@@ -4,8 +4,9 @@
 #        [masks=slot:channel pairs, each channel one of r g b c m y w]
 #        scripts/solve.sh escapement <layout> <scramble> <clocks, e.g. 1+,4-> [limit]
 # Prints the optimum, the park rule's fewest and most moves over every way its ties go under each reading, the
-# no-lookahead player's count, and the optimal moves. Escapement's mode prints the prover's fewest moves with the clock
-# ticking after each, and a line.
+# no-lookahead player's count, the one-visit and last-ring rules' ties, whether the level needs a plan (every rule's
+# fewest misses the optimum), and the optimal moves. Escapement's mode prints the prover's fewest moves with the clock ticking after
+# each, and a line.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/solve

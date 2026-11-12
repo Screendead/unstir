@@ -423,7 +423,30 @@ final class Solver {
     /// strands a seam.
     func parkTies(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, parking: Parking = .fewest)
         -> (best: Play, worst: Play)? {
-        let reach = self.reach(seized), rank = parkRank(seized, parking)
+        ties(stack, seized: seized, from: position, rule: .park(parking))
+    }
+
+    /// A blocked rule of thumb, which untwists the newest whole seam a working knob reaches until none is, then turns.
+    enum Rule {
+        /// `park`.
+        case park(Parking)
+        /// Turns to where the most seams come off before the next block, then the nearest.
+        case oneVisit
+        /// Parks the seized knobs over the rings that finish last: a finished ring counts -1, any other the index of
+        /// its oldest entry, summed over the seized knobs, lowest first; then the nearest.
+        case lastRing
+        /// `noLookahead`: the nearest.
+        case nearest
+    }
+
+    /// The rules the needs-a-plan verdict asks.
+    static let rules: [Rule] = [.park(.fewest), .park(.all), .oneVisit, .lastRing, .nearest]
+
+    /// A rule with no tie-break: its fewest and most moves over every way its ties can go. Nil when some way strands a
+    /// seam.
+    func ties(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, rule: Rule)
+        -> (best: Play, worst: Play)? {
+        let reach = self.reach(seized), rank = self.rank(rule, seized, reach)
         // Between turns the rule never chooses, so only blocked states branch. Each turn goes where a seam comes off,
         // so the stack shrinks along every branch and the memo never meets a state it is still working out.
         var memo: [Int: (best: Play, worst: Play)?] = [:]
@@ -452,17 +475,33 @@ final class Solver {
     /// Untwists the newest whole seam a working knob reaches. When none is, turns to the nearest position where one is,
     /// clockwise on a tie.
     func noLookahead(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0) -> Play? {
-        play(stack, seized: seized, from: position, tie: .clockwise) { _, turn, _ in [abs(turn)] }
+        play(stack, seized: seized, from: position, tie: .clockwise, rank: rank(.nearest, seized, reach(seized)))
     }
 
-    /// Orders the positions a blocked player may turn to, lowest first, from the stack, the turn and where it goes.
-    private typealias Rank = ([Twist], Int, Int) -> [Int]
+    /// Orders the positions a blocked player may turn to, lowest first, from the stack's id, the turn and where it goes.
+    private typealias Rank = (Int, Int, Int) -> [Int]
 
     private func parkRank(_ seized: Set<Int>, _ parking: Parking) -> Rank {
-        { stack, turn, to in
-            let rings = Set(stack.map(\.rod))
+        { id, turn, to in
+            let rings = Set(self.stacks[id].map(\.rod))
             let over = seized.filter { rings.contains(self.layout.slot(of: $0, at: to)) }.count
             return [parking == .fewest ? over : min(over, 1), abs(turn)]
+        }
+    }
+
+    private func rank(_ rule: Rule, _ seized: Set<Int>, _ reach: [[Bool]]) -> Rank {
+        switch rule {
+        case let .park(parking): parkRank(seized, parking)
+        case .oneVisit: { id, turn, to in [-self.advance(id, at: to, reach: reach).moves.count, abs(turn)] }
+        case .lastRing: { id, turn, to in
+            let stack = self.stacks[id]
+            let sum = seized.map { knob in
+                let slot = self.layout.slot(of: knob, at: to)
+                return stack.firstIndex { $0.rod == slot } ?? -1
+            }.reduce(0, +)
+            return [sum, abs(turn)]
+        }
+        case .nearest: { _, turn, _ in [abs(turn)] }
         }
     }
 
@@ -480,7 +519,7 @@ final class Solver {
     private func turns(_ id: Int, from p: Int, reach: [[Bool]], rank: Rank) -> [(to: Int, rank: [Int])] {
         let whole = untwists(id)
         return (0..<layout.order).filter { q in q != p && whole.contains { reach[q][$0.slot] } }
-            .map { q in (q, rank(stacks[id], shortWay(p, q), q)) }
+            .map { q in (q, rank(id, shortWay(p, q), q)) }
     }
 
     private func play(_ stack: [Twist], seized: Set<Int>, from position: Int, tie: Tie, rank: Rank) -> Play? {
@@ -497,6 +536,15 @@ final class Solver {
             moves += next.moves
         }
         return Play(moves: moves)
+    }
+
+    /// Whether the level needs a plan: the optimum is below the fewest moves every rule in `rules` takes, each with its
+    /// ties gone its best way. A rule that strands a seam misses. Nil when the stack can't be emptied.
+    func needsPlan(_ stack: [Twist], seized: Set<Int> = [], optimum: Int? = nil) -> Bool? {
+        guard let optimum = optimum ?? self.optimum(stack, seized: seized) else { return nil }
+        return Self.rules.allSatisfy { rule in
+            ties(stack, seized: seized, rule: rule).map { optimum < $0.best.count } ?? true
+        }
     }
 
     /// The fewest moves up to `limit` when a move may be any commits to one slot under a working knob, up to `commits`

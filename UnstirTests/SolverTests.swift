@@ -80,6 +80,27 @@ final class SolverTests: XCTestCase {
                                                                        .stir(knob: 1, slot: 3, steps: -2)])
     }
 
+    /// Two seized knobs on quad: the first turn's near way, +3, clears as many seams as the far way, +2, but leaves the
+    /// tail needing a third turn. Every rule of thumb takes the near way however its ties go, so the level needs a plan.
+    @MainActor func testTheFarFirstTurnNeedsAPlan() {
+        let solver = Solver(.quad), stack = [Twist].parse("0:+3,2:+2,3:-4,0:+6,3:+7,1:-4,0:+7", in: .quad)
+        let seized: Set<Int> = [0, 1]
+        let optimal = solver.optimalPlay(stack, seized: seized)
+        XCTAssertEqual(optimal?.count, 10)
+        for rule in Solver.rules { XCTAssertEqual(solver.ties(stack, seized: seized, rule: rule)?.best.count, 11, "\(rule)") }
+        XCTAssertEqual(solver.needsPlan(stack, seized: seized), true)
+        assertEmpties(optimal, .quad, stack, seized: seized)
+    }
+
+    /// No lookahead turns to the nearest and pays a second turn, but the park rule reaches the optimum, so no plan is
+    /// needed.
+    func testARuleOfThumbAtTheOptimumNeedsNoPlan() {
+        let solver = Solver(.quad), stack = [Twist].parse("3:+2,1:+3,0:+4", in: .quad)
+        XCTAssertEqual(solver.ties(stack, seized: [0], rule: .nearest)?.best.count, 5)
+        XCTAssertEqual(solver.ties(stack, seized: [0], rule: .oneVisit)?.best.count, 4)
+        XCTAssertEqual(solver.needsPlan(stack, seized: [0]), false)
+    }
+
     /// The eye's big knobs only swap with each other.
     func testSeizingBothBigKnobsStrandsTheirSeams() {
         let solver = Solver(.eye), stack = [Twist].parse("0:+3", in: .eye)
