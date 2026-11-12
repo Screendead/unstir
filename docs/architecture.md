@@ -1023,7 +1023,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   icloud-started = A, round 16), never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
   until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
   without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
-  (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
+  (`Config/iCloud.entitlements` on YES, or `Config/iCloudAgeRange.entitlements` with `AGE_RANGE`; none on NO); off, no call reaches the store. On, a plain launch
   (`Sync.plays`: never the harness, the test host or the editors' build) reconciles as it starts, on every change iCloud sends (an
   account's change merges the phone's bests into the new account's store, dropping none) and after every best
   `Game` saves, every endless tank cleared and every level's first start. The store holds `bests` (`Sync.key`, pinned: the store takes 1024 keys,
@@ -1371,7 +1371,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   test host, and drops the answer, as every level is for all ages: nothing is kept, logged or sent. It waits
   `AgeCheck.settle` (0.3 s, past the dip) first, and a request cut off by the menu being covered or left leaves the
   launch's ask standing (`testACancelledRequestLeavesTheLaunchsAskStanding`); a failure is dropped and not retried.
-  The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
+  Apple's docs require the Boolean entitlement `com.apple.developer.declared-age-range` (read 2026-11-12 in Apple's
+  Bundle Resources reference, developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.declared-age-range).
+  The build's `AGE_RANGE` signs it in (`Config/AgeRange.entitlements`, or `Config/iCloudAgeRange.entitlements` with
+  `ICLOUD`, one file per pair of switches in `Config/Unstir.xcconfig`); `scripts/archive-ios.sh` sets it, and it
+  stays NO for other builds until a phone build on the paid team shows the App ID takes it, so `scripts/run-ios.sh`
+  signs as before; at NO, `CODE_SIGN_ENTITLEMENTS` is what it was for every build. DeclaredAgeRange links weak, as the app runs from iOS 17.
   A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
   `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
   under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen, settings line and all, without

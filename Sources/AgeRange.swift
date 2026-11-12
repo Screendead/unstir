@@ -58,7 +58,7 @@ private struct AgeRequest: ViewModifier {
         content
             .task {
                 guard played else { return }
-                // Apple's docs require the Declared Age Range entitlement, which waits for the paid team's signing.
+                // Apple's docs require the Declared Age Range entitlement, which a build signs only with AGE_RANGE=YES.
                 eligible = (try? await AgeRangeService.shared.isEligibleForAgeFeatures) ?? false
             }
             .task(id: ready) {
