@@ -364,7 +364,7 @@ import XCTest
         XCTAssertEqual(levels.map(\.label), (1...30).map { String(format: "%02d", $0) })
         XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
         XCTAssertEqual(Level.escapementChapters, ["The Clock", "Tempo", "Two Clocks", "Wound Back", "Grand Complication"])
-        let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " No move is spare.",
+        let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " Sometimes the first move is to wait.",
                      13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks.",
                      2: " Tap wait: the clock ticks, nothing turns."]
         XCTAssertEqual(levels.map(\.title), [

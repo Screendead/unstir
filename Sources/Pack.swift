@@ -380,7 +380,7 @@ extension Level {
         switch chapter {
         case 0: String(localized: "rule.escapement.1", defaultValue: "Unstir in \(budget) ticks. A clock ticks after every move. Each let-go is a move.",
                        comment: "Escapement's note under the tank opening its first chapter: the tick budget, then the chapter's rule")
-        case 1: String(localized: "rule.escapement.2", defaultValue: "Unstir in \(budget) ticks. No move is spare.",
+        case 1: String(localized: "rule.escapement.2", defaultValue: "Unstir in \(budget) ticks. Sometimes the first move is to wait.",
                        comment: "Escapement's note under the tank opening its second chapter: the tick budget, then the chapter's rule")
         case 2: String(localized: "rule.escapement.3", defaultValue: "Unstir in \(budget) ticks. Two clocks tick in turn.",
                        comment: "Escapement's note under the tank opening its third chapter: the tick budget, then the chapter's rule")
