@@ -1291,6 +1291,9 @@ struct LevelView: View {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
     }
 
+    /// A frost day's ice melting off as the solve lands (`waved`).
+    private var thawing: Animation { reduceMotion ? .easeOut(duration: FrostLook.dissolve) : .easeInOut(duration: FrostLook.thaw) }
+
     /// The curtain on the screen: begun, and not yet played out.
     private var paying: Payoff? { payoffAt != nil && !paid ? payoff : nil }
     /// The chrome leaves for the curtain and comes back for the card; the knobs and lines leave with it and stay away,
@@ -1956,9 +1959,10 @@ struct LevelView: View {
                             .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
                     }
                 }
-                if game.level.frosty, let look = FrostLook.chosen {
+                if game.level.frosty {
                     ForEach(knobs.filter { game.level.kind(of: $0) == .seized }, id: \.self) { k in
-                        FrostDisc(look: look, radius: disc(k), core: core, k: k).position(at(k)).allowsHitTesting(false)
+                        FrostDisc(radius: disc(k), core: core, knob: k, thaw: waved ? 1 : 0, still: reduceMotion)
+                            .animation(thawing, value: waved).position(at(k)).allowsHitTesting(false)
                     }
                 }
                 if let k = liveRod, shown != nil {
@@ -2055,7 +2059,9 @@ struct LevelView: View {
                             RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                                     size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
                                     lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
-                                    channels: game.level.channels(of: game.slot(of: k)), frost: game.level.frosty ? FrostLook.chosen : nil)
+                                    channels: game.level.channels(of: game.slot(of: k)),
+                                    frost: game.level.frosty && game.level.kind(of: k) == .seized ? !waved : nil)
+                                .animation(thawing, value: waved)
                         } keyframes: { _ in Self.jolt }
                             .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
                     }

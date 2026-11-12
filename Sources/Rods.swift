@@ -13,8 +13,8 @@ struct RodView: View {
     var tint: Color?
     /// Prism's channels, spelt out under the knob in the swatches' letters where colour alone mustn't carry them.
     var channels: Channels?
-    /// A frost day's seized knob, drawn frozen in this look (prototype).
-    var frost: FrostLook?
+    /// A frost day's seized knob: true frozen, false thawed by the solve, when it is drawn as a working knob; nil any other.
+    var frost: Bool?
     @Environment(\.channelLetters) private var letters
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
@@ -25,11 +25,16 @@ struct RodView: View {
     var body: some View {
         // Whole device pixels out from a pixel-snapped centre, so at rest the upright and level ticks land crisp.
         let rim = px(size / 2), width = px(2 / 3)
-        let frozen = seized ? frost : nil
-        let lit = frozen != nil ? FrostLook.ice : seized ? Color(0x5A606C) : tint ?? .neonCyan
+        let frozen = frost == true, jammed = seized && frost == nil
+        let lit = frozen ? FrostLook.ice : jammed ? Color(0x5A606C) : tint ?? .neonCyan
         ZStack {
-            Circle().fill(RadialGradient(stops: frozen == .glaze ? FrostLook.glazed : frozen != nil ? FrostLook.cap : seized ? Self.dull : Self.knob, center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0,
+            Circle().fill(RadialGradient(stops: jammed ? Self.dull : Self.knob, center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0,
                                          endRadius: size * 0.95))
+            if frost != nil {
+                Circle().fill(RadialGradient(stops: FrostLook.glazed, center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0,
+                                             endRadius: size * 0.95))
+                    .opacity(frozen ? 1 : 0)
+            }
             Circle().strokeBorder(Color.black.opacity(0.8), lineWidth: 1.2)
             ticks(rim - px(2), rim - px(1 / 3)).stroke(lit.opacity(0.8), lineWidth: width)
             if grabbed { ticks(rim - px(2), rim - px(1 / 3)).stroke(Color.live, lineWidth: width) }
@@ -44,11 +49,11 @@ struct RodView: View {
             }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             // On pale ice the pointer goes near black, so the cap's angle still reads.
-            let pointer = frozen != nil ? Color(0x08141E) : lit
+            let pointer = frozen ? Color(0x08141E) : lit
             Capsule().fill(pointer.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
             Capsule().fill(pointer).frame(width: 2, height: size * 0.3).offset(y: -size * 0.3)
-            if let frozen {
-                FrostCap(look: frozen, size: size)
+            if frost != nil {
+                FrostCap(size: size).opacity(frozen ? 1 : 0)
             } else if seized {
                 Capsule().fill(Color.blood).frame(width: size * 0.95, height: 2.5).shadow(color: .blood, radius: 3)
                     .rotationEffect(.degrees(-35))
