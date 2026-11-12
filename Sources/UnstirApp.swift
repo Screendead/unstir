@@ -334,7 +334,10 @@ struct Harness {
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
-        case "daily": Level.daily()
+        // UNSTIR_DAILY=yyyymmdd: that day's daily, as played on its day.
+        case "daily": Level.daily(env["UNSTIR_DAILY"].flatMap(Int.init).flatMap {
+            calendar.date(from: DateComponents(year: $0 / 10000, month: $0 / 100 % 100, day: $0 % 100, hour: 12))
+        } ?? .now)
         // UNSTIR_DAY=n: the daily n days back, from the archive; yesterday's when unset.
         case "archive": Level.daily(calendar.date(byAdding: .day, value: -max(Int(env["UNSTIR_DAY"] ?? "") ?? 1, 1),
                                                       to: .now)!, archived: true)

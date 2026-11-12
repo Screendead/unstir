@@ -136,6 +136,13 @@ film rim-seized 14 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=maelstrom LEVEL=1
   MOVES=-1:+1,2:+8,3:-7,0:+4
 film rim-both 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 FINGER=1 \
   MOVES=-1:+1,0:+8,4:+7,1:-4
+# Frost days (scripts/frost-days.sh line <day> prints both lines): the daily on a day whose two seized knobs make every
+# rule of thumb miss par, the rim lesson unlearnt as a plughole player meets it. 20 Nov 2026 (quad, knobs 0 and 1) by
+# the park rule, 17 against par 15; 14 Dec 2026 (pent, knobs 2 and 4) on its optimal line, at par 17.
+film frost-park-over 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAILY=20261120 FINGER=1 REST=1 \
+  MOVES=-1:+1,2:-4,3:+4,-1:+1,2:+8,-1:+1,2:-6,-1:+1,2:-8,3:-2,-1:+2,3:-7,2:+7,3:+3,-1:+1,2:+4,3:-2
+film frost-at-par 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAILY=20261214 FINGER=1 REST=1 \
+  MOVES=3:-2,0:-2,-1:-2,0:+3,1:-5,-1:+1,3:+4,0:-8,1:+7,0:+6,-1:+1,0:-5,3:-2,-1:-1,3:+4,1:+2,0:-3
 # The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (a red ring just
 # inside the glass's edge), turned straight back and knob 0 healed.
 film rim-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
