@@ -393,8 +393,7 @@ struct ClipTank: View {
         }
         let ratchet = LevelView.ratchetSize(core)
         return ZStack {
-            LevelPicture(level: level, played: f.played, wound: f.wound, side: side, clock: t)
-                .modifier(unstirred)
+            LevelPicture(level: level, played: f.played, wound: f.wound, side: side, clock: t, stir: unstirred)
                 .clipShape(Circle())
             if let wave, page.paper {
                 Color.clear.overlay { page.wave(wave.radius, at: wave.at, r: r) }.clipShape(Circle())
@@ -454,24 +453,59 @@ struct ClipTank: View {
     }
 }
 
-/// A level's picture as the game draws it: its story's scene, with `played` of its vignettes and `wound` of its
-/// scramble's entries gone, or its picture, black until a bake lands.
+/// A level's picture as the game draws it under `stir`: its story's scene, with `played` of its vignettes and `wound` of
+/// its scramble's entries gone, or its picture, black until a bake lands. A Lens level's draws its lenses' cores finer
+/// as the level's glass does (`unstirLens`), once the detail for its size has baked off the main thread and the picture
+/// has struck, easing in over 0.2 s; until then it draws through `unstir`, so nothing waits on the detail.
 struct LevelPicture: View {
     let level: Level
     var played: Set<Int> = []
     var wound = 0
     let side: CGFloat
     var clock = 0.0
+    let stir: Unstirred
+    @Environment(\.displayScale) private var scale
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
+    @State private var fine: Fine?
+    @State private var struck = false
+    @State private var lit = false
+    @State private var crisp = 0.0
 
     var body: some View {
+        var stir = stir
+        (stir.fine, stir.crisp) = (fine, crisp)
+        return picture
+            .modifier(stir)
+            .task(id: [level.id, "\(side)", "\(scale)"]) {
+                guard level.picture == .halftone, !level.lenses.isEmpty else { return }
+                let n = Int((side * scale).rounded()), panel = Halftone.panel(level.panel)
+                let lenses = level.lenses.sorted().map { level.layout.rods[$0] }
+                let start = Date.now
+                let detail = await Task.detached(priority: .utility) { panel.detail(n, lenses: lenses) }.value
+                guard !Task.isCancelled, let made = Fine(detail) else { return }
+                Log.write("halftone \(panel.name) \(n) px cover detail baked in \(Int(Date.now.timeIntervalSince(start) * 1000)) ms, \(made.bytes) bytes")
+                fine = made
+            }
+            .task(id: struck) {
+                let strike = PictureLayer.strikeLength(calm: reduceMotion || dimFlashing || level.picture.paper)
+                guard struck, (try? await Task.sleep(for: .seconds(strike))) != nil else { return }
+                lit = true
+            }
+            .onChange(of: lit && fine != nil) { _, ready in withAnimation(.easeOut(duration: 0.2)) { crisp = ready ? 1 : 0 } }
+    }
+
+    @ViewBuilder private var picture: some View {
         #if FIRST_STIR
         if let scene = level.story?.scene {
             SceneLayer(scene: scene, played: played, wound: wound, count: level.scramble.count, side: side)
         } else {
-            PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock, panel: level.panel)
+            PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock, panel: level.panel,
+                         onStrike: { struck = true })
         }
         #else
-        PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock, panel: level.panel)
+        PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock, panel: level.panel,
+                     onStrike: { struck = true })
         #endif
     }
 }
