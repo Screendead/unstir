@@ -40,6 +40,18 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
 
+### Maelstrom levels that need a plan (2026-11-12)
+
+Jack dropped maelstrom's promise that the park rule reaches par however its ties go: "It's the last free tier; it's
+supposed to be a challenge." Built on `maelstrom-plan`: `scripts/maelstrom-levels.sh` (measure the table, deal
+candidates with the first search's seeds, keeping those where every rule of thumb's best tie misses par, no detour, and
+the park line keeps the tank turning); twelve rows dealt again, M6, M11-M14, M19-M22 and M24-M26, each needing a plan;
+M1-M5, the noted levels (M8, M10, M18), the layouts' openers, M23 (the store's shot) and the finale M27 kept;
+`testMaelstromParIsTheOptimum` pins par and which rows need a plan. Waits for Jack: he sees the rows first (the PR's
+table). Search yield: pent and quad give hundreds a band in 20,000 seeds; hex 12-25 gave about 350 in 60,000. Not
+measured: how they play. Films showing maelstrom 22 (`heartbeat-maelstrom22-chainmail`) show the old deal until
+filmed again.
+
 ### Escapement's wait comes back (2026-11-12)
 
 A side agent flagged that without the wait Escapement's finale (and 18 of 30 problems) measured 0.0 bits. Claude
