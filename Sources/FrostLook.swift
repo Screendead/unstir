@@ -51,8 +51,8 @@ enum FrostLook {
     /// Frost as it grows on a watch glass, one pane over the discs' union and seeded, so every launch draws the same
     /// crystals: breath frozen to a milk that is thick and mottled at the pane's edge and thins to a faint even veil in
     /// the middle, where the picture reads; hairline dendrites grown in from the edge, branching and fanning unevenly,
-    /// most of them filigree a few points long, a few feathers reaching towards a cap, the rime thick in some stretches
-    /// of the edge and thin in others; loose needles through the milk, a ground-glass grain, and the pane's cold edge.
+    /// most of them filigree a few points long, the rime thick in some stretches of the edge and thin in others, and
+    /// from the thick ones clumps of fern feathers of uneven length, the longest reaching most of the way to a cap; loose needles through the milk, a ground-glass grain, and the pane's cold edge.
     /// Where discs overlap nothing grows and no edge is drawn: the ice is one sheet.
     static func bake(_ discs: [Disc], seed: Int, scale: CGFloat) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
@@ -117,7 +117,7 @@ enum FrostLook {
             }
 
             // Strokes by weight, heaviest first: a feather's spine, then ever finer and fainter hairlines.
-            let weights: [(CGFloat, UIColor)] = [(0.9, white.withAlphaComponent(0.78)), (0.65, white.withAlphaComponent(0.66)),
+            let weights: [(CGFloat, UIColor)] = [(1, white.withAlphaComponent(0.8)), (0.65, white.withAlphaComponent(0.66)),
                                                  (0.55, ice.withAlphaComponent(0.6)), (0.48, white.withAlphaComponent(0.48)),
                                                  (0.42, ice.withAlphaComponent(0.42)), (0.36, white.withAlphaComponent(0.32))]
             let strokes = weights.map { _ in CGMutablePath() }
@@ -143,9 +143,9 @@ enum FrostLook {
                     let turn = (CGFloat(i) + unit()) / CGFloat(seeds), a = turn * 2 * .pi, o = at(d.r - 0.5, a, from: d.centre)
                     let at12 = turn * 12, i0 = Int(at12) % 12, f = at12 - at12.rounded(.down), ease = f * f * (3 - 2 * f)
                     let thick = patches[i0] * (1 - ease) + patches[(i0 + 1) % 12] * ease
-                    let far = unit(), feather = unit() < 0.01 + 0.05 * thick * thick, lean = (unit() - 0.5) * 1.3
+                    let far = unit(), feather = unit() < 0.006 + 0.12 * pow(thick, 2.5), lean = (unit() - 0.5) * (feather ? 0.9 : 1.3)
                     if covered(o, but: k) { continue }
-                    grow(o, a + .pi + lean, d.r * (feather ? 0.16 + 0.3 * far * thick : 0.03 + 0.19 * thick * far * far),
+                    grow(o, a + .pi + lean, d.r * (feather ? 0.16 + 0.5 * far * (0.35 + 0.65 * thick) : 0.03 + 0.19 * thick * far * far),
                          rank: feather ? 0 : 1 + Int(unit() * 2))
                 }
                 // Loose needles lying in the milk, any way round, crowding towards the edge.

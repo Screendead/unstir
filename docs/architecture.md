@@ -229,7 +229,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   lays one pane of frosted glass over the union of the frozen knobs' discs, still in the frame with the knobs as the
   picture turns under it (the ice is on the rods, which a tank turn never moves): a milk thick and mottled at the
   pane's edge thinning to a faint even veil in the middle, hairline dendrites grown in from the edge in thick and thin
-  stretches, most a few points long and a few feathers reaching towards a cap, loose needles in the milk, a
+  stretches, most a few points long, with clumps of fern feathers of uneven length growing from the thick ones (Jack
+  picked lusher feathers), loose needles in the milk, a
   ground-glass grain and a cold edge; nothing grows and no edge is drawn where discs overlap. `FrostLook.bake` draws it
   with Core Graphics from a `SplitMix64` seeded by the level's id (`Level.frostSeed`), so each frost day has its own
   crystals, and `FrostLook.pane` bakes it off the main actor as the level opens (about 0.2 s in a Debug simulator
