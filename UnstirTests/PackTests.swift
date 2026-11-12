@@ -205,6 +205,17 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Pack.firstStir.access(4, owned: [], unlocked: true, release: true, editors: true), .withheld)
     }
 
+    /// The measuring probes compile into Debug and a PROBES=YES build alone: the tracked config, the App Store
+    /// build's, leaves them out, and an archive refuses the switch.
+    func testADefaultBuildHasNoProbes() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let config = try String(contentsOf: root.appending(path: "Config/Unstir.xcconfig"), encoding: .utf8)
+        XCTAssertEqual(config.split(separator: "\n").filter { $0.hasPrefix("PROBES =") }, ["PROBES = NO"])
+        let archive = try String(contentsOf: root.appending(path: "scripts/archive-ios.sh"), encoding: .utf8)
+        XCTAssertTrue(archive.contains(#"[[ "${PROBES:-}" == YES ]] && {"#))
+        XCTAssertTrue(archive.contains(#""$@" PROBES=NO archive"#))
+    }
+
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
     @MainActor func testAMistypedPackIdFailsClosed() {
         for id in ["lens_7", "Lens-7", "lens-", "escapement-7"] {

@@ -21,7 +21,11 @@ POLICY_URL =
 // "open every tier", that opens every tier, level and pack. NO, the App Store build's, compiles the switch out.
 EDITORS = NO
 EDITORS_CONDITION_YES = EDITORS
-SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS))
+// YES compiles the measuring probes into a Release build, for timing on a phone: the twist oracle's bench
+// (Sources/OracleBench.swift). Debug always holds them. NO, the App Store build's, compiles them out.
+PROBES = NO
+PROBES_CONDITION_YES = PROBES
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS)) $(PROBES_CONDITION_$(PROBES))
 // YES builds Game Center in: a sign-in at the menu and the achievements (Sources/GameCenter.swift). NO, v1's until the
 // sign-in overlay test passes, makes no GameKit call. A build with it YES needs the Game Center capability on its App
 // ID and the com.apple.developer.game-center entitlement.
