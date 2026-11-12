@@ -49,6 +49,8 @@ enum GPUBench {
 
     struct Args {
         var radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold: Float
+        /// The oracle's cases set these (`OracleBench`); the sweeps here draw the glass unturned, in full colour.
+        var turn: Float = 0, haze: Float = 0, isolate: Float = 0, tintR: Float = 1, tintG: Float = 1, tintB: Float = 1, nudgeX: Float = 0, nudgeY: Float = 0
         var count, maskCount, channels, fineCount: Int32
     }
 

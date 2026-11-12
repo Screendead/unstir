@@ -110,6 +110,62 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
   rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
   Caches, for the call on capping that cache, and Lens 01's and 25's details, which every open bakes. In the simulator that is the Mac's CPU running unoptimised Debug code.
+- **OracleBench.swift** and `scripts/twist-oracle.sh` are the twist oracle:
+  what any faster way to draw twists is held against (Jack, 2026-11-12: find one, provided it doesn't look worse). Its
+  cases (`scripts/twist-oracle/cases.sh`) are harness launches with every clock held, so a rerun draws the same
+  pixels: maelstrom 24 as dealt, at 36 entries, at 4 and at two taps, its live picture at four clocks, a rod and the
+  rim in hand, the opening's wind-in part way, the wave, and with the chrome; whirlpool 27; plughole 20 at 36
+  entries; vortex 27 and its breath; Lens 25, and Lens 1's lens in hand zooming in and out; an Escapement tick in the
+  air; Prism 30, a rod held with its read drawn and a swatch held; the menu's dock and a card; and Reduce Motion's
+  rest frame. `build` builds Debug for the simulator, and every other command installs that build on the oracle's
+  own simulator (`scripts/twist-oracle/sim` names its device and runtime; a second fresh one drew the same frames,
+  to one level in one value) and refuses where `Sources/` has changed since. `ref` shoots the references, which stay
+  out of git (`shots/`, or `ORACLE_REF`), and refuses unless `Sources/` is committed and the same as
+  `ORACLE_BASE`'s, origin/master's unless set, so no branch's shader becomes its own reference; the folder's
+  `base.txt` says what they were shot from, and `diff` prints it. They go stale as master's drawing changes: shoot
+  them again from master before holding a branch against them. `shoot <set>` shoots the same cases from any
+  checkout, each frame taken once two screenshots 0.7 s
+  apart are the same bytes; and `diff <set>` applies the pass rule (`scripts/twist-oracle.py`), on the screenshots'
+  8-bit values inside the lit box, less a screen's bottom 68 rows, where the system's home indicator comes and goes
+  between shots. A frame passes as `same`: the difference 99.9% of values are within at most 6
+  levels, the mean at most 0.35, the worst 16 px block's mean at most 0.8 (a seam or patch the percentile leaves
+  out) and the gradient energy within 3% of the reference's (under is blur, over is aliasing). Or it passes as
+  `alike`. Deep in a stir a pixel's filaments are far thinner than the pixel, so a map moved a hundredth of a pixel
+  draws other values with the same look: maelstrom 24 turned 0.003 degrees, 0.03 px at the rim, moves 0.1% of values
+  by over 100 levels. So each reference is shot twice more as its twins, the whole stir drawn a tenth of a pixel
+  along each axis over the same picture, down each diagonal (`UNSTIR_NUDGE`, `Unstirred.nudge`), which changes
+  nothing where the map is the identity; and a frame is alike where every block's mean difference is at most 0.5
+  plus 1.5 times the most either twin differs by there or in a block beside it, the mean signed difference is at
+  most 0.35 a channel (light lost or gained) and the gradient energy is within the same 3%, over the whole frame and
+  again over only the blocks where a twin differs by more than 3 levels, since a blur inside the deep stir alone is
+  diluted in the whole frame's. Across a sweep's small
+  steps of one held turn the frame-to-frame change must be within 5% of the reference's (over is shimmer).
+  Measured 2026-11-12: today's shader against itself reads 0 on every case (one value off by a level in two Prism
+  frames); the stir moved 0.05 px passes as alike on the nine cases tried, its sweeps' change within 0.1% of the
+  reference's and both energies within 0.3%, and 0.2 px fails on all five tried; that
+  0.003 degree turn passes and 0.01 degrees just fails; every case drawn with two taps fails, by 5% to 47% more
+  gradient energy and up to 19% more change a step; a blur of 0.2 px or more, a 1 px shift, +-3 levels of noise and
+  a 24 px patch on a calm glass all fail; a seam a pixel wide and 12 levels up fails on a calm glass and passes
+  inside a deep stir, where the films are the check. A frame that
+  fails isn't condemned: it is a call for Jack, with the two beside each other. `film <set>` records the moving cases
+  (the opening, two real drags, a played line, Lens, Escapement and Prism lines) and lays each beside the
+  reference's take, for the eye. `time` runs `OracleBench` (`UNSTIR_GPUBENCH=oracle`, `UNSTIR_ORACLECASES` the same
+  cases' variables): it builds each case's glass as `LevelView.tank` does, takes the shader's arguments from
+  `Unstirred.shader(scale:)`, draws it off screen at 1137 px through every `Method` in `OracleBench.methods`, today's
+  being `benchUnstir`, writes each method's frame and today's twins, which `benchdiff <method>` holds against today's by the same rule,
+  and times the methods in turn round by round, so a busy moment on a shared GPU lands on all of them and each
+  line's share of today's is steadier than its milliseconds. A new way joins `methods` with its kernels, its
+  once-a-commit work timed apart (`Method.commit`). A live picture's layer is stood in for by the glass's fill, the
+  only one with a kernel, timed once on its own line, so a line is the twist pass alone. The timer holds
+  `ORACLE_LOCK` through each launch; in the simulator the clock is the wall's round each command buffer, so a buffer
+  holds enough frames to take some 30 ms. On 2026-11-12 three launches' medians lay within 1% to 5% of each other on
+  most cases, 11% at worst (maelstrom 24 as dealt 0.75 ms on the Mac, 1.19 at 36 entries, 0.62 of that with two taps).
+  `scripts/twist-oracle/shimmer.py <ref film dir> <set film dir>` reads how much each film changes from frame to
+  frame beside the reference's take. The bench is a probe: Debug holds it, and a Release build only with
+  `PROBES=YES` (`Config/Unstir.xcconfig`, the `PROBES` compilation condition, as `EDITORS` is set), for timing on a
+  phone; `Probes.screen` is the one place the app asks for one, `UNSTIR_NUDGE` reads as nothing without it,
+  `scripts/archive-ios.sh` refuses the switch and builds with it off, and `testADefaultBuildHasNoProbes` holds the
+  tracked config to NO.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -1415,7 +1471,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim,
   knob and lens lessons' ghost fingers, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
-  and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
+  and it holds the swirl's breath at 0. `UNSTIR_WIND=f` holds the opening's wind-in at that share of every committed angle, `UNSTIR_TICKAT=p` an Escapement move's ticks p through their flight (tick i in the air from i to i + 1), and `UNSTIR_NUDGE=px` (or `x,y`) draws every glass's stir that many device pixels off over the same picture, all for the twist oracle's cases. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_REVIEW=log` logs the rating request in place of making it, as a plain launch would make it. `UNSTIR_NOW=HH:mm` sets the clock the daily's card reads the next daily from. `UNSTIR_DAILY=yyyymmdd` deals that day's daily for the menu's row, which keeps it on return to the front, and with `UNSTIR_MODE=daily` opens it (the `frost-` films and `menu-daily-` shots). `UNSTIR_RESUME=2:+5,0:+2,u,1:+3` is the harness's one save, for the launch, so whatever a plain launch left stored never reaches a shot: the level's try with that line (`UNSTIR_MOVES`'s form, plus `u` an undo and `r` a reset), so it opens resumed, and with `UNSTIR_MODE=endless` `UNSTIR_RESUMETANK=n` puts the saved run on tank n (from 0; empty `UNSTIR_RESUME` is the run with no move yet), which the menu's endless row continues. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it

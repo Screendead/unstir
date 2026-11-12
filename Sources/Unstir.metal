@@ -273,6 +273,7 @@ struct BenchLayer {
 
 struct BenchArgs {
     float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold;
+    float turn, haze, isolate, tintR, tintG, tintB, nudgeX, nudgeY;
     int count, maskCount, channels, fineCount;
 };
 
@@ -283,15 +284,15 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
                         uint2 gid [[thread_position_in_grid]]) {
     if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
     BenchLayer layer = { picture, a.scale };
-    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius);
+    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius) + float2(a.nudgeX, a.nudgeY) / a.scale;
     half4 c = a.fineCount != 0
         ? unstirLensBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
-                         a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, atlas, fine, a.fineCount)
+                         a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn, atlas, fine, a.fineCount)
         : a.channels != 0
         ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
-                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1), a.held,
-                             a.hold)
+                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn, a.isolate,
+                             float3(a.tintR, a.tintG, a.tintB), a.held, a.hold)
         : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
-                     a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0);
+                     a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn);
     out.write(c, gid);
 }

@@ -29,6 +29,8 @@ struct UnstirApp: App {
         WindowGroup {
             if GPUBench.wanted {
                 GPUBenchView()
+            } else if let probe = Probes.screen {
+                probe
             } else if let window = HarnessWindow.wanted {
                 HarnessWindow(window, content: RootView())
             } else {
@@ -128,6 +130,11 @@ struct Harness {
     /// the swirl's breath, so a shot on a layout with a swirl that sets none of this, UNSTIR_BREATH and UNSTIR_SWIRLED=1
     /// may catch a slosh.
     let clock: Double?
+    /// UNSTIR_WIND=0.5: the opening's wind-in held that far, every committed angle at that share of itself.
+    let wind: Double?
+    /// UNSTIR_TICKAT=0.5: Escapement: the newest move's ticks held that far through their flight, as `LevelView.tickKeys`
+    /// counts it: tick i is in the air from i to i + 1.
+    let tickAt: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
     /// UNSTIR_EXIT=left: the level, once open, left for the menu by "‹ levels"; =solved, as from its result card after
@@ -302,6 +309,8 @@ struct Harness {
         }
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
+        wind = env["UNSTIR_WIND"].flatMap(Double.init).map { min(max($0, 0), 1) }
+        tickAt = env["UNSTIR_TICKAT"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         lockTap = env["UNSTIR_LOCKTAP"]
         pickArchive = env["UNSTIR_PICK"] == "archive"
