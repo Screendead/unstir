@@ -51,10 +51,31 @@ struct Problem {
     func play(_ s: [Twist], _ m: Move) -> [Twist]? {
         var s = s
         if case let .turn(r, n) = m { s.commit(rod: r, steps: n, in: layout) }
-        for c in clocks where s.contains(where: { $0.rod == c.rod }) {
+        for c in clocks where s.contains(where: { $0.rod == c.rod }) && ticks(c, on: m) {
             if s.commit(rod: c.rod, steps: c.dir, in: layout) == .pushed, !keepsPushed { return nil }
         }
         return s.isEmpty || running(s) ? s : nil
+    }
+
+    /// Whether a move ticks clock `c`: every move does, or under ESC_TICK=local only a turn of a knob crossing its disc.
+    func ticks(_ c: Clock, on m: Move) -> Bool {
+        guard localTicks, case let .turn(r, _) = m else { return true }
+        return layout.overlaps(r, c.rod)
+    }
+
+    /// `play` with `k` slips left: a tick that would push turns nothing instead, while a slip is left.
+    func play(_ s: [Twist], _ m: Move, slips k: Int) -> (s: [Twist], k: Int)? {
+        var s = s, k = k
+        if case let .turn(r, n) = m { s.commit(rod: r, steps: n, in: layout) }
+        for c in clocks where s.contains(where: { $0.rod == c.rod }) && ticks(c, on: m) {
+            let before = s
+            if s.commit(rod: c.rod, steps: c.dir, in: layout) == .pushed {
+                guard k > 0 else { return nil }
+                s = before
+                k -= 1
+            }
+        }
+        return s.isEmpty || running(s) ? (s, k) : nil
     }
 
     /// Waits and whole heals: turns that land on one entry and pop it.
@@ -84,6 +105,11 @@ struct Problem {
 
 /// ESC_WAIT=0 plays without the waiting move, the no-wait rule, where a clock can't be touched.
 let waitsAllowed = ProcessInfo.processInfo.environment["ESC_WAIT"] != "0"
+
+/// ESC_TICK=local ticks a clock only on a turn of a knob crossing its disc: a rule measured for Jack, not the app's.
+let spread = ProcessInfo.processInfo.environment["ESC_SPREAD"] == "1"
+
+let localTicks = ProcessInfo.processInfo.environment["ESC_TICK"] == "local"
 
 /// ESC_PUSHED=1 plays on past a tick that pushes, to check that no such line ever empties the stack.
 let keepsPushed = ProcessInfo.processInfo.environment["ESC_PUSHED"] == "1"
@@ -351,7 +377,13 @@ func build(_ layout: Layout, clocks: [Clock], n: Int, waits: ClosedRange<Int>, s
             if !waitAt.contains(t) {
                 let free = working.filter { r in !clocks.contains { layout.overlaps($0.rod, r) } }
                 let inside = working.filter { !free.contains($0) }
-                let r = (free.isEmpty || Double.random(in: 0..<1, using: &rng) < share ? inside : free).randomElement(using: &rng)!
+                var pool = free.isEmpty || Double.random(in: 0..<1, using: &rng) < share ? inside : free
+                // ESC_SPREAD=1 keeps each heal's knob off the last one's disc where it can, so heals stand side by side.
+                if spread, let top = s.last(where: { !clocks.map(\.rod).contains($0.rod) })?.rod {
+                    let apart = working.filter { !layout.overlaps($0, top) }
+                    if !apart.isEmpty { pool = apart }
+                }
+                let r = pool.randomElement(using: &rng)!
                 if s.commit(rod: r, steps: [-5, -4, -3, -2, 2, 3, 4, 5].randomElement(using: &rng)!, in: layout) != .pushed {
                     ok = false
                 }
@@ -439,6 +471,71 @@ func table(_ path: String, span: Int) {
     }
 }
 
+/// Fewest whole heals to par with `slips` slips, and the chance a uniform player among heals that don't lose at once
+/// solves at that par.
+func slipMeasure(_ p: Problem, slips: Int, limit: Int) -> (par: Int, bits: Double, lines: Int)? {
+    struct K: Hashable { var s: [Twist]; var k: Int; var left: Int }
+    var memo: [K: Int] = [:]
+    func count(_ s: [Twist], _ k: Int, _ left: Int) -> Int {
+        if s.isEmpty { return 1 }
+        if left == 0 || p.bound(s) > left { return 0 }
+        let key = K(s: s, k: k, left: left)
+        if let c = memo[key] { return c }
+        var c = 0
+        for m in p.cleanMoves(s, after: nil) where m != .wait {
+            if let t = p.play(s, m, slips: k) { c = min(1_000_000, c + count(t.s, t.k, left - 1)) }
+        }
+        memo[key] = c
+        return c
+    }
+    guard let par = (p.bound(p.stack)...max(limit, p.bound(p.stack))).first(where: { count(p.stack, slips, $0) > 0 })
+    else { return nil }
+    var cm: [K: Double] = [:]
+    func go(_ s: [Twist], _ k: Int, _ left: Int) -> Double {
+        if s.isEmpty { return 1 }
+        if left == 0 { return 0 }
+        let key = K(s: s, k: k, left: left)
+        if let c = cm[key] { return c }
+        let next = p.cleanMoves(s, after: nil).filter { $0 != .wait }.compactMap { p.play(s, $0, slips: k) }
+        let c = next.isEmpty ? 0 : next.map { go($0.s, $0.k, left - 1) }.reduce(0, +) / Double(next.count)
+        cm[key] = c
+        return c
+    }
+    let c = go(p.stack, slips, par)
+    return (par, c > 0 ? abs(log2(c)) : 99, count(p.stack, slips, par))
+}
+
+/// Deals under ESC_TICK=local backwards from a line of `n` heals: each step back picks the heal's knob, unticks every
+/// clock its disc crosses that is on the picture (and, with chance `tick`, one that isn't, starting its run), then
+/// pushes the heal's inverse. Prints seed, par, bits, lines at par, each clock's owed, entries, stack.
+func buildLocal(_ layout: Layout, clocks: [Clock], n: Int, seeds: Range<UInt64>, slips: Int) {
+    let tick = Double(ProcessInfo.processInfo.environment["ESC_START"] ?? "0.5")!
+    let working = layout.rods.indices.filter { r in !clocks.contains { $0.rod == r } }
+    for seed in seeds {
+        var rng = SplitMix64(state: seed)
+        var s: [Twist] = []
+        var ok = true
+        for _ in 0..<n {
+            let r = working.randomElement(using: &rng)!
+            for c in clocks.reversed() where layout.overlaps(r, c.rod) {
+                if s.contains(where: { $0.rod == c.rod }) || Double.random(in: 0..<1, using: &rng) < tick {
+                    s.commit(rod: c.rod, steps: -c.dir, in: layout)
+                }
+            }
+            if s.commit(rod: r, steps: [-5, -4, -3, -2, 2, 3, 4, 5].randomElement(using: &rng)!, in: layout) != .pushed {
+                ok = false
+            }
+        }
+        guard ok, !s.isEmpty else { continue }
+        let p = Problem(layout: layout, stack: s, clocks: clocks, rule: .final, waits: false)
+        let owed = clocks.map { c in max(0, -c.dir * s.filter { $0.rod == c.rod }.reduce(0) { $0 + $1.steps }) }
+        guard owed.allSatisfy({ $0 <= 9 }), let m = slipMeasure(p, slips: slips, limit: n) else { continue }
+        print([String(seed), String(m.par), String(format: "%.2f", m.bits), String(m.lines),
+               owed.map(String.init).joined(separator: "/"), String(s.count), describe(s)].joined(separator: "\t"))
+        fflush(stdout)
+    }
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 let rule = Rule(rawValue: ProcessInfo.processInfo.environment["ESC_RULE"] ?? "final") ?? .final
 switch args.first {
@@ -474,6 +571,37 @@ case "book" where args.count == 2:
             .joined(separator: "\t"))
         fflush(stdout)
     }
+case "rules" where args.count == 2:
+    // Each problem of a book under slips 0, 1 and 2 (and ESC_TICK as set): par and bits for each, or "-" if unsolvable.
+    for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
+        let f = row.split(separator: "\t").map(String.init)
+        let layout = Layout(rawValue: f[1])!
+        let p = Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: .final, waits: false)
+        let cells = (0...2).map { k in
+            slipMeasure(p, slips: k, limit: p.owed(p.stack) + 8).map { "\($0.par) \(String(format: "%.1f", $0.bits))" } ?? "-"
+        }
+        print(([f[0], f[1], f[2]] + cells).joined(separator: "\t"))
+        fflush(stdout)
+    }
+case "avail" where args.count == 2:
+    // Along each problem's line: per move, the whole heals open, then those whose ticks don't lose at once.
+    for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
+        let f = row.split(separator: "\t").map(String.init)
+        let layout = Layout(rawValue: f[1])!
+        let p = Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: .final, waits: false)
+        let clean = Counter(p, span: nil)
+        guard let par = clean.optimum(limit: p.owed(p.stack) + 8) else { print(f[0], "-"); continue }
+        var st = p.stack, cells: [String] = []
+        for m in clean.lines(p.stack, last: nil, left: par, keep: 1)[0] {
+            let open = p.cleanMoves(st, after: nil).filter { $0 != .wait }
+            cells.append("\(open.count)/\(open.filter { p.play(st, $0) != nil }.count)")
+            st = p.play(st, m)!
+        }
+        print(([f[0], f[1], f[2]] + cells).joined(separator: " "))
+    }
+case "local" where args.count == 7:
+    buildLocal(Layout(rawValue: args[1])!, clocks: parseClocks(args[2]), n: Int(args[3])!,
+               seeds: UInt64(args[4])!..<UInt64(args[5])!, slips: Int(args[6])!)
 case "table" where args.count >= 2:
     table(args[1], span: args.count > 2 ? Int(args[2])! : 6)
 case "build" where args.count == 7:
