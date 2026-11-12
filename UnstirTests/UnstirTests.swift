@@ -1651,6 +1651,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
+    /// The daily's row says a frost day under its title, before a run of days, and VoiceOver hears it with the shape.
+    @MainActor func testTheDailyRowSaysAFrostDay() throws {
+        func noon(_ day: Int) throws -> Level {
+            .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
+        }
+        let frost = try noon(15), plain = try noon(1)
+        XCTAssertFalse(frost.seized.isEmpty)
+        XCTAssertTrue(plain.seized.isEmpty)
+        XCTAssertEqual(MenuView.dailyLines(frost, run: 0).under, "frost day")
+        XCTAssertEqual(MenuView.dailyLines(frost, run: 4).under, "frost day \u{00B7} 4 days running")
+        XCTAssertEqual(MenuView.dailyLines(frost, run: 0).detail,
+                       "\(frost.layout.rods.count) rods \u{00B7} par \(frost.par) \u{00B7} frost day")
+        XCTAssertNil(MenuView.dailyLines(plain, run: 1).under, "a plain day before a run: one line")
+        XCTAssertNil(MenuView.dailyLines(plain, run: 1).detail)
+        XCTAssertEqual(MenuView.dailyLines(plain, run: 3).under, "3 days running")
+    }
+
     /// The menu's top follows plughole 23: the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int) -> (String) -> Best? {

@@ -29,6 +29,15 @@ shot menu-daily-run "The same with today's daily and the three before it solved:
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
 shot menu-all-done "Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row." \
   BESTS=plughole:ccccccccccccccccccccccccccc,whirlpool:$par27,vortex:$par27,maelstrom:$par27,endless:9 DAILIES=4
+# Frost days (UNSTIR_DAILY sets the menu's day): the daily's row says so under its title, at default and large type.
+shot menu-daily-frost "Menu on whirlpool, today a frost day (2026-10-15, two knobs frozen): the daily's row says frost day under its title." \
+  TIER=whirlpool BESTS=plughole:$par27 DAILY=20261015
+shot menu-daily-plain "The same on a plain day (2026-10-01): the daily's row one line, as on any day before a run." \
+  TIER=whirlpool BESTS=plughole:$par27 DAILY=20261001
+shot menu-daily-frost-large "The frost day at accessibility type (accessibility3), on plughole with every level at par so the list lands at its top: frost day under the title, which keeps the row's width." \
+  TIER=plughole BESTS=plughole:$par27 DAILY=20261015 TYPESIZE=accessibility3
+shot menu-daily-plain-large "The plain day at accessibility type (accessibility3), landing at the list's top as above." \
+  TIER=plughole BESTS=plughole:$par27 DAILY=20261001 TYPESIZE=accessibility3
 # The daily archive (to-do 47): a row under today's daily, shut until any purchase.
 shot menu-archive-locked "The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
