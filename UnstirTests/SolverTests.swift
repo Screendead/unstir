@@ -329,18 +329,19 @@ final class SolverTests: XCTestCase {
         XCTAssertEqual(ties?.worst.moves, ties?.best.moves)
     }
 
-    /// Each maelstrom level's par is the optimum, the park rule reaches it however its ties go under either parking,
-    /// and the optimal play empties the stack on a real `Game`.
-    @MainActor func testMaelstromIsFairAtPar() throws {
+    /// Each maelstrom level's par is the optimum, and the optimal play empties the stack on a real `Game`. The levels
+    /// that need a plan miss it by every rule of thumb, however its ties go (Jack, 2026-11-12: maelstrom is the last
+    /// free tier and no longer promises that one does).
+    @MainActor func testMaelstromParIsTheOptimum() throws {
         try skipUnlessSlow()
+        let planned: Set<String> = ["M6", "M11", "M12", "M13", "M14", "M19", "M20", "M21", "M22",
+                                       "M24", "M25", "M26"]
         for level in Level.maelstrom {
             let solver = Solver(level.layout), stack = level.scramble, seized = level.seized
-            let optimal = solver.optimalPlay(stack, seized: seized)
-            XCTAssertEqual(optimal?.count, level.par, level.id)
-            for parking in [Solver.Parking.fewest, .all] {
-                XCTAssertEqual(solver.parkTies(stack, seized: seized, parking: parking)?.worst.count, level.par,
-                               "\(level.id) \(parking)")
-            }
+            let optimal = try XCTUnwrap(solver.optimalPlay(stack, seized: seized), level.id)
+            XCTAssertEqual(optimal.count, level.par, level.id)
+            XCTAssertEqual(solver.needsPlan(stack, seized: seized, optimum: optimal.count), planned.contains(level.id),
+                           level.id)
             assertEmpties(optimal, level.layout, stack, seized: seized, level.id)
         }
     }

@@ -2316,9 +2316,9 @@ final class UnstirTests: XCTestCase {
                                    .chainmail, .glass, .marbling]
         XCTAssertEqual(levels.map(\.picture), pictures.map(\.twin))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [3, 4, 5, 5, 6, 10, 8, 8, 10, 9, 14, 14, 20, 18, 9, 11, 10, 12, 15, 18, 18, 19, 22, 23, 23, 24, 26])
+                       [3, 4, 5, 5, 6, 11, 8, 8, 10, 9, 12, 14, 16, 18, 9, 11, 10, 12, 16, 17, 17, 18, 22, 23, 24, 25, 26])
         XCTAssertEqual(levels.map(\.par),
-                       [4, 5, 6, 6, 8, 14, 11, 10, 12, 12, 17, 17, 24, 22, 11, 13, 13, 15, 18, 21, 22, 22, 25, 26, 26, 27, 29])
+                       [4, 5, 6, 6, 8, 15, 11, 10, 12, 12, 16, 18, 21, 23, 11, 13, 13, 15, 19, 20, 21, 22, 25, 26, 27, 28, 29])
         for level in levels {
             XCTAssertTrue((1...2).contains(level.seized.count), level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
