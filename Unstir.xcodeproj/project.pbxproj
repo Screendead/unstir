@@ -103,6 +103,7 @@
 		DDC10BD09FEBD9AE2335CDA4 /* TapLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3E166CF7D5345846B794E8 /* TapLaw.swift */; };
 		DE428BEF42CED2D968A33849 /* TapLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8235408DE6DD3E0A6017F00E /* TapLawTests.swift */; };
 		E1CABF4A6915387E15F59DD0 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517BAC88FDF90B3147BC41A1 /* ShareSheet.swift */; };
+		E3A16EF831A2BE537DEDCFBB /* FrostLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7308CEB6975B30328EE4E9 /* FrostLook.swift */; };
 		E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */; };
 		E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D692C82FAF648856F00B09E0 /* PackTests.swift */; };
 		ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283B1A56B07119D483F58617 /* Pack.swift */; };
@@ -165,6 +166,7 @@
 		58A75F3E52CC7C2EE27C7DFE /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		59B662DA049B8A76E76E38BF /* FirstStirTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTests.swift; sourceTree = "<group>"; };
 		5A3E166CF7D5345846B794E8 /* TapLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapLaw.swift; sourceTree = "<group>"; };
+		5B7308CEB6975B30328EE4E9 /* FrostLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrostLook.swift; sourceTree = "<group>"; };
 		63330CD5793ABE158F314B89 /* Unstir.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Unstir.metal; sourceTree = "<group>"; };
 		63E173CE4887FF0DF1142C19 /* SyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncTests.swift; sourceTree = "<group>"; };
 		6499D4977A88A7764419D373 /* Brim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brim.swift; sourceTree = "<group>"; };
@@ -345,6 +347,7 @@
 				E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */,
 				BA733A070401C0AD2175FAC1 /* Flow.metal */,
 				2BE5E713943E3199845C370B /* Frost.swift */,
+				5B7308CEB6975B30328EE4E9 /* FrostLook.swift */,
 				708EF54666A7750097BCDFEC /* Game.swift */,
 				1482D797341825629413BA25 /* GameCenter.swift */,
 				D1F91870B1E87E24EFC084E0 /* Glass.metal */,
@@ -533,6 +536,7 @@
 				AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */,
 				A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */,
 				5DBA55C92B9F8415AE633266 /* Frost.swift in Sources */,
+				E3A16EF831A2BE537DEDCFBB /* FrostLook.swift in Sources */,
 				5149A9D99C1F252AF495DA01 /* GPUBench.swift in Sources */,
 				B53F675881F4530F0753B7CC /* Game.swift in Sources */,
 				949BBA29683D9F40A62C2798 /* GameCenter.swift in Sources */,
