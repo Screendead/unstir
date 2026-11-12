@@ -80,6 +80,34 @@ final class SolverTests: XCTestCase {
                                                                        .stir(knob: 1, slot: 3, steps: -2)])
     }
 
+    /// Two seized knobs on quad: the first turn's near way, +3, clears as many seams as the far way, +2, but leaves the
+    /// tail needing a third turn. Every rule of thumb takes the near way however its ties go, so the level needs a plan,
+    /// and the near way scores no worse than the far way until a lookahead of six moves.
+    @MainActor func testTheFarFirstTurnNeedsAPlan() {
+        let solver = Solver(.quad), stack = [Twist].parse("0:+3,2:+2,3:-4,0:+6,3:+7,1:-4,0:+7", in: .quad)
+        let seized: Set<Int> = [0, 1]
+        let optimal = solver.optimalPlay(stack, seized: seized)
+        XCTAssertEqual(optimal?.count, 10)
+        for rule in Solver.rules { XCTAssertEqual(solver.ties(stack, seized: seized, rule: rule)?.best.count, 11, "\(rule)") }
+        XCTAssertEqual(solver.needsPlan(stack, seized: seized), true)
+        let decoys = solver.decoys(stack, seized: seized, line: optimal!)
+        XCTAssertEqual(decoys?.filter { $0.at == 0 }.map(\.survives), [6])
+        XCTAssertEqual(decoys?.filter { $0.at == 0 }.map(\.move), [.turn(steps: -1, to: 3)])
+        assertEmpties(optimal, .quad, stack, seized: seized)
+    }
+
+    /// No lookahead turns to the nearest and pays a second turn, but the park rule reaches the optimum, so no plan is
+    /// needed. Both nearest turns are decoys, each refuted by a lookahead of three moves.
+    func testARuleOfThumbAtTheOptimumNeedsNoPlan() {
+        let solver = Solver(.quad), stack = [Twist].parse("3:+2,1:+3,0:+4", in: .quad)
+        XCTAssertEqual(solver.ties(stack, seized: [0], rule: .nearest)?.best.count, 5)
+        XCTAssertEqual(solver.ties(stack, seized: [0], rule: .oneVisit)?.best.count, 4)
+        XCTAssertEqual(solver.needsPlan(stack, seized: [0]), false)
+        let decoys = solver.decoys(stack, seized: [0], line: solver.optimalPlay(stack, seized: [0])!)
+        XCTAssertEqual(decoys?.map(\.at), [0, 0])
+        XCTAssertEqual(decoys?.map(\.survives), [3, 3])
+    }
+
     /// The eye's big knobs only swap with each other.
     func testSeizingBothBigKnobsStrandsTheirSeams() {
         let solver = Solver(.eye), stack = [Twist].parse("0:+3", in: .eye)

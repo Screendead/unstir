@@ -1429,6 +1429,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   most moves over every way its ties go, and `park` breaks them by `Tie` (`.clockwise` or `.lowest`) only to name one
   play. No lookahead (`noLookahead`) turns to the nearest, clockwise on a tie. A level is fair when the park rule's
   most moves over its ties is the optimum under both parkings; its planning gap is no lookahead minus the optimum.
+  `ties` gives any blocked rule's (`Rule`) fewest and most moves over its ties: the park rule under either parking,
+  one-visit (turns to where the most seams come off before the next block, then the nearest), last-ring (parks the
+  seized knobs over the rings that finish last) and the nearest. A level needs a plan (`needsPlan`) when the optimum
+  is below every rule's fewest; a rule that strands a seam misses. When only a detour beats the rules, `solve.sh` says
+  so: that is insight, not planning. `decoys` walks an untwisting optimal line and, at each state, finds the sensible
+  moves (untwists a working knob reaches, or, only when blocked, turns to where one is) that cost par, and for each
+  the moves a lookahead must search, the decoy first, before it scores worse than the best move, its leaves scored by
+  the stirs left with every knob working, plus one while blocked. Calibrated on the far first turn
+  (`testTheFarFirstTurnNeedsAPlan`), where the near turn shows its cost six moves on. Each costs under a millisecond
+  on every shipped level; `solve.sh` prints the count, and `decoys` lists them.
   `home:` asks for the tank back at 0, the old end rule. Several tests replay plays on a real `Game`, which must empty
   the stack in the moves the play counts. Escapement's prover (`Solver.escapement`) is a breadth-first search over
   stacks where a move is a wait or one commit to a working slot, by ±1 to ±11 or an entry's exact inverse, then the
