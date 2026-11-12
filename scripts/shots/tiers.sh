@@ -83,3 +83,9 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
+# A frost day's seized knobs frozen, each under a sheet of frost over its disc (FrostLook), on 20 Nov 2026 (quad, knobs
+# 0 and 1) and 14 Dec 2026 (pent, knobs 2 and 4), and the first drawn as maelstrom's jammed knobs beside it.
+shot frost-look "Frost day 20 Nov 2026, knobs 0 and 1 frozen: a glazed cap, and frost over each knob's disc." MODE=daily DAILY=20261120
+shot frost-look-pent "Frost day 14 Dec 2026, knobs 2 and 4 frozen." MODE=daily DAILY=20261214
+shot frost-look-jammed "Frost day 20 Nov 2026 with UNSTIR_FROSTLOOK=jammed: its seized knobs as maelstrom draws them." \
+  MODE=daily DAILY=20261120 FROSTLOOK=jammed

@@ -1291,6 +1291,15 @@ struct LevelView: View {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
     }
 
+    /// A frost day's pane of ice over its frozen discs, none on any other level.
+    private func frost(_ discs: [FrostLook.Disc]) -> some View {
+        FrostPane(discs: discs, seed: game.level.frostSeed, thaw: waved ? 1 : 0, still: reduceMotion)
+            .animation(thawing, value: waved).allowsHitTesting(false)
+    }
+
+    /// A frost day's ice melting off as the solve lands (`waved`).
+    private var thawing: Animation { reduceMotion ? .easeOut(duration: FrostLook.dissolve) : .easeInOut(duration: FrostLook.thaw) }
+
     /// The curtain on the screen: begun, and not yet played out.
     private var paying: Payoff? { payoffAt != nil && !paid ? payoff : nil }
     /// The chrome leaves for the curtain and comes back for the card; the knobs and lines leave with it and stay away,
@@ -1793,6 +1802,10 @@ struct LevelView: View {
         func disc(_ k: Int) -> CGFloat { min(rods[k].z * r, r - 4) }
         let core = 2 * Tank.coreRadius * r
         let probing = shown == nil ? liveRod : nil
+        let iced: [FrostLook.Disc] = !game.level.frosty ? [] : knobs.filter { game.level.kind(of: $0) == .seized }.map {
+            let c = at($0)
+            return FrostLook.Disc(x: c.x, y: c.y, r: disc($0))
+        }
         // The held rod's dial is fainter while letting go would cost nothing or a full stack would refuse the twist.
         // Only a full stack asks Array.commit's rule, which may sample the map: overlapping rods can commute (hex's hub
         // and its swirl).
@@ -1956,6 +1969,7 @@ struct LevelView: View {
                             .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
                     }
                 }
+                frost(iced)
                 if let k = liveRod, shown != nil {
                     glowRing(.magenta, 2.5, 6, under: page.ground.opacity(0.7))
                         .frame(width: 2 * disc(k), height: 2 * disc(k))
@@ -2050,7 +2064,9 @@ struct LevelView: View {
                             RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                                     size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
                                     lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
-                                    channels: game.level.channels(of: game.slot(of: k)))
+                                    channels: game.level.channels(of: game.slot(of: k)),
+                                    frost: game.level.frosty && game.level.kind(of: k) == .seized ? !waved : nil)
+                                .animation(thawing, value: waved)
                         } keyframes: { _ in Self.jolt }
                             .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
                     }

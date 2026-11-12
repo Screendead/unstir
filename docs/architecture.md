@@ -225,7 +225,23 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   2029-12-31 (164 of 1,188 days), not a solve at launch, though the slowest day takes 0.3 s on the Mac: the solver is
   the test target's and a bounded search, so a later change to it, or a device's rounding, could give two players
   different frosts on one day. Like the generator's draws, a shipped row never changes; past `Frost.last` no daily
-  frosts. `testTheFrostTableIsTheSolversVerdict` (slow) checks every day of the table. A daily's id and seed are
+  frosts. `testTheFrostTableIsTheSolversVerdict` (slow) checks every day of the table. A frost day's seized knobs are
+  drawn frozen, not jammed (FrostLook.swift, `Level.frosty`; Jack picked the glaze and a thaw on the solve):
+  `RodView.frost` gives the cap a glaze and ice-blue ticks in place of the dull cap and red slash, and `FrostPane`
+  lays one pane of frosted glass over the union of the frozen knobs' discs, still in the frame with the knobs as the
+  picture turns under it (the ice is on the rods, which a tank turn never moves): a milk thick and mottled at the
+  pane's edge thinning to a faint even veil in the middle, hairline dendrites grown in from the edge in thick and thin
+  stretches, most a few points long, with clumps of fern feathers of uneven length growing from the thick ones (Jack
+  picked lusher feathers), loose needles in the milk, a
+  ground-glass grain and a cold edge; nothing grows and no edge is drawn where discs overlap. `FrostLook.bake` draws it
+  with Core Graphics from a `SplitMix64` seeded by the level's id (`Level.frostSeed`), so each frost day has its own
+  crystals, and `FrostLook.pane` bakes it off the main actor as the level opens (about 0.2 s in a Debug simulator
+  build) and keeps it, so a still tank, a drag and a turn composite one image with no mask or effect. When the solve
+  lands (`waved`) the ice melts in `FrostLook.thaw` seconds, clear from each cap outwards with the edge's crystals
+  last (radial masks, only while it melts), the cap easing to a working knob's; Reduce Motion dissolves it instead;
+  the ice follows `waved` both ways, so it stands again wherever that is cleared.
+  `testAFrostDayIsFrozenAndItsIceIsSeeded`.
+  `UNSTIR_FROSTLOOK=jammed` draws the knobs as maelstrom's, for a shot beside. A daily's id and seed are
   its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
   that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13), and a best the archive
   saved (`Best.archived`) never counts. Endless changes only what
