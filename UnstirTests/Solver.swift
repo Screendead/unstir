@@ -684,6 +684,29 @@ final class Solver {
 }
 
 extension Solver {
+    /// The pairs of knobs a frost day may seize on `layout`, in the order they are tried: never hex's hub, which strands
+    /// the slot under it.
+    static func frostPairs(_ layout: Layout) -> [[Int]] {
+        let knobs = layout.rods.indices.filter { !(layout == .hex && $0 == 0) }
+        return knobs.flatMap { i in knobs.filter { $0 > i }.map { [i, $0] } }
+    }
+
+    /// The daily's frost (`Frost.days`): the first pair in `frostPairs` that leaves the stack solvable and needs a plan,
+    /// every rule of thumb's best tie missing what untwisting with the tank's turns takes, with its par, the optimum.
+    /// Nil when no pair does.
+    func frost(_ stack: [Twist]) -> (knobs: [Int], par: Int)? {
+        for pair in Self.frostPairs(layout) {
+            let seized = Set(pair)
+            guard let untwisting = untwistingPlay(stack, seized: seized),
+                  needsPlan(stack, seized: seized, optimum: untwisting.count) == true,
+                  let par = optimum(stack, seized: seized) else { continue }
+            return (pair, par)
+        }
+        return nil
+    }
+}
+
+extension Solver {
     /// Escapement's clocks, in the order they tick: each clock rod and its step, +1 or -1 for a wound-back clock.
     typealias Clocks = [(rod: Int, dir: Int)]
 
