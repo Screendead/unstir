@@ -58,6 +58,20 @@ jobs:
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
           echo "$udid" > "$RUNNER_TEMP/udid"
           xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null
+      # The first launch after a boot has taken the simulator 218 s against 2 s (2026-11-13, in xcodebuild's own
+      # launch of the test host, with nothing logged), so the app is launched once here, where each part is timed
+      # and the host's load printed either side: a stall then has a step and a busiest process to its name.
+      - name: Warm the simulator
+        shell: bash
+        run: |
+          udid=$(cat "$RUNNER_TEMP/udid")
+          app=build/store/Build/Products/Debug-iphonesimulator/Unstir.app
+          load() { uptime; ps -Aro %cpu,etime,comm | head -8; }
+          load
+          SECONDS=0; xcrun simctl install "$udid" "$app"; echo "install ${SECONDS} s"
+          SECONDS=0; xcrun simctl launch "$udid" com.screendead.Unstir; echo "launch ${SECONDS} s"
+          load
+          xcrun simctl terminate "$udid" com.screendead.Unstir || true
       # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
       # on master (nightly.yml).
       - name: Test
@@ -77,6 +91,7 @@ jobs:
           path: |
             ${{ runner.temp }}/test.log
             ${{ runner.temp }}/Test.xcresult
+            ~/Library/Logs/CoreSimulator
           retention-days: 14
           if-no-files-found: ignore
       # Measures the app the build step made, so it costs no build of its own.
