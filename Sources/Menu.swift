@@ -220,7 +220,7 @@ struct MenuView: View {
     @Binding var settings: Bool
     /// The settings' supporter mark switch, mirrored here as the sheet moves it.
     @State private var supporter = Settings.supporter
-    /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
+    /// A pack's card opened from Triptych I's, so its back returns there while it is still the card up.
     @State private var cameFrom: CameFrom?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
@@ -711,7 +711,7 @@ struct MenuView: View {
         withAnimation(.snappy(duration: 0.42)) { card = offer }
     }
 
-    /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
+    /// The card a pack's card was opened from, while it is still on offer: Triptych I stops saving once a pack is bought.
     private var returns: Offer? { cameFrom?.returns(card: card, offersComplete: Store.shared.offersComplete) }
 
     /// That card, or the menu.
@@ -1454,7 +1454,7 @@ private struct Sparkle: Shape {
     }
 }
 
-/// A pack's card opened from another card's link, Complete's: back returns there while that pack's card is still the
+/// A pack's card opened from another card's link, Triptych I's: back returns there while that pack's card is still the
 /// one up, never once the card has changed, closed or been put away under a level, then opened again.
 struct CameFrom: Equatable {
     let back: Offer
@@ -1463,7 +1463,7 @@ struct CameFrom: Equatable {
     /// Kept across a change of card only while the card is still the one it opened.
     func kept(as now: Offer?) -> CameFrom? { now == card ? self : nil }
 
-    /// Where back goes, while Complete still saves anything.
+    /// Where back goes, while Triptych I still saves anything.
     func returns(card now: Offer?, offersComplete: Bool) -> Offer? {
         guard now == card, back != .complete || offersComplete else { return nil }
         return back

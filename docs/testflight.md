@@ -19,7 +19,7 @@ archive, and settings after the mode go to it (`CODE_SIGNING_ALLOWED=NO` archive
 
 - **Switches.** It passes the shell's build switches as `scripts/build-ios.sh` does (`scripts/build-settings.sh`:
   `ANALYTICS`, `APTABASE_KEY`, `ANALYTICS_PLAYTEST`, `GAME_CENTER`, `ICLOUD`, `AGE_RANGE`, `ADAPTIVE_TAPS`,
-  `SUPPORT_ADDRESS`, `POLICY_URL`, `EDITORS`), over `Config/Local.xcconfig`, with `AGE_RANGE` YES unless set, so the
+  `SUPPORT_ADDRESS`, `POLICY_URL`, `EDITORS`, `PROBES`), over `Config/Local.xcconfig`, with `AGE_RANGE` YES unless set, so the
   build signs with Declared Age Range's entitlement. `EDITORS=YES` makes the editors' build, archived as
   `Unstir-<build>-editors`.
 - **Support address.** It refuses to upload or export without `SUPPORT_ADDRESS`, from the shell or
@@ -176,8 +176,10 @@ strangers will be.
 On day 3 each tester is asked to send their log: the gear beside the menu's title, then "report a problem". With an
 account in Apple's Mail it opens a mail to the support address with the log attached; otherwise the share sheet
 carries the address, the subject and the log to whichever app takes it (read: `SettingsSheet` in `Consent.swift`).
-The log holds touches, moves, purchases and errors, and no name (`Log.swift`; the privacy policy keeps support mail
-and logs 12 months). Without `SUPPORT_ADDRESS` in the build, the share sheet carries the log alone, with no address,
+The log holds touches, moves, purchases and errors, the device line (app version and build, iOS, model, locale, text
+size, accessibility switches, settings, each screen's four-tap budget) and the phone's thermal state and charger at
+launch and on each thermal change, and no name (`Log.swift`, `Power.heat`; the privacy policy keeps support mail and
+logs 12 months). The mail's body carries the device line too. Without `SUPPORT_ADDRESS` in the build, the share sheet carries the log alone, with no address,
 so the TestFlight archive is built with it set (`Config/Local.xcconfig` for an Xcode archive).
 
 The ask, a draft for Jack, describing the log as the app's own row does (`ConsentWords.reportDetail`), and not as
@@ -197,6 +199,8 @@ Thanks for testing Unstir. Play as you would any game, with no help from us: tha
 
 On day 3, please tap the gear by the title, then "report a problem", and send the log. It holds your touches, moves, purchases and errors.
 
+Purchases in this test build are free and charge nothing: buy a pack if you want to play past its first three levels.
+
 Then answer these in TestFlight's feedback (take a screenshot, or open TestFlight and tap Send Beta Feedback):
 1. Did you come back the day after you first played? What brought you back, or what didn't?
 2. Where did you stop, and why?
@@ -205,7 +209,7 @@ Then answer these in TestFlight's feedback (take a screenshot, or open TestFligh
 5. In one sentence, what is Unstir?
 ```
 
-Measured with a script: 646 characters.
+Measured with a script: 765 characters (646 before the purchases line, proposed 2026-11-13).
 
 Why these five: 1 cross-checks the day-2 number with the reason behind it; 2 finds where testers get stuck; 3 asks
 of each opening, where the game teaches itself (Plughole, Whirlpool, Vortex, Maelstrom, Lens, Escapement, Prism);

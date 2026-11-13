@@ -36,7 +36,7 @@ CAPTIONS = {
     "06": "A new daily every day, the same for everyone.",
     "07": "Endless: waste a stir and the brim rises.",
     "08": "Paid pack · Prism: three colours, one line",
-    "09": "Paid pack · Lens: rods that zoom and spiral",
+    "09": "Paid pack · Lens: rods that zoom",
     "10": "Paid pack · Escapement: a clock in every problem",
 }
 PAID = "Paid pack · "

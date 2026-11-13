@@ -45,7 +45,7 @@ struct Ledger: Equatable, Sendable {
         if state == .revoked && shared { unshared.insert(id) } else { unshared.remove(id) }
     }
 
-    /// The product itself waits on Ask to Buy, not only Complete that would grant it.
+    /// The product itself waits on Ask to Buy, not only Triptych I that would grant it.
     func asked(_ id: String) -> Bool { products[id] == .pending }
 
     /// Requests made on an earlier launch, still open, wait again, unless StoreKit has said more of the product since.
@@ -53,18 +53,18 @@ struct Ledger: Equatable, Sendable {
         for id in asked where products[id] == nil || products[id] == .unowned { products[id] = .pending }
     }
 
-    /// Revoked because the family stopped sharing it, through its own product or Complete.
+    /// Revoked because the family stopped sharing it, through its own product or Triptych I.
     func unshared(_ pack: Pack) -> Bool {
         guard state(pack) == .revoked else { return false }
-        return unshared.contains(products[pack.productID] == .revoked ? pack.productID : Pack.completeID)
+        return unshared.contains(products[pack.productID] == .revoked ? pack.productID : Pack.triptychID)
     }
 
-    /// Owned through its own product or Complete; otherwise its own product's state, else Complete's.
+    /// Owned through its own product or Triptych I; otherwise its own product's state, else Triptych I's.
     func state(_ pack: Pack) -> Purchase {
         let own = products[pack.productID] ?? .unowned
-        let complete = Pack.bundled.contains(pack) ? products[Pack.completeID] ?? .unowned : .unowned
+        let complete = Pack.bundled.contains(pack) ? products[Pack.triptychID] ?? .unowned : .unowned
         if own == .owned || complete == .owned { return .owned }
-        // Complete's failed attempt was made on Complete's card, and says nothing about this pack.
+        // Triptych I's failed attempt was made on Triptych I's card, and says nothing about this pack.
         return own != .unowned ? own : complete == .failed ? .unowned : complete
     }
 
@@ -124,7 +124,7 @@ final class Store {
     private(set) var harness: Ledger?
     /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
     private(set) var prices: [String: String] = [:]
-    /// Each price as a number, and the storefront's style to write one in, for Complete's saving.
+    /// Each price as a number, and the storefront's style to write one in, for Triptych I's saving.
     private(set) var amounts: [String: Decimal] = [:]
     @ObservationIgnored private var styles: [String: Decimal.FormatStyle.Currency] = [:]
     private(set) var pricing = Pricing.fetching
@@ -169,7 +169,7 @@ final class Store {
 
     func unshared(_ pack: Pack) -> Bool { (harness ?? ledger).unshared(pack) }
 
-    /// The player owns a pack, by a purchase of their own, Complete or a family's share: what the supporter mark and the
+    /// The player owns a pack, by a purchase of their own, Triptych I or a family's share: what the supporter mark and the
     /// daily archive both open on.
     var bought: Bool { (harness ?? ledger).bought }
 
@@ -186,7 +186,7 @@ final class Store {
     /// before every price it needs is in. The bundle owned owns all it grants, so it saves nothing.
     var saving: String? {
         guard let s = Offer.saving(amounts: amounts, owned: (harness ?? ledger).owned) else { return nil }
-        return styles[Pack.completeID].map { s.formatted($0) }
+        return styles[Pack.triptychID].map { s.formatted($0) }
     }
 
     /// The bundle is on offer, on the dock and as a card to go back to (`Offer.offersComplete`): with none of its packs
