@@ -58,7 +58,7 @@ enum Achievement: String, CaseIterable, Sendable {
         case .intoTheVortex: "Solve every Whirlpool level."
         case .theMaelstrom: "Solve every Vortex level."
         case .unstirred: "Reach par on every level of every tier."
-        case .noWake: "Solve a level clean: at par on the first try, with no undo or reset."
+        case .noWake: "Solve a daily clean: at par on the first try, with no undo or reset."
         case .turnOfTheTide: "Turn the tank."
         case .theEdgeTurns: "Stir the swirl."
         case .todaysTank: "Solve a daily on its first try."
@@ -79,7 +79,7 @@ enum Achievement: String, CaseIterable, Sendable {
         case .intoTheVortex: "Solved every Whirlpool level."
         case .theMaelstrom: "Solved every Vortex level."
         case .unstirred: "Every level of every tier at par."
-        case .noWake: "Solved a level clean."
+        case .noWake: "Solved a daily clean."
         case .turnOfTheTide: "Turned the tank."
         case .theEdgeTurns: "Stirred the swirl."
         case .todaysTank: "Solved a daily on its first try."
@@ -164,7 +164,8 @@ extension Achievement {
         var best: (String) -> Best? = { _ in nil }
         /// Dailies with a best: only a first try saves one, in any order of days.
         var dailies = 0
-        /// Some level's best is clean (`Game.clean`).
+        /// Some daily's best is clean (`Game.clean`): only the daily shows clean, so only a daily earns No Wake (Jack,
+        /// 2026-11-13).
         var clean = false
         var tankTurned = false
         var swirled = false
@@ -174,7 +175,7 @@ extension Achievement {
 
         static func stored() -> Record {
             let bests = UserDefaults.standard.dictionaryRepresentation().filter { $0.key.hasPrefix("best.") }
-            let clean = bests.values.contains { v in
+            let clean = bests.filter { $0.key.hasPrefix("best.daily-") }.values.contains { v in
                 (v as? Data).flatMap { try? JSONDecoder().decode(Best.self, from: $0) }?.clean == true
             }
             return Record(best: Best.load, dailies: bests.keys.filter { $0.hasPrefix("best.daily-") }.count,

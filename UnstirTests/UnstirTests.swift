@@ -110,7 +110,7 @@ final class UnstirTests: XCTestCase {
     }
 
     /// Only the daily shows clean (Jack, 2026-11-13): a level solved at par on its first try with nothing wasted shows
-    /// two marks and at par, but its best still stores the flag, which No Wake reads.
+    /// two marks and at par, though its best still stores the flag; a daily's clean best earns No Wake.
     @MainActor func testOnlyTheDailyShowsClean() {
         let id = "test-clean-level"
         UserDefaults.standard.removeObject(forKey: "best.\(id)")
@@ -124,7 +124,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(level.finishSpoken.hasSuffix("At par."), level.finishSpoken)
         XCTAssertFalse(level.offersAgain, "a level at par offers next only (Jack, 2026-11-13)")
         XCTAssertEqual(Best.load(id)?.clean, true)
-        XCTAssertTrue(Achievement.Record.stored().clean)
         XCTAssertEqual(Archive.Mark(id), .par)
         let day = "daily-test-clean"
         defer { UserDefaults.standard.removeObject(forKey: "best.\(day)") }
@@ -135,6 +134,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(daily.cleanShown)
         XCTAssertTrue(daily.finishSpoken.hasSuffix("Clean."), daily.finishSpoken)
         XCTAssertFalse(daily.offersAgain)
+        XCTAssertTrue(Achievement.Record.stored().clean, "a daily's clean best earns No Wake")
     }
 
     /// A level's card offers again only over par (Jack, 2026-11-13); the daily's on any finish that isn't clean.
