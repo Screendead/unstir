@@ -66,7 +66,7 @@ jobs:
         run: |
           udid=$(cat "$RUNNER_TEMP/udid")
           app=build/store/Build/Products/Debug-iphonesimulator/Unstir.app
-          load() { uptime; ps -Aro %cpu,etime,comm | head -8; }
+          load() { uptime; ps -Aro %cpu,etime,comm | awk 'NR <= 8 { n = split($0, part, "/"); print $1, $2, part[n] }'; }
           load
           SECONDS=0; xcrun simctl install "$udid" "$app"; echo "install ${SECONDS} s"
           SECONDS=0; xcrun simctl launch "$udid" com.screendead.Unstir; echo "launch ${SECONDS} s"
