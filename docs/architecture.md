@@ -69,7 +69,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   and checks the order, so a new uniform goes into the signature and `TankShader.parameters` together. The entries
   themselves are packed once, `Unstirred.entries`, which the GPU bench and `testTheShadersChannelChainsMatchTheModel`
   call too. Each of the three has a stored map's twin (`unstirMapped`, `unstirChannelsMapped`, `unstirLensMapped`,
-  `StirMap.swift`), which takes its arguments and then the map's.
+  `StirMap.swift`), which takes its arguments and then the map's; `unstirLensMapped` takes no atlas, as its map's
+  image holds it (below).
   A Lens level's glass draws through a third stitchable, `unstirLens` (Jack's call, 2026-11-11: draw each lens's core
   finer, so x8 is crisp), once its panel's detail is baked (`Halftone.Detail`, below) and the strike has ended
   (`Unstirred.fine` and `crisp`, the detail's share, which `LevelView` eases in over 0.2 s, as the detail is drawn past
@@ -232,19 +233,42 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (arithmetic; on the iOS 26.5 simulator at 1172 px `UNSTIR_MAPLOG` read 22.2 MB allocated a tile, 66.6 for three,
   and the app's footprint there counts none of it, so a phone's is unmeasured). `StirMap.cap` (`UNSTIR_MAPCAP`, in
   MB) draws through the chain past a size; it is unset.
-  A Lens level's map holds its lenses' flow, but is drawn only where `UNSTIR_MAPLENS=1` asks on iOS 26 or later
-  (`StirMap.lensMaps`). Its glass then draws through `unstirLensMapped` once the detail is in, which reads the map
+  A Lens level's map holds its lenses' flow, but is drawn only where `UNSTIR_MAPLENS=1` asks (`StirMap.lensMaps`;
+  whether Lens ships on the map is Jack's call). Its glass then draws through `unstirLensMapped` once the detail is in, which reads the map
   but runs `unstirLensBody` whole for any pixel whose point on the panel may lie in a lens's inset: the detail is
   drawn from the taps' differences, finer at x8 than the stored step, so wherever it might be drawn the glass is the
   chain's to the byte (`testLensOverItsMapDrawsTheDetailAsTheChainDoes`). The point is the map's, within half a step
   at a tap's own texel; between texels, where a fold may take the nearest whole, each inset is held `bend` pixels
-  wider, and a point in a fold farther out than that is drawn from the layer as `mix` draws it. Before the detail is
-  in, the plain `unstirMapped` draws it. Off by default, as the detail and the map are two images: so drawn the
-  glass came out right on the iOS 26.5 simulator and black on 18.5's (2026-11-13), and iOS 26.0 to 26.4 and 17 are
-  untried; and the gain is small, as the cores a lens magnifies, where the detail is drawn, run the chain: on the
-  Mac Lens 25 took 0.87 of its frame as dealt (12 entries, the deepest dealt; Lens 22 to 24 are 10), 0.80 six
-  twists deeper, 0.88 with a lens in hand past x8 and 0.95 with a plain rod in hand (1.04 by `chain`), against
-  today's body in a kernel of its own.
+  wider, and a point in a fold farther out than that is drawn from the layer as `mix` draws it.
+  A shader takes one image. SwiftUI's own note on `Shader.Argument.image` says so ("Currently only one image
+  parameter is supported per Shader instance", still in the iOS 27.2 SDK), and on the iOS 18.5 simulator RenderBox
+  refuses a shader given two as it first draws it, with one line in the log, `custom shader: Only one texture
+  argument is allowed: unstirLensMapped`: a layer effect then draws nothing (in two of the probe's three runs; its
+  view untouched in the first), which was the black glass of the first build (2026-11-13), and a colour effect
+  leaves its view untouched. A probe app held it to that alone
+  (2026-11-13): two images of plain bytes, two of surfaces, one of each in either order, the same image twice, a
+  body that reads neither, a colour and a layer effect, the images apart in the signature as the glass's were, all
+  refused on 18.5 with that line and all drawn on 26.5, each image its own; one image of either kind drew on both.
+  Which release first took two is not known (26.0 to 26.4 untried), and iOS 17 has no runtime here: the note has
+  stood since 17, so it is taken to refuse as 18.5 does (inferred).
+  So a Lens level's map is one image with its detail (`StirMap.pack`, `Key.atlas`): the atlas in the top rows, where
+  `fineLight` reads it as it reads the atlas's own image, its last column drawn on to the image's edge and its last
+  row once more, as its sampler clamps there, and the map `Key.skip` rows down (`stored`'s `skip`, the stitchable's
+  last argument), the image as wide as the wider of the two (Lens 25's atlas, four insets, is 2604 by 748 at 1171 px,
+  wider than its map's 2344). The key holds the bake's atlas, so the map is drawn again as the detail lands, and
+  `Unstirred.shader` draws the detail over a map only where the map holds that very atlas, and a map that holds one
+  only with the detail: without, a frame draws through the chain (the strike, and the 0.1 s between the detail
+  landing and its map in the simulator: 40 asked for, 43 to 50 drawing, the longest frame the usual one), never
+  through a map that is not its own. So drawn, the Lens cases of the oracle pass on
+  both simulators, held against the same build's chain (`MAP=off`) and its twins: 13 of 13 on iOS 18.5 and on 26.5
+  (2026-11-13; the mapped cases `same`, a plain rod in hand over the map `alike`). Unproven: iOS 17, any phone, and
+  what the wider image costs one (32.2 MB for Lens 25's at 1172 px against 22.0 for the map alone, and the
+  atlas's own image, 7.8 MB, stays for the frames without a map). Off by default, as the gain is small:
+  the cores a lens magnifies, where the detail is drawn, run the chain. On
+  the Mac, from one image, Lens 25 took 0.89 of its frame as dealt (12 entries, the deepest dealt; Lens 22 to 24 are
+  10), 0.81 six twists deeper, 0.90 with a lens in hand past x8 and 0.98 with a plain rod in hand (1.08 by
+  `chain`), against today's body in a kernel of its own (medians of three launches; from two images the same cases
+  read 0.87, 0.80, 0.88 and 0.95, within the clock's wander of these).
   The image is the hard part. SwiftUI hands a shader an image, not a texture, and RenderBox uploads an image of
   plain bytes on the main thread as it first draws it (`replaceRegion`, by a sample): 20 MB a map, one frame of 33 to
   43 ms a commit in the simulator where 16.7 is usual. So the GPU draws the map straight into an `IOSurface`
