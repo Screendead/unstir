@@ -90,7 +90,7 @@ final class Game {
     /// Away from the front after the clock started: it runs again on coming back.
     private var paused = false
     /// False once an earlier visit committed a move, or after "again" on a solved daily: a daily is then practice, and
-    /// nothing else can be clean.
+    /// can't be clean.
     private(set) var firstTry: Bool
     /// Escapement's demonstration is on the stack: its commits are not the player's, so they try nothing.
     private(set) var demoing = false
@@ -238,9 +238,12 @@ final class Game {
     private let keptOnItsDay: Bool
 
     /// The result card's "again", never endless's: on the daily any finish that isn't clean, played as practice (Jack's
-    /// call P1 = B, 2026-11-01); on any other level only a solve over par, as par is all a level shows (Jack,
-    /// 2026-11-13). Escapement, which has no par, never offers it; its lost card has its own.
-    var offersAgain: Bool { level.run == nil && (Best.keepsClean(level.id) ? !clean : over > 0) }
+    /// call P1 = B, 2026-11-01); on any other level unless its best is clean, this solve's or an earlier one's (Jack,
+    /// 2026-11-13: "yes, show again unless it's already clean").
+    var offersAgain: Bool {
+        guard level.run == nil else { return false }
+        return Best.cleanNeedsFirstTry(level.id) ? !clean : !(clean || Best.load(level.id)?.clean == true)
+    }
 
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }
@@ -249,9 +252,8 @@ final class Game {
     var over: Int { level.run == nil ? max(moves - par, 0) : 0 }
     var spilled: Bool { level.run != nil && brim >= Run.room }
     var finished: Bool { solved || spilled || lost }
-    var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
-    /// `clean` where the level shows it (`Best.keepsClean`): the card's marks and words, and VoiceOver's.
-    var cleanShown: Bool { clean && Best.keepsClean(level.id) }
+    /// At par with no undo or reset; on the daily, on its first try too (`Best.cleanNeedsFirstTry`).
+    var clean: Bool { over == 0 && resets == 0 && undos == 0 && (firstTry || !Best.cleanNeedsFirstTry(level.id)) }
 
     /// The daily's share line, on its day; nil on any other level.
     var shareText: String? {

@@ -413,9 +413,17 @@ struct LevelView: View {
         // A save with no line yet, a run's next tank, opens as any tank does.
         self.resumed = !(resumed?.actions.isEmpty ?? true)
         if resumed == nil { game.turnTank(harness?.tank ?? 0) }
-        if resumed == nil, let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil && h.played.isEmpty {
+        if resumed == nil, let h = harness, ["result", "clean", "undone"].contains(h.screen) || h.wave != nil && h.played.isEmpty {
             // Solved through the real commit path, unless the harness plays a line, which Escapement's clocks need;
-            // "result" first wastes two stirs, so taking them back costs moves.
+            // "result" first wastes two stirs, so taking them back costs moves; "undone" wastes one and undoes it, so the
+            // solve is at par with an undo.
+            if h.screen == "undone", let top = game.stack.last {
+                let count = level.layout.rods.count, home = game.knob(over: top.rod)
+                if let w = (1..<count).map({ (home + $0) % count }).first(where: { level.kind(of: $0) == .working }) {
+                    game.commit(rod: w, steps: 1)
+                    game.undo()
+                }
+            }
             if h.screen == "result", let top = game.stack.last {
                 let count = level.layout.rods.count, home = game.knob(over: top.rod)
                 let wrong = (1..<count).map { (home + $0) % count }.filter { level.kind(of: $0) == .working }

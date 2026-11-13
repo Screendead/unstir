@@ -109,54 +109,58 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(game.clean)
     }
 
-    /// Only the daily shows clean (Jack, 2026-11-13): a level solved at par on its first try with nothing wasted shows
-    /// two marks and at par, though its best still stores the flag; a daily's clean best earns No Wake.
-    @MainActor func testOnlyTheDailyShowsClean() {
-        let id = "test-clean-level"
-        UserDefaults.standard.removeObject(forKey: "best.\(id)")
-        defer { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
-        let level = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
-        level.commit(rod: 0, steps: -4)
-        XCTAssertTrue(level.solved)
-        XCTAssertTrue(level.clean)
-        XCTAssertFalse(level.cleanShown)
-        XCTAssertEqual(ResultMarks.filled(clean: level.cleanShown, over: level.over), 2)
-        XCTAssertTrue(level.finishSpoken.hasSuffix("At par."), level.finishSpoken)
-        XCTAssertFalse(level.offersAgain, "a level at par offers next only (Jack, 2026-11-13)")
-        XCTAssertEqual(Best.load(id)?.clean, true)
-        XCTAssertEqual(Archive.Mark(id), .par)
-        let day = "daily-test-clean"
-        defer { UserDefaults.standard.removeObject(forKey: "best.\(day)") }
-        let daily = Game(level: Level(id: day, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
-        daily.commit(rod: 0, steps: -4)
-        XCTAssertTrue(daily.solved)
-        XCTAssertEqual(daily.cleanShown, daily.clean)
-        XCTAssertTrue(daily.cleanShown)
-        XCTAssertTrue(daily.finishSpoken.hasSuffix("Clean."), daily.finishSpoken)
-        XCTAssertFalse(daily.offersAgain)
-        XCTAssertTrue(Achievement.Record.stored().clean, "a daily's clean best earns No Wake")
-    }
-
-    /// A level's card offers again only over par (Jack, 2026-11-13); the daily's on any finish that isn't clean.
-    @MainActor func testAgainOnlyOverParButOnTheDaily() {
-        let ids = ["test-again-level", "daily-test-again"]
-        defer { for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") } }
-        func solved(_ id: String, over: Bool, undo: Bool = false) -> Game {
-            UserDefaults.standard.removeObject(forKey: "best.\(id)")
-            Best.undos = 5
-            let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]), firstTry: true)
+    /// Clean is at par with no undo or reset; a level earns it on any try, the daily on its first alone (Jack,
+    /// 2026-11-13). A replay that earns it upgrades the level's best, and "again" shows until the best is clean.
+    @MainActor func testALevelEarnsCleanOnAnyTryAndTheDailyOnItsFirst() {
+        let id = "test-clean-level", day = "daily-test-clean"
+        func forget() { for i in [id, day] { for k in ["best.\(i)", "started.\(i)"] { UserDefaults.standard.removeObject(forKey: k) } } }
+        forget()
+        defer { forget() }
+        Best.undos = 9
+        func play(_ id: String, over: Bool = false, undo: Bool = false, reset: Bool = false) -> Game {
+            let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
             if undo { game.commit(rod: 1, steps: 1); game.undo() }
-            if over { game.commit(rod: 0, steps: -2); game.commit(rod: 1, steps: 1); game.commit(rod: 1, steps: -1); game.commit(rod: 0, steps: -2) }
+            if reset { game.commit(rod: 1, steps: 1); game.reset() }
+            if over { for (rod, steps) in [(0, -2), (1, 1), (1, -1), (0, -2)] { game.commit(rod: rod, steps: steps) } }
             else { game.commit(rod: 0, steps: -4) }
             XCTAssertTrue(game.solved, id)
             return game
         }
-        XCTAssertFalse(solved(ids[0], over: false).offersAgain, "a level at par")
-        XCTAssertFalse(solved(ids[0], over: false, undo: true).offersAgain, "a level at par with an undo")
-        XCTAssertTrue(solved(ids[0], over: true).offersAgain, "a level over par")
-        XCTAssertFalse(solved(ids[1], over: false).offersAgain, "the daily clean")
-        XCTAssertTrue(solved(ids[1], over: false, undo: true).offersAgain, "the daily at par with an undo")
-        XCTAssertTrue(solved(ids[1], over: true).offersAgain, "the daily over par")
+        // A first try over par, then a replay at par with an undo: neither clean, both offer again.
+        let first = play(id, over: true)
+        XCTAssertFalse(first.clean)
+        XCTAssertTrue(first.offersAgain, "over par: again")
+        let undone = play(id, undo: true)
+        XCTAssertFalse(undone.firstTry)
+        XCTAssertFalse(undone.clean, "an undo denies it")
+        XCTAssertTrue(undone.offersAgain, "at par with an undo: again")
+        XCTAssertTrue(undone.finishSpoken.hasSuffix("At par."), undone.finishSpoken)
+        let reset = play(id, reset: true)
+        XCTAssertFalse(reset.clean, "a reset denies it")
+        XCTAssertEqual(Best.load(id)?.clean, false)
+        // A later replay at par with nothing wasted earns clean, upgrades the best and offers no again.
+        let replay = play(id)
+        XCTAssertTrue(replay.clean)
+        XCTAssertEqual(ResultMarks.filled(clean: replay.clean, over: replay.over), 3)
+        XCTAssertTrue(replay.finishSpoken.hasSuffix("Clean."), replay.finishSpoken)
+        XCTAssertEqual(Best.load(id)?.clean, true)
+        XCTAssertEqual(replay.bests.flatMap { ResultCard.bestLine(was: $0.was, now: $0.now, par: true) }, "new best \u{00B7} was par")
+        XCTAssertFalse(replay.offersAgain, "clean: no again")
+        XCTAssertEqual(Archive.Mark(id), .clean)
+        // With the best clean, a later solve over par offers no again either.
+        XCTAssertFalse(play(id, over: true).offersAgain)
+        XCTAssertEqual(Best.load(id)?.clean, true, "a worse solve keeps the clean best")
+        // The daily: a later try at par with nothing wasted is practice, never clean, and again stays.
+        _ = Best.start(day)
+        let practice = play(day)
+        XCTAssertFalse(practice.firstTry)
+        XCTAssertFalse(practice.clean, "the daily needs its first try")
+        XCTAssertTrue(practice.offersAgain)
+        forget()
+        let daily = play(day)
+        XCTAssertTrue(daily.clean)
+        XCTAssertFalse(daily.offersAgain)
+        XCTAssertTrue(Achievement.Record.stored().clean, "a daily's clean best earns No Wake")
     }
 
     /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;
@@ -672,12 +676,11 @@ final class UnstirTests: XCTestCase {
         // Again from the card, on the same tank: the re-solve completes nothing.
         let level = Level(id: lens[5], pack: .lens, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
         UserDefaults.standard.removeObject(forKey: "best.\(lens[5])")
-        // The solves above committed moves, which mark a level started, and only a first try is clean.
         UserDefaults.standard.removeObject(forKey: "started.\(lens[5])")
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         game.commit(rod: 0, steps: -4)
         XCTAssertEqual(game.completed, .pack(.lens))
-        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. At par. Lens complete, 25 panels.")
+        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. Clean. Lens complete, 25 panels.")
         XCTAssertTrue(game.reset())
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
@@ -723,24 +726,18 @@ final class UnstirTests: XCTestCase {
         }
     }
 
-    /// The card calls a best new only when what it names improves: clean (the daily's alone), then over par; a faster
-    /// time at the same mark is still the old best's line, and a first solve has none.
+    /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
+    /// mark is still the old best's line, and a first solve has none.
     @MainActor func testTheCardsBestLine() {
         func best(_ over: Int, clean: Bool = false, _ seconds: Int = 30) -> Best { Best(over: over, seconds: seconds, clean: clean) }
-        func line(_ was: Best?, _ now: Best, par: Bool = true, daily: Bool = true) -> String? {
-            ResultCard.bestLine(was: was, now: now, par: par, keepsClean: daily)
-        }
-        XCTAssertNil(line(nil, best(0)))
-        XCTAssertEqual(line(best(2), best(0)), "new best \u{00B7} was +2")
-        XCTAssertEqual(line(best(0), best(0, clean: true)), "new best \u{00B7} was par")
-        XCTAssertEqual(line(best(0), best(0, 10)), "best \u{00B7} par")
-        XCTAssertEqual(line(best(0, clean: true), best(3)), "best \u{00B7} clean")
-        // A level's stored clean is named par: only the daily shows clean (Jack, 2026-11-13).
-        XCTAssertEqual(line(best(0, clean: true), best(0), daily: false), "best \u{00B7} par")
-        XCTAssertEqual(line(best(0, clean: true), best(3), par: false, daily: false), "best \u{00B7} solved")
-        XCTAssertEqual(line(best(0), best(0, clean: true), par: false, daily: false), "new best \u{00B7} was solved")
+        XCTAssertNil(ResultCard.bestLine(was: nil, now: best(0), par: true))
+        XCTAssertEqual(ResultCard.bestLine(was: best(2), now: best(0), par: true), "new best \u{00B7} was +2")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: true), "new best \u{00B7} was par")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
         // A daily's first solve on its day over the archive's best, which another time zone or iCloud brought: a first.
-        XCTAssertNil(line(Best(over: 0, seconds: 9, clean: true, archived: true), best(3)))
+        XCTAssertNil(ResultCard.bestLine(was: Best(over: 0, seconds: 9, clean: true, archived: true), now: best(3), par: true))
     }
 
     /// A faster solve at the same mark keeps the older best, seconds and all; a cleaner one replaces it however slow.
@@ -2249,8 +2246,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(Level.vortex[3], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil, gate: .whirlpool).value,
                        "locked, solve every \(Tier.whirlpool.name) level first")
         func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
-        // A level's stored clean reads as par: only the daily says clean (Jack, 2026-11-13).
-        XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "at par")
+        XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")
         XCTAssertEqual(result(Best(over: 2, seconds: 9)), "solved, 2 over par")
         let daily = Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[22])
@@ -2290,7 +2286,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.movesSpoken, "\(game.moves) moves, par \(level.par), over par")
         let clean = Game(level: level)
         while let t = clean.reachable { clean.commit(rod: t.rod, steps: t.steps) }
-        XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.cleanShown ? "Clean." : "At par."))
+        XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
         XCTAssertEqual(clean.movesSpoken, "\(level.par) moves, par \(level.par), at par")
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")

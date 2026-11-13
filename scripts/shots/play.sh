@@ -87,13 +87,15 @@ shot level-at-par "Level 11 after three heals, a partial and a push, the stack n
 shot level-over-par "The same a push later: moves 6 / par 5 in magenta." LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2,3:+2
 shot result-veil "Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most." \
   LEVEL=11 PLAYED=0:+1,2:-6,0:-1,3:+1,1:+4,3:+4,0:+1,2:+4,0:-5
-shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted on its first try: two marks and at par, as only the daily shows clean." SCREEN=clean LEVEL=6
-shot result-replay "Level 06 (city) replayed at par with nothing wasted, started before (UNSTIR_TRIED) so no first try, no best saved yet: two marks and at par, the same as a first try." \
+shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted: three marks, clean, next alone." SCREEN=clean LEVEL=6
+shot result-replay "Level 06 (city) replayed at par with nothing wasted, started before (UNSTIR_TRIED) so no first try, no best saved yet: three marks and clean, as a level earns clean on any try." \
   SCREEN=clean LEVEL=6 TRIED=L6
+shot result-undone "Level 06 (city) solved at par with a stir undone on the way: two marks, at par, clean needs no undo or reset, again beside next." \
+  SCREEN=undone LEVEL=6
 shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006
-shot result-fullest "Plughole 27 replayed at +2 (two wasted stirs taken back, then the inverse word) against a stored best of +6, every other plughole level at par: the margin, the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows." \
-  SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+shot result-fullest "Plughole 27 replayed at par with a stir undone against a stored best of +6, every other plughole level at par: clean needs no undo or reset, the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows." \
+  SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \

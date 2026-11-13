@@ -35,7 +35,7 @@ final class PayoffTests: XCTestCase {
             XCTAssertEqual(payoff?.parts.first?.colours, Tier.whirlpool.colours)
             XCTAssertEqual(payoff?.stamp, "unstirred.")
             XCTAssertEqual(payoff?.spoken, "Whirlpool, unstirred.")
-            XCTAssertTrue(game.finishSpoken.hasSuffix("At par. Whirlpool, unstirred."), game.finishSpoken)
+            XCTAssertTrue(game.finishSpoken.hasSuffix("Clean. Whirlpool, unstirred."), game.finishSpoken)
             XCTAssertNil(again.tierDone)
             XCTAssertNil(Payoff(again))
             XCTAssertFalse(again.finishSpoken.contains("Whirlpool"), again.finishSpoken)

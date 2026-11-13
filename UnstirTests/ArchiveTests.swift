@@ -139,13 +139,11 @@ final class ArchiveTests: XCTestCase {
 
     /// Each day says its result in the menu's words, and in VoiceOver's.
     func testEachDayShowsItsResult() throws {
-        let id = "daily-20261025"
-        XCTAssertEqual(Archive.Mark(Best(over: 0, seconds: 9, clean: true), started: true, of: id), .clean)
-        XCTAssertEqual(Archive.Mark(Best(over: 0, seconds: 9, clean: true), started: true, of: "L1"), .par)
-        XCTAssertEqual(Archive.Mark(Best(over: 0, seconds: 9), started: true, of: id), .par)
-        XCTAssertEqual(Archive.Mark(Best(over: 3, seconds: 9), started: true, of: id), .over(3))
-        XCTAssertEqual(Archive.Mark(nil, started: true, of: id), .tried)
-        XCTAssertEqual(Archive.Mark(nil, started: false, of: id), .unplayed)
+        XCTAssertEqual(Archive.Mark(Best(over: 0, seconds: 9, clean: true), started: true), .clean)
+        XCTAssertEqual(Archive.Mark(Best(over: 0, seconds: 9), started: true), .par)
+        XCTAssertEqual(Archive.Mark(Best(over: 3, seconds: 9), started: true), .over(3))
+        XCTAssertEqual(Archive.Mark(nil, started: true), .tried)
+        XCTAssertEqual(Archive.Mark(nil, started: false), .unplayed)
         XCTAssertEqual([Archive.Mark.clean, .par, .over(3), .tried, .unplayed].map(\.word), ["clean", "par", "+3", "tried", ""])
         let day = try date(20261020)
         let spoken = Spoken.archiveDay(day, level: Level.daily(day, archived: true), mark: .over(3))

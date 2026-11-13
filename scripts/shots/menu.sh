@@ -27,7 +27,7 @@ shot menu-modes-new "Menu on whirlpool with every plughole level at par: the dai
   TIER=whirlpool BESTS=plughole:$par27
 shot menu-daily-run "The same with today's daily and the three before it solved: its marks at the daily row's right as on every row and 4 days running under its title, neither row new any more." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
-shot menu-all-done "Menu with every tier's levels solved, plughole's with clean stored and the rest at par, the daily run four days and endless's best 9: all four tiers open, two marks on every row, as only the daily shows clean." \
+shot menu-all-done "Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row." \
   BESTS=plughole:ccccccccccccccccccccccccccc,whirlpool:$par27,vortex:$par27,maelstrom:$par27,endless:9 DAILIES=4
 # Frost days (UNSTIR_DAILY sets the menu's day): the daily's row says so under its title, at default and large type.
 shot menu-daily-frost "Menu on whirlpool, today a frost day (2026-10-15, two knobs frozen): the daily's row says frost day under its title." \

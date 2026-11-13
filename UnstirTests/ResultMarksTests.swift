@@ -7,15 +7,13 @@ import XCTest
 /// VoiceOver says the same result in words.
 final class ResultMarksTests: XCTestCase {
     func testEachResultFillsItsMarksAndSaysThem() {
-        func row(_ best: Best?, started: Bool, on level: Level = Level.plughole[0]) -> (filled: Int?, spoken: String) {
-            (ResultMarks.filled(Archive.Mark(best, started: started, of: level.id)),
+        let level = Level.plughole[0]
+        func row(_ best: Best?, started: Bool) -> (filled: Int?, spoken: String) {
+            (ResultMarks.filled(Archive.Mark(best, started: started)),
              Spoken.row(level, result: best, tanks: 0, detail: nil, enabled: true, needs: nil, started: started).value)
         }
-        // Only the daily shows clean (Jack, 2026-11-13); a level's stored flag reads as par.
-        XCTAssertEqual(row(Best(over: 0, seconds: 9, clean: true), started: true, on: .daily()).filled, 3)
-        XCTAssertEqual(row(Best(over: 0, seconds: 9, clean: true), started: true, on: .daily()).spoken, "clean")
         let cases: [(Best?, Bool, Int?, String)] = [
-            (Best(over: 0, seconds: 9, clean: true), true, 2, "at par"),
+            (Best(over: 0, seconds: 9, clean: true), true, 3, "clean"),
             (Best(over: 0, seconds: 9, clean: false), true, 2, "at par"),
             (Best(over: 0, seconds: 9), true, 2, "at par"),
             (Best(over: 2, seconds: 9), true, 1, "solved, 2 over par"),
@@ -28,13 +26,12 @@ final class ResultMarksTests: XCTestCase {
             XCTAssertEqual(got.spoken, spoken)
         }
         // Over par, the row keeps the margin it showed before the marks; par, clean and tried show marks alone.
-        XCTAssertEqual(ResultMarks.margin(Archive.Mark(Best(over: 2, seconds: 9), started: true, of: "L1")), "+2")
+        XCTAssertEqual(ResultMarks.margin(Archive.Mark(Best(over: 2, seconds: 9), started: true)), "+2")
         for best in [Best(over: 0, seconds: 9, clean: true), Best(over: 0, seconds: 9), nil] {
-            XCTAssertNil(ResultMarks.margin(Archive.Mark(best, started: true, of: "daily-20261025")))
+            XCTAssertNil(ResultMarks.margin(Archive.Mark(best, started: true)))
         }
         // An archived daily's best fills as the day's own would.
-        XCTAssertEqual(ResultMarks.filled(Archive.Mark(Best(over: 0, seconds: 9, clean: true, archived: true), started: true,
-                                                                of: "daily-20261025")), 3)
+        XCTAssertEqual(ResultMarks.filled(Archive.Mark(Best(over: 0, seconds: 9, clean: true, archived: true), started: true)), 3)
     }
 
     /// The card marks this solve: clean only with nothing wasted on a first try, which `Game.clean` already holds.

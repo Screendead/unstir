@@ -593,15 +593,16 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
-    /// The fullest card any level shows: plughole 27 replayed over par against a best of +6, every other plughole level
-    /// at par, so its card says the margin and the new best, offers again (a level's only over par, Jack, 2026-11-13)
-    /// and goes up a notch to the open tier. As tiers open on solved levels (Jack, 2026-11-13), a closed tier's longer
-    /// way up never shows on a tier's last level. The tests measure every candidate rather than trust this.
+    /// The fullest card any level shows: plughole 27 replayed at par with a stir undone, against a best of +6, every
+    /// other plughole level at par, so its card says what clean takes and the new best, offers again (the best isn't
+    /// clean) and goes up a notch to the open tier. As tiers open on solved levels (Jack, 2026-11-13), a closed tier's
+    /// longer way up never shows on a tier's last level. Measured 2026-11-13: 311 pt at xxxLarge, the SE's glass at 59%.
+    /// The tests measure every candidate rather than trust this.
     private func storeTheFullestCard() {
         for level in Tier.plughole.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) }
         Best(over: 6, seconds: 60).save(Tier.plughole.levels.last!.id)
     }
-    private let fullest = ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
+    private let fullest = ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
         // The cards that ran past the foot: the fullest at xxxLarge, the play screen's cap, on the largest phone and the
@@ -611,7 +612,7 @@ final class PlayLayoutTests: XCTestCase {
             ("the fullest card at xxxLarge on a Pro Max", fullest, proMax, .xxxLarge, storeTheFullestCard),
             ("the fullest card on an SE", fullest, se, .large, storeTheFullestCard),
             ("the daily's card on an SE", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], se, .large, {}),
-            ("a replay at par on an SE", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "6"], se, .large,
+            ("a replay at par with an undo on an SE", ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "6"], se, .large,
              { for level in Tier.plughole.levels.prefix(6) { Best(over: 0, seconds: 60).save(level.id) } }),
         ]
         for (what, env, phone, type, store) in cases {
@@ -641,7 +642,13 @@ final class PlayLayoutTests: XCTestCase {
         return [
             ("plughole 27 replayed at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
              storeTheFullestCard),
-            ("plughole 27 replayed over par against +6", fullest, storeTheFullestCard),
+            ("plughole 27 replayed over par against +6", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
+             storeTheFullestCard),
+            ("plughole 27 replayed at par with an undo against +6", fullest, storeTheFullestCard),
+            ("plughole 05 at par with an undo, the last plughole level without a best",
+             ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "5", "UNSTIR_CLOCK": "0"],
+             { for (i, level) in Tier.plughole.levels.enumerated() where i != 4 { Best(over: 0, seconds: 60).save(level.id) } }),
+            ("the daily at par with an undo", ["UNSTIR_SCREEN": "undone", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
             ("plughole 05 over par, the last plughole level without a best", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "5",
                                                                                "UNSTIR_CLOCK": "0"],
              { for (i, level) in Tier.plughole.levels.enumerated() where i != 4 { Best(over: 0, seconds: 60).save(level.id) } }),
@@ -676,6 +683,7 @@ final class PlayLayoutTests: XCTestCase {
             forgetEveryBest()
             c.store()
             let p = try! XCTUnwrap(placedCard(c.env, screen, type: type), "\(screen.name): \(c.what)")
+            print("card candidate: \(screen.name) at \(type): \(c.what): \(p.frame.height)")
             if p.frame.height > tallest?.3.frame.height ?? 0 { tallest = (c.what, c.env, c.store, p) }
         }
         forgetEveryBest()

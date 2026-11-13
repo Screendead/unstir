@@ -42,13 +42,13 @@ struct ResultCard: View {
     @State private var packs: Pack?
     @Environment(\.page) private var page
 
-    /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean
-    /// where `keepsClean`, then over par), and nothing on a first solve, which a daily's first on its day is over a best
-    /// the archive saved (`Best.standing` puts it first). Escapement has no par, so its only mark is solved.
-    static func bestLine(was: Best?, now: Best, par: Bool, keepsClean: Bool) -> String? {
+    /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
+    /// then over par), and nothing on a first solve, which a daily's first on its day is over a best the archive saved
+    /// (`Best.standing` puts it first). Escapement has no par, so its marks are clean and solved.
+    static func bestLine(was: Best?, now: Best, par: Bool) -> String? {
         guard let was, (was.archived == true) == (now.archived == true) else { return nil }
         func mark(_ b: Best) -> String {
-            keepsClean && b.clean == true ? String(localized: "clean", comment: "The card's best line: the best before, solved with nothing wasted")
+            b.clean == true ? String(localized: "clean", comment: "The card's best line: the best before, solved with nothing wasted")
                 : !par ? String(localized: "solved", comment: "The card's best line: Escapement's best before")
                 : b.over == 0 ? String(localized: "par", comment: "The card's best line: the best before, at par") : "+\(b.over)"
         }
@@ -88,11 +88,11 @@ struct ResultCard: View {
                         // Escapement has no par, so no marks; nor has the sandbox, where nothing counts.
                         let par = game.level.ratchets.isEmpty
                         if par && !game.level.sandbox {
-                            ResultMarks(filled: ResultMarks.filled(clean: game.cleanShown, over: game.over), card: true)
+                            ResultMarks(filled: ResultMarks.filled(clean: game.clean, over: game.over), card: true)
                                 .padding(.bottom, 4)
                         }
                         Group {
-                            if game.cleanShown {
+                            if game.clean {
                                 Text("clean").foregroundStyle(page.signal(.lime)).shadow(color: page.glow(.lime), radius: 6)
                             } else if par && game.over == 0 {
                                 Text("at par").foregroundStyle(page.signal(.amber))
@@ -112,13 +112,13 @@ struct ResultCard: View {
                         } else {
                             facts.foregroundStyle(quiet)
                         }
-                        if Best.keepsClean(game.level.id) && !game.clean && game.over == 0 {
-                            (game.firstTry ? Text("clean needs no undo or reset") : Text("clean counts on the first try"))
+                        if !game.clean && (!par || game.over == 0) {
+                            (game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? Text("clean needs no undo or reset")
+                                : Text("clean counts on the first try"))
                                 .font(.ui(.detail)).tone(page.tone(.text3))
                         }
                     }
-                    if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty,
-                                                                         keepsClean: Best.keepsClean(game.level.id)) {
+                    if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
                         Text(line).tone(.text2) // loc: verbatim localized by bestLine
                     }
                     if let done = game.completed {

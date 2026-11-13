@@ -787,7 +787,7 @@ struct PackCard: View {
                         if !open {
                             Image(systemName: "lock.fill").font(.ui(.detail)).imageScale(.small).foregroundStyle(Color.text4)
                                 .transition(.opacity.combined(with: .scale(scale: 1.8)))
-                        } else if !noPar, case let mark = Archive.Mark(best, started: tried, of: level.id), let filled = ResultMarks.filled(mark) {
+                        } else if !noPar, case let mark = Archive.Mark(best, started: tried), let filled = ResultMarks.filled(mark) {
                             ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail)) // loc: verbatim localized by atPar, or a number
@@ -806,7 +806,7 @@ struct PackCard: View {
                 .accessibilityValue(open ? best.map { // loc: verbatim each localized
                     noPar ? ($0.over == 0 ? String(localized: "solved", comment: "VoiceOver: Escapement's best, solved")
                              : String(localized: "\($0.over) over par", comment: "VoiceOver: an archive day's best. Moves over par"))
-                        : Spoken.result($0, of: level.id)
+                        : Spoken.result($0)
                 } ?? (tried ? String(localized: "tried", comment: "VoiceOver: a row started, with no best") : "")
                     : String(localized: "locked, needs the pack", comment: "VoiceOver: a pack's row past its free levels, unowned"))
                 .accessibilityHint(open ? Text(verbatim: "") // loc: verbatim each a key

@@ -774,7 +774,7 @@ enum Daily {
 /// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
     var over: Int, seconds: Int
-    /// Stored, because only a first try can be clean and a later one can match its numbers. Optional so saves from the
+    /// Stored, because a daily's later try can match a clean first try's numbers. Optional so saves from the
     /// test builds that predate it still decode and keep the next level open; v1 saves never decode, as they lack `over`.
     var clean: Bool?
     /// A daily's best saved from the archive, after its day; nil for every other, so older saves count as on the day.
@@ -786,10 +786,9 @@ struct Best: Codable {
         return UserDefaults.standard.data(forKey: "best.\(id)").flatMap(decode)
     }
 
-    /// Whether `id`'s level shows clean: only a daily, past ones from the archive too, which comes fresh each day, so a
-    /// first try is always still to come (Jack, 2026-11-13). Every other level stores the flag, which `standing` ranks,
-    /// where it reorders nothing a level shows, but never names or marks it; No Wake reads only a daily's.
-    static func keepsClean(_ id: String) -> Bool { id.hasPrefix("daily-") }
+    /// Whether clean on `id`'s level needs the first try: only a daily's, past ones from the archive too, which comes
+    /// fresh each day. Any other level can be solved clean on any try (Jack, 2026-11-13), so a replay can still earn it.
+    static func cleanNeedsFirstTry(_ id: String) -> Bool { id.hasPrefix("daily-") }
 
     static func decode(_ data: Data) -> Best? { try? JSONDecoder().decode(Best.self, from: data) }
 
