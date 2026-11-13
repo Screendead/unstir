@@ -545,6 +545,12 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | No Wake daily-only | 2026-11-13 | The No Wake achievement is earned only by a daily solved clean: "Solve a daily clean: at par on the first try, with no undo or reset." Same id, title, points and hidden flag; App Store Connect's copy takes the same text. | architecture |
 | Clean on any try for levels | 2026-11-13 | On a tier or pack level, clean is at par with no undo or reset on any attempt, so a replay can earn the third disc and upgrade the best; the daily still needs its first try. Asked "is there another thing the three discs could signify? 3 is nice, 2 is less nice" and offered par in one go, Jack: "yes build it, keep the word clean". Replaces the daily-only clean above for levels. | architecture |
 | Again unless clean | 2026-11-13 | A level's or pack level's card shows "again" unless the level's best is already clean; replaces "only over par". Jack: "yes, show again unless it's already clean". The daily keeps its rule. | architecture |
+| Cached map merged | 2026-11-13 | The stored map for a level's glass merges after Jack's look and the reference phone's numbers. Jack: "felt the same, merge it." | HANDOFF, architecture |
+| Prism's map | 2026-11-13 | Prism's map keeps three tiles and maps only past the deal; a held disc reads the map between texels. Jack's picks. | architecture |
+| The tank's limit | 2026-11-13 | Raise the tank's limit once the map is in for every level (Jack picked "raise it once the map is in"); the next step's size is open (48 suggested). The brim scales to whatever the limit becomes. Jack: "your recommendation is fine by me". | HANDOFF |
+| Tier achievements follow the gate | 2026-11-13 | The three tier achievements follow the new gate, a tier opening when every level below is solved. Jack's pick. | architecture |
+| Lens on the stored map | 2026-11-13 | A Lens level draws from the stored map by default, its detail packed into the map's own image, from the same 10 entries as any level; `UNSTIR_MAPLENS=0` is the probe that turns it off. Jack, on 32 MB a map for a tenth to a fifth of the deepest levels' frame: "32mb out of 6gb seems like a reasonable trade-off for 10-20% savings and thus better battery life." | architecture |
+| Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
 
 ## Undated, no round
 

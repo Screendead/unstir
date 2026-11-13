@@ -4,6 +4,12 @@
 #                                     first "Pro Max"
 #        scripts/gpu-bench.sh phone   builds Release, installs and launches it on UNSTIR_DEVICE through run-ios.sh with
 #                                     UNSTIR_GPUBENCH=1, waits for the bench to quit, and pulls its lines from the log
+#        scripts/gpu-bench.sh twists [pattern]   builds Release with PROBES=YES, installs it on UNSTIR_DEVICE and times
+#                                     the twist oracle's cases there (OracleBench.swift, scripts/twist-oracle.sh's, those
+#                                     whose name holds the pattern): today's shader, the stored map and the map with
+#                                     every moved tap through the chain, each as a share of today's, and what drawing
+#                                     the map costs, by the GPU's clock at 1137 px, or ORACLE_SIDE's (1471, the Duo's).
+#                                     It leaves the probes' build on the phone: install a plain one after.
 # The app (GPUBench.swift) runs Unstir.metal's own shader bodies off screen and prints a stack entry's cost with four
 # taps and two at 1137, 1284 and 1471 px, the glass's fill and whirlpool 27's whole frame at 1137 and 1471, then at
 # 1284 each Prism specimen's per-channel cost against what Unstirred.channelCost assumes, and the slowest against the
@@ -40,5 +46,21 @@ case "${1:-sim}" in
     [[ -n "$started" ]] || { echo "no bench in the phone's log"; exit 1; }
     tail -n +"$started" "$log" | grep 'GPUBENCH'
     ;;
-  *) echo "usage: scripts/gpu-bench.sh [sim|phone]"; exit 2 ;;
+  twists)
+    # The twist oracle's bench on the phone: today's shader against the stored map, on the GPU's own clock.
+    cases=$(scripts/twist-oracle.sh cases "${2:-}")
+    [[ -n "$cases" ]] || { echo "no oracle case matches '${2:-}'"; exit 2; }
+    PROBES=YES UNSTIR_GPUBENCH=oracle UNSTIR_ORACLECASES="$cases" UNSTIR_ORACLESIDE="${ORACLE_SIDE:-}" scripts/run-ios.sh Release
+    log=$(mktemp)
+    for _ in $(seq 60); do
+      sleep 10
+      scripts/pull-log.sh "$log" >/dev/null 2>&1 || continue
+      started=$(grep -n 'ORACLE start' "$log" | tail -1 | cut -d: -f1)
+      [[ -n "$started" ]] && tail -n +"$started" "$log" | grep -qE 'ORACLE (done|no Metal)' && break
+    done
+    started=$(grep -n 'ORACLE start' "$log" | tail -1 | cut -d: -f1)
+    [[ -n "$started" ]] || { echo "no oracle bench in the phone's log"; exit 1; }
+    tail -n +"$started" "$log" | grep 'ORACLE'
+    ;;
+  *) echo "usage: scripts/gpu-bench.sh [sim|phone|twists [pattern]]"; exit 2 ;;
 esac

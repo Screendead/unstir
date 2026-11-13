@@ -239,8 +239,10 @@ final class PrismTests: XCTestCase {
         var shader = TankShader(centre: .zero, radius: 1, twists: [0, 0, 0.5, 1], fourTaps: 40, scale: 3)
         let fine = try XCTUnwrap(Fine(Halftone.test.detail(64, lenses: [])))
         let prism = TankShader.Prism(masks: [1], cost: 3, isolate: .red, tint: SIMD3(1, 0, 0))
-        for (prism, fine) in [(nil, nil), (prism, nil), (nil, fine)] {
-            (shader.prism, shader.fine) = (prism, fine)
+        let mapped = TankShader.Mapped(image: fine.atlas, kept: 1, rest: 0, quant: 56, mode: .mix)
+        for (prism, fine, mapped) in [(nil, nil, nil), (prism, nil, nil), (nil, fine, nil), (nil, nil, mapped), (prism, nil, mapped),
+                                      (nil, fine, mapped)] {
+            (shader.prism, shader.fine, shader.mapped) = (prism, fine, mapped)
             let head = try XCTUnwrap(source.range(of: "[[ stitchable ]] half4 \(shader.name)("), shader.name)
             let declared = source[head.upperBound...].prefix { $0 != ")" }.split(separator: ",")
                 .map { $0.split(whereSeparator: \.isWhitespace) }

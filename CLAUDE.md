@@ -167,7 +167,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg);
   a pattern ending in `$` films only the case of that name, as `rim-swirl` alone would also film `rim-swirl-push`.
-  Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives. A film over 9.5 MB is shrunk
+  Both take the first "Pro Max" simulator, or `UNSTIR_SIM`'s. A film over 9.5 MB is shrunk
   to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
   BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
   video's clock by when each recorder started. recordVideo writes a frame only when the screen changes, so a take
@@ -213,7 +213,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the layer's alone over the line and, for Escapement, its sketch's with and without the sketch's ticks and its drums
   alone (`escBDry`, `escBDrums`), as the game's own tick replaces the sketch's in play. `scripts/layers-film.sh`
   films those three levels in the app with sound (`film.sh layer-`, BlackHole switched in and back).
-- App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
+- App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView`), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
 - Promoted-purchase images: `scripts/promo.sh` shoots each sold offer's (`shots.sh promo-`, `UNSTIR_PROMO`,
@@ -225,7 +225,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   builds `build/picture-lab/lab` with `swiftc` from Twist.swift, VortexPictures.swift, `SplitMix64` cut out of
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
-  one sheet (needs Pillow).
+  one sheet.
 - Prism's specimens: `scripts/prism-levels.sh table` measures every specimen in Pack.swift (depth, the solver's
   optimum, what is free under the masks and read white, blocked knobs, right moves per step, the shader's assumed cost,
   and the shares of the glass showing ghosts and three-way splits, the readability limits); `check <layout> <masks>
@@ -254,12 +254,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`CatalogTests` runs it too); `scripts/catalog.py plural` writes a plural key's
   English forms into `Sources/Localizable.xcstrings`, which no command-line build does, and `fixed` marks keys
   do-not-translate (`docs/architecture.md`).
-- Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
+- Workflows: `actionlint .github/workflows/*.yml` (Homebrew's) before pushing a change to one.
 - GPU bench: `scripts/gpu-bench.sh [sim|phone]` launches the app with `UNSTIR_GPUBENCH=1` (`GPUBench.swift`), which
   times Unstir.metal's shader bodies (`benchUnstir`) off screen: a stack entry with four taps and two at 1137, 1284 and
   1471 px, the glass's fill and whirlpool 27's frame, each Prism specimen against `Unstirred.channelCost`, then bakes
   Lens's cheapest, dearest and first panels cold at the device's glass, and quits. `phone` (Jack's) installs Release
-  through `run-ios.sh` and pulls the lines from the log; the simulator's times are the Mac's wall clock.
+  through `run-ios.sh` and pulls the log's lines; the simulator's times are the Mac's wall clock. `twists [pattern]`
+  times the twist oracle's cases there (`PROBES=YES`).
 - The four-tap budget on the phone: `scripts/taps-check.sh [--sim udid] [runs...]` plays whirlpool 27 on the phone
   `UNSTIR_DEVICE` names (the build `scripts/run-ios.sh Release` installed), its stack cut or repeated (`UNSTIR_DEEP`),
   a knob dragged through the real let-go (`UNSTIR_TAPDRAG`), and prints each run's `taps` lines: `gpu`, `calm` and

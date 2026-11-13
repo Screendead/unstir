@@ -18,13 +18,14 @@
 #                                              in turn, ORACLE_RUNS launches (3), holding $ORACLE_LOCK through each
 #                                              (shots/oracle/time: each run's lines, and the last's frames)
 #   scripts/twist-oracle.sh benchdiff <method> holds a timed method's frames against today's by the same rule
+#   scripts/twist-oracle.sh cases [pattern]    prints the timed cases as the bench takes them (scripts/gpu-bench.sh twists)
 #   scripts/twist-oracle.sh clean              deletes the oracle's simulator
 #
 # ORACLE_SIM names the simulator; unset, one named for this checkout is made on the first call (a Pro Max) and found
 # again after. ORACLE_REF is where the references live (shots/oracle/ref): a folder outside the checkout shares one
 # set between checkouts. ORACLE_LOCK is the file every GPU timing on this Mac locks, so no two run at once; `time`
 # refuses without it. ORACLE_EXTRA="TAPS=5" adds harness variables to every case of a shoot, for a set drawn worse on
-# purpose (two taps). ORACLE_BASE is the commit whose Sources/ the references are shot from, origin/master unless set
+# purpose (two taps), and to `time`'s launch. ORACLE_BASE is the commit whose Sources/ the references are shot from, origin/master unless set
 # (a branch that adds a harness hold its cases need names itself, before it changes any drawing). The app's sound
 # stays off: a harness launch is silent.
 set -euo pipefail
@@ -165,12 +166,9 @@ films() {  # set pattern
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
 }
 
-timing() {  # pattern
-  local pattern=$1 cases="" kind n sweep better isCalm secs vars seen="" run out data f
-  : "${ORACLE_LOCK:?set ORACLE_LOCK to the file every GPU timing on this Mac locks}"
-  sim
-  fresh
-  # A sweep is timed at its first value.
+# The bench's cases, as UNSTIR_ORACLECASES takes them. A sweep is timed at its first value.
+timed() {  # pattern
+  local pattern=$1 cases="" kind n sweep better isCalm secs vars seen=""
   while IFS='|' read -r kind n sweep better isCalm secs vars; do
     # The glass alone: a frame with the chrome round it, the menu's or a card's times nothing more, and the bench
     # draws no wave.
@@ -179,15 +177,28 @@ timing() {  # pattern
     seen="$seen $sweep"
     cases="$cases${sweep:-$n}|$(for kv in $vars; do printf 'UNSTIR_%s ' "$kv"; done);"
   done < <(list)
+  printf '%s' "$cases"
+}
+
+timing() {  # pattern
+  local cases run out data f
+  : "${ORACLE_LOCK:?set ORACLE_LOCK to the file every GPU timing on this Mac locks}"
+  sim
+  fresh
+  cases=$(timed "$1")
   data=$(xcrun simctl get_app_container "$udid" "$bundle" data)
   out=shots/oracle/time
   mkdir -p "$out"
   # A shorter run's summary would otherwise read a longer one's leftover files too.
   for f in "$out"/run-*.txt; do [[ -e $f ]] && trash "$f"; done
+  # ORACLE_EXTRA reaches the bench's launch as it does a shot's (UNSTIR_MAPLENS=0 for Lens through its chain, a probe
+  # the bench reads from its own launch).
+  local extra=()
+  for f in ${ORACLE_EXTRA:-}; do extra+=("SIMCTL_CHILD_UNSTIR_$f"); done
   for run in $(seq "${ORACLE_RUNS:-3}"); do
     : > "$out/run-$run.txt"
     # The bench's lines reach the file as it quits. The lock is held from its launch until then.
-    /usr/bin/lockf -k "$ORACLE_LOCK" env SIMCTL_CHILD_UNSTIR_GPUBENCH=oracle SIMCTL_CHILD_UNSTIR_ORACLECASES="$cases" \
+    /usr/bin/lockf -k "$ORACLE_LOCK" env ${extra[@]+"${extra[@]}"} SIMCTL_CHILD_UNSTIR_GPUBENCH=oracle SIMCTL_CHILD_UNSTIR_ORACLECASES="$cases" \
       ${ORACLE_SIDE:+SIMCTL_CHILD_UNSTIR_ORACLESIDE="$ORACLE_SIDE"} \
       bash -c 'xcrun simctl launch --stdout="$2" --terminate-running-process "$0" "$1" > /dev/null
                for _ in $(seq 1200); do grep -qE "ORACLE (done|no Metal)" "$2" && break; sleep 0.5; done' \
@@ -248,6 +259,7 @@ case "${1:-}" in
   control) python3 scripts/twist-oracle.py control "$ref" "${2:-}" ;;
   film) films "${2:?a set name}" "${3:-}" ;;
   time) timing "${2:-}" ;;
+  cases) timed "${2:-}" ;;
   benchdiff)
     dir=shots/oracle/time/frames
     (cd "$dir/today" && ls *.png) | sed 's/\.png$//' | awk '{ print $0 "\t\t" }' > "$dir/today/cases.tsv"
@@ -257,5 +269,5 @@ case "${1:-}" in
     udid=${ORACLE_SIM:-$(xcrun simctl list devices | grep -F "$name (" | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
     [[ -n "$udid" ]] && xcrun simctl delete "$udid"
     ;;
-  *) sed -n '3,29p' "$0"; exit 2 ;;
+  *) sed -n '3,30p' "$0"; exit 2 ;;
 esac
