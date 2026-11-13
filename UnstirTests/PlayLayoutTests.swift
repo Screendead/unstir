@@ -539,11 +539,9 @@ final class PlayLayoutTests: XCTestCase {
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
         // The cards that ran past the foot: the fullest at xxxLarge, the play screen's cap, on the largest phone and the
         // shortest, and on the shortest at the default size the fullest, the daily's with its next daily, and a replay at
-        // par with its best. Since only the daily keeps clean's hint (Jack, 2026-11-13), the fullest at the cap on an SE
-        // stands whole, the tank still over its least, and no card measured then scrolls.
+        // par with its best. The tallest at the cap on an SE has its own test, either way it falls.
         let cases: [(String, [String: String], Phone, DynamicTypeSize, () -> Void)] = [
             ("the fullest card at xxxLarge on a Pro Max", fullest, proMax, .xxxLarge, storeTheFullestCard),
-            ("the fullest card at xxxLarge on an SE", fullest, se, .xxxLarge, storeTheFullestCard),
             ("the fullest card on an SE", fullest, se, .large, storeTheFullestCard),
             ("the daily's card on an SE", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], se, .large, {}),
             ("a replay at par on an SE", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "6"], se, .large,
@@ -561,6 +559,110 @@ final class PlayLayoutTests: XCTestCase {
             // The room is measured with the tank as played: one that moved with the shrink would never settle.
             XCTAssertLessThan(m.times, 6, "\(what): settles")
         }
+    }
+
+    /// Every bit of a level's best and pack progress, so each candidate stores only its own.
+    private func forgetEveryBest() {
+        for level in Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) {
+            UserDefaults.standard.removeObject(forKey: "best.\(level.id)")
+        }
+    }
+
+    /// The cards that could be the tallest a player reaches, each with the progress it needs: what the card says grows
+    /// with the solve's line, its best's, a completion's, its buttons and a way up.
+    private var candidates: [(what: String, env: [String: String], store: () -> Void)] {
+        let maelstrom27 = Tier.maelstrom.levels.last!.id
+        return [
+            ("plughole 27 replayed at par against +6", fullest, storeTheFullestCard),
+            ("plughole 27 replayed over par against +6", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
+             storeTheFullestCard),
+            ("plughole 05 at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "5", "UNSTIR_CLOCK": "0"], {
+                for level in Tier.plughole.levels { Best(over: 0, seconds: 60).save(level.id) }
+                Best(over: 6, seconds: 60).save(Tier.plughole.levels[4].id)
+            }),
+            ("the daily as practice", ["UNSTIR_SCREEN": "clean", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00",
+                                       "UNSTIR_TRIED": Level.dailyID(Date())], {}),
+            ("the daily with undos", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
+            ("the daily clean", ["UNSTIR_SCREEN": "clean", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
+            ("Lens 25 completing Lens on a replay", ["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "25", "UNSTIR_SCREEN": "clean",
+                                                     "UNSTIR_OWNED": "first-stir,lens", "UNSTIR_CLOCK": "0",
+                                                     "UNSTIR_TRIED": Pack.lens.levels.last!.id],
+             { for level in Pack.lens.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) } }),
+            ("maelstrom 27 unstirring every tier on a replay", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom",
+                                                                "UNSTIR_LEVEL": "27", "UNSTIR_OWNED": "first-stir",
+                                                                "UNSTIR_CLOCK": "0", "UNSTIR_TRIED": maelstrom27],
+             { for level in Tier.allCases.flatMap(\.levels) where level.id != maelstrom27 { Best(over: 0, seconds: 60).save(level.id) } }),
+            ("maelstrom 27 against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom", "UNSTIR_LEVEL": "27",
+                                         "UNSTIR_OWNED": "first-stir", "UNSTIR_CLOCK": "0"],
+             { Best(over: 6, seconds: 60).save(maelstrom27) }),
+        ]
+    }
+
+    /// The tallest of `candidates` measured in `phone` at `type`, with what it measured.
+    @MainActor private func tallestCard(_ phone: Phone, type: DynamicTypeSize)
+        -> (what: String, env: [String: String], store: () -> Void, m: (card: CGFloat, room: CGFloat, fit: PlayLayout.Finished, times: Int)) {
+        var tallest: (String, [String: String], () -> Void, (card: CGFloat, room: CGFloat, fit: PlayLayout.Finished, times: Int))?
+        for c in candidates {
+            forgetEveryBest()
+            c.store()
+            let m = try! XCTUnwrap(measuredCard(c.env, phone, type: type), c.what)
+            print("card candidate: \(phone.window) at \(type): \(c.what): card \(m.card)")
+            if m.card > tallest?.3.card ?? 0 { tallest = (c.what, c.env, c.store, m) }
+        }
+        forgetEveryBest()
+        let t = tallest!
+        return (t.0, t.1, t.2, t.3)
+    }
+
+    /// Jack's rule for a finished card (2026-11-11), whichever way it falls: text never shrinks, the tank gives way down
+    /// to its least, and a card that still doesn't fit scrolls in exactly the room left, never clipped.
+    private func holdsTheRule(_ m: (card: CGFloat, room: CGFloat, fit: PlayLayout.Finished, times: Int), _ what: String,
+                              file: StaticString = #filePath, line: UInt = #line) {
+        let reach = m.room - PlayLayout.cardFoot + m.fit.lift
+        XCTAssertGreaterThanOrEqual(m.fit.scale, PlayLayout.leastFinished, "\(what): the tank never under its least", file: file, line: line)
+        XCTAssertEqual(m.fit.scrolls, m.card > reach + 0.001, "\(what): scrolls exactly when the card runs past the room", file: file, line: line)
+        if m.fit.scrolls {
+            XCTAssertEqual(m.fit.scale, PlayLayout.leastFinished, accuracy: 0.005, "\(what): the tank gave all it can first", file: file, line: line)
+            XCTAssertEqual(m.fit.height, reach, "\(what): the card scrolls in exactly the room left", file: file, line: line)
+        } else {
+            XCTAssertEqual(m.fit.height, m.card, "\(what): the card whole", file: file, line: line)
+            XCTAssertEqual(m.fit.lift, max(m.card - m.room + PlayLayout.cardFoot, 0).rounded(.up),
+                           "\(what): the tank gives up no more than the card lacks", file: file, line: line)
+        }
+        XCTAssertLessThan(m.times, 6, "\(what): settles", file: file, line: line)
+    }
+
+    /// The tallest card a player can reach, measured over every candidate, at the play screen's largest type on the
+    /// shortest phone, holds the rule whichever way it falls; a taller card added later becomes the one checked.
+    @MainActor func testTheTallestCardAtTheLargestTypeOnTheShortestPhoneHoldsTheRule() {
+        let tallest = tallestCard(se, type: PlayLayout.typeCap)
+        print("card fit: the tallest card at the cap on an SE, \(tallest.what): card \(tallest.m.card) room \(tallest.m.room) "
+              + "lift \(tallest.m.fit.lift) scale \(tallest.m.fit.scale) scrolls \(tallest.m.fit.scrolls)")
+        holdsTheRule(tallest.m, tallest.what)
+        // Text never shrinks: the card is taller at the cap than at the default size, and no smaller past the cap.
+        forgetEveryBest()
+        tallest.store()
+        let plain = try! XCTUnwrap(measuredCard(tallest.env, se, type: .large))
+        XCTAssertGreaterThan(tallest.m.card, plain.card, "the card's text grows with the type")
+        forgetEveryBest()
+        tallest.store()
+        let past = try! XCTUnwrap(measuredCard(tallest.env, se, type: .accessibility5))
+        XCTAssertEqual(past.card, tallest.m.card, accuracy: 0.5, "past the cap the card stays at the cap's size")
+        holdsTheRule(past, "\(tallest.what) at accessibility5")
+        forgetEveryBest()
+    }
+
+    /// No real phone overflows a card since only the daily keeps clean's hint (2026-11-13), so the scroll branch runs
+    /// through the real layout on a stand-in: the tallest card at the cap in a window 100 pt shorter than an SE's, which
+    /// no supported iPhone is. It is a stand-in, not a phone.
+    @MainActor func testACardPastTheTanksLeastScrollsInTheRoomLeft() {
+        let short: Phone = (CGSize(width: 375, height: 567), (20, 0, 0, 0))
+        let tallest = tallestCard(short, type: PlayLayout.typeCap)
+        print("card fit: the tallest card at the cap on the stand-in, \(tallest.what): card \(tallest.m.card) "
+              + "room \(tallest.m.room) lift \(tallest.m.fit.lift) scale \(tallest.m.fit.scale)")
+        XCTAssertTrue(tallest.m.fit.scrolls, "the stand-in is short enough to overflow")
+        XCTAssertGreaterThan(tallest.m.card, tallest.m.fit.height, "the card keeps its height and scrolls, never squeezed")
+        holdsTheRule(tallest.m, "\(tallest.what) on the stand-in")
     }
 
     @MainActor func testACardWithRoomAndATankInPlayLeaveTheTankAsItIs() {

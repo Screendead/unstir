@@ -868,7 +868,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   there is no card and nothing to measure, so the tank is the layout's. The tank never goes under 55% of the size it
   was played at (`leastFinished`): past that the card scrolls in the room there is, which none of the cards measured on 2026-11-13, once only the daily
   kept clean's hint, does: the fullest of them, plughole 27 replayed against an older best, stands whole at xxxLarge on the
-  shortest phone (`testTheTankShrinksUntilTheWholeCardStandsOverTheFoot`).
+  shortest phone. `testTheTallestCardAtTheLargestTypeOnTheShortestPhoneHoldsTheRule` measures every candidate there
+  and holds the tallest to the rule whichever way it falls, and `testACardPastTheTanksLeastScrollsInTheRoomLeft` runs
+  the scroll through the real layout on a stand-in window 100 pt shorter than an SE's.
   The split's card goes over the menu and the tabletop's stack makes room for its own, so neither shrinks. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
   default size, as the title's 18 pt gap holds no more; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
