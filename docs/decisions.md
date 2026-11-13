@@ -532,7 +532,12 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Faster twists | 2026-11-12 | Jack: "100% you should find a faster way to draw twists. this is the most important part of the game, and you have an unlimited budget to do so provided it doesn't look worse." Reopens the twist side of the performance pass and picks the twist-chain cache (R11) back up, superseding PERF = A's set-aside of it. | HANDOFF |
 | Hand heat test first | 2026-11-12, night | The by-hand heat test runs on a build with only the thermal logging added (#220), before any faster drawing; Jack: "good point". | HANDOFF |
 | Cached map in `mix` | 2026-11-12, night | Agreed in principle, pending Jack's look at a before/after: the glass drawn from the stored map in the faster-everywhere `mix` mode. Jack: "i like the sound of this, this sounds fine." | HANDOFF |
-| Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
+| Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF, architecture |
+| Store text approved | 2026-11-13 | The store page, privacy policy and TestFlight wording revised that day against the game as built is approved, with one change, the bundle's product id. | store-page, privacy-policy, testflight |
+| Bundle's product id | 2026-11-13 | The bundle's product id becomes `com.screendead.Unstir.triptych1`, before anything is registered with Apple, so with no migration. Jack: "the only change i wanted was complete -> triptych1". | store-page, architecture |
+| Privacy label and the report mail | 2026-11-13 | The App Privacy label stays Data Not Collected; the report-a-problem mail, optional, started by the player each time and shown before sending, is not declared. Decided again for the mail as it now works (ST7 decided it for a share-sheet button). | store-page |
+| TestFlight in the privacy policy | 2026-11-13 | The policy says what Apple's TestFlight passes on (sessions by day, feedback, screenshots, crash reports, the tester id or invited name and email), used only to improve the game, kept 12 months at most, never shared. | privacy-policy |
+| Escapement's wait button | 2026-11-13 | The button keeps the word "wait". | architecture |
 
 ## Undated, no round
 

@@ -315,6 +315,21 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
   and the card follows at `Brim.card`, or at once under Reduce Motion (Jack's call R-spill, round 15). The tests reach only the Swift side.
+  Every other level's bezel carries the same jug for its stack (Jack's call "Tank's fullness", 2026-11-13): `BrimRing`
+  with `stack` set reads `Game.stack`'s count against `Tank.maxStack`, so 36 notches, 5° apart, to the pin at twelve,
+  and a full tank refuses the turn as before ("the tank is full: undo or reset"). `spills` false makes the last notch a
+  held level like any other, the warn pulse and tremble still on it, with no crest, pour, murk or card. Only
+  `Brim.levelReach` (48 of the jug's 480) past the bezel is drawn, the lit tick ends and the pin's cap fading out by
+  there, as no level's `PlayLayout.Halo` leaves endless's room: no phone's glass shrinks for it. Only the split beside the
+  menu makes room, above the stage (`Halo.brim`, kept in `halo.above` once the side is known), where the pin would
+  otherwise reach into the title: 9 pt off the Duo's open glass, which takes the place of the rim lesson's 8. Its liquid is the level's
+  colour (`Level.colour`, `Brim.colours(flat:)`), as only the grid has a CPU sampler to read the rim off. `LevelView`
+  keeps its own record of the stack's size (`StackBrimClock`: a `Brim.Event` per change of the count, the older folded
+  into the base past eight), runs its timeline only for `Brim.settle` after a change and while the stack is within a
+  notch of full, holds it under Reduce Motion as endless's, strikes it with the picture, and draws it under the knurl so
+  a turning tank's milled edge reads over the liquid. `UNSTIR_CLEAN`'s bare glass, the dock covers and the card clips
+  draw the bezel alone. VoiceOver hears it in the tank's value, "3 moves, par 7, brim 26 of 36" (`Game.tankSpoken`);
+  the ring itself is hidden from it.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
   maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
@@ -677,7 +692,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   In Release its every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`) and analytics' snapshot (`testFirstStirIsOutOfV1`). The bundle
-  (`Offer.complete`, sold as `Pack.completeID`, its old name Complete kept in its ids) is self-limiting (Jack's call
+  (`Offer.complete`, sold as `Pack.triptychID`, `com.screendead.Unstir.triptych1`, an id Jack renamed from its first name, Complete, on 2026-11-13, before any product was registered with Apple; the offer and its name for the harness, clips and analytics, `complete`, keep that first name) is self-limiting (Jack's call
   M1 = B2, round 14): it grants a fixed `Pack.bundled`, Lens, Escapement and Prism, in every build, and no later pack
   ever joins it (`testNoLaterPackJoinsTheBundle`); a later bundle would be a product of its own. What it grants and
   needs, its cover, words (`Pack.named`; the card's "or all three in Triptych I" counts them, `Offer.countWord`) and clip
@@ -698,7 +713,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   through its own way out, `LevelView.leave`, its try saved and its quit sent as the back's are), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
   are off, landing as any purchase lands (Jack's call M6, round 14). `Store.bought`, any pack owned (the bundle or a
   family's share too), is the one check of whether the player has bought anything: the supporter mark reads it, as
-  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; the bundle (`Pack.completeID`) grants
+  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; the bundle (`Pack.triptychID`) grants
   `Pack.bundled`, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads
@@ -1219,7 +1234,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   ..."; the daily, endless and the sandbox by name), value (its result, `Spoken.result`: "clean", "at par" or "solved, 2 over par"; "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
   every Plughole level first") and hint (its rods and par), a lit hairline's reason first (`Spoken.marked`:
-  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
+  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, or Escapement's ticks left, then the brim, the stack's "brim 26 of 36" or endless's "brim 3 of 8"), and
   the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared.", a completion after it in words: "Lens complete, 25 panels."), which
   labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
