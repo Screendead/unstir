@@ -326,18 +326,25 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   map was in). Nothing in the shaders is sized by it: they take the entries as a pointer and a count, and SwiftUI's
   `Shader.Argument.floatArray` states no limit (iOS 27.2 SDK). On the iOS 18.5 and 26.5 simulators, with the map off, a
   48th entry moved 6% to 9% of the glass's pixels on plughole 20, maelstrom 24 and Prism 30, and so did a 96th in a
-  build with the limit at 96, with no `custom shader` refusal in the log. The four-tap budget is unchanged and a mapped
+  build with the limit at 96 (a refused shader draws nothing, as the black glass of two images did). The four-tap budget is unchanged and a mapped
   frame obeys it too (`unstirMappedBody`'s stride), so past it a glass draws two taps, map or not: from 41 entries on
-  a baked picture, 37 on a live one's fill of 4; on maelstrom 24 at 48, from its map, two taps carry 43% more gradient
-  energy than four (grain). On the oracle (the Mac's GPU, 1137 px, medians of three launches, the twist pass alone):
+  a baked picture, 37 on a live one's fill of 4, so every twist maelstrom 27 (marbling's twin) gains draws two; on
+  maelstrom 24 at 48, from its map, two taps carry 43% more gradient energy than four (grain). On the oracle (the Mac's GPU, 1137 px, medians of three launches, the twist pass alone):
   maelstrom 24 at 48 at rest from its map 0.10 to 0.12 ms (two taps; 0.17 with four forced, against 0.16 to 0.18 at
   36), a rod in hand 0.13 to 0.15 (0.24); through the chain, as after a pop, a merge or a reset and in the wind-in,
-  0.61 (1.10 with four), against 0.77 at 36 with four, the load that held 120 Hz on the 13 Pro Max; plughole 20 0.56
-  (0.99) against 0.72; Prism 30 at 48 1.05 (2.03), its map 0.28 to 0.30 (0.43); Lens 25 at 48 0.95 (1.09), its map
-  0.69 (0.72), as the lenses' cores run the chain. Drawing a map took 1.9 to 4.8 ms at 48 against 1.5 to 2.9 at 36 on
+  0.61 (1.10 with four), against 0.77 at 36 with four, the load that held 120 Hz on the 13 Pro Max, but 1.35 times
+  the 0.45 of 36 with two, so where 36 already drew two taps (the Duo upright, a phone the law has stepped down, the
+  twin neurons' fill) 48 is that glass's heaviest frame yet; plughole 20 0.56 (0.99) against 0.72; Prism 30 at 48
+  1.05 (2.03), the one frame drawn as built that is over the 0.77, its map 0.28 to 0.30 (0.43); Lens 25 dealt four
+  times over, its lenses' steps with it, 0.95 (1.09), its map 0.69 (0.72), as the lenses' cores run the chain. No
+  deal is past 28 and the opening winds in only the deal, so a 48-deep chain is reached by a pop, a merge into the
+  top entry or a reset, until the next map lands. Drawing a map took 1.9 to 4.8 ms at 48 against 1.5 to 2.9 at 36 on
   the Mac. In the simulator a map landed 78 to 103 ms after a commit that changed it, at 35 or 47 entries alike, its
   GPU time 4 to 9 ms either way; the map's memory (22.0 MB at 1172 px) and the app's (36 MB) were the same at 36 and 48.
-  The chain grows linearly: maelstrom 24 at 72 0.996 ms with two taps (1.85 with four), at 96 1.50 with two.
+  The chain grows linearly: maelstrom 24 at 72 0.996 ms with two taps (1.85 with four), at 96 1.50 with two (two
+  launches each). On the screen the chain's frame and the map's differ in the deep stir's noise by a mean of 0.2 to
+  1.0 levels at 36, 0.9 to 2.4 at 48 and 11 to 12 at 96 (iOS 26.5; plughole 20 and maelstrom 24; Prism 30 under 1
+  throughout), which is the step a landing map makes: deeper stirs carry more of the two kernels' rounding.
 - **Hand.swift**, **DragProbe.swift** and `scripts/drag-probe.sh`: the turn in hand, kept out of `LevelView`'s own
   state so a frame of a drag re-evaluates the parts that draw the turn and not the play screen (Jack, 2026-11-12:
   find a faster way to draw twists, provided it doesn't look worse). `Hand` is an observable reference `LevelView`
