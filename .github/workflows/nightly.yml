@@ -51,3 +51,53 @@ jobs:
       - name: Slowest tests
         if: always()
         run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"
+  # The StoreKit tests again on the iOS players run now: macos-26 carries only iOS 26 simulators, the xcode-27 image
+  # (a GitHub preview) iOS 27. No cache: its build is another Xcode's.
+  store-ios27:
+    runs-on: xcode-27
+    timeout-minutes: 25
+    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: |
+          curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+      # Built, booted and tested in turn, as test.yml does, each showing where it is: the build's phase lines, the
+      # boot's progress, and every test case as it starts, so a step that hangs names where.
+      - name: Build for testing
+        shell: bash
+        run: |
+          xcodebuild -version
+          scripts/test-store.sh build-for-testing COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep --line-buffered -E "^([A-Za-z*]|.*(error|warning):)"
+      - name: Boot the simulator
+        run: |
+          udid=$(xcrun simctl list devices available | awk '/^-- /{on = /iOS 27\.2/} on && /iPhone .*Pro Max \(/' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+          [[ -n "$udid" ]] || { xcrun simctl list devices available; echo "no iOS 27.2 Pro Max simulator" >&2; exit 1; }
+          echo "$udid" > "$RUNNER_TEMP/udid"
+          xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b
+      # The first StoreKit test on the runner's fresh simulator hung for as long as it was left (6 min 45 s), so one
+      # purchase test runs first, allowed to fail, and every test here is stopped at 60 s.
+      - name: Warm StoreKit up
+        shell: bash
+        run: |
+          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests/testPurchaseGrantsOnePack -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 | tee "$RUNNER_TEMP/warm.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began" || echo "the warm-up test failed"
+      - name: StoreKit tests on iOS 27.2
+        shell: bash
+        run: |
+          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began"
+      - name: Keep the test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-ios27-log
+          path: |
+            ${{ runner.temp }}/build.log
+            ${{ runner.temp }}/warm.log
+            ${{ runner.temp }}/test.log
+            ${{ runner.temp }}/Test.xcresult
+          retention-days: 14
+          if-no-files-found: ignore

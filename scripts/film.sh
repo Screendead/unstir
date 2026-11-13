@@ -115,7 +115,7 @@ fi
 # The edge swipe back (UNSTIR_BACKSWIPE=run): a second in, a drawn fingertip slides plughole 05 off over the menu.
 film back-swipe 3 "fps=8,scale=180:-1,tile=8x3:padding=4" LEVEL=5 BACKSWIPE=run
 film tour 8 "fps=4,scale=200:-1,tile=9x4:padding=4" TOUR=1 OPEN=1
-# The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 17 ticks lit), then plughole tapped.
+# The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 20 ticks lit), then plughole tapped.
 par27=$(printf '0%.0s' {1..27})
 film tier-switch 11 "fps=6,scale=180:-1,tile=11x6:padding=4" TIERDEMO=1 BESTS=plughole:$par27,whirlpool:00001000000200000100
 # The twins' heartbeat, still: from 2.2 s in (the neural web lands about 2 s after launch), one beat at 20 frames a second.
@@ -125,6 +125,10 @@ film heartbeat-maelstrom18-neurons 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank
 # to 3, then five pushes fill it notch by notch until the last spills over the lip at twelve and the picture stirs together.
 # Cropped taller than the tank, for the brim pin and the pour above it.
 film endless-brim-run 14 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
+# A level's brim: maelstrom 27's stack repeated to 30, then rod turns that each add a twist, rising to the pin at 36,
+# and one more that the full tank refuses.
+film brim-rise 12 "crop=1320:1460:0:700,fps=2,scale=200:-1,tile=8x3:padding=4" TIER=maelstrom LEVEL=27 DEEP=30 \
+  MOVES=0:+1,1:+1,0:+1,1:+1,0:+1,1:+1,0:+1 PACE=1.2
 # The rim, played by a drawn fingertip (UNSTIR_FINGER) after two seconds at rest, its lessons learnt: vortex 01 swirled
 # from the rim, healing the swirl's seam then the knob's; maelstrom 01's glass turned from the bezel, then its three
 # knobs; vortex 02 with knob 3 seized, the glass turned from the bezel, a knob, the swirl from the glass's edge and a

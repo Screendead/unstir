@@ -27,7 +27,7 @@ final class PackTests: XCTestCase {
                                                         "com.screendead.Unstir.pack.lens",
                                                         "com.screendead.Unstir.pack.escapement",
                                                         "com.screendead.Unstir.pack.prism"])
-        XCTAssertEqual(Pack.completeID, "com.screendead.Unstir.complete")
+        XCTAssertEqual(Pack.triptychID, "com.screendead.Unstir.triptych1")
         XCTAssertEqual(Pack.productIDs.count, Set(Pack.productIDs).count)
         for pack in Pack.allCases {
             for (i, level) in pack.levels.enumerated() {
@@ -226,7 +226,7 @@ final class PackTests: XCTestCase {
     }
 
     /// A purchase started on the App Store's product page names the offer whose card it opens, for each pack the build
-    /// sells and Complete, and none for a product it doesn't sell; under the harness's states the card's buy lands.
+    /// sells and Triptych I, and none for a product it doesn't sell; under the harness's states the card's buy lands.
     @MainActor func testAPromotedPurchaseNamesTheOfferItBuys() async {
         for offer in Offer.all where offer.sold {
             let store = Store()
@@ -238,13 +238,13 @@ final class PackTests: XCTestCase {
         XCTAssertNil(store.promoted)
         XCTAssertNil(Offer.promoted(Pack.firstStir.productID, release: true), "Release doesn't sell First Stir")
         XCTAssertEqual(Offer.promoted(Pack.lens.productID, release: true), .pack(.lens))
-        XCTAssertEqual(Offer.promoted(Pack.completeID, release: true), .complete)
+        XCTAssertEqual(Offer.promoted(Pack.triptychID, release: true), .complete)
         store.pretend(Ledger())
         await store.purchase(Pack.prism.productID)
         XCTAssertEqual(store.state(.prism), .owned)
     }
 
-    /// The supporter mark and the daily archive open on any pack owned, Complete or a family's share included, and on
+    /// The supporter mark and the daily archive open on any pack owned, Triptych I or a family's share included, and on
     /// nothing pending, revoked or failed.
     @MainActor func testAnyPackOwnedHasBought() {
         let store = Store()
@@ -255,7 +255,7 @@ final class PackTests: XCTestCase {
         ledger.record(Pack.escapement.productID, .failed)
         store.pretend(ledger)
         XCTAssertFalse(store.bought)
-        ledger.record(Pack.completeID, .owned)
+        ledger.record(Pack.triptychID, .owned)
         store.pretend(ledger)
         XCTAssertTrue(store.bought)
         var one = Ledger()
@@ -337,14 +337,14 @@ final class PackTests: XCTestCase {
     /// that takes is in (Jack's call C7, round 13).
     @MainActor func testTheBundleSavesOnlyWhileItCostsLessThanThePacksLeft() {
         let amounts = Dictionary(uniqueKeysWithValues: Pack.allCases.map { ($0.productID, Decimal(string: "2.99")!) })
-            .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
+            .merging([Pack.triptychID: Decimal(string: "5.99")!]) { $1 }
         XCTAssertEqual(Offer.saving(amounts: amounts, owned: []), Decimal(string: "2.98"))
         XCTAssertNil(Offer.saving(amounts: amounts, owned: [.lens]), "5.98 against 5.99")
         XCTAssertEqual(Offer.saving(amounts: amounts, owned: [.firstStir]), Decimal(string: "2.98"),
                        "a pack outside the bundle changes nothing")
         XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.prism.productID }, owned: []))
         XCTAssertNotNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.firstStir.productID }, owned: []))
-        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.completeID }, owned: []))
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.triptychID }, owned: []))
         XCTAssertNil(Offer.saving(amounts: amounts, owned: Set(Pack.bundled)))
 
         // The store reads it off its own ledger: a pending pack is unowned, and the bundle owned owns all it grants.
@@ -353,7 +353,7 @@ final class PackTests: XCTestCase {
         ledger.record(Pack.lens.productID, .pending)
         store.pretend(ledger, amounts: amounts)
         XCTAssertEqual(store.saving, "$2.98")
-        ledger.record(Pack.completeID, .owned)
+        ledger.record(Pack.triptychID, .owned)
         store.pretend(ledger, amounts: amounts)
         XCTAssertNil(store.saving)
         store.pretend(Ledger())
@@ -375,26 +375,26 @@ final class PackTests: XCTestCase {
         store.pretend(one, amounts: amounts, pricing: .fetched)
         XCTAssertFalse(store.offersComplete, "two left cost 5.98 against 5.99, whatever else the build sells")
         var all = Ledger()
-        all.record(Pack.completeID, .owned)
+        all.record(Pack.triptychID, .owned)
         store.pretend(all)
         XCTAssertFalse(store.offersComplete)
     }
 
-    /// Whether Complete is on offer is read off the prices and the packs owned alone: a fetch that returns no products
+    /// Whether Triptych I is on offer is read off the prices and the packs owned alone: a fetch that returns no products
     /// left the dock without its cover, and a card's fetch put it back for the fetch's length, under the opening card.
     @MainActor func testCompleteIsOfferedWhateverTheFetchIsDoing() {
         let sold = Pack.bundled
         let amounts = Dictionary(uniqueKeysWithValues: sold.map { ($0.productID, Decimal(string: "2.99")!) })
-            .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
+            .merging([Pack.triptychID: Decimal(string: "5.99")!]) { $1 }
         XCTAssertTrue(Offer.offersComplete(amounts: [:], owned: [], bundled: sold), "no prices, nothing owned")
-        XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], bundled: sold),
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key != Pack.triptychID }, owned: [], bundled: sold),
                        "the packs' prices in and the bundle's missing, as where it isn't sold: nothing to buy")
         XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key == Pack.lens.productID }, owned: [], bundled: sold),
                        "some prices in, the bundle's missing")
         XCTAssertFalse(Offer.offersComplete(amounts: [:], owned: [.lens], bundled: sold), "no prices, a pack owned")
         XCTAssertTrue(Offer.offersComplete(amounts: amounts, owned: [], bundled: sold))
         XCTAssertFalse(Offer.offersComplete(amounts: amounts, owned: [.lens], bundled: sold), "5.98 against 5.99")
-        XCTAssertFalse(Offer.offersComplete(amounts: amounts.merging([Pack.completeID: 9]) { $1 }, owned: [], bundled: sold),
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.merging([Pack.triptychID: 9]) { $1 }, owned: [], bundled: sold),
                        "the prices say it saves nothing")
         XCTAssertFalse(Offer.offersComplete(amounts: [:], owned: Set(sold), bundled: sold), "every pack owned")
 
@@ -410,7 +410,7 @@ final class PackTests: XCTestCase {
             }
             XCTAssertEqual(Set(read), [true], "the fetch's state never moves it")
         }
-        store.pretend(Ledger(), amounts: amounts.filter { $0.key != Pack.completeID }, pricing: .fetched)
+        store.pretend(Ledger(), amounts: amounts.filter { $0.key != Pack.triptychID }, pricing: .fetched)
         XCTAssertFalse(store.offersComplete, "a storefront that sells the packs but not the bundle")
     }
 
@@ -445,7 +445,7 @@ final class PackTests: XCTestCase {
     /// StoreKit has said of the product since.
     func testARequestStillWaitsAfterARelaunch() {
         let lens = Pack.lens.productID, prism = Pack.prism.productID, escapement = Pack.escapement.productID
-        let bundle = Pack.completeID
+        let bundle = Pack.triptychID
         let d = UserDefaults.standard
         let keys = [lens, prism, escapement, bundle].flatMap { [Asked.key($0), Asked.dateKey($0)] }
         let saved = keys.map { d.object(forKey: $0) }
@@ -499,7 +499,7 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(Pack.lens.fits(best: { plughole.contains($0) ? Best(over: 2, seconds: 60) : nil }))
         XCTAssertTrue(Pack.prism.fits(best: { plughole.contains($0) ? atPar : nil }))
         XCTAssertFalse(Pack.escapement.fits(best: { plughole.contains($0) ? atPar : nil }))
-        XCTAssertTrue(Pack.escapement.fits(best: { sea.contains($0) ? atPar : nil }), "maelstrom opens on vortex at par")
+        XCTAssertTrue(Pack.escapement.fits(best: { sea.contains($0) ? atPar : nil }), "maelstrom opens on vortex solved")
         XCTAssertFalse(Pack.firstStir.fits(best: { _ in atPar }))
 
         let d = try XCTUnwrap(UserDefaults(suiteName: "marks-test"))
@@ -550,7 +550,7 @@ final class PackTests: XCTestCase {
     }
 
     /// A pack's ids never read as another pack's or a tier's.
-    /// A Release shelf shows a pack it sells once it has levels past its taste, and Complete once it shows every pack
+    /// A Release shelf shows a pack it sells once it has levels past its taste, and Triptych I once it shows every pack
     /// it sells; a build outside Release shows them all.
     func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
         XCTAssertEqual(Offer.shelf(release: false, ready: { _ in false }), Offer.all)
@@ -566,7 +566,7 @@ final class PackTests: XCTestCase {
     }
 
     /// First Stir is out of v1 (Jack, FS17), and Prism takes its place (PK1): a Release build neither sells First Stir nor
-    /// opens its levels, taste and all, and Complete names only what it grants. Outside Release it stays whole.
+    /// opens its levels, taste and all, and Triptych I names only what it grants. Outside Release it stays whole.
     func testFirstStirIsOutOfV1() {
         XCTAssertEqual(Pack.sold(release: true), [.lens, .escapement, .prism])
         XCTAssertEqual(Pack.sold(release: false), Pack.allCases)
@@ -622,9 +622,9 @@ final class PackTests: XCTestCase {
     /// else, so no later pack joins it. Every pack outside it, First Stir today, stands in for a later one.
     @MainActor func testNoLaterPackJoinsTheBundle() {
         XCTAssertEqual(Pack.bundled, [.lens, .escapement, .prism])
-        XCTAssertEqual(Pack.completeID, "com.screendead.Unstir.complete")
+        XCTAssertEqual(Pack.triptychID, "com.screendead.Unstir.triptych1")
         var ledger = Ledger()
-        ledger.record(Pack.completeID, .owned)
+        ledger.record(Pack.triptychID, .owned)
         let outside = Pack.allCases.filter { !Pack.bundled.contains($0) }
         XCTAssertFalse(outside.isEmpty, "First Stir is outside it")
         for pack in outside {
@@ -752,7 +752,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(label(trail, card, closes: MenuView.closes(playing: true, covered: true)), "\u{2715} close")
         // Or the parked card brought back as the level leaves: the menu, as on a phone.
         XCTAssertEqual(label(trail, card, closes: false), "\u{2039} menu")
-        // Complete stops saving once a pack is bought: back goes to the menu.
+        // Triptych I stops saving once a pack is bought: back goes to the menu.
         XCTAssertNil(CameFrom(back: .complete, card: .pack(.lens)).returns(card: .pack(.lens), offersComplete: false))
     }
 
@@ -785,7 +785,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(h.failure, .offline)
         XCTAssertEqual(h.prices, [:])
         XCTAssertEqual(h.amounts, [:])
-        XCTAssertEqual(Harness([:]).prices[Pack.completeID], "$5.99")
+        XCTAssertEqual(Harness([:]).prices[Pack.triptychID], "$5.99")
         XCTAssertEqual(Harness([:]).amounts[Pack.lens.productID], Decimal(string: "2.99"))
         XCTAssertEqual(h.pricing, .unreachable)
         XCTAssertFalse(h.canPay)

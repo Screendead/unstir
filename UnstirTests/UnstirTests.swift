@@ -423,6 +423,25 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
     }
 
+    /// A level's brim is its stack, of `Tank.maxStack`: the push that fills it springs in as any other and holds at the
+    /// pin, with no spill's flash, pour or soak, and reaches only `Brim.levelReach` past the bezel.
+    func testALevelsFullBrimNeverSpills() {
+        let room = Tank.maxStack, full = [Brim.Event(from: room - 1, to: room, time: 1)]
+        XCTAssertLessThan(Brim.level(at: 1.05, full, base: room - 1, room: room, spills: false), Double(room) - 0.9)
+        XCTAssertEqual(Brim.level(at: 1 + Brim.settle, full, base: room - 1, room: room, spills: false), Double(room),
+                       accuracy: 0.01)
+        let floats = Brim.frame(at: 1 + Brim.spillSettle, full, base: room - 1, room: room, clock: Brim.Clock(), held: nil,
+                                spills: false, out: Brim.levelReach)
+        // No crest met (negative), no flash, nothing soaked away, and the ring ends at the level's reach.
+        XCTAssertLessThan(floats[15], 0)
+        XCTAssertEqual(floats[16], 0)
+        XCTAssertEqual(floats[18], 1)
+        XCTAssertEqual(Double(floats[19]), Brim.levelReach)
+        XCTAssertEqual(Double(floats[20]), 180 / Double(room), accuracy: 1e-4)
+        // The last notch still warns.
+        XCTAssertGreaterThan(floats[6], 0.99)
+    }
+
     /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
     /// film or kick; at the last notch with no tremble either, its pulse held lit; and a spill held where its pour has
     /// run and soaked away.
@@ -522,8 +541,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(game.clean)
     }
 
-    /// The solve that brings the last of a tier's levels to par goes up a notch, wherever that level stands in the
-    /// tier; a solve with the next tier already open, or one short of par, does not.
+    /// The solve that gives the last of a tier's levels a best goes up a notch, at any score, wherever that level stands
+    /// in the tier; a solve with the next tier already open, or one that leaves a level unsolved, does not.
     @MainActor func testTheSolveThatOpensATierSaysSo() {
         let ids = Tier.plughole.levels.map(\.id), flag = Best.unlocked
         let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
@@ -533,10 +552,9 @@ final class UnstirTests: XCTestCase {
         }
         Best.unlocked = false
         for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
-        for id in ids where id != ids[4] { Best(over: 0, seconds: 9, clean: false).save(id) }
-        Best(over: 2, seconds: 9, clean: false).save(ids[4])
-        func solve(over: Bool) -> Game {
-            let game = Game(level: Tier.plughole.levels[4], tankTurned: true, swirled: true, bank: (5, nil))
+        for id in ids where id != ids[4] && id != ids[6] { Best(over: 0, seconds: 9, clean: false).save(id) }
+        func solve(_ i: Int = 4, over: Bool) -> Game {
+            let game = Game(level: Tier.plughole.levels[i], tankTurned: true, swirled: true, bank: (5, nil))
             if over { game.commit(rod: 0, steps: 1); game.commit(rod: 1, steps: 1) }
             while let t = game.reachable { game.commit(rod: t.rod, steps: t.steps) }
             XCTAssertTrue(game.solved)
@@ -547,13 +565,15 @@ final class UnstirTests: XCTestCase {
         let (earned, pending) = (Review.shared.earned, Review.shared.pending)
         defer { (Review.shared.earned, Review.shared.pending) = (earned, pending) }
         (Review.shared.earned, Review.shared.pending) = (false, false)
-        XCTAssertNil(solve(over: true).opened)
+        XCTAssertNil(solve(over: false).opened, "06 is still unsolved")
         XCTAssertFalse(Review.shared.earned)
         Carded.shown()
         XCTAssertFalse(Review.shared.pending)
         XCTAssertFalse(Tier.whirlpool.isOpen())
         let reports = GameCenter.shared.reports
-        XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        let over = solve(6, over: true)
+        XCTAssertGreaterThan(over.over, 0)
+        XCTAssertEqual(over.opened, .whirlpool, "over par opens it too")
         XCTAssertTrue(Review.shared.earned)
         XCTAssertFalse(Review.shared.pending, "the wait starts with the card")
         XCTAssertEqual(GameCenter.shared.reports, reports, "a solve reports nothing before its card")
@@ -1517,31 +1537,29 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool, .vortex])
     }
 
-    /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best at or
-    /// under par, and the developer unlock opens them all.
+    /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best, at any
+    /// score (Jack, 2026-11-13), and the developer unlock opens them all.
     func testTierGate() {
         var bests: [String: Best] = [:]
         func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false])
         for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
+        XCTAssertEqual(Tier.plughole.solved { bests[$0] }, Array(repeating: true, count: 26) + [false])
         bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
-        XCTAssertFalse(open(.whirlpool))
         XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
-        bests[Level.plughole.last!.id] = Best(over: 0, seconds: 30)
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false])
-        // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool at par opens
-        // vortex and not maelstrom, and vortex at par opens maelstrom.
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false], "over par opens it")
+        // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool solved opens
+        // vortex and not maelstrom, and vortex solved opens maelstrom.
         for level in Level.maelstrom { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.maelstrom))
         for level in Level.whirlpool { bests[level.id] = Best(over: 0, seconds: 30) }
         for level in Level.plughole { bests[level.id] = nil }
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true, false])
         for level in Level.vortex.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
-        bests[Level.vortex.last!.id] = Best(over: 1, seconds: 30)
         XCTAssertFalse(open(.maelstrom))
         for level in Level.whirlpool { bests[level.id] = nil }
-        bests[Level.vortex.last!.id] = Best(over: 0, seconds: 30)
+        bests[Level.vortex.last!.id] = Best(over: 3, seconds: 30)
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, true])
         bests = [:]
         XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true, true])
@@ -1589,7 +1607,7 @@ final class UnstirTests: XCTestCase {
         for level in Level.plughole { bests[level.id] = bests[level.id] ?? Best(over: 0, seconds: 30) }
         XCTAssertNil(Tier.plughole.frontier { bests[$0] })
         XCTAssertEqual(landing(.plughole), "L5")
-        XCTAssertNil(landing(.whirlpool), "whirlpool is still locked while 05 is over par")
+        XCTAssertEqual(landing(.whirlpool), "N1", "whirlpool opens with 05 over par")
         bests["L5"] = Best(over: 0, seconds: 30)
         XCTAssertNil(landing(.plughole))
         XCTAssertEqual(landing(.whirlpool), "N1")
@@ -1781,12 +1799,13 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(PackDock.nameScale(names, cover: 10, width: width), 0.5)
     }
 
-    /// The gate lists what is short of par as runs, each opening at a level the player can open.
-    func testTheGateListsTheLevelsShortOfParAsRuns() {
+    /// The gate lists what is unsolved as runs, each opening at a level the player can open; a best over par counts.
+    func testTheGateListsTheUnsolvedLevelsAsRuns() {
         var bests: [String: Best] = [:]
         XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... 26])
         for level in Level.plughole.prefix(20) { bests[level.id] = Best(over: 0, seconds: 30) }
-        for id in ["L5", "L12", "L13"] { bests[id] = Best(over: 1, seconds: 30) }
+        for id in ["L5", "L12", "L13"] { bests[id] = nil }
+        bests["L7"] = Best(over: 2, seconds: 30)
         let runs = Tier.plughole.short { bests[$0] }
         XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... 26])
         for run in runs { XCTAssert(run.lowerBound == 0 || bests[Level.plughole[run.lowerBound - 1].id] != nil) }
@@ -2172,7 +2191,7 @@ final class UnstirTests: XCTestCase {
                        "locked, solve level 6 first")
         XCTAssertEqual(Spoken.row(Level.vortex[0], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil).value, "locked")
         XCTAssertEqual(Spoken.row(Level.vortex[3], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil, gate: .whirlpool).value,
-                       "locked, par every \(Tier.whirlpool.name) level first")
+                       "locked, solve every \(Tier.whirlpool.name) level first")
         func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")
@@ -2219,12 +2238,13 @@ final class UnstirTests: XCTestCase {
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
-        XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+        // A level's brim is its stack, of the most the tank holds.
+        XCTAssertEqual(game.tankSpoken, "\(game.movesSpoken), brim 0 of \(Tank.maxStack)")
         // The sandbox has no par, so it never reads as at or over one.
         let sandbox = Game(level: .sandbox)
-        XCTAssertEqual(sandbox.tankSpoken, "0 moves")
+        XCTAssertEqual(sandbox.tankSpoken, "0 moves, brim 0 of \(Tank.maxStack)")
         sandbox.commit(rod: 0, steps: 1)
-        XCTAssertEqual(sandbox.tankSpoken, "1 move")
+        XCTAssertEqual(sandbox.tankSpoken, "1 move, brim 1 of \(Tank.maxStack)")
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.

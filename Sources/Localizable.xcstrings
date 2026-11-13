@@ -10,8 +10,8 @@
     "%@: %@ unstirred." : {
       "comment" : "VoiceOver: the curtain after a pack's last level. The pack, then its levels counted"
     },
-    "%lld %@ levels short of par" : {
-      "comment" : "The card's way up, the next tier shut. Levels short of par, then their tier",
+    "%lld %@ levels unsolved" : {
+      "comment" : "The card's way up, the next tier shut. Levels unsolved, then their tier",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -19,13 +19,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld %@ level short of par"
+                  "value" : "%lld %@ level unsolved"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld %@ levels short of par"
+                  "value" : "%lld %@ levels unsolved"
                 }
               }
             }

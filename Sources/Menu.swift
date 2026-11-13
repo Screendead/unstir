@@ -56,9 +56,9 @@ extension Tier {
     /// For VoiceOver: the tier, and if it is locked, what opens it.
     var spoken: String {
         guard let below, !isOpen() else { return word }
-        let par = below.atPar(), lit = par.filter { $0 }.count
-        return String(localized: "\(word), locked, opens with every \(below.word) level at par, \(lit) of \(par.count)",
-                      comment: "VoiceOver: a shut tier. The tier, the tier below, then its levels at par, of all")
+        let solved = below.solved(), lit = solved.filter { $0 }.count
+        return String(localized: "\(word), locked, opens with every \(below.word) level solved, \(lit) of \(solved.count)",
+                      comment: "VoiceOver: a shut tier. The tier, the tier below, then its levels solved, of all")
     }
 
     /// The first level with no best, on an open tier: where the player is. Every level before it has a best, so it is
@@ -67,10 +67,10 @@ extension Tier {
         isOpen(unlocked: unlocked, best) ? levels.first { best($0.id) == nil } : nil
     }
 
-    /// The levels short of par, as runs of neighbours by index. The first of each run is open: the level before it is at
-    /// par, or it is the first.
+    /// The levels not yet solved, as runs of neighbours by index. The first of each run is open: the level before it has
+    /// a best, or it is the first.
     func short(_ best: (String) -> Best? = Best.load) -> [ClosedRange<Int>] {
-        atPar(best).enumerated().reduce(into: []) { runs, level in
+        solved(best).enumerated().reduce(into: []) { runs, level in
             guard !level.element else { return }
             if let last = runs.last, last.upperBound == level.offset - 1 {
                 runs[runs.count - 1] = last.lowerBound ... level.offset
@@ -220,7 +220,7 @@ struct MenuView: View {
     @Binding var settings: Bool
     /// The settings' supporter mark switch, mirrored here as the sheet moves it.
     @State private var supporter = Settings.supporter
-    /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
+    /// A pack's card opened from Triptych I's, so its back returns there while it is still the card up.
     @State private var cameFrom: CameFrom?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
@@ -711,7 +711,7 @@ struct MenuView: View {
         withAnimation(.snappy(duration: 0.42)) { card = offer }
     }
 
-    /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
+    /// The card a pack's card was opened from, while it is still on offer: Triptych I stops saving once a pack is bought.
     private var returns: Offer? { cameFrom?.returns(card: card, offersComplete: Store.shared.offersComplete) }
 
     /// That card, or the menu.
@@ -1146,7 +1146,7 @@ private struct TierList: View, Equatable {
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
                 let reached = unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
                 let opens = !open ? tier.below.map {
-                    String(localized: "par every \($0.word) level to open", comment: "A shut tier's row, tapped. The tier below")
+                    String(localized: "solve every \($0.word) level to open", comment: "A shut tier's row, tapped. The tier below")
                 } : reached ? nil : String(localized: "solve \(levels[i - 1].label) to open",
                                            comment: "A shut row, tapped. The level number before it")
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
@@ -1175,20 +1175,20 @@ private struct TierList: View, Equatable {
         .id(Self.heading)
     }
 
-    /// What opens a locked tier: a tick per level of the tier below, lit once that level is at par.
+    /// What opens a locked tier: a tick per level of the tier below, lit once that level is solved.
     @ViewBuilder private func gate(_ below: Tier) -> some View {
-        let par = below.atPar(), lit = par.filter { $0 }.count
+        let solved = below.solved(), lit = solved.filter { $0 }.count
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "lock.fill").font(.ui(.detail, .semibold))
-                Text("opens with every \(below.word) level at par", comment: "A shut tier's gate. The tier below").font(.ui(.label))
+                Text("opens with every \(below.word) level solved", comment: "A shut tier's gate. The tier below").font(.ui(.label))
                 Spacer(minLength: 0)
-                Text(verbatim: "\(lit)/\(par.count)").font(.ui(.label, .semibold))
+                Text(verbatim: "\(lit)/\(solved.count)").font(.ui(.label, .semibold))
             }
             .foregroundStyle(tier.ink)
             .shadow(color: tier.glow.opacity(0.5), radius: 5)
             HStack(spacing: 0) {
-                ForEach(Array(zip(below.levels, par).enumerated()), id: \.offset) { i, tick in
+                ForEach(Array(zip(below.levels, solved).enumerated()), id: \.offset) { i, tick in
                     if i > 0 { Spacer(minLength: 0) }
                     Capsule().fill(tick.1 ? tick.0.colour : Color.text.opacity(0.24)).frame(width: 3, height: 16)
                         .shadow(color: tick.1 ? tick.0.colour : .clear, radius: 3)
@@ -1196,13 +1196,13 @@ private struct TierList: View, Equatable {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Locked. Opens with every \(below.word) level at par: \(lit) of \(par.count).",
-                                 comment: "VoiceOver: a shut tier's gate. The tier below, its levels at par, of all"))
+        .accessibilityLabel(Text("Locked. Opens with every \(below.word) level solved: \(lit) of \(solved.count).",
+                                 comment: "VoiceOver: a shut tier's gate. The tier below, its levels solved, of all"))
         .padding(.top, 12)
         shortList(below)
     }
 
-    /// The levels still short of par, each run a button that opens its first.
+    /// The levels not yet solved, each run a button that opens its first.
     @ViewBuilder private func shortList(_ below: Tier) -> some View {
         let runs = below.short(), levels = below.levels
         if !runs.isEmpty {
@@ -1220,10 +1220,10 @@ private struct TierList: View, Equatable {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(run.count == 1 // loc: verbatim each a key
-                            ? Text("\(below.word) \(first.label), short of par", comment: "VoiceOver: a level short of par. Its tier, its number")
-                            : Text("\(below.word) \(first.label) to \(last.label), short of par",
-                                   comment: "VoiceOver: levels short of par. Their tier, the first number, the last"))
-                        .accessibilityHint(Text("Opens \(below.word) \(first.label)", comment: "VoiceOver: a level short of par. Its tier, its number"))
+                            ? Text("\(below.word) \(first.label), unsolved", comment: "VoiceOver: a level not yet solved. Its tier, its number")
+                            : Text("\(below.word) \(first.label) to \(last.label), unsolved",
+                                   comment: "VoiceOver: levels not yet solved. Their tier, the first number, the last"))
+                        .accessibilityHint(Text("Opens \(below.word) \(first.label)", comment: "VoiceOver: a level not yet solved. Its tier, its number"))
                         if i < runs.count - 1 {
                             Text(verbatim: "\u{00B7}").font(.ui(.label)).foregroundStyle(Color.text4).frame(minHeight: 36).accessibilityHidden(true)
                         }
@@ -1454,7 +1454,7 @@ private struct Sparkle: Shape {
     }
 }
 
-/// A pack's card opened from another card's link, Complete's: back returns there while that pack's card is still the
+/// A pack's card opened from another card's link, Triptych I's: back returns there while that pack's card is still the
 /// one up, never once the card has changed, closed or been put away under a level, then opened again.
 struct CameFrom: Equatable {
     let back: Offer
@@ -1463,7 +1463,7 @@ struct CameFrom: Equatable {
     /// Kept across a change of card only while the card is still the one it opened.
     func kept(as now: Offer?) -> CameFrom? { now == card ? self : nil }
 
-    /// Where back goes, while Complete still saves anything.
+    /// Where back goes, while Triptych I still saves anything.
     func returns(card now: Offer?, offersComplete: Bool) -> Offer? {
         guard now == card, back != .complete || offersComplete else { return nil }
         return back

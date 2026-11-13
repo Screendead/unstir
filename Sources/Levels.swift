@@ -71,9 +71,14 @@ enum Tier: String, CaseIterable {
         levels.map { best($0.id).map { $0.over == 0 } ?? false }
     }
 
-    /// Plughole always; any other tier once every level of the tier below is at par.
+    /// Per level, whether it has a best, at any score.
+    func solved(_ best: (String) -> Best? = Best.load) -> [Bool] {
+        levels.map { best($0.id) != nil }
+    }
+
+    /// Plughole always; any other tier once every level of the tier below is solved (Jack, 2026-11-13).
     func isOpen(unlocked: Bool = Best.unlocked, _ best: (String) -> Best? = Best.load) -> Bool {
-        unlocked || below.map { $0.atPar(best).allSatisfy { $0 } } ?? true
+        unlocked || below.map { $0.solved(best).allSatisfy { $0 } } ?? true
     }
 
     /// The tier the menu opens on: the last one stored, or the highest open one below it if that has closed since.

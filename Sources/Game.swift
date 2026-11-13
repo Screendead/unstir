@@ -75,7 +75,7 @@ final class Game {
     /// Turns a full stack refused (`Tank.maxStack`), and the knob of the last, which shakes.
     private(set) var refusals = 0
     private(set) var refusedKnob = 0
-    /// The tier this solve opened, on whichever level was the last to reach par: the card goes up a notch.
+    /// The tier this solve opened, on whichever level was the last to be solved: the card goes up a notch.
     private(set) var opened: Tier?
     /// What this solve completed, the one that gave the last of a pack's levels, or of the last tier's, a best.
     private(set) var completed: Completion?

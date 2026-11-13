@@ -227,7 +227,7 @@ struct ResultCard: View {
 }
 
 /// The solve that opens the next tier, and the last level of a tier, go on up the ladder, in the next tier's own
-/// colours. A tier still closed shows its sweep behind a lock, unfilled and still, says how many levels are short of par and opens the menu
+/// colours. A tier still closed shows its sweep behind a lock, unfilled and still, says how many levels are unsolved and opens the menu
 /// on its gate, which shows which.
 private struct TierUp: View {
     let from: Tier
@@ -238,9 +238,9 @@ private struct TierUp: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let open = to.isOpen(), short = from.atPar().filter { !$0 }.count
-        let shortLine = String(localized: "\(short) \(from.word) levels short of par",
-                               comment: "The card's way up, the next tier shut. Levels short of par, then their tier")
+        let open = to.isOpen(), short = from.solved().filter { !$0 }.count
+        let shortLine = String(localized: "\(short) \(from.word) levels unsolved",
+                               comment: "The card's way up, the next tier shut. Levels unsolved, then their tier")
         // A primary 56 tall in the tier's sweep and glow; closed, unfilled and still.
         Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 4) {
@@ -264,10 +264,10 @@ private struct TierUp: View {
         }
         .buttonStyle(Sounding(presses: true))
         .accessibilityLabel(open ? Text("Up a notch: \(to.name)", comment: "VoiceOver: the card's way up. The next tier") // loc: verbatim each a key
-                            : Text("\(to.name), locked. \(shortLine), and par on every one opens it",
-                                   comment: "VoiceOver: the card's way up, shut. The next tier, then how many levels are short of par"))
+                            : Text("\(to.name), locked. \(shortLine), and solving every one opens it",
+                                   comment: "VoiceOver: the card's way up, shut. The next tier, then how many levels are unsolved"))
         .accessibilityHint(open ? Text(verbatim: "") // loc: verbatim each a key
-                           : Text("Shows which \(from.name) levels are short of par", comment: "VoiceOver: the card's way up, shut. The tier below"))
+                           : Text("Shows which \(from.name) levels are unsolved", comment: "VoiceOver: the card's way up, shut. The tier below"))
         .onAppear {
             guard !reduceMotion, to.isOpen() else { return }
             withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glint = true }

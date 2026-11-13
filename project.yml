@@ -4,6 +4,9 @@ options:
   bundleIdPrefix: com.screendead
   # The source is British English (colour), so a later en-US is a review, not a copy (Jack's call CAT6 = A).
   developmentLanguage: en
+  # xcodegen writes storeKitConfiguration only into the run action; the test action needs it too.
+  postGenCommand: >-
+    perl -0pi -e 's|(   </TestAction>)|      <StoreKitConfigurationFileReference\n         identifier = "../../StoreKit/Unstir.storekit">\n      </StoreKitConfigurationFileReference>\n$1|' Unstir.xcodeproj/xcshareddata/xcschemes/Unstir.xcscheme
   deploymentTarget:
     iOS: "17.0"
 settings:
