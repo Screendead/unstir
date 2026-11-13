@@ -181,7 +181,7 @@ struct Harness {
     static func purchases(_ env: [String: String], release: Bool = Build.release) -> Ledger? {
         guard !release, env["UNSTIR_OWNED"] != nil || env["UNSTIR_STORE"] != nil else { return nil }
         func product(_ name: Substring) -> String? {
-            name == "complete" ? Pack.completeID : Pack(rawValue: String(name))?.productID
+            name == "complete" ? Pack.triptychID : Pack(rawValue: String(name))?.productID
         }
         var ledger = Ledger()
         for name in env["UNSTIR_OWNED"]?.split(separator: ",") ?? [] {
@@ -201,7 +201,7 @@ struct Harness {
     /// With `purchases`, the prices StoreKit/Unstir.storekit sets, as the App Store would show them on a US storefront;
     /// none with UNSTIR_PRICES=0, as before StoreKit answers, or UNSTIR_PRICES=unreachable, after its fetch failed.
     let prices: [String: String]
-    /// The same prices as numbers, for Complete's saving.
+    /// The same prices as numbers, for Triptych I's saving.
     let amounts: [String: Decimal]
     let pricing: Pricing
     /// UNSTIR_FAILED=offline (storefront, refused): why each failed product failed, or each pending one's ask again.
@@ -325,7 +325,7 @@ struct Harness {
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
         amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
-            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, Decimal(string: $0 == Pack.completeID ? "5.99" : "2.99")!) })
+            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, Decimal(string: $0 == Pack.triptychID ? "5.99" : "2.99")!) })
         prices = amounts.mapValues { "$\($0)" }
         pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : amounts.isEmpty ? .fetching : .fetched
         failure = env["UNSTIR_FAILED"].flatMap(Failure.init(rawValue:)) ?? .other
@@ -701,7 +701,7 @@ struct RootView: View {
         _settings = State(initialValue: welcome == nil && menu && h.settings)
         _archive = State(initialValue: welcome == nil && (h.archive || h.level.archived && !menu))
         mute = h.mute
-        // Complete's card opens, as from the dock, only while it is on offer, or as an owner's home.
+        // Triptych I's card opens, as from the dock, only while it is on offer, or as an owner's home.
         let card = h.card.flatMap { $0 != .complete || Store.shared.offersComplete || Store.shared.state(.complete) == .owned ? $0 : nil }
         _card = State(initialValue: gate.map(Offer.pack) ?? card)
         _arrived = State(initialValue: gate)

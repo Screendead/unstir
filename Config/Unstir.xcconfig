@@ -34,7 +34,7 @@ GAME_CENTER = NO
 // iCloud's entitlement. NO, until the App ID has the iCloud capability with key-value storage, makes no call to the
 // store and signs without it, as a device build with that entitlement fails to provision without it. Before it turns
 // YES for a release: the App ID's iCloud capability, a two-device test on one Apple ID, and docs/privacy-policy.md and
-// docs/store-page.md, which say the bests stay on the phone and that iCloud sync isn't built.
+// docs/store-page.md, which say the bests stay on the phone and that iCloud sync is built but off in v1.
 ICLOUD = NO
 // YES signs with Declared Age Range's entitlement (com.apple.developer.declared-age-range), which Apple's docs require
 // of an app calling the API (Sources/AgeRange.swift); scripts/archive-ios.sh sets it. NO, until a phone build on the

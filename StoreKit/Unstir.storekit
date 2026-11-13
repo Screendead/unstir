@@ -23,7 +23,7 @@
       "internalID": "6740000002",
       "localizations": [
         {
-          "description": "Rods that zoom.",
+          "description": "25 panels where some rods zoom",
           "displayName": "Lens",
           "locale": "en_US"
         }
@@ -38,7 +38,7 @@
       "internalID": "6740000003",
       "localizations": [
         {
-          "description": "A clock rod that ticks.",
+          "description": "30 problems with clocks in them",
           "displayName": "Escapement",
           "locale": "en_US"
         }
@@ -53,7 +53,7 @@
       "internalID": "6740000005",
       "localizations": [
         {
-          "description": "Rods that stir only some colours.",
+          "description": "30 specimens in three colours",
           "displayName": "Prism",
           "locale": "en_US"
         }
@@ -68,13 +68,13 @@
       "internalID": "6740000004",
       "localizations": [
         {
-          "description": "Lens, Escapement and Prism.",
+          "description": "Lens, Escapement and Prism",
           "displayName": "Triptych I",
           "locale": "en_US"
         }
       ],
-      "productID": "com.screendead.Unstir.complete",
-      "referenceName": "Complete",
+      "productID": "com.screendead.Unstir.triptych1",
+      "referenceName": "Triptych I",
       "type": "NonConsumable"
     }
   ],
