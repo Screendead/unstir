@@ -69,10 +69,21 @@ replay while Jack holds the phone.
 
 **In flight** (`twist-map`, `tank-full` and `store-text` cut from master at #219's merge):
 
-- The cached map (R11, picked back up): the glass drawn from a stored map of the committed stack. Prototype on local
-  `twist-cached-map` (`StirMap.swift` behind `UNSTIR_MAP`, modes `chain`, `lerp` and `mix`, timed in the oracle's
-  bench); the PR goes up from `twist-map`, no commits yet. Jack, on the faster-everywhere `mix` mode: "i like the
-  sound of this, this sounds fine." It waits for his look at a before/after.
+- The cached map (R11, picked back up): a level's glass drawn from a stored map of its committed stack, on
+  `twist-map`, its PR open and waiting for Jack (`docs/architecture.md`, StirMap.swift, holds how it works and what
+  was measured). It is on in every build in `mix`, every state read from the map (Jack: "i like the sound of this,
+  this sounds fine", pending his look); `UNSTIR_MAP=chain` and `off` are probes. On the Mac the twist pass costs 0.20
+  to 0.32 of today's at rest on deep stacks, 0.25 to 0.36 with a rod in hand, 0.49 with the rim in hand and 0.41
+  through the breath. The landing hitch is gone in the simulator: the map is drawn into a surface the image stands
+  for, so nothing is uploaded on the main thread. Waits for Jack, two things: his look at the before and after
+  (inside a held rod's disc on the deepest stirs the fine noise is slightly coarser at twice the size; `chain` is
+  today's picture, with no gain for the rim or the breath), and his phone's numbers, none taken yet:
+  `scripts/gpu-bench.sh twists` for the shares, `PROBES=YES UNSTIR_MAPLOG=1 scripts/run-ios.sh Release` for the
+  landings and memory, and a by-hand heat pair against `UNSTIR_MAP=off`. Not built: Lens and Prism through a map,
+  a correcting entry so an undo or a merge keeps the map (they draw through the chain for the few frames until the
+  next lands), redrawing only the committed rod's box of the map. What the four-tap budget means once a frame's
+  cost no longer grows with depth is a later call of Jack's; nothing here changes it. `tank-full` touches
+  TankView.swift; this branch does not.
 - Endless's brim on every level, on `tank-full`, no commits yet. Jack (2026-11-13): "show it all the time on every
   level". It changes every tank shot.
 - The StoreKit tests on iOS 27.2, on `store-ios27` (no PR; the remote holds only a nightly run on 27.2, the rest is

@@ -75,6 +75,7 @@ final class HandTests: XCTestCase {
             { $0.haze = 0.5 }, { $0.turn = 1 }, { $0.wave = SIMD3(0, 0, 1) }, { $0.fillEntries = 4 },
             { $0.breath = (0, 1) }, { $0.tick = (0, 1) }, { $0.isolate = .red }, { $0.whiteIsolate = true },
             { $0.held = .red }, { $0.hold = 1 }, { $0.budget = 30 }, { $0.fine = fine }, { $0.crisp = 1 },
+            { $0.map = StirMap.Made(key: StirMap.Key(twists: [], rest: 0, side: 100, scale: 3), image: fine.atlas, quant: 4, id: 1) },
         ]
         // Each field, and the environment's scale.
         XCTAssertEqual(Mirror(reflecting: glass).children.count, changes.count + 1)

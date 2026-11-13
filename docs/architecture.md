@@ -167,11 +167,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a 24 px patch on a calm glass all fail; a seam a pixel wide and 12 levels up fails on a calm glass and passes
   inside a deep stir, where the films are the check. A frame that
   fails isn't condemned: it is a call for Jack, with the two beside each other. `film <set>` records the moving cases
-  (the opening, two real drags, a played line, Lens, Escapement and Prism lines) and lays each beside the
+  (the opening, two real drags, a played line, the rim carried by a finger, Lens, Escapement and Prism lines) and lays each beside the
   reference's take, for the eye. `time` runs `OracleBench` (`UNSTIR_GPUBENCH=oracle`, `UNSTIR_ORACLECASES` the same
   cases' variables): it builds each case's glass as `LevelView.tank` does, takes the shader's arguments from
   `Unstirred.shader(scale:)`, draws it off screen at 1137 px through every `Method` in `OracleBench.methods`, today's
-  being `benchUnstir`, writes each method's frame and today's twins, which `benchdiff <method>` holds against today's by the same rule,
+  being `benchUnstir` (and `map` and `map-chain` the stored map's, `StirMap`), writes each method's frame and today's twins, which `benchdiff <method>` holds against today's by the same rule,
   and times the methods in turn round by round, so a busy moment on a shared GPU lands on all of them and each
   line's share of today's is steadier than its milliseconds. A new way joins `methods` with its kernels, its
   once-a-commit work timed apart (`Method.commit`). A live picture's layer is stood in for by the glass's fill, the
@@ -185,6 +185,65 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   phone; `Probes.screen` is the one place the app asks for one, `UNSTIR_NUDGE` reads as nothing without it,
   `scripts/archive-ios.sh` refuses the switch and builds with it off, and `testADefaultBuildHasNoProbes` holds the
   tracked config to NO.
+- **StirMap.swift** is the stored map (Jack, 2026-11-12: find a faster way to draw twists, provided it doesn't look
+  worse; R11's cache, picked back up). A level's glass draws from a map of its committed stack, so a frame costs the
+  same at any depth. The shader's taps sit a quarter pixel off each pixel's centre, a grid of two a pixel, so the
+  chain's result for every tap is an image two texels a device pixel (`stirMap`, a thread a pixel through
+  `tapsThrough` itself, `storeTaps`): each texel its tap's point on the layer in device pixels, 16 bits a coordinate
+  over two 8-bit channels, `StirMap.quant` steps a pixel, a multiple of 4 so a tap the stack leaves alone is stored
+  exactly (56 steps on the 13 Pro Max's 1137 px glass). `HeldUnstirred` keeps a `StirMap.Holder` and asks it for the
+  committed glass's map (`StirMap.key`: the stack's entries as the shader takes them, the committed turn, the size)
+  on a stack of `StirMap.least` (10) or more, wound in whole, with no lens and no Prism mask; a cover, a clip, the
+  icon and the menu's stir never ask. The holder draws the key still wanted after `Holder.settle` (40 ms, as a tick's
+  flight or autoplay asks for another every frame), one at a time, off the main actor, and lets the map go when none
+  is wanted. `Unstirred.shader` draws through `unstirMapped` whenever the map it has holds a run of the frame's
+  bottom entries, float for float, at its size: so a map is never wrong, only short. A twist pushed since, a rod in
+  hand, a tick and the breath run above it as entries (`tapsThrough` from the map's count up), and a tap none of them
+  moves reads its own texel. A tap they move, or any tap while the glass is turned off the map's turn (the rim in
+  hand, a turn easing in), lands between texels, and `between` reads the map there: between the four nearest texels
+  where those lie as a straight map would put them, to `StirMap.bend` (16) pixels of the picture, and elsewhere the
+  nearest texel's point whole, since deep in a stir the map folds within half a pixel and a point between two of
+  its points is not one of them (Jack's call, 2026-11-12, `mix`: every state reads the map; he sees the before and
+  after at the PR). As a settle runs out the moved taps come back onto their texels, so the frame runs into the rest
+  frame with no step, provided the new map has landed, which in the simulator it does some 55 to 80 ms after the let-go (40 asked
+  for, 13 to 36 drawing) against a settle of 0.3 s. A pop, a merge into the top entry, a reset and the opening's wind change what the map
+  holds, and those frames draw through `unstir` until the next map lands; so do a stack under 10, Lens (its detail
+  holds the shader's image; a map could carry a lens's flow, with a second image argument, which worked on iOS 26.5
+  and is unproven on 17), Prism (three chains a tap would want three maps, 62 MB at 1137 px) and every glass but a
+  level's. The two-tap rule and the four-tap budget are `unstir`'s, unchanged.
+  The image is the hard part. SwiftUI hands a shader an image, not a texture, and RenderBox uploads an image of
+  plain bytes on the main thread as it first draws it (`replaceRegion`, by a sample): 20 MB a map, one frame of 33 to
+  43 ms a commit in the simulator where 16.7 is usual. So the GPU draws the map straight into an `IOSurface`
+  (`makeTexture(descriptor:iosurface:plane:)`), and the image is Core Image's deferred image of that surface
+  (`CIContext.createCGImage(_:from:format:colorSpace:deferred:)`), which RenderBox makes its texture of in place
+  (`prepare_from_iosurface`, no `replaceRegion`, sampled on the iOS 26.5 and 18.5 simulators, 2026-11-13; an image
+  made by `VTCreateCGImageFromCVPixelBuffer`, or drawn by `UIGraphicsImageRenderer`, was uploaded as before).
+  Nothing is read back or copied, every byte reaches the shader as written (sRGB-tagged BGRA), and a landing's
+  longest frame is the usual one. Each map has a surface of its own, never written again, as the frame reads the
+  very memory. A map is 16 bytes a pixel of the glass: 20.7 MB at 1137 px, 34.6 on the Duo's 1471, and the old one
+  goes as the new lands (one map's surface in every sample of a played line). It is drawn a strip of rows at a
+  time, a command buffer each, so a frame queues behind one strip and not a whole frame of the chain's work.
+  `UNSTIR_MAP=off`, `chain` (a pixel with a tap off its texel runs the whole chain, as `unstir` does: today's
+  picture, and no gain with the rim in hand or the breath) and `show` (tints each pixel by how many taps read their
+  own texel), `UNSTIR_MAPBEND`, `UNSTIR_MAPLEAST` and `UNSTIR_MAPLOG` (a line as each map lands: its drawing time
+  and the GPU's, then the longest of the next eight frames beside the usual one and the app's memory) are probes:
+  Debug reads them, a Release build only with `PROBES=YES`.
+  Measured 2026-11-13 on the oracle (the Mac's GPU off screen at 1137 px, medians of three launches, shares of
+  today's twist pass, which is the `tapsThrough` loop): at rest 0.28 on maelstrom 24 (23 entries), 0.20 at 36 and
+  0.21 there with two taps, 0.23 on whirlpool 27, 0.24 on vortex 27, 0.32 on plughole 20 at 36 and 0.60 on Escapement
+  12 (10 entries); a rod in hand 0.36, and 0.25 at 35 entries (0.54 and 0.45 by `chain`); the rim in hand 0.49 (1.05
+  by `chain`); the breath 0.41 (1.15). A live picture's fill, 0.2 to 0.4 ms there, is under every frame and
+  untouched, so a whole rest frame is nearer half. Drawing a map takes 1.1 to 2.8 ms. The map reads 20 MB of
+  texture a frame where the chain reads none, so a phone's shares may differ: none has run it
+  (`scripts/gpu-bench.sh twists` times these cases there). On the screen all 45 of the oracle's frames and their
+  sweeps pass with the map, and by `chain`: `same` where nothing or little is mapped, `alike` on deep stacks, where
+  two kernels never round a deep chain alike (mean difference 0.14 on maelstrom 24 at rest); with `UNSTIR_MAP=off`
+  every frame is master's to the level. What the rule does not see: inside a held rod's disc on the deepest stirs
+  the nearest texels repeat a little, and the fine noise there is slightly coarser at twice the size (one-pixel
+  autocorrelation 0.16 against 0.14, the twins within 0.004; unchanged by a bend of 1 or 2; the rim in hand and
+  the breath read as today's), which is the look Jack judges at the PR. Running the folded taps through the chain
+  instead costs what `chain` does (measured). `scripts/twist-oracle/crops.py` lays one case's crops from several
+  sets beside each other at twice the size.
 - **Hand.swift**, **DragProbe.swift** and `scripts/drag-probe.sh`: the turn in hand, kept out of `LevelView`'s own
   state so a frame of a drag re-evaluates the parts that draw the turn and not the play screen (Jack, 2026-11-12:
   find a faster way to draw twists, provided it doesn't look worse). `Hand` is an observable reference `LevelView`
