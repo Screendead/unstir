@@ -122,6 +122,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(level.cleanShown)
         XCTAssertEqual(ResultMarks.filled(clean: level.cleanShown, over: level.over), 2)
         XCTAssertTrue(level.finishSpoken.hasSuffix("At par."), level.finishSpoken)
+        XCTAssertFalse(level.offersAgain, "a level at par offers next only (Jack, 2026-11-13)")
         XCTAssertEqual(Best.load(id)?.clean, true)
         XCTAssertTrue(Achievement.Record.stored().clean)
         XCTAssertEqual(Archive.Mark(id), .par)
@@ -133,6 +134,29 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(daily.cleanShown, daily.clean)
         XCTAssertTrue(daily.cleanShown)
         XCTAssertTrue(daily.finishSpoken.hasSuffix("Clean."), daily.finishSpoken)
+        XCTAssertFalse(daily.offersAgain)
+    }
+
+    /// A level's card offers again only over par (Jack, 2026-11-13); the daily's on any finish that isn't clean.
+    @MainActor func testAgainOnlyOverParButOnTheDaily() {
+        let ids = ["test-again-level", "daily-test-again"]
+        defer { for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") } }
+        func solved(_ id: String, over: Bool, undo: Bool = false) -> Game {
+            UserDefaults.standard.removeObject(forKey: "best.\(id)")
+            Best.undos = 5
+            let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]), firstTry: true)
+            if undo { game.commit(rod: 1, steps: 1); game.undo() }
+            if over { game.commit(rod: 0, steps: -2); game.commit(rod: 1, steps: 1); game.commit(rod: 1, steps: -1); game.commit(rod: 0, steps: -2) }
+            else { game.commit(rod: 0, steps: -4) }
+            XCTAssertTrue(game.solved, id)
+            return game
+        }
+        XCTAssertFalse(solved(ids[0], over: false).offersAgain, "a level at par")
+        XCTAssertFalse(solved(ids[0], over: false, undo: true).offersAgain, "a level at par with an undo")
+        XCTAssertTrue(solved(ids[0], over: true).offersAgain, "a level over par")
+        XCTAssertFalse(solved(ids[1], over: false).offersAgain, "the daily clean")
+        XCTAssertTrue(solved(ids[1], over: false, undo: true).offersAgain, "the daily at par with an undo")
+        XCTAssertTrue(solved(ids[1], over: true).offersAgain, "the daily over par")
     }
 
     /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;

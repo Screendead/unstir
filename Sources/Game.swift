@@ -237,9 +237,10 @@ final class Game {
     var counts: Bool { level.archived ? !keptOnItsDay : firstTry || !level.id.hasPrefix("daily-") }
     private let keptOnItsDay: Bool
 
-    /// The result card's "again": any finish that isn't clean, but endless's. On the daily it plays as practice (Jack's
-    /// call P1 = B, 2026-11-01).
-    var offersAgain: Bool { level.run == nil && !clean }
+    /// The result card's "again", never endless's: on the daily any finish that isn't clean, played as practice (Jack's
+    /// call P1 = B, 2026-11-01); on any other level only a solve over par, as par is all a level shows (Jack,
+    /// 2026-11-13). Escapement, which has no par, never offers it; its lost card has its own.
+    var offersAgain: Bool { level.run == nil && (Best.keepsClean(level.id) ? !clean : over > 0) }
 
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }

@@ -593,16 +593,15 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
-    /// The fullest card any level shows: plughole 27 replayed at par against a best of +6, every other plughole level
-    /// at par, so its card says the new best, offers again and goes up a notch to the open tier. As tiers open on
-    /// solved levels (Jack, 2026-11-13), a closed tier's longer way up never shows on a tier's last level. Measured
-    /// 2026-11-13, once only the daily kept clean's hint: 284 pt at xxxLarge, ahead of the daily's practice card (258 on
-    /// an SE, 234 on a Pro Max) and a pack's or the free ladder's last level, completion and all (234).
+    /// The fullest card any level shows: plughole 27 replayed over par against a best of +6, every other plughole level
+    /// at par, so its card says the margin and the new best, offers again (a level's only over par, Jack, 2026-11-13)
+    /// and goes up a notch to the open tier. As tiers open on solved levels (Jack, 2026-11-13), a closed tier's longer
+    /// way up never shows on a tier's last level. The tests measure every candidate rather than trust this.
     private func storeTheFullestCard() {
         for level in Tier.plughole.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) }
         Best(over: 6, seconds: 60).save(Tier.plughole.levels.last!.id)
     }
-    private let fullest = ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
+    private let fullest = ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
         // The cards that ran past the foot: the fullest at xxxLarge, the play screen's cap, on the largest phone and the
@@ -640,9 +639,12 @@ final class PlayLayoutTests: XCTestCase {
     private var candidates: [(what: String, env: [String: String], store: () -> Void)] {
         let maelstrom27 = Tier.maelstrom.levels.last!.id
         return [
-            ("plughole 27 replayed at par against +6", fullest, storeTheFullestCard),
-            ("plughole 27 replayed over par against +6", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
+            ("plughole 27 replayed at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
              storeTheFullestCard),
+            ("plughole 27 replayed over par against +6", fullest, storeTheFullestCard),
+            ("plughole 05 over par, the last plughole level without a best", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "5",
+                                                                               "UNSTIR_CLOCK": "0"],
+             { for (i, level) in Tier.plughole.levels.enumerated() where i != 4 { Best(over: 0, seconds: 60).save(level.id) } }),
             ("plughole 05 at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "5", "UNSTIR_CLOCK": "0"], {
                 for level in Tier.plughole.levels { Best(over: 0, seconds: 60).save(level.id) }
                 Best(over: 6, seconds: 60).save(Tier.plughole.levels[4].id)
