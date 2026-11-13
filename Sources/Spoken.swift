@@ -126,13 +126,16 @@ extension Game {
 
     private static func moved(_ moves: Int) -> String { String(localized: "\(moves) moves", comment: "Moves played") }
 
-    /// The tank's value: Escapement's ticks left, a run's brim, or the header's count.
+    /// The tank's value: a run's brim, or Escapement's ticks left or the header's count and then the brim the stack fills.
     var tankSpoken: String {
-        if !level.ratchets.isEmpty { return String(localized: "\(budget) ticks left",
-                                                   comment: "VoiceOver: Escapement's tank. Ticks left") }
-        return level.run == nil ? movesSpoken
-            : String(localized: "\(movesSpoken), brim \(brim) of \(Run.room)",
-                     comment: "VoiceOver: endless's tank. Moves, then the brim's notches of its room")
+        guard level.run == nil else {
+            return String(localized: "\(movesSpoken), brim \(brim) of \(Run.room)",
+                          comment: "VoiceOver: endless's tank. Moves, then the brim's notches of its room")
+        }
+        let count = level.ratchets.isEmpty ? movesSpoken
+            : String(localized: "\(budget) ticks left", comment: "VoiceOver: Escapement's tank. Ticks left")
+        return String(localized: "\(count), brim \(stack.count) of \(Tank.maxStack)",
+                      comment: "VoiceOver: a level's tank. Its count, then the twists the brim shows of the most it holds")
     }
 
     /// The card's account of how the level ended, where VoiceOver lands as it shows.

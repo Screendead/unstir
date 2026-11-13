@@ -12,6 +12,9 @@ enum Brim {
     static let rOut = unit * 1.045, rMid = (unit + rOut) / 2
     /// How far past the bezel the rim draws: out to where the glow and a spill's drops have faded.
     static let reach = 110.0
+    /// A level's brim reaches only this far past the bezel: the lit ticks and the pin's cap, fading out by here, as no
+    /// level's glass leaves room for endless's glow.
+    static let levelReach = 48.0
 
     /// The spill, in seconds after the push that fills the brim. The two fronts meet at the brim pin, a crest swells over
     /// the lip and breaks 0.3 s later (Brim.metal times the pour from the meet).
@@ -56,12 +59,13 @@ enum Brim {
 
     /// The fill in ticks at `t`, from `base` as the tank opened: each change springs in, except the one that fills the
     /// brim, whose two fronts climb faster and faster to meet at twelve.
-    static func level(at t: Double, _ events: [Event], base: Int, room: Int) -> Double {
-        if let last = events.last, last.to >= room, t >= last.time + 0.06 {
+    /// `spills` false, a level's: the full brim is a held last notch, never a spill.
+    static func level(at t: Double, _ events: [Event], base: Int, room: Int, spills: Bool = true) -> Double {
+        if spills, let last = events.last, last.to >= room, t >= last.time + 0.06 {
             let x = (t - last.time - 0.06) / (meet - 0.06)
             return x < 1 ? Double(room - 1) + x * x : Double(room)
         }
-        return events.filter { $0.to < room }.reduce(Double(base)) { $0 + Double($1.to - $1.from) * spring(t - $1.time - 0.06) }
+        return events.filter { !spills || $0.to < room }.reduce(Double(base)) { $0 + Double($1.to - $1.from) * spring(t - $1.time - 0.06) }
     }
 
     /// Where the surface stands for a fill of `g` ticks, in Brim.metal's units below the centre: a level chord that
@@ -75,9 +79,9 @@ enum Brim {
     }
 
     /// How much the liquid moves at `t`: fully while room runs short and for a while after each change, then it settles.
-    static func alive(at t: Double, _ events: [Event], warn: Double, room: Int) -> Double {
+    static func alive(at t: Double, _ events: [Event], warn: Double, room: Int, spills: Bool = true) -> Double {
         guard let last = events.last else { return warn > 0.01 ? 1 : 0 }
-        if last.to >= room { return 1 - sstep(spillSettle - 0.6, spillSettle - 0.2, t - last.time) }
+        if spills && last.to >= room { return 1 - sstep(spillSettle - 0.6, spillSettle - 0.2, t - last.time) }
         return warn > 0.01 ? 1 : 1 - sstep(settle - 0.6, settle, t - last.time)
     }
 
@@ -100,14 +104,14 @@ enum Brim {
     /// clock stands at that many seconds instead of `clock`'s. `still`, Reduce Motion's, also stills what runs on while
     /// room runs short: no bob, tremble or slosh, and the last notch's pulse held lit.
     static func frame(at now: Double, _ events: [Event], base: Int, room: Int, clock: Clock, held: Double?,
-                      still: Bool = false) -> [Float] {
+                      still: Bool = false, spills: Bool = true, out: Double = reach) -> [Float] {
         let n = Double(room)
-        let spill = events.last.flatMap { $0.to >= room ? $0.time : nil }
+        let spill = spills ? events.last.flatMap { $0.to >= room ? $0.time : nil } : nil
         let met = spill.map { now >= $0 + meet } ?? false
-        func g(_ t: Double) -> Double { level(at: t, events, base: base, room: room) }
+        func g(_ t: Double) -> Double { level(at: t, events, base: base, room: room, spills: spills) }
         let fill = g(now)
         let warn = met ? 0 : sstep(n - 1.7, n - 1, fill)
-        let live = alive(at: now, events, warn: warn, room: room)
+        let live = alive(at: now, events, warn: warn, room: room, spills: spills)
         let t: Double, phase: Double
         if let held {
             (t, phase) = (held, 2 * .pi * (1.3 + 2 * warn) * held)
@@ -156,7 +160,7 @@ enum Brim {
         let wetFilm: Double = min(max((wet - fill) * 1.4, 0), 1) * 0.35
         let fullness = sstep(3 * n / 8, n, fill)
         let floats: [Double] = [t, levelY(fill, room: room), tan(tilt), bob, trem[0], trem[1], warn, calm, old, tau,
-                                levelY(wet, room: room), wetFilm, kick, pulse, fullness, tb, flash, bri, soaked, reach,
+                                levelY(wet, room: room), wetFilm, kick, pulse, fullness, tb, flash, bri, soaked, out,
                                 180 / n, old2, tau2, sstep(0, 0.6, fill)]
         return floats.map { Float($0) }
     }
@@ -188,6 +192,14 @@ enum Brim {
         let lines = around(720, radii: [0.979, 0.9855, 0.992], blur: 1)
         func floats(_ v: [SIMD3<Double>]) -> [Float] { v.flatMap { [Float($0.x), Float($0.y), Float($0.z)] } }
         return (floats(hue), floats(lines))
+    }
+
+    /// A level's liquid in one colour all round, `rgb` brightest-channel 1 as `colours` leaves its hue, and its lines a
+    /// darker shade of it.
+    static func colours(flat rgb: SIMD3<Double>) -> (hue: [Float], lines: [Float]) {
+        let hue = rgb / (rgb.max() + 1e-4), line = hue * 0.35
+        return (Array(repeating: [Float(hue.x), Float(hue.y), Float(hue.z)], count: 360).flatMap { $0 },
+                Array(repeating: [Float(line.x), Float(line.y), Float(line.z)], count: 720).flatMap { $0 })
     }
 
     /// After the spill, `t` seconds after they begin, the stirs that mix the picture together (Brim.metal's `murk`), 4
@@ -224,14 +236,17 @@ struct BrimRing: View {
     /// Reduce Motion's: held where it rests, not mid-motion as UNSTIR_CLOCK's frame is.
     var still = false
     let paused: Bool
+    /// A level's: `brim` is the stack's entries, of `Tank.maxStack`, and a full stack refuses rather than spills. The
+    /// tank's own value speaks it (`Game.tankSpoken`).
+    var stack = false
     @State private var clock = Brim.Clock()
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: paused || held != nil)) { timeline in
             let now = held.map { (events.last?.time ?? 0) + $0 } ?? timeline.date.timeIntervalSinceReferenceDate
-            let floats = Brim.frame(at: now, events, base: base, room: Run.room, clock: clock, held: held,
-                                     still: still)
-            let outer = CGFloat(Brim.rOut + Brim.reach) / CGFloat(Brim.unit) * r
+            let floats = Brim.frame(at: now, events, base: base, room: stack ? Tank.maxStack : Run.room, clock: clock,
+                                     held: held, still: still, spills: !stack, out: stack ? Brim.levelReach : Brim.reach)
+            let outer = CGFloat(Brim.rOut + (stack ? Brim.levelReach : Brim.reach)) / CGFloat(Brim.unit) * r
             Circle()
                 .stroke(ShaderLibrary.brim(.float2((r + outer) / 2, (r + outer) / 2), .float(r), .floatArray(floats),
                                            .floatArray(colours.hue), .floatArray(colours.lines)),
@@ -243,6 +258,7 @@ struct BrimRing: View {
         .accessibilityElement()
         .accessibilityLabel(Text("brim", comment: "VoiceOver: endless's brim, the gauge round the tank's rim"))
         .accessibilityValue(Text("\(brim) of \(Run.room)", comment: "VoiceOver: the brim's notches filled, of the notches it holds"))
+        .accessibilityHidden(stack)
     }
 }
 

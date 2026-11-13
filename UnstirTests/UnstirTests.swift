@@ -423,6 +423,25 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
     }
 
+    /// A level's brim is its stack, of `Tank.maxStack`: the push that fills it springs in as any other and holds at the
+    /// pin, with no spill's flash, pour or soak, and reaches only `Brim.levelReach` past the bezel.
+    func testALevelsFullBrimNeverSpills() {
+        let room = Tank.maxStack, full = [Brim.Event(from: room - 1, to: room, time: 1)]
+        XCTAssertLessThan(Brim.level(at: 1.05, full, base: room - 1, room: room, spills: false), Double(room) - 0.9)
+        XCTAssertEqual(Brim.level(at: 1 + Brim.settle, full, base: room - 1, room: room, spills: false), Double(room),
+                       accuracy: 0.01)
+        let floats = Brim.frame(at: 1 + Brim.spillSettle, full, base: room - 1, room: room, clock: Brim.Clock(), held: nil,
+                                spills: false, out: Brim.levelReach)
+        // No crest met (negative), no flash, nothing soaked away, and the ring ends at the level's reach.
+        XCTAssertLessThan(floats[15], 0)
+        XCTAssertEqual(floats[16], 0)
+        XCTAssertEqual(floats[18], 1)
+        XCTAssertEqual(Double(floats[19]), Brim.levelReach)
+        XCTAssertEqual(Double(floats[20]), 180 / Double(room), accuracy: 1e-4)
+        // The last notch still warns.
+        XCTAssertGreaterThan(floats[6], 0.99)
+    }
+
     /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
     /// film or kick; at the last notch with no tremble either, its pulse held lit; and a spill held where its pour has
     /// run and soaked away.
@@ -2219,12 +2238,13 @@ final class UnstirTests: XCTestCase {
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
-        XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+        // A level's brim is its stack, of the most the tank holds.
+        XCTAssertEqual(game.tankSpoken, "\(game.movesSpoken), brim 0 of \(Tank.maxStack)")
         // The sandbox has no par, so it never reads as at or over one.
         let sandbox = Game(level: .sandbox)
-        XCTAssertEqual(sandbox.tankSpoken, "0 moves")
+        XCTAssertEqual(sandbox.tankSpoken, "0 moves, brim 0 of \(Tank.maxStack)")
         sandbox.commit(rod: 0, steps: 1)
-        XCTAssertEqual(sandbox.tankSpoken, "1 move")
+        XCTAssertEqual(sandbox.tankSpoken, "1 move, brim 1 of \(Tank.maxStack)")
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.
