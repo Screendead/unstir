@@ -50,12 +50,12 @@ still prism-swatch PACK=prism OWNED=prism LEVEL=8 CLEAN=1 SWATCH=r
 # Lens and Prism as deep as the stored map draws them: Lens 25 with six twists more on its plain rods (2, 4 and 6),
 # a plain rod and a lens in hand over them, the lens past x8; Lens 1's lens in hand over a map of its one entry; Prism
 # 30 at its dealt depth over a map and dealt three times over, held near a count and with a swatch. MAPLEAST lowers
-# the depth a map is drawn from and MAPLENS=1 draws Lens's (StirMap.lensMaps), probes the references' build ignores.
-l25d=(PACK=lens OWNED=lens LEVEL=25 CLEAN=1 PLAYED=2:2,4:-3,6:2,2:-1,4:2,6:-2 MAPLENS=1)
+# the depth a map is drawn from, a probe the references' build ignores.
+l25d=(PACK=lens OWNED=lens LEVEL=25 CLEAN=1 PLAYED=2:2,4:-3,6:2,2:-1,4:2,6:-2)
 still lens-25-deep "${l25d[@]}"
 sweep lens-25-rod LIVE "2:+1.40 2:+1.44" "${l25d[@]}"
 sweep lens-25-lens LIVE "0:+2.90 0:+2.94" "${l25d[@]}"
-sweep lens-zoom-map LIVE "0:+2.90 0:+2.94" PACK=lens LEVEL=1 CLEAN=1 MAPLEAST=1 MAPLENS=1
+sweep lens-zoom-map LIVE "0:+2.90 0:+2.94" PACK=lens LEVEL=1 CLEAN=1 MAPLEAST=1
 p30d=(PACK=prism OWNED=prism LEVEL=30 CLEAN=1 DEEP=24)
 still prism-30-map PACK=prism OWNED=prism LEVEL=30 CLEAN=1 MAPLEAST=1
 still prism-30-deep "${p30d[@]}"

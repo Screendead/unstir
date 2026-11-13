@@ -170,7 +170,7 @@ final class StirMapTests: XCTestCase {
     }
 
     /// No map is asked for a short stack, one winding in or a cover's shares; a Lens level's holds its lenses' flow
-    /// where UNSTIR_MAPLENS asks, and Prism's counts its channels' maps for its depth and holds a tile a word.
+    /// (but under UNSTIR_MAPLENS=0), and Prism's counts its channels' maps for its depth and holds a tile a word.
     @MainActor func testOnlyADeepGlassAsksForAMap() throws {
         try XCTSkipIf(StirMap.mode == nil)
         let stack = (0..<StirMap.least).map { Twist(rod: $0 % 3, steps: 2) }
@@ -188,12 +188,16 @@ final class StirMapTests: XCTestCase {
         var held = glass
         (held.liveRod, held.liveAngle, held.breath, held.tick) = (1, 0.7, (0, 0.1), (2, 0.2))
         XCTAssertEqual(StirMap.key(held, scale: 3), StirMap.key(glass, scale: 3))
-        // A lens's entries as the frame takes them.
+        // A Lens level asks as any other does, from the same depth (Jack's call, 2026-11-13), its lens's entries as
+        // the frame takes them; only the probe turns it off.
+        XCTAssertEqual(StirMap.lensMaps, ProcessInfo.processInfo.environment["UNSTIR_MAPLENS"] != "0")
         var lens = glass
         lens.lenses = [0]
         let key = StirMap.key(lens, scale: 3)
         XCTAssertEqual(key == nil, !StirMap.lensMaps)
         if let key { XCTAssertTrue(lens.shader(scale: 3).twists.starts(with: key.twists)) }
+        lens.stack.removeLast()
+        XCTAssertNil(StirMap.key(lens, scale: 3))
         // Prism: red's word and cyan's (green and blue together), its depth the maps its entries hold.
         var prism = glass
         prism.masks = [0: .red, 1: .cyan]

@@ -55,9 +55,10 @@ enum StirMap {
     /// The most a map may hold in bytes, its tiles all told (`Key.bytes`): past it the glass draws through the chain.
     /// UNSTIR_MAPCAP, in MB, a probe.
     nonisolated static let cap = probed("UNSTIR_MAPCAP").flatMap(Double.init).map { Int($0 * 1e6) } ?? Int.max
-    /// Whether a Lens level draws from a map: only where UNSTIR_MAPLENS=1 asks, a probe, as Lens 25, the deepest,
-    /// gains a fifth at most (`docs/architecture.md`); whether it ships is Jack's call.
-    nonisolated static let lensMaps = probed("UNSTIR_MAPLENS") == "1"
+    /// Whether a Lens level draws from a map, its detail in the map's own image (`pack`): Jack's call, 2026-11-13,
+    /// its memory for a tenth to a fifth of the deepest levels' frame. UNSTIR_MAPLENS=0, a probe, draws Lens through
+    /// its chain as before, for holding the two against each other.
+    nonisolated static let lensMaps = probed("UNSTIR_MAPLENS") != "0"
     /// The shortest word a Prism channel's chain is given a tile for; a channel with a shorter one runs it as it does
     /// without a map, a tile's memory saved. UNSTIR_MAPSHORTEST, a probe: unset, every word has its tile.
     nonisolated static let shortest = probed("UNSTIR_MAPSHORTEST").flatMap(Int.init) ?? 1
@@ -149,7 +150,7 @@ enum StirMap {
 
     /// The map a level's glass at rest would draw from, nil where it draws without one: a stack under `least` (or
     /// Prism's under `prismLeast`, unless `least` is given), one still winding in, a map past `cap`, or a Lens level
-    /// but where `lensMaps` asks.
+    /// with `lensMaps` off.
     nonisolated static func key(_ glass: Unstirred, scale: CGFloat, least: Int? = nil) -> Key? {
         guard mode != nil, glass.wind >= 1, glass.shares == nil, glass.lenses.isEmpty || lensMaps else { return nil }
         let (twists, channels) = Unstirred.entries(glass.stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: glass.layout,

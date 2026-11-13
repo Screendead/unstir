@@ -191,8 +191,8 @@ timing() {  # pattern
   mkdir -p "$out"
   # A shorter run's summary would otherwise read a longer one's leftover files too.
   for f in "$out"/run-*.txt; do [[ -e $f ]] && trash "$f"; done
-  # ORACLE_EXTRA reaches the bench's launch as it does a shot's (UNSTIR_MAPLENS=1 for Lens's map, a probe the bench
-  # reads from its own launch).
+  # ORACLE_EXTRA reaches the bench's launch as it does a shot's (UNSTIR_MAPLENS=0 for Lens through its chain, a probe
+  # the bench reads from its own launch).
   local extra=()
   for f in ${ORACLE_EXTRA:-}; do extra+=("SIMCTL_CHILD_UNSTIR_$f"); done
   for run in $(seq "${ORACLE_RUNS:-3}"); do
