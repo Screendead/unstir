@@ -119,6 +119,9 @@ struct Harness {
     /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of a knob drawn through the real let-go, each landing a
     /// move, for `Taps` on the phone.
     let tapDrags: Int?
+    /// UNSTIR_TAPFINGER=rod or rim: those drags made as a finger's touches on a knob or the rim, through the drag
+    /// gesture's own handlers.
+    let tapFinger: String?
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
     /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
     /// the settings' colour letters chosen off or on, for this launch only (`switches`).
@@ -295,6 +298,7 @@ struct Harness {
         }
         bench = env["UNSTIR_BENCH"] == "1"
         tapDrags = env["UNSTIR_TAPDRAG"].flatMap(Int.init)
+        tapFinger = env["UNSTIR_TAPFINGER"].flatMap { ["rod", "rim"].contains($0) ? $0 : nil }
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"

@@ -471,7 +471,7 @@ struct TapHooks: ViewModifier {
     }
 
     let moment: Moment
-    let motion: [Double]
+    let hand: Hand
 
     func body(content: Content) -> some View {
         content
@@ -483,7 +483,11 @@ struct TapHooks: ViewModifier {
                     taps.still(pixels: now.pixels, was == now || was.pixels == 0 ? "open" : was.pixels != now.pixels ? "pose" : "move")
                 }
             }
-            .onChange(of: motion) { Taps.shared.moved() }
+            // In a body of its own, so a frame of the turn evaluates this and not the level's.
+            .background {
+                InHand(hand: hand) { h in Color.clear.onChange(of: h.motion) { Taps.shared.moved() } }
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
             .onDisappear { Taps.shared.window(nil) }
     }
 }
