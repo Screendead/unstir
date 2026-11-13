@@ -94,3 +94,7 @@ film esc 9 PACK=escapement LEVEL=2 CLEAN=1 MOVES=2:4,w,1:-3 PACE=1.5
 film prism 9 PACK=prism OWNED=prism LEVEL=8 CLEAN=1 MOVES=1:2,0:-3,u PACE=1.5
 film lens-deep 9 "${l25d[@]}" MOVES=0:3,2:-2,0:-3 PACE=1.5
 film prism-deep 9 "${p30d[@]}" MOVES=0:2,1:-2,u PACE=1.5
+# Past the four-tap budget a push rides over the map at four taps; the undo pops what the map holds, so the chain
+# draws two taps until the next map lands, then the map four. Held clocks keep the picture still, so only that moves.
+film undo-deep 12 "${m24[@]}" DEEP=47 MOVES=0:2,u PACE=2
+film undo-deep-held 12 "${m24[@]}" CLOCK=3 DEEP=47 MOVES=0:2,u PACE=2
