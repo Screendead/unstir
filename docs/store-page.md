@@ -264,7 +264,7 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
   | `com.screendead.Unstir.triptych1` | Triptych I | Triptych I | Lens, Escapement and Prism | 26 |
 
   The reference name is App Store Connect's own, never shown to players. `StoreKit/Unstir.storekit`, the local test
-  file, carries older descriptions ("Rods that zoom.", "A clock rod that ticks."); its product ids match these. First Stir's product, in that file, is not created in App Store
+  file, holds the same names and descriptions. First Stir's product, in that file, is not created in App Store
   Connect for v1.
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
@@ -340,5 +340,5 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 9. `scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings
    row would then open this repo's draft policy, a page that goes dark if the repo goes private (CIPRIVATE = A).
 10. Follow-ups outside the docs: `scripts/store-captions.py` still captions shot 9 "rods that zoom and spiral";
-    `StoreKit/Unstir.storekit` carries older descriptions; `Config/Unstir.xcconfig`'s comment on `ICLOUD`
+    `Config/Unstir.xcconfig`'s comment on `ICLOUD`
     says these docs call iCloud sync unbuilt.
