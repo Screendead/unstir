@@ -937,3 +937,14 @@ marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under i
 marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.
+brim-m27-dealt.png  Maelstrom 27 as dealt: 26 of 36, the brim's liquid in the level's colour most of the way up the bezel, under the knurl.
+brim-m27-35.png  Maelstrom 27, its stack repeated to 35 of 36: the liquid a notch under the pin, which pulses.
+brim-m27-full.png  Maelstrom 27 at 36 of 36: the brim full to the pin, no spill.
+brim-m27-refused.png  Maelstrom 27 at 36 of 36, a rod turn just refused: the knob shakes and the caption says the tank is full.
+brim-plughole-11.png  Plughole 11 five moves in: a low brim in plughole's colour.
+brim-escapement-02.png  Escapement 02 a move in, on paper: the brim on the bezel over the paper ground.
+brim-prism-01.png  Prism specimen 1 as dealt: the brim in Prism's colour.
+brim-lens-01.png  Lens 01, 1:+2,0:+2: a two-twist brim over the halftone.
+brim-frost.png  A frost day's daily (2026-10-15): two knobs frozen, the knurl over the brim.
+brim-duo.png  Duo open: plughole 11 five moves in, the tank in the leading half with its brim.
+brim-endless.png  Endless as it was: its own brim of eight notches, untouched.

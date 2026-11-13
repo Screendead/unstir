@@ -6,7 +6,7 @@ hold=5 shot brim-m27-dealt "Maelstrom 27 as dealt: 26 of 36, the brim's liquid i
 hold=5 shot brim-m27-35 "Maelstrom 27, its stack repeated to 35 of 36: the liquid a notch under the pin, which pulses." \
   TIER=maelstrom LEVEL=27 DEEP=35 CLOCK=3
 hold=5 shot brim-m27-full "Maelstrom 27 at 36 of 36: the brim full to the pin, no spill." TIER=maelstrom LEVEL=27 DEEP=36 CLOCK=3
-hold=2 shot brim-m27-refused "Maelstrom 27 at 36 of 36, a rod turn just refused: the knob shakes and the caption says the tank is full." \
+hold=4 shot brim-m27-refused "Maelstrom 27 at 36 of 36, a rod turn just refused: the knob shakes and the caption says the tank is full." \
   TIER=maelstrom LEVEL=27 DEEP=36 MOVES=0:+1 PACE=0.1
 hold=5 shot brim-plughole-11 "Plughole 11 five moves in: a low brim in plughole's colour." LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2 CLOCK=3
 hold=5 shot brim-escapement-02 "Escapement 02 a move in, on paper: the brim on the bezel over the paper ground." \
