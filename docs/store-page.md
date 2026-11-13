@@ -339,5 +339,5 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
    D1 and M2 = A want daily #1 set to launch day and an App Store link on the line in the build that goes to review).
 9. `scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings
    row would then open this repo's draft policy, a page that goes dark if the repo goes private (CIPRIVATE = A).
-10. Follow-up outside the docs: `Config/Unstir.xcconfig`'s comment on `ICLOUD` says these docs call iCloud sync
-    unbuilt.
+10. ~~Follow-ups outside the docs: shot 9's caption in `scripts/store-captions.py`, the StoreKit test file's names and
+    descriptions, and `Config/Unstir.xcconfig`'s comment on `ICLOUD`.~~ All three match these docs since 2026-11-13.
