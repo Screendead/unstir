@@ -529,6 +529,10 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Pedantic polish pass | 2026-11-01 | Pass over every UI action and edge case so the app pleases and funnels to the packs without begging. | HANDOFF |
 | CI line | 2026-11-01 | The CI line moves to 10 minutes (after #79 ran 7:17); a build over 10 minutes goes to Jack to rethink the approach. | HANDOFF, CLAUDE.md |
 | Back button from a bundle's card | 2026-11-01 | Kept Claude's merge call: back from a pack's card opened on the bundle's returns there, reading "‹ Complete" (now "‹ Triptych"). | HANDOFF, architecture |
+| Faster twists | 2026-11-12 | Jack: "100% you should find a faster way to draw twists. this is the most important part of the game, and you have an unlimited budget to do so provided it doesn't look worse." Reopens the twist side of the performance pass and picks the twist-chain cache (R11) back up, superseding PERF = A's set-aside of it. | HANDOFF |
+| Hand heat test first | 2026-11-12, night | The by-hand heat test runs on a build with only the thermal logging added (#220), before any faster drawing; Jack: "good point". | HANDOFF |
+| Cached map in `mix` | 2026-11-12, night | Agreed in principle, pending Jack's look at a before/after: the glass drawn from the stored map in the faster-everywhere `mix` mode. Jack: "i like the sound of this, this sounds fine." | HANDOFF |
+| Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
 
 ## Undated, no round
 
