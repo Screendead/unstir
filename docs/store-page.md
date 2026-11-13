@@ -67,7 +67,7 @@ FOUR TIERS, 108 LEVELS, FREE
 - Vortex: 27 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
 - Maelstrom: 27 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. Its pictures have a heartbeat.
 
-Each tier opens when every level of the one before it is at par.
+Each tier opens when every level of the one before it is solved.
 
 EVERY DAY
 
@@ -250,7 +250,7 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
   | Triptych | Lens, Escapement and Prism | 26 |
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
-- **Review notes.** App Review can't open the later tiers without playing every level at par, and the developer unlock
+- **Review notes.** App Review can't open the later tiers without solving every level, and the developer unlock
   is off in Release. Recommend a short note saying how tiers open, which levels show each mechanic in the free taste,
   and that the packs' first three levels play without a purchase. A Release build with the unlock on would be a
   different build from the one reviewed, so it is not an option.

@@ -68,7 +68,8 @@ final class AchievementTests: XCTestCase {
         XCTAssertEqual(Achievement.firstDrop.percent(Record(best: bests(["N1", "daily-20261102", "lens-1"]))), 0)
     }
 
-    /// Each tier's is the next tier open, read without the developer unlock: every level of the tier below at par.
+    /// Each tier's is the next tier open, read without the developer unlock: every level of the tier below solved, at
+    /// any score.
     func testEachTierOpensItsOwn() {
         let tiers: [(Achievement, Tier)] = [(.downThePlughole, .plughole), (.intoTheVortex, .whirlpool),
                                              (.theMaelstrom, .vortex)]
@@ -76,8 +77,8 @@ final class AchievementTests: XCTestCase {
             let all = tier.levels.map(\.id)
             XCTAssertEqual(a.percent(Record(best: bests(all))), 100, a.title)
             XCTAssertEqual(a.percent(Record(best: bests(Array(all.dropLast())))), 0, a.title)
-            let offPar = Record(best: { id in Best(over: id == all.last ? 1 : 0, seconds: 1) })
-            XCTAssertEqual(a.percent(offPar), 0, a.title)
+            let offPar = Record(best: { id in all.contains(id) ? Best(over: id == all.last ? 1 : 0, seconds: 1) : nil })
+            XCTAssertEqual(a.percent(offPar), 100, a.title)
         }
         let unlocked = Best.unlocked
         defer { Best.unlocked = unlocked }

@@ -499,7 +499,7 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(Pack.lens.fits(best: { plughole.contains($0) ? Best(over: 2, seconds: 60) : nil }))
         XCTAssertTrue(Pack.prism.fits(best: { plughole.contains($0) ? atPar : nil }))
         XCTAssertFalse(Pack.escapement.fits(best: { plughole.contains($0) ? atPar : nil }))
-        XCTAssertTrue(Pack.escapement.fits(best: { sea.contains($0) ? atPar : nil }), "maelstrom opens on vortex at par")
+        XCTAssertTrue(Pack.escapement.fits(best: { sea.contains($0) ? atPar : nil }), "maelstrom opens on vortex solved")
         XCTAssertFalse(Pack.firstStir.fits(best: { _ in atPar }))
 
         let d = try XCTUnwrap(UserDefaults(suiteName: "marks-test"))

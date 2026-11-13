@@ -533,6 +533,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Hand heat test first | 2026-11-12, night | The by-hand heat test runs on a build with only the thermal logging added (#220), before any faster drawing; Jack: "good point". | HANDOFF |
 | Cached map in `mix` | 2026-11-12, night | Agreed in principle, pending Jack's look at a before/after: the glass drawn from the stored map in the faster-everywhere `mix` mode. Jack: "i like the sound of this, this sounds fine." | HANDOFF |
 | Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
+| Tiers open on solved | 2026-11-13 | A free tier opens when every level of the tier below has been solved, at any score, no longer at par. Jack: "we should open the next tier when every level is solved". | architecture |
 
 ## Undated, no round
 

@@ -75,7 +75,7 @@ enum Spoken {
                     : String(localized: "locked, solve \(n.tier.name) level \(number) first",
                              comment: "VoiceOver: a shut mode. The tier, then the level number, that opens it")
             } else if let gate {
-                value = String(localized: "locked, par every \(gate.name) level first",
+                value = String(localized: "locked, solve every \(gate.name) level first",
                                comment: "VoiceOver: a row of a shut tier. The tier below")
             } else {
                 value = String(localized: "locked", comment: "VoiceOver: a shut menu row")
