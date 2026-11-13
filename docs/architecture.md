@@ -211,7 +211,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   frame with no step (by the arithmetic; the films show none, and can't rule one out), provided the new map has landed, which in the simulator it does some 55 to 80 ms after the let-go (40 asked
   for, 13 to 36 drawing) against a settle of 0.3 s. A pop, a merge into the top entry, a reset and the opening's wind change what the map
   holds, and those frames draw through the chain until the next map lands; so do a shallower stack and
-  every glass but a level's. The two-tap rule and the four-tap budget are the chain's, unchanged.
+  every glass but a level's. The two-tap rule and the four-tap budget are the chain's alone: a frame drawn from the map
+  draws four taps at any depth (Jack, 2026-11-13), `Unstirred.shader` giving it `TankShader.everyTap` for `fourTaps`,
+  and so do the pixels such a frame runs through the chain (a Lens inset, the `chain` mode), so no seam shows between
+  them. On the reference phone (2026-11-13, 1137 px, GPU clock) a mapped frame cost 1.2 to 2.3 ms at 36 to 96 entries,
+  against the chain's 5.6 at 36 with four taps, 4.5 at 48, 7.3 at 72 and 10.4 at 96 with two; drawing a map 6.0, 7.9,
+  13.2 and 19.0 at 36, 48, 72 and 96. So past the budget a pop, a merge or a reset draws the chain at two taps for the
+  80 to 100 ms until the next map lands, then four again. A drag over a mapped glass (`TapWindow.mapped`, the glass
+  asking for a map, `StirMap.key`) is logged but never judged by `TapLaw`: no budget changes what its frames cost, so
+  its misses would step down only the chain's frames, which no drag draws once the map is in.
   Prism's map (`unstirChannelsMapped`) holds a tile a chain, each a square as the one map is, stacked down one image:
   a channel's word is the committed entries whose mask holds it, channels whose words are the same share a tile and a
   channel no entry holds has none (`StirMap.tiles`; `-1` in `tiles`, its point then run through its empty word), so
@@ -326,10 +334,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   map was in). Nothing in the shaders is sized by it: they take the entries as a pointer and a count, and SwiftUI's
   `Shader.Argument.floatArray` states no limit (iOS 27.2 SDK). On the iOS 18.5 and 26.5 simulators, with the map off, a
   48th entry moved 6% to 9% of the glass's pixels on plughole 20, maelstrom 24 and Prism 30, and so did a 96th in a
-  build with the limit at 96 (a refused shader draws nothing, as the black glass of two images did). The four-tap budget is unchanged and a mapped
-  frame obeys it too (`unstirMappedBody`'s stride), so past it a glass draws two taps, map or not: from 41 entries on
-  a baked picture, 37 on a live one's fill of 4, so every twist maelstrom 27 (marbling's twin) gains draws two; on
-  maelstrom 24 at 48, from its map, two taps carry 43% more gradient energy than four (grain). On the oracle (the Mac's GPU, 1137 px, medians of three launches, the twist pass alone):
+  build with the limit at 96 (a refused shader draws nothing, as the black glass of two images did). The four-tap budget is unchanged, and until
+  2026-11-13 a mapped frame obeyed it too (`unstirMappedBody`'s stride), so past it a glass drew two taps, map or not:
+  from 41 entries on a baked picture, 37 on a live one's fill of 4; on maelstrom 24 at 48, from its map, two taps
+  carried 43% more gradient energy than four (grain). A frame from the map now draws four at any depth (above), so
+  only the chain's frames past the budget draw two. On the oracle (the Mac's GPU, 1137 px, medians of three launches, the twist pass alone):
   maelstrom 24 at 48 at rest from its map 0.10 to 0.12 ms (two taps; 0.17 with four forced, against 0.16 to 0.18 at
   36), a rod in hand 0.13 to 0.15 (0.24); through the chain, as after a pop, a merge or a reset and in the wind-in,
   0.61 (1.10 with four), against 0.77 at 36 with four, the load that held 120 Hz on the 13 Pro Max, but 1.35 times
@@ -400,7 +409,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
   committed work, `Tank.fourTaps`' unit: a frame draws four taps where its work (`Unstirred.committedWork`: Prism's
   channel cost or the entry count, plus the fill, what is in flight riding over as it always has, `Unstirred.weigh`)
-  is at most B, and two otherwise, as the shader can't split one chain. `Taps` learns B per glass (`TapKey`: the
+  is at most B, and two otherwise, as the shader can't split one chain; a frame from the stored map draws four
+  whatever B (Jack, 2026-11-13), so the budget governs only the chain's frames, and a drag over a glass that asks for a
+  map (`TapWindow.mapped`) opens no window of the law's: its frames are logged ("four-tap mapped") but judged by
+  nothing, so on a phone the law now learns only from drags on stacks too shallow for a map. `Taps` learns B per glass (`TapKey`: the
   screen's top rate and the glass's side to 16 px) and drives only the level's glass, `LevelView.tank()`'s
   `Unstirred`; the dock's covers, the cards' clips, the icon, the menu's stir and the GPU bench keep their static
   limits. It runs where the build's `ADAPTIVE_TAPS` (`Config/Unstir.xcconfig`, YES: Jack's call taps-keep = C, the

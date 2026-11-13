@@ -2870,11 +2870,14 @@ struct LevelView: View {
     private func tapWindow(side: CGFloat) -> TapWindow? {
         guard phase == .active, struck, shown == nil, !demoing, !game.finished, !settling, swiped == 0, !breathing,
               liveRod != nil || hand.turning, side > 0 else { return nil }
-        let held = liveRod.map(game.slot(of:))
+        let held = liveRod.map(game.slot(of:)), stack = bare ? [] : game.stack
+        let glass = Unstirred(stack: stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks,
+                              liveAngle: 0, side: side)
         return TapWindow(pixels: Double(side * scale),
-                         work: Unstirred.committedWork(stack: bare ? [] : game.stack, masks: game.level.masks,
+                         work: Unstirred.committedWork(stack: stack, masks: game.level.masks,
                                                        fill: game.level.picture.fillEntries, held: held),
-                         held: held.map { "rod \($0)" } ?? "rim", picture: game.level.picture.rawValue)
+                         held: held.map { "rod \($0)" } ?? "rim", picture: game.level.picture.rawValue,
+                         mapped: StirMap.key(glass, scale: scale) != nil)
     }
 
     /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of the first working knob through the finger's own
