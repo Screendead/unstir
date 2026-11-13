@@ -58,6 +58,8 @@ calm=1 still m24-calm "${m24[@]}"
 film open 7 "${m24[@]}" OPEN=1
 film drag 14 "${m24[@]}" TAPDRAG=2
 film play 12 "${m24[@]}" MOVES=2:8,-1:1,5:-3,u,-1:-1 PACE=1.2
+# The rim in a finger's hand, carried round a step each way and let go.
+film rim 14 "${m24[@]}" TAPDRAG=2 TAPFINGER=rim
 film lens 9 PACK=lens LEVEL=1 CLEAN=1 MOVES=0:3,0:-5,0:2 PACE=1.5
 film esc 9 PACK=escapement LEVEL=2 CLEAN=1 MOVES=2:4,w,1:-3 PACE=1.5
 film prism 9 PACK=prism OWNED=prism LEVEL=8 CLEAN=1 MOVES=1:2,0:-3,u PACE=1.5

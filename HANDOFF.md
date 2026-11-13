@@ -76,7 +76,7 @@ replay while Jack holds the phone.
   to 0.32 of today's at rest on deep stacks, 0.25 to 0.36 with a rod in hand, 0.49 with the rim in hand and 0.41
   through the breath. The landing hitch is gone in the simulator: the map is drawn into a surface the image stands
   for, so nothing is uploaded on the main thread. Waits for Jack, two things: his look at the before and after
-  (inside a held rod's disc on the deepest stirs the fine noise is slightly coarser at twice the size; `chain` is
+  (inside a held rod's disc on the deepest stirs the fine noise is coarser at twice the size, plainly so at 35 entries in motion; `chain` is
   today's picture, with no gain for the rim or the breath), and his phone's numbers, none taken yet:
   `scripts/gpu-bench.sh twists` for the shares, `PROBES=YES UNSTIR_MAPLOG=1 scripts/run-ios.sh Release` for the
   landings and memory, and a by-hand heat pair against `UNSTIR_MAP=off`. Not built: Lens and Prism through a map,

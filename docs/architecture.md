@@ -204,8 +204,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   where those lie as a straight map would put them, to `StirMap.bend` (16) pixels of the picture, and elsewhere the
   nearest texel's point whole, since deep in a stir the map folds within half a pixel and a point between two of
   its points is not one of them (Jack's call, 2026-11-12, `mix`: every state reads the map; he sees the before and
-  after at the PR). As a settle runs out the moved taps come back onto their texels, so the frame runs into the rest
-  frame with no step, provided the new map has landed, which in the simulator it does some 55 to 80 ms after the let-go (40 asked
+  after at the PR). As a settle runs out the moved taps come back onto their texels, so the frame should run into the rest
+  frame with no step (by the arithmetic; the films show none, and can't rule one out), provided the new map has landed, which in the simulator it does some 55 to 80 ms after the let-go (40 asked
   for, 13 to 36 drawing) against a settle of 0.3 s. A pop, a merge into the top entry, a reset and the opening's wind change what the map
   holds, and those frames draw through `unstir` until the next map lands; so do a stack under 10, Lens (its detail
   holds the shader's image; a map could carry a lens's flow, with a second image argument, which worked on iOS 26.5
@@ -219,10 +219,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`prepare_from_iosurface`, no `replaceRegion`, sampled on the iOS 26.5 and 18.5 simulators, 2026-11-13; an image
   made by `VTCreateCGImageFromCVPixelBuffer`, or drawn by `UIGraphicsImageRenderer`, was uploaded as before).
   Nothing is read back or copied, every byte reaches the shader as written (sRGB-tagged BGRA), and a landing's
-  longest frame is the usual one. Each map has a surface of its own, never written again, as the frame reads the
-  very memory. A map is 16 bytes a pixel of the glass: 20.7 MB at 1137 px, 34.6 on the Duo's 1471, and the old one
-  goes as the new lands (one map's surface in every sample of a played line). It is drawn a strip of rows at a
-  time, a command buffer each, so a frame queues behind one strip and not a whole frame of the chain's work.
+  longest frame is the usual one at the simulator's 60 Hz (the texture's making sampled at about 1 ms; 120 Hz and
+  a phone unmeasured). Each map has a surface of its own, never written again, as the frame is taken to read the
+  very memory (inferred from the route's name). A map is 16 bytes a pixel of the glass: 20.7 MB at 1137 px, 34.6 on the Duo's 1471, and the old one
+  goes as the new lands (one map's surface in each of 14 samples of a played line, 0.4 s apart or more; two at a swap is the most). It is drawn a strip of rows at a
+  time, a command buffer each, meant to let a frame queue behind one strip and not a whole frame of the chain's work (not measured: a phone's
+  `UNSTIR_MAPLOG` shows it).
   `UNSTIR_MAP=off`, `chain` (a pixel with a tap off its texel runs the whole chain, as `unstir` does: today's
   picture, and no gain with the rim in hand or the breath) and `show` (tints each pixel by how many taps read their
   own texel), `UNSTIR_MAPBEND`, `UNSTIR_MAPLEAST` and `UNSTIR_MAPLOG` (a line as each map lands: its drawing time
@@ -239,7 +241,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   sweeps pass with the map, and by `chain`: `same` where nothing or little is mapped, `alike` on deep stacks, where
   two kernels never round a deep chain alike (mean difference 0.14 on maelstrom 24 at rest); with `UNSTIR_MAP=off`
   every frame is master's to the level. What the rule does not see: inside a held rod's disc on the deepest stirs
-  the nearest texels repeat a little, and the fine noise there is slightly coarser at twice the size (one-pixel
+  the nearest texels repeat a little, and the fine noise there is coarser at twice the size, plainly so on a 35-entry stack's held hub in motion (one-pixel
   autocorrelation 0.16 against 0.14, the twins within 0.004; unchanged by a bend of 1 or 2; the rim in hand and
   the breath read as today's), which is the look Jack judges at the PR. Running the folded taps through the chain
   instead costs what `chain` does (measured). `scripts/twist-oracle/crops.py` lays one case's crops from several

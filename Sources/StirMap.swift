@@ -128,8 +128,8 @@ enum StirMap {
     /// written again: every map has its own. Tagged sRGB, which reaches the shader untouched; BGRA, the order
     /// SwiftUI's own textures keep.
     ///
-    /// Drawn a strip of rows at a time, each its own command buffer, so a frame the screen is waiting on queues
-    /// behind one strip and not the whole map, which is a frame of the full chain's work.
+    /// Drawn a strip of rows at a time, each its own command buffer, meant to let a frame the screen is waiting on
+    /// queue behind one strip and not the whole map, which is a frame of the full chain's work (no phone has shown it).
     private nonisolated static func draw(_ key: Key) -> Drawn? {
         guard let gpu, !key.twists.isEmpty else { return nil }
         let pixels = key.pixels, n = 2 * pixels
