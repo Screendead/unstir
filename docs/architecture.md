@@ -113,7 +113,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (GPUBench.swift, `UNSTIR_GPUBENCH`, `scripts/gpu-bench.sh`) times a plain entry with four taps and with two at 1137,
   1284 and 1471 px, as the slope from 18 to 36 entries with each tap count forced (`fourTaps` 99 or -1), and
   whirlpool 27's whole frame at 1137 and 1471: the glass's fill (`benchGlass` in Glass.metal, `glass`'s body as a
-  kernel, since a kernel can't call a stitchable) into the texture its stack then samples, at 28 and 36 entries. Its
+  kernel, since a kernel can't call a stitchable) into the texture its stack then samples, at 28 entries and a full stack (`Tank.maxStack`; 36 until 2026-11-13). Its
   Prism sweep, at 1284, keeps the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
   go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
