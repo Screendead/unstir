@@ -2234,6 +2234,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(Power.saving(lowPower: false, thermal: .serious))
         XCTAssertTrue(Power.saving(lowPower: false, thermal: .critical))
         XCTAssertTrue(Power.saving(lowPower: true, thermal: .nominal))
+        XCTAssertEqual([.nominal, .fair, .serious, .critical].map(Power.name), ["nominal", "fair", "serious", "critical"])
         let clip = CGSize(width: 320, height: 320)
         XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: -100, width: 390, height: 800)))
         XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: 300, width: 390, height: 800)))

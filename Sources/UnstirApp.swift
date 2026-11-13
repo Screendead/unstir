@@ -834,6 +834,7 @@ struct RootView: View {
         }
         .task {
             Log.write(UnstirApp.device)
+            Log.write(Power.shared.heat)
             Power.shared.watch()
             await Log.trim()
         }
