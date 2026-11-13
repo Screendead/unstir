@@ -109,6 +109,60 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(game.clean)
     }
 
+    /// Clean is at par with no undo or reset; a level earns it on any try, the daily on its first alone (Jack,
+    /// 2026-11-13). A replay that earns it upgrades the level's best, and "again" shows until the best is clean.
+    @MainActor func testALevelEarnsCleanOnAnyTryAndTheDailyOnItsFirst() {
+        let id = "test-clean-level", day = "daily-test-clean"
+        func forget() { for i in [id, day] { for k in ["best.\(i)", "started.\(i)"] { UserDefaults.standard.removeObject(forKey: k) } } }
+        forget()
+        defer { forget() }
+        Best.undos = 9
+        func play(_ id: String, over: Bool = false, undo: Bool = false, reset: Bool = false) -> Game {
+            let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
+            if undo { game.commit(rod: 1, steps: 1); game.undo() }
+            if reset { game.commit(rod: 1, steps: 1); game.reset() }
+            if over { for (rod, steps) in [(0, -2), (1, 1), (1, -1), (0, -2)] { game.commit(rod: rod, steps: steps) } }
+            else { game.commit(rod: 0, steps: -4) }
+            XCTAssertTrue(game.solved, id)
+            return game
+        }
+        // A first try over par, then a replay at par with an undo: neither clean, both offer again.
+        let first = play(id, over: true)
+        XCTAssertFalse(first.clean)
+        XCTAssertTrue(first.offersAgain, "over par: again")
+        let undone = play(id, undo: true)
+        XCTAssertFalse(undone.firstTry)
+        XCTAssertFalse(undone.clean, "an undo denies it")
+        XCTAssertTrue(undone.offersAgain, "at par with an undo: again")
+        XCTAssertTrue(undone.finishSpoken.hasSuffix("At par."), undone.finishSpoken)
+        let reset = play(id, reset: true)
+        XCTAssertFalse(reset.clean, "a reset denies it")
+        XCTAssertEqual(Best.load(id)?.clean, false)
+        // A later replay at par with nothing wasted earns clean, upgrades the best and offers no again.
+        let replay = play(id)
+        XCTAssertTrue(replay.clean)
+        XCTAssertEqual(ResultMarks.filled(clean: replay.clean, over: replay.over), 3)
+        XCTAssertTrue(replay.finishSpoken.hasSuffix("Clean."), replay.finishSpoken)
+        XCTAssertEqual(Best.load(id)?.clean, true)
+        XCTAssertEqual(replay.bests.flatMap { ResultCard.bestLine(was: $0.was, now: $0.now, par: true) }, "new best \u{00B7} was par")
+        XCTAssertFalse(replay.offersAgain, "clean: no again")
+        XCTAssertEqual(Archive.Mark(id), .clean)
+        // With the best clean, a later solve over par offers no again either.
+        XCTAssertFalse(play(id, over: true).offersAgain)
+        XCTAssertEqual(Best.load(id)?.clean, true, "a worse solve keeps the clean best")
+        // The daily: a later try at par with nothing wasted is practice, never clean, and again stays.
+        _ = Best.start(day)
+        let practice = play(day)
+        XCTAssertFalse(practice.firstTry)
+        XCTAssertFalse(practice.clean, "the daily needs its first try")
+        XCTAssertTrue(practice.offersAgain)
+        forget()
+        let daily = play(day)
+        XCTAssertTrue(daily.clean)
+        XCTAssertFalse(daily.offersAgain)
+        XCTAssertTrue(Achievement.Record.stored().clean, "a daily's clean best earns No Wake")
+    }
+
     /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;
     /// a look, a refused turn and the clock's demonstration try nothing.
     @MainActor func testALookIsFree() throws {
@@ -603,7 +657,6 @@ final class UnstirTests: XCTestCase {
         // Again from the card, on the same tank: the re-solve completes nothing.
         let level = Level(id: lens[5], pack: .lens, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
         UserDefaults.standard.removeObject(forKey: "best.\(lens[5])")
-        // The solves above committed moves, which mark a level started, and only a first try is clean.
         UserDefaults.standard.removeObject(forKey: "started.\(lens[5])")
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         game.commit(rod: 0, steps: -4)

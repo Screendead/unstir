@@ -150,7 +150,8 @@ final class AchievementTests: XCTestCase {
         }
     }
 
-    /// The stored record reads the game's own keys: a clean best anywhere, and only dailies' bests as dailies.
+    /// The stored record reads the game's own keys: only a daily's clean best for No Wake (a level's stores the flag but
+    /// never shows it, Jack, 2026-11-13), and only dailies' bests as dailies.
     func testTheStoredRecordReadsTheGamesKeys() {
         let d = UserDefaults.standard
         let keys = ["best.daily-19990101", "best.daily-19990102", "best.pin-clean", "tank.turned", "swirled",
@@ -161,6 +162,8 @@ final class AchievementTests: XCTestCase {
         Best(over: 0, seconds: 1).save("daily-19990101")
         Best(over: 0, seconds: 1).save("daily-19990102")
         Best(over: 0, seconds: 1, clean: true).save("pin-clean")
+        XCTAssertEqual(Record.stored().clean, before.clean, "a level's clean best earns nothing")
+        Best(over: 0, seconds: 1, clean: true).save("daily-19990102")
         Best.tankTurned = true
         Best.swirled = true
         Best.tanks = 6

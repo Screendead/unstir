@@ -9,5 +9,5 @@ shot marks-card-lens "Lens's card, owned, scrolled to its levels: 01 clean, 02 a
   CARD=lens OWNED=lens BESTS=lens:c02c TRIED=lens-5 CARDSCROLL=1 CLOCK=5.4
 shot marks-card-lens-locked "Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards." \
   CARD=lens STORE=lens:unowned BESTS=lens:c0 CARDSCROLL=1 CLOCK=5.4
-shot marks-result-par "Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try." \
-  SCREEN=clean LEVEL=6 BESTS=plughole:000000
+shot marks-result-par "Level 06 solved at par on a replay with a stir undone: two discs filled over at par, clean needs no undo or reset." \
+  SCREEN=undone LEVEL=6 BESTS=plughole:000000

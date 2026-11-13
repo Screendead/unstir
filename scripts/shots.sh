@@ -45,7 +45,7 @@ shot() {  # name description KEY=VALUE...
     done
   fi
   # A harness solve's card lands its result marks one by one, the last some 1.5 s after the card shows.
-  if [[ " $* " == *" SCREEN=result "* || " $* " == *" SCREEN=clean "* ]] && ((wait < 5)); then wait=5; fi
+  if [[ " $* " == *" SCREEN=result "* || " $* " == *" SCREEN=clean "* || " $* " == *" SCREEN=undone "* ]] && ((wait < 5)); then wait=5; fi
   sleep "$wait"
   settle=3
   xcrun simctl io "$udid" screenshot "shots/$name.png" >/dev/null 2>&1

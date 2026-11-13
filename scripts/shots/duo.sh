@@ -11,8 +11,8 @@ hold=10 shot duo-open-level "Duo open: plughole 11 five moves in, the tank wholl
   "${duo[@]}" LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
 hold=10 shot duo-open-result "Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played." \
   "${duo[@]}" SCREEN=clean LEVEL=6
-hold=10 shot duo-open-fullest "Duo open: plughole 27's fullest card (at par on a replay, what clean takes, new best, again, up a notch) whole over the menu in the trailing half." \
-  "${duo[@]}" SCREEN=clean LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+hold=10 shot duo-open-fullest "Duo open: plughole 27's fullest card (at par with an undo on a replay, what clean takes, new best, again, up a notch) whole over the menu in the trailing half." \
+  "${duo[@]}" SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 hold=10 shot duo-open-escapement "Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note." \
   "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
 hold=10 shot duo-open-prism "Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them." \
@@ -48,8 +48,8 @@ shot duo-tabletop-result "Duo tabletop: plughole 06 solved clean, the card and u
   "${table[@]}" SCREEN=clean LEVEL=6
 shot duo-tabletop-daily-result "Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold." \
   "${table[@]}" SCREEN=result MODE=daily NOW=17:00
-shot duo-tabletop-fullest "Duo tabletop: plughole 27 replayed at par against a best of +6, the fullest card a tier level shows (what clean takes, new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold." \
-  "${table[@]}" SCREEN=clean LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+shot duo-tabletop-fullest "Duo tabletop: plughole 27 replayed at par with a stir undone against a best of +6, the fullest card a level shows (what clean takes, new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold." \
+  "${table[@]}" SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot duo-tabletop-pack-complete "Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold." \
   "${table[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot duo-tabletop-escapement "Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half." \
@@ -134,7 +134,7 @@ hold=10 shot duo-beside-archive "Duo open: whirlpool 11 beside the menu, the arc
 hold=12 shot duo-beside-live-solve "Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card over the menu." \
   "${duo[@]}" LEVEL=19 MOVES=4:-7,1:+7,0:+4,3:+5,2:-4 BESTS=plughole:000000000000000000-00000000 OWNED= CLOCK=1
 hold=8 shot duo-beside-ax3 "Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size." \
-  "${duo[@]}" SCREEN=clean LEVEL=27 BESTS=plughole:000000000000000000000000006 OWNED= CLOCK=0 TYPESIZE=accessibility3
+  "${duo[@]}" SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 OWNED= CLOCK=0 TYPESIZE=accessibility3
 hold=8 shot duo-beside-ax5 "Duo open at the largest accessibility size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size." \
   "${duo[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
 hold=10 shot duo-beside-pack-complete "Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu." \
