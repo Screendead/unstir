@@ -66,10 +66,31 @@ jobs:
           curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
-      - name: StoreKit tests on iOS 27.2
+      # Built, booted and tested in turn, as test.yml does, each showing where it is: the build's phase lines, the
+      # boot's progress, and every test case as it starts, so a step that hangs names where.
+      - name: Build for testing
         shell: bash
         run: |
           xcodebuild -version
+          scripts/test-store.sh build-for-testing COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep --line-buffered -E "^([A-Za-z*]|.*(error|warning):)"
+      - name: Boot the simulator
+        run: |
           udid=$(xcrun simctl list devices available | awk '/^-- /{on = /iOS 27\.2/} on && /iPhone .*Pro Max \(/' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
           [[ -n "$udid" ]] || { xcrun simctl list devices available; echo "no iOS 27.2 Pro Max simulator" >&2; exit 1; }
-          UNSTIR_SIM=$udid scripts/test-store.sh -only-testing:UnstirTests/StoreTests COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)|: error: "
+          echo "$udid" > "$RUNNER_TEMP/udid"
+          xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b
+      - name: StoreKit tests on iOS 27.2
+        shell: bash
+        run: |
+          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began"
+      - name: Keep the test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-ios27-log
+          path: |
+            ${{ runner.temp }}/build.log
+            ${{ runner.temp }}/test.log
+            ${{ runner.temp }}/Test.xcresult
+          retention-days: 14
+          if-no-files-found: ignore
