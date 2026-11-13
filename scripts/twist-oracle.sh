@@ -24,8 +24,8 @@
 # ORACLE_SIM names the simulator; unset, one named for this checkout is made on the first call (a Pro Max) and found
 # again after. ORACLE_REF is where the references live (shots/oracle/ref): a folder outside the checkout shares one
 # set between checkouts. ORACLE_LOCK is the file every GPU timing on this Mac locks, so no two run at once; `time`
-# refuses without it. ORACLE_EXTRA="TAPS=5" adds harness variables to every case of a shoot, for a set drawn worse on
-# purpose (two taps), and to `time`'s launch. ORACLE_BASE is the commit whose Sources/ the references are shot from, origin/master unless set
+# refuses without it. ORACLE_EXTRA="TAPS=5 MAP=off" adds harness variables to every case of a shoot, for a set drawn worse on
+# purpose (two taps, which a frame from the map never draws), and to `time`'s launch. ORACLE_BASE is the commit whose Sources/ the references are shot from, origin/master unless set
 # (a branch that adds a harness hold its cases need names itself, before it changes any drawing). The app's sound
 # stays off: a harness launch is silent.
 set -euo pipefail
