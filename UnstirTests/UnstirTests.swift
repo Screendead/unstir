@@ -423,25 +423,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
     }
 
-    /// A level's brim is its stack, of `Tank.maxStack`: the push that fills it springs in as any other and holds at the
-    /// pin, with no spill's flash, pour or soak, and reaches only `Brim.levelReach` past the bezel.
-    func testALevelsFullBrimNeverSpills() {
-        let room = Tank.maxStack, full = [Brim.Event(from: room - 1, to: room, time: 1)]
-        XCTAssertLessThan(Brim.level(at: 1.05, full, base: room - 1, room: room, spills: false), Double(room) - 0.9)
-        XCTAssertEqual(Brim.level(at: 1 + Brim.settle, full, base: room - 1, room: room, spills: false), Double(room),
-                       accuracy: 0.01)
-        let floats = Brim.frame(at: 1 + Brim.spillSettle, full, base: room - 1, room: room, clock: Brim.Clock(), held: nil,
-                                spills: false, out: Brim.levelReach)
-        // No crest met (negative), no flash, nothing soaked away, and the ring ends at the level's reach.
-        XCTAssertLessThan(floats[15], 0)
-        XCTAssertEqual(floats[16], 0)
-        XCTAssertEqual(floats[18], 1)
-        XCTAssertEqual(Double(floats[19]), Brim.levelReach)
-        XCTAssertEqual(Double(floats[20]), 180 / Double(room), accuracy: 1e-4)
-        // The last notch still warns.
-        XCTAssertGreaterThan(floats[6], 0.99)
-    }
-
     /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
     /// film or kick; at the last notch with no tremble either, its pulse held lit; and a spill held where its pour has
     /// run and soaked away.
@@ -741,23 +722,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack.count, Tank.maxStack - 1)
     }
 
-    /// Maelstrom 27, which filled at 22 moves of its 29 under the old limit of 36, takes pushes to the limit, built at 48
-    /// (pending Jack's look), and refuses the one past it.
+    /// Maelstrom 27, which filled at 22 moves of its 29 under the old limit of 36, takes pushes to the silent cap of 96
+    /// (Jack, 2026-11-13: no limit the player sees) and refuses the one past it with the knob's shake.
     @MainActor func testALevelPlaysToTheLimitAndRefusesOnePast() throws {
-        XCTAssertEqual(Tank.maxStack, 48)
+        XCTAssertEqual(Tank.maxStack, 96)
         let level = Level.maelstrom[26]
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         let dealt = game.stack.count
         try game.push(to: Tank.maxStack)
-        XCTAssertEqual(game.stack.count, 48)
-        XCTAssertEqual(game.moves, 48 - dealt)
+        XCTAssertEqual(game.stack.count, Tank.maxStack)
+        XCTAssertEqual(game.moves, Tank.maxStack - dealt)
         XCTAssertEqual(game.refusals, 0)
-        let knob = try XCTUnwrap(game.pushingKnob(), "a turn that would push a 49th")
+        let knob = try XCTUnwrap(game.pushingKnob(), "a turn that would push one past the cap")
         game.commit(rod: knob, steps: 1)
         XCTAssertEqual(game.refusals, 1)
         XCTAssertEqual(game.refusedKnob, knob)
-        XCTAssertEqual(game.stack.count, 48)
-        XCTAssertEqual(game.moves, 48 - dealt)
+        XCTAssertEqual(game.stack.count, Tank.maxStack)
+        XCTAssertEqual(game.moves, Tank.maxStack - dealt)
     }
 
     /// The level's clock stops while the app is away, and a reset's replay never restarts it.
@@ -2257,13 +2238,12 @@ final class UnstirTests: XCTestCase {
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
-        // A level's brim is its stack, of the most the tank holds.
-        XCTAssertEqual(game.tankSpoken, "\(game.movesSpoken), brim 0 of \(Tank.maxStack)")
+        XCTAssertEqual(game.tankSpoken, game.movesSpoken)
         // The sandbox has no par, so it never reads as at or over one.
         let sandbox = Game(level: .sandbox)
-        XCTAssertEqual(sandbox.tankSpoken, "0 moves, brim 0 of \(Tank.maxStack)")
+        XCTAssertEqual(sandbox.tankSpoken, "0 moves")
         sandbox.commit(rod: 0, steps: 1)
-        XCTAssertEqual(sandbox.tankSpoken, "1 move, brim 1 of \(Tank.maxStack)")
+        XCTAssertEqual(sandbox.tankSpoken, "1 move")
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.

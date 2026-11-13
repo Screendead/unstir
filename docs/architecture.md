@@ -330,8 +330,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `chain`; the held read turning white near the count (bench only), its white pixels within 21 of today's. Prism's
   three mapped takes of its deep line and Lens's one, aligned to the frame, change frame to frame within the
   spread of two takes of today's. The let-go has no still under the rule: only the takes show it.
-  The tank's limit went from 36 to 48 with the map in (2026-11-13, pending Jack's look; he picked raising it once the
-  map was in). Nothing in the shaders is sized by it: they take the entries as a pointer and a count, and SwiftUI's
+  The tank's limit went from 36 to 48 with the map in (2026-11-13; he picked raising it once the map was in), then,
+  the same day, to a silent cap of 96 that no level shows (Jack: "yes drop the visible limit, ring stays in endless
+  only"; 96 is Claude's pick of where the backstop sits, the deepest stack measured below). Nothing in the shaders is sized by it: they take the entries as a pointer and a count, and SwiftUI's
   `Shader.Argument.floatArray` states no limit (iOS 27.2 SDK). On the iOS 18.5 and 26.5 simulators, with the map off, a
   48th entry moved 6% to 9% of the glass's pixels on plughole 20, maelstrom 24 and Prism 30, and so did a 96th in a
   build with the limit at 96 (a refused shader draws nothing, as the black glass of two images did). The four-tap budget is unchanged, and until
@@ -430,7 +431,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   nothing, hot or cool (its `far` is unbounded; the attributed cuts would let 6 of them step while hot). It
   climbs one after 600 clean four-tap frames at its edge, never past `ceiling` (42, Jack's call TAPS-CEIL = A: the
   full stack of 36 the game then allowed plus the largest fill; it no longer follows `Tank.maxStack`, which went to 48
-  pending Jack's look, as a higher ceiling is his call) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
+  and then to a silent 96, as a higher ceiling is his call) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
   by a second miss there or erased by 600 clean at it; a cap is always over the cool budget bar a probe's, and a
   stored one that isn't is dropped. Each step waits on its effect check: two-tap frames at its work or under it, or up
   to 4 over, that still miss 4 in 30 take back the oldest step they cover and every step since, and pause the steps
@@ -488,22 +489,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
   and the card follows at `Brim.card`, or at once under Reduce Motion (Jack's call R-spill, round 15). The tests reach only the Swift side.
-  Every other level's bezel carries the same jug for its stack (Jack's call "Tank's fullness", 2026-11-13): `BrimRing`
-  with `stack` set reads `Game.stack`'s count against `Tank.maxStack`, so a notch a twist to the pin at twelve (48,
-  3.75° apart; 36 and 5° until 2026-11-13),
-  and a full tank refuses the turn as before ("the tank is full: undo or reset"). `spills` false makes the last notch a
-  held level like any other, the warn pulse and tremble still on it, with no crest, pour, murk or card. Only
-  `Brim.levelReach` (48 of the jug's 480) past the bezel is drawn, the lit tick ends and the pin's cap fading out by
-  there, as no level's `PlayLayout.Halo` leaves endless's room: no phone's glass shrinks for it. Only the split beside the
-  menu makes room, above the stage (`Halo.brim`, kept in `halo.above` once the side is known), where the pin would
-  otherwise reach into the title: 9 pt off the Duo's open glass, which takes the place of the rim lesson's 8. Its liquid is the level's
-  colour (`Level.colour`, `Brim.colours(flat:)`), as only the grid has a CPU sampler to read the rim off. `LevelView`
-  keeps its own record of the stack's size (`StackBrimClock`: a `Brim.Event` per change of the count, the older folded
-  into the base past eight), runs its timeline only for `Brim.settle` after a change and while the stack is within a
-  notch of full, holds it under Reduce Motion as endless's, strikes it with the picture, and draws it under the knurl so
-  a turning tank's milled edge reads over the liquid. `UNSTIR_CLEAN`'s bare glass, the dock covers and the card clips
-  draw the bezel alone. VoiceOver hears it in the tank's value, "3 moves, par 7, brim 26 of 48" (`Game.tankSpoken`);
-  the ring itself is hidden from it.
+  Only endless draws it. From 2026-11-13 to the same day's later call every other level's bezel carried the jug for
+  its stack against `Tank.maxStack`; Jack then dropped it ("yes drop the visible limit, ring stays in endless only"):
+  the tank has no limit a level shows, and `Tank.maxStack` (96) is a silent cap, a turn past it refused with the
+  knob's shake and "the tank is full: undo or reset" as before. `BrimRing`, `Brim.frame` and `PlayLayout.Halo` are
+  endless's alone again, so no glass sizes itself for a ring on a level, the Duo's split included.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
   maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best, at
@@ -1409,7 +1399,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   ..."; the daily, endless and the sandbox by name), value (its result, `Spoken.result`: "clean", "at par" or "solved, 2 over par"; "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, solve
   every Plughole level first") and hint (its rods and par), a lit hairline's reason first (`Spoken.marked`:
-  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, or Escapement's ticks left, then the brim, the stack's "brim 26 of 48" or endless's "brim 3 of 8"), and
+  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, or Escapement's ticks left, then endless's brim, "brim 3 of 8"; a level's says nothing of its stack), and
   the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared.", a completion after it in words: "Lens complete, 25 panels."), which
   labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
