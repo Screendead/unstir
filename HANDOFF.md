@@ -45,7 +45,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 Jack's by-hand session of 2026-11-12 (launched 17:02) first logged thermal fair 9:15 after launch and serious at
 15:53 (the build logged the state only on its drag lines then). Jack reports the phone was plugged into the Mac at
-100%; that build logged no charger. A 15-minute soak unplugged (`scripts/heat-run.sh`, 125 drags) stayed nominal.
+100%; that build logged no charger. A 15-minute soak unplugged (`scripts/heat-run.sh` on `heat-fix`, 125 drags) stayed nominal.
 
 A replay harness on local branch `heat-fix` (unpushed): `UNSTIR_REPLAY` plays a flight recorder's session through
 the tank's own touch, `scripts/replay-session.py` writes its events from the log and checks a replay against it, and
@@ -54,7 +54,7 @@ the tank's own touch, `scripts/replay-session.py` writes its events from the log
 none of 52,513 frames late. The branch also carries `UNSTIR_HEAT`'s options (a live picture at 30 Hz at rest, a turn
 in hand at 60 Hz, fair counted as serious), none of them the rule, each a call for Jack if the heat needs one.
 
-By hand on 2026-11-13, on the charger and full: on master with #217 and #220 but before #218 and #219, fair came
+By hand on 2026-11-13, on the charger and full: on a build with #220's logging, before #218 and #219, fair came
 1:26 after Maelstrom 25 opened and serious at 1:46 (Maelstrom 25 and 26); on a trial build carrying #218 and #219
 (`twist-try`), fair at 2:40 and serious at 3:45 (Maelstrom 25 to 27). Both launched nominal; that the phone was warm
 from earlier play is Jack's account, not the log's. Jack agreed ("good point") that the hand test runs on a build
@@ -67,7 +67,7 @@ replay while Jack holds the phone.
 
 ### Open work (2026-11-13)
 
-**In flight** (each branch cut from master at #219's merge):
+**In flight** (`twist-map`, `tank-full` and `store-text` cut from master at #219's merge):
 
 - The cached map (R11, picked back up): the glass drawn from a stored map of the committed stack. Prototype on local
   `twist-cached-map` (`StirMap.swift` behind `UNSTIR_MAP`, modes `chain`, `lerp` and `mix`, timed in the oracle's
@@ -75,8 +75,8 @@ replay while Jack holds the phone.
   sound of this, this sounds fine." It waits for his look at a before/after.
 - Endless's brim on every level, on `tank-full`, no commits yet. Jack (2026-11-13): "show it all the time on every
   level". It changes every tank shot.
-- The StoreKit tests on iOS 27.2, on `store-ios27` (pushed, no PR): the scheme's test action given the StoreKit
-  configuration ends the hang; `testAskToBuyDeclinedGrantsNothing` and `testRefundRevokesThePack` still fail on 27.2
+- The StoreKit tests on iOS 27.2, on `store-ios27` (no PR; the remote holds only a nightly run on 27.2, the rest is
+  local): the scheme's test action given the StoreKit configuration ends the hang; `testAskToBuyDeclinedGrantsNothing` and `testRefundRevokesThePack` still fail on 27.2
   alone.
 - The store page and privacy policy refreshed, on `store-text`, no commits yet; its wording waits for Jack's approval.
 - The developer account night: the steps under "The Apple Developer account", below.
@@ -997,7 +997,7 @@ TestFlight is ready, not earlier; that gives the first year the most selling tim
 - Check in with the ICO (LG3 = A): ask whether a home-based sole trader's register entry can show "Address: Withheld",
   then register and pay before the first emailed tester, received log or support email. If the ICO won't withhold the
   address, bring it back to Jack (the fallback was: no fee, send log out, TestFlight's public link only).
-- The account night, in order (planned for 2026-11-12): buy the membership; sign in to Xcode again; make an App
+- The account night, in order: buy the membership; sign in to Xcode again; make an App
   Store Connect API key (the `.p8` outside the repo; `archive-ios.sh` reads `ASC_KEY_PATH`, `ASC_KEY_ID`,
   `ASC_ISSUER_ID`); create the app record; give the App ID the Declared Age Range capability; accept the Paid Apps
   agreement with tax and banking; add the four in-app purchases; then the first archive and upload
