@@ -243,14 +243,14 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   A shader takes one image. SwiftUI's own note on `Shader.Argument.image` says so ("Currently only one image
   parameter is supported per Shader instance", still in the iOS 27.2 SDK), and on the iOS 18.5 simulator RenderBox
   refuses a shader given two as it first draws it, with one line in the log, `custom shader: Only one texture
-  argument is allowed: unstirLensMapped`: a layer effect then draws nothing (in two of the probe's three runs; its
-  view untouched in the first), which was the black glass of the first build (2026-11-13), and a colour effect
-  leaves its view untouched. A probe app held it to that alone
+  argument is allowed: unstirLensMapped`: a layer effect then draws nothing, which was the black glass of the first
+  build (2026-11-13), and a colour effect leaves its view untouched. A probe app held it to that alone
   (2026-11-13): two images of plain bytes, two of surfaces, one of each in either order, the same image twice, a
   body that reads neither, a colour and a layer effect, the images apart in the signature as the glass's were, all
   refused on 18.5 with that line and all drawn on 26.5, each image its own; one image of either kind drew on both.
   Which release first took two is not known (26.0 to 26.4 untried), and iOS 17 has no runtime here: the note has
-  stood since 17, so it is taken to refuse as 18.5 does (inferred).
+  stood since 17 (recalled, not read here), so it is taken to refuse as 18.5 does (inferred); with one image the
+  question no longer bears on the glass.
   So a Lens level's map is one image with its detail (`StirMap.pack`, `Key.atlas`): the atlas in the top rows, where
   `fineLight` reads it as it reads the atlas's own image, its last column drawn on to the image's edge and its last
   row once more, as its sampler clamps there, and the map `Key.skip` rows down (`stored`'s `skip`, the stitchable's
@@ -261,7 +261,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   landing and its map in the simulator: 40 asked for, 43 to 50 drawing, the longest frame the usual one), never
   through a map that is not its own. So drawn, the Lens cases of the oracle pass on
   both simulators, held against the same build's chain (`MAP=off`) and its twins: 13 of 13 on iOS 18.5 and on 26.5
-  (2026-11-13; the mapped cases `same`, a plain rod in hand over the map `alike`). Unproven: iOS 17, any phone, and
+  (2026-11-13; the mapped cases `same`, a plain rod in hand over the map `alike`), and on 26.5 against the stored
+  references too. Unproven: iOS 17 (the surface's image as a shader's one, which the plain map rests on too), any phone, and
   what the wider image costs one (32.2 MB for Lens 25's at 1172 px against 22.0 for the map alone, and the
   atlas's own image, 7.8 MB, stays for the frames without a map). Off by default, as the gain is small:
   the cores a lens magnifies, where the detail is drawn, run the chain. On
