@@ -611,6 +611,40 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
     out.write(c, gid);
 }
 
+// Today's bodies a kernel each, as the mapped ones are timed (`OracleBench`'s `today-own`): `benchUnstir` holds all
+// three, which can cost a body some of its speed.
+kernel void benchPlainOwn(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                          device const float *twists [[buffer(0)]], constant BenchArgs &a [[buffer(2)]],
+                          uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+    BenchLayer layer = { picture, a.scale };
+    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius) + float2(a.nudgeX, a.nudgeY) / a.scale;
+    out.write(unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
+                         a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn), gid);
+}
+
+kernel void benchLensOwn(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                         texture2d<half> atlas [[texture(2)]], device const float *twists [[buffer(0)]],
+                         constant BenchArgs &a [[buffer(2)]], device const float *fine [[buffer(3)]],
+                         uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+    BenchLayer layer = { picture, a.scale };
+    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius) + float2(a.nudgeX, a.nudgeY) / a.scale;
+    out.write(unstirLensBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
+                             a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn, atlas, fine, a.fineCount), gid);
+}
+
+kernel void benchChannelsOwn(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                             device const float *twists [[buffer(0)]], device const float *masks [[buffer(1)]],
+                             constant BenchArgs &a [[buffer(2)]], uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+    BenchLayer layer = { picture, a.scale };
+    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius) + float2(a.nudgeX, a.nudgeY) / a.scale;
+    out.write(unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost,
+                                 a.fourTaps, a.plateau, a.swirlPlateau, a.lensEdge, a.scale, a.haze, float3(0, 0, -1),
+                                 a.turn, a.isolate, float3(a.tintR, a.tintG, a.tintB), a.held, a.hold), gid);
+}
+
 // The stored map's kernels: the map itself, a thread a device pixel from row `row` down (StirMap draws it a strip at
 // a time), and the oracle's bench's frame over it. MapArgs is StirMap.Args' layout.
 struct MapArgs {
