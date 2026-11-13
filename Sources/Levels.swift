@@ -12,6 +12,8 @@ struct Run: Hashable, Sendable, Codable {
 
     /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
     static let room = 8
+    /// The deepest tank a run deals, frozen as every run's deals are: it was `Tank.maxStack` (36) less `room`.
+    static let deepest = 28
 }
 
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
@@ -638,10 +640,10 @@ struct Level: Hashable, Sendable {
         var level = Level(id: "endless", label: "\u{221E}", title: String(localized: "Endless",
                                                                           comment: "The endless run's title"), layout: Layout.generated[run.tank % 4], scramble: [],
                           run: run)
-        // No deeper than keeps the tank four taps as dealt, or than leaves room under the stack's limit for every push
-        // the brim takes before it spills: the stack holds at most the scramble plus the brim's notches, and the push
-        // that spills must never be refused.
-        let depth = min(5 + 5 * run.tank / 4, Tank.fourTaps - level.picture.fillEntries, Tank.maxStack - Run.room)
+        // No deeper than keeps the tank four taps as dealt, or than `Run.deepest`, which leaves room under the stack's
+        // limit for every push the brim takes before it spills: the stack holds at most the scramble plus the brim's
+        // notches, and the push that spills must never be refused.
+        let depth = min(5 + 5 * run.tank / 4, Tank.fourTaps - level.picture.fillEntries, Run.deepest)
         // Wrapping, as a random seed overflows.
         var rng = SplitMix64(state: run.seed &* 1000 &+ UInt64(run.tank))
         level.scramble = level.layout.scramble(depth: depth, inversions: min(run.tank / 2, depth / 2), rng: &rng)

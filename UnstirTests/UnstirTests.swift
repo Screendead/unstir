@@ -2870,8 +2870,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual((0...20).map { Level.endless(Run(seed: 7, tank: $0)).scramble.count },
                        [5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23, 25, 26, 27, 28, 28])
         // Every push the brim takes before it spills fits under the stack's limit, with the deepest tank dealt.
-        XCTAssertLessThan(28 + Run.room - 1, Tank.maxStack)
-        XCTAssertLessThanOrEqual(28, Tank.fourTaps - Level.endless(Run(seed: 7)).picture.fillEntries)
+        XCTAssertLessThan(Run.deepest + Run.room - 1, Tank.maxStack)
+        XCTAssertLessThanOrEqual(Run.deepest, Tank.fourTaps - Level.endless(Run(seed: 7)).picture.fillEntries)
     }
 
     /// The grid's node colours against the prototype's oklch (colour.py): its top and bottom rows, x = -1 ... 1.
