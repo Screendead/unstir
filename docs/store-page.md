@@ -1,8 +1,10 @@
 # App Store page
 
 Drafted 2026-10-27; Jack's calls ST1 to ST7 applied 2026-10-29, each A, so each section holds the chosen text and the
-options set aside under it. Every character count below was measured with a script, not by eye. Anything legal is
-marked **(check)**: nothing here settles it.
+options set aside under it. Revised 2026-11-13 against the game as built: every passage changed that day is a proposal
+until Jack approves it, marked "proposed 2026-11-13", and the text he approved stands in this file's history. Every
+character count below was measured with a script, not by eye. Anything legal is marked **(check)**: nothing here
+settles it.
 
 v1 ships with no analytics (AN1 = A) and is not sold in the EU or EEA at launch (EU1 = B), so this page holds only
 the no-analytics texts and the privacy policy for that build. The contact address is Jack's and is written here only as
@@ -10,11 +12,13 @@ the token `{{CONTACT_ADDRESS}}`; the address itself is kept outside the repo, in
 Store Connect and the hosted pages, never into a tracked file. The same goes for the developer's name in the policy:
 `{{DEVELOPER_NAME}}`.
 
-What it is true to: `master` with `v1-no-analytics` (four tiers of 27 levels, the daily, endless, StoreKit
-for the packs and the bundle) and the packs' levels as built: Lens's 25 and Escapement's 30. Prism, the third pack
-(PK1 = A, replacing First Stir, which is out of v1), is being built; its lines below describe its design and are to be
-checked against it once it ships. Not built, so left out of the copy: the daily archive, the supporter mark, iCloud
-sync and charybdis. Out of v1, so left out too: the sandbox (Jack's call store-sandbox = A, round 16).
+What it is true to: `master` on 2026-11-13, built for release with its tracked defaults (no analytics, iCloud sync
+and Game Center off): four tiers of 27 levels, the daily with its frost days, endless, the daily archive and the
+supporter mark that any purchase opens, and the three packs as built, Lens's 25 panels, Escapement's 30 problems and
+Prism's 30 specimens, with Triptych I. First Stir is out of v1 and compiled out of Release. Built but off in v1, so left
+out of the copy: iCloud sync of bests (`ICLOUD = NO`) and Game Center (`GAME_CENTER = NO`); turning either on changes
+the description's last line and the privacy policy. Not built: charybdis. Out of v1: the sandbox (Jack's call
+store-sandbox = A, round 16).
 
 ## Name (30 characters at most)
 
@@ -65,13 +69,13 @@ FOUR TIERS, 108 LEVELS, FREE
 - Plughole: 27 levels on neon pictures, from one stir on three rods to deep tanks on seven. The first three replay the scramble so you can watch it happen.
 - Whirlpool: 27 deeper levels on live pictures that move as you play: glass, chainmail, coral, a web of neurons and marbled ink. More stirs, more of them hidden under louder ones.
 - Vortex: 27 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
-- Maelstrom: 27 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. Its pictures have a heartbeat.
+- Maelstrom: 27 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. The last free tier and the hardest: some levels need a plan, not just a good eye. Its pictures have a heartbeat.
 
 Each tier opens when every level of the one before it is at par.
 
 EVERY DAY
 
-- The daily: one new tank a day, the same tank for everyone on the same date. Share your result as a line of coloured squares, one per move.
+- The daily: one new tank a day, the same tank for everyone on the same date. About one day in seven is a frost day: two knobs freeze under frosted glass, so you turn the whole tank to work round them, and the solve thaws them. Share your result as three dots: solved, at par, clean.
 - Endless: tank after tank, with no undo, reset or par. Every stir you waste fills the brim on the rim. Healing the scramble's own stirs lets it settle. Eight notches and it spills.
 
 The daily and endless open once you have cleared plughole's 23rd level.
@@ -80,11 +84,11 @@ PACKS
 
 Three packs add their own pictures, tanks and rules. The first three levels of each are free to play.
 
-- Lens: some rods zoom or spiral instead of turning. Read how far a picture has grown against a halftone dot screen that never lies about scale.
-- Escapement: a book of composed problems with a clock in them. One rod ticks a step by itself after every move you make. Time your heals so the clock always finds its seam.
-- Prism: every picture is drawn three times, in red, green and blue light, and each rod stirs only some of the colours. Unstir until the ghosts snap back into one white line.
+- Lens, 25 panels: some rods zoom instead of turning. Read how far a picture has grown against a halftone dot screen that never lies about scale.
+- Escapement, 30 problems: composed problems with clocks in them. A clock's rod ticks a step by itself after every move you make, on a budget of ticks. Time your heals so every tick finds its seam, and tap wait to let the clocks tick while nothing turns.
+- Prism, 30 specimens: every picture is drawn three times, in red, green and blue light, and each rod stirs only some of the colours. Unstir until the ghosts snap back into one white line.
 
-Triptych I unlocks Lens, Escapement and Prism in one purchase. Packs and Triptych I can be shared with your family through Family Sharing.
+Triptych I unlocks Lens, Escapement and Prism in one purchase. Packs and Triptych I can be shared with your family through Family Sharing. Any purchase also opens the archive of past dailies and adds a small supporter mark by the title and in your share line, which you can switch off.
 
 No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
 ```
@@ -96,7 +100,13 @@ Choices and checks in it:
   family-shareable, and the store code handles family grants. Turn it on for each in App Store Connect too; once on it
   can't be turned off (check).
 - **Prices.** Left out: they vary by storefront and the store shows them beside each purchase.
-- **Pack sizes.** Left out until Prism is built (Lens 25 levels, Escapement 30 problems, Prism planned at 30 specimens).
+- **Pack sizes.** In, each in its pack's own noun as its card counts it (`Pack.counted`): Lens 25 panels, Escapement 30
+  problems, Prism 30 specimens (proposed 2026-11-13).
+- **Frost days and maelstrom's plans** (proposed 2026-11-13). Both shipped on 2026-11-12. The maelstrom line says
+  "some levels" without naming rows, as which rows need a plan is still Jack's to see. Frost days are in the code from
+  2026-10-01 to 2029-12-31, 164 of those 1,188 days, one in 7.2.
+- **Archive and supporter mark** (proposed 2026-11-13). Both open with any purchase (`Archive.opens`, `Store.bought`);
+  the archive holds every past daily back to 30 days before daily #1. The mark has an off switch in settings.
 - **Vortex's swirl.** Worded to fit both the map in CLAUDE.md and a7d5b9f ("turn the swirl inside out"); check it
   against the swirl as it ships.
 
@@ -142,7 +152,7 @@ version exists.
 | Medical or treatment information | None | |
 | Gambling, simulated gambling | None | No loot boxes; every purchase names what it unlocks |
 | Contests ("competitions for rankings, rewards, or personal goals") | Infrequent | Par, bests and the daily fit. Still 4+, but A6 in Brazil, not AL |
-| Unrestricted web access | No | The app has no web view: the privacy policy row opens Safari |
+| Unrestricted web access | No | The app's one web page is the privacy policy, shown in Apple's in-app Safari sheet (`SFSafariViewController`), which shows the page's address but has no field to type one **(check)** (proposed 2026-11-13; the reason said "opens Safari") |
 | User-generated content, messaging, chat | No | The share line is a text the player sends through the system share sheet; nothing is received |
 | Advertising | No | |
 | In-app purchases | Yes | Three packs and a bundle of them |
@@ -180,10 +190,11 @@ the captions in a draft look:
 | 6 | `store-06-daily` | A new daily every day, the same for everyone. | 45 |
 | 7 | `store-07-endless` | Endless: waste a stir and the brim rises. | 41 |
 | 8 | `store-08-prism` | Paid pack · Prism: three colours, one line | 42 |
-| 9 | `store-09-lens` | Paid pack · Lens: rods that zoom and spiral | 43 |
+| 9 | `store-09-lens` | Paid pack · Lens: rods that zoom | 32 |
 | 10 | `store-10-escapement` | Paid pack · Escapement: a clock in every problem | 48 |
 
 Notes:
+- 9 is proposed 2026-11-13: it said "rods that zoom and spiral", and no rod spirals.
 - 2 shows the drag's dashes and count on plughole's grid; `whirlpool-count-marbling` is the same moment on a live
   picture if the grid reads too plain beside 1.
 - 3 is plughole level 13 solved; a solve wave on a live picture would need a new case (`UNSTIR_TIER=whirlpool` with the
@@ -230,47 +241,75 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
 
 ## Other fields App Store Connect asks for
 
-- **Privacy policy URL** (required): GitHub Pages serving `docs/` of this public repo (Jack, ST7), free and versioned
-  with the code. Until Pages is set up, the app's settings row links the plain github.com page of
-  `docs/privacy-policy.md`; switch that constant to the Pages address once it serves. Set aside: a domain of its own,
-  which HANDOFF puts off until sharing.
-- **Support URL** (required): a support page on the same Pages site, giving `{{CONTACT_ADDRESS}}`.
+- **Privacy policy URL** (required): the policy's page on Jack's own domain (Jack's call C17 = A, round 13, which
+  replaced ST7's GitHub Pages), written here only as `{{POLICY_URL}}`. The build reads it from `POLICY_URL`, set in the
+  shell or `Config/Local.xcconfig` for the archive; a build without it opens the plain github.com page of
+  `docs/privacy-policy.md`, the draft, and `scripts/archive-ios.sh` does not refuse one (proposed 2026-11-13).
+- **Support URL** (required): a support page on the same domain, `{{SUPPORT_URL}}`, giving `{{CONTACT_ADDRESS}}`
+  (proposed 2026-11-13).
 - **Contact address** for privacy and support: `{{CONTACT_ADDRESS}}` everywhere in the repo. Jack has picked it; it is
   recorded in `HANDOFF.private.md` only, and filled in App Store Connect and in the published pages at publishing.
-- **Marketing URL** (optional). None until a domain exists.
+- **Marketing URL** (optional). The policy is to live on Jack's own domain (C17 = A); once that domain serves, whether
+  its home page is the marketing URL is his call (proposed 2026-11-13).
 - **Copyright.** The year and holder of the source files' copyright headers.
-- **In-app purchases.** Display names: "Lens", "Escapement", "Prism", "Triptych I". Descriptions (Apple's limit is
-  assumed to be 45 characters; check):
+- **In-app purchases.** Four products, the ids never renamed. Display names (30 characters at most, assumed; check)
+  and descriptions (45 at most, assumed; check), proposed 2026-11-13:
 
-  | Product | Description | Chars |
-  |---|---|---|
-  | Lens | Rods that zoom and spiral | 25 |
-  | Escapement | Composed problems with a clock | 30 |
-  | Prism | Three colours, one white line | 29 |
-  | Triptych | Lens, Escapement and Prism | 26 |
+  | Product id | Reference name | Display name | Description | Chars |
+  |---|---|---|---|---|
+  | `com.screendead.Unstir.pack.lens` | Lens | Lens | 25 panels where some rods zoom | 30 |
+  | `com.screendead.Unstir.pack.escapement` | Escapement | Escapement | 30 problems with clocks in them | 31 |
+  | `com.screendead.Unstir.pack.prism` | Prism | Prism | 30 specimens in three colours | 29 |
+  | `com.screendead.Unstir.complete` | Triptych I | Triptych I | Lens, Escapement and Prism | 26 |
+
+  The reference name is App Store Connect's own, never shown to players. `StoreKit/Unstir.storekit`, the local test
+  file, still names the bundle's reference "Complete" and carries older descriptions ("Rods that zoom.", "A clock rod
+  that ticks."); its product ids are right and stay. First Stir's product, in that file, is not created in App Store
+  Connect for v1.
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
-- **Review notes.** App Review can't open the later tiers without playing every level at par, and the developer unlock
-  is off in Release. Recommend a short note saying how tiers open, which levels show each mechanic in the free taste,
-  and that the packs' first three levels play without a purchase. A Release build with the unlock on would be a
-  different build from the one reviewed, so it is not an option.
+- **Review notes** (App Review Information, Notes; 4000 characters at most, assumed; check). App Review can't open the
+  later tiers without playing every level at par, and the developer unlock is off in a Release build (the editors'
+  build has a labelled switch, but it is its own TestFlight group, never the one reviewed). Proposed 2026-11-13:
+
+  ```
+  No account or sign-in is needed, and the app has no server of its own: purchases go through StoreKit alone.
+
+  How the game opens: the four free tiers (Plughole, Whirlpool, Vortex, Maelstrom) open in turn, each once every level of the one before is solved at par. The release build has no unlock. Plughole's first levels teach the rule; the screenshots and preview show the later tiers.
+
+  The daily and Endless open once Plughole level 23 is solved. About one daily in seven is a frost day, with two knobs frozen under frosted glass: this is intended.
+
+  Paid packs: the row of pack covers at the bottom of the menu appears once Plughole level 9 is solved. Lens, Escapement and Prism each play their first three levels free; buying a pack, or Triptych I for all three, opens the rest. Any purchase also opens the archive of past dailies (a row under today's daily) and a supporter mark (a small star by the title and in the daily's share line, with an off switch in settings). "restore purchases" is in settings (the gear by the title) and on each pack's card.
+
+  Age range: where the system says a law applies, the app asks Apple's Declared Age Range API once a launch. Every level suits all ages, so the answer changes nothing and is not kept.
+
+  Settings, "report a problem", opens a mail to our support address with the app's log attached; nothing is sent unless the player sends it.
+  ```
 
 ## App Privacy label
 
-The label must match the build that ships: v1 without analytics (branch `v1-no-analytics`). Derived from the code.
+The label must match the build that ships: v1 without analytics (`ANALYTICS = NO`, `master`'s default; proposed
+2026-11-13, it named the branch `v1-no-analytics`). Derived from the code.
 
 **Data Not Collected.** With analytics off the app opens no network connection of its own. StoreKit's
 purchases go between the phone and Apple, and Apple's handling isn't the app's to declare (Apple's guidance, as
-understood; check). The daily's share line and the send-log button go through the system share sheet, which the
-player directs.
+understood; check). The daily's share line goes through the system share sheet, which the player directs, and the
+send-log button opens a mail the player reads and sends, or the share sheet where Mail has no account (proposed
+2026-11-13; it said both went through the share sheet).
 
 ### The send-log button
 
-`ShareLink(item: Log.url)` hands `Library/unstir-log.txt` to the share sheet; the app sends nothing itself. The log
-holds the last 3,000 lines of play: each touch's landing and path in tank units, commits, undos and resets with the
-stack, levels opened and left, tank turns, whether a pack is owned as its levels open, purchase and restore failures,
-and a launch line saying whether the boot session could be read (not its value), each line with the phone's time. It
-holds no uptime, since a line's time less the uptime would give the boot's instant.
+Settings' "report a problem" (proposed 2026-11-13; the button was `ShareLink(item: Log.url)` when ST7 was decided)
+opens a mail to the support address in Apple's Mail, `Library/unstir-log.txt` attached and the device line in the body;
+where Mail has no account, the share sheet with the address, the subject, the line and the log; the app sends nothing
+itself. The log keeps its newest part, cut back to 512 KB once it passes 1 MB: each touch's landing and path in tank
+units, commits, undos and resets with the stack, levels opened and left, tank turns, whether a pack is owned as its
+levels open, cards shown, purchase and restore failures, the settings switched, a launch line saying whether the boot
+session could be read (not its value), the device line once the first screen is up (app version and build, iOS, model,
+locale, text size, Reduce Motion, VoiceOver, Low Power Mode, the game's settings and each screen's four-tap budget), and
+the phone's thermal state and whether it is charging, at launch and on each thermal change, each line with the phone's
+time. It holds no uptime, since a line's time less the uptime would give the boot's instant, and no name, account or
+device identifier.
 
 | Option | Label |
 |---|---|
@@ -285,8 +324,21 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 1. Before submitting: the checks marked **(check)** above, against App Store Connect's live pages.
 2. The captions' look (band, type, size) is a draft for the UI design pass to set; `scripts/store-media.sh` makes the
    set, the preview and the social clips again in one run.
-3. The Prism lines describe its design; check them against the pack as it ships.
+3. ~~The Prism lines describe its design; check them against the pack as it ships.~~ Prism ships; its lines were
+   checked against it on 2026-11-13.
 4. In App Store Connect's availability, exclude the EU/EEA storefronts (EU1 = B); the EU is out at launch.
 5. "Every stir in this tank has an exact inverse." left the menu for this page (Jack's call D1 = A, round 13). Which
    field carries it, the description's rule paragraph or a later promotional text, is not yet decided, so the chosen
    texts above are as Jack approved them.
+6. The send-log button's label answer (ST7 = A, don't declare it) was decided for a share-sheet button. The button now
+   opens a mail already addressed to the developer, its log attached and the device line in the body, so the call goes
+   back to Jack with the mechanism as built (proposed 2026-11-13).
+7. iCloud sync and Game Center are built but off (`ICLOUD = NO`, `GAME_CENTER = NO` by default). If either ships on, the description's last line, the privacy label and the privacy policy
+   change before the build goes to review.
+8. `Share.url` and `Share.firstDay` are still empty, so the share line names the date and carries no link (Jack's calls
+   D1 and M2 = A want daily #1 set to launch day and an App Store link on the line in the build that goes to review).
+9. `scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings
+   row would then open this repo's draft policy, a page that goes dark if the repo goes private (CIPRIVATE = A).
+10. Follow-ups outside the docs: `scripts/store-captions.py` still captions shot 9 "rods that zoom and spiral";
+    `StoreKit/Unstir.storekit` names the bundle's reference "Complete"; `Config/Unstir.xcconfig`'s comment on `ICLOUD`
+    says these docs call iCloud sync unbuilt.
