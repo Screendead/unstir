@@ -74,6 +74,15 @@ still card-lens CARD=lens CLOCK=3
 # Reduce Motion: the live picture held on its rest frame with no clock given.
 calm=1 still m24-calm "${m24[@]}"
 
+# The tank's limit, 48 (Tank.maxStack): maelstrom 24 full, at rest, a rod in hand a twist short, the wind-in part way;
+# plughole 20, Prism 30 and Lens 25 full. Past the four-tap budget these draw two taps.
+still m24-48 "${m24[@]}" CLOCK=3 DEEP=48
+sweep m24-rod-48 LIVE "0:-2.30 0:-2.34" "${m24[@]}" CLOCK=3 DEEP=47
+sweep m24-wind-48 WIND "0.50 0.52 0.54" "${m24[@]}" CLOCK=3 DEEP=48
+still p20-48 TIER=plughole LEVEL=20 CLEAN=1 DEEP=48
+still prism-30-48 PACK=prism OWNED=prism LEVEL=30 CLEAN=1 DEEP=48
+still lens-25-48 PACK=lens OWNED=lens LEVEL=25 CLEAN=1 DEEP=48
+
 # Takes in motion, for shimmer no still shows.
 film open 7 "${m24[@]}" OPEN=1
 film drag 14 "${m24[@]}" TAPDRAG=2
