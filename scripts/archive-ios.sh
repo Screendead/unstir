@@ -48,6 +48,8 @@ fi
 team=()
 [[ -n "${UNSTIR_TEAM:-}" ]] && team=(DEVELOPMENT_TEAM="$UNSTIR_TEAM")
 
+# The measuring probes never ship: refused from the shell, and held off over Config/Local.xcconfig and any setting given.
+[[ "${PROBES:-}" == YES ]] && { echo "PROBES=YES is for measuring, never for an archive" >&2; exit 2; }
 name="Unstir-$number"
 [[ "${EDITORS:-}" == YES ]] && name+="-editors"
 archive="build/archive/$name.xcarchive"
@@ -57,7 +59,7 @@ xcodegen generate --quiet
 echo "archiving $name"
 xcodebuild -quiet -project Unstir.xcodeproj -scheme Unstir -configuration Release -destination "generic/platform=iOS" \
   -derivedDataPath build -archivePath "$archive" -allowProvisioningUpdates ${auth[@]+"${auth[@]}"} \
-  ${settings[@]+"${settings[@]}"} ${team[@]+"${team[@]}"} CURRENT_PROJECT_VERSION="$number" "$@" archive
+  ${settings[@]+"${settings[@]}"} ${team[@]+"${team[@]}"} CURRENT_PROJECT_VERSION="$number" "$@" PROBES=NO archive
 
 app="$archive/Products/Applications/Unstir.app"
 read_plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$app/Info.plist" 2>/dev/null || true; }

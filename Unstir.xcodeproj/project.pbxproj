@@ -44,6 +44,7 @@
 		5DBA55C92B9F8415AE633266 /* Frost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE5E713943E3199845C370B /* Frost.swift */; };
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
 		62E9EDC60BA3BB59B13DD2B8 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CD3AE9E7D3D1186321F8E8 /* Buttons.swift */; };
+		6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18BFB7C893FE494190410F59 /* OracleBench.swift */; };
 		64226C2831BE05FB2104354C /* EscapementArtPlates2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F984B99ADC6983C898614F1 /* EscapementArtPlates2.swift */; };
 		64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */; };
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
@@ -139,6 +140,7 @@
 		12E8193F7A9FB37B678695D2 /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		1482D797341825629413BA25 /* GameCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenter.swift; sourceTree = "<group>"; };
 		17636929C2246F5CE34FBFB3 /* EscapementArtPlates3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArtPlates3.swift; sourceTree = "<group>"; };
+		18BFB7C893FE494190410F59 /* OracleBench.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OracleBench.swift; sourceTree = "<group>"; };
 		254553325D43A8E887B3C94D /* ShaderKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderKit.swift; sourceTree = "<group>"; };
 		25930862609F89911BFB5015 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = SOURCE_ROOT; };
 		27BA49A685BB926E18C45760 /* PayoffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoffTests.swift; sourceTree = "<group>"; };
@@ -369,6 +371,7 @@
 				0D958FCA92212546745A433D /* Marbling.metal */,
 				12E8193F7A9FB37B678695D2 /* Menu.swift */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
+				18BFB7C893FE494190410F59 /* OracleBench.swift */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
 				799D669DC17401F34FBEB5D2 /* Page.swift */,
 				580758B9300EF9A94D07C121 /* Payoff.swift */,
@@ -556,6 +559,7 @@
 				D7B47E903167691787C1EB50 /* Marbling.metal in Sources */,
 				52972B0C126203096364F0AF /* Menu.swift in Sources */,
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
+				6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
 				346EECEE0574652612E6DB3B /* Page.swift in Sources */,
 				AE4D088FB75371D72F05FEF9 /* Payoff.swift in Sources */,

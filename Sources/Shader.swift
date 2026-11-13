@@ -55,6 +55,24 @@ struct Unstirred: ViewModifier, Animatable {
     }
 
     func body(content: Content) -> some View {
+        content.layerEffect(shader(scale: scale).shader, maxSampleOffset: CGSize(width: side, height: side))
+    }
+
+    /// UNSTIR_NUDGE=0.1: every glass's stir drawn that many device pixels right and down of where it sits, over the
+    /// same picture, so nothing changes where the map is the identity. For the twist oracle: how far a frame's pixels
+    /// move for a shift of the map no eye sees is what it lets another way of drawing the frame differ by.
+    /// `0.1,-0.1` gives each axis its own.
+    nonisolated static let nudge: (x: Double, y: Double) = {
+        #if PROBES || DEBUG
+        let f = (ProcessInfo.processInfo.environment["UNSTIR_NUDGE"] ?? "").split(separator: ",").compactMap { Double($0) }
+        return f.isEmpty ? (0, 0) : (f[0], f.count > 1 ? f[1] : f[0])
+        #else
+        return (0, 0)
+        #endif
+    }()
+
+    /// The frame's shader and its arguments on a display of `scale`, which the oracle's bench draws too (`OracleBench`).
+    nonisolated func shader(scale: CGFloat) -> TankShader {
         var turns = stack.enumerated().map { i, t in (rod: t.rod, angle: Double(t.steps) * Tank.step * min(shares?[i] ?? wind, 1)) }
         if let tick { turns.append(tick) }
         if let liveRod { turns.append((liveRod, liveAngle)) }
@@ -69,7 +87,8 @@ struct Unstirred: ViewModifier, Animatable {
         // drop to two taps at the budget's edge rather than run one more.
         let taps = budget.map { $0 - fillEntries } ?? Self.taps(side: side, scale: scale, fill: fillEntries)
         let weight = Self.weigh(channels, inFlight: n - stack.count)
-        var shader = TankShader(centre: CGPoint(x: r, y: r), radius: r, twists: twists, fourTaps: Float(taps + weight.rides),
+        var shader = TankShader(centre: CGPoint(x: r + Self.nudge.x / scale, y: r + Self.nudge.y / scale), radius: r, twists: twists,
+                                fourTaps: Float(taps + weight.rides),
                                 scale: scale, haze: haze, wave: wave, turn: turn)
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
@@ -79,7 +98,7 @@ struct Unstirred: ViewModifier, Animatable {
             shader.fine = fine
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
         }
-        return content.layerEffect(shader.shader, maxSampleOffset: CGSize(width: side, height: side))
+        return shader
     }
 }
 

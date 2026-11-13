@@ -7,7 +7,8 @@
 # opening every tier. GAME_CENTER=YES builds Game Center's sign-in and achievements in. ICLOUD=YES syncs bests through
 # iCloud, which needs the App ID's iCloud capability to sign for a device. AGE_RANGE=YES signs with Declared Age
 # Range's entitlement (scripts/archive-ios.sh sets it). ADAPTIVE_TAPS (YES unless set) learns and keeps each
-# glass's four-tap budget on a plain launch; NO draws the static limit.
+# glass's four-tap budget on a plain launch; NO draws the static limit. PROBES=YES compiles the measuring probes
+# (Sources/OracleBench.swift) into a Release build, for timing on a phone; Debug always holds them.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 config="${1:-Debug}"

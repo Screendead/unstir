@@ -270,6 +270,8 @@ struct LevelView: View {
     private let frozenClock: Double?
     /// UNSTIR_SHAKE: a seized knob's shake and the rim's pulse held this many seconds in.
     private let frozenShake: Double?
+    /// UNSTIR_TICKAT: Escapement: the newest move's ticks held this far through their flight.
+    private let frozenTick: Double?
     /// UNSTIR_TODAY: the day the level opens on, for the bank's refill.
     private let today: String?
     /// UNSTIR_BREATH: the swirl's breath held this many seconds into the tank's first rest.
@@ -456,6 +458,8 @@ struct LevelView: View {
         frozenWave = harness?.wave
         frozenClock = harness?.clock
         frozenShake = harness?.shake
+        frozenTick = harness?.tickAt
+        if let w = harness?.wind { _wind = State(initialValue: w) }
         today = harness?.today
         frozenBreath = harness?.breath
         rest = harness?.rest ?? 2
@@ -1887,6 +1891,7 @@ struct LevelView: View {
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
                 let payoffNow = payoffTime(timeline.date)
                 KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { p in
+                    let p = frozenTick ?? p
                     Group {
                         #if FIRST_STIR
                         if let scene = game.level.story?.scene {
@@ -2050,6 +2055,7 @@ struct LevelView: View {
                     let p = at(k)
                     if let c = clocks.first(where: { $0.rod == k }) {
                         KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { v in
+                            let v = frozenTick ?? v
                             // Where this clock's tick stands in the move's turn: before it, it is still to come.
                             let i = tickNow.firstIndex { $0.rod == k }, f = i.map { Self.flight(v, $0) } ?? 1
                             let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
@@ -2191,7 +2197,7 @@ struct LevelView: View {
     private static let ticksDone = 3.0
 
     /// The `i`th tick's flight, 0 to 1, eased, at `v` of the move's ticks.
-    nonisolated private static func flight(_ v: Double, _ i: Int) -> Double {
+    nonisolated static func flight(_ v: Double, _ i: Int) -> Double {
         let x = min(max(v - Double(i), 0), 1)
         return x * x * (3 - 2 * x)
     }
