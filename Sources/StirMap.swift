@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import Accelerate
 import CoreImage
 import CoreVideo
 import IOSurface
@@ -122,15 +123,20 @@ enum StirMap {
     /// the atlas's edge finds what the atlas's own image gives there (its sampler clamps to the edge).
     nonisolated static func pack(_ key: Key) -> [UInt8] {
         guard let atlas = key.atlas else { return [] }
-        let width = key.width
-        var out = [UInt8](repeating: 255, count: 4 * width * key.skip)
+        let width = key.width, row = 4 * width
+        var out = [UInt8](repeating: 255, count: row * key.skip)
         atlas.pixels.withUnsafeBufferPointer { from in
-            for y in 0..<key.skip {
-                let row = 4 * min(y, atlas.height - 1) * atlas.width
-                for x in 0..<width {
-                    let k = row + 4 * min(x, atlas.width - 1), o = 4 * (y * width + x)
-                    (out[o], out[o + 1], out[o + 2]) = (from[k + 2], from[k + 1], from[k])
+            out.withUnsafeMutableBufferPointer { to in
+                var source = vImage_Buffer(data: UnsafeMutableRawPointer(mutating: from.baseAddress), height: vImagePixelCount(atlas.height),
+                                           width: vImagePixelCount(atlas.width), rowBytes: 4 * atlas.width)
+                var packed = vImage_Buffer(data: to.baseAddress, height: source.height, width: source.width, rowBytes: row)
+                vImagePermuteChannels_ARGB8888(&source, &packed, [2, 1, 0, 3], vImage_Flags(kvImageNoFlags))
+                for y in 0..<atlas.height {
+                    for x in stride(from: 4 * atlas.width, to: row, by: 4) {
+                        for c in 0..<4 { to[y * row + x + c] = to[y * row + 4 * (atlas.width - 1) + c] }
+                    }
                 }
+                to.baseAddress!.advanced(by: atlas.height * row).update(from: to.baseAddress!.advanced(by: (atlas.height - 1) * row), count: row)
             }
         }
         return out
