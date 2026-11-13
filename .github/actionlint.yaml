@@ -1,0 +1,5 @@
+# Copyright © 2026 Jack Lusher. All rights reserved.
+# GitHub's preview image, which actionlint does not list yet.
+self-hosted-runner:
+  labels:
+    - xcode-27

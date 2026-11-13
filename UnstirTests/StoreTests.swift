@@ -201,6 +201,25 @@ final class StoreTests: XCTestCase {
         }
     }
 
+    /// The products StoreKit itself holds as owned, read past the app's ledger.
+    private func entitled() async -> Set<String> {
+        var ids: Set<String> = []
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let t) = result, t.revocationDate == nil { ids.insert(t.productID) }
+        }
+        return ids
+    }
+
+    /// The iOS 27.2 simulator's test session can record a refund made as a purchase's `finish` returns without sending
+    /// it to `Transaction.updates` (two runs of three; never after a read of `Transaction.unfinished`, a few
+    /// milliseconds), so a refund waits until StoreKit lists nothing unfinished.
+    private func finished() async throws {
+        try await eventually("StoreKit to finish the purchases") {
+            for await _ in Transaction.unfinished { return false }
+            return true
+        }
+    }
+
     /// What a new launch reads back.
     private func relaunch(owns packs: Set<Pack>) async throws {
         let next = Store()
@@ -287,6 +306,7 @@ final class StoreTests: XCTestCase {
         await store.purchase(.firstStir)
         await store.purchase(Pack.triptychID)
         XCTAssertEqual(store.ledger.owned, Set(Pack.allCases))
+        try await finished()
         let complete = try XCTUnwrap(session.allTransactions().first { $0.productIdentifier == Pack.triptychID })
         try session.refundTransaction(identifier: complete.identifier)
         try await eventually("the refund to reach the listener") { store.state(.lens) == .revoked }
@@ -300,6 +320,7 @@ final class StoreTests: XCTestCase {
         let store = Store()
         await store.start()
         await store.purchase(.lens)
+        try await finished()
         let first = try XCTUnwrap(session.allTransactions().first { $0.productIdentifier == Pack.lens.productID })
         try session.refundTransaction(identifier: first.identifier)
         try await eventually("the refund to reach the listener") { store.state(.lens) == .revoked }
@@ -335,6 +356,12 @@ final class StoreTests: XCTestCase {
         let asked = try XCTUnwrap(session.allTransactions().first { $0.pendingAskToBuyConfirmation })
         try session.declineAskToBuyTransaction(identifier: asked.identifier)
         try await Task.sleep(for: .seconds(2))
+        // The iOS 27.2 simulator's test session marks the declined request failed and still has StoreKit sign and send
+        // its purchase, the same in every field as an approval's, where iOS 26.5's sends nothing. No app could tell
+        // that from an approval, so there the test holds the app to what StoreKit granted and goes no further.
+        let granted = await entitled()
+        XCTAssertEqual(Set(store.ledger.owned.map(\.productID)), granted)
+        try XCTSkipUnless(granted.isEmpty, "this runtime's test session grants a declined Ask to Buy")
         XCTAssertEqual(store.ledger.owned, [])
         // StoreKit sends nothing for a decline, so the card still waits, and asking again sends the parent a new request.
         XCTAssertEqual(store.state(.lens), .pending)
