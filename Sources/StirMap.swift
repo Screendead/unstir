@@ -61,6 +61,9 @@ enum StirMap {
         guard #available(iOS 26, *) else { return false }
         return probed("UNSTIR_MAPLENS") == "1"
     }()
+    /// The shortest word a Prism channel's chain is given a tile for; a channel with a shorter one runs it as it does
+    /// without a map, a tile's memory saved. UNSTIR_MAPSHORTEST, a probe: unset, every word has its tile.
+    nonisolated static let shortest = probed("UNSTIR_MAPSHORTEST").flatMap(Int.init) ?? 1
     /// UNSTIR_MAPLOG, a probe: a line in the log as each map lands (`Holder.report`).
     nonisolated static let logs = probed("UNSTIR_MAPLOG") != nil
 
@@ -86,12 +89,12 @@ enum StirMap {
     /// The tiles a map of entries with these channels (raw values, an entry each; empty for every one white) holds,
     /// each the channels of one word: a channel's word is the entries whose mask holds it, so channels the masks never
     /// part share a tile, and a channel no entry holds needs none. One tile, every channel's, where nothing is masked.
-    nonisolated static func tiles(_ masks: [Float]) -> [Int] {
+    nonisolated static func tiles(_ masks: [Float], shortest: Int = StirMap.shortest) -> [Int] {
         guard !masks.isEmpty else { return [Int(Channels.white.rawValue)] }
         var tiles: [(word: [Int], channels: Int)] = []
         for bit in [1, 2, 4] {
             let word = masks.indices.filter { Int(masks[$0]) & bit != 0 }
-            if word.isEmpty { continue }
+            if word.count < max(shortest, 1) { continue }
             if let i = tiles.firstIndex(where: { $0.word == word }) { tiles[i].channels |= bit } else { tiles.append((word, bit)) }
         }
         return tiles.map(\.channels)
