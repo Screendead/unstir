@@ -44,6 +44,25 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and, of the shader, only `lensFlow` and the channel chains, compiled
   on their own through `ShaderKit` (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  A pixel's taps go through the chain in step (`tapsThrough`, Jack, 2026-11-12: find a faster way to draw twists,
+  provided it doesn't look worse): entry by entry, each entry read once for all the taps (`entry`), where each tap
+  used to run the whole chain on its own; `unmap` clears a point past the entry's disc by the squared distance,
+  before its root and divide; and a pixel whose taps all lie past the glass's edge runs no entry (`pastTheGlass`),
+  which holds only while every disc lies within the glass (`testEveryDiscLiesWithinTheGlass`; a direct caller of
+  `TankShader` keeps its discs there too), where each entry would find it the identity. Prism's chains read each
+  entry once too and skip the same pixels. No tap's arithmetic changed, and `testTheShadersTapsMatchTheModel` holds
+  the taps to the Swift copy, turn and all, at four taps and at two. On the Mac's GPU, off screen at 1137 px
+  (`scripts/twist-oracle.sh time`, the loop it replaced timed in the same rounds, 2026-11-12), the twist pass takes
+  0.63 of what it did on maelstrom 24 (23 entries), 0.65 at 36 entries, 0.73 there with two taps, 0.62 at 4 entries,
+  0.64 on whirlpool 27, 0.72 on vortex 27, 0.70 on Lens 25 and 0.76 to 0.81 on Prism; the square it times includes
+  the corners past the glass, a fifth of its pixels, which the skip clears, so a draw that never shades them gains
+  less (by arithmetic, not measured, about 0.7 on maelstrom 24). No phone has timed it. The gain is in how the loop is arranged, not in less
+  arithmetic: the taps as an array, an entry's floats read apart, or a tap at a time each lost it, and nothing but
+  the timer shows a change that does, so time any change to `unmap` or `tapsThrough` against the file as it was:
+  a copy of it with its stitchables and kernel renamed, its kernel a second `Method` in `OracleBench.methods`.
+  It is not the old loop to the bit: the compiler fuses multiplies and adds its own way in each arrangement, and a
+  deep stack carries a last bit of rounding to whole levels, so a deep stir's pixels differ as they do when the stir
+  moves a tenth of a pixel (the oracle's `alike`) and a calm frame's by a level at most (`same`).
   Every draw through `unstir` or `unstirChannels` (the level's glass, the dock's covers, the cards' clips, the icon,
   the menu's stir) passes its arguments by name through `TankShader` (Shader.swift, Jack's call ARCH = A), which lists
   them in the signature's order: `testTheTankShaderPassesTheSignaturesOrder` reads both signatures out of Unstir.metal

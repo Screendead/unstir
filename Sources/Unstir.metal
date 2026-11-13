@@ -9,23 +9,33 @@ static float lensFlow(float u, float t, float a, float e) {
     return a * pow(1.0 + (pow(a / u, e) - 1.0) * exp(-e * t), -1.0 / e);
 }
 
-// Entry e's inverse map at q: (rod centre x, y, disc radius, angle), as `twists` below lays it out.
-static float2 unmap(float2 q, device const float *e, float plateau, float swirlPlateau, float lensEdge) {
-    float2 c = float2(e[0], e[1]);
+// Entry e's inverse map at q: (rod centre x, y, disc radius, angle), as `twists` below lays it out. The entry comes
+// already read, once for every point it moves, and a point past its disc is cleared by the squared distance, before
+// the root and the divide: with the taps in step (tapsThrough) that takes about a third off the twist pass on the
+// Mac's GPU (2026-11-12), and the gain is in this arrangement, not in less arithmetic, so time a change to it
+// (scripts/twist-oracle.sh time).
+static float2 unmap(float2 q, float4 e, float plateau, float swirlPlateau, float lensEdge) {
+    float2 c = e.xy;
     float2 d = q - c;
-    float z = e[2];
+    float z = e.z;
+    // Past the disc by more than rounding, where the test below finds the same.
+    if (dot(d, d) > z * z * 1.00001) return q;
     float s = length(d) / abs(z);
     // Outside the rod's disc the map is exactly the identity.
     if (s >= 1.0) return q;
     if (z < 0.0) {
         // A lens moves nothing outside its rigid core.
-        return s < plateau && s > 1e-6 ? c + d * (lensFlow(s, -e[3], plateau, lensEdge) / s) : q;
+        return s < plateau && s > 1e-6 ? c + d * (lensFlow(s, -e.w, plateau, lensEdge) / s) : q;
     }
     // A knob turns its core and lets go towards its edge; the swirl holds the glass's edge and lets go towards its centre.
     float t = smoothstep(z >= 1.0 ? swirlPlateau : plateau, 1.0, s);
-    float a = -e[3] * (z >= 1.0 ? t : 1.0 - t);
+    float a = -e.w * (z >= 1.0 ? t : 1.0 - t);
     float cs = cos(a), sn = sin(a);
     return c + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
+}
+
+static float4 entry(device const float *twists, int i) {
+    return float4(twists[4 * i], twists[4 * i + 1], twists[4 * i + 2], twists[4 * i + 3]);
 }
 
 // The top n entries' inverses, each on the points of the channels its mask (a Channels raw value) holds.
@@ -33,11 +43,61 @@ static void chains(int n, device const float *twists, device const float *masks,
                    float lensEdge, thread float2 &qr, thread float2 &qg, thread float2 &qb) {
     for (int i = n - 1; i >= 0; i--) {
         int m = int(masks[i]);
-        device const float *e = twists + 4 * i;
+        float4 e = entry(twists, i);
         if (m & 1) qr = unmap(qr, e, plateau, swirlPlateau, lensEdge);
         if (m & 2) qg = unmap(qg, e, plateau, swirlPlateau, lensEdge);
         if (m & 4) qb = unmap(qb, e, plateau, swirlPlateau, lensEdge);
     }
+}
+
+// Whether every tap of the pixel at pos lies past the glass's edge, with room for rounding. Every disc lies within
+// the glass (testEveryDiscLiesWithinTheGlass), so each entry would find such a pixel the identity, and none runs.
+static bool pastTheGlass(float2 pos, float2 centre, float radius, float scale) {
+    float2 pc = (pos - centre) / radius;
+    float edge = 1.0 + 0.5 / (scale * radius);
+    return dot(pc, pc) > edge * edge;
+}
+
+// A pixel's taps: p on the screen and q through the chain, both in tank units. Each a field of its own: an array
+// here cost a frame of four entries a third more.
+struct Taps {
+    float2 p0, p1, p2, p3, q0, q1, q2, q3;
+};
+
+static float2 tapOnScreen(float2 pos, int j, float2 centre, float radius, float scale) {
+    return (pos + (float2(j & 1, j >> 1) - 0.5) * 0.5 / scale - centre) / radius;
+}
+
+// The taps of the pixel at pos, a quarter device pixel off its centre, each turned back by the glass's turn and then
+// through the top `entries` of the chain: in step, entry by entry, so each entry is read once for all of them. Past
+// the four-tap budget (stride 3) only the diagonal pair, 0 and 3, runs.
+static Taps tapsThrough(float2 pos, float2 centre, float radius, device const float *twists, int entries, int stride,
+                        float plateau, float swirlPlateau, float lensEdge, float scale, float turn) {
+    Taps taps;
+    float ct = cos(turn), st = sin(turn);
+    taps.p0 = tapOnScreen(pos, 0, centre, radius, scale);
+    taps.p1 = tapOnScreen(pos, 1, centre, radius, scale);
+    taps.p2 = tapOnScreen(pos, 2, centre, radius, scale);
+    taps.p3 = tapOnScreen(pos, 3, centre, radius, scale);
+    if (pastTheGlass(pos, centre, radius, scale)) entries = 0;
+    float2 q0 = float2(taps.p0.x * ct + taps.p0.y * st, taps.p0.y * ct - taps.p0.x * st);
+    float2 q1 = float2(taps.p1.x * ct + taps.p1.y * st, taps.p1.y * ct - taps.p1.x * st);
+    float2 q2 = float2(taps.p2.x * ct + taps.p2.y * st, taps.p2.y * ct - taps.p2.x * st);
+    float2 q3 = float2(taps.p3.x * ct + taps.p3.y * st, taps.p3.y * ct - taps.p3.x * st);
+    for (int k = entries - 1; k >= 0; k--) {
+        float4 e = entry(twists, k);
+        q0 = unmap(q0, e, plateau, swirlPlateau, lensEdge);
+        q3 = unmap(q3, e, plateau, swirlPlateau, lensEdge);
+        if (stride == 1) {
+            q1 = unmap(q1, e, plateau, swirlPlateau, lensEdge);
+            q2 = unmap(q2, e, plateau, swirlPlateau, lensEdge);
+        }
+    }
+    taps.q0 = q0;
+    taps.q1 = q1;
+    taps.q2 = q2;
+    taps.q3 = q3;
+    return taps;
 }
 
 // A tap's light: s the sampled colour, p the tap in tank units on the screen.
@@ -62,19 +122,19 @@ template <typename L>
 static half4 unstirBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count, float n,
                         float fourTaps, float plateau, float swirlPlateau, float lensEdge, float scale, float haze,
                         float3 wave, float turn) {
-    // Four taps a quarter device pixel off centre, each through the whole inverse chain: the stretching is in the
-    // map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the diagonal pair
-    // runs: on an iPhone 13 Pro Max's glass, about 1137 px, a full stack of 36 and the drag over a live picture's fill
+    // Four taps a quarter device pixel off centre, each through the whole inverse chain (tapsThrough): the stretching
+    // is in the map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the
+    // diagonal pair runs: on an iPhone 13 Pro Max's glass, about 1137 px, a full stack of 36 and the drag over a live picture's fill
     // of 4, 41 entries' work in all, held 120 Hz with four taps (2026-11-04).
     int stride = n > fourTaps ? 3 : 1;
-    float ct = cos(turn), st = sin(turn);
-    float3 acc = 0;
-    for (int j = 0; j < 4; j += stride) {
-        float2 p = (pos + (float2(j & 1, j >> 1) - 0.5) * 0.5 / scale - centre) / radius;
-        float2 q = float2(p.x * ct + p.y * st, p.y * ct - p.x * st);
-        for (int i = min(int(n), count / 4) - 1; i >= 0; i--) q = unmap(q, twists + 4 * i, plateau, swirlPlateau, lensEdge);
-        acc += lit(float3(layer.sample(centre + q * radius).rgb), p, wave);
+    Taps taps = tapsThrough(pos, centre, radius, twists, min(int(n), count / 4), stride, plateau, swirlPlateau, lensEdge,
+                            scale, turn);
+    float3 acc = lit(float3(layer.sample(centre + taps.q0 * radius).rgb), taps.p0, wave);
+    if (stride == 1) {
+        acc += lit(float3(layer.sample(centre + taps.q1 * radius).rgb), taps.p1, wave);
+        acc += lit(float3(layer.sample(centre + taps.q2 * radius).rgb), taps.p2, wave);
     }
+    acc += lit(float3(layer.sample(centre + taps.q3 * radius).rgb), taps.p3, wave);
     return finish(acc, stride, haze);
 }
 
@@ -84,6 +144,7 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
                                 float plateau, float swirlPlateau, float lensEdge, float scale, float haze, float3 wave,
                                 float turn, float isolate, float3 tint, float held, float hold) {
     int stride = cost > fourTaps ? 3 : 1;
+    int entries = pastTheGlass(pos, centre, radius, scale) ? 0 : min(int(n), min(count / 4, maskCount));
     int alone = int(isolate);
     int h = int(held);
     float3 own = float3(h & 1, (h >> 1) & 1, (h >> 2) & 1);
@@ -93,7 +154,7 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
         float2 p = (pos + (float2(j & 1, j >> 1) - 0.5) * 0.5 / scale - centre) / radius;
         float2 q = float2(p.x * ct + p.y * st, p.y * ct - p.x * st);
         float2 qr = q, qg = q, qb = q;
-        chains(min(int(n), min(count / 4, maskCount)), twists, masks, plateau, swirlPlateau, lensEdge, qr, qg, qb);
+        chains(entries, twists, masks, plateau, swirlPlateau, lensEdge, qr, qg, qb);
         float3 s = float3(layer.sample(centre + qr * radius).r, layer.sample(centre + qg * radius).g,
                           layer.sample(centre + qb * radius).b);
         if (alone != 0) s = (alone == 1 ? s.r : alone == 2 ? s.g : s.b) * tint;
@@ -176,13 +237,15 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
     int entries = min(int(n), count / 4);
     float ct = cos(turn), st = sin(turn);
     float2 ps[4], qs[4];
-    for (int j = 0; j < 4; j += stride) {
-        float2 p = (pos + (float2(j & 1, j >> 1) - 0.5) * 0.5 / scale - centre) / radius;
-        float2 q = float2(p.x * ct + p.y * st, p.y * ct - p.x * st);
-        for (int i = entries - 1; i >= 0; i--) q = unmap(q, twists + 4 * i, plateau, swirlPlateau, lensEdge);
-        ps[j] = p;
-        qs[j] = q;
-    }
+    Taps taps = tapsThrough(pos, centre, radius, twists, entries, stride, plateau, swirlPlateau, lensEdge, scale, turn);
+    ps[0] = taps.p0;
+    ps[1] = taps.p1;
+    ps[2] = taps.p2;
+    ps[3] = taps.p3;
+    qs[0] = taps.q0;
+    qs[1] = taps.q1;
+    qs[2] = taps.q2;
+    qs[3] = taps.q3;
     float weight = 0.0;
     float3 detail = 0;
     float2 q = 0.5 * (qs[0] + qs[3]);
@@ -198,7 +261,7 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
             // Two taps lie on one diagonal: a third chain, only here, gives the footprint its other axis.
             float2 p = (pos + float2(0.25, -0.25) / scale - centre) / radius;
             float2 r = float2(p.x * ct + p.y * st, p.y * ct - p.x * st);
-            for (int i = entries - 1; i >= 0; i--) r = unmap(r, twists + 4 * i, plateau, swirlPlateau, lensEdge);
+            for (int i = entries - 1; i >= 0; i--) r = unmap(r, entry(twists, i), plateau, swirlPlateau, lensEdge);
             qs[1] = r;
             qs[2] = qs[0] + qs[3] - r;
         }
