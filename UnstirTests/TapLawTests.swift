@@ -138,7 +138,8 @@ final class TapLawTests: XCTestCase {
         XCTAssertNil(shallow.cap)
         XCTAssertEqual(TapLaw(start: 3).applied, TapLaw.floor)
         XCTAssertEqual(TapLaw(start: 99).applied, TapLaw.ceiling)
-        XCTAssertEqual(TapLaw.ceiling, Tank.maxStack + 6, "every stack on every picture, the twin neurons' fill the largest")
+        XCTAssertEqual(TapLaw.ceiling, 42, "Jack's TAPS-CEIL: the old full stack of 36 on the twin neurons' fill of 6")
+        XCTAssertEqual(Picture.allCases.map(\.fillEntries).max(), 6)
     }
 
     func testSixHundredCleanFramesAtTheEdgeStepUpOne() {
