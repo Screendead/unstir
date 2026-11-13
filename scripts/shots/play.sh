@@ -90,8 +90,8 @@ shot result-veil "Level 11 solved in 9, four over par: the picture under the car
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006
-shot result-fullest "Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows." \
-  SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+shot result-fullest "Plughole 27 replayed at par against a stored best of +6, every other plughole level at par: clean counts on the first try, the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows." \
+  SCREEN=clean LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
