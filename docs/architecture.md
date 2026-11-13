@@ -925,7 +925,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   plays (Jack, round 16; the bundle's wedges each turned to hold its key knob, `PackTank.turn`; the promoted-purchase
   images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held stirred under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
-  (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
+  (Low Power Mode, or a thermal state of serious or worse; `Power.heat`, the thermal state and the charger's, is logged
+  after the launch's device line and on each thermal change) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
   it held (`PausingTimeline`), a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
   to Buy, nothing else, a revocation being the card's to say). Under the name a line says "new", in the pack's glow,

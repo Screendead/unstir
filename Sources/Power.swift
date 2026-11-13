@@ -14,6 +14,29 @@ final class Power {
     private(set) var idle = false
     @ObservationIgnored private var waking: Task<Void, Never>?
     @ObservationIgnored private var watching = false
+    @ObservationIgnored private var thermal = ProcessInfo.processInfo.thermalState
+
+    /// How warm the phone says it is and whether it is on a charger, for the log.
+    var heat: String {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let power = switch UIDevice.current.batteryState {
+        case .unplugged: "unplugged"
+        case .charging: "charging"
+        case .full: "full"
+        default: "unknown"
+        }
+        return "thermal \(Self.name(ProcessInfo.processInfo.thermalState)), power \(power)"
+    }
+
+    nonisolated static func name(_ state: ProcessInfo.ThermalState) -> String {
+        switch state {
+        case .nominal: "nominal"
+        case .fair: "fair"
+        case .serious: "serious"
+        case .critical: "critical"
+        @unknown default: "unknown"
+        }
+    }
 
     nonisolated static func saving(lowPower: Bool, thermal: ProcessInfo.ThermalState) -> Bool {
         lowPower || thermal.rawValue >= ProcessInfo.ThermalState.serious.rawValue
@@ -29,6 +52,11 @@ final class Power {
     }
 
     private func update() {
+        let state = ProcessInfo.processInfo.thermalState
+        if state != thermal {
+            thermal = state
+            Log.write(heat)
+        }
         let now = Self.saving(lowPower: ProcessInfo.processInfo.isLowPowerModeEnabled, thermal: ProcessInfo.processInfo.thermalState)
         guard now != saving else { return }
         saving = now
