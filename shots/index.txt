@@ -12,7 +12,7 @@ first-launch-pointer.png  The same, its note at rest after 4 s: the note and the
 menu-after-01.png  Menu with 01 solved: next: 02 · Drip over the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear under today, one line each, each marked new, under next: 01.
 menu-daily-run.png  The same with today's daily and the three before it solved: its marks at the daily row's right as on every row and 4 days running under its title, neither row new any more.
-menu-all-done.png  Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row.
+menu-all-done.png  Menu with every tier's levels solved, plughole's with clean stored and the rest at par, the daily run four days and endless's best 9: all four tiers open, two marks on every row, as only the daily shows clean.
 menu-daily-frost.png  Menu on whirlpool, today a frost day (2026-10-15, two knobs frozen): the daily's row says frost day under its title.
 menu-daily-plain.png  The same on a plain day (2026-10-01): the daily's row one line, as on any day before a run.
 menu-daily-frost-large.png  The frost day at accessibility type (accessibility3), on plughole with every level at par so the list lands at its top: frost day under the title, which keeps the row's width.
@@ -97,9 +97,10 @@ result.png  Level 05 result card after a harness solve through the real commit p
 level-at-par.png  Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber.
 level-over-par.png  The same a push later: moves 6 / par 5 in magenta.
 result-veil.png  Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most.
-result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
+result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted on its first try: two marks and at par, as only the daily shows clean.
+result-replay.png  Level 06 (city) replayed at par with nothing wasted, started before (UNSTIR_TRIED) so no first try, no best saved yet: two marks and at par, the same as a first try.
 result-again-best.png  Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next.
-result-fullest.png  Plughole 27 replayed at par against a stored best of +6, every other plughole level at par: clean counts on the first try, the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows.
+result-fullest.png  Plughole 27 replayed at par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows.
 result-pack-complete.png  Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's).
 result-every-tier.png  Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
 result-ladder-end.png  Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
@@ -108,6 +109,7 @@ tier-up-locked.png  The same with maelstrom still closed, no other vortex level 
 tier-up-midway.png  Plughole 05 solved at par, the last plughole level without a best: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
 tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, vortex 01 to 24 solved (04, 11 and 22 over par): 24 ticks lit, short: 25–27.
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and share, sharing the card's width, and next daily in 7 h under them (UNSTIR_NOW=17:00).
+daily-clean.png  Today's daily solved at par on its first try with nothing wasted: three marks, clean, share and next daily in 7 h.
 daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet its share button opens, opened without a tap).
 daily-share-supporter.png  The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦.
@@ -828,8 +830,8 @@ store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held hal
 store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
 store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
-duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
-duo-open-fullest.png  Duo open: plughole 27's fullest card (at par on a replay, what clean takes, new best, again, up a notch) whole over the menu in the trailing half.
+duo-open-result.png  Duo open: plughole 06 solved at par, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
+duo-open-fullest.png  Duo open: plughole 27's fullest card (at par on a replay, new best, again, up a notch) whole over the menu in the trailing half.
 duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note.
 duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them.
 duo-open-endless.png  Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it.
@@ -841,9 +843,9 @@ duo-open-upright-endless.png  Duo upright at 1471 px: endless's tank 20, 28 stir
 duo-phone-whirlpool-27.png  A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, four taps: 28 stirs and the glass's fill of 4 make 32, within 40.
 duo-folded-book.png  Duo half open like a book: the split clear of the fold's band either side, the tank and its chrome wholly in the leading half, the menu in the trailing half.
 duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
-duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.
+duo-tabletop-result.png  Duo tabletop: plughole 06 solved at par, the card and unstirred. in the upright half, above the fold.
 duo-tabletop-daily-result.png  Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold.
-duo-tabletop-fullest.png  Duo tabletop: plughole 27 replayed at par against a best of +6, the fullest card a tier level shows (what clean takes, new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold.
+duo-tabletop-fullest.png  Duo tabletop: plughole 27 replayed at par against a best of +6, the fullest card a tier level shows (new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold.
 duo-tabletop-pack-complete.png  Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold.
 duo-tabletop-escapement.png  Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half.
 duo-tabletop-prism.png  Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half.
@@ -876,7 +878,7 @@ duo-beside-level.png  Duo open: plughole 11 five moves in beside the menu: heade
 duo-beside-opened-from-menu.png  Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half with its title and gear, 05's tank and chrome in the leading half.
 duo-beside-pick.png  Duo open: plughole 11 beside the menu, row 07 tapped 1.5 s in (UNSTIR_PICK): 11 left through its own way out, 07 in the tank, the list following it.
 duo-beside-back.png  Duo open: plughole 11 beside the menu, left by its back a second in: the list back in the leading half under its title and gear, the trailing half empty.
-duo-beside-result.png  Duo open: plughole 06 solved clean beside the menu: the result card headed by unstirred. over the menu in the trailing half, centred on the tank, the list gone under it.
+duo-beside-result.png  Duo open: plughole 06 solved at par beside the menu: the result card headed by unstirred. over the menu in the trailing half, centred on the tank, the list gone under it.
 duo-beside-card.png  Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, its way out ‹ menu, the tank and its chrome playing on.
 duo-beside-gate.png  Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over 03's result card in the trailing half on buying, its way out ✕ close (s5b-back = B), Lens 03 still in the tank.
 duo-beside-archive.png  Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned.
@@ -919,8 +921,8 @@ type-menu-ax3.png  The same at accessibility3: each row's result under its title
 type-level-xxxl.png  Level 01 at xxxLarge type: the header, title, note and controls grown, the tank still the screen's width.
 type-level-ax5.png  Level 01 at accessibility5: the play screen capped at xxxLarge, the same frame as type-level-xxxl.
 type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size.
-type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge, replayed at par: clean counts on the first try, the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
-type-result-clean-xxxl.png  Level 06's clean result card at xxxLarge.
+type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge, replayed at par: the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
+type-result-clean-xxxl.png  Level 06 solved at par on its first try with nothing wasted, at xxxLarge.
 type-result-par-xxxl.png  Level 06 solved at par on a replay, at xxxLarge.
 type-tier-up-xxxl.png  Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM.
 type-daily-result-xxxl.png  Today's daily's result card at xxxLarge, two over par: again, share and next daily in 7 h.
@@ -930,13 +932,13 @@ type-settings-ax3.png  Settings at accessibility3: the title, rows and details s
 stamp-default.png  Level 05 solved at the default type size: "unstirred." over the tank, the result card under it.
 stamp-xxxl.png  The same at xxxLarge, the play screen's cap: "unstirred." grown with the card, still clear of the rim.
 stamp-ax5.png  The same at accessibility5: the play screen capped at xxxLarge, the same frame as stamp-xxxl.
-stamp-tabletop-xxxl.png  Duo tabletop at xxxLarge: plughole 06 solved clean, "unstirred." kept at its fixed 22 pt above the fold.
-stamp-split-xxxl.png  Duo open at xxxLarge: plughole 06 solved clean, the card over the menu headed by "unstirred." at the larger size.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
+stamp-tabletop-xxxl.png  Duo tabletop at xxxLarge: plughole 06 solved at par, "unstirred." kept at its fixed 22 pt above the fold.
+stamp-split-xxxl.png  Duo open at xxxLarge: plughole 06 solved at par, the card over the menu headed by "unstirred." at the larger size.
+marks-menu.png  Plughole 01 to 07 solved, 01, 03 and 05 with clean stored, the rest at par but 04 at +2, 08 tried and 09 on locked: two discs filled at par, clean stored or not (only the daily shows clean), one on 04 with its +2 in magenta before it, three hollow on 08, a lock on 09 onwards.
 marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
-marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
-marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 and 04 with clean stored, shown as at par, 02 at par, 03 +2 (the +2 in magenta before one disc), 05 tried.
+marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 (clean stored) and 02 at par, 03 open, a lock on 04 onwards.
+marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par.
 brim-m27-dealt.png  Maelstrom 27 as dealt: 26 of 36, the brim's liquid in the level's colour most of the way up the bezel, under the knurl.
 brim-m27-35.png  Maelstrom 27, its stack repeated to 35 of 36: the liquid a notch under the pin, which pulses.
 brim-m27-full.png  Maelstrom 27 at 36 of 36: the brim full to the pin, no spill.

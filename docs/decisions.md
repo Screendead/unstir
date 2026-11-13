@@ -539,6 +539,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Privacy label and the report mail | 2026-11-13 | The App Privacy label stays Data Not Collected; the report-a-problem mail, optional, started by the player each time and shown before sending, is not declared. Decided again for the mail as it now works (ST7 decided it for a share-sheet button). | store-page |
 | TestFlight in the privacy policy | 2026-11-13 | The policy says what Apple's TestFlight passes on (sessions by day, feedback, screenshots, crash reports, the tester id or invited name and email), used only to improve the game, kept 12 months at most, never shared. | privacy-policy |
 | Escapement's wait button | 2026-11-13 | The button keeps the word "wait". | architecture |
+| Clean on the daily only | 2026-11-13 | "Clean" (solved at par on the first try with no undo or reset) is shown only on the daily, past days from the archive too: its share line's three dots and word, its card, its archive marks and VoiceOver. Levels and packs drop it from the card, rows and VoiceOver, with the hint under the card. Jack: "drop the "clean" status; it's impossible to get after try 1, and this would be frustrating and disappointing to our most engaged players"; asked whether everywhere, he kept the daily, which comes fresh each day. | architecture |
 
 ## Undated, no round
 

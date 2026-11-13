@@ -1358,7 +1358,7 @@ private struct LevelRow: View {
                 Image(systemName: "lock.fill").imageScale(.small).foregroundStyle(Color.text4)
             } else if new, result == nil {
                 Text("new").foregroundStyle(Color.text2)
-            } else if case let mark = Archive.Mark(result, started: tried), let filled = ResultMarks.filled(mark) {
+            } else if case let mark = Archive.Mark(result, started: tried, of: level.id), let filled = ResultMarks.filled(mark) {
                 ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
             }
         }

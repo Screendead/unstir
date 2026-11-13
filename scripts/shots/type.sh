@@ -11,9 +11,9 @@ shot type-level-ax5 "Level 01 at accessibility5: the play screen capped at xxxLa
   LEVEL=1 CLOCK=0 TYPESIZE=accessibility5
 shot type-result-xxxl "Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006 TYPESIZE=xxxLarge
-shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge, replayed at par: clean counts on the first try, the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot." \
+shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge, replayed at par: the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot." \
   SCREEN=clean LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0 TYPESIZE=xxxLarge
-shot type-result-clean-xxxl "Level 06's clean result card at xxxLarge." SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
+shot type-result-clean-xxxl "Level 06 solved at par on its first try with nothing wasted, at xxxLarge." SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
 shot type-result-par-xxxl "Level 06 solved at par on a replay, at xxxLarge." SCREEN=clean LEVEL=6 BESTS=plughole:000000 TYPESIZE=xxxLarge
 shot type-tier-up-xxxl "Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0 TYPESIZE=xxxLarge
@@ -30,7 +30,7 @@ shot stamp-xxxl "The same at xxxLarge, the play screen's cap: \"unstirred.\" gro
   SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=xxxLarge
 shot stamp-ax5 "The same at accessibility5: the play screen capped at xxxLarge, the same frame as stamp-xxxl." \
   SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=accessibility5
-shot stamp-tabletop-xxxl "Duo tabletop at xxxLarge: plughole 06 solved clean, \"unstirred.\" kept at its fixed 22 pt above the fold." \
+shot stamp-tabletop-xxxl "Duo tabletop at xxxLarge: plughole 06 solved at par, \"unstirred.\" kept at its fixed 22 pt above the fold." \
   FRAME=669x951 INSETS=59,0,34,0 FOLD=0,466,669,19 SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
-hold=10 shot stamp-split-xxxl "Duo open at xxxLarge: plughole 06 solved clean, the card over the menu headed by \"unstirred.\" at the larger size." \
+hold=10 shot stamp-split-xxxl "Duo open at xxxLarge: plughole 06 solved at par, the card over the menu headed by \"unstirred.\" at the larger size." \
   FRAME=951x669 INSETS=24,0,21,84 SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge

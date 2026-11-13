@@ -92,7 +92,7 @@ enum Spoken {
                     : new ? fresh : notPlayed
             }
         } else if let result {
-            value = Self.result(result)
+            value = Self.result(result, of: level.id)
         } else {
             value = level.sandbox ? "" : new ? fresh : started ? String(localized: "tried",
                                                                         comment: "VoiceOver: a row started, with no best")
@@ -104,9 +104,10 @@ enum Spoken {
 }
 
 extension Spoken {
-    /// A row's best, as its marks show it (`ResultMarks`): three filled clean, two at par, one solved.
-    static func result(_ best: Best) -> String {
-        best.clean == true ? String(localized: "clean", comment: "VoiceOver: a row's best, solved with nothing wasted")
+    /// A row's best, as its marks show it (`ResultMarks`): three filled clean (where `Best.keepsClean`), two at par,
+    /// one solved.
+    static func result(_ best: Best, of id: String) -> String {
+        best.clean == true && Best.keepsClean(id) ? String(localized: "clean", comment: "VoiceOver: a row's best, solved with nothing wasted")
             : best.over == 0 ? String(localized: "at par", comment: "VoiceOver: a row's best")
             : String(localized: "solved, \(best.over) over par", comment: "VoiceOver: a row's best. Moves over par")
     }
@@ -160,12 +161,9 @@ extension Game {
                          comment: "VoiceOver: endless's card, a tank cleared")
         }
         if !level.ratchets.isEmpty {
-            return clean ? String(localized: "Unstirred. \(moved), \(level.budget) ticks. Clean.",
-                                  comment: "VoiceOver: Escapement's card")
-                : String(localized: "Unstirred. \(moved), \(level.budget) ticks.",
-                         comment: "VoiceOver: Escapement's card")
+            return String(localized: "Unstirred. \(moved), \(level.budget) ticks.", comment: "VoiceOver: Escapement's card")
         }
-        if clean { return String(localized: "Unstirred. \(moved), par \(par). Clean.",
+        if cleanShown { return String(localized: "Unstirred. \(moved), par \(par). Clean.",
                                  comment: "VoiceOver: the result card") }
         if over > 0 { return String(localized: "Unstirred. \(moved), par \(par). \(over) over par.",
                                     comment: "VoiceOver: the result card") }

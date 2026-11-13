@@ -525,9 +525,11 @@ final class PlayLayoutTests: XCTestCase {
         return box.last.map { ($0.0, $0.1, $0.2, box.times) }
     }
 
-    /// The fullest card a tier level shows: plughole 27 replayed at par against a best of +6, every other plughole level
-    /// at par, so its card says what clean takes and the new best, and goes up a notch to the open tier. As tiers open
-    /// on solved levels (Jack, 2026-11-13), a closed tier's longer way up never shows on a tier's last level.
+    /// The fullest card any level shows: plughole 27 replayed at par against a best of +6, every other plughole level
+    /// at par, so its card says the new best, offers again and goes up a notch to the open tier. As tiers open on
+    /// solved levels (Jack, 2026-11-13), a closed tier's longer way up never shows on a tier's last level. Measured
+    /// 2026-11-13, once only the daily kept clean's hint: 284 pt at xxxLarge, ahead of the daily's practice card (258 on
+    /// an SE, 234 on a Pro Max) and a pack's or the free ladder's last level, completion and all (234).
     private func storeTheFullestCard() {
         for level in Tier.plughole.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) }
         Best(over: 6, seconds: 60).save(Tier.plughole.levels.last!.id)
@@ -535,11 +537,13 @@ final class PlayLayoutTests: XCTestCase {
     private let fullest = ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
-        // The cards that ran past the foot: the fullest at xxxLarge on the largest phone, and on the shortest at the
-        // default size a tier's last level with the next tier locked, the daily's with its next daily, and a replay at
-        // par with its best.
+        // The cards that ran past the foot: the fullest at xxxLarge, the play screen's cap, on the largest phone and the
+        // shortest, and on the shortest at the default size the fullest, the daily's with its next daily, and a replay at
+        // par with its best. Since only the daily keeps clean's hint (Jack, 2026-11-13), the fullest at the cap on an SE
+        // stands whole, the tank still over its least, and no card measured then scrolls.
         let cases: [(String, [String: String], Phone, DynamicTypeSize, () -> Void)] = [
             ("the fullest card at xxxLarge on a Pro Max", fullest, proMax, .xxxLarge, storeTheFullestCard),
+            ("the fullest card at xxxLarge on an SE", fullest, se, .xxxLarge, storeTheFullestCard),
             ("the fullest card on an SE", fullest, se, .large, storeTheFullestCard),
             ("the daily's card on an SE", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], se, .large, {}),
             ("a replay at par on an SE", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "6"], se, .large,
@@ -557,16 +561,6 @@ final class PlayLayoutTests: XCTestCase {
             // The room is measured with the tank as played: one that moved with the shrink would never settle.
             XCTAssertLessThan(m.times, 6, "\(what): settles")
         }
-    }
-
-    @MainActor func testTheFullestCardAtTheLargestTypeOnTheShortestPhoneScrollsUnderTheTanksLeast() {
-        storeTheFullestCard()
-        let m = try! XCTUnwrap(measuredCard(fullest, se, type: .xxxLarge))
-        print("card fit: the fullest card at xxxLarge on an SE: card \(m.card) room \(m.room) lift \(m.fit.lift) scale \(m.fit.scale)")
-        XCTAssertTrue(m.fit.scrolls, "more than the tank's least can give")
-        XCTAssertGreaterThanOrEqual(m.fit.scale, PlayLayout.leastFinished)
-        XCTAssertEqual(m.fit.height, m.room - PlayLayout.cardFoot + m.fit.lift, "the card takes all the room there is")
-        XCTAssertLessThan(m.times, 6)
     }
 
     @MainActor func testACardWithRoomAndATankInPlayLeaveTheTankAsItIs() {

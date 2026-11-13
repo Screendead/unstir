@@ -786,6 +786,11 @@ struct Best: Codable {
         return UserDefaults.standard.data(forKey: "best.\(id)").flatMap(decode)
     }
 
+    /// Whether `id`'s level shows clean: only a daily, past ones from the archive too, which comes fresh each day, so a
+    /// first try is always still to come (Jack, 2026-11-13). Every other level stores the flag, which No Wake reads,
+    /// and `standing` ranks, where it reorders nothing a level shows, but never names or marks it.
+    static func keepsClean(_ id: String) -> Bool { id.hasPrefix("daily-") }
+
     static func decode(_ data: Data) -> Best? { try? JSONDecoder().decode(Best.self, from: data) }
 
     /// The harness's: this launch sees it as the id's best, and it is never written to disk.

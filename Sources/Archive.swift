@@ -36,12 +36,13 @@ enum Archive {
     enum Mark: Equatable {
         case clean, par, over(Int), tried, unplayed
 
-        init(_ best: Best?, started: Bool) {
-            self = if let best { best.clean == true ? .clean : best.over == 0 ? .par : .over(best.over) }
+        /// `id`'s level's: clean only where `Best.keepsClean`.
+        init(_ best: Best?, started: Bool, of id: String) {
+            self = if let best { best.clean == true && Best.keepsClean(id) ? .clean : best.over == 0 ? .par : .over(best.over) }
                 else { started ? .tried : .unplayed }
         }
 
-        init(_ id: String) { self.init(Best.load(id), started: Best.started(id)) }
+        init(_ id: String) { self.init(Best.load(id), started: Best.started(id), of: id) }
 
         var word: String {
             switch self {

@@ -249,6 +249,8 @@ final class Game {
     var spilled: Bool { level.run != nil && brim >= Run.room }
     var finished: Bool { solved || spilled || lost }
     var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
+    /// `clean` where the level shows it (`Best.keepsClean`): the card's marks and words, and VoiceOver's.
+    var cleanShown: Bool { clean && Best.keepsClean(level.id) }
 
     /// The daily's share line, on its day; nil on any other level.
     var shareText: String? {
