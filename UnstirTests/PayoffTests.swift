@@ -133,7 +133,6 @@ final class PayoffTests: XCTestCase {
         XCTAssertEqual(Payoff.gap, 34)
         XCTAssertEqual(Payoff.scale(block: 206, room: 140, stage: 400), 0.75, accuracy: 1e-9)
         XCTAssertEqual(Payoff.scale(block: 900, room: 140, stage: 400), Payoff.least)
-        XCTAssertLessThan(Payoff.least, PlayLayout.leastFinished)
     }
 
     /// Every string the curtain adds is in the String Catalog, under the key the build looks up.

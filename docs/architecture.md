@@ -649,7 +649,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   simulator, 2026-11-11). Where it doesn't, the words stand under the glass instead with no veil, as nothing is over
   the picture, `Payoff.gap` (34 pt, the clearance "unstirred." keeps over the glass) under the rim, and the glass
   scales about its top to leave them room (`Payoff.scale`, `LevelView.curtained`), down to
-  `Payoff.least` (0.45, under a card's 0.55, as a curtain can't scroll), at once under Reduce Motion, and hands its
+  `Payoff.least` (0.45, as a curtain can't scroll either), at once under Reduce Motion, and hands its
   scale straight to the card's own fit. Only the column does this: the split's and the tabletop's words stand over
   the glass whatever their size. The curtain is in the tree from the solve, unseen, so it is measured before it shows.
   **Reduce Motion** (`still`): the glass holds still and the lines come up together. **VoiceOver**: the curtain is
@@ -865,12 +865,18 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Lift`, stepped frame by frame so the arriving card rides up with the tank's foot), not laid out higher, so the
   room is always measured with the tank as played. It keeps time with the card's arrival
   (`LevelView.arrival`), at once under Reduce Motion, and the tank is its own size again once the card leaves; in play
-  there is no card and nothing to measure, so the tank is the layout's. The tank never goes under 55% of the size it
-  was played at (`leastFinished`): past that the card scrolls in the room there is, which none of the cards measured on 2026-11-13, once only the daily
-  kept clean's hint, does: the fullest of them, plughole 27 replayed against an older best, stands whole at xxxLarge on the
-  shortest phone. `testTheTallestCardAtTheLargestTypeOnTheShortestPhoneHoldsTheRule` measures every candidate there
-  and holds the tallest to the rule whichever way it falls, and `testACardPastTheTanksLeastScrollsInTheRoomLeft` runs
-  the scroll through the real layout on a stand-in window 100 pt shorter than an SE's.
+  there is no card and nothing to measure, so the tank is the layout's. The card never scrolls (Jack, 2026-11-13:
+  "look man the game shouldn't scroll, i don't like it. everything should fit in one screen"): the tank gives way as far
+  as the card needs, down to a hard floor of 30% of the size it was played at (`leastFinished`, about 100 pt across on
+  the shortest phone), under which the glass would stop being a picture; a card that lacks room even there would run
+  past the foot (`Finished.fits` false), which the tests fail. No card measured comes near it: on 2026-11-13 the
+  tallest, plughole 27 replayed against an older best, at xxxLarge took the SE's glass to 67% and the closed Duo's to
+  67%, every other screen less. `testEveryCardStandsWholeOnOneScreenOnEveryScreenAtEveryType` measures every
+  candidate card on each screen the game runs on (the SE, a 6.1 inch, the Pro Max and the Duo closed, upright, beside
+  the menu and flat) at the type cap, and every one on the SE at every type up to it, and holds the tallest to stand
+  whole on one screen at its own height (`LevelView`'s `cardPlaced` hands the tests its frame);
+  `testOnAWindowShorterThanAnyPhoneTheGlassGivesWayAndTheCardStandsWhole` runs the give past the old 55% through the
+  real layout on a stand-in window 100 pt shorter than an SE's.
   The split's card goes over the menu and the tabletop's stack makes room for its own, so neither shrinks. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
   default size, as the title's 18 pt gap holds no more; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.

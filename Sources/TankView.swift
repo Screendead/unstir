@@ -260,6 +260,7 @@ struct LevelView: View {
     @Environment(\.harnessFold) private var harnessFold
     @Environment(\.chromeMeasured) private var chromeMeasured
     @Environment(\.finishedMeasured) private var finishedMeasured
+    @Environment(\.cardPlaced) private var cardPlaced
     /// The type size round the level, which its own text sees capped at `PlayLayout.typeCap`.
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The level's note at full strength for its first seconds of play.
@@ -743,7 +744,7 @@ struct LevelView: View {
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
     /// is an overlay, so the solved tank stays exactly where it was played.
-    private func caption(_ layout: PlayLayout, _ fit: PlayLayout.Finished?) -> some View {
+    private func caption(_ layout: PlayLayout) -> some View {
         let toSkip = String(localized: "tap to skip", comment: "The caption over an opening's stir")
         let practice = game.level.archived
             ? String(localized: "Practice: this day's best was set on its day.", comment: "The caption of an archive day replayed")
@@ -770,7 +771,7 @@ struct LevelView: View {
             .padding(.top, 14)
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-            .overlay(alignment: .top) { if showResult { card(layout, fit) } }
+            .overlay(alignment: .top) { if showResult { card(layout) } }
             .modifier(Unseen(staged))
     }
 
@@ -779,27 +780,24 @@ struct LevelView: View {
     /// pose, so a change of pose moves the card rather than showing it again.
     ///
     /// The column's card keeps the player's Text Size: where it is taller than the room under the tank, the tank shrinks
-    /// for it (`fit`), and only past the tank's least does the card scroll.
-    private func card(_ layout: PlayLayout, _ fit: PlayLayout.Finished?) -> some View {
+    /// for it (`fit`). It never scrolls (Jack, 2026-11-13).
+    private func card(_ layout: PlayLayout) -> some View {
         let over = layout.kind == .split ? layout.menuPane : nil
-        return ScrollView {
-            VStack(spacing: 0) {
-                if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
-                if game.lost {
-                    LostCard(game: game, notice: notice, undo: undo, again: reset)
-                } else {
-                    ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+        return VStack(spacing: 0) {
+            if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
+            if game.lost {
+                LostCard(game: game, notice: notice, undo: undo, again: reset)
+            } else {
+                ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, over == nil ? 14 : 0)
-            .frame(maxWidth: .infinity)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
         }
-        .scrollBounceBehavior(.basedOnSize)
-        // A card that fits draws its buttons' glow past its own edges.
-        .scrollClipDisabled(fit?.scrolls != true)
-        .frame(width: over?.width, height: fit?.height ?? cardReach)
+        .padding(.top, over == nil ? 14 : 0)
+        .frame(maxWidth: .infinity)
+        .fixedSize(horizontal: false, vertical: true)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { cardPlaced?($0) }
+        .frame(width: over?.width)
         .offset(over.map { pane in
             // From the caption's place, under the stage and its ring; a card taller than the pane starts at its top.
             let top = max(pane.minY, min(layout.stage.midY - cardReach / 2, pane.maxY - cardReach))
@@ -941,7 +939,7 @@ struct LevelView: View {
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .modifier(PlayPart.stage(read: 3))
-                caption(layout, fit)
+                caption(layout)
                     // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
                     // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
                     .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
@@ -974,7 +972,7 @@ struct LevelView: View {
                 guard let fit, let captionTop else { return }
                 finishedMeasured?(cardReach, foot - captionTop, fit)
                 if fit.lift > 0 {
-                    Log.write("card \(Int(cardReach)) over \(Int(foot - captionTop)): tank at \(Int((fit.scale * 100).rounded()))%\(fit.scrolls ? ", card scrolls" : "")")
+                    Log.write("card \(Int(cardReach)) over \(Int(foot - captionTop)): tank at \(Int((fit.scale * 100).rounded()))%\(fit.fits ? "" : ", card past the foot")")
                 }
             }
             .modifier(TapHooks(moment: .init(window: tapWindow(side: layout.side), history: game.history,
