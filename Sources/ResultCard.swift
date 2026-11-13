@@ -33,7 +33,7 @@ struct ResultCard: View {
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
     @AccessibilityFocusState private var focused: Bool
-    /// A reset from the card, for another go at a solve that wasn't clean.
+    /// A reset from the card, for another go: a level's over par, the daily's short of clean (`Game.offersAgain`).
     let again: () -> Void
     /// The harness's clock for the daily's next one; nil reads the time.
     let now: Date?
@@ -113,7 +113,8 @@ struct ResultCard: View {
                             facts.foregroundStyle(quiet)
                         }
                         if !game.clean && (!par || game.over == 0) {
-                            (game.firstTry ? Text("clean needs no undo or reset") : Text("clean counts on the first try"))
+                            (game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? Text("clean needs no undo or reset")
+                                : Text("clean counts on the first try"))
                                 .font(.ui(.detail)).tone(page.tone(.text3))
                         }
                     }

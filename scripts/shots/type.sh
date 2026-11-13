@@ -11,10 +11,10 @@ shot type-level-ax5 "Level 01 at accessibility5: the play screen capped at xxxLa
   LEVEL=1 CLOCK=0 TYPESIZE=accessibility5
 shot type-result-xxxl "Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006 TYPESIZE=xxxLarge
-shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge, replayed at par: clean counts on the first try, the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot." \
-  SCREEN=clean LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0 TYPESIZE=xxxLarge
+shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge, replayed at par with a stir undone: clean needs no undo or reset, the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot." \
+  SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0 TYPESIZE=xxxLarge
 shot type-result-clean-xxxl "Level 06's clean result card at xxxLarge." SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
-shot type-result-par-xxxl "Level 06 solved at par on a replay, at xxxLarge." SCREEN=clean LEVEL=6 BESTS=plughole:000000 TYPESIZE=xxxLarge
+shot type-result-par-xxxl "Level 06 solved at par on a replay with a stir undone, at xxxLarge." SCREEN=undone LEVEL=6 BESTS=plughole:000000 TYPESIZE=xxxLarge
 shot type-tier-up-xxxl "Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0 TYPESIZE=xxxLarge
 shot type-daily-result-xxxl "Today's daily's result card at xxxLarge, two over par: again, share and next daily in 7 h." \

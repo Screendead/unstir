@@ -188,9 +188,11 @@ struct PlayLayout: Equatable {
         return (over, (line - room).rounded(.up))
     }
 
-    /// The least a finished column's tank shrinks to for its card, as a share of the size it was played at: under it the
-    /// picture is too small to be the reward, so the card scrolls instead.
-    static let leastFinished: CGFloat = 0.55
+    /// The least a finished column's tank shrinks to for its card, as a share of the size it was played at: the play
+    /// screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"), so the glass gives way as far as
+    /// the card needs, down to where it is still a picture, about 100 pt across on the shortest phone. A card that lacks room
+    /// even then runs past the foot, which the layout tests fail; no card a player reaches comes near it.
+    static let leastFinished: CGFloat = 0.3
     /// What a card keeps clear over the safe area's foot, as the controls it covers do.
     static let cardFoot: CGFloat = 4
 
@@ -205,11 +207,8 @@ struct PlayLayout: Equatable {
         let drop: CGFloat
         /// How far the card rises with the tank's foot.
         let lift: CGFloat
-        /// The card's height on screen: its own, or less where it scrolls.
-        let height: CGFloat
-        /// The tank at its least still leaves the card too little, so it scrolls in what there is.
-        var scrolls: Bool { height < card }
-        fileprivate let card: CGFloat
+        /// The card stands whole over the foot: false only past the tank's least.
+        let fits: Bool
     }
 
     /// `card`: the card's height from the stage's foot, where the caption starts; `room`: from there to the safe area's
@@ -219,8 +218,7 @@ struct PlayLayout: Equatable {
     static func finished(card: CGFloat, room: CGFloat, stage: CGFloat, drop: CGFloat = 0) -> Finished {
         let room = room - cardFoot, most = (stage * (1 - leastFinished)).rounded(.down)
         let drop = min(drop, most), lift = min(max(card - room, 0).rounded(.up), most - drop)
-        return Finished(scale: stage > 0 ? (stage - lift - drop) / stage : 1, drop: drop, lift: lift,
-                        height: min(card, max(room + lift, 0)), card: card)
+        return Finished(scale: stage > 0 ? (stage - lift - drop) / stage : 1, drop: drop, lift: lift, fits: card <= room + lift)
     }
 }
 
@@ -503,4 +501,6 @@ extension EnvironmentValues {
     /// Handed the card's height, the room it measured under the tank and how the column gives it room, each time they
     /// change while a card is up.
     @Entry var finishedMeasured: (@Sendable (_ card: CGFloat, _ room: CGFloat, PlayLayout.Finished) -> Void)? = nil
+    /// Handed the card's frame in the window, in every pose, each time it changes while a card is up.
+    @Entry var cardPlaced: (@Sendable (CGRect) -> Void)? = nil
 }

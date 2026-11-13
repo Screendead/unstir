@@ -158,8 +158,8 @@ struct Payoff: Equatable {
         }
     }
 
-    /// The least the glass shrinks to for the words: under a card's `PlayLayout.leastFinished`, as the curtain can't
-    /// scroll and the game's six lines at the play screen's largest type need this much of the smallest phone.
+    /// The least the glass shrinks to for the words, as the curtain can't scroll and the game's six lines at the play
+    /// screen's largest type need this much of the smallest phone.
     static let least: CGFloat = 0.45
 
     /// The text never shrinks: where the lines pass the glass's edge they stand under it instead, and the glass, its
