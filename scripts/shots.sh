@@ -52,6 +52,8 @@ shot() {  # name description KEY=VALUE...
   echo "shot $name"
 }
 pattern=${1:-}
+# The tank's limit, Tank.maxStack, for the cases that fill it.
+limit=$(sed -nE 's/^ *static let maxStack = ([0-9]+)$/\1/p' Sources/Twist.swift)
 
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
