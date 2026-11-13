@@ -170,7 +170,7 @@ final class StirMapTests: XCTestCase {
     }
 
     /// No map is asked for a short stack, one winding in or a cover's shares; a Lens level's holds its lenses' flow
-    /// where a shader takes two images, and Prism's counts its channels' maps for its depth and holds a tile a word.
+    /// where UNSTIR_MAPLENS asks, and Prism's counts its channels' maps for its depth and holds a tile a word.
     @MainActor func testOnlyADeepGlassAsksForAMap() throws {
         try XCTSkipIf(StirMap.mode == nil)
         let stack = (0..<StirMap.least).map { Twist(rod: $0 % 3, steps: 2) }
@@ -219,6 +219,46 @@ final class StirMapTests: XCTestCase {
         XCTAssertEqual(StirMap.slots(StirMap.tiles([3, 3])), SIMD3(0, 0, -1))
     }
 
+    /// RenderBox draws nothing through a shader given two images (iOS 18.5: "Only one texture argument is allowed"), so
+    /// a Lens glass draws its detail over a map only from the map's own image, which holds that very atlas above the
+    /// map, and no shader the glass makes is given two.
+    @MainActor func testALensGlassDrawsItsDetailOnlyFromTheMapsOwnImage() throws {
+        try XCTSkipIf(StirMap.mode == nil)
+        let stack = (0..<12).map { Twist(rod: $0 % 3, steps: $0 % 2 == 0 ? 2 : -3) }
+        let detail = Halftone.test.detail(64, lenses: [Layout.tri.rods[0]])
+        let fine = try XCTUnwrap(Fine(detail)), other = try XCTUnwrap(Fine(detail))
+        var glass = Unstirred(stack: stack, layout: .tri, lenses: [0], liveAngle: 0, side: 100, fine: fine, crisp: 1)
+        let twists = glass.shader(scale: 3).twists
+        let plain = StirMap.Key(twists: twists, rest: 0, side: 100, scale: 3)
+        var packed = plain
+        packed.atlas = fine.texels
+        var stale = plain
+        stale.atlas = other.texels
+        for (key, name) in [(packed, "unstirLensMapped"), (plain, "unstirLens"), (stale, "unstirLens")] {
+            glass.map = made(key)
+            let shader = glass.shader(scale: 3)
+            XCTAssertEqual(shader.name, name)
+            XCTAssertLessThanOrEqual(shader.parameters.filter { ["atlas", "map"].contains($0.name) }.count, 1, name)
+        }
+        XCTAssertEqual(glass.shader(scale: 3).mapped?.skip ?? 0, 0)
+        glass.map = made(packed)
+        XCTAssertEqual(glass.shader(scale: 3).mapped?.skip, detail.height + 1)
+        // Before the detail is drawn the plain shader draws only a map that starts at its image's top.
+        glass.crisp = 0
+        XCTAssertEqual(glass.shader(scale: 3).name, "unstir")
+        glass.map = made(plain)
+        XCTAssertEqual(glass.shader(scale: 3).name, "unstirMapped")
+        // The atlas's rows: its own texels in the surface's order, the last column and row drawn on.
+        let rows = StirMap.pack(packed), width = packed.width
+        XCTAssertEqual(width, max(600, detail.width))
+        XCTAssertEqual(rows.count, 4 * width * (detail.height + 1))
+        XCTAssertEqual(packed.bytes, 4 * width * (600 + detail.height + 1))
+        for (x, y) in [(0, 0), (detail.width - 1, 3), (width - 1, detail.height), (7, detail.height - 1)] {
+            let from = 4 * (min(y, detail.height - 1) * detail.width + min(x, detail.width - 1)), to = 4 * (y * width + x)
+            XCTAssertEqual([rows[to + 2], rows[to + 1], rows[to]], Array(detail.pixels[from..<from + 3]), "\(x), \(y)")
+        }
+    }
+
     /// The stored step keeps a tap a quarter pixel off its pixel's centre exact, across any glass the game draws.
     func testTheStoredStepHoldsAQuarterPixelAcrossTheGlass() {
         for pixels in [64, 300, 1137, 1284, 1471, 2048] {
@@ -227,7 +267,7 @@ final class StirMapTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(quant, 4)
             XCTAssertLessThanOrEqual(quant * Float(pixels), 65535)
         }
-        XCTAssertEqual(MemoryLayout<StirMap.Args>.stride, 68)
+        XCTAssertEqual(MemoryLayout<StirMap.Args>.stride, 72)
     }
 
     /// A holder draws the map it is asked for, and lets it go when none is wanted.
@@ -265,12 +305,12 @@ final class StirMapPackTests: XCTestCase {
         struct PackArgs {
             float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold, isolate, rest, quant, mode,
                   bend, tileR, tileG, tileB;
-            int count, maskCount, fineCount, kind, kept, tile;
+            int count, maskCount, fineCount, kind, kept, tile, skip;
         };
         kernel void storeTile(texture2d<float, access::write> map [[texture(0)]], device const float *twists [[buffer(0)]],
                               constant PackArgs &a [[buffer(1)]], uint2 gid [[thread_position_in_grid]]) {
             storeTaps(map, gid, float2(a.radius), a.radius, twists, a.kept, a.plateau, a.swirlPlateau, a.lensEdge, a.scale,
-                      a.rest, a.quant, a.tile);
+                      a.rest, a.quant, a.tile, a.skip);
         }
         // kind 0: Prism through its chains, 1: over the map; 2: Lens through its chain, 3: over the map.
         kernel void drawPack(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
@@ -296,8 +336,8 @@ final class StirMapPackTests: XCTestCase {
                                  a.lensEdge, a.scale, 0.0, wave, a.rest, atlas, fine, a.fineCount)
                 : a.kind == 3
                 ? unstirLensMappedBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau,
-                                       a.swirlPlateau, a.lensEdge, a.scale, 0.0, wave, a.rest, atlas, fine, a.fineCount, map,
-                                       mapped, a.bend)
+                                       a.swirlPlateau, a.lensEdge, a.scale, 0.0, wave, a.rest, fine, a.fineCount, map, mapped,
+                                       a.bend, a.skip)
                 : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
                              a.lensEdge, a.scale, 0.0, wave, a.rest);
             out.write(c, gid);
@@ -308,7 +348,7 @@ final class StirMapPackTests: XCTestCase {
         var radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold, isolate, rest, quant, mode, bend: Float
         var tileR: Float = 0, tileG: Float = 0, tileB: Float = 0
         var count, maskCount, fineCount: Int32
-        var kind: Int32 = 0, kept: Int32 = 0, tile: Int32 = 0
+        var kind: Int32 = 0, kept: Int32 = 0, tile: Int32 = 0, skip: Int32 = 0
     }
 
     private static let side = 160, scale = 2.0
@@ -355,13 +395,18 @@ final class StirMapPackTests: XCTestCase {
         // The committed stack's key, as `StirMap.key` makes it, whether or not the game would ask for it.
         let committed = Unstirred.entries(glass.stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: glass.layout,
                                           lenses: glass.lenses, masks: glass.masks)
+        // A Lens glass's map holds its detail's atlas above it, as the game's one image does (`StirMap.pack`).
         let key = StirMap.Key(twists: committed.twists, masks: Unstirred.channelCost(committed.masks) == nil ? [] : committed.masks,
-                              rest: glass.turn, side: glass.side, scale: scale)
+                              rest: glass.turn, side: glass.side, scale: scale, atlas: fine.map(Fine.Texels.init))
         if glass.lenses.isEmpty { XCTAssertEqual(StirMap.key(glass, scale: scale, least: 1), key) }
         let shader = glass.shader(scale: scale)
         let twists = shader.twists, masks = shader.prism?.masks ?? [Float](repeating: 7, count: twists.count / 4)
         let words = StirMap.words(key)
-        let map = try kit.texture([], 2 * n, 2 * n * words.count, format: .bgra8Unorm)
+        let map = try kit.texture([], key.width, 2 * n * words.count + key.skip, format: .bgra8Unorm)
+        if key.skip > 0 {
+            map.replace(region: MTLRegionMake2D(0, 0, key.width, key.skip), mipmapLevel: 0, withBytes: StirMap.pack(key),
+                        bytesPerRow: 4 * key.width)
+        }
         let slots = StirMap.slots(key.tiles), table = fine?.table ?? [0]
         var args = Args(radius: Float(glass.side / 2), scale: Float(scale), n: Float(twists.count / 4), fourTaps: shader.fourTaps,
                         cost: Float(shader.prism?.cost ?? 0), plateau: Float(Tank.plateau), swirlPlateau: Float(Tank.swirlPlateau),
@@ -369,7 +414,7 @@ final class StirMapPackTests: XCTestCase {
                         isolate: Float(shader.prism?.isolate?.rawValue ?? 0), rest: Float(key.rest),
                         quant: StirMap.quant(pixels: key.pixels), mode: mode.rawValue, bend: StirMap.bend,
                         tileR: slots.x, tileG: slots.y, tileB: slots.z, count: Int32(twists.count), maskCount: Int32(masks.count),
-                        fineCount: fine == nil ? 0 : Int32(table.count))
+                        fineCount: fine == nil ? 0 : Int32(table.count), skip: Int32(key.skip))
         for (tile, word) in words.enumerated() {
             var a = args
             (a.kept, a.tile) = (Int32(word.count / 4), Int32(tile))

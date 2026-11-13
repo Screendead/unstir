@@ -54,13 +54,9 @@ enum StirMap {
     /// The most a map may hold in bytes, its tiles all told (`Key.bytes`): past it the glass draws through the chain.
     /// UNSTIR_MAPCAP, in MB, a probe.
     nonisolated static let cap = probed("UNSTIR_MAPCAP").flatMap(Double.init).map { Int($0 * 1e6) } ?? Int.max
-    /// Whether a Lens level draws from a map: only where UNSTIR_MAPLENS=1 asks, a probe, on iOS 26 or later. Its
-    /// detail and its map are two images: so drawn, the glass came out right on iOS 26.5's simulator and black on
-    /// 18.5's (2026-11-13), and Lens 25, the deepest, gained a fifth at most (`docs/architecture.md`).
-    nonisolated static let lensMaps: Bool = {
-        guard #available(iOS 26, *) else { return false }
-        return probed("UNSTIR_MAPLENS") == "1"
-    }()
+    /// Whether a Lens level draws from a map: only where UNSTIR_MAPLENS=1 asks, a probe, as Lens 25, the deepest,
+    /// gains a fifth at most (`docs/architecture.md`); whether it ships is Jack's call.
+    nonisolated static let lensMaps = probed("UNSTIR_MAPLENS") == "1"
     /// The shortest word a Prism channel's chain is given a tile for; a channel with a shorter one runs it as it does
     /// without a map, a tile's memory saved. UNSTIR_MAPSHORTEST, a probe: unset, every word has its tile.
     nonisolated static let shortest = probed("UNSTIR_MAPSHORTEST").flatMap(Int.init) ?? 1
@@ -79,11 +75,16 @@ enum StirMap {
         var rest: Double
         var side: CGFloat
         var scale: CGFloat
+        /// A Lens level's detail, which the map's image holds above the map (`pack`): SwiftUI gives a shader one image.
+        var atlas: Fine.Texels?
         var pixels: Int { Int((side * scale).rounded(.up)) }
+        /// The image's width, the atlas's where that is the wider, and the rows the atlas takes (`pack`).
+        var width: Int { max(2 * pixels, atlas?.width ?? 0) }
+        var skip: Int { atlas.map { $0.height + 1 } ?? 0 }
         /// The map's tiles, each the channels (a `Channels` raw value) whose chain it holds (`StirMap.tiles`).
         var tiles: [Int] { StirMap.tiles(masks) }
-        /// Two texels a device pixel each way, four bytes a texel, a square a tile.
-        var bytes: Int { 16 * pixels * pixels * tiles.count }
+        /// Two texels a device pixel each way, four bytes a texel, a square a tile, under the atlas's rows.
+        var bytes: Int { 4 * width * (2 * pixels * tiles.count + skip) }
     }
 
     /// The tiles a map of entries with these channels (raw values, an entry each; empty for every one white) holds,
@@ -116,6 +117,25 @@ enum StirMap {
         }
     }
 
+    /// The top `key.skip` rows of a Lens level's map's image, BGRA: the detail's atlas where `fineLight` reads it
+    /// alone, its last column drawn on to the image's edge and its last row once more, so a read between texels at
+    /// the atlas's edge finds what the atlas's own image gives there (its sampler clamps to the edge).
+    nonisolated static func pack(_ key: Key) -> [UInt8] {
+        guard let atlas = key.atlas else { return [] }
+        let width = key.width
+        var out = [UInt8](repeating: 255, count: 4 * width * key.skip)
+        atlas.pixels.withUnsafeBufferPointer { from in
+            for y in 0..<key.skip {
+                let row = 4 * min(y, atlas.height - 1) * atlas.width
+                for x in 0..<width {
+                    let k = row + 4 * min(x, atlas.width - 1), o = 4 * (y * width + x)
+                    (out[o], out[o + 1], out[o + 2]) = (from[k + 2], from[k + 1], from[k])
+                }
+            }
+        }
+        return out
+    }
+
     /// How deep a stack is for `least`: its entries, or on Prism's glass the channels' maps they hold.
     nonisolated static func work(stack: Int, masks: [Float]) -> Int {
         Unstirred.channelCost(masks) == nil ? stack : masks.reduce(0) { $0 + Int($1).nonzeroBitCount }
@@ -131,7 +151,7 @@ enum StirMap {
         let prism = Unstirred.channelCost(channels) != nil
         guard !twists.isEmpty, work(stack: glass.stack.count, masks: channels) >= least ?? (prism ? prismLeast : StirMap.least) else { return nil }
         let key = Key(twists: twists, masks: prism ? channels : [], rest: glass.turn,
-                      side: glass.side, scale: scale)
+                      side: glass.side, scale: scale, atlas: glass.lenses.isEmpty ? nil : glass.fine?.texels)
         return key.bytes <= cap && !key.tiles.isEmpty ? key : nil
     }
 
@@ -146,13 +166,15 @@ enum StirMap {
     }
 
     /// `stirMap`'s arguments, and with `benchMapped`'s own the bench's: MapArgs' layout in Unstir.metal. `kept` is the
-    /// entries the map holds for the frame; `stirMap` takes the tile it draws, and its word's count in `kept`.
+    /// entries the map holds for the frame; `stirMap` takes the tile it draws, and its word's count in `kept`. `skip`
+    /// is the rows a Lens level's atlas takes above the map.
     struct Args {
         var radius, scale, centreX, centreY, plateau, swirlPlateau, lensEdge, rest, quant, mode, bend: Float
         var tileR: Float = 0, tileG: Float = 0, tileB: Float = 0
         var kept: Int32
         var row: Int32 = 0
         var tile: Int32 = 0
+        var skip: Int32 = 0
     }
 
     nonisolated static func args(_ key: Key, mode: Mode = .mix, bend: Float = StirMap.bend) -> Args {
@@ -160,7 +182,7 @@ enum StirMap {
         return Args(radius: r, scale: scale, centreX: r + Float(Unstirred.nudge.x) / scale, centreY: r + Float(Unstirred.nudge.y) / scale,
                     plateau: Float(Tank.plateau), swirlPlateau: Float(Tank.swirlPlateau), lensEdge: Float(Tank.lensEdge),
                     rest: Float(key.rest), quant: quant(pixels: key.pixels), mode: mode.rawValue, bend: bend,
-                    tileR: slots.x, tileG: slots.y, tileB: slots.z, kept: Int32(key.twists.count / 4))
+                    tileR: slots.x, tileG: slots.y, tileB: slots.z, kept: Int32(key.twists.count / 4), skip: Int32(key.skip))
     }
 
     /// A map drawn: its image, and for the log the GPU's time over its strips and the bytes its surface took.
@@ -200,13 +222,16 @@ enum StirMap {
     /// queue behind one strip and not the whole map, which is a frame of the full chain's work (no phone has shown it).
     private nonisolated static func draw(_ key: Key) -> Drawn? {
         guard let gpu, !key.twists.isEmpty else { return nil }
-        let pixels = key.pixels, n = 2 * pixels, words = words(key)
-        let properties: [CFString: Any] = [kIOSurfaceWidth: n, kIOSurfaceHeight: n * words.count, kIOSurfaceBytesPerElement: 4,
+        let pixels = key.pixels, n = 2 * pixels, words = words(key), width = key.width, height = n * words.count + key.skip
+        let properties: [CFString: Any] = [kIOSurfaceWidth: width, kIOSurfaceHeight: height, kIOSurfaceBytesPerElement: 4,
                                            kIOSurfacePixelFormat: kCVPixelFormatType_32BGRA]
-        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: n, height: n * words.count, mipmapped: false)
+        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: width, height: height, mipmapped: false)
         desc.usage = [.shaderRead, .shaderWrite]
         guard let surface = IOSurfaceCreate(properties as CFDictionary),
               let map = gpu.device.makeTexture(descriptor: desc, iosurface: surface, plane: 0) else { return nil }
+        if key.skip > 0 {
+            map.replace(region: MTLRegionMake2D(0, 0, width, key.skip), mipmapLevel: 0, withBytes: pack(key), bytesPerRow: 4 * width)
+        }
         var args = args(key), seconds = 0.0, count = 0
         for (tile, word) in words.enumerated() {
             guard let twists = gpu.device.makeBuffer(bytes: word, length: 4 * word.count) else { return nil }
@@ -256,7 +281,8 @@ enum StirMap {
 
         /// What else a key is made of, besides the stack.
         private struct Of: Equatable {
-            var layout: Layout, lenses: Set<Int>, masks: [Int: Channels], turn: Double, side: CGFloat, scale: CGFloat, wound: Bool
+            var layout: Layout, lenses: Set<Int>, masks: [Int: Channels], turn: Double, side: CGFloat, scale: CGFloat, wound: Bool,
+                atlas: Fine.Texels?
         }
 
         nonisolated init() {}
@@ -265,7 +291,7 @@ enum StirMap {
         /// where what the key is made of has changed.
         func want(_ glass: Unstirred, scale: CGFloat) {
             let of = Of(layout: glass.layout, lenses: glass.lenses, masks: glass.masks, turn: glass.turn, side: glass.side, scale: scale,
-                        wound: glass.wind >= 1 && glass.shares == nil)
+                        wound: glass.wind >= 1 && glass.shares == nil, atlas: glass.fine?.texels)
             if let askedOf, askedOf == of, asked == glass.stack { return }
             (asked, askedOf) = (glass.stack, of)
             want(StirMap.key(glass, scale: scale))

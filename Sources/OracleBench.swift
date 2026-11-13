@@ -96,10 +96,16 @@ enum OracleBench {
             guard let key = f.map else { return }
             let tiles = StirMap.words(key)
             let map = maps.made[f.name] ?? {
-                let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 2 * f.side, height: 2 * f.side * tiles.count,
-                                                                    mipmapped: false)
+                let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: key.width,
+                                                                    height: 2 * f.side * tiles.count + key.skip, mipmapped: false)
                 desc.usage = [.shaderRead, .shaderWrite]
-                return device.makeTexture(descriptor: desc)!
+                let map = device.makeTexture(descriptor: desc)!
+                // A Lens level's atlas above its map, as `StirMap.draw` lays the image out.
+                if key.skip > 0 {
+                    map.replace(region: MTLRegionMake2D(0, 0, key.width, key.skip), mipmapLevel: 0, withBytes: StirMap.pack(key),
+                                bytesPerRow: 4 * key.width)
+                }
+                return map
             }()
             maps.made[f.name] = map
             let buffers = words.made[f.name] ?? tiles.map { device.makeBuffer(bytes: $0, length: 4 * $0.count)! }
@@ -232,7 +238,8 @@ enum OracleBench {
                 let f = kv.split(separator: "=", maxSplits: 1)
                 return f.count == 2 ? (String(f[0]), String(f[1])) : nil
             }, uniquingKeysWith: { $1 })
-            let (level, glass, committed, map) = glass(vars, side: points, scale: scale)
+            let (level, glass, committed, key) = glass(vars, side: points, scale: scale)
+            var map = key
             var shader = glass.shader(scale: scale)
             let clock = vars["UNSTIR_CLOCK"].flatMap(Double.init) ?? 0, seed = Int(level.label) ?? 0
             let picture: MTLTexture
@@ -259,6 +266,8 @@ enum OracleBench {
                 let detail = await Task.detached(priority: .userInitiated) { panel.detail(side, lenses: rods) }.value
                 atlas = texture(detail.pixels, detail.width, detail.height)
                 shader.fine = Fine(detail)
+                // The map holds the detail the frame draws, as `StirMap.key` gives a glass with its detail in.
+                map?.atlas = shader.fine?.texels
                 table = detail.table
                 table[Fine.share] = 1
             }

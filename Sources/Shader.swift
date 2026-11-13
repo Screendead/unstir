@@ -103,7 +103,7 @@ struct Unstirred: ViewModifier, Animatable {
             // entries are the same rods, so the same channels: a map of a stack all white draws Prism's every channel
             // from its one tile.
             shader.mapped = TankShader.Mapped(image: map.image, kept: map.key.twists.count / 4, rest: map.key.rest, quant: map.quant,
-                                              mode: mode, tiles: StirMap.slots(map.key.tiles))
+                                              mode: mode, tiles: StirMap.slots(map.key.tiles), skip: map.key.skip)
         }
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
@@ -112,8 +112,11 @@ struct Unstirred: ViewModifier, Animatable {
         } else if let fine, crisp > 0, !lenses.isEmpty {
             shader.fine = fine
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
-            // The detail and the map are two images (`StirMap.lensMaps`).
-            if !StirMap.lensMaps { shader.mapped = nil }
+            // A shader is given one image: the detail is drawn over a map only from the map's own (`StirMap.pack`).
+            if map?.key.atlas != fine.texels { shader.mapped = nil }
+        } else if map?.key.atlas != nil {
+            // The plain shader reads a map from its image's top.
+            shader.mapped = nil
         }
         return shader
     }
@@ -188,7 +191,7 @@ struct TankShader {
 
     /// The mapped stitchables' own, after the rest: the stored map's image, how many of the bottom entries it holds, the
     /// turn it was drawn at, its steps a pixel, how a tap between texels is drawn and, on Prism's glass, each channel's
-    /// tile (`StirMap.slots`).
+    /// tile (`StirMap.slots`), or over a Lens level's detail the rows of the image the detail's atlas takes.
     var mapped: Mapped?
 
     struct Mapped {
@@ -198,6 +201,7 @@ struct TankShader {
         var quant: Float
         var mode: StirMap.Mode
         var tiles = SIMD3<Float>(0, 0, 0)
+        var skip = 0
     }
 
     var name: String { (prism != nil ? "unstirChannels" : fine != nil ? "unstirLens" : "unstir") + (mapped != nil ? "Mapped" : "") }
@@ -213,7 +217,10 @@ struct TankShader {
         list += [("fourTaps", .float(fourTaps)), ("plateau", .float(plateau)), ("swirlPlateau", .float(swirlPlateau)),
                  ("lensEdge", .float(lensEdge)), ("scale", .float(scale)), ("haze", .float(haze)),
                  ("wave", .float3(wave.x, wave.y, wave.z)), ("turn", .float(turn))]
-        if let fine, prism == nil { list += [("atlas", .image(fine.atlas)), ("fine", .floatArray(fine.table))] }
+        if let fine, prism == nil {
+            if mapped == nil { list.append(("atlas", .image(fine.atlas))) }
+            list.append(("fine", .floatArray(fine.table)))
+        }
         if let prism {
             list += [("isolate", .float(Float(prism.isolate?.rawValue ?? 0))),
                      ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z)),
@@ -224,6 +231,7 @@ struct TankShader {
                      ("mapped", .float4(Float(mapped.kept), Float(mapped.rest), mapped.quant, mapped.mode.rawValue)),
                      ("bend", .float(StirMap.bend))]
             if prism != nil { list.append(("tiles", .float3(mapped.tiles.x, mapped.tiles.y, mapped.tiles.z))) }
+            if fine != nil, prism == nil { list.append(("skip", .float(Float(mapped.skip)))) }
         }
         return list
     }
@@ -241,6 +249,18 @@ struct Fine: Equatable {
     var table: [Float]
     /// The atlas's bytes, for the log.
     let bytes: Int
+    /// The atlas as a stored map packs it into its own image (`StirMap.pack`).
+    let texels: Texels
+
+    /// A bake's atlas: two are the same where they are the one object.
+    final class Texels: Sendable, Equatable {
+        let width: Int, height: Int
+        let pixels: [UInt8]
+
+        nonisolated init(_ detail: Halftone.Detail) { (width, height, pixels) = (detail.width, detail.height, detail.pixels) }
+
+        nonisolated static func == (a: Texels, b: Texels) -> Bool { a === b }
+    }
 
     init?(_ detail: Halftone.Detail) {
         guard let provider = CGDataProvider(data: Data(detail.pixels) as CFData),
@@ -251,6 +271,7 @@ struct Fine: Equatable {
         atlas = Image(decorative: image, scale: 1)
         table = detail.table
         bytes = detail.pixels.count
+        texels = Texels(detail)
     }
 }
 
