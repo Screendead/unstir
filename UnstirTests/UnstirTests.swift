@@ -741,6 +741,25 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack.count, Tank.maxStack - 1)
     }
 
+    /// Maelstrom 27, which filled at 22 moves of its 29 under the old limit of 36, takes pushes to the limit, built at 48
+    /// (pending Jack's look), and refuses the one past it.
+    @MainActor func testALevelPlaysToTheLimitAndRefusesOnePast() throws {
+        XCTAssertEqual(Tank.maxStack, 48)
+        let level = Level.maelstrom[26]
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+        let dealt = game.stack.count
+        try game.push(to: Tank.maxStack)
+        XCTAssertEqual(game.stack.count, 48)
+        XCTAssertEqual(game.moves, 48 - dealt)
+        XCTAssertEqual(game.refusals, 0)
+        let knob = try XCTUnwrap(game.pushingKnob(), "a turn that would push a 49th")
+        game.commit(rod: knob, steps: 1)
+        XCTAssertEqual(game.refusals, 1)
+        XCTAssertEqual(game.refusedKnob, knob)
+        XCTAssertEqual(game.stack.count, 48)
+        XCTAssertEqual(game.moves, 48 - dealt)
+    }
+
     /// The level's clock stops while the app is away, and a reset's replay never restarts it.
     @MainActor func testTheClockStopsWhileTheAppIsAway() {
         let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
@@ -2887,6 +2906,25 @@ final class UnstirTests: XCTestCase {
                     XCTAssertEqual(got * 255, want, accuracy: 2, "node \(k) at y \(y)")
                 }
             }
+        }
+    }
+}
+
+extension Game {
+    /// A working knob whose step lands on no entry, so the stack would take it as a push.
+    func pushingKnob() -> Int? {
+        (0..<level.layout.rods.count).first { knob in
+            level.kind(of: knob) == .working
+                && stack.landing(rod: slot(of: knob), steps: 1, in: level.layout, lenses: level.lenses, masks: level.masks) == nil
+        }
+    }
+
+    /// Steps working knobs, each a push, until the stack holds `n` entries.
+    func push(to n: Int) throws {
+        while stack.count < n {
+            let before = stack.count
+            commit(rod: try XCTUnwrap(pushingKnob(), "no knob pushes at \(before)"), steps: 1)
+            XCTAssertEqual(stack.count, before + 1)
         }
     }
 }

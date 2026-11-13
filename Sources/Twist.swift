@@ -52,10 +52,11 @@ enum Tank {
     /// The swirl has no rigid core: its turn fades smoothly from the full angle at the centre to 0 at the glass's edge,
     /// so it shears through every knob's core rather than carrying them round as a block.
     static let swirlPlateau = 0.0
-    /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist. The same
-    /// on every glass, so every level plays as on an iPhone (Jack's call duocap2 = D), however far a larger glass then
-    /// runs over the frame budget measured at `tunedPixels`.
-    static let maxStack = 36
+    /// Pushes past this are refused, and the brim's notches run to it. A glass at rest or in hand draws its stack from
+    /// the stored map (`StirMap`), but a frame before a map lands runs every entry through the chain, and past the
+    /// four-tap budget with two taps. The same on every glass, so every level plays as on an iPhone (Jack's call
+    /// duocap2 = D). 36 until 2026-11-13; 48 pending Jack's look (he picked raising it once the map was in).
+    static let maxStack = 48
     /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two. What a level is
     /// dealt to fit, on every device; the shader takes `fourTaps(pixels:)`, or the budget `Taps` learns. 40 held 120 Hz
     /// on the iPhone 13 Pro Max's 1136 px glass (2026-11-04): the most the game allows, a full stack of 36 on a fill of 4,

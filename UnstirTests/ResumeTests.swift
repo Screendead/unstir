@@ -70,6 +70,20 @@ import XCTest
                                   storesResume: false))
     }
 
+    /// A stack played to the limit saves and replays to the same 48 entries: the save holds the calls, not the stack,
+    /// so its format is as it was.
+    func testAFullStackSavesAndRestores() throws {
+        let level = Level.maelstrom[26]
+        let g = Game(level: level, tankTurned: true, swirled: true, bank: (10, nil))
+        try g.push(to: Tank.maxStack)
+        XCTAssertEqual(g.stack.count, 48)
+        let r = try JSONDecoder().decode(Resume.self, from: try JSONEncoder().encode(Resume(of: g)))
+        let back = try XCTUnwrap(Game.resumed(level, from: r, tankTurned: true, swirled: true, bank: (g.bank, nil),
+                                              storesResume: false))
+        assertSame(g, back, level.id)
+        XCTAssertEqual(back.stack.count, 48)
+    }
+
     func testResumeDropsAChangedLevel() throws {
         let level = Level.plughole[11]
         let g = Game(level: level, bank: (10, nil))
