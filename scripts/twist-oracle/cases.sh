@@ -12,8 +12,9 @@ m24=(TIER=maelstrom LEVEL=24 TANKTURNED=1 CLEAN=1)
 still m24 "${m24[@]}" CLOCK=3
 still m24-deep "${m24[@]}" CLOCK=3 DEEP=36
 still m24-shallow "${m24[@]}" CLOCK=3 DEEP=4
-# Two taps: the look past the four-tap budget, on a hot phone or the Duo.
-better=m24-deep still m24-deep-two "${m24[@]}" CLOCK=3 DEEP=36 TAPS=12
+# Two taps: the look past the four-tap budget, on a hot phone or the Duo, through the chain: a frame from the map
+# draws four whatever the budget.
+better=m24-deep still m24-deep-two "${m24[@]}" CLOCK=3 DEEP=36 TAPS=12 MAP=off
 # The live picture at rest, at other times: early, past the marbling's 10 s loop and near the twin's 60 s one.
 still m24-clock-0.5 "${m24[@]}" CLOCK=0.5
 still m24-clock-11.3 "${m24[@]}" CLOCK=11.3
