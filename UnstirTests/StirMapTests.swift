@@ -169,15 +169,15 @@ final class StirMapTests: XCTestCase {
         XCTAssertNil(glass.shader(scale: 2).mapped)
     }
 
-    /// No map is asked for a short stack, one winding in, a cover's shares, a Lens level or Prism's channels.
-    @MainActor func testOnlyADeepPlainGlassAsksForAMap() throws {
+    /// No map is asked for a short stack, one winding in or a cover's shares; a Lens level's holds its lenses' flow
+    /// where a shader takes two images, and Prism's counts its channels' maps for its depth and holds a tile a word.
+    @MainActor func testOnlyADeepGlassAsksForAMap() throws {
         try XCTSkipIf(StirMap.mode == nil)
         let stack = (0..<StirMap.least).map { Twist(rod: $0 % 3, steps: 2) }
         let glass = Unstirred(stack: stack, layout: .tri, liveAngle: 0, side: 100)
-        XCTAssertNotNil(StirMap.key(glass, scale: 3))
+        XCTAssertEqual(StirMap.key(glass, scale: 3)?.tiles, [7])
         let without: [(inout Unstirred) -> Void] = [
             { $0.stack.removeLast() }, { $0.wind = 0.9 }, { $0.shares = [Double](repeating: 1, count: $0.stack.count) },
-            { $0.lenses = [0] }, { $0.masks = [0: .red] },
         ]
         for (i, change) in without.enumerated() {
             var other = glass
@@ -188,6 +188,35 @@ final class StirMapTests: XCTestCase {
         var held = glass
         (held.liveRod, held.liveAngle, held.breath, held.tick) = (1, 0.7, (0, 0.1), (2, 0.2))
         XCTAssertEqual(StirMap.key(held, scale: 3), StirMap.key(glass, scale: 3))
+        // A lens's entries as the frame takes them.
+        var lens = glass
+        lens.lenses = [0]
+        let key = StirMap.key(lens, scale: 3)
+        XCTAssertEqual(key == nil, !StirMap.lensMaps)
+        if let key { XCTAssertTrue(lens.shader(scale: 3).twists.starts(with: key.twists)) }
+        // Prism: red's word and cyan's (green and blue together), its depth the maps its entries hold.
+        var prism = glass
+        prism.masks = [0: .red, 1: .cyan]
+        // Cyan's two channels an entry.
+        prism.stack = (0..<(StirMap.prismLeast + 1) / 2).map { Twist(rod: 1, steps: $0 % 2 == 0 ? 1 : 2) }
+        XCTAssertNotNil(StirMap.key(prism, scale: 3))
+        prism.stack.removeLast()
+        XCTAssertNil(StirMap.key(prism, scale: 3))
+        prism.masks = [0: .red, 1: .cyan]
+        prism.stack = (0..<4).map { Twist(rod: $0 % 2, steps: 2) }
+        XCTAssertNil(StirMap.key(prism, scale: 3, least: 7))
+        let tiles = try XCTUnwrap(StirMap.key(prism, scale: 3, least: 6))
+        XCTAssertEqual(tiles.tiles, [1, 6])
+        XCTAssertEqual(StirMap.slots(tiles.tiles), SIMD3(0, 1, 1))
+        XCTAssertEqual(tiles.bytes, 2 * 16 * 300 * 300)
+        XCTAssertEqual(StirMap.words(tiles).map { $0.count / 4 }, [2, 2])
+        prism.masks[2] = .white
+        XCTAssertEqual(StirMap.key(prism, scale: 3, least: 6)?.tiles, [1, 6])
+        prism.stack.append(Twist(rod: 2, steps: 1))
+        XCTAssertEqual(StirMap.key(prism, scale: 3, least: 6)?.tiles, [1, 6])
+        XCTAssertEqual(StirMap.tiles([1, 2, 4, 7]), [1, 2, 4])
+        XCTAssertEqual(StirMap.tiles([1, 3]), [1, 2])
+        XCTAssertEqual(StirMap.slots(StirMap.tiles([3, 3])), SIMD3(0, 0, -1))
     }
 
     /// The stored step keeps a tap a quarter pixel off its pixel's centre exact, across any glass the game draws.
@@ -198,7 +227,7 @@ final class StirMapTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(quant, 4)
             XCTAssertLessThanOrEqual(quant * Float(pixels), 65535)
         }
-        XCTAssertEqual(MemoryLayout<StirMap.Args>.stride, 52)
+        XCTAssertEqual(MemoryLayout<StirMap.Args>.stride, 68)
     }
 
     /// A holder draws the map it is asked for, and lets it go when none is wanted.
@@ -218,5 +247,230 @@ final class StirMapTests: XCTestCase {
         holder.want(short, scale: 2)
         await settled { holder.made == nil }
         XCTAssertNil(holder.made)
+    }
+}
+
+/// A Lens and a Prism glass over a stored map (`unstirLensMappedBody`, `unstirChannelsMappedBody` in Unstir.metal),
+/// each held against the glass drawn through its chain, as the GPU bench runs both bodies on a texture.
+final class StirMapPackTests: XCTestCase {
+    private static let kernels = """
+        struct PackLayer {
+            texture2d<half> picture;
+            float pixels;
+            half4 sample(float2 p) const {
+                constexpr sampler s(filter::linear, address::clamp_to_zero, coord::pixel);
+                return picture.sample(s, p * pixels);
+            }
+        };
+        struct PackArgs {
+            float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold, isolate, rest, quant, mode,
+                  bend, tileR, tileG, tileB;
+            int count, maskCount, fineCount, kind, kept, tile;
+        };
+        kernel void storeTile(texture2d<float, access::write> map [[texture(0)]], device const float *twists [[buffer(0)]],
+                              constant PackArgs &a [[buffer(1)]], uint2 gid [[thread_position_in_grid]]) {
+            storeTaps(map, gid, float2(a.radius), a.radius, twists, a.kept, a.plateau, a.swirlPlateau, a.lensEdge, a.scale,
+                      a.rest, a.quant, a.tile);
+        }
+        // kind 0: Prism through its chains, 1: over the map; 2: Lens through its chain, 3: over the map.
+        kernel void drawPack(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                             texture2d<half> atlas [[texture(2)]], texture2d<half> map [[texture(3)]],
+                             device const float *twists [[buffer(0)]], device const float *masks [[buffer(1)]],
+                             constant PackArgs &a [[buffer(2)]], device const float *fine [[buffer(3)]],
+                             uint2 gid [[thread_position_in_grid]]) {
+            PackLayer layer = { picture, a.scale };
+            float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius);
+            float3 tint = float3(1, 1, 1), wave = float3(0, 0, -1);
+            float4 mapped = float4(a.kept, a.rest, a.quant, a.mode);
+            half4 c = a.kind == 0
+                ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
+                                     a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, wave, a.rest, a.isolate, tint, a.held,
+                                     a.hold)
+                : a.kind == 1
+                ? unstirChannelsMappedBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost,
+                                           a.fourTaps, a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, wave, a.rest,
+                                           a.isolate, tint, a.held, a.hold, map, mapped, a.bend,
+                                           float3(a.tileR, a.tileG, a.tileB))
+                : a.kind == 2
+                ? unstirLensBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
+                                 a.lensEdge, a.scale, 0.0, wave, a.rest, atlas, fine, a.fineCount)
+                : a.kind == 3
+                ? unstirLensMappedBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau,
+                                       a.swirlPlateau, a.lensEdge, a.scale, 0.0, wave, a.rest, atlas, fine, a.fineCount, map,
+                                       mapped, a.bend)
+                : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
+                             a.lensEdge, a.scale, 0.0, wave, a.rest);
+            out.write(c, gid);
+        }
+        """
+
+    private struct Args {
+        var radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold, isolate, rest, quant, mode, bend: Float
+        var tileR: Float = 0, tileG: Float = 0, tileB: Float = 0
+        var count, maskCount, fineCount: Int32
+        var kind: Int32 = 0, kept: Int32 = 0, tile: Int32 = 0
+    }
+
+    private static let side = 160, scale = 2.0
+
+    private struct Kit {
+        let kit: ShaderKit
+        let store, draw: MTLComputePipelineState
+
+        init() throws {
+            kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: StirMapPackTests.kernels)
+            (store, draw) = (try kit.pipeline("storeTile"), try kit.pipeline("drawPack"))
+        }
+
+        func texture(_ pixels: [UInt8], _ width: Int, _ height: Int, format: MTLPixelFormat = .rgba8Unorm) throws -> MTLTexture {
+            let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: width, height: height, mipmapped: false)
+            desc.usage = [.shaderRead, .shaderWrite]
+            let t = try XCTUnwrap(kit.device.makeTexture(descriptor: desc))
+            if !pixels.isEmpty {
+                t.replace(region: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0, withBytes: pixels, bytesPerRow: 4 * width)
+            }
+            return t
+        }
+    }
+
+    /// Bands of each channel at its own pitch and slant, some 7 pixels a band: fine enough that a tap drawn off its
+    /// point shows, smooth enough that the stored step's half a step, a 112th of a pixel, moves a value about a level.
+    private func picture(_ kit: Kit) throws -> MTLTexture {
+        let n = Self.side
+        var bytes = [UInt8](repeating: 255, count: 4 * n * n)
+        for y in 0..<n {
+            for x in 0..<n {
+                for (c, (a, b)) in [(0.9, 0.3), (-0.4, 0.8), (0.5, -0.7)].enumerated() {
+                    bytes[4 * (y * n + x) + c] = UInt8(127.5 + 127.5 * sin((a * Double(x) + b * Double(y)) * .pi / 7))
+                }
+            }
+        }
+        return try kit.texture(bytes, n, n)
+    }
+
+    /// The glass of `glass` (its stack committed, a rod maybe in hand) drawn through its chain (`kind`) and over a map
+    /// of its committed stack (`kind + 1`), mapped as `mode` says, and the plain chain's (`unstirBody`) for a Lens glass.
+    private func draw(_ kit: Kit, _ glass: Unstirred, mode: StirMap.Mode, fine: Halftone.Detail? = nil) throws -> (chain: [UInt8], mapped: [UInt8], plain: [UInt8]) {
+        let n = Self.side, scale = CGFloat(Self.scale)
+        // The committed stack's key, as `StirMap.key` makes it, whether or not the game would ask for it.
+        let committed = Unstirred.entries(glass.stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: glass.layout,
+                                          lenses: glass.lenses, masks: glass.masks)
+        let key = StirMap.Key(twists: committed.twists, masks: Unstirred.channelCost(committed.masks) == nil ? [] : committed.masks,
+                              rest: glass.turn, side: glass.side, scale: scale)
+        if glass.lenses.isEmpty { XCTAssertEqual(StirMap.key(glass, scale: scale, least: 1), key) }
+        let shader = glass.shader(scale: scale)
+        let twists = shader.twists, masks = shader.prism?.masks ?? [Float](repeating: 7, count: twists.count / 4)
+        let words = StirMap.words(key)
+        let map = try kit.texture([], 2 * n, 2 * n * words.count, format: .bgra8Unorm)
+        let slots = StirMap.slots(key.tiles), table = fine?.table ?? [0]
+        var args = Args(radius: Float(glass.side / 2), scale: Float(scale), n: Float(twists.count / 4), fourTaps: shader.fourTaps,
+                        cost: Float(shader.prism?.cost ?? 0), plateau: Float(Tank.plateau), swirlPlateau: Float(Tank.swirlPlateau),
+                        lensEdge: Float(Tank.lensEdge), held: Float(shader.prism?.held?.rawValue ?? 0), hold: shader.prism?.hold ?? 0,
+                        isolate: Float(shader.prism?.isolate?.rawValue ?? 0), rest: Float(key.rest),
+                        quant: StirMap.quant(pixels: key.pixels), mode: mode.rawValue, bend: StirMap.bend,
+                        tileR: slots.x, tileG: slots.y, tileB: slots.z, count: Int32(twists.count), maskCount: Int32(masks.count),
+                        fineCount: fine == nil ? 0 : Int32(table.count))
+        for (tile, word) in words.enumerated() {
+            var a = args
+            (a.kept, a.tile) = (Int32(word.count / 4), Int32(tile))
+            let buffer = try kit.kit.buffer(word)
+            try kit.kit.run(kit.store, grid: MTLSize(width: n, height: n, depth: 1), group: MTLSize(width: 8, height: 8, depth: 1)) { enc in
+                enc.setTexture(map, index: 0)
+                enc.setBuffer(buffer, offset: 0, index: 0)
+                enc.setBytes(&a, length: MemoryLayout<Args>.stride, index: 1)
+            }
+        }
+        args.kept = Int32(key.twists.count / 4)
+        let layer = try picture(kit), out = try kit.texture([], n, n)
+        let atlas = try fine.map { try kit.texture($0.pixels, $0.width, $0.height) } ?? kit.texture([0, 0, 0, 255], 1, 1)
+        let twistBuffer = try kit.kit.buffer(twists), maskBuffer = try kit.kit.buffer(masks), fineBuffer = try kit.kit.buffer(table)
+        func run(_ kind: Int32) throws -> [UInt8] {
+            args.kind = kind
+            try kit.kit.run(kit.draw, grid: MTLSize(width: n, height: n, depth: 1), group: MTLSize(width: 8, height: 8, depth: 1)) { enc in
+                enc.setTexture(layer, index: 0)
+                enc.setTexture(out, index: 1)
+                enc.setTexture(atlas, index: 2)
+                enc.setTexture(map, index: 3)
+                enc.setBuffer(twistBuffer, offset: 0, index: 0)
+                enc.setBuffer(maskBuffer, offset: 0, index: 1)
+                enc.setBytes(&args, length: MemoryLayout<Args>.stride, index: 2)
+                enc.setBuffer(fineBuffer, offset: 0, index: 3)
+            }
+            var pixels = [UInt8](repeating: 0, count: 4 * n * n)
+            out.getBytes(&pixels, bytesPerRow: 4 * n, from: MTLRegionMake2D(0, 0, n, n), mipmapLevel: 0)
+            return pixels
+        }
+        let kind: Int32 = fine == nil ? 0 : 2
+        return (try run(kind), try run(kind + 1), fine == nil ? [] : try run(4))
+    }
+
+    /// The mean and the most two frames' colour values differ by, in levels.
+    private func difference(_ a: [UInt8], _ b: [UInt8]) -> (mean: Double, most: Int) {
+        var sum = 0, most = 0
+        for i in a.indices where i % 4 != 3 {
+            let d = abs(Int(a[i]) - Int(b[i]))
+            (sum, most) = (sum + d, max(most, d))
+        }
+        return (Double(sum) / Double(3 * a.count / 4), most)
+    }
+
+    /// Prism over its map draws its chains' glass: at rest within the stored step, with a rod held and its read drawn,
+    /// and with a swatch held; a channel no entry moves has no tile; and by `chain`, a pixel any held entry moves is the
+    /// chains' own to the byte.
+    @MainActor func testPrismOverItsMapDrawsItsChainsGlass() throws {
+        let kit = try Kit(), layout = Layout.pent
+        let masks = try XCTUnwrap(Channels.masks("0:y,1:m,2:r,3:w,4:g"))
+        let stack = [Twist].parse("3:-1,2:+2,1:-2,2:-1,0:+1,4:+2,1:+1,0:-2", in: layout, masks: masks)
+        let side = CGFloat(Self.side) / CGFloat(Self.scale)
+        let glass = Unstirred(stack: stack, layout: layout, masks: masks, liveAngle: 0, side: side)
+        XCTAssertEqual(StirMap.key(glass, scale: CGFloat(Self.scale), least: 1)?.tiles, [1, 2, 4])
+        let rest = try draw(kit, glass, mode: .mix)
+        let still = difference(rest.chain, rest.mapped)
+        XCTAssertLessThan(still.mean, 0.2, "at rest")
+        XCTAssertLessThanOrEqual(still.most, 6, "at rest")
+        var held = glass
+        (held.liveRod, held.liveAngle, held.held, held.hold) = (0, -0.9 * Tank.step, masks[0], 1)
+        let chain = try draw(kit, held, mode: .chain), mix = try draw(kit, held, mode: .mix)
+        XCTAssertTrue(chain.chain == chain.mapped || difference(chain.chain, chain.mapped).most <= 6, "held, by chain")
+        XCTAssertLessThan(difference(mix.chain, mix.mapped).mean, 0.5, "held")
+        var swatch = glass
+        swatch.isolate = .green
+        let alone = try draw(kit, swatch, mode: .mix)
+        XCTAssertLessThan(difference(alone.chain, alone.mapped).mean, 0.2, "swatch")
+        // No entry holds blue: two tiles, and blue drawn through its empty word.
+        let blueless = try XCTUnwrap(Channels.masks("0:r,1:g,2:y,3:r,4:g"))
+        var other = glass
+        (other.masks, other.stack) = (blueless, [Twist].parse("0:+2,1:-1,2:+1,3:-2,4:+1", in: layout, masks: blueless))
+        XCTAssertEqual(StirMap.key(other, scale: CGFloat(Self.scale), least: 1).map { StirMap.slots($0.tiles) }, SIMD3(0, 1, -1))
+        let two = try draw(kit, other, mode: .mix)
+        XCTAssertLessThan(difference(two.chain, two.mapped).mean, 0.2, "blueless")
+    }
+
+    /// Lens over its map draws the chain's glass, and wherever the detail is drawn draws it to the byte: at rest, with
+    /// a twist and with the lens in hand past x8.
+    @MainActor func testLensOverItsMapDrawsTheDetailAsTheChainDoes() throws {
+        let kit = try Kit(), layout = Layout.tri, lenses: Set<Int> = [0]
+        let stack = [Twist].parse("1:+3,0:+3,2:-2,1:+1", in: layout, lenses: lenses)
+        let side = CGFloat(Self.side) / CGFloat(Self.scale)
+        let detail = Halftone.test.detail(Self.side, lenses: [layout.rods[0]])
+        let glass = Unstirred(stack: stack, layout: layout, lenses: lenses, liveAngle: 0, side: side)
+        var twisted = glass, zoomed = glass
+        (twisted.liveRod, twisted.liveAngle) = (2, 1.4 * Tank.step)
+        (zoomed.liveRod, zoomed.liveAngle) = (0, 0.9 * Tank.step)
+        for (name, g) in [("rest", glass), ("twisted", twisted), ("zoomed", zoomed)] {
+            for mode in [StirMap.Mode.chain, .mix] {
+                let frames = try draw(kit, g, mode: mode, fine: detail)
+                var detailed = 0, missed = 0
+                for i in stride(from: 0, to: frames.chain.count, by: 4) {
+                    let shown = (0..<3).contains { abs(Int(frames.chain[i + $0]) - Int(frames.plain[i + $0])) > 8 }
+                    guard shown else { continue }
+                    detailed += 1
+                    if frames.chain[i..<i + 3] != frames.mapped[i..<i + 3] { missed += 1 }
+                }
+                XCTAssertGreaterThan(detailed, 100, name)
+                XCTAssertEqual(missed, 0, "\(name), \(mode): of \(detailed) pixels showing the detail")
+                XCTAssertLessThan(difference(frames.chain, frames.mapped).mean, mode == .chain || name == "rest" ? 0.2 : 0.5, "\(name), \(mode)")
+            }
+        }
     }
 }

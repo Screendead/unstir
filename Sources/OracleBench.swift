@@ -68,33 +68,48 @@ enum OracleBench {
         // the chain, `map-chain`. A glass the game draws without a map draws as today in both.
         let stir = try device.makeComputePipelineState(function: library.makeFunction(name: "stirMap")!)
         let mapped = try device.makeComputePipelineState(function: library.makeFunction(name: "benchMapped")!)
+        let lensMapped = try device.makeComputePipelineState(function: library.makeFunction(name: "benchLensMapped")!)
+        let channelsMapped = try device.makeComputePipelineState(function: library.makeFunction(name: "benchChannelsMapped")!)
         final class Maps { var made: [String: MTLTexture] = [:] }
         let maps = Maps()
+        // Each tile's word, as `StirMap` draws them.
+        final class Words { var made: [String: [MTLBuffer]] = [:] }
+        let words = Words()
         func commit(_ f: Frame, _ enc: MTLComputeCommandEncoder) {
             guard let key = f.map else { return }
+            let tiles = StirMap.words(key)
             let map = maps.made[f.name] ?? {
-                let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 2 * f.side, height: 2 * f.side, mipmapped: false)
+                let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 2 * f.side, height: 2 * f.side * tiles.count,
+                                                                    mipmapped: false)
                 desc.usage = [.shaderRead, .shaderWrite]
                 return device.makeTexture(descriptor: desc)!
             }()
             maps.made[f.name] = map
-            var m = StirMap.args(key)
-            enc.setComputePipelineState(stir)
-            enc.setTexture(map, index: 0)
-            enc.setBuffer(f.twists, offset: 0, index: 0)
-            enc.setBytes(&m, length: MemoryLayout<StirMap.Args>.stride, index: 1)
-            enc.dispatchThreads(MTLSize(width: f.side, height: f.side, depth: 1), threadsPerThreadgroup: group)
+            let buffers = words.made[f.name] ?? tiles.map { device.makeBuffer(bytes: $0, length: 4 * $0.count)! }
+            words.made[f.name] = buffers
+            for (tile, word) in tiles.enumerated() {
+                var m = StirMap.args(key)
+                (m.tile, m.kept) = (Int32(tile), Int32(word.count / 4))
+                enc.setComputePipelineState(stir)
+                enc.setTexture(map, index: 0)
+                enc.setBuffer(buffers[tile], offset: 0, index: 0)
+                enc.setBytes(&m, length: MemoryLayout<StirMap.Args>.stride, index: 1)
+                enc.dispatchThreads(MTLSize(width: f.side, height: f.side, depth: 1), threadsPerThreadgroup: group)
+            }
         }
         func draw(_ mode: StirMap.Mode) -> (Frame, MTLComputeCommandEncoder) -> Void {
             { f, enc in
                 guard let key = f.map, let map = maps.made[f.name] else { return today(f, enc) }
                 var a = f.args, m = StirMap.args(key, mode: mode)
-                enc.setComputePipelineState(mapped)
+                enc.setComputePipelineState(f.shader.prism != nil ? channelsMapped : f.shader.fine != nil ? lensMapped : mapped)
                 enc.setTexture(f.picture, index: 0)
                 enc.setTexture(f.out, index: 1)
+                enc.setTexture(f.atlas, index: 2)
                 enc.setTexture(map, index: 3)
                 enc.setBuffer(f.twists, offset: 0, index: 0)
+                enc.setBuffer(f.masks, offset: 0, index: 1)
                 enc.setBytes(&a, length: MemoryLayout<GPUBench.Args>.stride, index: 2)
+                enc.setBuffer(f.fine, offset: 0, index: 3)
                 enc.setBytes(&m, length: MemoryLayout<StirMap.Args>.stride, index: 4)
                 enc.dispatchThreads(MTLSize(width: f.side, height: f.side, depth: 1), threadsPerThreadgroup: group)
             }
@@ -130,8 +145,9 @@ enum OracleBench {
         if let s = h.breath, game.breathes, let swirl = level.layout.swirl {
             u.breath = (game.slot(of: swirl), Breath(start: 0, wait: Breath.first).angle(at: s))
         }
-        // The committed glass's map, as `HeldUnstirred` asks for it, then the rim's turn in hand.
-        let map = StirMap.key(u, scale: scale)
+        // The committed glass's map, as `HeldUnstirred` asks for it (UNSTIR_MAPLEAST as a case's own, here), then the
+        // rim's turn in hand.
+        let map = StirMap.key(u, scale: scale, least: env["UNSTIR_MAPLEAST"].flatMap(Int.init))
         u.turn += (h.tankLive ?? 0) * .pi / 180
         return (level, u, u.stack.count, map)
     }
