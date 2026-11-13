@@ -17,3 +17,5 @@ hold=5 shot brim-frost "A frost day's daily (2026-10-15): two knobs frozen, the 
 hold=10 shot brim-duo "Duo open: plughole 11 five moves in, the tank in the leading half with its brim." \
   FRAME=951x669 INSETS=24,0,21,84 LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2 CLOCK=3
 hold=5 shot brim-endless "Endless as it was: its own brim of eight notches, untouched." MODE=endless CLOCK=3
+hold=10 shot brim-duo-upright "Duo upright: maelstrom 27 as dealt, its glass the size it was before the brim." \
+  FRAME=669x951 INSETS=59,0,34,0 TIER=maelstrom LEVEL=27 CLOCK=3

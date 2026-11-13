@@ -948,3 +948,4 @@ brim-lens-01.png  Lens 01, 1:+2,0:+2: a two-twist brim over the halftone.
 brim-frost.png  A frost day's daily (2026-10-15): two knobs frozen, the knurl over the brim.
 brim-duo.png  Duo open: plughole 11 five moves in, the tank in the leading half with its brim.
 brim-endless.png  Endless as it was: its own brim of eight notches, untouched.
+brim-duo-upright.png  Duo upright: maelstrom 27 as dealt, its glass the size it was before the brim.

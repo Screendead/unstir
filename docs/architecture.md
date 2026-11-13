@@ -320,7 +320,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   and a full tank refuses the turn as before ("the tank is full: undo or reset"). `spills` false makes the last notch a
   held level like any other, the warn pulse and tremble still on it, with no crest, pour, murk or card. Only
   `Brim.levelReach` (48 of the jug's 480) past the bezel is drawn, the lit tick ends and the pin's cap fading out by
-  there, as no level's `PlayLayout.Halo` leaves endless's room: no glass shrinks for it. Its liquid is the level's
+  there, as no level's `PlayLayout.Halo` leaves endless's room: no phone's glass shrinks for it. Only the split beside the
+  menu makes room, above the stage (`Halo.brim`, kept in `halo.above` once the side is known), where the pin would
+  otherwise reach into the title: 9 pt off the Duo's open glass, which takes the place of the rim lesson's 8. Its liquid is the level's
   colour (`Level.colour`, `Brim.colours(flat:)`), as only the grid has a CPU sampler to read the rim off. `LevelView`
   keeps its own record of the stack's size (`StackBrimClock`: a `Brim.Event` per change of the count, the older folded
   into the base past eight), runs its timeline only for `Brim.settle` after a change and while the stack is within a
