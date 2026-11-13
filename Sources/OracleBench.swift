@@ -16,7 +16,9 @@ import UniformTypeIdentifiers
 ///
 /// A way to draw twists faster joins `methods` with the kernels it needs: `draw` encodes one frame into `Frame.out`,
 /// and `commit`, where it has one, the work it does once when the committed stack changes (`Frame.committed` entries,
-/// the rest in flight), timed apart. Today's shader is `today`, the stitchables' own bodies (`benchUnstir`).
+/// the rest in flight), timed apart. Today's shader is `today`, the stitchables' own bodies (`benchUnstir`); `map` is
+/// the stored map as the game draws it (`StirMap`, `benchMapped`), its commit the map's drawing, and `map-chain` the
+/// map with every tap off its texel run through the chain.
 ///
 /// The picture under the stack is a texture: a baked picture's own bake, and for every live picture the glass's fill at
 /// the case's clock (`benchGlass`, the one fill with a kernel), which stands in for the others'. So a line times the
@@ -30,6 +32,8 @@ enum OracleBench {
         var shader: TankShader
         /// The entries below those in flight (the drag, a tick, the breath).
         var committed: Int
+        /// The stored map the game would draw this glass from (`StirMap.key`), nil where it draws without one.
+        var map: StirMap.Key?
         var args: GPUBench.Args
         var twists, masks, fine: MTLBuffer
         var picture, out: MTLTexture
@@ -45,11 +49,11 @@ enum OracleBench {
     static let group = MTLSize(width: 16, height: 16, depth: 1)
 
     static func methods(_ device: MTLDevice, _ library: MTLLibrary) throws -> [Method] {
-        let today = try device.makeComputePipelineState(function: library.makeFunction(name: "benchUnstir")!)
-        return [
-            Method(name: "today") { f, enc in
+        let pipeline = try device.makeComputePipelineState(function: library.makeFunction(name: "benchUnstir")!)
+        func today(_ f: Frame, _ enc: MTLComputeCommandEncoder) {
+            do {
                 var args = f.args
-                enc.setComputePipelineState(today)
+                enc.setComputePipelineState(pipeline)
                 enc.setTexture(f.picture, index: 0)
                 enc.setTexture(f.out, index: 1)
                 enc.setTexture(f.atlas, index: 2)
@@ -58,12 +62,52 @@ enum OracleBench {
                 enc.setBytes(&args, length: MemoryLayout<GPUBench.Args>.stride, index: 2)
                 enc.setBuffer(f.fine, offset: 0, index: 3)
                 enc.dispatchThreads(MTLSize(width: f.side, height: f.side, depth: 1), threadsPerThreadgroup: group)
-            },
+            }
+        }
+        // The stored map (`unstirMappedBody`) as the game draws it, `map`, and with every tap off its texel run through
+        // the chain, `map-chain`. A glass the game draws without a map draws as today in both.
+        let stir = try device.makeComputePipelineState(function: library.makeFunction(name: "stirMap")!)
+        let mapped = try device.makeComputePipelineState(function: library.makeFunction(name: "benchMapped")!)
+        final class Maps { var made: [String: MTLTexture] = [:] }
+        let maps = Maps()
+        func commit(_ f: Frame, _ enc: MTLComputeCommandEncoder) {
+            guard let key = f.map else { return }
+            let map = maps.made[f.name] ?? {
+                let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 2 * f.side, height: 2 * f.side, mipmapped: false)
+                desc.usage = [.shaderRead, .shaderWrite]
+                return device.makeTexture(descriptor: desc)!
+            }()
+            maps.made[f.name] = map
+            var m = StirMap.args(key)
+            enc.setComputePipelineState(stir)
+            enc.setTexture(map, index: 0)
+            enc.setBuffer(f.twists, offset: 0, index: 0)
+            enc.setBytes(&m, length: MemoryLayout<StirMap.Args>.stride, index: 1)
+            enc.dispatchThreads(MTLSize(width: f.side, height: f.side, depth: 1), threadsPerThreadgroup: group)
+        }
+        func draw(_ mode: StirMap.Mode) -> (Frame, MTLComputeCommandEncoder) -> Void {
+            { f, enc in
+                guard let key = f.map, let map = maps.made[f.name] else { return today(f, enc) }
+                var a = f.args, m = StirMap.args(key, mode: mode)
+                enc.setComputePipelineState(mapped)
+                enc.setTexture(f.picture, index: 0)
+                enc.setTexture(f.out, index: 1)
+                enc.setTexture(map, index: 3)
+                enc.setBuffer(f.twists, offset: 0, index: 0)
+                enc.setBytes(&a, length: MemoryLayout<GPUBench.Args>.stride, index: 2)
+                enc.setBytes(&m, length: MemoryLayout<StirMap.Args>.stride, index: 4)
+                enc.dispatchThreads(MTLSize(width: f.side, height: f.side, depth: 1), threadsPerThreadgroup: group)
+            }
+        }
+        return [
+            Method(name: "today", draw: today),
+            Method(name: "map", commit: commit, draw: draw(.mix)),
+            Method(name: "map-chain", draw: draw(.chain)),
         ]
     }
 
     /// The glass a harness launch with `env` draws, as `LevelView.tank` builds it, `side` points across.
-    @MainActor static func glass(_ env: [String: String], side: CGFloat) -> (level: Level, glass: Unstirred, committed: Int) {
+    @MainActor static func glass(_ env: [String: String], side: CGFloat, scale: CGFloat) -> (level: Level, glass: Unstirred, committed: Int, map: StirMap.Key?) {
         let h = Harness(env), level = h.level
         let game = Game(level: level, tankTurned: h.tankTurned, swirled: h.swirled, bank: h.bank, storesProgress: false)
         game.turnTank(h.tank)
@@ -72,7 +116,7 @@ enum OracleBench {
             if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
         }
         let live = h.live.map { (slot: game.slot(of: $0.rod), angle: $0.steps * Tank.step) }
-        let turn = Double(game.position) * level.layout.tankStep + (h.tankLive ?? 0) * .pi / 180
+        let turn = Double(game.position) * level.layout.tankStep
         var u = Unstirred(stack: h.bare ? [] : game.stack, layout: level.layout, lenses: level.lenses, masks: level.masks,
                           liveRod: live?.slot, liveAngle: live?.angle ?? 0, wind: h.wind ?? 1, side: side, turn: turn,
                           fillEntries: level.picture.fillEntries, isolate: h.swatch,
@@ -86,7 +130,10 @@ enum OracleBench {
         if let s = h.breath, game.breathes, let swirl = level.layout.swirl {
             u.breath = (game.slot(of: swirl), Breath(start: 0, wait: Breath.first).angle(at: s))
         }
-        return (level, u, u.stack.count)
+        // The committed glass's map, as `HeldUnstirred` asks for it, then the rim's turn in hand.
+        let map = StirMap.key(u, scale: scale)
+        u.turn += (h.tankLive ?? 0) * .pi / 180
+        return (level, u, u.stack.count, map)
     }
 
     @MainActor static func run() async {
@@ -151,7 +198,7 @@ enum OracleBench {
                 let f = kv.split(separator: "=", maxSplits: 1)
                 return f.count == 2 ? (String(f[0]), String(f[1])) : nil
             }, uniquingKeysWith: { $1 })
-            let (level, glass, committed) = glass(vars, side: points)
+            let (level, glass, committed, map) = glass(vars, side: points, scale: scale)
             var shader = glass.shader(scale: scale)
             let clock = vars["UNSTIR_CLOCK"].flatMap(Double.init) ?? 0, seed = Int(level.label) ?? 0
             let picture: MTLTexture
@@ -192,7 +239,7 @@ enum OracleBench {
                                      isolate: Float(shader.prism?.isolate?.rawValue ?? 0), tintR: tint.x, tintG: tint.y, tintB: tint.z,
                                      count: Int32(twists.count), maskCount: Int32(masks.count),
                                      channels: shader.prism == nil ? 0 : 1, fineCount: shader.fine == nil ? 0 : Int32(table.count))
-            let frame = Frame(name: name, side: side, shader: shader, committed: committed, args: args, twists: buffer(twists),
+            let frame = Frame(name: name, side: side, shader: shader, committed: committed, map: map, args: args, twists: buffer(twists),
                               masks: buffer(masks), fine: buffer(table), picture: picture,
                               out: texture([], side, side, usage: [.shaderRead, .shaderWrite]), atlas: atlas)
             // Each method's frame, written before any is timed, then every method timed in turn, round by round.
@@ -226,7 +273,7 @@ enum OracleBench {
                            commits[k].map { String(format: ", commit %.3f ms", $0 * 1000) } ?? ""))
             }
         }
-        say("ORACLE done, by the \(wallClock ? "wall" : "GPU") clock, frames in \(out.path)")
+        say("ORACLE done, by the \(wallClock ? "wall" : "GPU") clock, thermal \(["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]), frames in \(out.path)")
     }
 
     static func write(_ texture: MTLTexture, to url: URL) {

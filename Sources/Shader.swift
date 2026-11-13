@@ -44,6 +44,9 @@ struct Unstirred: ViewModifier, Animatable {
     /// while the layer is not yet the lit panel, as the detail is drawn past the layer and would not strike with it.
     var fine: Fine?
     var crisp = 0.0
+    /// The stored map of the committed stack, where the glass has one (`StirMap`): a level's, which `HeldUnstirred`
+    /// gives, never a cover's or a clip's.
+    var map: StirMap.Made?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, Double> {
@@ -99,18 +102,26 @@ struct Unstirred: ViewModifier, Animatable {
         } else if let fine, crisp > 0, !lenses.isEmpty {
             shader.fine = fine
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
+        } else if let map, let mode = StirMap.mode, map.key.side == side, map.key.scale == scale, twists.starts(with: map.key.twists) {
+            // Whatever the map holds of this frame's bottom entries, float for float, it holds rightly: a twist pushed
+            // since, a rod in hand, a tick or the breath run above it. One popped or merged since, or the opening's
+            // wind, leaves it another stack's, and the frame draws through the chain until the next lands.
+            shader.mapped = TankShader.Mapped(image: map.image, kept: map.key.twists.count / 4, rest: map.key.rest, quant: map.quant, mode: mode)
         }
         return shader
     }
 }
 
 /// The level's glass with the turn in hand on top of `rest`, read in this modifier's own body, so a frame of a drag
-/// re-evaluates the shader's arguments and nothing above them (`Hand`).
+/// re-evaluates the shader's arguments and nothing above them (`Hand`). It keeps the glass's stored map (`StirMap`),
+/// asked for by `rest`, the committed glass, so a map landing draws this body again and nothing above it either.
 struct HeldUnstirred: ViewModifier, Equatable {
     let hand: Hand
     let rest: Unstirred
     /// The glass has eased home, where the tank's turn in hand no longer turns it.
     let eased: Bool
+    @Environment(\.displayScale) private var scale
+    @State private var maps = StirMap.Holder()
 
     nonisolated init(hand: Hand, rest: Unstirred, eased: Bool) {
         (self.hand, self.rest, self.eased) = (hand, rest, eased)
@@ -128,11 +139,16 @@ struct HeldUnstirred: ViewModifier, Equatable {
         var u = rest
         u.liveAngle = hand.angle
         if !eased { u.turn += hand.held ?? 0 }
+        if StirMap.mode != nil {
+            maps.want(rest, scale: scale)
+            u.map = maps.made
+        }
         return content.modifier(u)
     }
 }
 
-/// Unstir.metal's `unstir`, or `unstirChannels` where `prism` is set, its arguments by name. `parameters` lists them
+/// Unstir.metal's `unstir`, `unstirChannels` where `prism` is set, `unstirLens` where `fine` is or `unstirMapped`
+/// where `mapped` is, its arguments by name. `parameters` lists them
 /// in the signature's order, each array's count passed with it (`testTheTankShaderPassesTheSignaturesOrder`).
 struct TankShader {
     var centre: CGPoint
@@ -163,7 +179,19 @@ struct TankShader {
         var hold: Float = 0
     }
 
-    var name: String { prism != nil ? "unstirChannels" : fine != nil ? "unstirLens" : "unstir" }
+    /// `unstirMapped`'s own, in place of `unstir`; never with `prism` or `fine`: the stored map's image, how many of the
+    /// bottom entries it holds, the turn it was drawn at, its steps a pixel and how a tap between texels is drawn.
+    var mapped: Mapped?
+
+    struct Mapped {
+        var image: Image
+        var kept: Int
+        var rest: Double
+        var quant: Float
+        var mode: StirMap.Mode
+    }
+
+    var name: String { prism != nil ? "unstirChannels" : fine != nil ? "unstirLens" : mapped != nil ? "unstirMapped" : "unstir" }
 
     var parameters: [(name: String, argument: Shader.Argument)] {
         // The shader reads min(n, count / 4) entries, so an empty stack's pad reads none.
@@ -177,6 +205,11 @@ struct TankShader {
                  ("lensEdge", .float(lensEdge)), ("scale", .float(scale)), ("haze", .float(haze)),
                  ("wave", .float3(wave.x, wave.y, wave.z)), ("turn", .float(turn))]
         if let fine, prism == nil { list += [("atlas", .image(fine.atlas)), ("fine", .floatArray(fine.table))] }
+        if let mapped, prism == nil, fine == nil {
+            list += [("map", .image(mapped.image)),
+                     ("mapped", .float4(Float(mapped.kept), Float(mapped.rest), mapped.quant, mapped.mode.rawValue)),
+                     ("bend", .float(StirMap.bend))]
+        }
         if let prism {
             list += [("isolate", .float(Float(prism.isolate?.rawValue ?? 0))),
                      ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z)),
@@ -220,7 +253,7 @@ extension Unstirred {
         let turns = liveRod == o.liveRod && liveAngle == o.liveAngle && wind == o.wind && shares == o.shares && turn == o.turn
             && breath?.rod == o.breath?.rod && breath?.angle == o.breath?.angle && tick?.rod == o.tick?.rod && tick?.angle == o.tick?.angle
         let look = haze == o.haze && wave == o.wave && isolate == o.isolate && whiteIsolate == o.whiteIsolate && held == o.held
-            && hold == o.hold && fine == o.fine && crisp == o.crisp
+            && hold == o.hold && fine == o.fine && crisp == o.crisp && map == o.map
         return level && turns && look
     }
 

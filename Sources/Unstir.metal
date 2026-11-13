@@ -282,6 +282,100 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
     return finish(acc, stride, haze);
 }
 
+// The stored map (StirMap.swift): where each tap of the glass lands on the picture through the stack's bottom entries,
+// worked out once when the stack changes. Taps sit a quarter pixel off each pixel's centre, a grid of two a pixel, so
+// the map is an image two texels a device pixel, a texel a tap. A texel holds its tap's point on the layer in device
+// pixels, 16 bits a coordinate over two bytes each (red and green, blue and alpha), `quant` steps a pixel: a multiple
+// of 4, so a tap the stack leaves alone is stored exactly.
+static float2 stored(texture2d<half> map, int2 at, float quant) {
+    at = clamp(at, int2(0), int2(map.get_width() - 1, map.get_height() - 1));
+    float4 t = round(float4(map.read(uint2(at))) * 255.0);
+    return float2(t.r + 256.0 * t.g, t.b + 256.0 * t.a) / quant;
+}
+
+static float4 storing(float2 pixel, float quant) {
+    float2 v = clamp(round(pixel * quant), 0.0, 65535.0), high = floor(v / 256.0);
+    return float4(v.x - 256.0 * high.x, high.x, v.y - 256.0 * high.y, high.y) / 255.0;
+}
+
+// The map's four texels of device pixel `pixel`, through the bottom `kept` entries with the glass turned `rest`: its
+// taps as a frame's are (tapsThrough), since a deep stir stretches the last bit of a tap's place into pixels of the
+// picture.
+static void storeTaps(texture2d<float, access::write> map, uint2 pixel, float2 centre, float radius,
+                      device const float *twists, int kept, float plateau, float swirlPlateau, float lensEdge,
+                      float scale, float rest, float quant) {
+    Taps taps = tapsThrough((float2(pixel) + 0.5) / scale, centre, radius, twists, kept, 1, plateau, swirlPlateau,
+                            lensEdge, scale, rest);
+    map.write(storing((centre + taps.q0 * radius) * scale, quant), 2 * pixel);
+    map.write(storing((centre + taps.q1 * radius) * scale, quant), 2 * pixel + uint2(1, 0));
+    map.write(storing((centre + taps.q2 * radius) * scale, quant), 2 * pixel + uint2(0, 1));
+    map.write(storing((centre + taps.q3 * radius) * scale, quant), 2 * pixel + uint2(1, 1));
+}
+
+// Where x, a point of the glass the entries above the map have moved, or any point while the glass is turned off the
+// map's turn (cr and sr its cosine and sine), lands on the layer, in device pixels: read between the map's four
+// nearest texels where those lie as a straight map would put them, to `bend` pixels, and elsewhere the nearest texel's
+// point whole. Deep in a stir the map folds within half a pixel, and a point between two of its points is not one of
+// them: read between them everywhere, vortex 27's breath drew 0.4 of a level brighter (2026-11-12).
+static float2 between(texture2d<half> map, float2 x, float2 centre, float radius, float scale, float cr, float sr,
+                      float quant, float bend) {
+    // No disc reaches past the glass's edge (testEveryDiscLiesWithinTheGlass), so a point outside it is its own.
+    if (dot(x, x) >= 1.0) return (centre + x * radius) * scale;
+    // The point back on the screen as the map was drawn.
+    float2 y = float2(x.x * cr - x.y * sr, x.y * cr + x.x * sr);
+    float2 u = (centre + y * radius) * scale * 2.0 - 0.5, low = floor(u), f = u - low;
+    float2 a = stored(map, int2(low), quant), b = stored(map, int2(low) + int2(1, 0), quant);
+    float2 c = stored(map, int2(low) + int2(0, 1), quant), d = stored(map, int2(low) + int2(1, 1), quant);
+    float2 cross = a + d - b - c;
+    if (dot(cross, cross) > bend * bend) return f.y < 0.5 ? (f.x < 0.5 ? a : b) : (f.x < 0.5 ? c : d);
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+// `unstirBody` over a stored map of the bottom mapped.x entries, drawn with the glass turned mapped.y, at mapped.z
+// steps a pixel. The entries above them (a rod in hand, a tick, the breath, a twist the map has yet to take in) run
+// as they do there, and a tap none of them moves reads its own texel: the point `unstirBody` reaches, to the stored
+// step. A tap they move, or any tap while the glass is turned off the map's turn or the layer lies off the screen's
+// pixels, lands between texels (`between`). mapped.w is StirMap.Mode: 1 draws as said; 0 draws a pixel with any such
+// tap through the whole chain instead, as `unstirBody` does, for holding the two against each other; 2 tints the
+// pixels whose taps all read their own texel green, some yellow and none red.
+template <typename L>
+static half4 unstirMappedBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count,
+                              float n, float fourTaps, float plateau, float swirlPlateau, float lensEdge, float scale,
+                              float haze, float3 wave, float turn, texture2d<half> map, float4 mapped, float bend) {
+    int stride = n > fourTaps ? 3 : 1;
+    int entries = min(int(n), count / 4), kept = min(int(mapped.x), entries), mode = int(mapped.w);
+    float rest = mapped.y, quant = mapped.z;
+    Taps still = tapsThrough(pos, centre, radius, twists, 0, stride, plateau, swirlPlateau, lensEdge, scale, turn);
+    Taps taps = tapsThrough(pos, centre, radius, twists + 4 * kept, entries - kept, stride, plateau, swirlPlateau,
+                            lensEdge, scale, turn);
+    float2 at = (pos * scale - 0.5) * 2.0, whole = round(at);
+    bool off = turn != rest || any(abs(at - whole) >= 0.02);
+    bool m0 = off || any(taps.q0 != still.q0), m3 = off || any(taps.q3 != still.q3);
+    bool m1 = stride == 1 && (off || any(taps.q1 != still.q1)), m2 = stride == 1 && (off || any(taps.q2 != still.q2));
+    if (pastTheGlass(pos, centre, radius, scale) || (mode == 0 && (m0 || m1 || m2 || m3))) {
+        return unstirBody(pos, layer, centre, radius, twists, count, n, fourTaps, plateau, swirlPlateau, lensEdge, scale,
+                          haze, wave, turn);
+    }
+    float cr = cos(rest), sr = sin(rest);
+    int2 own = int2(whole);
+    float2 s0 = m0 ? between(map, taps.q0, centre, radius, scale, cr, sr, quant, bend) : stored(map, own, quant);
+    float2 s3 = m3 ? between(map, taps.q3, centre, radius, scale, cr, sr, quant, bend) : stored(map, own + int2(1, 1), quant);
+    float3 acc = lit(float3(layer.sample(s0 / scale).rgb), taps.p0, wave);
+    if (stride == 1) {
+        float2 s1 = m1 ? between(map, taps.q1, centre, radius, scale, cr, sr, quant, bend) : stored(map, own + int2(1, 0), quant);
+        float2 s2 = m2 ? between(map, taps.q2, centre, radius, scale, cr, sr, quant, bend) : stored(map, own + int2(0, 1), quant);
+        acc += lit(float3(layer.sample(s1 / scale).rgb), taps.p1, wave);
+        acc += lit(float3(layer.sample(s2 / scale).rgb), taps.p2, wave);
+    }
+    acc += lit(float3(layer.sample(s3 / scale).rgb), taps.p3, wave);
+    half4 colour = finish(acc, stride, haze);
+    if (mode == 2) {
+        int moved = int(m0) + int(m1) + int(m2) + int(m3);
+        colour.rgb *= moved == 0 ? half3(0.3h, 1.0h, 0.3h) : moved < (stride == 1 ? 4 : 2) ? half3(1.0h, 1.0h, 0.3h) : half3(1.0h, 0.3h, 0.3h);
+    }
+    return colour;
+}
+
 // twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first. A
 // lens's entry has a negative radius and its flow's time (steps * Tank.lensRate) for the angle.
 // Tank.profile / Tank.twist / Tank.lens in Twist.swift are the Swift copy the tests check; the tests reach lensFlow and
@@ -323,6 +417,16 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
                           haze, wave, turn, atlas, fine, fineCount);
 }
 
+// A level's glass over a stored map of its committed stack (`unstirMappedBody`, StirMap.swift): map is StirMap's
+// image, mapped its (entries held, turn, steps a pixel, StirMap.Mode) and bend StirMap.bend.
+[[ stitchable ]] half4 unstirMapped(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
+                                    device const float *twists, int count, float n, float fourTaps, float plateau,
+                                    float swirlPlateau, float lensEdge, float scale, float haze, float3 wave, float turn,
+                                    texture2d<half> map, float4 mapped, float bend) {
+    return unstirMappedBody(pos, layer, centre, radius, twists, count, n, fourTaps, plateau, swirlPlateau, lensEdge, scale,
+                            haze, wave, turn, map, mapped, bend);
+}
+
 // The GPU bench (UNSTIR_GPUBENCH, GPUBench.swift): the stitchables' own bodies on a texture of the picture, one thread a
 // device pixel, so the phone's GPU clock times exactly the shader the tank draws.
 struct BenchLayer {
@@ -358,4 +462,31 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
         : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
                      a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn);
     out.write(c, gid);
+}
+
+// The stored map's kernels: the map itself, a thread a device pixel from row `row` down (StirMap draws it a strip at
+// a time), and the oracle's bench's frame over it. MapArgs is StirMap.Args' layout.
+struct MapArgs {
+    float radius, scale, centreX, centreY, plateau, swirlPlateau, lensEdge, rest, quant, mode, bend;
+    int kept, row;
+};
+
+kernel void stirMap(texture2d<float, access::write> map [[texture(0)]], device const float *twists [[buffer(0)]],
+                    constant MapArgs &m [[buffer(1)]], uint2 gid [[thread_position_in_grid]]) {
+    uint2 pixel = gid + uint2(0, m.row);
+    if (2 * pixel.x >= map.get_width() || 2 * pixel.y >= map.get_height()) return;
+    storeTaps(map, pixel, float2(m.centreX, m.centreY), m.radius, twists, m.kept, m.plateau, m.swirlPlateau, m.lensEdge,
+              m.scale, m.rest, m.quant);
+}
+
+kernel void benchMapped(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                        texture2d<half> map [[texture(3)]], device const float *twists [[buffer(0)]],
+                        constant BenchArgs &a [[buffer(2)]], constant MapArgs &m [[buffer(4)]],
+                        uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+    BenchLayer layer = { picture, a.scale };
+    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius) + float2(a.nudgeX, a.nudgeY) / a.scale;
+    out.write(unstirMappedBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
+                               a.lensEdge, a.scale, a.haze, float3(0, 0, -1), a.turn, map,
+                               float4(m.kept, m.rest, m.quant, m.mode), m.bend), gid);
 }

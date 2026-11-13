@@ -18,6 +18,7 @@
 #                                              in turn, ORACLE_RUNS launches (3), holding $ORACLE_LOCK through each
 #                                              (shots/oracle/time: each run's lines, and the last's frames)
 #   scripts/twist-oracle.sh benchdiff <method> holds a timed method's frames against today's by the same rule
+#   scripts/twist-oracle.sh cases [pattern]    prints the timed cases as the bench takes them (scripts/gpu-bench.sh twists)
 #   scripts/twist-oracle.sh clean              deletes the oracle's simulator
 #
 # ORACLE_SIM names the simulator; unset, one named for this checkout is made on the first call (a Pro Max) and found
@@ -165,12 +166,9 @@ films() {  # set pattern
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
 }
 
-timing() {  # pattern
-  local pattern=$1 cases="" kind n sweep better isCalm secs vars seen="" run out data f
-  : "${ORACLE_LOCK:?set ORACLE_LOCK to the file every GPU timing on this Mac locks}"
-  sim
-  fresh
-  # A sweep is timed at its first value.
+# The bench's cases, as UNSTIR_ORACLECASES takes them. A sweep is timed at its first value.
+timed() {  # pattern
+  local pattern=$1 cases="" kind n sweep better isCalm secs vars seen=""
   while IFS='|' read -r kind n sweep better isCalm secs vars; do
     # The glass alone: a frame with the chrome round it, the menu's or a card's times nothing more, and the bench
     # draws no wave.
@@ -179,6 +177,15 @@ timing() {  # pattern
     seen="$seen $sweep"
     cases="$cases${sweep:-$n}|$(for kv in $vars; do printf 'UNSTIR_%s ' "$kv"; done);"
   done < <(list)
+  printf '%s' "$cases"
+}
+
+timing() {  # pattern
+  local cases run out data f
+  : "${ORACLE_LOCK:?set ORACLE_LOCK to the file every GPU timing on this Mac locks}"
+  sim
+  fresh
+  cases=$(timed "$1")
   data=$(xcrun simctl get_app_container "$udid" "$bundle" data)
   out=shots/oracle/time
   mkdir -p "$out"
@@ -248,6 +255,7 @@ case "${1:-}" in
   control) python3 scripts/twist-oracle.py control "$ref" "${2:-}" ;;
   film) films "${2:?a set name}" "${3:-}" ;;
   time) timing "${2:-}" ;;
+  cases) timed "${2:-}" ;;
   benchdiff)
     dir=shots/oracle/time/frames
     (cd "$dir/today" && ls *.png) | sed 's/\.png$//' | awk '{ print $0 "\t\t" }' > "$dir/today/cases.tsv"
@@ -257,5 +265,5 @@ case "${1:-}" in
     udid=${ORACLE_SIM:-$(xcrun simctl list devices | grep -F "$name (" | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
     [[ -n "$udid" ]] && xcrun simctl delete "$udid"
     ;;
-  *) sed -n '3,29p' "$0"; exit 2 ;;
+  *) sed -n '3,30p' "$0"; exit 2 ;;
 esac
