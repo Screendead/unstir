@@ -1,8 +1,9 @@
 # App Store page
 
 Drafted 2026-10-27; Jack's calls ST1 to ST7 applied 2026-10-29, each A, so each section holds the chosen text and the
-options set aside under it. Revised 2026-11-13 against the game as built: every passage changed that day is a proposal
-until Jack approves it, marked "proposed 2026-11-13", and the text he approved stands in this file's history. Every
+options set aside under it. Revised 2026-11-13 against the game as built: every passage changed that day is marked
+"proposed 2026-11-13", and Jack approved the wording the same day, with one change, the bundle's product id; the text
+it replaced stands in this file's history. The calls those passages leave to Jack stay his. Every
 character count below was measured with a script, not by eye. Anything legal is marked **(check)**: nothing here
 settles it.
 
