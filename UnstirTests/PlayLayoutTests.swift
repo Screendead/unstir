@@ -691,6 +691,17 @@ final class PlayLayoutTests: XCTestCase {
         return (t.0, t.1, t.2, t.3)
     }
 
+    private typealias Tallest = (what: String, env: [String: String], store: () -> Void,
+                                 p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))
+    @MainActor private static var shortestsTallest: Tallest?
+    /// The tallest candidate on the shortest phone at the play screen's largest type, measured once a run.
+    @MainActor private func shortestsTallest() -> Tallest {
+        if let kept = Self.shortestsTallest { return kept }
+        let t = tallestCard(screens[0], type: PlayLayout.typeCap)
+        Self.shortestsTallest = t
+        return t
+    }
+
     /// The play screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"). On the shortest and
     /// the largest phone every candidate is measured afresh at the play screen's largest type and the tallest stands
     /// whole; every other screen, and every smaller type on the shortest phone, places the shortest phone's tallest.
@@ -699,7 +710,7 @@ final class PlayLayoutTests: XCTestCase {
     @MainActor func testEveryCardStandsWholeOnOneScreenOnEveryScreenAtEveryType() {
         let all = ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1"
         let shortest = screens[0]
-        let pick = tallestCard(shortest, type: PlayLayout.typeCap)
+        let pick = shortestsTallest()
         func placed(_ screen: Screen, _ type: DynamicTypeSize) -> (what: String, p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?)) {
             if all || (screen.name == "Pro Max" && type == PlayLayout.typeCap) {
                 let t = tallestCard(screen, type: type)
@@ -737,7 +748,21 @@ final class PlayLayoutTests: XCTestCase {
     /// there stands whole, the glass simply smaller.
     @MainActor func testOnAWindowShorterThanAnyPhoneTheGlassGivesWayAndTheCardStandsWhole() {
         let short = Screen(name: "the stand-in", window: CGSize(width: 375, height: 567), insets: (20, 0, 0, 0))
-        let tallest = tallestCard(short, type: PlayLayout.typeCap)
+        // A card keeps its own height whatever the window's, and the stand-in is as wide as the shortest phone, so
+        // that phone's tallest card is the tallest here; `UNSTIR_SLOW_TESTS=1` measures every candidate here too.
+        let tallest: (what: String, p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))
+        if ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1" {
+            let t = tallestCard(short, type: PlayLayout.typeCap)
+            tallest = (t.what, t.p)
+        } else {
+            let pick = shortestsTallest()
+            XCTAssertEqual(short.window.width, screens[0].window.width)
+            forgetEveryBest()
+            pick.store()
+            tallest = (pick.what, try! XCTUnwrap(placedCard(pick.env, short, type: PlayLayout.typeCap)))
+            XCTAssertEqual(tallest.p.frame.height, pick.p.frame.height, accuracy: 0.5, "the card keeps its height")
+            forgetEveryBest()
+        }
         print("card placed: the stand-in at the cap, \(tallest.what): \(tallest.p.frame) scale \(tallest.p.fit?.scale ?? 1)")
         standsWhole(tallest.p, on: short, "the stand-in: \(tallest.what)")
         XCTAssertLessThan(try! XCTUnwrap(tallest.p.fit).scale, 0.55, "the glass gave way past the old least")
