@@ -54,9 +54,9 @@ enum Achievement: String, CaseIterable, Sendable {
     var goal: String {
         switch self {
         case .firstDrop: "Unstir a Plughole level."
-        case .downThePlughole: "Reach par on every Plughole level."
-        case .intoTheVortex: "Reach par on every Whirlpool level."
-        case .theMaelstrom: "Reach par on every Vortex level."
+        case .downThePlughole: "Solve every Plughole level."
+        case .intoTheVortex: "Solve every Whirlpool level."
+        case .theMaelstrom: "Solve every Vortex level."
         case .unstirred: "Reach par on every level of every tier."
         case .noWake: "Solve a level clean: at par on the first try, with no undo or reset."
         case .turnOfTheTide: "Turn the tank."
@@ -75,9 +75,9 @@ enum Achievement: String, CaseIterable, Sendable {
     var earned: String {
         switch self {
         case .firstDrop: "Unstirred a Plughole level."
-        case .downThePlughole: "Every Plughole level at par."
-        case .intoTheVortex: "Every Whirlpool level at par."
-        case .theMaelstrom: "Every Vortex level at par."
+        case .downThePlughole: "Solved every Plughole level."
+        case .intoTheVortex: "Solved every Whirlpool level."
+        case .theMaelstrom: "Solved every Vortex level."
         case .unstirred: "Every level of every tier at par."
         case .noWake: "Solved a level clean."
         case .turnOfTheTide: "Turned the tank."

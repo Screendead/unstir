@@ -23,7 +23,7 @@ struct Clip: Sendable {
         fatalError("a clip has reels")
     }
 
-    /// Each offer's clip. Complete cuts between the packs it grants.
+    /// Each offer's clip. Triptych I cuts between the packs it grants.
     static func of(_ offer: Offer) -> Clip {
         switch offer {
         #if FIRST_STIR
@@ -533,7 +533,7 @@ struct ClipPlayer: View {
 
     /// Every reel stays drawn, the others clear and held at their start, so a cut never waits on a picture's bake or
     /// strike. Only First Stir's reel has a caption under its tank, so the reels share a top, not a centre, or a
-    /// Complete clip's tank would jump at each cut to or from it.
+    /// Triptych I's clip tank would jump at each cut to or from it.
     private func frame(_ t: Double) -> some View {
         let (_, i, u) = clip.reel(at: t)
         return ZStack(alignment: .top) {

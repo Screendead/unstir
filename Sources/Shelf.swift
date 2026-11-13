@@ -64,7 +64,7 @@ enum Offer: Hashable, Sendable {
     /// unless it saves something and every price that takes is known (Jack's call C7, round 13).
     static func saving(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Decimal? {
         let left = bundled.filter { !owned.contains($0) }.map { amounts[$0.productID] }
-        guard !left.isEmpty, let complete = amounts[Pack.completeID], !left.contains(nil) else { return nil }
+        guard !left.isEmpty, let complete = amounts[Pack.triptychID], !left.contains(nil) else { return nil }
         let saving = left.compactMap { $0 }.reduce(0, +) - complete
         return saving > 0 ? saving : nil
     }
@@ -77,7 +77,7 @@ enum Offer: Hashable, Sendable {
     static func offersComplete(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Bool {
         let left = bundled.filter { !owned.contains($0) }
         guard !left.isEmpty else { return false }
-        let needed = [Pack.completeID] + left.map(\.productID)
+        let needed = [Pack.triptychID] + left.map(\.productID)
         if needed.allSatisfy({ amounts[$0] != nil }) { return saving(amounts: amounts, owned: owned, bundled: bundled) != nil }
         return left.count == bundled.count && needed.allSatisfy { amounts[$0] == nil }
     }
@@ -104,7 +104,7 @@ enum Offer: Hashable, Sendable {
 
     var name: String { pack?.name ?? Offer.bundleName }
 
-    var productID: String { pack?.productID ?? Pack.completeID }
+    var productID: String { pack?.productID ?? Pack.triptychID }
 
     var pitch: String {
         switch self {
@@ -199,7 +199,7 @@ extension Store {
         case .complete:
             let l = harness ?? ledger
             if Pack.bundled.allSatisfy({ l.state($0) == .owned }) { return .owned }
-            return l.products[Pack.completeID] ?? .unowned
+            return l.products[Pack.triptychID] ?? .unowned
         }
     }
 
@@ -328,7 +328,7 @@ extension Offer {
 
 /// An offer's cover in a tank: its clip's level on its own picture, as the game draws it, stirred by the stack its clip
 /// opens on, the level's own deal for every pack but Lens (`Reel.lensOpening`). `clock` nil holds it so; otherwise the
-/// loop at that time: clean, stirred in bottom first, then unstirred top first a move at a time. Complete's shows a wedge of each pack's, cut from the centre, the first
+/// loop at that time: clean, stirred in bottom first, then unstirred top first a move at a time. Triptych I's shows a wedge of each pack's, cut from the centre, the first
 /// centred at the top, each on its own loop. Its knobs are drawn as the game draws them, each turned by its rod's share
 /// of the stack, and a clock's ratchet counts what it owes, so a cover shows how its pack plays (Jack, round 16); a
 /// wedge whose key knob (a clock, else a lens, else a masked rod) falls outside it is turned to bring it in.
@@ -487,7 +487,7 @@ struct PackClip: View {
 
 // MARK: - The card
 
-/// A pack's card, or Complete's: its clip, what it assumes, the free taste, the App Store's price, buy and restore, and
+/// A pack's card, or Triptych I's: its clip, what it assumes, the free taste, the App Store's price, buy and restore, and
 /// the pack's levels once it has them.
 struct PackCard: View {
     let offer: Offer
@@ -501,11 +501,11 @@ struct PackCard: View {
     var focus: Level?
     /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
     var arrived = false
-    /// Where back goes: the menu, or Complete's card when this card was opened from it.
+    /// Where back goes: the menu, or Triptych I's card when this card was opened from it.
     var backTo = PackCard.menu
     let onBack: () -> Void
     let onPlay: (Level) -> Void
-    /// Complete's card opens a pack's card from its name.
+    /// Triptych I's card opens a pack's card from its name.
     var onOffer: (Offer) -> Void = { _ in }
     /// Beside the menu's list in a wide window, not over it, so VoiceOver reaches both.
     var beside = false
@@ -707,7 +707,7 @@ struct PackCard: View {
     static var menu: String { String(localized: "menu", comment: "A pack's card: its back button, to the menu") }
 
     /// The way out's words and VoiceOver's. Beside the list the menu is already in sight, so going back to it closes
-    /// the card (Jack's call d4-menuback = B, round 16); back to Complete's card reads as ever.
+    /// the card (Jack's call d4-menuback = B, round 16); back to Triptych I's card reads as ever.
     static func back(to: String, beside: Bool) -> (text: String, spoken: String) {
         beside && to == menu
             ? ("\u{2715} " + String(localized: "close", comment: "A pack's card beside the menu: closes it"),
@@ -849,7 +849,7 @@ struct PackCard: View {
                           comment: "The bundle's card, owned. Its packs, counted in words")
                  : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), .lime)
         case .pending:
-            // A pack can wait on Complete's request alone, which only Complete's card asks again.
+            // A pack can wait on Triptych I's request alone, which only Triptych I's card asks again.
             let asked = store.asked(offer)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
@@ -920,7 +920,7 @@ struct PackCard: View {
             }
         } else {
             // A declined Ask to Buy sends no transaction, so an asked pill stays live: tapping it sends a new request.
-            // A pack waiting only on Complete's request is bought alone.
+            // A pack waiting only on Triptych I's request is bought alone.
             let asked = store.asked(offer)
             let label = switch state {
             case _ where buying: String(localized: "buying\u{2026}", comment: "The buy pill, a purchase running")
@@ -1037,9 +1037,9 @@ struct PackCard: View {
         }
     }
 
-    /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
+    /// Triptych I's failure stays off the pack's own status, so it is said here, beside the button that tried.
     private func completeLine(_ saving: String) -> some View {
-        let complete = store.price(Pack.completeID) ?? ""
+        let complete = store.price(Pack.triptychID) ?? ""
         let quiet = Color.text3
         // Non-breaking within each part, so a narrow phone or a large size wraps the line only before "· save".
         func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
@@ -1057,14 +1057,14 @@ struct PackCard: View {
                 .hit(10, 8)
             }
             .buttonStyle(Sounding())
-            // Complete's own request is asked again only from Complete's card.
+            // Triptych I's own request is asked again only from Triptych I's card.
             .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy \(Offer.bundleName), \(Pack.named(Pack.bundled))")
             .accessibilityValue("\(complete), saves \(saving)")
             if store.state(.complete) == .failed {
                 Text("\(Offer.bundleName)'s purchase didn't go through").font(.ui(.detail, .semibold)).foregroundStyle(Color.magenta)
                     .fixedSize(horizontal: false, vertical: true)
-                if let why = store.failures[Pack.completeID]?.words { detail(why) }
+                if let why = store.failures[Pack.triptychID]?.words { detail(why) }
             }
         }
     }
@@ -1107,7 +1107,7 @@ private struct PulsingDot: View {
 
 // MARK: - The dock
 
-/// The menu's shelf: a live cover per pack and Complete along the bottom, each opening its card. Out of step, so the
+/// The menu's shelf: a live cover per pack and Triptych I along the bottom, each opening its card. Out of step, so the
 /// dock never stirs all at once. Equatable on what it is handed, since the menu redraws on every frame of a scroll and
 /// each cover's marks read the saved bests.
 struct PackDock: View, Equatable {
@@ -1164,7 +1164,7 @@ struct PackDock: View, Equatable {
     var body: some View {
         VStack(spacing: 10) {
             let owned = Pack.sold().filter { store.state($0) == .owned }
-            // Complete only while it costs less than the packs left: owned, it saves nothing.
+            // Triptych I only while it costs less than the packs left: owned, it saves nothing.
             let shelf = Offer.shelf().filter { $0 != .complete || store.offersComplete }
             HStack {
                 if let yours = store.approved.first {

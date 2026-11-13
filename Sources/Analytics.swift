@@ -303,9 +303,9 @@ final class Analytics {
     func cardSeen(_ pack: Pack) { once("card", pack.rawValue) }
     func tasteFinished(_ pack: Pack) { once("taste", pack.rawValue) }
 
-    /// A verified purchase made on this phone, of a pack or Complete.
+    /// A verified purchase made on this phone, of a pack or Triptych I.
     func purchased(_ productID: String) {
-        let name = productID == Pack.completeID ? "complete" : Pack.allCases.first { $0.productID == productID }?.rawValue
+        let name = productID == Pack.triptychID ? "complete" : Pack.allCases.first { $0.productID == productID }?.rawValue
         if let name { once("purchased", name) }
     }
 
