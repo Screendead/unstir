@@ -17,7 +17,8 @@ Unstir is a puzzle game made by {{DEVELOPER_NAME}}, its developer ("we", "us").
 The game itself collects no personal data. It has no account, no ads, no analytics and no tracking. It talks only to
 Apple's services: the App Store, through StoreKit, for prices and purchases, and, where a US state law asks, Apple's
 age-range check. The one exception is this policy's web page, which the game loads when you open it from settings.
-The only data we ever receive is an email you choose to send us.
+The only data we ever receive is an email you choose to send us and, if you test a beta through Apple's TestFlight,
+what Apple passes on about your testing.
 
 ## What stays on your phone
 
@@ -74,6 +75,13 @@ game working. You never have to send anything; if you don't, we can't look into 
 {{EMAIL_PROVIDER}} in {{EMAIL_PROVIDER_COUNTRY}}. Nobody else sees it, unless the law requires us to show it, for
 example to the regulator. We delete the email and any log once the report is dealt with, and within 12 months of your
 last message at the latest.
+
+## If you test a beta
+
+If you test a beta through Apple's TestFlight, Apple tells us how many sessions you played and on which days, and
+passes on any feedback, screenshots or crash reports you send through TestFlight. Apple identifies you to us only by an
+opaque tester id, or by the name and email you were invited under. We use this only to improve the game, keep it no
+longer than 12 months, and never share it.
 
 ## Your rights
 
