@@ -163,11 +163,12 @@ enum StirMap {
                     tileR: slots.x, tileG: slots.y, tileB: slots.z, kept: Int32(key.twists.count / 4))
     }
 
-    /// A map drawn: its image, and for the log the GPU's time over its strips.
+    /// A map drawn: its image, and for the log the GPU's time over its strips and the bytes its surface took.
     struct Drawn: @unchecked Sendable {
         var image: CGImage
         var gpu: Double
         var strips: Int
+        var bytes: Int
     }
 
     private struct GPU: @unchecked Sendable {
@@ -230,7 +231,7 @@ enum StirMap {
         }
         let image = CIImage(ioSurface: surface, options: [.colorSpace: NSNull()])
         return gpu.context.createCGImage(image, from: image.extent, format: .BGRA8, colorSpace: CGColorSpace(name: CGColorSpace.sRGB), deferred: true)
-            .map { Drawn(image: $0, gpu: seconds, strips: count) }
+            .map { Drawn(image: $0, gpu: seconds, strips: count, bytes: IOSurfaceGetAllocSize(surface)) }
     }
 
     /// `draw` off the main actor, one map at a time.
@@ -309,8 +310,9 @@ enum StirMap {
         /// usual one, and the app's memory.
         private func report(_ key: Key, _ drawn: Drawn, took: Double) {
             guard StirMap.logs else { return }
-            Log.write(String(format: "stirmap: %d entries at %d px, %d tiles, %.1f MB, drawn in %.1f ms, %.2f ms of the GPU's in %d strips",
-                             key.twists.count / 4, 2 * key.pixels, key.tiles.count, Double(key.bytes) / 1e6, took * 1000, drawn.gpu * 1000, drawn.strips))
+            Log.write(String(format: "stirmap: %d entries at %d px, %d tiles, %.1f MB (%.1f allocated), drawn in %.1f ms, %.2f ms of the GPU's in %d strips",
+                             key.twists.count / 4, 2 * key.pixels, key.tiles.count, Double(key.bytes) / 1e6, Double(drawn.bytes) / 1e6,
+                             took * 1000, drawn.gpu * 1000, drawn.strips))
             gaps.landed()
         }
         #else
