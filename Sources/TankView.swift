@@ -334,6 +334,11 @@ struct LevelView: View {
     @State private var rimColours: (hue: [Float], lines: [Float])?
     /// Endless: the brim changed lately enough that the rim is still moving.
     @State private var brimMoving = false
+    /// A level's brim (every mode but endless's): each change of the stack's size, and the size it opened at.
+    @State private var stackEvents: [Brim.Event] = []
+    @State private var stackBase = 0
+    /// A level's brim takes the level's colour, as its number does: only endless's grid has colours read off the rim.
+    private let stackColours: (hue: [Float], lines: [Float])
     /// The picture has landed and struck.
     @State private var struck = false
     /// Lens: the panel's detail for the glass's size (`Halftone.Detail`), once baked, and whether the strike has ended.
@@ -430,6 +435,10 @@ struct LevelView: View {
             if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
         }
         _game = State(initialValue: game)
+        _stackBase = State(initialValue: game.stack.count)
+        var (red, green, blue): (CGFloat, CGFloat, CGFloat) = (0, 0, 0)
+        UIColor(level.colour).getRed(&red, green: &green, blue: &blue, alpha: nil)
+        stackColours = Brim.colours(flat: simd_clamp(SIMD3(Double(red), Double(green), Double(blue)), .zero, .one))
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
         _heldChannels = State(initialValue: live.map { level.masks[game.slot(of: $0.rod)] ?? .white })
@@ -2052,6 +2061,17 @@ struct LevelView: View {
                     }
                     .position(at(fk))
                 Bezel(r: r)
+                if game.level.run == nil {
+                    // Under the knurl, so a turning tank's milled edge reads over the liquid as over the steel.
+                    BrimRing(r: r, brim: game.stack.count, events: stackEvents, base: stackBase, colours: stackColours,
+                             held: brimHeld, still: frozenClock == nil && reduceMotion,
+                             paused: !(brimMoving || game.stack.count >= Tank.maxStack - 1), stack: true)
+                        .keyframeAnimator(initialValue: 0.0, trigger: struck) { ring, o in
+                            ring.opacity(o)
+                        } keyframes: { _ in PictureLayer.strike(calm: reduceMotion || dimFlashing) }
+                        .modifier(StackBrimClock(count: game.stack.count, events: $stackEvents, base: $stackBase,
+                                                 moving: $brimMoving, frozen: frozenClock != nil))
+                }
                 if game.level.motion != .none {
                     InHand(hand: hand) { h in Knurl(r: r, angle: turn + inHand(h), held: h.turning) }
                         .opacity(showResult && !game.spilled ? 0 : 1)
@@ -3212,5 +3232,33 @@ struct Knurl: View {
         .opacity(held ? 1 : 0.85)
         .frame(width: 2 * r, height: 2 * r)
         .allowsHitTesting(false)
+    }
+}
+
+/// A level's brim's record of the stack's size: each change as a `Brim.Event`, older ones folded into the base once a
+/// spring has settled, and `moving` while the last still springs.
+private struct StackBrimClock: ViewModifier {
+    let count: Int
+    @Binding var events: [Brim.Event]
+    @Binding var base: Int
+    @Binding var moving: Bool
+    let frozen: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: count) { was, now in
+                events.append(Brim.Event(from: was, to: now, time: Date.now.timeIntervalSinceReferenceDate))
+                while events.count > 8 {
+                    let e = events.removeFirst()
+                    base += e.to - e.from
+                }
+            }
+            .task(id: events.last?.time) {
+                guard let last = events.last, !frozen else { return }
+                moving = true
+                let left = Brim.settle - (Date.now.timeIntervalSinceReferenceDate - last.time)
+                guard (try? await Task.sleep(for: .seconds(max(left, 0)))) != nil else { return }
+                moving = false
+            }
     }
 }
