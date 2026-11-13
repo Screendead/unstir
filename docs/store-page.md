@@ -313,7 +313,7 @@ device identifier.
 
 | Option | Label |
 |---|---|
-| **A (Jack, ST7)** | Don't declare it: optional, infrequent, started by the player each time, through a system sheet that shows where it goes |
+| **A (Jack, 2026-11-13, for the mail as it now works; ST7 chose it for the share-sheet button)** | Don't declare it: optional, started by the player each time, and shown to the player, address, log and all, before it is sent |
 | B, set aside | Declare Diagnostics › Other Diagnostic Data, linked (an email carries the sender's address) |
 
 A rests on Apple's "optional disclosure" criteria, unchecked against the current App Privacy page **(check)**; B is
@@ -330,9 +330,9 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 5. "Every stir in this tank has an exact inverse." left the menu for this page (Jack's call D1 = A, round 13). Which
    field carries it, the description's rule paragraph or a later promotional text, is not yet decided, so the chosen
    texts above are as Jack approved them.
-6. The send-log button's label answer (ST7 = A, don't declare it) was decided for a share-sheet button. The button now
-   opens a mail already addressed to the developer, its log attached and the device line in the body, so the call goes
-   back to Jack with the mechanism as built (proposed 2026-11-13).
+6. ~~The send-log button's label answer (ST7 = A, don't declare it) was decided for a share-sheet button; the button
+   now opens a mail already addressed to the developer.~~ Jack decided it again for the mail as it now works
+   (2026-11-13): the label stays Data Not Collected and the mail is not declared.
 7. iCloud sync and Game Center are built but off (`ICLOUD = NO`, `GAME_CENTER = NO` by default). If either ships on, the description's last line, the privacy label and the privacy policy
    change before the build goes to review.
 8. `Share.url` and `Share.firstDay` are still empty, so the share line names the date and carries no link (Jack's calls
