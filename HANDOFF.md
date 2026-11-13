@@ -43,127 +43,23 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 ### Maelstrom levels that need a plan (2026-11-12)
 
-Jack dropped maelstrom's promise that the park rule reaches par however its ties go: "It's the last free tier; it's
-supposed to be a challenge." Built on `maelstrom-plan`: `scripts/maelstrom-levels.sh` (measure the table, deal
-candidates with the first search's seeds, keeping those where every rule of thumb's best tie misses par, no detour, no
-two dealt stirs joined into one move (so the plan is in the turns, not stir order), and the park line keeps the tank
-turning); twelve rows dealt again, M6, M11-M14, M19-M22 and M24-M26, each needing a plan;
-M1-M5, the noted levels (M8, M10, M18), the layouts' openers, M23 (the store's shot) and the finale M27 kept;
-`testMaelstromParIsTheOptimum` pins par and which rows need a plan. Waits for Jack: he sees the rows first (the PR's
-table). Search yield: pent and quad give hundreds a band in 20,000 seeds; hex picks came from a partial pool (a run stopped
-early, the two-apart 18-25 band never started), random generator only, not the first search's plan-first one. Not
-measured: how they play. Films showing maelstrom 22 (`heartbeat-maelstrom22-chainmail`) show the old deal until
-filmed again.
+Closed: moved word for word to `docs/history.md`.
 
 ### Escapement's wait comes back (2026-11-12)
 
-A side agent flagged that without the wait Escapement's finale (and 18 of 30 problems) measured 0.0 bits. Claude
-measured two rules that keep the wait out (`esc-rule-measure`, pushed, no PR; `scripts/escapement.sh rules`, `local`,
-`avail`): slips (a tick that would push turns nothing, k a level) double the bits of problems that had some (28: 3 to 6)
-but leave the zeros; local ticks (a clock ticks only when the turned knob crosses it) break 23 of the 29 deals and
-fresh deals score 0 in 97 to 99 in 100. The cause: along each line, at most moves only one whole heal is open at all;
-each tick lays a clock seam over the heal beneath. Jack then reversed his call (round 20).
-
-- #207 (`esc-wait-back`): reverts #194's app, book and shots (every deal back byte for byte), merges #191's wait
-  button, keeps "Tempo", "No move is spare." and "Counterweight" as decided. PR test set passes locally (481).
-  Waits for Jack: it changes what the player sees.
-- Open for Jack, pitched: chapter 2's line ("No move is spare." against a chapter that waits), level 7's name
-  (Counterweight against Pause), the button's word ("wait" against "tick").
-- Moot: the longer-finale call (`esc-finale-longer` deleted); the finale is the pre-#194 two-clock hex again.
-- After it merges: Escapement 29's sound layer rendered again on the old deal; the store shots and films showing
-  Escapement 2 retaken (its line waits again).
+Closed: moved word for word to `docs/history.md`.
 
 ### Open work (finish-and-pitch, 2026-11-11 night, after Jack's answers)
 
-Jack answered all six calls of the second follow-up page. His notes, verbatim. On the curtain call (he picked
-"change something first"): "I want the text within the glass. You spaced the text below the glass far too close to
-it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided?
-It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small
-screens." On Prism: "This is a fantastic solution to the problem. Well done." On the credit: "made by screendead ·
-thank you for playing".
-
-**Decided, to do this run**
-
-1. Record the six answers (round 19). Done here.
-2. Level 7 is named "Counterweight": the shown name only, its id and picture as they are (#203). The pause-mark
-   picture is set aside.
-3. Curtain call (#201): the credit back inside the glass wherever the lines fit at full text size, as Jack saw it
-   when he picked; where they don't fit, the glass shrinks and the words stand under it, with more room between
-   glass and words than #201 gave. The credit's words change. Shown to Jack again before it merges: his pick said
-   so. The sounds, the shorter hold and Escapement's smaller title size stand, as his note names only the text.
-4. Prism: the fade-in treatment goes from `prism-read`'s harness switch into the game (shader and Swift copy
-   together), its per-pixel cost timed. The PR opens and waits: his option was "on your phone before it is merged",
-   and the phone needs him to unlock it.
-5. Owed from before: `docs/escapement-problems.md` without the wait (done here); Escapement 29's layer rendered
-   again on its new deal (done, `scripts/sounds.sh layers`, nothing tracked changed); the loc-lint baseline removed
-   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator: done on `store-ios27` (local,
-   unpushed). Giving the scheme's test action the StoreKit configuration (xcodegen writes it only to run, so a
-   `postGenCommand` adds it) ends the hang, but `testAskToBuyDeclinedGrantsNothing` (lens owned after a declined
-   ask) and `testRefundRevokesThePack` (no complete-pack transaction) fail on 27.2 alone; next, those two.
-
-**Undecided, pitched 2026-11-11 night** (https://claude.ai/artifact/Q4p5NRvFtmJyRSHAw6U3v7; picks in its `picks`
-collection):
-
-- The curtain call again, with the text inside the glass (#201 pushed): Jack's credit is wider than the glass on
-  every phone and breaks after the dot; the recommendation drops the dot when it breaks. Prism (#205) waits on
-  his phone, a to-do on the page.
-- The PR test job: 6 of the last 18 PR runs passed 10 minutes and #201's last took 14:21, 39 s under the hard stop.
-  Options: catch the stall and trim the start (recommended), a larger runner, or move the line.
-
-**Waiting**
-
-- The store screenshot, editors' reel and promo image showing Escapement 2 are retaken once, after the curtain call
-  merges. `shots/` is untracked, so a retake now would only be redone.
-- Stopwatch (Escapement 11) still rests on one proved line; the whole-book prover run stalls on it.
+Closed: moved word for word to `docs/history.md`.
 
 ### Open work (2026-11-11, after Jack's calls on Escapement, Lens, Prism and the payoff)
 
-**Merged on master**: #194 (Escapement's clocks can't be touched; the twenty levels that needed a wait are dealt
-again), #195 (Lens's Spectacles, Bifocals and Night vision redrawn and on the three-rod glass; it carried #190),
-#196 (Escapement's thirty pictures) and #200 (undo steps aside while reset is armed and the row cannot hold both
-labels on a line each). #191 (the labelled wait button) is closed. Jack's calls on them are in round 18 of
-`docs/decisions.md`. Escapement's per-move notes starting again each level, and VoiceOver's "next, not played", stay
-as built.
-
-**Open**: PR #201, the curtain call (Jack picked it: "I just don't like how A re-stirs to reward you for unstirring.
-Curtain call looks cleanest to me."), finished and waiting for Jack, as it differs from what he saw: the credit sits
-under the glass, the glass shrinks for long lines, the sounds are quieter, the hold is shorter, Escapement's name is
-in the smaller size. Its decision row lands with it. Local and unpushed: `prism-read`, three treatments for reading
-the picture while a rod turns (dim the other rods; the rod's colours in white; dim what is out of register) behind a
-harness switch, untested. Jack on Prism: "The issue with reading was not reading the knobs. It was with reading the
-picture itself while turning the rod. I think you investigated the wrong problem here." `store-ios27`: StoreKit
-tests hang at the first purchase on the iOS 27.2 simulator, locally and on the runner; next, a StoreKit
-configuration set at the scheme level.
-
-**Answered by Jack, 2026-11-11 night** (round 19 of `docs/decisions.md`; the section above has the work they start):
-chapter 2 stays "Tempo" with its rule line; level 7 becomes "Counterweight" on its picture; Snooze and Standstill
-stay; Prism takes its held rod in its own colour with white fading in near the count; the curtain call is to change
-before it merges (the text inside the glass); the credit reads "made by screendead · thank you for playing".
-
-**Owed**: retake the store screenshot, editors' reel and promo image showing Escapement 2; Stopwatch (11) rests
-on one proved line; the PR test job ran about 12 minutes on #201, over Jack's 10-minute line, to raise with him with
-a proposal; remove the empty `scripts/loc-lint/baseline.txt` and its test's read of it.
-
-The earlier record of this run, "Open work (finish-and-pitch, 2026-11-09)", is closed: moved word for word to
-`docs/history.md`.
+Closed: moved word for word to `docs/history.md`.
 
 ### Open work (finish-and-pitch, 2026-11-09)
 
 Closed: moved word for word to `docs/history.md`.
-
-**The payoff, picked (PAYOFF = C).** Jack took the curtain call over the glass stirring itself and the counting
-bezel: "I just don't like how A re-stirs to reward you for unstirring. Curtain call looks cleanest to me." Built
-on `curtain-call` with no switch, the other two options and draft #198 dropped, the rating prompt's and Game
-Center's timing fix lifted out as its own commit: a tier's or a pack's holds the screen 3.2 s and the game's 7.4 s
-(2.6 s and 5 s under Reduce Motion), a tap ends it, its strings are in the catalog, and where the words would pass
-the glass's edge the glass shrinks and they stand under it. After the game the credit, in Jack's words "made by
-screendead · thank you for playing" (VoiceOver: "Made by screendead. Thank you for playing."), stands inside the glass
-under "every tier unstirred", as in the prototype he picked, broken at its dot onto two lines, the dot dropped (Jack, 2026-11-12), as one line is
-wider than the glass's chord there on every phone; where the lines don't fit (small phones at larger text) they
-stand 34 pt under the shrunk glass (was 20, which Jack found far too close). **Jack's, still open**: whether a tier finished with levels still over par, whose card then shows the next
-tier locked, should get the curtain at all (it does: every level holds a best). **Owed**: its frame rate on the
-phone, and its sounds by ear (the levels are measured from the files, not heard). The split and the tabletop
-stand the words over the glass whatever their size.
 
 ### Open work (finish-and-pitch, 2026-11-02)
 
