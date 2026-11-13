@@ -543,6 +543,8 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Prism's map | 2026-11-13 | Prism's map keeps three tiles and maps only past the deal; a held disc reads the map between texels. Jack's picks. | architecture |
 | The tank's limit | 2026-11-13 | Raise the tank's limit once the map is in for every level (Jack picked "raise it once the map is in"); the next step's size is open (48 suggested). The brim scales to whatever the limit becomes. Jack: "your recommendation is fine by me". | HANDOFF |
 | Tier achievements follow the gate | 2026-11-13 | The three tier achievements follow the new gate, a tier opening when every level below is solved. Jack's pick. | architecture |
+| Lens on the stored map | 2026-11-13 | A Lens level draws from the stored map by default, its detail packed into the map's own image, from the same 10 entries as any level; `UNSTIR_MAPLENS=0` is the probe that turns it off. Jack, on 32 MB a map for a tenth to a fifth of the deepest levels' frame: "32mb out of 6gb seems like a reasonable trade-off for 10-20% savings and thus better battery life." | architecture |
+| Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
 
 ## Undated, no round
 

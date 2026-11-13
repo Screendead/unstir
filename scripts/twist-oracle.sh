@@ -25,7 +25,7 @@
 # again after. ORACLE_REF is where the references live (shots/oracle/ref): a folder outside the checkout shares one
 # set between checkouts. ORACLE_LOCK is the file every GPU timing on this Mac locks, so no two run at once; `time`
 # refuses without it. ORACLE_EXTRA="TAPS=5" adds harness variables to every case of a shoot, for a set drawn worse on
-# purpose (two taps). ORACLE_BASE is the commit whose Sources/ the references are shot from, origin/master unless set
+# purpose (two taps), and to `time`'s launch. ORACLE_BASE is the commit whose Sources/ the references are shot from, origin/master unless set
 # (a branch that adds a harness hold its cases need names itself, before it changes any drawing). The app's sound
 # stays off: a harness launch is silent.
 set -euo pipefail
@@ -191,10 +191,14 @@ timing() {  # pattern
   mkdir -p "$out"
   # A shorter run's summary would otherwise read a longer one's leftover files too.
   for f in "$out"/run-*.txt; do [[ -e $f ]] && trash "$f"; done
+  # ORACLE_EXTRA reaches the bench's launch as it does a shot's (UNSTIR_MAPLENS=0 for Lens through its chain, a probe
+  # the bench reads from its own launch).
+  local extra=()
+  for f in ${ORACLE_EXTRA:-}; do extra+=("SIMCTL_CHILD_UNSTIR_$f"); done
   for run in $(seq "${ORACLE_RUNS:-3}"); do
     : > "$out/run-$run.txt"
     # The bench's lines reach the file as it quits. The lock is held from its launch until then.
-    /usr/bin/lockf -k "$ORACLE_LOCK" env SIMCTL_CHILD_UNSTIR_GPUBENCH=oracle SIMCTL_CHILD_UNSTIR_ORACLECASES="$cases" \
+    /usr/bin/lockf -k "$ORACLE_LOCK" env ${extra[@]+"${extra[@]}"} SIMCTL_CHILD_UNSTIR_GPUBENCH=oracle SIMCTL_CHILD_UNSTIR_ORACLECASES="$cases" \
       ${ORACLE_SIDE:+SIMCTL_CHILD_UNSTIR_ORACLESIDE="$ORACLE_SIDE"} \
       bash -c 'xcrun simctl launch --stdout="$2" --terminate-running-process "$0" "$1" > /dev/null
                for _ in $(seq 1200); do grep -qE "ORACLE (done|no Metal)" "$2" && break; sleep 0.5; done' \

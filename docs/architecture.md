@@ -68,7 +68,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   them in the signature's order: `testTheTankShaderPassesTheSignaturesOrder` reads both signatures out of Unstir.metal
   and checks the order, so a new uniform goes into the signature and `TankShader.parameters` together. The entries
   themselves are packed once, `Unstirred.entries`, which the GPU bench and `testTheShadersChannelChainsMatchTheModel`
-  call too.
+  call too. Each of the three has a stored map's twin (`unstirMapped`, `unstirChannelsMapped`, `unstirLensMapped`,
+  `StirMap.swift`), which takes its arguments and then the map's; `unstirLensMapped` takes no atlas, as its map's
+  image holds it (below).
   A Lens level's glass draws through a third stitchable, `unstirLens` (Jack's call, 2026-11-11: draw each lens's core
   finer, so x8 is crisp), once its panel's detail is baked (`Halftone.Detail`, below) and the strike has ended
   (`Unstirred.fine` and `crisp`, the detail's share, which `LevelView` eases in over 0.2 s, as the detail is drawn past
@@ -135,8 +137,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   pixels: maelstrom 24 as dealt, at 36 entries, at 4 and at two taps, its live picture at four clocks, a rod and the
   rim in hand, the opening's wind-in part way, the wave, and with the chrome; whirlpool 27; plughole 20 at 36
   entries; vortex 27 and its breath; Lens 25, and Lens 1's lens in hand zooming in and out; an Escapement tick in the
-  air; Prism 30, a rod held with its read drawn and a swatch held; the menu's dock and a card; and Reduce Motion's
-  rest frame. `build` builds Debug for the simulator, and every other command installs that build on the oracle's
+  air; Prism 30, a rod held with its read drawn and a swatch held; Lens 25 and Prism 30 deep enough for the stored
+  map, at rest and in hand (`MAPLEAST`, `StirMap`'s probe, as a case variable); the menu's dock and a
+  card; and Reduce Motion's rest frame. `build` builds Debug for the simulator, and every other command installs that build on the oracle's
   own simulator (`scripts/twist-oracle/sim` names its device and runtime; a second fresh one drew the same frames,
   to one level in one value) and refuses where `Sources/` has changed since. `ref` shoots the references, which stay
   out of git (`shots/`, or `ORACLE_REF`), and refuses unless `Sources/` is committed and the same as
@@ -193,8 +196,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   over two 8-bit channels, `StirMap.quant` steps a pixel, a multiple of 4 so a tap the stack leaves alone is stored
   exactly (56 steps on the 13 Pro Max's 1137 px glass). `HeldUnstirred` keeps a `StirMap.Holder` and asks it for the
   committed glass's map (`StirMap.key`: the stack's entries as the shader takes them, the committed turn, the size)
-  on a stack of `StirMap.least` (10) or more, wound in whole, with no lens and no Prism mask; a cover, a clip, the
-  icon and the menu's stir never ask. The holder draws the key still wanted after `Holder.settle` (40 ms, as a tick's
+  on a stack of `StirMap.least` (10) or more, or on Prism's glass `StirMap.prismLeast` (20) of its channels' maps,
+  wound in whole; a cover, a clip, the icon and the menu's stir never ask. The holder draws the key still wanted after `Holder.settle` (40 ms, as a tick's
   flight or autoplay asks for another every frame), one at a time, off the main actor, and lets the map go when none
   is wanted. `Unstirred.shader` draws through `unstirMapped` whenever the map it has holds a run of the frame's
   bottom entries, float for float, at its size: so a map is never wrong, only short. A twist pushed since, a rod in
@@ -207,10 +210,72 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   after at the PR). As a settle runs out the moved taps come back onto their texels, so the frame should run into the rest
   frame with no step (by the arithmetic; the films show none, and can't rule one out), provided the new map has landed, which in the simulator it does some 55 to 80 ms after the let-go (40 asked
   for, 13 to 36 drawing) against a settle of 0.3 s. A pop, a merge into the top entry, a reset and the opening's wind change what the map
-  holds, and those frames draw through `unstir` until the next map lands; so do a stack under 10, Lens (its detail
-  holds the shader's image; a map could carry a lens's flow, with a second image argument, which worked on iOS 26.5
-  and is unproven on 17), Prism (three chains a tap would want three maps, 62 MB at 1137 px) and every glass but a
-  level's. The two-tap rule and the four-tap budget are `unstir`'s, unchanged.
+  holds, and those frames draw through the chain until the next map lands; so do a shallower stack and
+  every glass but a level's. The two-tap rule and the four-tap budget are the chain's, unchanged.
+  Prism's map (`unstirChannelsMapped`) holds a tile a chain, each a square as the one map is, stacked down one image:
+  a channel's word is the committed entries whose mask holds it, channels whose words are the same share a tile and a
+  channel no entry holds has none (`StirMap.tiles`; `-1` in `tiles`, its point then run through its empty word), so
+  the first tray's red and cyan take two and every later level three. `stirMap` draws each tile from its word's
+  entries alone, as `chains` runs them. The entries above the map run through `chains` with their masks, and each
+  channel then reads its own tile as the one map is read; the held rod's read and the swatch take the points the
+  tiles give (`channelsRead`, shared with `unstirChannels`). A map of a stack all white draws every channel from
+  its one tile. Its depth is the channels' maps its entries hold. On the Mac, against today's body in a kernel of
+  its own (`today-own`), Prism 30's frame took 0.85 of the chains' as dealt (8 entries, 14 maps) and 0.49 at 24
+  entries (two taps); there its rod held 0.52 (0.71 by `chain`), held a step off the count where its read turns
+  white 0.52 to 0.53, and a swatch 0.49; as dealt, a rod held 0.95 to 0.98 (1.01 to 1.03 by `chain`). Against
+  `benchUnstir`'s kernel, which ran today's Prism body some 5% slower than its own: 0.59 at 12 entries (21 maps),
+  0.48 at 16 (28) and 0.41 at 20, Prism 24 and Prism 6 (two tiles) at 16 entries 0.46 and 0.48. No level is dealt
+  past 16 maps (Prism 24), so at `prismLeast` a Prism map is drawn only once a player has stirred past the deal.
+  `UNSTIR_MAPSHORTEST=n` (`StirMap.shortest`) gives no tile to a word under n entries, which runs as it does without
+  a map: at 10, Prism 30 at 24 entries keeps two tiles (41 MB) and took 0.70 against three tiles' 0.44 (both
+  against `benchUnstir`). A tile is a map's 16 bytes a pixel:
+  41.4 MB for two tiles at 1137 px and 62.1 for three, 69.2 and 103.9 on the Duo's 1471, twice that at a swap
+  (arithmetic; on the iOS 26.5 simulator at 1172 px `UNSTIR_MAPLOG` read 22.2 MB allocated a tile, 66.6 for three,
+  and the app's footprint there counts none of it, so a phone's is unmeasured). `StirMap.cap` (`UNSTIR_MAPCAP`, in
+  MB) draws through the chain past a size; it is unset.
+  A Lens level's map holds its lenses' flow, and is asked for as any level's is, from `least` entries (Jack's call,
+  2026-11-13, the map's memory for the frame's saving: "32mb out of 6gb seems like a reasonable trade-off for 10-20%
+  savings and thus better battery life"): Lens 22 to 25 as dealt (10, 10, 10 and 12 entries), and the 21 before
+  them, dealt 1 to 9, only once a player has stirred to 10. `UNSTIR_MAPLENS=0`, a probe, draws Lens through its
+  chain as before (`StirMap.lensMaps`), for holding the two against each other on a phone. Its glass draws through `unstirLensMapped` once the detail is in, which reads the map
+  but runs `unstirLensBody` whole for any pixel whose point on the panel may lie in a lens's inset: the detail is
+  drawn from the taps' differences, finer at x8 than the stored step, so wherever it might be drawn the glass is the
+  chain's to the byte (`testLensOverItsMapDrawsTheDetailAsTheChainDoes`). The point is the map's, within half a step
+  at a tap's own texel; between texels, where a fold may take the nearest whole, each inset is held `bend` pixels
+  wider, and a point in a fold farther out than that is drawn from the layer as `mix` draws it.
+  A shader takes one image. SwiftUI's own note on `Shader.Argument.image` says so ("Currently only one image
+  parameter is supported per Shader instance", still in the iOS 27.2 SDK), and on the iOS 18.5 simulator RenderBox
+  refuses a shader given two as it first draws it, with one line in the log, `custom shader: Only one texture
+  argument is allowed: unstirLensMapped`: a layer effect then draws nothing, which was the black glass of the first
+  build (2026-11-13), and a colour effect leaves its view untouched. A probe app held it to that alone
+  (2026-11-13): two images of plain bytes, two of surfaces, one of each in either order, the same image twice, a
+  body that reads neither, a colour and a layer effect, the images apart in the signature as the glass's were, all
+  refused on 18.5 with that line and all drawn on 26.5, each image its own; one image of either kind drew on both.
+  Which release first took two is not known (26.0 to 26.4 untried), and iOS 17 has no runtime here: the note has
+  stood since 17 (recalled, not read here), so it is taken to refuse as 18.5 does (inferred); with one image the
+  question no longer bears on the glass.
+  So a Lens level's map is one image with its detail (`StirMap.pack`, `Key.atlas`): the atlas in the top rows, where
+  `fineLight` reads it as it reads the atlas's own image, its last column drawn on to the image's edge and its last
+  row once more, as its sampler clamps there, and the map `Key.skip` rows down (`stored`'s `skip`, the stitchable's
+  last argument), the image as wide as the wider of the two (Lens 25's atlas, four insets, is 2604 by 748 at 1171 px,
+  wider than its map's 2344). The key holds the bake's atlas, so the map is drawn again as the detail lands, and
+  `Unstirred.shader` draws the detail over a map only where the map holds that very atlas, and a map that holds one
+  only with the detail: without, a frame draws through the chain (the strike, and the 0.1 s between the detail
+  landing and its map in the simulator: 40 asked for, 43 to 50 drawing, the longest frame the usual one), never
+  through a map that is not its own. So drawn, the Lens cases of the oracle pass on
+  both simulators, held against the same build's chain (`MAP=off`) and its twins: 13 of 13 on iOS 18.5 and on 26.5
+  (2026-11-13; the mapped cases `same`, a plain rod in hand over the map `alike`), and on 26.5 against the stored
+  references too. Unproven: iOS 17 (the surface's image as a shader's one, which the plain map rests on too), any phone, and
+  what the wider image costs one (32.2 MB for Lens 25's at 1172 px against 22.0 for the map alone, and the
+  atlas's own image, 7.8 MB, stays for the frames without a map). The gain is small, as
+  the cores a lens magnifies, where the detail is drawn, run the chain. On
+  the Mac, from one image, Lens 25 took 0.89 of its frame as dealt (12 entries, the deepest dealt; Lens 22 to 24 are
+  10), 0.81 six twists deeper, 0.90 with a lens in hand past x8 and 0.98 with a plain rod in hand (1.08 by
+  `chain`), against today's body in a kernel of its own (medians of three launches; from two images the same cases
+  read 0.87, 0.80, 0.88 and 0.95, within the clock's wander of these).
+  With the map on by default a level under `least` asks for none and draws as before: Lens 1 as dealt (one entry)
+  took 1.00 of today's frame, 0.110 ms in both, beside Lens 25's 0.87, and the oracle's Lens cases pass again on
+  both simulators, Lens 25 as dealt now among the mapped (`same`).
   The image is the hard part. SwiftUI hands a shader an image, not a texture, and RenderBox uploads an image of
   plain bytes on the main thread as it first draws it (`replaceRegion`, by a sample): 20 MB a map, one frame of 33 to
   43 ms a commit in the simulator where 16.7 is usual. So the GPU draws the map straight into an `IOSurface`
@@ -221,14 +286,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Nothing is read back or copied, every byte reaches the shader as written (sRGB-tagged BGRA), and a landing's
   longest frame is the usual one at the simulator's 60 Hz (the texture's making sampled at about 1 ms; 120 Hz and
   a phone unmeasured). Each map has a surface of its own, never written again, as the frame is taken to read the
-  very memory (inferred from the route's name). A map is 16 bytes a pixel of the glass: 20.7 MB at 1137 px, 34.6 on the Duo's 1471, and the old one
+  very memory (inferred from the route's name). A map is 16 bytes a pixel of the glass a tile: 20.7 MB at 1137 px, 34.6 on the Duo's 1471, and the old one
   goes as the new lands (one map's surface in each of 14 samples of a played line, 0.4 s apart or more; two at a swap is the most). It is drawn a strip of rows at a
   time, a command buffer each, meant to let a frame queue behind one strip and not a whole frame of the chain's work (not measured: a phone's
   `UNSTIR_MAPLOG` shows it).
   `UNSTIR_MAP=off`, `chain` (a pixel with a tap off its texel runs the whole chain, as `unstir` does: today's
   picture, and no gain with the rim in hand or the breath) and `show` (tints each pixel by how many taps read their
-  own texel), `UNSTIR_MAPBEND`, `UNSTIR_MAPLEAST` and `UNSTIR_MAPLOG` (a line as each map lands: its drawing time
-  and the GPU's, then the longest of the next eight frames beside the usual one and the app's memory) are probes:
+  own texel, and blue where a Lens glass runs its chain), `UNSTIR_MAPBEND`, `UNSTIR_MAPLEAST` (`least` and
+  `prismLeast` both), `UNSTIR_MAPCAP`, `UNSTIR_MAPLENS` and `UNSTIR_MAPLOG` (a line as each map lands: its tiles,
+  bytes and those its surface took, its drawing time and the GPU's, then the longest of the next eight frames
+  beside the usual one and the app's memory) are probes:
   Debug reads them, a Release build only with `PROBES=YES`.
   Measured 2026-11-13 on the oracle (the Mac's GPU off screen at 1137 px, medians of three launches, shares of
   today's twist pass, which is the `tapsThrough` loop): at rest 0.28 on maelstrom 24 (23 entries), 0.20 at 36 and
@@ -245,7 +312,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   autocorrelation 0.16 against 0.14, the twins within 0.004; unchanged by a bend of 1 or 2; the rim in hand and
   the breath read as today's), which is the look Jack judges at the PR. Running the folded taps through the chain
   instead costs what `chain` does (measured). `scripts/twist-oracle/crops.py` lays one case's crops from several
-  sets beside each other at twice the size.
+  sets beside each other at twice the size. The bench draws each mapped body in a kernel of its own, as each
+  stitchable is its own function: one kernel holding all three drew the plain one 5% to 14% slower (2026-11-13).
+  `today-own` draws today's bodies the same way: `benchUnstir`, which holds all three, ran them 0% to 8% slower,
+  so a share against `today` reads that much low (maelstrom 24 at 36 entries 0.20 against it, 0.21 against its own).
+  Lens's and Prism's deep cases (2026-11-13), on the screen against `twist-map`'s drawing, which drew both through
+  the chain: `same` at rest and `alike` with a rod in hand (Prism's held read p99.9 26 levels, inside the held
+  disc); Prism's tiles drew right on the iOS 18.5 simulator too. On the bench: the same by `mix`, and `same` by
+  `chain`; the held read turning white near the count (bench only), its white pixels within 21 of today's. Prism's
+  three mapped takes of its deep line and Lens's one, aligned to the frame, change frame to frame within the
+  spread of two takes of today's. The let-go has no still under the rule: only the takes show it.
 - **Hand.swift**, **DragProbe.swift** and `scripts/drag-probe.sh`: the turn in hand, kept out of `LevelView`'s own
   state so a frame of a drag re-evaluates the parts that draw the turn and not the play screen (Jack, 2026-11-12:
   find a faster way to draw twists, provided it doesn't look worse). `Hand` is an observable reference `LevelView`

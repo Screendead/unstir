@@ -47,6 +47,26 @@ still esc-12 PACK=escapement OWNED=escapement LEVEL=12 CLEAN=1
 still prism-30 PACK=prism OWNED=prism LEVEL=30 CLEAN=1
 sweep prism-held LIVE "1:+1.50 1:+1.54" PACK=prism OWNED=prism LEVEL=8 CLEAN=1
 still prism-swatch PACK=prism OWNED=prism LEVEL=8 CLEAN=1 SWATCH=r
+# Lens and Prism as deep as the stored map draws them: Lens 25 with six twists more on its plain rods (2, 4 and 6),
+# a plain rod and a lens in hand over them, the lens past x8; Lens 1's lens in hand over a map of its one entry; Prism
+# 30 at its dealt depth over a map and dealt three times over, held near a count and with a swatch. MAPLEAST lowers
+# the depth a map is drawn from, a probe the references' build ignores.
+l25d=(PACK=lens OWNED=lens LEVEL=25 CLEAN=1 PLAYED=2:2,4:-3,6:2,2:-1,4:2,6:-2)
+still lens-25-deep "${l25d[@]}"
+sweep lens-25-rod LIVE "2:+1.40 2:+1.44" "${l25d[@]}"
+sweep lens-25-lens LIVE "0:+2.90 0:+2.94" "${l25d[@]}"
+sweep lens-zoom-map LIVE "0:+2.90 0:+2.94" PACK=lens LEVEL=1 CLEAN=1 MAPLEAST=1
+p30d=(PACK=prism OWNED=prism LEVEL=30 CLEAN=1 DEEP=24)
+still prism-30-map PACK=prism OWNED=prism LEVEL=30 CLEAN=1 MAPLEAST=1
+still prism-30-deep "${p30d[@]}"
+sweep prism-30-held LIVE "0:-0.90 0:-0.94 0:-0.98" "${p30d[@]}"
+still prism-30-swatch "${p30d[@]}" SWATCH=g
+# Rod 0 held towards the count that undoes its stirs (net +1 as dealt, +3 dealt three times), where the held read's
+# white fades in: half a step off it and just short of it.
+still prism-30-near "${p30d[@]}" LIVE=0:-2.50
+still prism-30-count "${p30d[@]}" LIVE=0:-2.97
+still prism-30-map-near PACK=prism OWNED=prism LEVEL=30 CLEAN=1 MAPLEAST=1 LIVE=0:-0.50
+still prism-30-map-count PACK=prism OWNED=prism LEVEL=30 CLEAN=1 MAPLEAST=1 LIVE=0:-0.97
 # The menu's dock covers and a card's clips, which draw through the same shader at their own sizes. The menu's daily
 # row on a fixed day, so a set shot past midnight matches.
 still menu-dock SCREEN=menu CLOCK=3 DAILY=20261112
@@ -63,3 +83,5 @@ film rim 14 "${m24[@]}" TAPDRAG=2 TAPFINGER=rim
 film lens 9 PACK=lens LEVEL=1 CLEAN=1 MOVES=0:3,0:-5,0:2 PACE=1.5
 film esc 9 PACK=escapement LEVEL=2 CLEAN=1 MOVES=2:4,w,1:-3 PACE=1.5
 film prism 9 PACK=prism OWNED=prism LEVEL=8 CLEAN=1 MOVES=1:2,0:-3,u PACE=1.5
+film lens-deep 9 "${l25d[@]}" MOVES=0:3,2:-2,0:-3 PACE=1.5
+film prism-deep 9 "${p30d[@]}" MOVES=0:2,1:-2,u PACE=1.5
