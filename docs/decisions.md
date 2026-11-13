@@ -532,6 +532,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Faster twists | 2026-11-12 | Jack: "100% you should find a faster way to draw twists. this is the most important part of the game, and you have an unlimited budget to do so provided it doesn't look worse." Reopens the twist side of the performance pass and picks the twist-chain cache (R11) back up, superseding PERF = A's set-aside of it. | HANDOFF |
 | Hand heat test first | 2026-11-12, night | The by-hand heat test runs on a build with only the thermal logging added (#220), before any faster drawing; Jack: "good point". | HANDOFF |
 | Cached map in `mix` | 2026-11-12, night | Agreed in principle, pending Jack's look at a before/after: the glass drawn from the stored map in the faster-everywhere `mix` mode. Jack: "i like the sound of this, this sounds fine." | HANDOFF |
+| Lens on the stored map | 2026-11-13 | A Lens level draws from the stored map by default, its detail packed into the map's own image, from the same 10 entries as any level; `UNSTIR_MAPLENS=0` is the probe that turns it off. Jack, on 32 MB a map for a tenth to a fifth of the deepest levels' frame: "32mb out of 6gb seems like a reasonable trade-off for 10-20% savings and thus better battery life." | architecture |
 | Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
 
 ## Undated, no round
