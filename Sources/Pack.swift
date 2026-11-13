@@ -29,14 +29,14 @@ enum Pack: String, CaseIterable, Sendable {
         }
     }
 
-    /// The bundle's product, which grants `bundled`. Its id says Complete, its old name, and never changes.
-    static let completeID = "com.screendead.Unstir.complete"
+    /// The bundle's product, Triptych I, which grants `bundled`. Its id never changes once registered with Apple.
+    static let triptychID = "com.screendead.Unstir.triptych1"
 
     /// What the bundle grants, fixed: a later pack never joins it, and a bundle after it holds three packs of its own
     /// under a new product (Jack's call M1 = B2, round 14).
     static let bundled: [Pack] = [.lens, .escapement, .prism]
 
-    static var productIDs: [String] { sold().map(\.productID) + [completeID] }
+    static var productIDs: [String] { sold().map(\.productID) + [triptychID] }
 
     /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17), and Prism takes its place
     /// (PK1); a build outside Release keeps First Stir, so its levels, tests and films still run. Release also compiles

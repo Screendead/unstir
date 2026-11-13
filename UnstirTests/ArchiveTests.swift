@@ -61,8 +61,8 @@ final class ArchiveTests: XCTestCase {
         }
         XCTAssertFalse(bought([:]))
         XCTAssertTrue(bought([Pack.lens.productID: .owned]))
-        XCTAssertTrue(bought([Pack.completeID: .owned]))
-        XCTAssertFalse(bought([Pack.lens.productID: .pending, Pack.completeID: .revoked]))
+        XCTAssertTrue(bought([Pack.triptychID: .owned]))
+        XCTAssertFalse(bought([Pack.lens.productID: .pending, Pack.triptychID: .revoked]))
     }
 
     /// An archive day's best is its own: the days running count only bests kept on their day.

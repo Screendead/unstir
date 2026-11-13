@@ -252,7 +252,8 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
 - **Marketing URL** (optional). The policy is to live on Jack's own domain (C17 = A); once that domain serves, whether
   its home page is the marketing URL is his call (proposed 2026-11-13).
 - **Copyright.** The year and holder of the source files' copyright headers.
-- **In-app purchases.** Four products, the ids never renamed. Display names (30 characters at most, assumed; check)
+- **In-app purchases.** Four products. An id never changes once it is registered with Apple; the bundle's was renamed
+  from its first name, Complete, to `triptych1` by Jack on 2026-11-13, before any was. Display names (30 characters at most, assumed; check)
   and descriptions (45 at most, assumed; check), proposed 2026-11-13:
 
   | Product id | Reference name | Display name | Description | Chars |
@@ -260,11 +261,10 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
   | `com.screendead.Unstir.pack.lens` | Lens | Lens | 25 panels where some rods zoom | 30 |
   | `com.screendead.Unstir.pack.escapement` | Escapement | Escapement | 30 problems with clocks in them | 31 |
   | `com.screendead.Unstir.pack.prism` | Prism | Prism | 30 specimens in three colours | 29 |
-  | `com.screendead.Unstir.complete` | Triptych I | Triptych I | Lens, Escapement and Prism | 26 |
+  | `com.screendead.Unstir.triptych1` | Triptych I | Triptych I | Lens, Escapement and Prism | 26 |
 
   The reference name is App Store Connect's own, never shown to players. `StoreKit/Unstir.storekit`, the local test
-  file, still names the bundle's reference "Complete" and carries older descriptions ("Rods that zoom.", "A clock rod
-  that ticks."); its product ids are right and stay. First Stir's product, in that file, is not created in App Store
+  file, carries older descriptions ("Rods that zoom.", "A clock rod that ticks."); its product ids match these. First Stir's product, in that file, is not created in App Store
   Connect for v1.
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
@@ -340,5 +340,5 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 9. `scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings
    row would then open this repo's draft policy, a page that goes dark if the repo goes private (CIPRIVATE = A).
 10. Follow-ups outside the docs: `scripts/store-captions.py` still captions shot 9 "rods that zoom and spiral";
-    `StoreKit/Unstir.storekit` names the bundle's reference "Complete"; `Config/Unstir.xcconfig`'s comment on `ICLOUD`
+    `StoreKit/Unstir.storekit` carries older descriptions; `Config/Unstir.xcconfig`'s comment on `ICLOUD`
     says these docs call iCloud sync unbuilt.

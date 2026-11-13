@@ -677,7 +677,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   In Release its every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`) and analytics' snapshot (`testFirstStirIsOutOfV1`). The bundle
-  (`Offer.complete`, sold as `Pack.completeID`, its old name Complete kept in its ids) is self-limiting (Jack's call
+  (`Offer.complete`, sold as `Pack.triptychID`, `com.screendead.Unstir.triptych1`, an id Jack renamed from its first name, Complete, on 2026-11-13, before any product was registered with Apple; the offer and its name for the harness, clips and analytics, `complete`, keep that first name) is self-limiting (Jack's call
   M1 = B2, round 14): it grants a fixed `Pack.bundled`, Lens, Escapement and Prism, in every build, and no later pack
   ever joins it (`testNoLaterPackJoinsTheBundle`); a later bundle would be a product of its own. What it grants and
   needs, its cover, words (`Pack.named`; the card's "or all three in Triptych I" counts them, `Offer.countWord`) and clip
@@ -698,7 +698,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   through its own way out, `LevelView.leave`, its try saved and its quit sent as the back's are), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
   are off, landing as any purchase lands (Jack's call M6, round 14). `Store.bought`, any pack owned (the bundle or a
   family's share too), is the one check of whether the player has bought anything: the supporter mark reads it, as
-  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; the bundle (`Pack.completeID`) grants
+  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; the bundle (`Pack.triptychID`) grants
   `Pack.bundled`, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads

@@ -274,7 +274,7 @@ final class AnalyticsTests: XCTestCase {
             a.cardSeen(.lens)
             a.tasteFinished(.lens)
             a.purchased(Pack.lens.productID)
-            a.purchased(Pack.completeID)
+            a.purchased(Pack.triptychID)
             a.purchased("not.a.product")
         }
         await settle(a)
