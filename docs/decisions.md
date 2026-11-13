@@ -539,6 +539,10 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Privacy label and the report mail | 2026-11-13 | The App Privacy label stays Data Not Collected; the report-a-problem mail, optional, started by the player each time and shown before sending, is not declared. Decided again for the mail as it now works (ST7 decided it for a share-sheet button). | store-page |
 | TestFlight in the privacy policy | 2026-11-13 | The policy says what Apple's TestFlight passes on (sessions by day, feedback, screenshots, crash reports, the tester id or invited name and email), used only to improve the game, kept 12 months at most, never shared. | privacy-policy |
 | Escapement's wait button | 2026-11-13 | The button keeps the word "wait". | architecture |
+| Cached map merged | 2026-11-13 | The stored map for a level's glass merges after Jack's look and the reference phone's numbers. Jack: "felt the same, merge it." | HANDOFF, architecture |
+| Prism's map | 2026-11-13 | Prism's map keeps three tiles and maps only past the deal; a held disc reads the map between texels. Jack's picks. | architecture |
+| The tank's limit | 2026-11-13 | Raise the tank's limit once the map is in for every level (Jack picked "raise it once the map is in"); the next step's size is open (48 suggested). The brim scales to whatever the limit becomes. Jack: "your recommendation is fine by me". | HANDOFF |
+| Tier achievements follow the gate | 2026-11-13 | The three tier achievements follow the new gate, a tier opening when every level below is solved. Jack's pick. | architecture |
 
 ## Undated, no round
 
