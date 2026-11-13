@@ -115,7 +115,7 @@ fi
 # The edge swipe back (UNSTIR_BACKSWIPE=run): a second in, a drawn fingertip slides plughole 05 off over the menu.
 film back-swipe 3 "fps=8,scale=180:-1,tile=8x3:padding=4" LEVEL=5 BACKSWIPE=run
 film tour 8 "fps=4,scale=200:-1,tile=9x4:padding=4" TOUR=1 OPEN=1
-# The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 17 ticks lit), then plughole tapped.
+# The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 20 ticks lit), then plughole tapped.
 par27=$(printf '0%.0s' {1..27})
 film tier-switch 11 "fps=6,scale=180:-1,tile=11x6:padding=4" TIERDEMO=1 BESTS=plughole:$par27,whirlpool:00001000000200000100
 # The twins' heartbeat, still: from 2.2 s in (the neural web lands about 2 s after launch), one beat at 20 frames a second.
