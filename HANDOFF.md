@@ -36,9 +36,42 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Round 12 (decided, 2026-10-29) | AN1 = A (v1 ships with no analytics), EU1 = B (no EU storefronts at launch; revisit when sales cover a business address), PK1 = A (Prism replaces First Stir as the third pack, capped at depth 8), ES2 = B (each hub shows its own flip clock, plus a total counter elsewhere; a hub that reaches 0 shows plainly that it has run out; built on `esc-hub-flaps`), PL1 (Prism's plates 3 and 4 redrawn as Haeckel's medusae and radiolarians). See round 12 under "Jack's calls on the pitch" |
 | Round 14's store lane (2026-11-02, branch `r14-store`) | Jack's call M6 = A (all six), this lane's four: promoted purchases (`PurchaseIntent` opens the offer's card and buys there; the four 1024 px images from `scripts/promo.sh`), the supporter mark (to-do 48), "more puzzles in the packs ›" once on maelstrom 27's card, and the known dailies below. The daily archive is lane `r14-archive`; mid-level state surviving a kill is C2, built. `Store.bought` is the one "has the player bought anything" check both lanes read |
 | Dailies the solver beats (known, 2026-11-02) | On 4 of 2027's 365 dailies the solver's optimum is one under par (`par` = `scramble.count`): 2027-03-08 hex 14→13, 2027-08-29 pent 12→11, 2027-08-30 pent 13→12 (plain untwisting takes 13), 2027-12-29 pent 10→9 (measured for round 14's gap 1 against the frozen generator). Recorded as known: the generator is frozen (`testDailyVectors`) and stays unchanged (Jack's call M6). A player can finish those four under par; no test pins a daily's par to the optimum |
+| Frost days (2026-11-12, `frost-days`) | Jack's call: build them, then he decides from films whether they ship. Built: on about one daily in seven (`Frost.days`, 2026-10-01 to 2029-12-31), after the frozen draws, two knobs seize on a turning tank where every rule of thumb misses par; par is the solver's optimum. A table, not an on-device solve. Films `frost-park-over` (the park rule, 17 against par 15) and `frost-at-par`. Jack's call: ship, and the menu's daily row says "frost day" on one (`MenuView.dailyLines`). Endless left out. A frozen look of its own for the seized knobs is prototyped on local branch `frost-look` |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
+
+### Maelstrom levels that need a plan (2026-11-12)
+
+Jack dropped maelstrom's promise that the park rule reaches par however its ties go: "It's the last free tier; it's
+supposed to be a challenge." Built on `maelstrom-plan`: `scripts/maelstrom-levels.sh` (measure the table, deal
+candidates with the first search's seeds, keeping those where every rule of thumb's best tie misses par, no detour, no
+two dealt stirs joined into one move (so the plan is in the turns, not stir order), and the park line keeps the tank
+turning); twelve rows dealt again, M6, M11-M14, M19-M22 and M24-M26, each needing a plan;
+M1-M5, the noted levels (M8, M10, M18), the layouts' openers, M23 (the store's shot) and the finale M27 kept;
+`testMaelstromParIsTheOptimum` pins par and which rows need a plan. Waits for Jack: he sees the rows first (the PR's
+table). Search yield: pent and quad give hundreds a band in 20,000 seeds; hex picks came from a partial pool (a run stopped
+early, the two-apart 18-25 band never started), random generator only, not the first search's plan-first one. Not
+measured: how they play. Films showing maelstrom 22 (`heartbeat-maelstrom22-chainmail`) show the old deal until
+filmed again.
+
+### Escapement's wait comes back (2026-11-12)
+
+A side agent flagged that without the wait Escapement's finale (and 18 of 30 problems) measured 0.0 bits. Claude
+measured two rules that keep the wait out (`esc-rule-measure`, pushed, no PR; `scripts/escapement.sh rules`, `local`,
+`avail`): slips (a tick that would push turns nothing, k a level) double the bits of problems that had some (28: 3 to 6)
+but leave the zeros; local ticks (a clock ticks only when the turned knob crosses it) break 23 of the 29 deals and
+fresh deals score 0 in 97 to 99 in 100. The cause: along each line, at most moves only one whole heal is open at all;
+each tick lays a clock seam over the heal beneath. Jack then reversed his call (round 20).
+
+- #207 (`esc-wait-back`): reverts #194's app, book and shots (every deal back byte for byte), merges #191's wait
+  button, keeps "Tempo", "No move is spare." and "Counterweight" as decided. PR test set passes locally (481).
+  Waits for Jack: it changes what the player sees.
+- Open for Jack, pitched: chapter 2's line ("No move is spare." against a chapter that waits), level 7's name
+  (Counterweight against Pause), the button's word ("wait" against "tick").
+- Moot: the longer-finale call (`esc-finale-longer` deleted); the finale is the pre-#194 two-clock hex again.
+- After it merges: Escapement 29's sound layer rendered again on the old deal; the store shots and films showing
+  Escapement 2 retaken (its line waits again).
 
 ### Open work (finish-and-pitch, 2026-11-11 night, after Jack's answers)
 
@@ -63,13 +96,19 @@ thank you for playing".
    and the phone needs him to unlock it.
 5. Owed from before: `docs/escapement-problems.md` without the wait (done here); Escapement 29's layer rendered
    again on its new deal (done, `scripts/sounds.sh layers`, nothing tracked changed); the loc-lint baseline removed
-   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator.
+   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator: done on `store-ios27` (local,
+   unpushed). Giving the scheme's test action the StoreKit configuration (xcodegen writes it only to run, so a
+   `postGenCommand` adds it) ends the hang, but `testAskToBuyDeclinedGrantsNothing` (lens owned after a declined
+   ask) and `testRefundRevokesThePack` (no complete-pack transaction) fail on 27.2 alone; next, those two.
 
-**Undecided, to pitch**
+**Undecided, pitched 2026-11-11 night** (https://claude.ai/artifact/Q4p5NRvFtmJyRSHAw6U3v7; picks in its `picks`
+collection):
 
-- The curtain call again, with the text inside the glass.
+- The curtain call again, with the text inside the glass (#201 pushed): Jack's credit is wider than the glass on
+  every phone and breaks after the dot; the recommendation drops the dot when it breaks. Prism (#205) waits on
+  his phone, a to-do on the page.
 - The PR test job: 6 of the last 18 PR runs passed 10 minutes and #201's last took 14:21, 39 s under the hard stop.
-  Measured options go to Jack.
+  Options: catch the stall and trim the start (recommended), a larger runner, or move the line.
 
 **Waiting**
 
@@ -111,6 +150,20 @@ The earlier record of this run, "Open work (finish-and-pitch, 2026-11-09)", is c
 ### Open work (finish-and-pitch, 2026-11-09)
 
 Closed: moved word for word to `docs/history.md`.
+
+**The payoff, picked (PAYOFF = C).** Jack took the curtain call over the glass stirring itself and the counting
+bezel: "I just don't like how A re-stirs to reward you for unstirring. Curtain call looks cleanest to me." Built
+on `curtain-call` with no switch, the other two options and draft #198 dropped, the rating prompt's and Game
+Center's timing fix lifted out as its own commit: a tier's or a pack's holds the screen 3.2 s and the game's 7.4 s
+(2.6 s and 5 s under Reduce Motion), a tap ends it, its strings are in the catalog, and where the words would pass
+the glass's edge the glass shrinks and they stand under it. After the game the credit, in Jack's words "made by
+screendead · thank you for playing" (VoiceOver: "Made by screendead. Thank you for playing."), stands inside the glass
+under "every tier unstirred", as in the prototype he picked, broken at its dot onto two lines, the dot dropped (Jack, 2026-11-12), as one line is
+wider than the glass's chord there on every phone; where the lines don't fit (small phones at larger text) they
+stand 34 pt under the shrunk glass (was 20, which Jack found far too close). **Jack's, still open**: whether a tier finished with levels still over par, whose card then shows the next
+tier locked, should get the curtain at all (it does: every level holds a best). **Owed**: its frame rate on the
+phone, and its sounds by ear (the levels are measured from the files, not heard). The split and the tabletop
+stand the words over the glass whatever their size.
 
 ### Open work (finish-and-pitch, 2026-11-02)
 
@@ -977,7 +1030,9 @@ TestFlight is ready, not earlier; that gives the first year the most selling tim
 - Check in with the ICO (LG3 = A): ask whether a home-based sole trader's register entry can show "Address: Withheld",
   then register and pay before the first emailed tester, received log or support email. If the ICO won't withhold the
   address, bring it back to Jack (the fallback was: no fee, send log out, TestFlight's public link only).
-- Turn on the Declared Age Range capability in the app's entitlements once the paid team signs the build.
+- Declared Age Range's entitlement: `AGE_RANGE=YES` signs it in and `scripts/archive-ios.sh` sets it (2026-11-12).
+  Still owed: the first signed archive shows the App ID takes it (the script refuses to export one without it); then
+  decide whether `AGE_RANGE` defaults to YES for phone builds too.
 - Before each paid pack ships, send Apple the significant-change notice Texas requires (a new purchase is one).
 - Once a year, with the ICO renewal (remind Jack): delete Unstir support mail and logs older than 12 months, and
   complaint records older than two years, as the privacy policy promises.

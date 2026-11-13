@@ -191,19 +191,38 @@ struct ResultCard: View {
 
 /// The one rating request (Jack's call C20, round 13): on the card of the solve that opens whirlpool, a tier's worth of
 /// play in and on a high. A launch that saw a purchase land skips it, and since that solve comes once, never asks.
-/// `RootView` makes it, not the card: a tap on within the wait would take it with the card, for good.
+/// `RootView` makes it, not the card: a tap on within the wait would take it with the card, for good. Its wait starts as
+/// the card shows (`Carded.shown`), never at the solve, so nothing that plays before the card has the request over it.
 @MainActor @Observable final class Review {
     static let shared = Review()
-    /// The solve that opens whirlpool came this launch, and the request hasn't been made.
+    /// The solve that opens whirlpool came this launch, and its card has yet to show.
+    var earned = false
+    /// That solve's card has shown, or its level was left first, and the request hasn't been made.
     var pending = false
     /// The launch's: a harnessed one, or the test host, never asks, and UNSTIR_REVIEW=log logs the request in place of
     /// making it.
     static var harnessed = false, logs = false
-    /// 2 s after the card, which shows 1.4 s after the solve.
-    static let wait = 3.4
+    /// 2 s after the card shows.
+    static let wait = 2.0
+
+    func carded() {
+        guard earned else { return }
+        earned = false
+        pending = true
+    }
 
     static func due(opened: Tier?, asked: Bool, harnessed: Bool, purchased: Bool) -> Bool {
         opened == .whirlpool && !asked && !harnessed && !purchased
+    }
+}
+
+/// What waits for a finish's card to show, so that nothing of the system's lands over the solve or what plays before
+/// the card: the rating request's wait, and Game Center's report, whose banner shows over the card (Jack's call
+/// G-banner = A). A level left before its card shows them then.
+@MainActor enum Carded {
+    static func shown() {
+        Review.shared.carded()
+        GameCenter.shared.report()
     }
 }
 

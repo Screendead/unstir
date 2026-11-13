@@ -287,6 +287,10 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
+    /// A plain daily and a frost day (`Frost.days`), which seizes two knobs and turns the tank.
+    static let plainDay = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 12))!
+    static let frostDay = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 12))!
+
     func testTheTabletopsSpacersShareWhatTheChromeLeaves() {
         XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2), 212, "centred round the chrome")
         XCTAssertEqual(PlayStack.share(100, used: 200, spacers: 2), 0, "a tall card: the spacers give way")
@@ -304,7 +308,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(stage1, (624 - plain.above - plain.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
         XCTAssertEqual(stage1, 417, accuracy: 1)
         for level in [Level.plughole[10], Level.whirlpool[0], Level.vortex[0], Level.lens[0], Level.prism[0],
-                      Level.daily(.now), Level.plughole[0]] {
+                      Level.daily(Self.plainDay), Level.plughole[0]] {
             XCTAssertEqual(side(level), stage1, accuracy: 0.001, level.id)
         }
         // Escapement's taller header and two lines of serif: 5 pt less.
@@ -316,6 +320,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(side(Level.maelstrom[0]), (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim,
                        accuracy: 0.001)
         XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 8, accuracy: 1)
+        XCTAssertEqual(side(Level.daily(Self.frostDay)), side(Level.maelstrom[0]), accuracy: 0.001, "a frost day's rim lesson")
         // Prism read by its letters, the swatches under the caption, a row of buttons: 46 pt less.
         let swatches = 4 + max(ButtonFace.height, 24 + TypeRole.button.line(at: .large).height)
         XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - swatches - PlayStack.gap) / PlayLayout.rim,
@@ -349,7 +354,7 @@ final class PlayLayoutTests: XCTestCase {
                                                     options: [.usesLineFragmentOrigin], attributes: [.font: font], context: nil).height
             return Int((h / font.lineHeight).rounded())
         }
-        let levels = Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) + [Level.daily(.now), Level.endless(Run(seed: 7))]
+        let levels = Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) + [Level.daily(Self.plainDay), Level.daily(Self.frostDay), Level.endless(Run(seed: 7))]
         for level in levels {
             XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, "\(level.id) at \(type)", file: file, line: line)
         }
@@ -358,9 +363,10 @@ final class PlayLayoutTests: XCTestCase {
             XCTAssertLessThanOrEqual(lines(text, mono), 2, "\(text) at \(type)", file: file, line: line)
         }
         for bank in [0, 1] {
-            let words = Game(level: Level.mockUp, bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
+            let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
             XCTAssertLessThanOrEqual(lines(words, serif), 2, "\(words) at \(type)", file: file, line: line)
         }
+        XCTAssertLessThanOrEqual(lines(LevelView.demoWait, serif), 2, "\(LevelView.demoWait) at \(type)", file: file, line: line)
     }
 
     /// Lays `content` out in a window of `size` with `insets` as its safe area, as `UNSTIR_FRAME` does, for `seconds`.
@@ -401,9 +407,10 @@ final class PlayLayoutTests: XCTestCase {
                                 (["UNSTIR_PACK": "prism", "UNSTIR_LEVEL": "1", "UNSTIR_OWNED": "prism", "UNSTIR_LETTERS": "1",
                                   "UNSTIR_CLOCK": "1"], true)] {
             // The largest size plays capped, as xxxLarge does.
+            let pane = layout(window: open.window, insets: open.insets).chromePane.width
             for type in [DynamicTypeSize.large, .xxxLarge, .accessibility5] {
                 let harness = Harness(env), what = "\(harness.level.id) at \(type)"
-                let budget = PlayLayout.Chrome(harness.level, swatches: swatches, type: type)
+                let budget = PlayLayout.Chrome(harness.level, swatches: swatches, type: type, width: pane)
                 let got = try! XCTUnwrap(measuredChrome(harness, type: type), "\(what): laid out beside the menu")
                 XCTAssertEqual(got.above, budget.above, accuracy: 1, what)
                 // Escapement's note may show one line of its two, or "tap to skip" over the demonstration.
@@ -411,6 +418,32 @@ final class PlayLayoutTests: XCTestCase {
                 XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, what)
             }
         }
+    }
+
+    /// Escapement's wait shares undo and reset's row only where all three fit it on a line each; where they don't it
+    /// takes a row of its own and the chrome's room grows by it, so no label wraps or shrinks. An SE is 343 pt inside
+    /// its margins and the widest phone 408.
+    func testTheWaitTakesARowWhereTheRowCantHoldAllThree() {
+        let clocks = Level.escapement[1], plain = Level.plughole[0]
+        XCTAssertFalse(PlayLayout.waitTakesARow(clocks, width: 343, type: .large))
+        XCTAssertTrue(PlayLayout.waitTakesARow(clocks, width: 343, type: .xxxLarge))
+        XCTAssertEqual(PlayLayout.waitTakesARow(clocks, width: 343, type: .accessibility5),
+                       PlayLayout.waitTakesARow(clocks, width: 343, type: .xxxLarge), "play caps its type at xxxLarge")
+        XCTAssertFalse(PlayLayout.waitTakesARow(clocks, width: 408, type: .xxxLarge))
+        for type in [DynamicTypeSize.large, .xxxLarge] {
+            XCTAssertFalse(PlayLayout.waitTakesARow(plain, width: 100, type: type), "no clock, no wait")
+            XCTAssertFalse(PlayLayout.waitTakesARow(nil, width: 100, type: type))
+            let shared = PlayLayout.Chrome(clocks, type: type, width: 408), own = PlayLayout.Chrome(clocks, type: type, width: 200)
+            let button = max(ButtonFace.height, 24 + TypeRole.button.line(at: type).height)
+            XCTAssertEqual(own.below - shared.below, button + LevelView.controlRows, accuracy: 0.34, "\(type)")
+            XCTAssertEqual(own.above, shared.above)
+            XCTAssertEqual(PlayLayout.Chrome(plain, type: type, width: 200), PlayLayout.Chrome(plain, type: type))
+        }
+        let labels = ["undo \u{00B7} 10", "wait", "reset"]
+        let row = labels.reduce(0) { $0 + TypeRole.button.width(of: $1, at: .large) + 2 * ButtonFace.side }
+            + 2 * PlayLayout.controlGap
+        XCTAssertFalse(PlayLayout.waitTakesARow(clocks, width: row, type: .large))
+        XCTAssertTrue(PlayLayout.waitTakesARow(clocks, width: row - 1, type: .large))
     }
 
     /// An armed reset has the row to itself where undo can't share it on a line each, so "reset? tap again" never wraps
@@ -577,7 +610,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim), "the rim lesson's arc")
         XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(), "drawn wholly on the glass and rim")
         XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo())
-        XCTAssertEqual(PlayLayout.Halo(Level.mockUp), PlayLayout.Halo())
+        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo())
     }
 
     func testEndlesssBrimStaysInsideTheTanksPaneInEveryPose() {

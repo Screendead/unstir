@@ -131,12 +131,11 @@ final class UnstirTests: XCTestCase {
         let escapement = Level.escapement[0]
         let clock = Game(level: escapement, tankTurned: true, bank: (10, nil))
         clock.demo(escapement.demo)
-        clock.commit(rod: 2, steps: 3)
         clock.commit(rod: 1, steps: -2)
-        XCTAssertEqual(clock.stack, .parse("0:-1", in: .tri))
+        XCTAssertTrue(clock.wait(on: 0))
         XCTAssertFalse(Best.started(escapement.id), "the demonstration's moves are not the player's")
         clock.endDemo()
-        clock.commit(rod: 2, steps: 4)
+        XCTAssertTrue(clock.wait(on: 0))
         XCTAssertTrue(Best.started(escapement.id))
     }
 
@@ -543,18 +542,31 @@ final class UnstirTests: XCTestCase {
             XCTAssertTrue(game.solved)
             return game
         }
-        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone.
-        let pending = Review.shared.pending
-        defer { Review.shared.pending = pending }
-        Review.shared.pending = false
+        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone; and its
+        // wait, like Game Center's report, starts as that solve's card shows, never at the solve.
+        let (earned, pending) = (Review.shared.earned, Review.shared.pending)
+        defer { (Review.shared.earned, Review.shared.pending) = (earned, pending) }
+        (Review.shared.earned, Review.shared.pending) = (false, false)
         XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Review.shared.earned)
+        Carded.shown()
         XCTAssertFalse(Review.shared.pending)
         XCTAssertFalse(Tier.whirlpool.isOpen())
+        let reports = GameCenter.shared.reports
         XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertTrue(Review.shared.earned)
+        XCTAssertFalse(Review.shared.pending, "the wait starts with the card")
+        XCTAssertEqual(GameCenter.shared.reports, reports, "a solve reports nothing before its card")
+        Carded.shown()
+        XCTAssertFalse(Review.shared.earned)
         XCTAssertTrue(Review.shared.pending)
+        XCTAssertEqual(GameCenter.shared.reports, reports + 1)
         Review.shared.pending = false
-        XCTAssertNil(solve(over: false).opened)
+        // A second card starts no second wait.
+        Carded.shown()
         XCTAssertFalse(Review.shared.pending)
+        XCTAssertNil(solve(over: false).opened)
+        XCTAssertFalse(Review.shared.earned)
     }
 
     /// The rating request comes once, on the solve that opens whirlpool, and never in the harness or after a purchase
@@ -955,7 +967,7 @@ final class UnstirTests: XCTestCase {
             { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
         ], "pack")
 
-        var clocks = Level.mockUp
+        var clocks = Level.escapement[1]
         clocks.id = "test-undo-clocks"
         check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
             { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
@@ -1639,6 +1651,38 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
+    /// Only a frost day's daily is drawn frozen, and a day's ice is the same crystals every time it is baked, its own.
+    @MainActor func testAFrostDayIsFrozenAndItsIceIsSeeded() throws {
+        func noon(_ day: Int) throws -> Level {
+            .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
+        }
+        XCTAssertTrue(try noon(15).frosty)
+        XCTAssertFalse(try noon(1).frosty)
+        XCTAssertFalse(try XCTUnwrap(Level.maelstrom.first { !$0.seized.isEmpty }).frosty, "maelstrom's stay jammed")
+        let discs = [FrostLook.Disc(x: 40, y: 40, r: 36), FrostLook.Disc(x: 80, y: 60, r: 36)]
+        func ice(_ seed: Int) -> Data? { FrostLook.bake(discs, seed: seed, scale: 2).pngData() }
+        XCTAssertNotNil(ice(20261015))
+        XCTAssertEqual(ice(20261015), ice(20261015))
+        XCTAssertNotEqual(ice(20261015), ice(20261016))
+    }
+
+    /// The daily's row says a frost day under its title, before a run of days, and VoiceOver hears it with the shape.
+    @MainActor func testTheDailyRowSaysAFrostDay() throws {
+        func noon(_ day: Int) throws -> Level {
+            .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
+        }
+        let frost = try noon(15), plain = try noon(1)
+        XCTAssertFalse(frost.seized.isEmpty)
+        XCTAssertTrue(plain.seized.isEmpty)
+        XCTAssertEqual(MenuView.dailyLines(frost, run: 0).under, "frost day")
+        XCTAssertEqual(MenuView.dailyLines(frost, run: 4).under, "frost day \u{00B7} 4 days running")
+        XCTAssertEqual(MenuView.dailyLines(frost, run: 0).detail,
+                       "\(frost.layout.rods.count) rods \u{00B7} par \(frost.par) \u{00B7} frost day")
+        XCTAssertNil(MenuView.dailyLines(plain, run: 1).under, "a plain day before a run: one line")
+        XCTAssertNil(MenuView.dailyLines(plain, run: 1).detail)
+        XCTAssertEqual(MenuView.dailyLines(plain, run: 3).under, "3 days running")
+    }
+
     /// The menu's top follows plughole 23: the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int) -> (String) -> Best? {
@@ -1955,7 +1999,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([0: .ratchet]), at: a), .ratchet(0))
         XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([1: .ratchet]), at: a), .rod(0))
         let level = Level(id: "test-kinds", label: "", title: "", layout: .quad,
-                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2], waits: true)
+                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2])
         XCTAssertEqual((0..<4).map(level.kind(of:)), [.working, .socket, .ratchet, .working])
         let game = Game(level: level, tankTurned: true, swirled: true)
         game.commit(rod: 2, steps: 4)
@@ -1963,7 +2007,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, level.scramble)
         XCTAssertEqual(game.moves, 0)
         XCTAssertNil(game.reachable)
-        // Under the waiting move a tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
+        // A tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
         game.wait(on: 2)
         XCTAssertEqual(game.moves, 1)
         XCTAssertEqual(game.stack, .parse("0:+3,1:+2,2:-3", in: .quad))
@@ -2190,6 +2234,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(Power.saving(lowPower: false, thermal: .serious))
         XCTAssertTrue(Power.saving(lowPower: false, thermal: .critical))
         XCTAssertTrue(Power.saving(lowPower: true, thermal: .nominal))
+        XCTAssertEqual([.nominal, .fair, .serious, .critical].map(Power.name), ["nominal", "fair", "serious", "critical"])
         let clip = CGSize(width: 320, height: 320)
         XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: -100, width: 390, height: 800)))
         XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: 300, width: 390, height: 800)))
@@ -2304,9 +2349,9 @@ final class UnstirTests: XCTestCase {
                                    .chainmail, .glass, .marbling]
         XCTAssertEqual(levels.map(\.picture), pictures.map(\.twin))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [3, 4, 5, 5, 6, 10, 8, 8, 10, 9, 14, 14, 20, 18, 9, 11, 10, 12, 15, 18, 18, 19, 22, 23, 23, 24, 26])
+                       [3, 4, 5, 5, 6, 11, 8, 8, 10, 9, 12, 14, 16, 18, 9, 11, 10, 12, 16, 17, 17, 18, 22, 23, 24, 25, 26])
         XCTAssertEqual(levels.map(\.par),
-                       [4, 5, 6, 6, 8, 14, 11, 10, 12, 12, 17, 17, 24, 22, 11, 13, 13, 15, 18, 21, 22, 22, 25, 26, 26, 27, 29])
+                       [4, 5, 6, 6, 8, 15, 11, 10, 12, 12, 16, 18, 21, 23, 11, 13, 13, 15, 19, 20, 21, 22, 25, 26, 27, 28, 29])
         for level in levels {
             XCTAssertTrue((1...2).contains(level.seized.count), level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }

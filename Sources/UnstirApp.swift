@@ -29,6 +29,8 @@ struct UnstirApp: App {
         WindowGroup {
             if GPUBench.wanted {
                 GPUBenchView()
+            } else if let probe = Probes.screen {
+                probe
             } else if let window = HarnessWindow.wanted {
                 HarnessWindow(window, content: RootView())
             } else {
@@ -69,6 +71,8 @@ struct Harness {
     let today: String?
     /// UNSTIR_NOW=HH:mm: the daily's result card reads the next daily from that time today.
     let now: Date?
+    /// UNSTIR_DAILY=yyyymmdd: the day the daily is dealt for, the menu's row and UNSTIR_MODE=daily's level, at noon.
+    let day: Date?
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
@@ -86,9 +90,10 @@ struct Harness {
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; with UNSTIR_FINGER, any turn of it
     /// but 1 taps halfway out the clock's disc instead. A turn of the open stir's knob takes it up again. `u` is an undo
-    /// through the control, with its sound, and `p<s>` rests s seconds more before the next step.
+    /// through the control, with its sound, `w` a wait through Escapement's wait control, and `p<s>` rests s seconds more
+    /// before the next step.
     let moves: [Step]?
-    enum Step: Equatable { case twist(Twist), undo, rest(Double) }
+    enum Step: Equatable { case twist(Twist), undo, wait, rest(Double) }
     /// UNSTIR_PLAYED=2:4,0:1: a line in UNSTIR_MOVES's form, committed through the real path as the level opens, so a
     /// still shows the tank part way through it.
     let played: [Twist]
@@ -97,6 +102,8 @@ struct Harness {
     let finger: Bool
     /// UNSTIR_REST=s: with UNSTIR_FINGER, the seconds at rest before the first fingertip lands (2 when unset).
     let rest: Double
+    /// UNSTIR_TURN=s: with UNSTIR_FINGER, the seconds a knob's turn takes a step (0.1 unset), for reading a slow drag.
+    let turn: Double
     /// UNSTIR_BREATH=s: on a layout with a swirl, its breath held s seconds into the tank's first rest. Unset, it runs
     /// live, or not at all while UNSTIR_CLOCK holds the clock. Never with UNSTIR_SWIRLED=1.
     let breath: Double?
@@ -112,6 +119,9 @@ struct Harness {
     /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of a knob drawn through the real let-go, each landing a
     /// move, for `Taps` on the phone.
     let tapDrags: Int?
+    /// UNSTIR_TAPFINGER=rod or rim: those drags made as a finger's touches on a knob or the rim, through the drag
+    /// gesture's own handlers.
+    let tapFinger: String?
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
     /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
     /// the settings' colour letters chosen off or on, for this launch only (`switches`).
@@ -123,6 +133,11 @@ struct Harness {
     /// the swirl's breath, so a shot on a layout with a swirl that sets none of this, UNSTIR_BREATH and UNSTIR_SWIRLED=1
     /// may catch a slosh.
     let clock: Double?
+    /// UNSTIR_WIND=0.5: the opening's wind-in held that far, every committed angle at that share of itself.
+    let wind: Double?
+    /// UNSTIR_TICKAT=0.5: Escapement: the newest move's ticks held that far through their flight, as `LevelView.tickKeys`
+    /// counts it: tick i is in the air from i to i + 1.
+    let tickAt: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
     /// UNSTIR_EXIT=left: the level, once open, left for the menu by "‹ levels"; =solved, as from its result card after
@@ -283,6 +298,7 @@ struct Harness {
         }
         bench = env["UNSTIR_BENCH"] == "1"
         tapDrags = env["UNSTIR_TAPDRAG"].flatMap(Int.init)
+        tapFinger = env["UNSTIR_TAPFINGER"].flatMap { ["rod", "rim"].contains($0) ? $0 : nil }
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
@@ -297,6 +313,8 @@ struct Harness {
         }
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
+        wind = env["UNSTIR_WIND"].flatMap(Double.init).map { min(max($0, 0), 1) }
+        tickAt = env["UNSTIR_TICKAT"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         lockTap = env["UNSTIR_LOCKTAP"]
         pickArchive = env["UNSTIR_PICK"] == "archive"
@@ -329,9 +347,13 @@ struct Harness {
         }
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
+        day = env["UNSTIR_DAILY"].flatMap(Int.init).flatMap {
+            calendar.date(from: DateComponents(year: $0 / 10000, month: $0 / 100 % 100, day: $0 % 100, hour: 12))
+        }
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
-        case "daily": Level.daily()
+        // UNSTIR_DAILY=yyyymmdd: that day's daily, as played on its day.
+        case "daily": Level.daily(day ?? .now)
         // UNSTIR_DAY=n: the daily n days back, from the archive; yesterday's when unset.
         case "archive": Level.daily(calendar.date(byAdding: .day, value: -max(Int(env["UNSTIR_DAY"] ?? "") ?? 1, 1),
                                                       to: .now)!, archived: true)
@@ -432,6 +454,7 @@ struct Harness {
         moves = env["UNSTIR_MOVES"].map { line in
             line.split(separator: ",").compactMap { step -> Step? in
                 if step == "u" { return .undo }
+                if step == "w" { return .wait }
                 if step.first == "p" { return Double(step.dropFirst()).map(Step.rest) }
                 let f = step.split(separator: ":").compactMap { Int($0) }
                 return f.count == 2 && f[1] != 0 ? .twist(Twist(rod: f[0], steps: f[1])) : nil
@@ -440,6 +463,7 @@ struct Harness {
         played = env["UNSTIR_PLAYED"].map(line) ?? []
         finger = env["UNSTIR_FINGER"] == "1"
         rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
+        turn = env["UNSTIR_TURN"].flatMap(Double.init) ?? 0.1
         breath = env["UNSTIR_BREATH"].flatMap(Double.init)
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         resetArmed = env["UNSTIR_RESETARMED"] == "1"
@@ -638,6 +662,10 @@ struct RootView: View {
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
+        // UNSTIR_PAYOFFAT=s holds the curtain call (`Payoff`) s seconds in on a level opened solved, and
+        // UNSTIR_PAYOFFSKIP=s ends it s seconds in, as a tap does.
+        Payoff.frozen = env["UNSTIR_PAYOFFAT"].flatMap(Double.init)
+        Payoff.skips = env["UNSTIR_PAYOFFSKIP"].flatMap(Double.init)
         #if DEBUG
         // UNSTIR_EDITORS=1: settings shows the editors' switch, for its shot.
         Build.editorsSwitch = Build.editors || h.harnessed && env["UNSTIR_EDITORS"] == "1"
@@ -708,7 +736,7 @@ struct RootView: View {
                 // level, whose ground it leaves uncovered.
                 if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
-                             frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock,
+                             frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
                              cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
                              run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil && !beside,
@@ -819,6 +847,7 @@ struct RootView: View {
         }
         .task {
             Log.write(UnstirApp.device)
+            Log.write(Power.shared.heat)
             Power.shared.watch()
             await Log.trim()
         }

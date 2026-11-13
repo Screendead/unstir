@@ -1,6 +1,7 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
 import Metal
+import MetalKit
 import UIKit
 import XCTest
 import simd
@@ -158,6 +159,77 @@ final class PrismTests: XCTestCase {
         XCTAssertGreaterThan(moved, points.count, "the stack moves enough of the tank to test")
     }
 
+    /// Unstir.metal's taps (`tapsThrough`) are the pixel's four points a quarter device pixel off its centre, each
+    /// turned back by the glass's turn and carried through the stack's inverses as the model maps it, on hex's swirl
+    /// too; with two taps the diagonal pair is; and a pixel past the glass's edge runs no entry.
+    func testTheShadersTapsMatchTheModel() throws {
+        let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: """
+            struct TapArgs { float radius, scale, turn, plateau, swirlPlateau, lensEdge; int entries, stride, side; };
+            kernel void taps(device const float *twists [[buffer(0)]], constant TapArgs &a [[buffer(1)]],
+                             device float2 *out [[buffer(2)]], uint2 gid [[thread_position_in_grid]]) {
+                float2 pos = (float2(gid) + 0.5) / a.scale;
+                Taps t = tapsThrough(pos, float2(a.radius), a.radius, twists, a.entries, a.stride, a.plateau,
+                                     a.swirlPlateau, a.lensEdge, a.scale, a.turn);
+                int i = 8 * (gid.y * a.side + gid.x);
+                out[i] = t.p0; out[i + 1] = t.p1; out[i + 2] = t.p2; out[i + 3] = t.p3;
+                out[i + 4] = t.q0; out[i + 5] = t.q1; out[i + 6] = t.q2; out[i + 7] = t.q3;
+            }
+            """)
+        struct Args {
+            var radius, scale, turn, plateau, swirlPlateau, lensEdge: Float
+            var entries, stride, side: Int32
+        }
+        let layout = Layout.hexSwirl, rods = layout.rods
+        var rng = SplitMix64(state: 61)
+        // Shallow and gentle: a deep stack stretches a float's last bit past any tolerance worth holding.
+        let stack = (0..<6).map { _ in Twist(rod: rng.below(rods.count), steps: [-2, -1, 1, 2][rng.below(4)]) }
+        let twists = Unstirred.entries(stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: layout, lenses: [],
+                                       masks: [:]).twists
+        // A glass 54 px across in a 64 px square, so its corners lie past the edge.
+        let side = 64, scale = 2.0, radius = 13.5, turn = 0.4
+        for stride in [1, 3] {
+            var args = Args(radius: Float(radius), scale: Float(scale), turn: Float(turn), plateau: Float(Tank.plateau),
+                            swirlPlateau: Float(Tank.swirlPlateau), lensEdge: Float(Tank.lensEdge),
+                            entries: Int32(stack.count), stride: Int32(stride), side: Int32(side))
+            let output = try kit.buffer(SIMD2<Float>.self, count: 8 * side * side)
+            try kit.run(try kit.pipeline("taps"), grid: MTLSize(width: side, height: side, depth: 1),
+                        group: MTLSize(width: 8, height: 8, depth: 1)) { enc in
+                enc.setBuffer(try! kit.buffer(twists), offset: 0, index: 0)
+                enc.setBytes(&args, length: MemoryLayout<Args>.stride, index: 1)
+                enc.setBuffer(output, offset: 0, index: 2)
+            }
+            let got = kit.read(output, as: SIMD2<Float>.self).map { SIMD2<Double>(Double($0.x), Double($0.y)) }
+            var moved = 0, outside = 0
+            for y in 0..<side {
+                for x in 0..<side {
+                    for j in stride == 1 ? [0, 1, 2, 3] : [0, 3] {
+                        let at = SIMD2(Double(x) + 0.5 + (Double(j & 1) - 0.5) * 0.5, Double(y) + 0.5 + (Double(j >> 1) - 0.5) * 0.5)
+                        let p = (at / scale - SIMD2(radius, radius)) / radius
+                        let back = SIMD2(p.x * cos(turn) + p.y * sin(turn), p.y * cos(turn) - p.x * sin(turn))
+                        let want = stack.reversed().reduce(back) { Tank.twist($0, rod: rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+                        let i = 8 * (y * side + x)
+                        XCTAssertLessThan(simd_distance(got[i + j], p), 1e-5, "tap \(j) of \(x), \(y)")
+                        XCTAssertLessThan(simd_distance(got[i + 4 + j], want), 2e-4, "tap \(j) of \(x), \(y) through the stack")
+                        if simd_distance(want, back) > 0.01 { moved += 1 }
+                        if simd_length(p) > 1.05 { outside += 1 }
+                    }
+                }
+            }
+            XCTAssertGreaterThan(moved, side * side / 2, "the stack moves enough of the glass to test")
+            XCTAssertGreaterThan(outside, side * side / 8, "pixels past the glass's edge are tested")
+        }
+    }
+
+    /// The shader runs no entry for a pixel past the glass's edge (`pastTheGlass`), which holds only while every disc
+    /// lies within the glass: there each entry's map is the identity.
+    func testEveryDiscLiesWithinTheGlass() {
+        for layout in Layout.allCases {
+            for (k, rod) in layout.rods.enumerated() {
+                XCTAssertLessThanOrEqual((rod.x * rod.x + rod.y * rod.y).squareRoot() + rod.z, 1 + 1e-6, "\(layout) rod \(k)")
+            }
+        }
+    }
+
     /// `TankShader` passes each of the tank's stitchables its arguments in the signature's order, SwiftUI giving the
     /// position and layer and each array's count after it.
     func testTheTankShaderPassesTheSignaturesOrder() throws {
@@ -186,6 +258,150 @@ final class PrismTests: XCTestCase {
         XCTAssertNil(Unstirred.channelCost([]))
         XCTAssertNil(Unstirred.channelCost([w, w, w]))
         XCTAssertEqual(Unstirred.channelCost([w, r, c]), 3 + 3 + 1 + 2)
+    }
+
+    /// Unstir.metal's Prism body over a texture of the plate, as the GPU bench samples it, and beside it the glass as
+    /// it was drawn before a held rod had a read: each channel through its own chain, lit and finished, written out here.
+    private static let heldKernel = """
+        struct PlateLayer {
+            texture2d<half> picture;
+            float pixels;
+            half4 sample(float2 p) const {
+                constexpr sampler s(filter::linear, address::clamp_to_zero, coord::pixel);
+                return picture.sample(s, p * pixels);
+            }
+        };
+        struct HeldArgs { float radius, scale, n, cost, fourTaps, plateau, swirlPlateau, lensEdge, held, hold; int count, maskCount; };
+        kernel void held(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                         texture2d<half, access::write> plain [[texture(2)]], device const float *twists [[buffer(0)]],
+                         device const float *masks [[buffer(1)]], constant HeldArgs &a [[buffer(2)]],
+                         uint2 gid [[thread_position_in_grid]]) {
+            if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+            PlateLayer layer = { picture, a.scale };
+            float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius);
+            out.write(unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost,
+                                         a.fourTaps, a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1),
+                                         0.0, 0.0, float3(1), a.held, a.hold), gid);
+            int stride = a.cost > a.fourTaps ? 3 : 1;
+            float3 acc = 0;
+            for (int j = 0; j < 4; j += stride) {
+                float2 p = (pos + (float2(j & 1, j >> 1) - 0.5) * 0.5 / a.scale - centre) / a.radius;
+                float2 qr = p, qg = p, qb = p;
+                chains(min(int(a.n), min(a.count / 4, a.maskCount)), twists, masks, a.plateau, a.swirlPlateau, a.lensEdge,
+                       qr, qg, qb);
+                acc += lit(float3(layer.sample(centre + qr * a.radius).r, layer.sample(centre + qg * a.radius).g,
+                                  layer.sample(centre + qb * a.radius).b), p, float3(0, 0, -1));
+            }
+            plain.write(finish(acc, stride, 0.0), gid);
+        }
+        """
+
+    private struct HeldArgs {
+        var radius, scale, n, cost, fourTaps, plateau, swirlPlateau, lensEdge, held, hold: Float
+        var count, maskCount: Int32
+    }
+
+    /// The moves the held-rod tests turn: a Prism level, its stack before the move (its scramble's first `depth`
+    /// entries), whose top entry's rod is the one in hand, stirred once and not white. Frond's cyan and red rods,
+    /// Thistle's blue and specimen 14's yellow, each a move of its level's untwist (`scripts/prism-levels.sh read`).
+    private static let heldMoves = [(1, 3), (1, 2), (8, 3), (14, 3)]
+
+    /// A 1200 px glass of `level`'s first `depth` entries, its top entry's rod held `off` steps from its count, drawn
+    /// through the held read at `hold` and as the glass was drawn before it, each as RGBA bytes, with the disc that
+    /// rod turns rigidly in pixels.
+    @MainActor private func held(_ kit: ShaderKit, _ plate: MTLTexture, level: Level, depth: Int, off: Double,
+                                 hold: Float) throws -> (read: [UInt8], plain: [UInt8], side: Int, disc: (SIMD2<Double>, Double)) {
+        let stack = Array(level.scramble.prefix(depth)), top = try XCTUnwrap(stack.last)
+        let mask = level.masks[top.rod] ?? .white
+        let count = -Double(top.steps), angle = (count + (count < 0 ? -off : off)) * Tank.step
+        let turns = stack.map { ($0.rod, Double($0.steps) * Tank.step) } + [(top.rod, angle)]
+        let (twists, masks) = Unstirred.entries(turns, layout: level.layout, lenses: [], masks: level.masks)
+        let side = plate.width, scale: Float = 3, radius = Float(side) / scale / 2
+        var args = HeldArgs(radius: radius, scale: scale, n: Float(turns.count), cost: Float(try XCTUnwrap(Unstirred.channelCost(masks))),
+                            fourTaps: 99, plateau: Float(Tank.plateau), swirlPlateau: Float(Tank.swirlPlateau),
+                            lensEdge: Float(Tank.lensEdge), held: Float(mask.rawValue), hold: hold,
+                            count: Int32(twists.count), maskCount: Int32(masks.count))
+        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: side, height: side, mipmapped: false)
+        desc.usage = .shaderWrite
+        let outs = try (0..<2).map { _ in try XCTUnwrap(kit.device.makeTexture(descriptor: desc)) }
+        let buffers = try [kit.buffer(twists), kit.buffer(masks)]
+        try kit.run(try kit.pipeline("held"), grid: MTLSize(width: side, height: side, depth: 1),
+                    group: MTLSize(width: 16, height: 16, depth: 1)) { enc in
+            enc.setTexture(plate, index: 0)
+            enc.setTexture(outs[0], index: 1)
+            enc.setTexture(outs[1], index: 2)
+            for (i, b) in buffers.enumerated() { enc.setBuffer(b, offset: 0, index: i) }
+            enc.setBytes(&args, length: MemoryLayout<HeldArgs>.stride, index: 2)
+        }
+        let bytes = outs.map { t in
+            var b = [UInt8](repeating: 0, count: 4 * side * side)
+            t.getBytes(&b, bytesPerRow: 4 * side, from: MTLRegionMake2D(0, 0, side, side), mipmapLevel: 0)
+            return b
+        }
+        let rod = level.layout.rods[top.rod], r = Double(side) / 2
+        return (bytes[0], bytes[1], side, (SIMD2(r * (1 + rod.x), r * (1 + rod.y)), r * rod.z * Tank.plateau))
+    }
+
+    /// `level`'s plate at 1200 px, gamma-encoded as the layer samples it.
+    @MainActor private func plate(_ kit: ShaderKit, _ level: Level) async throws -> MTLTexture {
+        let rendered = await level.picture.render(side: 400, scale: 3)
+        let image = try XCTUnwrap(rendered?.cgImage)
+        return try await MTKTextureLoader(device: kit.device).newTexture(cgImage: image, options: [.SRGB: false])
+    }
+
+    /// The share of the lit pixels white (every channel past 0.6 of the brightest, lit past 110 of 255) in the held
+    /// rod's rigid disc outside its knob's cap (0.12 of the glass's radius), as the trial's shots were measured.
+    private func whiteShare(_ px: [UInt8], side: Int, disc: (SIMD2<Double>, Double)) -> Double {
+        let (c, r1) = disc, r0 = 0.12 * Double(side) / 2
+        var lit = 0, white = 0
+        for j in max(Int(c.y - r1), 0)...min(Int(c.y + r1), side - 1) {
+            for i in max(Int(c.x - r1), 0)...min(Int(c.x + r1), side - 1) {
+                let d = simd_distance(SIMD2(Double(i), Double(j)), c)
+                guard d > r0, d < r1 else { continue }
+                let k = 4 * (j * side + i), p = [px[k], px[k + 1], px[k + 2]].map(Double.init)
+                guard p.max()! > 110 else { continue }
+                lit += 1
+                if p.min()! > 0.6 * p.max()! { white += 1 }
+            }
+        }
+        return Double(white) / Double(max(lit, 1))
+    }
+
+    /// While a rod is held its disc draws only the channels it moves, in their own colour, until the turn is within
+    /// half a step of its count, and white closes up on the count. The read looks at the stack's maps, never at the
+    /// count, so this is a measure of the plates as dealt, not of a rule.
+    @MainActor func testAHeldRodReadsInItsOwnColourUntilNearItsCount() async throws {
+        let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: Self.heldKernel)
+        var rows: [String] = []
+        for (n, depth) in Self.heldMoves {
+            let level = Level.prism[n - 1], where_ = "\(level.id) after \(depth)"
+            let plate = try await plate(kit, level)
+            var shares: [Double] = []
+            for off in [-1, -0.5, 0, 0.5, 1] {
+                let drawn = try held(kit, plate, level: level, depth: depth, off: off, hold: 1)
+                let share = whiteShare(drawn.read, side: drawn.side, disc: drawn.disc)
+                shares.append(share)
+                if off == 0 {
+                    XCTAssertGreaterThanOrEqual(share, 0.7, "\(where_) on the count")
+                } else {
+                    XCTAssertLessThanOrEqual(share, 0.02, "\(where_) \(off) steps off the count")
+                }
+            }
+            rows.append(where_ + ": " + shares.map { String(format: "%.3f", $0) }.joined(separator: " "))
+        }
+        print("held white share, -1 -0.5 on +0.5 +1 steps off the count\n" + rows.joined(separator: "\n"))
+    }
+
+    /// Let go and faded out, the held read leaves the glass exactly as it was drawn before it, to the byte.
+    @MainActor func testAHeldRodsReadLeavesTheGlassAsItWasWhenLetGo() async throws {
+        let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: Self.heldKernel)
+        let level = Level.prism[0], plate = try await plate(kit, level)
+        for off in [0, 0.5] {
+            let drawn = try held(kit, plate, level: level, depth: 3, off: off, hold: 0)
+            XCTAssertTrue(drawn.read == drawn.plain, "\(off) steps off the count")
+            let gripped = try held(kit, plate, level: level, depth: 3, off: off, hold: 1)
+            XCTAssertFalse(gripped.read == gripped.plain, "the read shows in hand")
+        }
     }
 
     /// Each plate, drawn at `side`, as grey levels, row 0 at the top.

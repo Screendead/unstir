@@ -49,7 +49,7 @@ import XCTest
 
     func testResumeRebuildsEveryKindOfLevel() throws {
         let levels = [Level.plughole[11], Level.maelstrom[3], Level.vortex[4], Level.lens[2], Level.prism[0],
-                      Level.mockUp, Level.endless(Run(seed: 7, tank: 2, brim: 1)), Level.firstStir[0]]
+                      Level.escapement[1], Level.endless(Run(seed: 7, tank: 2, brim: 1)), Level.firstStir[0]]
         for level in levels {
             let g = Game(level: level, tankTurned: true, swirled: true, bank: (10, nil))
             g.startClock(at: Date(timeIntervalSinceNow: -42))
@@ -126,7 +126,7 @@ import XCTest
         XCTAssertNil(Resume.load("endless"), "a spill clears it")
 
         // Out of ticks keeps it, the losing move too (Jack's call, 2026-11-01, on C19); the lost card's undo saves on.
-        let clock = Level.mockUp
+        let clock = Level.escapement[1]
         defer { Resume.remove(clock.id) }
         let c = Game(level: clock, bank: (10, nil), storesResume: true)
         let ratchet = try XCTUnwrap(clock.clocks.first?.rod)
@@ -144,7 +144,7 @@ import XCTest
     /// A tank out of ticks reopens on its lost card (Jack's call, 2026-11-01, on C19): its undo takes back the losing move
     /// as it does live, and again deals afresh with the save following it.
     func testALostTankReopensLost() throws {
-        let level = Level.mockUp
+        let level = Level.escapement[1]
         defer { Resume.remove(level.id) }
         let live = Game(level: level, bank: (10, nil), storesResume: true)
         let ratchet = try XCTUnwrap(level.clocks.first?.rod)
@@ -180,7 +180,7 @@ import XCTest
 
     /// A solve on Escapement still clears the save, and a saved line that solves reopens nothing.
     func testAnEscapementSolveClearsItsSave() throws {
-        let level = Level.mockUp
+        let level = Level.escapement[1]
         defer { Resume.remove(level.id); UserDefaults.standard.removeObject(forKey: "best.\(level.id)") }
         let g = Game(level: level, bank: (10, nil), storesResume: true)
         // The book's line for problem 2: 2:+4, a wait, 1:-3.
@@ -237,7 +237,7 @@ import XCTest
     }
 
     func testTheHarnessLineAndThePrune() {
-        let maelstrom = Level.maelstrom[0], escapement = Level.mockUp, ratchet = escapement.clocks[0].rod
+        let maelstrom = Level.maelstrom[0], escapement = Level.escapement[1], ratchet = escapement.clocks[0].rod
         XCTAssertEqual(Resume.actions("0:+2,u,-1:1,r,3:0", on: maelstrom), [.turn(knob: 0, steps: 2), .undo, .tank(1), .reset])
         XCTAssertEqual(Resume.actions("\(ratchet):1", on: escapement), [.wait(ratchet: ratchet)])
 

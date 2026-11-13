@@ -109,11 +109,8 @@ struct Level: Hashable, Sendable {
     var seized: Set<Int> = []
     /// Slots with no knob over them, which refuse touch as a seized knob does.
     var sockets: Set<Int> = []
-    /// Escapement's clocks: a knob that can't be turned.
+    /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
-    /// Escapement's waiting move: a tap on a ratchet is a move that only ticks the clocks. Off, a clock ticks only
-    /// after a knob's turn and refuses touch as a seized knob does.
-    var waits = false
     /// Escapement's clocks wound back: stirred clockwise, each ticks -1. The rest of `ratchets` tick +1.
     var woundBack: Set<Int> = []
     /// A pack's chapter, which the card's list heads where it changes.
@@ -498,8 +495,9 @@ struct Level: Hashable, Sendable {
               note: l.4, picture: l.2, layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule
-    /// reaches it however its ties go (UnstirTests). Each shows the twin of the picture its row names.
+    /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum (UnstirTests). From M6
+    /// on, the last of each layout's teaching, several levels need a plan: every rule of thumb misses par however its ties
+    /// go (Jack, 2026-11-12). Each shows the twin of the picture its row names.
     static let maelstrom: [Level] = ([
         (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral,
          String(localized: "level.M1.title", defaultValue: "Swell",
@@ -522,7 +520,7 @@ struct Level: Hashable, Sendable {
         (.quad, "1:+3,2:+3,1:-5,2:-7,3:-8,0:+2", [0,1], 8, .coral,
          String(localized: "level.M5.title", defaultValue: "Breaker",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.quad, "3:-2,0:+2,1:-5,2:+8,0:-2,3:+7,1:+2,0:-8,2:-2,1:-6", [1,2], 14, .glass,
+        (.quad, "0:-2,1:-5,2:-7,0:+4,1:-8,3:+3,0:-5,1:+7,2:-8,0:-2,3:-8", [2,3], 15, .glass,
          String(localized: "level.M6.title", defaultValue: "Sandbar",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
         (.pent, "0:+4,2:-2,4:+2,3:+4,2:-7,3:-8,1:+4,0:-6", [0,4], 11, .chainmail,
@@ -541,16 +539,16 @@ struct Level: Hashable, Sendable {
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"),
          String(localized: "level.M10.note", defaultValue: "The nearer turn is not the shorter way.",
                            comment: "A level's lesson, one line under the tank")),
-        (.pent, "2:-2,3:+5,2:-7,1:+8,0:-2,4:+5,3:-6,4:-7,0:+8,1:+3,0:+6,4:-8,1:+3,2:+4", [3,4], 17, .chainmail,
+        (.pent, "0:+2,2:-2,1:+4,4:-3,3:-4,0:-2,4:-3,3:+3,4:-6,3:+7,0:-3,4:+8", [1,4], 16, .chainmail,
          String(localized: "level.M11.title", defaultValue: "Turning tide",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.pent, "4:+2,3:+5,4:+8,0:+7,1:-8,2:+5,3:-6,2:+7,1:+8,0:-4,2:-4,1:-6,2:+8,1:-6", [2,3], 17, .glass,
+        (.pent, "1:+4,0:+6,3:-4,4:-8,2:+3,1:-6,2:+7,1:-8,0:+4,1:-5,3:+2,2:-7,0:+4,1:+8", [1,3], 18, .glass,
          String(localized: "level.M12.title", defaultValue: "Spring tide",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.pent, "3:+2,4:+3,2:-2,3:+5,2:+6,1:-2,0:+4,4:+7,2:-2,1:+5,0:+8,1:-3,2:+5,4:-4,0:-4,4:+7,1:-7,0:-8,4:-3,2:-4", [3,4], 24, .marbling,
+        (.pent, "4:-2,2:-2,0:-5,3:-2,4:-6,1:-2,0:-5,3:-2,2:+4,3:-6,1:-8,2:+2,3:+2,4:+2,3:-5,1:+2", [0,3], 21, .marbling,
          String(localized: "level.M13.title", defaultValue: "Crosscurrent",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.pent, "4:-3,0:-5,4:-2,3:+3,2:+6,1:-8,0:-5,1:-6,4:-3,2:-7,0:+6,3:+8,1:-8,0:-7,4:-3,0:+4,4:-3,3:+2", [0,1], 22, .glass,
+        (.pent, "0:-4,4:-5,2:-2,3:-7,2:-8,4:+2,1:+2,2:-3,3:+4,4:+3,3:+3,1:-2,4:-5,2:-3,1:-5,0:-4,4:-7,2:+3", [2,4], 23, .glass,
          String(localized: "level.M14.title", defaultValue: "Open sea",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
         (.hex, "2:-2,3:+3,4:+5,1:+3,6:+2,3:-8,1:+2,5:-2,0:-7", [4,5], 11, .chainmail,
@@ -567,28 +565,28 @@ struct Level: Hashable, Sendable {
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"),
          String(localized: "level.M18.note", defaultValue: "The right stop is past the obvious one.",
                            comment: "A level's lesson, one line under the tank")),
-        (.hex, "4:-3,3:+5,2:-5,1:+6,3:+4,5:-3,0:+8,6:+4,4:-4,0:-6,3:+4,2:+7,0:-8,5:+6,6:+7", [1,2], 18, .chainmail,
+        (.hex, "6:-2,4:-4,5:+7,0:+4,3:+5,2:-8,1:+4,6:+7,4:-4,1:+8,3:+7,4:-8,0:+2,3:+4,1:-2,5:-4", [1,5], 19, .chainmail,
          String(localized: "level.M19.title", defaultValue: "High seas",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.hex, "3:+3,2:+5,1:+2,2:+2,0:+4,6:-5,0:+6,2:+7,0:+8,6:-5,4:+2,0:-8,2:+3,6:+4,0:-7,6:-8,4:-2,0:-5", [1,6], 21, .glass,
+        (.hex, "4:+4,3:+5,0:+7,2:-8,5:+2,4:+5,5:-6,6:+7,5:-8,1:+2,3:+3,2:-5,3:+8,1:-2,0:-4,6:+7,3:+3", [4,6], 20, .glass,
          String(localized: "level.M20.title", defaultValue: "Surge",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.hex, "2:-2,3:+4,0:-7,4:-8,1:+3,0:-3,2:-5,1:+7,5:+3,0:-8,3:-6,0:-7,1:-8,5:-2,0:-6,5:+7,4:-8,3:+8", [2,3], 22, .marbling,
+        (.hex, "1:-3,2:+5,6:-3,1:+5,6:+8,2:-2,3:+4,4:-5,5:-2,6:+2,4:+4,1:+5,2:-7,1:+8,3:+6,5:+2,4:+3", [2,4], 21, .marbling,
          String(localized: "level.M21.title", defaultValue: "Rogue wave",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.hex, "3:-2,0:+3,1:+6,2:+7,0:-8,1:+5,6:-7,0:-8,2:+7,0:-8,6:+5,4:-4,0:-8,2:+4,6:+3,0:+5,6:+6,2:+3,3:-5", [1,6], 22, .chainmail,
+        (.hex, "6:-4,1:-4,0:-3,3:-4,2:-7,1:-3,0:-2,4:-4,5:+5,2:-4,4:-7,6:+4,1:-3,3:+8,4:-2,2:+6,6:+2,3:-8", [1,3], 22, .chainmail,
          String(localized: "level.M22.title", defaultValue: "Tempest",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
         (.hex, "3:-3,4:-3,0:+6,2:+7,3:-8,2:+8,1:+6,0:-7,1:+8,0:-7,3:-8,0:-8,4:+8,0:+4,5:-5,0:+6,2:-7,3:+8,2:+4,1:+6,6:+8,1:+5", [5,6], 25, .glass,
          String(localized: "level.M23.title", defaultValue: "Fathom",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.hex, "5:+3,6:+5,5:-8,3:-3,4:+8,0:-7,3:-8,0:-8,6:-8,0:+6,4:+7,0:-8,6:+8,0:-8,1:+4,0:+5,2:+8,5:-3,0:+5,3:+6,2:-7,5:+3,3:+8", [1,2], 26, .marbling,
+        (.hex, "2:-4,0:+2,5:-4,4:+6,6:+4,0:+6,6:-8,3:-4,0:+4,1:-7,6:+4,5:-2,3:+3,4:-2,1:+4,6:-4,3:+4,5:-7,2:-6,3:-7,0:+8,5:-8,2:-2", [3,4], 26, .marbling,
          String(localized: "level.M24.title", defaultValue: "Seabed",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.hex, "6:-4,0:-5,6:-4,5:+7,4:-8,0:-4,6:+4,0:+6,1:-7,0:-3,5:+6,0:-8,4:+8,3:-5,5:-3,2:+8,1:-6,2:+7,0:-8,5:+2,0:-4,1:-7,6:-8", [4,5], 26, .chainmail,
+        (.hex, "0:+2,6:+5,0:+6,6:-7,5:-8,3:-2,0:-2,1:-4,4:-3,3:-6,5:-3,0:-4,4:-5,3:-7,2:-6,0:+8,3:+6,5:-4,1:+2,6:+7,2:-2,0:-8,6:-3,1:+6", [1,6], 27, .chainmail,
          String(localized: "level.M25.title", defaultValue: "Shipwreck",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
-        (.hex, "2:+2,3:-4,4:-5,0:-6,2:+8,4:-3,0:+5,1:-6,3:-4,0:-2,3:-5,4:-7,0:-8,2:-6,0:-8,5:-5,0:+6,2:+8,3:-3,0:-4,6:+5,0:+6,3:-8,1:-2", [5,6], 27, .glass,
+        (.hex, "2:+4,5:-2,0:-6,5:-8,1:+2,2:-4,1:-7,3:+4,2:-8,6:-2,5:+3,4:+4,5:+5,4:+6,5:+7,4:+8,6:+4,3:+3,1:-6,6:-8,4:+5,3:-7,4:-8,2:-3,5:+7", [4,5], 28, .glass,
          String(localized: "level.M26.title", defaultValue: "Trench",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
         (.hex, "1:+4,6:-3,1:+4,2:+4,0:+7,3:+8,1:+4,0:-6,1:-7,6:+8,0:-4,2:-7,3:+8,0:-5,4:+6,5:-8,6:-3,0:-5,5:-7,6:-3,0:-5,2:-7,0:+8,6:+3,0:+4,6:+6", [2,3], 29, .marbling,
@@ -608,17 +606,24 @@ struct Level: Hashable, Sendable {
 
     static func dailyID(_ date: Date) -> String { "daily-\(dailyDay(date))" }
 
-    /// Everyone gets the same tank that day: seeded from yyyymmdd. `archived`: dealt from the archive, after its day.
+    /// Everyone gets the same tank that day: seeded from yyyymmdd, then frosted on a frost day (`Frost`), after every
+    /// draw. `archived`: dealt from the archive, after its day.
     static func daily(_ date: Date = .now, archived: Bool = false) -> Level {
         let ymd = dailyDay(date)
-        var rng = SplitMix64(state: UInt64(ymd))
-        let layout = generated[rng.below(4)]
-        let depth = 10 + rng.below(5)
+        let (layout, scramble) = Layout.daily(ymd)
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        return Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
-                     title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
-                     layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng), archived: archived)
+        var level = Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
+                          title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
+                          layout: layout, scramble: scramble, archived: archived)
+        if let frost = Frost.days[ymd] {
+            level.seized = Set(frost.knobs)
+            level.motion = .tank
+            level.fixedPar = frost.par
+            level.note = String(localized: "Frost day: two knobs are frozen. Turn the tank. Turns count as moves.",
+                                comment: "A frost day's daily: two knobs seized. One line under the tank")
+        }
+        return level
     }
 
     /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half
@@ -626,7 +631,7 @@ struct Level: Hashable, Sendable {
     /// brim spills.
     static func endless(_ run: Run) -> Level {
         var level = Level(id: "endless", label: "\u{221E}", title: String(localized: "Endless",
-                                                                          comment: "The endless run's title"), layout: generated[run.tank % 4], scramble: [],
+                                                                          comment: "The endless run's title"), layout: Layout.generated[run.tank % 4], scramble: [],
                           run: run)
         // No deeper than keeps the tank four taps as dealt, or than leaves room under the stack's limit for every push
         // the brim takes before it spills: the stack holds at most the scramble plus the brim's notches, and the push
@@ -653,13 +658,20 @@ struct Level: Hashable, Sendable {
     /// Out of v1 until it offers what the packs a player owns add (Jack's call snd2-sandbox, round 16): a Release build
     /// neither lists nor opens it, while Debug and the harness outside Release keep it.
     static func playsSandbox(release: Bool = Build.release) -> Bool { !release }
-
-    /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
-    private static let generated: [Layout] = [.quad, .eye, .pent, .hex]
-
 }
 
 extension Layout {
+    /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
+    static let generated: [Layout] = [.quad, .eye, .pent, .hex]
+
+    /// The daily's tank on day `ymd` (yyyymmdd), its seed: frozen with the generator, as every past daily is its output.
+    static func daily(_ ymd: Int) -> (layout: Layout, scramble: [Twist]) {
+        var rng = SplitMix64(state: UInt64(ymd))
+        let layout = generated[rng.below(4)]
+        let depth = 10 + rng.below(5)
+        return (layout, layout.scramble(depth: depth, inversions: 3, rng: &rng))
+    }
+
     /// Push-only scramble of `depth` entries, `inversions` of them no louder than an undo-able twist they cover.
     /// Ported draw for draw from the prototype, so the dailies match it. Every past daily is this function's output, so
     /// it never changes: endless changes only what it asks for, and a new generator goes beside this one.

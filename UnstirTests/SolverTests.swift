@@ -80,6 +80,34 @@ final class SolverTests: XCTestCase {
                                                                        .stir(knob: 1, slot: 3, steps: -2)])
     }
 
+    /// Two seized knobs on quad: the first turn's near way, +3, clears as many seams as the far way, +2, but leaves the
+    /// tail needing a third turn. Every rule of thumb takes the near way however its ties go, so the level needs a plan,
+    /// and the near way scores no worse than the far way until a lookahead of six moves.
+    @MainActor func testTheFarFirstTurnNeedsAPlan() {
+        let solver = Solver(.quad), stack = [Twist].parse("0:+3,2:+2,3:-4,0:+6,3:+7,1:-4,0:+7", in: .quad)
+        let seized: Set<Int> = [0, 1]
+        let optimal = solver.optimalPlay(stack, seized: seized)
+        XCTAssertEqual(optimal?.count, 10)
+        for rule in Solver.rules { XCTAssertEqual(solver.ties(stack, seized: seized, rule: rule)?.best.count, 11, "\(rule)") }
+        XCTAssertEqual(solver.needsPlan(stack, seized: seized), true)
+        let decoys = solver.decoys(stack, seized: seized, line: optimal!)
+        XCTAssertEqual(decoys?.filter { $0.at == 0 }.map(\.survives), [6])
+        XCTAssertEqual(decoys?.filter { $0.at == 0 }.map(\.move), [.turn(steps: -1, to: 3)])
+        assertEmpties(optimal, .quad, stack, seized: seized)
+    }
+
+    /// No lookahead turns to the nearest and pays a second turn, but the park rule reaches the optimum, so no plan is
+    /// needed. Both nearest turns are decoys, each refuted by a lookahead of three moves.
+    func testARuleOfThumbAtTheOptimumNeedsNoPlan() {
+        let solver = Solver(.quad), stack = [Twist].parse("3:+2,1:+3,0:+4", in: .quad)
+        XCTAssertEqual(solver.ties(stack, seized: [0], rule: .nearest)?.best.count, 5)
+        XCTAssertEqual(solver.ties(stack, seized: [0], rule: .oneVisit)?.best.count, 4)
+        XCTAssertEqual(solver.needsPlan(stack, seized: [0]), false)
+        let decoys = solver.decoys(stack, seized: [0], line: solver.optimalPlay(stack, seized: [0])!)
+        XCTAssertEqual(decoys?.map(\.at), [0, 0])
+        XCTAssertEqual(decoys?.map(\.survives), [3, 3])
+    }
+
     /// The eye's big knobs only swap with each other.
     func testSeizingBothBigKnobsStrandsTheirSeams() {
         let solver = Solver(.eye), stack = [Twist].parse("0:+3", in: .eye)
@@ -301,18 +329,19 @@ final class SolverTests: XCTestCase {
         XCTAssertEqual(ties?.worst.moves, ties?.best.moves)
     }
 
-    /// Each maelstrom level's par is the optimum, the park rule reaches it however its ties go under either parking,
-    /// and the optimal play empties the stack on a real `Game`.
-    @MainActor func testMaelstromIsFairAtPar() throws {
+    /// Each maelstrom level's par is the optimum, and the optimal play empties the stack on a real `Game`. The levels
+    /// that need a plan miss it by every rule of thumb, however its ties go (Jack, 2026-11-12: maelstrom is the last
+    /// free tier and no longer promises that one does).
+    @MainActor func testMaelstromParIsTheOptimum() throws {
         try skipUnlessSlow()
+        let planned: Set<String> = ["M6", "M11", "M12", "M13", "M14", "M19", "M20", "M21", "M22",
+                                       "M24", "M25", "M26"]
         for level in Level.maelstrom {
             let solver = Solver(level.layout), stack = level.scramble, seized = level.seized
-            let optimal = solver.optimalPlay(stack, seized: seized)
-            XCTAssertEqual(optimal?.count, level.par, level.id)
-            for parking in [Solver.Parking.fewest, .all] {
-                XCTAssertEqual(solver.parkTies(stack, seized: seized, parking: parking)?.worst.count, level.par,
-                               "\(level.id) \(parking)")
-            }
+            let optimal = try XCTUnwrap(solver.optimalPlay(stack, seized: seized), level.id)
+            XCTAssertEqual(optimal.count, level.par, level.id)
+            XCTAssertEqual(solver.needsPlan(stack, seized: seized, optimum: optimal.count), planned.contains(level.id),
+                           level.id)
             assertEmpties(optimal, level.layout, stack, seized: seized, level.id)
         }
     }
@@ -345,5 +374,62 @@ final class SolverTests: XCTestCase {
         XCTAssertEqual(solver.park(level.scramble, seized: seized, parking: .all)?.count, 26)
         XCTAssertEqual(solver.park(level.scramble, seized: seized, parking: .fewest, tie: .lowest)?.count, 24)
         XCTAssertEqual(solver.park(level.scramble, seized: seized, parking: .all, tie: .lowest)?.count, 27)
+    }
+
+    private func noon(_ ymd: Int) -> Date {
+        Calendar(identifier: .gregorian).date(from: DateComponents(year: ymd / 10000, month: ymd / 100 % 100,
+                                                                   day: ymd % 100, hour: 12))!
+    }
+
+    /// A frost day is dealt as any daily, draw for draw, then seizes the first pair in order that needs a plan, its par
+    /// the optimum with the tank's turns; the optimal line empties it on a real `Game`.
+    @MainActor func testAFrostDaySeizesItsPairAfterTheDraws() {
+        let level = Level.daily(noon(20261015))
+        XCTAssertEqual(level.layout, .quad)
+        XCTAssertEqual(level.scramble, [Twist].parse("3:-3,1:+3,0:-4,1:+6,2:-6,1:+7,2:-8,0:+4,1:-8,3:-2,2:+5,0:+2,1:-6,0:+7",
+                                                     in: .quad))
+        XCTAssertEqual(level.seized, [0, 1])
+        XCTAssertEqual(level.motion, .tank)
+        XCTAssertEqual(level.par, 20)
+        XCTAssertFalse(level.note.isEmpty)
+        let solver = Solver(.quad)
+        XCTAssertEqual(solver.frost(level.scramble)?.knobs, [0, 1])
+        for pair in Solver.frostPairs(.quad).prefix { $0 != [0, 1] } {
+            XCTAssertNotEqual(solver.untwistingPlay(level.scramble, seized: Set(pair)).flatMap {
+                solver.needsPlan(level.scramble, seized: Set(pair), optimum: $0.count) }, true, "\(pair)")
+        }
+        assertEmpties(solver.optimalPlay(level.scramble, seized: level.seized), .quad, level.scramble, seized: level.seized)
+    }
+
+    /// A day no pair frosts is the daily as it always was.
+    func testAPlainDayIsUnchanged() {
+        let level = Level.daily(noon(20261001))
+        XCTAssertNil(Solver(level.layout).frost(level.scramble))
+        XCTAssertEqual(level.seized, [])
+        XCTAssertEqual(level.motion, .none)
+        XCTAssertNil(level.fixedPar)
+        XCTAssertEqual(level.par, level.scramble.count)
+        XCTAssertEqual(level.note, "")
+    }
+
+    /// `Frost.days` is the solver's verdict on every day it spans, and frosts no day outside it: about 3 min in a Debug
+    /// simulator build, the slowest day (2028-03-23) 5 s of it.
+    func testTheFrostTableIsTheSolversVerdict() throws {
+        try skipUnlessSlow()
+        let calendar = Calendar(identifier: .gregorian), clock = ContinuousClock()
+        var date = noon(Frost.first), slowest = (ymd: 0, took: Duration.zero)
+        while true {
+            let ymd = Level.dailyDay(date)
+            if ymd > Frost.last { break }
+            let (layout, stack) = Layout.daily(ymd)
+            var frost: (knobs: [Int], par: Int)?
+            let took = clock.measure { frost = Solver(layout).frost(stack) }
+            if took > slowest.took { slowest = (ymd, took) }
+            XCTAssertEqual(frost?.knobs, Frost.days[ymd]?.knobs, "\(ymd)")
+            XCTAssertEqual(frost?.par, Frost.days[ymd]?.par, "\(ymd)")
+            date = calendar.date(byAdding: .day, value: 1, to: date)!
+        }
+        XCTAssertTrue(Frost.days.keys.allSatisfy { (Frost.first...Frost.last).contains($0) })
+        print("frost: slowest verdict \(slowest.ymd), \(slowest.took)")
     }
 }

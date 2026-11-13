@@ -136,6 +136,16 @@ film rim-seized 14 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=maelstrom LEVEL=1
   MOVES=-1:+1,2:+8,3:-7,0:+4
 film rim-both 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 FINGER=1 \
   MOVES=-1:+1,0:+8,4:+7,1:-4
+# Frost days (scripts/frost-days.sh line <day> prints both lines): the daily on a day whose two seized knobs make every
+# rule of thumb miss par, the rim lesson unlearnt as a plughole player meets it. 20 Nov 2026 (quad, knobs 0 and 1) by
+# the park rule, 17 against par 15; 14 Dec 2026 (pent, knobs 2 and 4) on its optimal line, at par 17.
+film frost-park-over 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAILY=20261120 FINGER=1 REST=1 \
+  MOVES=-1:+1,2:-4,3:+4,-1:+1,2:+8,-1:+1,2:-6,-1:+1,2:-8,3:-2,-1:+2,3:-7,2:+7,3:+3,-1:+1,2:+4,3:-2
+film frost-at-par 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAILY=20261214 FINGER=1 REST=1 \
+  MOVES=3:-2,0:-2,-1:-2,0:+3,1:-5,-1:+1,3:+4,0:-8,1:+7,0:+6,-1:+1,0:-5,3:-2,-1:-1,3:+4,1:+2,0:-3
+# The thaw: 14 Dec 2026's frost day played through at par, quickly, and the ice melts off as the solve lands.
+film frost-thaw 17 "fps=5,scale=150:-1,tile=10x8:padding=4" MODE=daily DAILY=20261214 PACE=0.1 \
+  MOVES=3:-2,0:-2,-1:-2,0:+3,1:-5,-1:+1,3:+4,0:-8,1:+7,0:+6,-1:+1,0:-5,3:-2,-1:-1,3:+4,1:+2,0:-3
 # The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (a red ring just
 # inside the glass's edge), turned straight back and knob 0 healed.
 film rim-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
@@ -177,6 +187,12 @@ film firststir-ch4-harbour 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs
 film firststir-ch5-stir 34 "$tank,fps=1,scale=200:-1,tile=12x3:padding=4" $fs LEVEL=25 MOVES=1:+3,0:-2,1:-5,0:+3,2:-4
 # The night forwards whole, from First Stir 25 opened solved (UNSTIR_ENDING=-1 runs it from the start).
 film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=-1
+# Reading Prism's picture under a held rod: a move of shots/prism.sh's `reads` turned slowly by the fingertip, 0.7 s a
+# step, to its count and let go: Frond's cyan rod, its first move, and the last specimen's yellow rod, its fourth.
+film prism-read-01-cyan 9 "$tank,fps=2,scale=200:-1,tile=9x2:padding=4" PACK=prism OWNED=prism LEVEL=1 FINGER=1 \
+  REST=1.5 TURN=0.7 MOVES=1:+3
+film prism-read-30-yellow 9 "$tank,fps=2,scale=200:-1,tile=9x2:padding=4" PACK=prism OWNED=prism LEVEL=30 \
+  PLAYED=0:+2,1:-2,4:-2 FINGER=1 REST=1.5 TURN=0.7 MOVES=0:-3
 # Prism, played by a drawn fingertip: specimen 1 heals the red rod buried under the cyan one first, which its colour
 # frees, then the cyan, then the white bottom stir; specimen 5 on pent heals the solver's line, red and cyan words
 # interleaved, the white last, owned since it is past the taste.
@@ -200,36 +216,39 @@ film clip-prism 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=prism STO
 film clip-complete 18 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=complete STORE=lens:unowned
 # The menu's dock of covers, which keep their own loops.
 film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" STORE=lens:unowned BESTS=plughole:000000000
-# Escapement 1: the demonstration a first-time player sees before the first stir (two heals, the clock ticking after
-# each, then the problem winds in), and lines played by a drawn fingertip: won, and a slip whose tick pushes, played on
-# until the ticks run out. A ratchet's move (0:1) is a touch on it, which it refuses. Screen, so the header's budget
-# shows with the tank.
+# Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
+# again, then the problem winds in), and lines played by a drawn fingertip: won, and a slip whose tick pushes, played on
+# until the ticks run out. A ratchet's move (0:1) is a tap on it. Screen, so the header's budget shows with the tank.
 film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
-film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=1:-3,2:-2,2:-4
+film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+# The wait control: problem 1's demonstration waiting on it, and problem 2 solved with its wait made on it (`w`), the
+# whole screen so the row under the tank is in frame.
+film escapement-demo-wait 14 "fps=3,scale=150:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
+film escapement-won-wait 12 "fps=3,scale=150:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,w,1:-3
 screen=crop=iw:ih*0.75:0:ih*0.05  # the header and the tank, the budget's flaps with the clocks, at either scale
-film escapement-out-of-ticks 15 "$screen,fps=3,scale=150:-1,tile=9x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=1:-3,1:2,1:1
-# Out of ticks as the clock stops with twists left: on 3, knob 2 a step short, then knob 1, which pushes under knob
-# 2's seam as the clock stops.
-film escapement-stopped 11 "$tank,fps=3,scale=200:-1,tile=8x4:padding=4" PACK=escapement LEVEL=3 FINGER=1 REST=1 MOVES=2:1,1:-3
-# Clean solves of the book's lines: 17's two clocks, the first uncovering the second's seam on every move, and 29's
-# three.
+film escapement-out-of-ticks 15 "$screen,fps=3,scale=150:-1,tile=9x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,1:-3,0:1
+# Out of ticks as the clock stops with twists left: on 3, a tap, then knob 1, which pushes under knob 2's seam as the
+# clock stops.
+film escapement-stopped 11 "$tank,fps=3,scale=200:-1,tile=8x4:padding=4" PACK=escapement LEVEL=3 FINGER=1 REST=1 MOVES=0:1,1:-3
+# Clean solves of the book's lines: 17's two clocks, the first uncovering the second's seam on every move, and 29's three,
+# with its two taps (a ratchet's move, 1:1).
 film escapement-two-clocks 19 "$tank,fps=2,scale=200:-1,tile=8x5:padding=4" PACK=escapement OWNED=escapement LEVEL=17 FINGER=1 REST=1 \
   MOVES=3:-5,4:-2,3:5,4:3,3:-4
 # 16's line, the budget's flaps falling two a move while both clocks run, then one: 09 to 00 as clock 4 stops.
 film escapement-budget-16 22 "$screen,fps=2,scale=150:-1,tile=11x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
-  MOVES=0:3,6:-5,3:4,6:-2,5:-4,2:2
+  MOVES=3:-2,5:-2,1:1,6:-4,5:3,2:-5
 # Each clock's flip count in its hub (ES2): 16's line clean, each hub flipping with its own clock's ticks and greying at
-# 0 as its rod empties; and a wrong 2:+1 whose ticks both push, clock 1's its last, then more steps of knob 2 out of
-# ticks.
+# 0 as its rod empties; and a wrong 6:-4 whose tick pushes clock 1's last, then waits on clock 4 out of ticks.
 film escapement-hubs-16 22 "$screen,fps=2,scale=150:-1,tile=11x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
-  MOVES=0:3,6:-5,3:4,6:-2,5:-4,2:2
+  MOVES=3:-2,5:-2,1:1,6:-4,5:3,2:-5
 film escapement-hubs-16-wrong 20 "$screen,fps=2,scale=150:-1,tile=10x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
-  MOVES=0:3,6:-5,2:1,2:1,2:1,2:1
+  MOVES=3:-2,5:-2,6:-4,4:1,4:1,4:1
 film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=29 FINGER=1 REST=1 \
-  MOVES=0:-5,4:3,6:-3,2:-3,4:-5,2:-5,0:5,2:3
-# Escapement 7: a touch on the clock's ratchet (0:1), which shakes with a thud and makes no move, then the line.
+  MOVES=4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
+# Escapement 7, whose first move is a wait: a tap halfway out the clock's disc (0:2), then one on its ratchet (0:1),
+# then the line.
 film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escapement OWNED=escapement LEVEL=7 FINGER=1 REST=1 \
-  MOVES=0:1,3:3,1:-2,2:-3
+  MOVES=0:2,0:1,1:2,2:-3
 # A Lens level bakes its own panel the first time a Debug install draws it, half a minute or more, and the opening
 # waits on it: a launch of the level first bakes it into Caches, which its films then read.
 warm() {  # level
@@ -298,7 +317,7 @@ if wants editors-lens-03; then
   sleep 1  # the file is written whole, but let the launch settle before it is cut off
 fi
 film editors-lens-03 24 "$whole" PACK=lens LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-3,2:-4,1:+2
-film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-3,2:-2,2:-4
+film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=0.2 MOVES=2:4,0:1,1:-3
 film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-4,1:+3,2:-3
 # The packs' layers in play (scripts/layers-film.sh films them with sound): Lens 25, Escapement 29 and Prism 30 each
 # played by a drawn fingertip through its line in sound-src/layers-in-play.tsv, wrong moves and undos and all, its
@@ -327,3 +346,27 @@ layer layer-prism-30 prism 30 0
 # editors-whirlpool-03 with the interface, as the preview's other segments have it.
 film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
 film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6
+# The curtain call (`Payoff`), which the solve that finishes a tier, a paid pack or the free game plays before its
+# card: plughole 27, maelstrom 27, Lens 25 (its halftone baked first, as for lens-08-solve) and Escapement 30, each
+# on a two-stir stand-in for its scramble, autoplayed, every other level of its tier or pack holding a best. Each
+# strip starts as the level's last stir lands. Then the game's and a tier's under Reduce Motion.
+pay="trim=start=1.5,setpts=PTS-STARTPTS,crop=iw:ih*0.86:0:ih*0.05,fps=3,scale=180:-1"
+pay_tier=(LEVEL=27 STACK=0:+3,1:-4 AUTOPLAY=1 BESTS=plughole:cc0c0cc0cc0ccc0c0ccc0c0c0c-)
+pay_game=(TIER=maelstrom LEVEL=27 STACK=0:+3,1:-4 PAR=2 AUTOPLAY=1 OWNED=first-stir
+  BESTS=plughole:ccccc0ccccccc0cccccccc0cccc,whirlpool:cc0c0cc0cc0ccc0c0ccc0c0c0cc,vortex:c00c0c00cc0c0c000c0cc000c0c,maelstrom:0c00102c0010c00020c0100c00-)
+film payoff-tier 10 "$pay,tile=9x3:padding=4" "${pay_tier[@]}"
+film payoff-game 14 "$pay,tile=10x4:padding=4" "${pay_game[@]}"
+if wants payoff-lens; then warm 25; fi
+film payoff-lens 12 "$pay,tile=8x4:padding=4" PACK=lens LEVEL=25 OWNED=first-stir,lens STACK=2:+3,0:+1 PAR=2 AUTOPLAY=1 PACE=1.2 \
+  BESTS=lens:cc0c0cc0cc0ccc0c0ccc0c0c-
+film payoff-escapement 11 "$pay,tile=10x3:padding=4" PACK=escapement LEVEL=30 OWNED=escapement STACK=0:+3 AUTOPLAY=1 PACE=1.2 \
+  BESTS=escapement:ccccccccccccccccccccccccccccc-
+if wants calm-payoff-game || wants calm-payoff-tier; then
+  calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
+  trap 'calm false' EXIT
+  calm true
+  film calm-payoff-tier 9 "$pay,tile=9x3:padding=4" "${pay_tier[@]}"
+  film calm-payoff-game 12 "$pay,tile=9x4:padding=4" "${pay_game[@]}"
+  calm false
+  trap - EXIT
+fi

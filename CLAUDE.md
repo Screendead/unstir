@@ -64,8 +64,8 @@ leaving its heading and a pointer.
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
-  commits local until the next build is worth paying for. If a build takes more than
-  10 minutes (Jack, 2026-11-01), raise it with Jack: the approach to builds needs rethinking.
+  commits local until the next build is worth paying for. Tell Jack when CI's time jumps or
+  otherwise looks wrong (Jack, 2026-11-12); there is no fixed line.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
   use the allowance. macOS minutes in private repos count 10×.
@@ -117,6 +117,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
   tier, level and pack open, and the version line ends "editors". Any other Release build compiles the switch out
   (guideline 2.5.19 bars a hidden one; `testADefaultBuildHasNoEditorsSwitch`).
+- TestFlight: `scripts/archive-ios.sh` (`docs/testflight.md`).
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
   numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level, packs' too, on the phone
@@ -130,14 +131,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   harness's launches on that simulator, so the bundle's principal class (`FreshDefaults`) forgets every started flag
   before each test and after the run. The solver's tests that take seconds, and the
   halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
-  `xcodebuild` to run them too (about a minute and a half more).
+  `xcodebuild` to run them too (about 4.5 minutes more).
 - StoreKit tests: `scripts/test-store.sh [test|build-for-testing|test-without-building] [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots] [masks=slot:channel]`
-  (e.g. `quad 0:+3,2:-4 0`, `tri 1:-2,2:+4,0:+3 lenses=0`, or `tri 2:+2,0:+3,1:+4 masks=0:r,1:c`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
-  detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
-  by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
+  (e.g. `quad 0:+3,2:-4 0` or `tri 2:+2,0:+3,1:+4 masks=0:r,1:c`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
+  detour beats it), the park rule's fewest and most moves over its ties under each parking, the no-lookahead count
+  and planning gap, one-visit and last-ring ties, whether it needs a plan (no rule's best tie reaches the
+  optimum), decoys' lookahead (`decoys` lists them), then the optimal moves. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
   out of Levels.swift, so that struct stays top-level there. `scripts/solve.sh escapement <layout> <scramble> <clocks>
   [limit]` (e.g. `escapement hex <scramble> 1+,4-`, clocks as `problems.tsv` writes them) runs the app's own prover
@@ -149,9 +151,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   with twists left (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
   optimum and its proof, absolute when par is what the clocks owe, the lines and keys at par over turns of up
   to `span` steps, and each move of the line with the alternatives that would lose. `build` deals problems backwards from a line,
-  and `ESC_WAIT=0 ... book scripts/escapement/problems-nowait.tsv` proves the book
-  (`docs/escapement-problems.md`; it stalls on 11). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, `ESC_PUSHED=1` plays on past a pushed
-  tick, and `ESC_WAIT=0` plays without the wait, the app's rule. It builds `build/escapement/prove` as `solve.sh` does.
+  and `book scripts/escapement/problems.tsv` proves the book (`docs/escapement-problems.md`, about eight
+  minutes). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, `ESC_PUSHED=1` plays on past a pushed
+  tick, and `ESC_WAIT=0` plays without the wait. It builds `build/escapement/prove` as `solve.sh` does.
 - Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py

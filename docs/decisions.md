@@ -435,6 +435,7 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | CRISP = A | 2026-11-11 | The finer lens core merges and goes on the phone to check (#187). Jack: "How exciting. This looks lovely." | HANDOFF |
 | ESCPICTURES = A | 2026-11-11 | Escapement gets a plate per problem, drawn as its name. | HANDOFF |
 | MUSIC-THROUGH | 2026-11-11 | Jack, on the packs' layers: "i don't want the packs' foreground to fade when the level is solved then come back in the same spot on the next level; i want it to keep playing all the way through". | HANDOFF |
+| PAYOFF = C | 2026-11-11 | Finishing a tier, a paid pack or the free game plays the curtain call, with a credit line after the game. Jack: "I just don't like how A re-stirs to reward you for unstirring. Curtain call looks cleanest to me." The credit's words are not decided. | HANDOFF, architecture |
 
 ## Round 18
 
@@ -462,6 +463,19 @@ Calls 2026-11-11, night (the second follow-up page, six calls, all answered).
 | Prism's held rod | 2026-11-11 | While a Prism rod is held, the colours it moves are drawn alone in their own colour, and white fades in near the count. Jack: "This is a fantastic solution to the problem. Well done." It goes on his phone before it merges. | HANDOFF |
 | The curtain call as built | 2026-11-11 | Change it first and show it again before merging. Jack: "I want the text within the glass. You spaced the text below the glass far too close to it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided? It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small screens." | HANDOFF |
 | The credit | 2026-11-11 | The game's one credit reads "made by screendead · thank you for playing". | HANDOFF |
+
+## Round 20
+
+Said in the session, 2026-11-12, after Claude measured two no-wait rules (clocks that slip, and clocks that tick only
+when the turned knob crosses them): neither brought back choice, as at most moves only one twist can come off at all.
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| Escapement's wait, reversed | 2026-11-12 | The waiting move comes back as the labelled wait button (#191, merged into #207), and the game makes clear that a clock can tick with no knob turned. This reverses ESCWAIT (round 18), and the twenty problems dealt again go back to their earlier deals. Jack: "Okay, then I reverse my decision, and choose the tick button to wait and make it clear that the ratchets can move without a rod being manually turned." | HANDOFF |
+| Maelstrom needs plans | 2026-11-12 | Maelstrom's promise that a sensible player (the park rule, however its ties go) always reaches par is removed; levels that need a plan replace some rows. Jack: it "can be broken (well, removed). It's the last free tier; it's supposed to be a challenge." Which rows is open until he sees them. | HANDOFF, architecture |
+| Frost days ship | 2026-11-12 | Frost days ship (#211), and the menu's daily row says "frost day" under its title on one. Jack picked "ship, and mark frost days on the menu". | HANDOFF, architecture |
+| Frost day's ice | 2026-11-12 | A frost day's frozen knobs sit under one pane of frosted glass over their discs: Jack picked the glaze ("a frozen & frosted watch glass kinda feel", clear that the rod's circle is frozen, not overdone), then the lusher feathers over the fine ones. The ice thaws on the solve, and a thawed knob is a plain working knob. | architecture |
+| CI time | 2026-11-12 | The 10-minute line is gone: Claude tells Jack when CI's time jumps or otherwise looks wrong. Replaces "CI line" (2026-11-01) and the second half of r16c-ci-limit; the job's 15-minute stop stays. | CLAUDE.md |
 
 ## Dated, no round
 

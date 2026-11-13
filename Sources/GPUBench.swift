@@ -11,7 +11,8 @@ import SwiftUI
 /// taps and with two, on glasses of 1137 px (the iPhone 13 Pro Max's), 1284 and 1471 (the open Duo's upright one); the
 /// glass's own fill (`benchGlass` in Glass.metal) and whirlpool 27's whole frame, that fill under its stack, at 1137 and
 /// 1471; then, at 1284, a plain stack at 0 and 24 entries and every Prism specimen as dealt through the per-channel
-/// shader and, for comparison, the same stack read white through the plain one; then Lens 01 and 25 on their own panels,
+/// shader and, for comparison, the same stack read white through the plain one, and with its first move's rod in hand,
+/// its held read drawn and not, four taps forced; then Lens 01 and 25 on their own panels,
 /// as dealt and with every lens at x8. Last, Lens's first-open bake on the CPU.
 enum GPUBench {
     static var wanted: Bool { ProcessInfo.processInfo.environment["UNSTIR_GPUBENCH"] == "1" }
@@ -38,13 +39,18 @@ enum GPUBench {
         /// Drawn through `unstirLens` with the panel's detail, in place of `unstir`.
         var fine = false
         var channels = false
+        /// Prism: a rod in hand on top of the stack, turned to `angle`, its read drawn (`held`) or not.
+        var live: (rod: Int, angle: Double)?
+        var held: Channels?
         var side = Int(points * scale)
         var fourTaps = Float(Tank.fourTaps)
         var kind = Kind.unstir
     }
 
     struct Args {
-        var radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge: Float
+        var radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold: Float
+        /// The oracle's cases set these (`OracleBench`); the sweeps here draw the glass unturned, in full colour.
+        var turn: Float = 0, haze: Float = 0, isolate: Float = 0, tintR: Float = 1, tintG: Float = 1, tintB: Float = 1, nudgeX: Float = 0, nudgeY: Float = 0
         var count, maskCount, channels, fineCount: Int32
     }
 
@@ -145,6 +151,12 @@ enum GPUBench {
             cases.append(Case(name: level.id, picture: level.picture, layout: level.layout, stack: level.scramble,
                               masks: level.masks, channels: true))
             cases.append(Case(name: "\(level.id)-white", picture: level.picture, layout: level.layout, stack: level.scramble))
+            // The first move's rod in hand half a step short of its count, four taps forced, its read drawn and not.
+            let top = level.scramble.last!, live = (top.rod, -(Double(top.steps) - 0.5 * Double(top.steps.signum())) * Tank.step)
+            for held in [nil, level.masks[top.rod]] {
+                cases.append(Case(name: "\(level.id)-\(held == nil ? "live" : "held")", picture: level.picture, layout: level.layout,
+                                  stack: level.scramble, masks: level.masks, channels: true, live: live, held: held, fourTaps: four))
+            }
         }
         for level in lensLevels {
             // Every lens zoomed to the deal's limit over the level's twists: the most of the glass a lens magnifies.
@@ -160,15 +172,16 @@ enum GPUBench {
         var wallClock = false
         /// GPU seconds per frame of `c`: the median over 15 command buffers of 10 dispatches each, after a warm-up.
         func time(_ c: Case) -> Double {
-            var (floats, masks) = Unstirred.entries(c.stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: c.layout,
-                                                    lenses: c.lenses, masks: c.masks)
+            var (floats, masks) = Unstirred.entries(c.stack.map { ($0.rod, Double($0.steps) * Tank.step) } + (c.live.map { [$0] } ?? []),
+                                                    layout: c.layout, lenses: c.lenses, masks: c.masks)
             let n = floats.count / 4
             if floats.isEmpty { floats = [0, 0, 0, 0]; masks = [7] }
             let cost = Unstirred.channelCost(masks) ?? n
             let radius = Double(c.side) / scale / 2
             var args = Args(radius: Float(radius), scale: Float(scale), n: Float(n), fourTaps: c.fourTaps,
                             cost: Float(cost), plateau: Float(Tank.plateau), swirlPlateau: Float(Tank.swirlPlateau),
-                            lensEdge: Float(Tank.lensEdge), count: Int32(floats.count), maskCount: Int32(masks.count),
+                            lensEdge: Float(Tank.lensEdge), held: Float(c.held?.rawValue ?? 0), hold: c.held == nil ? 0 : 1,
+                            count: Int32(floats.count), maskCount: Int32(masks.count),
                             channels: c.channels ? 1 : 0, fineCount: 0)
             // Every case binds an atlas and a table, which only `unstirLens` reads.
             let table = c.fine ? tables[c.panel!]! : [0]
@@ -255,6 +268,20 @@ enum GPUBench {
         say(String(format: "GPUBENCH measured / assumed cost: median %.2f, max %.2f; slowest %@ at %.3f ms of the 8.333 ms a 120 Hz frame has; thermal %@",
                    drift[drift.count / 2], drift.last!, worst.name, worst.ms,
                    heat()))
+        // A held rod's read against the same frame without it: the stack and the rod in flight, four taps either way.
+        var ratios: [Double] = [], extra: [Double] = [], slowest = (name: "", ms: 0.0)
+        for level in Level.prism {
+            let live = ms["\(level.id)-live"]!, held = ms["\(level.id)-held"]!
+            ratios.append(held / live)
+            extra.append((held - live) / entry)
+            if held > slowest.ms { slowest = (level.id, held) }
+            say(String(format: "GPUBENCH %@ rod in hand: %.3f ms, its read drawn %.3f ms (%.3fx, %+.1f plain entries)", level.id, live, held,
+                       held / live, (held - live) / entry))
+        }
+        ratios.sort()
+        extra.sort()
+        say(String(format: "GPUBENCH held read / rod in hand: median %.3fx, max %.3fx; %+.1f plain entries median, %+.1f max; slowest held %@ at %.3f ms; thermal %@",
+                   ratios[ratios.count / 2], ratios.last!, extra[extra.count / 2], extra.last!, slowest.name, slowest.ms, heat()))
 
         // Each Lens frame through the plain shader, as every glass drew before the detail, and through `unstirLens`.
         for level in lensLevels {

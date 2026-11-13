@@ -44,6 +44,25 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and, of the shader, only `lensFlow` and the channel chains, compiled
   on their own through `ShaderKit` (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  A pixel's taps go through the chain in step (`tapsThrough`, Jack, 2026-11-12: find a faster way to draw twists,
+  provided it doesn't look worse): entry by entry, each entry read once for all the taps (`entry`), where each tap
+  used to run the whole chain on its own; `unmap` clears a point past the entry's disc by the squared distance,
+  before its root and divide; and a pixel whose taps all lie past the glass's edge runs no entry (`pastTheGlass`),
+  which holds only while every disc lies within the glass (`testEveryDiscLiesWithinTheGlass`; a direct caller of
+  `TankShader` keeps its discs there too), where each entry would find it the identity. Prism's chains read each
+  entry once too and skip the same pixels. No tap's arithmetic changed, and `testTheShadersTapsMatchTheModel` holds
+  the taps to the Swift copy, turn and all, at four taps and at two. On the Mac's GPU, off screen at 1137 px
+  (`scripts/twist-oracle.sh time`, the loop it replaced timed in the same rounds, 2026-11-12), the twist pass takes
+  0.63 of what it did on maelstrom 24 (23 entries), 0.65 at 36 entries, 0.73 there with two taps, 0.62 at 4 entries,
+  0.64 on whirlpool 27, 0.72 on vortex 27, 0.70 on Lens 25 and 0.76 to 0.81 on Prism; the square it times includes
+  the corners past the glass, a fifth of its pixels, which the skip clears, so a draw that never shades them gains
+  less (by arithmetic, not measured, about 0.7 on maelstrom 24). No phone has timed it. The gain is in how the loop is arranged, not in less
+  arithmetic: the taps as an array, an entry's floats read apart, or a tap at a time each lost it, and nothing but
+  the timer shows a change that does, so time any change to `unmap` or `tapsThrough` against the file as it was:
+  a copy of it with its stitchables and kernel renamed, its kernel a second `Method` in `OracleBench.methods`.
+  It is not the old loop to the bit: the compiler fuses multiplies and adds its own way in each arrangement, and a
+  deep stack carries a last bit of rounding to whole levels, so a deep stir's pixels differ as they do when the stir
+  moves a tenth of a pixel (the oracle's `alike`) and a calm frame's by a level at most (`same`).
   Every draw through `unstir` or `unstirChannels` (the level's glass, the dock's covers, the cards' clips, the icon,
   the menu's stir) passes its arguments by name through `TankShader` (Shader.swift, Jack's call ARCH = A), which lists
   them in the signature's order: `testTheTankShaderPassesTheSignaturesOrder` reads both signatures out of Unstir.metal
@@ -53,8 +72,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   A Lens level's glass draws through a third stitchable, `unstirLens` (Jack's call, 2026-11-11: draw each lens's core
   finer, so x8 is crisp), once its panel's detail is baked (`Halftone.Detail`, below) and the strike has ended
   (`Unstirred.fine` and `crisp`, the detail's share, which `LevelView` eases in over 0.2 s, as the detail is drawn past
-  the layer and would not flicker with it); every other draw of a Lens panel (dock cover, card, clip, promo image)
-  keeps `unstir`. The layer holds one sample a device pixel of the clean panel, which a lens at x8 spreads over eight,
+  the layer and would not flicker with it). A dock cover, the bundle's wedge, a card's clip, the bundle's cut and the
+  promoted-purchase image draw the same way through `LevelPicture`, which holds the same three states and bakes the
+  detail for its own size at utility priority: until it lands they draw through `unstir`, so a cut still never waits
+  on a bake. The layer holds one sample a device pixel of the clean panel, which a lens at x8 spreads over eight,
   so where a lens magnifies, `unstirLensBody` draws the panel again from its geometry at the final sample point
   (`fineLight`, `Halftone.Panel.light`'s copy: change the two together): each ink's nearest dot from its radius, and
   the white strokes from their distance to the nearest stroke's edge, both antialiased over the pixel's own
@@ -108,6 +129,112 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
   rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
   Caches, for the call on capping that cache, and Lens 01's and 25's details, which every open bakes. In the simulator that is the Mac's CPU running unoptimised Debug code.
+- **OracleBench.swift** and `scripts/twist-oracle.sh` are the twist oracle:
+  what any faster way to draw twists is held against (Jack, 2026-11-12: find one, provided it doesn't look worse). Its
+  cases (`scripts/twist-oracle/cases.sh`) are harness launches with every clock held, so a rerun draws the same
+  pixels: maelstrom 24 as dealt, at 36 entries, at 4 and at two taps, its live picture at four clocks, a rod and the
+  rim in hand, the opening's wind-in part way, the wave, and with the chrome; whirlpool 27; plughole 20 at 36
+  entries; vortex 27 and its breath; Lens 25, and Lens 1's lens in hand zooming in and out; an Escapement tick in the
+  air; Prism 30, a rod held with its read drawn and a swatch held; the menu's dock and a card; and Reduce Motion's
+  rest frame. `build` builds Debug for the simulator, and every other command installs that build on the oracle's
+  own simulator (`scripts/twist-oracle/sim` names its device and runtime; a second fresh one drew the same frames,
+  to one level in one value) and refuses where `Sources/` has changed since. `ref` shoots the references, which stay
+  out of git (`shots/`, or `ORACLE_REF`), and refuses unless `Sources/` is committed and the same as
+  `ORACLE_BASE`'s, origin/master's unless set, so no branch's shader becomes its own reference; the folder's
+  `base.txt` says what they were shot from, and `diff` prints it. They go stale as master's drawing changes: shoot
+  them again from master before holding a branch against them. `shoot <set>` shoots the same cases from any
+  checkout, each frame taken once two screenshots 0.7 s
+  apart are the same bytes; and `diff <set>` applies the pass rule (`scripts/twist-oracle.py`), on the screenshots'
+  8-bit values inside the lit box, less a screen's bottom 68 rows, where the system's home indicator comes and goes
+  between shots. A frame passes as `same`: the difference 99.9% of values are within at most 6
+  levels, the mean at most 0.35, the worst 16 px block's mean at most 0.8 (a seam or patch the percentile leaves
+  out) and the gradient energy within 3% of the reference's (under is blur, over is aliasing). Or it passes as
+  `alike`. Deep in a stir a pixel's filaments are far thinner than the pixel, so a map moved a hundredth of a pixel
+  draws other values with the same look: maelstrom 24 turned 0.003 degrees, 0.03 px at the rim, moves 0.1% of values
+  by over 100 levels. So each reference is shot twice more as its twins, the whole stir drawn a tenth of a pixel
+  along each axis over the same picture, down each diagonal (`UNSTIR_NUDGE`, `Unstirred.nudge`), which changes
+  nothing where the map is the identity; and a frame is alike where every block's mean difference is at most 0.5
+  plus 1.5 times the most either twin differs by there or in a block beside it, the mean signed difference is at
+  most 0.35 a channel (light lost or gained) and the gradient energy is within the same 3%, over the whole frame and
+  again over only the blocks where a twin differs by more than 3 levels, since a blur inside the deep stir alone is
+  diluted in the whole frame's. Across a sweep's small
+  steps of one held turn the frame-to-frame change must be within 5% of the reference's (over is shimmer).
+  Measured 2026-11-12: today's shader against itself reads 0 on every case (one value off by a level in two Prism
+  frames); the stir moved 0.05 px passes as alike on the nine cases tried, its sweeps' change within 0.1% of the
+  reference's and both energies within 0.3%, and 0.2 px fails on all five tried; that
+  0.003 degree turn passes and 0.01 degrees just fails; every case drawn with two taps fails, by 5% to 47% more
+  gradient energy and up to 19% more change a step; a blur of 0.2 px or more, a 1 px shift, +-3 levels of noise and
+  a 24 px patch on a calm glass all fail; a seam a pixel wide and 12 levels up fails on a calm glass and passes
+  inside a deep stir, where the films are the check. A frame that
+  fails isn't condemned: it is a call for Jack, with the two beside each other. `film <set>` records the moving cases
+  (the opening, two real drags, a played line, Lens, Escapement and Prism lines) and lays each beside the
+  reference's take, for the eye. `time` runs `OracleBench` (`UNSTIR_GPUBENCH=oracle`, `UNSTIR_ORACLECASES` the same
+  cases' variables): it builds each case's glass as `LevelView.tank` does, takes the shader's arguments from
+  `Unstirred.shader(scale:)`, draws it off screen at 1137 px through every `Method` in `OracleBench.methods`, today's
+  being `benchUnstir`, writes each method's frame and today's twins, which `benchdiff <method>` holds against today's by the same rule,
+  and times the methods in turn round by round, so a busy moment on a shared GPU lands on all of them and each
+  line's share of today's is steadier than its milliseconds. A new way joins `methods` with its kernels, its
+  once-a-commit work timed apart (`Method.commit`). A live picture's layer is stood in for by the glass's fill, the
+  only one with a kernel, timed once on its own line, so a line is the twist pass alone. The timer holds
+  `ORACLE_LOCK` through each launch; in the simulator the clock is the wall's round each command buffer, so a buffer
+  holds enough frames to take some 30 ms. On 2026-11-12 three launches' medians lay within 1% to 5% of each other on
+  most cases, 11% at worst (maelstrom 24 as dealt 0.75 ms on the Mac, 1.19 at 36 entries, 0.62 of that with two taps).
+  `scripts/twist-oracle/shimmer.py <ref film dir> <set film dir>` reads how much each film changes from frame to
+  frame beside the reference's take. The bench is a probe: Debug holds it, and a Release build only with
+  `PROBES=YES` (`Config/Unstir.xcconfig`, the `PROBES` compilation condition, as `EDITORS` is set), for timing on a
+  phone; `Probes.screen` is the one place the app asks for one, `UNSTIR_NUDGE` reads as nothing without it,
+  `scripts/archive-ios.sh` refuses the switch and builds with it off, and `testADefaultBuildHasNoProbes` holds the
+  tracked config to NO.
+- **Hand.swift**, **DragProbe.swift** and `scripts/drag-probe.sh`: the turn in hand, kept out of `LevelView`'s own
+  state so a frame of a drag re-evaluates the parts that draw the turn and not the play screen (Jack, 2026-11-12:
+  find a faster way to draw twists, provided it doesn't look worse). `Hand` is an observable reference `LevelView`
+  holds: a rod's turn (`angle`), the tank's (`turn` while `turning`), a twist's on top (`spin` while `spun`) and the
+  finger's point, and beside them, unobserved, the drag's bookkeeping nothing draws (`last`, `detent`, and the
+  drag's and the twist's paths for the log). `LevelView.body`, and all `tank()` works out outside a closure, read
+  only what changes with a count: `steps` and `turnSteps`, told only as they change
+  (`testATurnInHandTellsThePlayScreenOnlyAsACountChanges`), `turning` and `spun`. The parts that draw the turn read
+  it in a body of their own: `HeldUnstirred`, the glass's modifier, which adds the turn to the `Unstirred` the level
+  built without one (a modifier of its own, as the turn must reach `Unstirred.animatableData` for a settle to play),
+  and `InHand` round the held knob, its dial or track, the tank's dial, the knurl, each count's place, the drawn
+  fingertip and `TapHooks`' watch for a frame that moved. A value set to what it is tells no one, as a view's state
+  does. The handlers still read and write `liveAngle`, `liveTurn`, `spun`, `lastSpin`, `finger`, `detent`, `path`
+  and `twist`, now `LevelView`'s computed properties over the hand: **never read one in `body`, or in `tank()`
+  outside an `InHand`**, or every frame of a drag evaluates `LevelView` again; no test sees that, only `DragProbe`'s
+  `level` count a frame (0.05 on a drag that crosses a dozen counts, 1 if a read has crept in), so run
+  `scripts/drag-probe.sh run` after a change to either. The two-finger twist's gesture state is a flag (`spinning`),
+  not its rotation, which changed on every frame and of which only whether it was set was ever read. The drag
+  gesture's handlers are `touchMoved` and `touchEnded`, which `UNSTIR_TAPFINGER=rod` or `rim` also calls, making
+  `UNSTIR_TAPDRAG`'s drags as a finger's touches on a knob or the rim. `HeldUnstirred` is Equatable
+  (`Unstirred.draws(sameAs:)`, every stored field, `testTheGlassComparesEveryField`): a live picture's timeline
+  builds it again on every tick, asks `==` once and builds no arguments at rest (measured).
+  `DragProbe` and `UNSTIR_BROADDRAG` are probes: Debug holds them, a Release build only with `PROBES=YES`, and in a
+  plain Release build each call is an empty function. `UNSTIR_BROADDRAG=1` has `LevelView.body` read the turn as it
+  did when the turn was its state, and `alt` has `UNSTIR_TAPDRAG`'s drags take that in turn (a warm-up, as built,
+  twice so, as built). `DragProbe` (`UNSTIR_DRAGCPU=1`) logs, for each of those drags, the settle after it and three
+  seconds of rest after the last: the frames, the main thread's and the process's CPU time a frame, the
+  instructions the process retired a frame, how often `LevelView.body`, `tank()`, the glass's timeline,
+  `PictureLayer.body`, the shader's arguments and the held parts were evaluated, the most the glass's drawn turns
+  moved between two frames (a let-go's landing leaves their sum as it was, so a frame drawn with the new stack under
+  the old turn, or the old under the new, shows as a whole step), and how often the glass's modifier was built with
+  nothing changed. `scripts/drag-probe.sh build` builds Release with the probes, and `run` plays maelstrom 24,
+  whirlpool 27, plughole 20, Prism 8 and a frost day each way on the twist oracle's simulator, under the GPU
+  timings' lock; `shots <set>` and `film <set>` shoot and film the play screen whole (the oracle's own cases draw
+  the glass alone), `same` holds one build's frames against another's pixel for pixel and `beside` lays their films
+  side by side; `PROBE_APP` and `PROBE_RELEASE` name another checkout's builds.
+  Read the instructions, not the milliseconds: a lighter frame runs on a slower core, at a half to a third of the
+  instructions a millisecond, so the Mac's CPU time falls less than the work does; and a launch's own work runs on
+  under its first drag, which `run` plays as a warm-up.
+  On 2026-11-12, on the Mac (iOS 26.5 simulator, Release), a frame of a finger's drag of a rod on maelstrom 24 took
+  24.1 million instructions and 4.0 ms of the main thread with `UNSTIR_BROADDRAG` and 7.9 million and 3.1 ms without,
+  in one launch, turn about (the rim: 23.9 to 7.5; the harness's own state: 23.8 to 7.5), `LevelView.body` evaluated
+  1.00 and 0.05 times a frame, where the picture's frame at rest takes 3.6 million; a frost day's baked glass went
+  from 21.4 to 5.5 million, and rests at 0.07. Before `HeldUnstirred` was Equatable, 2 of 12 launches of one build
+  built the glass's arguments on every tick of a live picture's timeline with nothing changed. That was never
+  reproduced, so whether the comparison SwiftUI made in `==`'s place caused it is not known; none of the 3 launches on a live picture
+  since showed it. In the first drag after a launch the glass is still built with nothing changed on 0.02 to 0.10
+  of its frames, with `==` or without (not explained; none in the windows after it). No phone was measured, and no
+  iOS 17: the oldest runtime that Mac had was 18.5, where a rod's and the rim's drag turned the glass under the
+  finger and read 0.05 evaluations a frame.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -208,10 +335,38 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   layout and taking the finale, the ephemeris only to 14 stirs (`testVortexTable`), no knob seized, so the tank never turns and par is the entry count, which the
   solver's optimum matches and plain untwisting reaches (`testVortexParIsTheOptimum`, slow), and maelstrom 27 of its
   own (quad, then pent, then hex) on the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
-  solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
+  solver's optimum (`testMaelstromParIsTheOptimum`, slow). The levels that need a plan (M6, M11–M14 and most of hex
+  past M18) miss par by every rule of thumb however its ties go, and the rest are fair, the park rule reaching par
+  however its ties go; the test pins which is which. Jack dropped the promise that a sensible player always reaches par
+  (2026-11-12): it is the last free tier. `scripts/maelstrom-levels.sh` measures the table and deals candidates. Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
-  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. A daily's id and seed are
+  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Its draws are `Layout.daily`, in the extension the scripts cut out. On a frost day (built for
+  Jack's look from films, not yet decided) the daily is drawn as on any other, then seizes two knobs on a turning tank,
+  as maelstrom does, with a `fixedPar` and a line under the tank: the day's row in `Frost.days`, the first pair in
+  `Solver.frostPairs`' order (never hex's hub) that every rule of thumb misses par on, however its ties go, against
+  what untwisting with the tank's turns takes (`Solver.frost`; par is the optimum, below untwisting on four 2029 days,
+  where a detour beats it). The verdict is a table, `scripts/frost-days.sh <from> <days> swift`, from 2026-10-01 to
+  2029-12-31 (164 of 1,188 days), not a solve at launch, though the slowest day takes 0.3 s on the Mac: the solver is
+  the test target's and a bounded search, so a later change to it, or a device's rounding, could give two players
+  different frosts on one day. Like the generator's draws, a shipped row never changes; past `Frost.last` no daily
+  frosts. `testTheFrostTableIsTheSolversVerdict` (slow) checks every day of the table. A frost day's seized knobs are
+  drawn frozen, not jammed (FrostLook.swift, `Level.frosty`; Jack picked the glaze and a thaw on the solve):
+  `RodView.frost` gives the cap a glaze and ice-blue ticks in place of the dull cap and red slash, and `FrostPane`
+  lays one pane of frosted glass over the union of the frozen knobs' discs, still in the frame with the knobs as the
+  picture turns under it (the ice is on the rods, which a tank turn never moves): a milk thick and mottled at the
+  pane's edge thinning to a faint even veil in the middle, hairline dendrites grown in from the edge in thick and thin
+  stretches, most a few points long, with clumps of fern feathers of uneven length growing from the thick ones (Jack
+  picked lusher feathers), loose needles in the milk, a
+  ground-glass grain and a cold edge; nothing grows and no edge is drawn where discs overlap. `FrostLook.bake` draws it
+  with Core Graphics from a `SplitMix64` seeded by the level's id (`Level.frostSeed`), so each frost day has its own
+  crystals, and `FrostLook.pane` bakes it off the main actor as the level opens (about 0.2 s in a Debug simulator
+  build) and keeps it, so a still tank, a drag and a turn composite one image with no mask or effect. When the solve
+  lands (`waved`) the ice melts in `FrostLook.thaw` seconds, clear from each cap outwards with the edge's crystals
+  last (radial masks, only while it melts), the cap easing to a working knob's; Reduce Motion dissolves it instead;
+  the ice follows `waved` both ways, so it stands again wherever that is cleared.
+  `testAFrostDayIsFrozenAndItsIceIsSeeded`.
+  `UNSTIR_FROSTLOOK=jammed` draws the knobs as maelstrom's, for a shot beside. A daily's id and seed are
   its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
   that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13), and a best the archive
   saved (`Best.archived`) never counts. Endless changes only what
@@ -234,8 +389,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   uptime is the boot's instant. A `Level` has a `motion`, what the rim holds to carry the knobs round without a stir
   (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
   one or a socket refuses touch, and a ratchet is one of Escapement's clocks (`Level.clocks`, in tick order: clockwise from twelve by
-  `Layout.clockwise`, each +1, or -1 if in `woundBack`), which under `waits` takes a tap as a waiting move, a rule
-  switch no problem of the book has on, with a
+  `Layout.clockwise`, each +1, or -1 if in `woundBack`), with a
   `demo` stack for the demonstration before the first stir. Every level today turns its tank exactly where a
   knob is seized (`testTheRimKeysOnMotionAndADiscOnItsKind`), and `UNSTIR_SEIZED` sets both. `par` is `fixedPar`, else
   `scramble.count`.
@@ -258,7 +412,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   magenta ring and heavy tap, which in every mode mark only a commit that pops one of the scramble's entries (Jack's call SND2 = A, round 16; Escapement's the move's own commit, not its ticks, and the sandbox, with no scramble, never rings); a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
-  drops. The result card of a tier's last level, and of the solve that opens the next tier wherever it stands (`Game.opened`, read either side of the best's save), goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, in its sweep behind a lock, unfilled and still, with how many levels are short of par, opening the menu on that tier's gate. Any solve that isn't clean, but endless's (`Game.offersAgain`), offers "again ↺" on the card, a reset (the glass no longer eased home); on the daily, which counts only its first try's solve, it plays as practice, as a later visit does (`Game.firstTry` goes false, so `counts` saves no best and no streak day, and the caption, card and share line say practice; Jack's call P1 = B, round 13), and every solve that saves a best over an earlier one says how it stands: "new best · was +2" when what the card names improves (`Best.standing`), else "best · par". A best ranks by clean, then over par, never by time, a tie keeping the older (Jack's call C10, round 13), after a daily's best kept on its day first, over one the archive saved, whatever either's result, so `Daily.run` counts a day played on its day that another time zone or iCloud had already given an archive best (`Best.standing`, the one rank `save`, `Sync.beats` and the card read; the card says nothing of such an archive best, as on a first solve); the card shows no time, which only the log keeps. A run carries the best as it began (`Run.best`), so its spill card says "new best" in lime when it beat it. The solve that gives the last of a pack's levels a best, or of maelstrom's, says so under the best line, once (`Game.completed`, read either side of the save: "Lens complete · 25 panels", `Pack.noun`, or "every tier unstirred"; never a pack short of `Pack.planned`), and under it a quiet "try Escapement ›" opens the card of the first pack on the shelf the player doesn't own but the one completed (`Offer.pointer`, `LevelView.onOffer`), none once all are owned (Jack's call C8, round 13). Maelstrom 27's card, the end of the free ladder, says "more puzzles in the packs ›" once (`Best.packsPointed`, set as the card shows it, never by the harness) where no completion's pointer already does, opening the first pack on the shelf the player doesn't own, none once all are (`Offer.ladderEnd`; Jack's call M6, round 14). The solve that opens whirlpool asks for a rating once, 2 s after its card shows (`Review`, `requestReview`; Jack's call C20, round 13), and stores that it has (`Best.reviewAsked`): `RootView` makes the request (`Review.pending`), so a tap off the card within the wait doesn't lose it, and only while the app is in front, waiting again on its return; never in a harnessed launch or the test host, nor in one where a purchase landed on a card (`Store.landed`), which, as that solve comes once, never asks. The card reads top down, built round the way on (Jack's call DESIGN5 = A, the design pass's fifth change): the marks; the verdict in the headline role, "clean" in lime, "at par" in amber or "solved"; the facts in `text2`, "moves 9 · par 7 · +2", the margin in magenta (Escapement's "moves 7" alone, as its ticks say nothing, and endless's two lines as they were); only where the solve is not clean and not over par, what clean takes, in the detail role ("clean needs no undo or reset" on a first try, else "clean counts on the first try"); then the best line and a completion's; and 16 pt under them its buttons in a `ButtonRow`, a lone one the card's width and two sharing it, with TierUp the card's width under them. The daily's card, practice too, says under its buttons when the next daily comes, at the local midnight that ends the card's own daily, read off its id (`Daily.untilNext`: "next daily in 7 h", minutes under an hour, and "next daily is out" once that midnight has passed; VoiceOver hears hours and minutes). `Game.history` holds rod stirs by slot and
+  drops. The result card of a tier's last level, and of the solve that opens the next tier wherever it stands (`Game.opened`, read either side of the best's save), goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, in its sweep behind a lock, unfilled and still, with how many levels are short of par, opening the menu on that tier's gate. Any solve that isn't clean, but endless's (`Game.offersAgain`), offers "again ↺" on the card, a reset (the glass no longer eased home); on the daily, which counts only its first try's solve, it plays as practice, as a later visit does (`Game.firstTry` goes false, so `counts` saves no best and no streak day, and the caption, card and share line say practice; Jack's call P1 = B, round 13), and every solve that saves a best over an earlier one says how it stands: "new best · was +2" when what the card names improves (`Best.standing`), else "best · par". A best ranks by clean, then over par, never by time, a tie keeping the older (Jack's call C10, round 13), after a daily's best kept on its day first, over one the archive saved, whatever either's result, so `Daily.run` counts a day played on its day that another time zone or iCloud had already given an archive best (`Best.standing`, the one rank `save`, `Sync.beats` and the card read; the card says nothing of such an archive best, as on a first solve); the card shows no time, which only the log keeps. A run carries the best as it began (`Run.best`), so its spill card says "new best" in lime when it beat it. The solve that gives the last of a pack's levels a best, or of maelstrom's, says so under the best line, once (`Game.completed`, read either side of the save: "Lens complete · 25 panels", `Pack.noun`, or "every tier unstirred"; never a pack short of `Pack.planned`), and under it a quiet "try Escapement ›" opens the card of the first pack on the shelf the player doesn't own but the one completed (`Offer.pointer`, `LevelView.onOffer`), none once all are owned (Jack's call C8, round 13). Maelstrom 27's card, the end of the free ladder, says "more puzzles in the packs ›" once (`Best.packsPointed`, set as the card shows it, never by the harness) where no completion's pointer already does, opening the first pack on the shelf the player doesn't own, none once all are (`Offer.ladderEnd`; Jack's call M6, round 14). The solve that opens whirlpool asks for a rating once, 2 s after its card shows (`Review`, `requestReview`; Jack's call C20, round 13), and stores that it has (`Best.reviewAsked`): `RootView` makes the request (`Review.pending`), so a tap off the card within the wait doesn't lose it; the solve only earns it (`Review.earned`) and the wait starts as its card shows (`Carded.shown`, `LevelView`'s `showResult` turning true or starting so, or the level leaving before it has), as Game Center's report of a finish does, so neither the request nor an achievement's banner lands over the solve or anything that plays before the card (`testTheSolveThatOpensATierSaysSo`), and only while the app is in front, waiting again on its return; never in a harnessed launch or the test host, nor in one where a purchase landed on a card (`Store.landed`), which, as that solve comes once, never asks. The card reads top down, built round the way on (Jack's call DESIGN5 = A, the design pass's fifth change): the marks; the verdict in the headline role, "clean" in lime, "at par" in amber or "solved"; the facts in `text2`, "moves 9 · par 7 · +2", the margin in magenta (Escapement's "moves 7" alone, as its ticks say nothing, and endless's two lines as they were); only where the solve is not clean and not over par, what clean takes, in the detail role ("clean needs no undo or reset" on a first try, else "clean counts on the first try"); then the best line and a completion's; and 16 pt under them its buttons in a `ButtonRow`, a lone one the card's width and two sharing it, with TierUp the card's width under them. The daily's card, practice too, says under its buttons when the next daily comes, at the local midnight that ends the card's own daily, read off its id (`Daily.untilNext`: "next daily in 7 h", minutes under an hour, and "next daily is out" once that midnight has passed; VoiceOver hears hours and minutes). `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It is read off one record per stir
   (`Game.Stir`): its twist, and what its undo puts back as it began (the stack and clock, the heals, and whether the
   stir before it was open), so a stir is made, joined, dropped and taken back in one place and no part of one stir's
@@ -267,11 +421,18 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `Game.turnTank`), drawing the picture through the `Unstirred` shader modifier, and shows the result card. `LevelView.grab`, a pure function, decides what
   a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
-  ratchet `.ratchet`, which holds nothing: a touch shakes it with a thud, as a seized knob's does (`LevelView.refuse`),
-  since the book's clocks tick only after a knob's turn. Where a level has the waiting move (`Level.waits`), a tap on
-  the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
+  ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
-  it with a thud. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
+  it with a thud. The plate stays a shortcut (Jack's call ET1 = B) beside the play row's labelled "wait" control
+  (`LevelView.waitControl`, a secondary `UnstirButton`), shown on every level with clocks: between undo and reset where
+  the row holds all three on a line each, stepping aside while reset is armed, as "reset? tap again" needs the row;
+  and on a row of its own over them where it can't (`PlayLayout.waitTakesARow`, measured on the labels at the play
+  type: an SE at xxxLarge), where it stays through an armed reset, so no label wraps or shrinks for it and
+  `PlayLayout.Chrome` counts the row (`testTheWaitTakesARowWhereTheRowCantHoldAllThree`). Both make the same move through `LevelView.waitMove`, which thuds a
+  wait no clock can take as the plate always has; whichever is used, the control inverts (ink capsule, bone label) and
+  the waited clock's plate lights for `waitShown`, so each teaches the other. The control greys, as undo does, while
+  `Game.canWait` is false (finished, or no clock can tick) and through the opening and the demonstration; it taps as
+  every button does, the ticks following, and is VoiceOver's way to wait, as the tank is played by sight. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
   mostly sideways, it is the back swipe (`BackSwipe`; Jack's call C19, round 13), which slides the level off over the
   menu, dimmed 0.4 at the start and less as it uncovers, and past a third of the width, or heading past half, leaves as
   ‹ levels does, else (or flicked back left, as iOS's own) springs back; otherwise the tank takes it up from where it landed (a vertical one a rim turn,
@@ -385,16 +546,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last
-  tick solves on the spot; a clock that can't tick (`canTick`) has stopped. A
-  move is one working knob's stir; a level with `waits` on also takes a wait, a tap on any ratchet (`Game.wait`, refused
-  everywhere else), and once every clock has stopped there is nothing to wait for, and a tap that would wait thuds. Every
+  tick solves on the spot; a clock that can't tick (`canTick`) has stopped, and once all have there is nothing to wait for, and a tap that would wait thuds. A
+  move is one working knob's stir or a wait, a tap on any ratchet or the wait control. Every
   let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
   same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. Escapement has
   no par (Jack's calls EL1, round 11, which replaced round 9's E1/E2 loss rule, and ES2, round 12): each clock has its
   own count, what it owes on the stack (`Game.owed(_:)`, `Level.owed`), and each of its ticks spends one of it; the
   header's budget is every clock's together (`Game.budget`, `Level.budget(on:)`; `Level.budget` as dealt, which the note
   states: "Unstir in 9 ticks.", each chapter's opener adding its rule, problem 1's that a clock ticks after every move
-  and each let-go is a move), so a move with three running clocks spends three. Only a clock's own ticks change its
+  and each let-go is a move, and problem 2, the first whose par needs a wait, naming the control: "Tap wait: the clock
+  ticks, nothing turns."), so a move with three running clocks spends three. Only a clock's own ticks change its
   rod's steps, each by one whether it merges or pushes, so the counts are read off the stack and nothing stores them.
   A clock ticks while its rod holds an entry and its count is above 0 (`canTick`); at 0 it stops. A tick that pushes
   buries a clock entry of the wrong sign, `overdue(_:)`, that no continuation pops (`testAPushedTickNeverPops`), and
@@ -429,7 +590,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   header's "‹ levels" stays on screen above either, and the edge swipe leaves too, both through `leave`. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
   `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
-  heals the demo stack through the real rules, twice, the clock ticking after each (and under `waits` taps the ratchet), and the picture fades to the bone paper
+  heals the demo stack through the real rules, so the clock ticks, then the caption says "wait: the clock ticks,
+  nothing turns" (a notice, `LevelView.demoWait`) and the wait control presses (`pressWait`, the only control lit in
+  the greyed row), its plate lighting with it, so the clock ticks again, and the picture fades to the bone paper
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
   Escapement plays on paper (Jack's call ESC-PAPER = B, round 16; **Page.swift**): `Level.page` is `.book` for its
   levels alone and `.night`, the play screen's own colours, for every other (`testOnlyEscapementPlaysOnPaper`).
@@ -441,11 +604,59 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   brightens what is lit, which on bone runs white, so the band is off and an ink ring runs out over it (`Page.wave`).
   The ratchet's dark plate, steel wheel and split-flap cards stay as they are. The clip and the bundle's cut draw on
   the same page.
+- **Payoff.swift** and **PayoffViews.swift** are the curtain call (Jack's call PAYOFF = C: "Curtain call looks
+  cleanest to me"; he did not want a reward that stirs the glass again): what the solve that finishes a tier, the
+  whole free game or a paid pack plays between its wave and its card, on every launch. The solve that gives the last
+  of a tier's levels a best earns it (`Game.tierDone`, read either side of the save as `completed` is, so once;
+  maelstrom's is the game's, the same solve as `Completion.free`; no daily or run), as does the one that completes a
+  paid pack (`Game.completed`'s `.pack` where the pack ships, so Lens, Escapement and Prism at their planned count,
+  never First Stir, whose last level ends on the night forwards). A tier is finished when every level holds a best,
+  at par or not, so the card after it can still show the next tier locked. `LevelView` plays it: `Payoff.lead`
+  (1.1 s) after the solve the header, title, caption and controls leave (`staged`), the knobs with them, and for
+  `length` a veil dims the glass, which turns once about its centre and ends upright (`turn`, added to the shader's
+  own), while `PayoffCurtain` stands the name in the display role and its own sweep (`Payoff.parts`: `Tier.colours`,
+  or `Offer.sweep` and `glow`) over its stamp, "unstirred." or "25 panels unstirred"; the game's names each tier in
+  turn, 0.6 s apart in the smaller display role, then "every tier unstirred" and the credit, "made by screendead ·
+  thank you for playing" (`Payoff.Credit`, Jack's words), in the same block, broken at its dot, which goes (Jack, 2026-11-12), as on one line it
+  is wider than the glass's chord at the block's foot on every phone. Then
+  the curtain lifts and the card is the one it always was. A tier's or a pack's holds the screen 3.2 s and the game's
+  7.4 s (2.6 s and 5 s under Reduce Motion), so the card comes 4.3 s or 8.5 s after the solve where it came at 1.4 s
+  (`testTheCurtainIsShortTurnsOnceAndLetsGo` pins them); a tap anywhere ends it (`skipPayoff`), a reset forgets it,
+  and leaving the level cancels what is left of it (`finishing`), its sounds too. On Escapement's paper
+  (`Payoff.paper`) nothing glows: the veil is bone, the name the plate's vermilion, at the large-text contrast it has
+  on bone, and the rest ink.
+  **The words never shrink** (Jack, 2026-11-11). They take the column's width; a name that would run within 0.14 of
+  the radius of the rim at the display role is set in the smaller one, which is a choice of role, not a scale
+  (Escapement's, on every phone). Each line reports its place, and `Payoff.fits` asks whether every line lies inside
+  0.94 of the glass's radius with the block centred on it, the credit a line of it (Jack: "I want the text within
+  the glass"). The game's fits over the glass at the default type on every phone, at xLarge on those 402 pt wide or
+  more (17, 17 Pro, Air, Pro Max), at xxLarge on the Pro Max alone, and at xxxLarge on none (measured in the
+  simulator, 2026-11-11). Where it doesn't, the words stand under the glass instead with no veil, as nothing is over
+  the picture, `Payoff.gap` (34 pt, the clearance "unstirred." keeps over the glass) under the rim, and the glass
+  scales about its top to leave them room (`Payoff.scale`, `LevelView.curtained`), down to
+  `Payoff.least` (0.45, under a card's 0.55, as a curtain can't scroll), at once under Reduce Motion, and hands its
+  scale straight to the card's own fit. Only the column does this: the split's and the tabletop's words stand over
+  the glass whatever their size. The curtain is in the tree from the solve, unseen, so it is measured before it shows.
+  **Reduce Motion** (`still`): the glass holds still and the lines come up together. **VoiceOver**: the curtain is
+  one element that says what it shows (`spoken`: "Whirlpool, unstirred.", "Lens: 25 panels unstirred.", the game's
+  four names, "Every tier unstirred." and the credit), announced as it starts, and activating it goes on to the
+  card; the card's label, where focus lands next and which an announcement can't be cut off from, ends with what the
+  card doesn't already say (`carded`, `Game.finishSpoken`: a tier's sentence, or the credit; a pack's and the game's
+  completion lines are the card's own). **Sound** (`cues`): only the game's effects at their own levels, all in D
+  as the beds and the packs' layers are. A tier's or a pack's name comes up on the tier switch's sound and its stamp
+  on two of the heal's notes, A5 then D6; the game's names climb the heal's scale (D5, G5, A5, D6) and its stamp
+  lands on the solve's chime, 4 s after the solve's own, which is 3.3 s long. A pack's loop plays on under it and
+  its resolution over it, as after any solve. Mixed from the files after a level's last heal and chime, each
+  curtain's loudest 0.4 s reads -20.5 to -19.7 LUFS against -21.5 for that solve alone and -20.0 for three heals
+  0.3 s apart in play; not yet heard on a phone. `UNSTIR_PAYOFFAT=s` holds it s seconds in on a level opened solved
+  (`UNSTIR_PLAYED`), for stills, and `UNSTIR_PAYOFFSKIP=s` ends it s seconds in as a tap does; `scripts/film.sh
+  payoff-` films plughole's, the game's, Lens's and Escapement's, and a tier's and the game's under Reduce Motion
+  (`PayoffTests`).
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
-  prover in whole heals with no wait (`scripts/escapement/problems-nowait.tsv`, dealt by `nowait-book.py`; `problems.tsv` is the book as it was under the waiting move), its one key pinned,
+  prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
@@ -832,14 +1043,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
-  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
+  draws it (`LevelPicture`: the halftone, black until its bake lands, its lenses' cores drawn finer once their detail bakes, as the glass's are (`unstirLens`), Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
   the stack its clip opens on (the level's deal, but for Lens's: below), an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
   each turned by its rod's share of the stack and a clock's ratchet counting what it owes, so a cover shows how its pack
   plays (Jack, round 16; the bundle's wedges each turned to hold its key knob, `PackTank.turn`; the promoted-purchase
   images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held stirred under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
-  (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
+  (Low Power Mode, or a thermal state of serious or worse; `Power.heat`, the thermal state and the charger's, is logged
+  after the launch's device line and on each thermal change) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
   it held (`PausingTimeline`), a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
   to Buy, nothing else, a revocation being the card's to say). Under the name a line says "new", in the pack's glow,
@@ -910,7 +1122,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   them a lens's only entry, x8, with a twist on the rod either side: that lens dragged down to clean and back up, let
   go where it began, so it loops with no dip on the order read (Jack, CL1, whose clip played level 3 as dealt). A
   cover stirs the stack its clip opens on (`Offer.covers`), so Lens's dock cover, its promoted-purchase image and the
-  bundle's wedge show that position too, not the whole deal; every other pack's opens on its deal. Escapement: problem 2 in its three moves, its hub counting 3 down to 0. Prism: specimen 1
+  bundle's wedge show that position too, not the whole deal; every other pack's opens on its deal. Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
   in its par of three, the red stir buried under the cyan one first. The bundle (`Clip.cut(of:)`): each of its packs' first beat in turn, the zoom, the tick and
   Prism's red stir coming off, about 8 s, in every build (Jack, CL2; a cut can also take First Stir's vignette, the
   sunrise from just after its first heal, which plays nothing, through its second). Every reel stays drawn,
@@ -929,15 +1141,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   overlay test on an iOS 26.2 phone passes) sets Info.plist's `GameCenter`, read as `GameCenter.built`; off, no GameKit
   call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once the menu has
   been up with nothing over it for `settle` (`RootView.calm`, the age check's moment), holding a sign-in sheet GameKit
-  hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports after every
-  finish and the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
+  hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports as every
+  finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
   aren't set up.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
   bests, endless's best (`Best.tanks`) and the started flags (`Best.started`) (Jack's calls icloud-endless and
   icloud-started = A, round 16), never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
   until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
   without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
-  (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
+  (`Config/iCloud.entitlements` on YES, or `Config/iCloudAgeRange.entitlements` with `AGE_RANGE`; none on NO); off, no call reaches the store. On, a plain launch
   (`Sync.plays`: never the harness, the test host or the editors' build) reconciles as it starts, on every change iCloud sends (an
   account's change merges the phone's bests into the new account's store, dropping none) and after every best
   `Game` saves, every endless tank cleared and every level's first start. The store holds `bests` (`Sync.key`, pinned: the store takes 1024 keys,
@@ -1056,7 +1268,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
-  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`MenuView.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
   leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip holds every tier as a chip, 36 pt tall in a 44 pt target: the picked one stroked in its tier's sweep over its glow at 0.12, an open one in `line`, a locked one in `rule` with a lock after its dimmed name; the picked face moves to its chip as it is picked (`matchedGeometryEffect`), ahead of the list. The strip
@@ -1169,6 +1381,28 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a wrong count elsewhere (Sea nettle's magenta, 2 for 5), whatever the plate holds. `scripts/prism-levels.sh read`
   prints it a move at a time (25 of the 30 specimens have such a move, every one deeper than its rods are many), and
   `scripts/prism-plates.sh deal` sketches a deal on the Mac, each channel through its own word as the shader samples it.
+  While a rod is in hand the glass reads its turn (Jack, 2026-11-11: picked from five trials, as off the count the
+  plain glass is a tangle of three colours until it snaps white on it): `unstirChannels`' `held`, the rod's mask, and
+  `hold`, how far it is drawn over the plain glass (`Unstirred.held` and `hold`, from `LevelView`'s `heldChannels`).
+  The channels the rod moves are drawn alone in their own colour, a dark one lifted (blue's lines take 0.41 of red
+  and green, a gentler share for red and magenta, none for the rest), and each other channel only by how nearly it and a held
+  one show the same point of the plate: nothing from 0.03 of the glass's radius apart, whole within 0.003. So the
+  disc turns one colour while the rod is off its count, nothing white until about a third of a step from it, and
+  white fades in and closes up on the count, beside the held colour's lines, while lines that merely cross stay that
+  colour. It reads the stack's maps at each point, never the level's answer, so on a rod stirred twice it goes white
+  at the sum of its stirs, as the plain glass does (Jack chose to leave that as deduction). It eases in over 0.15 s
+  on the grab and out over 0.25 s on the let-go, glass-wide, the let-go keeping the rod's mask through the fade;
+  stepped by the clock from `onChange(of: liveRod)`, never animated, as an animation started with the grab would
+  take the turn's own with it, and at once under Reduce Motion. A white rod, and hold 0, skip it, so the glass is
+  then the plain one to the byte (`testAHeldRodsReadLeavesTheGlassAsItWasWhenLetGo`). `testAHeldRodReadsInItsOwnColourUntilNearItsCount`
+  runs the shader's body at 1200 px over four moves of once-stirred coloured rods (Frond's cyan and red, Thistle's
+  blue, specimen 14's yellow), each held a step and half a step either side of its count and on it, and measures the white share of the lit pixels in its
+  rigid disc outside the cap: at most 0.001 off the count, 0.79 to 1.00 on it (2026-11-11). The GPU bench times
+  each specimen with its first move's rod in hand half a step short, four taps forced, the read drawn against not:
+  on the Mac's GPU a median 1.07x, 1.14x at most, 1.2 plain entries' work (1.9 at most) that `channelCost` and the
+  four-tap budget don't count, as the rod in flight rides over them; the phone's number is owed. `shots.sh
+  prism-read-` holds six moves at rest, short of the count, on it and past it, and `film.sh prism-read-` turns
+  two slowly to the count and lets go (`UNSTIR_TURN`, the fingertip's seconds a step).
   Escapement's plate (`Picture.engineTurned`, drawn by `Picture.engineTurning` in Page.swift) is the packs mock-up's
   engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
   holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
@@ -1181,7 +1415,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   problem's number through `PictureLayer`'s `panel` to `engineTurning`, which draws `EscapementArt.plate`'s marks
   (**EscapementArt.swift**: polylines and filled outlines in tank units, in ink, bone and the second ink, vermilion)
   and falls back to the shared plate when the number has none. The table is that function's switch, a line a problem
-  in blocks of ten, all thirty drawn; the plates are in a file a block (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across files). `EscapementArt.alternate` holds plates drawn for Jack to choose between, registered for no problem: Pause (7) as a pause mark on a dial without hands, and Hourglass (9) with its glass ending inside the top and bottom rods; `UNSTIR_ESCALT=1` draws them in a debug build, and `scripts/escapement-art.sh` by `7alt` or `9alt`. A dock cover, a card's
+  in blocks of ten, all thirty drawn; the plates are in a file a block (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across files). `EscapementArt.alternate` holds plates drawn for Jack to choose between, registered for no problem: level 7 as a pause mark on a dial without hands, and Hourglass (9) with its glass ending inside the top and bottom rods; `UNSTIR_ESCALT=1` draws them in a debug build, and `scripts/escapement-art.sh` by `7alt` or `9alt`. A dock cover, a card's
   clip and the promoted-purchase image go through `LevelPicture`, which passes `Level.panel`, 0 for Escapement, so for
   now they keep the shared plate. Nothing is stored: `Level.picture` is still `engineTurned`, and the plate is baked
   like the shared one, in memory by `Picture.render` when the play screen's layer appears or changes problem (7 to
@@ -1263,7 +1497,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   test host, and drops the answer, as every level is for all ages: nothing is kept, logged or sent. It waits
   `AgeCheck.settle` (0.3 s, past the dip) first, and a request cut off by the menu being covered or left leaves the
   launch's ask standing (`testACancelledRequestLeavesTheLaunchsAskStanding`); a failure is dropped and not retried.
-  The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
+  Apple's docs require the Boolean entitlement `com.apple.developer.declared-age-range` (read 2026-11-12 in Apple's
+  Bundle Resources reference, developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.declared-age-range).
+  The build's `AGE_RANGE` signs it in (`Config/AgeRange.entitlements`, or `Config/iCloudAgeRange.entitlements` with
+  `ICLOUD`, one file per pair of switches in `Config/Unstir.xcconfig`); `scripts/archive-ios.sh` sets it, and it
+  stays NO for other builds until a phone build on the paid team shows the App ID takes it, so `scripts/run-ios.sh`
+  signs as before; at NO, `CODE_SIGN_ENTITLEMENTS` is what it was for every build. DeclaredAgeRange links weak, as the app runs from iOS 17.
   A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
   `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
   under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen, settings line and all, without
@@ -1296,15 +1535,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
   `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (refused, or a wait under `Level.waits`), `u` an undo through the control
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait), `w` a wait through the wait control, pressed a beat first, `u` an undo through the control
   with its sound and `p<s>` a rest of s seconds more before the next (`Harness.Step`); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim,
   knob and lens lessons' ghost fingers, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
-  and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
+  and it holds the swirl's breath at 0. `UNSTIR_WIND=f` holds the opening's wind-in at that share of every committed angle, `UNSTIR_TICKAT=p` an Escapement move's ticks p through their flight (tick i in the air from i to i + 1), and `UNSTIR_NUDGE=px` (or `x,y`) draws every glass's stir that many device pixels off over the same picture, all for the twist oracle's cases. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
-  pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_REVIEW=log` logs the rating request in place of making it, as a plain launch would make it. `UNSTIR_NOW=HH:mm` sets the clock the daily's card reads the next daily from. `UNSTIR_RESUME=2:+5,0:+2,u,1:+3` is the harness's one save, for the launch, so whatever a plain launch left stored never reaches a shot: the level's try with that line (`UNSTIR_MOVES`'s form, plus `u` an undo and `r` a reset), so it opens resumed, and with `UNSTIR_MODE=endless` `UNSTIR_RESUMETANK=n` puts the saved run on tank n (from 0; empty `UNSTIR_RESUME` is the run with no move yet), which the menu's endless row continues. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
+  pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_REVIEW=log` logs the rating request in place of making it, as a plain launch would make it. `UNSTIR_NOW=HH:mm` sets the clock the daily's card reads the next daily from. `UNSTIR_DAILY=yyyymmdd` deals that day's daily for the menu's row, which keeps it on return to the front, and with `UNSTIR_MODE=daily` opens it (the `frost-` films and `menu-daily-` shots). `UNSTIR_RESUME=2:+5,0:+2,u,1:+3` is the harness's one save, for the launch, so whatever a plain launch left stored never reaches a shot: the level's try with that line (`UNSTIR_MOVES`'s form, plus `u` an undo and `r` a reset), so it opens resumed, and with `UNSTIR_MODE=endless` `UNSTIR_RESUMETANK=n` puts the saved run on tank n (from 0; empty `UNSTIR_RESUME` is the run with no move yet), which the menu's endless row continues. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch. Nor
@@ -1373,13 +1612,23 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   most moves over every way its ties go, and `park` breaks them by `Tie` (`.clockwise` or `.lowest`) only to name one
   play. No lookahead (`noLookahead`) turns to the nearest, clockwise on a tie. A level is fair when the park rule's
   most moves over its ties is the optimum under both parkings; its planning gap is no lookahead minus the optimum.
+  `ties` gives any blocked rule's (`Rule`) fewest and most moves over its ties: the park rule under either parking,
+  one-visit (turns to where the most seams come off before the next block, then the nearest), last-ring (parks the
+  seized knobs over the rings that finish last) and the nearest. A level needs a plan (`needsPlan`) when the optimum
+  is below every rule's fewest; a rule that strands a seam misses. When only a detour beats the rules, `solve.sh` says
+  so: that is insight, not planning. `decoys` walks an untwisting optimal line and, at each state, finds the sensible
+  moves (untwists a working knob reaches, or, only when blocked, turns to where one is) that cost par, and for each
+  the moves a lookahead must search, the decoy first, before it scores worse than the best move, its leaves scored by
+  the stirs left with every knob working, plus one while blocked. Calibrated on the far first turn
+  (`testTheFarFirstTurnNeedsAPlan`), where the near turn shows its cost six moves on. Each costs under a millisecond
+  on every shipped level; `solve.sh` prints the count, and `decoys` lists them.
   `home:` asks for the tank back at 0, the old end rule. Several tests replay plays on a real `Game`, which must empty
   the stack in the moves the play counts. Escapement's prover (`Solver.escapement`) is a breadth-first search over
-  stacks where a move is one commit to a working slot (or, with `waits`, a wait), by ±1 to ±11 or an entry's exact inverse, then the
+  stacks where a move is a wait or one commit to a working slot, by ±1 to ±11 or an entry's exact inverse, then the
   clock's forced tick, a line dropped where that tick pushes or stops the clock with twists left (lines that can only run
   out of ticks); the same slot may be
   stirred twice running, as every let-go is final. So its first line is a fewest, and no shorter line exists among
-  those counts: the proof each problem ships with. `Move.wait` is the tap, under `waits`.
+  those counts: the proof each problem ships with. `Move.wait` is its tap.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's and vortex's pictures).

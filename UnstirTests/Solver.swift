@@ -423,7 +423,30 @@ final class Solver {
     /// strands a seam.
     func parkTies(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, parking: Parking = .fewest)
         -> (best: Play, worst: Play)? {
-        let reach = self.reach(seized), rank = parkRank(seized, parking)
+        ties(stack, seized: seized, from: position, rule: .park(parking))
+    }
+
+    /// A blocked rule of thumb, which untwists the newest whole seam a working knob reaches until none is, then turns.
+    enum Rule {
+        /// `park`.
+        case park(Parking)
+        /// Turns to where the most seams come off before the next block, then the nearest.
+        case oneVisit
+        /// Parks the seized knobs over the rings that finish last: a finished ring counts -1, any other the index of
+        /// its oldest entry, summed over the seized knobs, lowest first; then the nearest.
+        case lastRing
+        /// `noLookahead`: the nearest.
+        case nearest
+    }
+
+    /// The rules the needs-a-plan verdict asks.
+    static let rules: [Rule] = [.park(.fewest), .park(.all), .oneVisit, .lastRing, .nearest]
+
+    /// A rule with no tie-break: its fewest and most moves over every way its ties can go. Nil when some way strands a
+    /// seam.
+    func ties(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, rule: Rule)
+        -> (best: Play, worst: Play)? {
+        let reach = self.reach(seized), rank = self.rank(rule, seized, reach)
         // Between turns the rule never chooses, so only blocked states branch. Each turn goes where a seam comes off,
         // so the stack shrinks along every branch and the memo never meets a state it is still working out.
         var memo: [Int: (best: Play, worst: Play)?] = [:]
@@ -452,17 +475,33 @@ final class Solver {
     /// Untwists the newest whole seam a working knob reaches. When none is, turns to the nearest position where one is,
     /// clockwise on a tie.
     func noLookahead(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0) -> Play? {
-        play(stack, seized: seized, from: position, tie: .clockwise) { _, turn, _ in [abs(turn)] }
+        play(stack, seized: seized, from: position, tie: .clockwise, rank: rank(.nearest, seized, reach(seized)))
     }
 
-    /// Orders the positions a blocked player may turn to, lowest first, from the stack, the turn and where it goes.
-    private typealias Rank = ([Twist], Int, Int) -> [Int]
+    /// Orders the positions a blocked player may turn to, lowest first, from the stack's id, the turn and where it goes.
+    private typealias Rank = (Int, Int, Int) -> [Int]
 
     private func parkRank(_ seized: Set<Int>, _ parking: Parking) -> Rank {
-        { stack, turn, to in
-            let rings = Set(stack.map(\.rod))
+        { id, turn, to in
+            let rings = Set(self.stacks[id].map(\.rod))
             let over = seized.filter { rings.contains(self.layout.slot(of: $0, at: to)) }.count
             return [parking == .fewest ? over : min(over, 1), abs(turn)]
+        }
+    }
+
+    private func rank(_ rule: Rule, _ seized: Set<Int>, _ reach: [[Bool]]) -> Rank {
+        switch rule {
+        case let .park(parking): parkRank(seized, parking)
+        case .oneVisit: { id, turn, to in [-self.advance(id, at: to, reach: reach).moves.count, abs(turn)] }
+        case .lastRing: { id, turn, to in
+            let stack = self.stacks[id]
+            let sum = seized.map { knob in
+                let slot = self.layout.slot(of: knob, at: to)
+                return stack.firstIndex { $0.rod == slot } ?? -1
+            }.reduce(0, +)
+            return [sum, abs(turn)]
+        }
+        case .nearest: { _, turn, _ in [abs(turn)] }
         }
     }
 
@@ -480,7 +519,7 @@ final class Solver {
     private func turns(_ id: Int, from p: Int, reach: [[Bool]], rank: Rank) -> [(to: Int, rank: [Int])] {
         let whole = untwists(id)
         return (0..<layout.order).filter { q in q != p && whole.contains { reach[q][$0.slot] } }
-            .map { q in (q, rank(stacks[id], shortWay(p, q), q)) }
+            .map { q in (q, rank(id, shortWay(p, q), q)) }
     }
 
     private func play(_ stack: [Twist], seized: Set<Int>, from position: Int, tie: Tie, rank: Rank) -> Play? {
@@ -497,6 +536,114 @@ final class Solver {
             moves += next.moves
         }
         return Play(moves: moves)
+    }
+
+    /// Whether the level needs a plan: the optimum is below the fewest moves every rule in `rules` takes, each with its
+    /// ties gone its best way. A rule that strands a seam misses. Nil when the stack can't be emptied.
+    func needsPlan(_ stack: [Twist], seized: Set<Int> = [], optimum: Int? = nil) -> Bool? {
+        guard let optimum = optimum ?? self.optimum(stack, seized: seized) else { return nil }
+        return Self.rules.allSatisfy { rule in
+            ties(stack, seized: seized, rule: rule).map { optimum < $0.best.count } ?? true
+        }
+    }
+
+    /// A move the optimal line could have made instead, which costs par, and how far ahead a player must look to see it.
+    struct Decoy {
+        /// The index in the optimal line's moves of the move it stands in for.
+        var at: Int
+        var move: Move
+        /// The moves, the decoy first, a lookahead must search before the decoy scores worse than the best move.
+        var survives: Int
+    }
+
+    /// The decoys at each state along `line`, an untwisting play from (stack, 0) that empties it at the optimum.
+    ///
+    /// A decoy is a sensible move, an untwist of a whole seam a working knob reaches or, only when none is, a turn to
+    /// where one is, after which the fewest moves left exceed what par leaves. It survives n moves when a lookahead of
+    /// n moves (the decoy first; untwists, a further one of the same slot joining the stir for nothing, and turns, never
+    /// two running) scored at its leaves by the stirs left with every knob working, one more while blocked, rates it no
+    /// worse than the best move. Nil when `line` isn't an untwisting play at the optimum. Memoised by state and depth.
+    func decoys(_ stack: [Twist], seized: Set<Int> = [], line: Play) -> [Decoy]? {
+        let order = layout.order, reach = self.reach(seized)
+        // `open` is the slot whose stir a further untwist joins, -1 after a turn, which no turn follows, -2 at the start.
+        struct State: Hashable { var id: Int, p: Int, open: Int }
+        func untwisting(_ s: State) -> [(move: Move, cost: Int, to: State)] {
+            untwists(s.id).filter { reach[s.p][$0.slot] }.map { u in
+                (.stir(knob: layout.knob(over: u.slot, at: s.p), slot: u.slot, steps: u.steps),
+                 u.slot == s.open ? 0 : 1, State(id: u.to, p: s.p, open: u.slot))
+            }
+        }
+        func turning(_ s: State, where keep: (Int) -> Bool) -> [(move: Move, cost: Int, to: State)] {
+            guard s.open != -1, !stacks[s.id].isEmpty else { return [] }
+            return (0..<order).filter { $0 != s.p && keep($0) }
+                .map { q in (.turn(steps: shortWay(s.p, q), to: q), 1, State(id: s.id, p: q, open: -1)) }
+        }
+        func sensible(_ s: State) -> [(move: Move, cost: Int, to: State)] {
+            let here = untwisting(s)
+            if !here.isEmpty { return here }
+            let whole = untwists(s.id)
+            return turning(s) { q in whole.contains { reach[q][$0.slot] } }
+        }
+        func all(_ s: State) -> [(move: Move, cost: Int, to: State)] { untwisting(s) + turning(s) { _ in true } }
+        // The stack shrinks with each untwist and no turn follows a turn, so these recursions end.
+        var fewest: [State: Int] = [:]
+        func left(_ s: State) -> Int {
+            if stacks[s.id].isEmpty { return 0 }
+            if let known = fewest[s] { return known }
+            let found = all(s).map { $0.cost + left($0.to) }.min() ?? Int.max / 2
+            fewest[s] = found
+            return found
+        }
+        var relaxed: [State: Int] = [:]
+        func stirs(_ id: Int, _ open: Int) -> Int {
+            if stacks[id].isEmpty { return 0 }
+            let key = State(id: id, p: 0, open: open)
+            if let known = relaxed[key] { return known }
+            let found = untwists(id).map { ($0.slot == open ? 0 : 1) + stirs($0.to, $0.slot) }.min() ?? Int.max / 2
+            relaxed[key] = found
+            return found
+        }
+        struct Deep: Hashable { var state: State, depth: Int }
+        var scored: [Deep: Int] = [:]
+        func value(_ s: State, _ depth: Int) -> Int {
+            if stacks[s.id].isEmpty { return 0 }
+            if depth == 0 {
+                return stirs(s.id, s.open) + (untwists(s.id).contains { reach[s.p][$0.slot] } ? 0 : 1)
+            }
+            let key = Deep(state: s, depth: depth)
+            if let known = scored[key] { return known }
+            let found = all(s).map { $0.cost + value($0.to, depth - 1) }.min() ?? Int.max / 2
+            scored[key] = found
+            return found
+        }
+        var s = State(id: id(stack), p: 0, open: -2), made = 0, found: [Decoy] = []
+        let par = left(s)
+        guard line.count == par else { return nil }
+        for (i, move) in line.moves.enumerated() {
+            let options = sensible(s), keeping = all(s).filter { made + $0.cost + left($0.to) == par }
+            for m in options where made + m.cost + left(m.to) > par {
+                // Every lookahead as deep as the moves left sees the true counts, so this ends.
+                var depth = 0
+                while m.cost + value(m.to, depth) <= keeping.map({ $0.cost + value($0.to, depth) }).min() ?? 0 {
+                    depth += 1
+                }
+                found.append(Decoy(at: i, move: m.move, survives: depth + 1))
+            }
+            let next: (cost: Int, to: State)
+            switch move {
+            case let .stir(_, slot, steps):
+                guard let u = untwists(s.id).first(where: { $0.slot == slot && $0.steps == steps && reach[s.p][slot] })
+                else { return nil }
+                next = (slot == s.open ? 0 : 1, State(id: u.to, p: s.p, open: slot))
+            case let .turn(_, to):
+                next = (1, State(id: s.id, p: to, open: -1))
+            case .wait:
+                return nil
+            }
+            made += next.cost
+            s = next.to
+        }
+        return stacks[s.id].isEmpty && made == par ? found : nil
     }
 
     /// The fewest moves up to `limit` when a move may be any commits to one slot under a working knob, up to `commits`
@@ -537,19 +684,40 @@ final class Solver {
 }
 
 extension Solver {
+    /// The pairs of knobs a frost day may seize on `layout`, in the order they are tried: never hex's hub, which strands
+    /// the slot under it.
+    static func frostPairs(_ layout: Layout) -> [[Int]] {
+        let knobs = layout.rods.indices.filter { !(layout == .hex && $0 == 0) }
+        return knobs.flatMap { i in knobs.filter { $0 > i }.map { [i, $0] } }
+    }
+
+    /// The daily's frost (`Frost.days`): the first pair in `frostPairs` that leaves the stack solvable and needs a plan,
+    /// every rule of thumb's best tie missing what untwisting with the tank's turns takes, with its par, the optimum.
+    /// Nil when no pair does.
+    func frost(_ stack: [Twist]) -> (knobs: [Int], par: Int)? {
+        for pair in Self.frostPairs(layout) {
+            let seized = Set(pair)
+            guard let untwisting = untwistingPlay(stack, seized: seized),
+                  needsPlan(stack, seized: seized, optimum: untwisting.count) == true,
+                  let par = optimum(stack, seized: seized) else { continue }
+            return (pair, par)
+        }
+        return nil
+    }
+}
+
+extension Solver {
     /// Escapement's clocks, in the order they tick: each clock rod and its step, +1 or -1 for a wound-back clock.
     typealias Clocks = [(rod: Int, dir: Int)]
 
     /// Escapement's moves and their ticks, played on a stack: after every move each clock that still holds an entry as
-    /// its turn comes ticks its step, in `clocks`' order, as `Game` plays them. A move is one commit to a working slot
-    /// or, under `waits`, a wait; every let-go is final, so the same slot stirred again is another move (Jack's call E1).
+    /// its turn comes ticks its step, in `clocks`' order, as `Game` plays them. A move is a wait or one commit to a
+    /// working slot; every let-go is final, so the same slot stirred again is another move (Jack's call E1).
     struct Clockwork {
         let layout: Layout
         let lenses: Set<Int>
         let clocks: Clocks
         let steps: [Int]
-        /// `Level.waits`.
-        var waits = false
 
         func isClock(_ rod: Int) -> Bool { clocks.contains { $0.rod == rod } }
         func running(_ s: [Twist]) -> Bool { clocks.contains { c in s.contains { $0.rod == c.rod } } }
@@ -575,7 +743,7 @@ extension Solver {
             var s = s
             if case let .stir(_, slot, n) = m {
                 guard !isClock(slot), s.commit(rod: slot, steps: n, in: layout, lenses: lenses) != .refused else { return nil }
-            } else if !waits || !running(s) {
+            } else if !running(s) {
                 return nil
             }
             for c in clocks where s.contains(where: { $0.rod == c.rod }) {
@@ -591,7 +759,7 @@ extension Solver {
             var out: [Move] = [], seen = Set<Move>()
             func add(_ m: Move) { if seen.insert(m).inserted { out.append(m) } }
             for t in s.reversed() where !isClock(t.rod) { add(.stir(knob: t.rod, slot: t.rod, steps: -t.steps)) }
-            if waits, running(s) { add(.wait) }
+            if running(s) { add(.wait) }
             for slot in layout.rods.indices where !isClock(slot) {
                 for k in steps { add(.stir(knob: slot, slot: slot, steps: k)) }
             }
@@ -605,8 +773,8 @@ extension Solver {
     /// clocks owe, no line of any counts is shorter. Every move counts, as every let-go is final: `moves.count`, never
     /// `Play.count`, which joins commits to one slot in a row. Nil past `limit`, with the stacks that failed in `seen`.
     func escapement(_ stack: [Twist], clocks: Clocks, limit: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
-                    waits: Bool = false, seen: inout Int) -> Play? {
-        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps, waits: waits)
+                    seen: inout Int) -> Play? {
+        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps)
         var failed = Set<Key>()
         defer { seen = failed.count }
         guard !stack.isEmpty else { return Play() }
@@ -617,9 +785,9 @@ extension Solver {
     }
 
     /// Escapement: every first move from `stack` after which a line empties it in `par` moves in all, under `clocks`.
-    func escapementKeys(_ stack: [Twist], clocks: Clocks, par: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
-                        waits: Bool = false) -> [Move] {
-        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps, waits: waits)
+    func escapementKeys(_ stack: [Twist], clocks: Clocks, par: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] })
+        -> [Move] {
+        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps)
         var failed = Set<Key>()
         return work.moves(stack).filter { m in
             guard let t = work.play(stack, m) else { return false }

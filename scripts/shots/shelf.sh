@@ -1,7 +1,7 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # The pack shelf: the dock, each pack's card and its clip. Sourced in order by scripts/shots.sh.
 # A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the shots.
-if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || shelf == *$pattern* ]]; then
+if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || shelf == *$pattern* || lens-x8 == *$pattern* ]]; then
   SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   sleep 25
 fi
@@ -13,6 +13,12 @@ shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug buil
   STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's engraved plate clean on bone, Prism's fern just stirring in." \
   STORE=lens:unowned CLOCK=2.8 BESTS=plughole:$nine
+# Lens's cover (offset 1.75 s, its lens wound in from 2.2 to 3.2 s) and card clip at x8, held long enough for the lens's
+# detail to bake and ease in after the strike.
+hold=20 shot shelf-menu-lens-x8 "The dock 0.9 s into its loop: Lens's cover fully stirred, its newest entry a lens at x8, drawn crisp through its core as the level's glass draws it." \
+  STORE=lens:unowned CLOCK=0.9 BESTS=plughole:$nine
+hold=20 shot card-lens-x8 "Lens's card, its clip held 0.5 s in, the lens at x8 before the finger drags it down: its core drawn crisp as the level's glass draws it." \
+  CARD=lens STORE=lens:unowned CLOCK=0.5
 shot shelf-menu-clean "The dock at the top of its loop: First Stir and Triptych clean, Lens stirring in, Escapement and Prism unstirring." \
   STORE=lens:unowned CLOCK=0 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \

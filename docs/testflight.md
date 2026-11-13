@@ -10,6 +10,36 @@ Jack's call TFREAD = D: TestFlight play is read from three places, since v1 ship
 Each claim below is marked as **read** (from Apple's documentation, the code or a run here) or **unchecked**
 (inferred, and settled by the two-day check).
 
+## Uploading a build
+
+`scripts/archive-ios.sh [upload|export|archive] [xcodebuild settings...]` archives Release for a generic iOS device
+into `build/archive/`, then signs it for App Store Connect (`method` `app-store-connect`, automatic signing) and
+uploads it (`upload`, the default) or writes the `.ipa` to `build/export/` (`export`); `archive` stops after the
+archive, and settings after the mode go to it (`CODE_SIGNING_ALLOWED=NO` archives unsigned, as a check).
+
+- **Switches.** It passes the shell's build switches as `scripts/build-ios.sh` does (`scripts/build-settings.sh`:
+  `ANALYTICS`, `APTABASE_KEY`, `ANALYTICS_PLAYTEST`, `GAME_CENTER`, `ICLOUD`, `AGE_RANGE`, `ADAPTIVE_TAPS`,
+  `SUPPORT_ADDRESS`, `POLICY_URL`, `EDITORS`), over `Config/Local.xcconfig`, with `AGE_RANGE` YES unless set, so the
+  build signs with Declared Age Range's entitlement. `EDITORS=YES` makes the editors' build, archived as
+  `Unstir-<build>-editors`.
+- **Support address.** It refuses to upload or export without `SUPPORT_ADDRESS`, from the shell or
+  `Config/Local.xcconfig` (see the day-3 log below), checked before the archive and again in the archived Info.plist.
+  It also refuses an archive whose signature lacks Declared Age Range's entitlement while `AGE_RANGE` is YES.
+- **Build number.** `CFBundleVersion` is `BUILD_NUMBER` if set, else the UTC date and minute, e.g. `20261112.1530`
+  (the minute without a leading zero, as each part is an integer), so every archive rises with no tracked edit;
+  `project.yml`'s 1 stays for every other build. The export sets `manageAppVersionAndBuildNumber` NO, so App Store
+  Connect, the device log's `device:` line and settings' version line all show the archive's number. A new number also
+  drops each phone's kept four-tap budget and baked halftones, as any rebuild does.
+- **Signing.** `UNSTIR_TEAM`, if set, signs for that team in place of `project.yml`'s. With `ASC_KEY_PATH`,
+  `ASC_KEY_ID` and `ASC_ISSUER_ID` (the same variables as the poll's) it signs and uploads with that API key
+  (`-authenticationKeyPath` and its pair); with none set, with the account signed in to Xcode.
+
+Unchecked until the paid team signs: whether `project.yml`'s team is the paid team's, whether the App ID takes Declared
+Age Range's entitlement as automatic signing registers it, the role an API key needs to make the distribution
+certificate and upload (App Manager or Admin likely; the poll's Developer key may not do), and the upload itself.
+Read on 2026-11-12: an unsigned editors archive builds, carrying its build number and support address, and `export`
+then stops on signing ("No Team Found in Archive"), past the export options.
+
 ## What the API gives
 
 Read, from Apple's App Store Connect API reference (`GET /v1/apps/{id}/metrics/betaTesterUsages`, added in API 3.1,

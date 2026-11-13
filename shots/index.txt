@@ -13,6 +13,10 @@ menu-after-01.png  Menu with 01 solved: next: 02 · Drip over the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear under today, one line each, each marked new, under next: 01.
 menu-daily-run.png  The same with today's daily and the three before it solved: its marks at the daily row's right as on every row and 4 days running under its title, neither row new any more.
 menu-all-done.png  Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row.
+menu-daily-frost.png  Menu on whirlpool, today a frost day (2026-10-15, two knobs frozen): the daily's row says frost day under its title.
+menu-daily-plain.png  The same on a plain day (2026-10-01): the daily's row one line, as on any day before a run.
+menu-daily-frost-large.png  The frost day at accessibility type (accessibility3), on plughole with every level at par so the list lands at its top: frost day under the title, which keeps the row's width.
+menu-daily-plain-large.png  The plain day at accessibility type (accessibility3), landing at the list's top as above.
 menu-archive-locked.png  The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack.
 menu-archive-open.png  The same with Lens owned: the archive's row open, 30 past dailies and how many are at par.
 archive.png  The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today.
@@ -163,6 +167,9 @@ seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,
 seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
 seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.
 seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.
+frost-look.png  Frost day 20 Nov 2026, knobs 0 and 1 frozen: a glazed cap, and frost over each knob's disc.
+frost-look-pent.png  Frost day 14 Dec 2026, knobs 2 and 4 frozen.
+frost-look-jammed.png  Frost day 20 Nov 2026 with UNSTIR_FROSTLOOK=jammed: its seized knobs as maelstrom draws them.
 menu-vortex.png  Menu on vortex with every row unlocked.
 vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
 vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
@@ -513,6 +520,8 @@ firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
 shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Triptych, nothing bought.
 shelf-menu-stirred.png  The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's engraved plate clean on bone, Prism's fern just stirring in.
+shelf-menu-lens-x8.png  The dock 0.9 s into its loop: Lens's cover fully stirred, its newest entry a lens at x8, drawn crisp through its core as the level's glass draws it.
+card-lens-x8.png  Lens's card, its clip held 0.5 s in, the lens at x8 before the finger drags it down: its core drawn crisp as the level's glass draws it.
 shelf-menu-clean.png  The dock at the top of its loop: First Stir and Triptych clean, Lens stirring in, Escapement and Prism unstirring.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
 shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
@@ -596,59 +605,64 @@ menu-supporter-off.png  The same with the settings' supporter mark switched off:
 menu-no-supporter.png  The same with nothing owned: no mark.
 settings-editors.png  The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
-escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,2:+4,0:-1,2:+2,0:-1,1:+3.
+escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
 escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-04.png  Escapement 4 as dealt: quad, clocks 0+, scramble 0:-1,3:+2,0:-2,2:-4,1:-3,0:-1,2:-2.
 escapement-book-05.png  Escapement 5 as dealt: eye, clocks 2+, scramble 2:-2,3:-2,1:-4,2:-2,3:-3,1:+3,2:-1,3:-5.
 escapement-book-06.png  Escapement 6 as dealt: hex, clocks 1+, scramble 1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2.
-escapement-book-07.png  Escapement 7 as dealt: quad, clocks 0+, scramble 0:-2,2:+3,1:+2,0:-1,3:-3.
-escapement-book-08.png  Escapement 8 as dealt: pent, clocks 0+, scramble 0:-3,2:+3,3:+2,4:-5,0:-2,3:-2,1:-4.
-escapement-book-09.png  Escapement 9 as dealt: eye, clocks 2+, scramble 2:-2,3:-3,1:+5,2:-2,3:+4,1:-2,2:-2,3:-5,0:+3.
-escapement-book-10.png  Escapement 10 as dealt: pent, clocks 0+, scramble 0:-4,2:+3,3:+2,2:-3,1:+4,0:-2,2:+3,4:+3.
-escapement-book-11.png  Escapement 11 as dealt: pent, clocks 0+, scramble 0:-6,2:+2,3:+4,2:-2,3:+4,2:-3,1:+3,0:-2,2:+3,4:+5.
-escapement-book-12.png  Escapement 12 as dealt: hex, clocks 1+, scramble 1:-2,3:-3,6:+3,1:-2,5:-2,2:+5,1:-3,3:+5,4:+3,0:+2.
-escapement-book-13.png  Escapement 13 as dealt: quad, clocks 0+,2+, scramble 0:-1,1:+5,2:-1,0:-1,3:+3,2:-1,0:-1,1:-5.
-escapement-book-14.png  Escapement 14 as dealt: quad, clocks 0+,2+, scramble 2:-1,1:+5,2:-1,1:+4,2:-1,0:-1,1:-5,2:-1,0:-1,3:+5.
-escapement-book-15.png  Escapement 15 as dealt: pent, clocks 0+,2+, scramble 2:-4,4:+2,0:-1,4:+5,0:-1,4:-4,0:-2,3:+5,2:-1,1:+5.
-escapement-book-16.png  Escapement 16 as dealt: hex, clocks 1+,4+, scramble 4:-2,2:-2,5:+4,4:-2,6:+2,1:-2,3:-4,4:-2,6:+5,1:-1,0:-3.
+escapement-book-07.png  Escapement 7 as dealt: quad, clocks 0+, scramble 0:-2,2:+3,1:-2,0:-1.
+escapement-book-08.png  Escapement 8 as dealt: pent, clocks 0+, scramble 0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1.
+escapement-book-09.png  Escapement 9 as dealt: eye, clocks 2+, scramble 2:-3,0:+3,2:-2,3:+4,0:-3,2:-1,3:+3.
+escapement-book-10.png  Escapement 10 as dealt: pent, clocks 0+, scramble 0:-3,3:+3,2:-3,1:-2,0:-2,1:-4,0:-1,2:+3.
+escapement-book-11.png  Escapement 11 as dealt: pent, clocks 0+, scramble 0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2.
+escapement-book-12.png  Escapement 12 as dealt: hex, clocks 1+, scramble 1:-2,5:+4,2:+5,1:-2,3:+3,2:-3,1:-2,3:-4,0:-5,1:-1.
+escapement-book-13.png  Escapement 13 as dealt: quad, clocks 0+,2+, scramble 0:-1,2:-2,1:+3,0:-1,2:-1,3:+2.
+escapement-book-14.png  Escapement 14 as dealt: quad, clocks 0+,2+, scramble 0:-1,1:+3,0:-1,3:+3,2:-2,0:-2,3:-3.
+escapement-book-15.png  Escapement 15 as dealt: pent, clocks 0+,2+, scramble 2:-1,3:-4,2:-4,4:-5,0:-2,4:+2,0:-1,4:-5.
+escapement-book-16.png  Escapement 16 as dealt: hex, clocks 1+,4+, scramble 4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2.
 escapement-book-17.png  Escapement 17 as dealt: pent, clocks 0+,1+, scramble 1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5.
 escapement-book-18.png  Escapement 18 as dealt: hex, clocks 1+,2+, scramble 2:-2,6:+2,3:-4,2:-2,4:-2,1:-1,5:+2,2:-1,1:-1,4:+4,2:-1,1:-1,5:-4.
-escapement-book-19.png  Escapement 19 as dealt: tri, clocks 0-, scramble 0:+1,2:+4,0:+1,2:+2,0:+1,1:+3.
-escapement-book-20.png  Escapement 20 as dealt: quad, clocks 0+,2-, scramble 2:+1,1:+5,2:+1,1:+4,2:+1,0:-1,1:-5,2:+1,0:-1,3:+5,2:+1,0:-1,3:+3.
-escapement-book-21.png  Escapement 21 as dealt: pent, clocks 0-,2+, scramble 2:-2,4:+2,3:-3,2:-4,4:-3,0:+1,4:-5,0:+1,4:-3,0:+1,1:-3.
-escapement-book-22.png  Escapement 22 as dealt: hex, clocks 1+,4-, scramble 4:+2,6:+5,3:+4,4:+3,2:+4,1:-1,2:+4,1:-3,5:-2,4:+1,5:+5,4:+1,0:+5.
+escapement-book-19.png  Escapement 19 as dealt: tri, clocks 0-, scramble 0:+1,1:-3,0:+2,2:+4.
+escapement-book-20.png  Escapement 20 as dealt: quad, clocks 0+,2-, scramble 2:+1,1:+3,2:+1,1:-3,2:+1,0:-1,1:-4,2:+2,0:-2,1:+5.
+escapement-book-21.png  Escapement 21 as dealt: pent, clocks 0-,2+, scramble 0:+2,3:+2,4:+5,0:+2,3:+3,2:-2,4:-3,0:+2,3:-4,2:-1.
+escapement-book-22.png  Escapement 22 as dealt: hex, clocks 1+,4-, scramble 4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3.
 escapement-book-23.png  Escapement 23 as dealt: pent, clocks 0-, scramble 0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4.
 escapement-book-24.png  Escapement 24 as dealt: hex, clocks 1-, scramble 1:+3,4:-2,5:+4,2:+2,1:+2,3:+3,2:-5,1:+2,3:+2,6:-2.
-escapement-book-25.png  Escapement 25 as dealt: hex, clocks 1+,3+,5+, scramble 5:-2,2:+4,3:-1,1:-2,4:+2,5:-1,3:-1,6:-5.
-escapement-book-26.png  Escapement 26 as dealt: pent, clocks 0+,2+, scramble 0:-2,3:-4,4:+3,0:-1,1:-5,0:-2,3:+5,2:-4,4:+3,0:-1,4:-4,0:-1,4:-3,0:-1,4:+5.
-escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-5,3:-2,2:-4,3:-2,2:-2,1:-2,0:-2,2:+2,1:+3,0:-1,1:-4,0:-1,4:+3.
-escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-1,2:-3,1:-3,4:-4,5:-3,2:+3,1:-2,3:-2,6:-2,1:-2,5:-3,6:+5,1:-1,5:+5.
-escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-2,2:-3,0:-5,5:-2,2:+5,4:+5,5:-2,3:-1,1:-1,2:+3,3:-2,1:-1,6:+3,5:-1,1:-2,4:-3,5:-1,3:-1,0:+5.
+escapement-book-25.png  Escapement 25 as dealt: hex, clocks 1+,3+,5+, scramble 1:-2,3:-1,5:-3,0:+3.
+escapement-book-26.png  Escapement 26 as dealt: pent, clocks 0+,2+, scramble 2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2.
+escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2.
+escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4.
+escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
 escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
 escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
-escapement-2-ticked.png  Escapement 2 after rod 1 -3 heals: its tick has taken the clock's top seam, one tooth on, and the budget's flaps read 02.
-escapement-2-pushed.png  Escapement 2, then a wrong rod 1 +2 over the clock's seam: its tick finds the seam covered and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
+escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
+escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
-escapement-2-out.png  Escapement 2, then rod 1 +2 and rod 1 +1: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
-escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (1:-3, 1:+2, 1:+1): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
-escapement-2-won.png  Escapement 2 won in 3: 1:-3, 2:-2, 2:-4, the last tick emptying the stack.
+escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
+escapement-2-wait-dealt.png  Escapement 2 as dealt: the row under the tank reads undo, wait and reset, and the note says Unstir in 3 ticks. Tap wait: the clock ticks, nothing turns.
+escapement-2-wait-waiting.png  Escapement 2 after 2:+4: the clock owes 1 tick and only a wait unstirs at par, the wait control live between undo and reset.
+escapement-2-wait-armed.png  Escapement 2 after 2:+4 with reset armed: reset? tap again on one line, the wait stepped aside, and undo too where the row can't hold it beside the armed reset (an SE).
+escapement-2-wait-largest.png  Escapement 2 after 2:+4 at the largest text size, where the play screen's type stops at xxxLarge: undo, wait and reset, the wait on its own row where one row can't hold them.
+escapement-2-wait-largest-armed.png  The same with reset armed: reset? tap again on one line, undo stepped aside, the wait still on its own row where it has one.
+escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
 escapement-2-drag.png  Escapement 2 mid-drag on paper: rod 2 turned +2.6, its disc's hairline, dashes and +3 count in ink.
 escapement-2-wave.png  Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod.
 escapement-2-back-swipe.png  Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's glyphs dark across the whole width, the menu's side too.
 escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
-escapement-budget-16-mid.png  Escapement 16 after 0:+3, 6:-5 and 3:+4, two ticks a move: clock 1 stopped, 03 ticks left.
-escapement-budget-16-late.png  Escapement 16 after 0:+3, 6:-5, 3:+4, 6:-2 and 5:-4: 01 tick left, clock 4's last.
+escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
+escapement-budget-16-late.png  Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last.
 escapement-hubs-16-dealt.png  Escapement 16 as dealt: hubs 3 and 6, header 09.
-escapement-hubs-16-mid.png  Escapement 16 after 0:+3, 6:-5 and 3:+4: clock 1 run out, grey at 0; clock 4 at 3; header 03.
-escapement-hubs-16-wrong.png  Escapement 16 after 0:+3, 6:-5 and a wrong 2:+1: both ticks pushed, clock 1's its last, grey at 0 over its +1, clock 4 at 3 over its own; header 03.
-escapement-hubs-16-out.png  Escapement 16, the wrong 2:+1 then three more steps of knob 2: both hubs grey at 0, header 00, out of ticks.
+escapement-hubs-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 run out, grey at 0; clock 4 at 3; header 03.
+escapement-hubs-16-wrong.png  Escapement 16 after 3:-2, 5:-2 and a wrong 6:-4: clock 1's last tick pushed, grey at 0 over its +1; clock 4 at 3; header 03.
+escapement-hubs-16-out.png  Escapement 16, the wrong 6:-4 then three waits: both hubs grey at 0, header 00, out of ticks.
 escapement-hubs-22-dealt.png  Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11.
-escapement-stopped-3-stamp.png  Escapement 3 after 2:+1 and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
-escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and 3:-2: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
-escapement-stopped-3-left.png  Escapement 3 after 2:+1 and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
-escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and 3:-2: both clocks stopped with knob 3's twist left, out of ticks; look left.
-escapement-stopped-3-rings.png  Escapement 3 after 2:+1 and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
-escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and 3:-2: both clocks stopped with knob 3's twist left, out of ticks; look rings.
+escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
+escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
+escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
+escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look left.
+escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
+escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look rings.
 escapement-plate-1-dealt.png  Escapement 1 as dealt on its own plate.
 escapement-plate-1-solved.png  Escapement 1 solved on its own plate, the solve's ink ring run out.
 escapement-plate-2-dealt.png  Escapement 2 as dealt on its own plate.
@@ -763,6 +777,42 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+prism-read-01-cyan-rest.png  Prism's read: Frond's cyan rod, its first move, held at 0 of +3.
+prism-read-01-cyan-short10.png  Prism's read: Frond's cyan rod, its first move, held at +2.0 of +3.
+prism-read-01-cyan-short5.png  Prism's read: Frond's cyan rod, its first move, held at +2.5 of +3.
+prism-read-01-cyan-on.png  Prism's read: Frond's cyan rod, its first move, held at +3.0 of +3.
+prism-read-01-cyan-past5.png  Prism's read: Frond's cyan rod, its first move, held at +3.5 of +3.
+prism-read-01-cyan-past10.png  Prism's read: Frond's cyan rod, its first move, held at +4.0 of +3.
+prism-read-01-red-rest.png  Prism's read: Frond's red rod, its second move, held at 0 of -4.
+prism-read-01-red-short10.png  Prism's read: Frond's red rod, its second move, held at -3.0 of -4.
+prism-read-01-red-short5.png  Prism's read: Frond's red rod, its second move, held at -3.5 of -4.
+prism-read-01-red-on.png  Prism's read: Frond's red rod, its second move, held at -4.0 of -4.
+prism-read-01-red-past5.png  Prism's read: Frond's red rod, its second move, held at -4.5 of -4.
+prism-read-01-red-past10.png  Prism's read: Frond's red rod, its second move, held at -5.0 of -4.
+prism-read-08-blue-rest.png  Prism's read: Thistle's blue rod, its third move, held at 0 of -4.
+prism-read-08-blue-short10.png  Prism's read: Thistle's blue rod, its third move, held at -3.0 of -4.
+prism-read-08-blue-short5.png  Prism's read: Thistle's blue rod, its third move, held at -3.5 of -4.
+prism-read-08-blue-on.png  Prism's read: Thistle's blue rod, its third move, held at -4.0 of -4.
+prism-read-08-blue-past5.png  Prism's read: Thistle's blue rod, its third move, held at -4.5 of -4.
+prism-read-08-blue-past10.png  Prism's read: Thistle's blue rod, its third move, held at -5.0 of -4.
+prism-read-14-yellow-rest.png  Prism's read: specimen 14's yellow rod, its second move, held at 0 of +4.
+prism-read-14-yellow-short10.png  Prism's read: specimen 14's yellow rod, its second move, held at +3.0 of +4.
+prism-read-14-yellow-short5.png  Prism's read: specimen 14's yellow rod, its second move, held at +3.5 of +4.
+prism-read-14-yellow-on.png  Prism's read: specimen 14's yellow rod, its second move, held at +4.0 of +4.
+prism-read-14-yellow-past5.png  Prism's read: specimen 14's yellow rod, its second move, held at +4.5 of +4.
+prism-read-14-yellow-past10.png  Prism's read: specimen 14's yellow rod, its second move, held at +5.0 of +4.
+prism-read-30-yellow-rest.png  Prism's read: the last specimen's yellow rod, its fourth move, held at 0 of -3.
+prism-read-30-yellow-short10.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -2.0 of -3.
+prism-read-30-yellow-short5.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -2.5 of -3.
+prism-read-30-yellow-on.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -3.0 of -3.
+prism-read-30-yellow-past5.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -3.5 of -3.
+prism-read-30-yellow-past10.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -4.0 of -3.
+prism-read-15-magenta-rest.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at 0 of -5.
+prism-read-15-magenta-short10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -4.0 of -5.
+prism-read-15-magenta-short5.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -4.5 of -5.
+prism-read-15-magenta-on.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.0 of -5.
+prism-read-15-magenta-past5.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.5 of -5.
+prism-read-15-magenta-past10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
@@ -776,7 +826,7 @@ store-06-daily.png  Store 6: today's daily, its result card, share and next dail
 store-07-endless.png  Store 7: endless's first tank with 5 of the brim's 8 notches.
 store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held halfway back, its ghosts closing on the white line.
 store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
-store-10-escapement.png  Store 10: Escapement 02 after rod 1 -3: its tick landed, the ratchet a tooth on, 02 ticks left.
+store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
 duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
 duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half.
@@ -882,8 +932,8 @@ stamp-xxxl.png  The same at xxxLarge, the play screen's cap: "unstirred." grown 
 stamp-ax5.png  The same at accessibility5: the play screen capped at xxxLarge, the same frame as stamp-xxxl.
 stamp-tabletop-xxxl.png  Duo tabletop at xxxLarge: plughole 06 solved clean, "unstirred." kept at its fixed 22 pt above the fold.
 stamp-split-xxxl.png  Duo open at xxxLarge: plughole 06 solved clean, the card over the menu headed by "unstirred." at the larger size.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, three hollow on 08, a lock on 09 onwards.
-marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2, 04 clean, 05 tried.
+marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
+marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.

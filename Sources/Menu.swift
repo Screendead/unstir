@@ -27,15 +27,16 @@ extension Level {
 }
 
 extension Tier {
-    var sweep: LinearGradient {
-        let colours: [Color] = switch self {
+    var colours: [Color] {
+        switch self {
         case .plughole: [.neonCyan, .magenta, .amber]
         case .whirlpool: [.blood, .magenta, .violet]
         case .vortex: [.violet, Color(0x2F6BFF), Color(0x00D2C0)]
         case .maelstrom: [Color(0xFF1A2A), Color(0xD4200C), Color(0xB89A00)]
         }
-        return LinearGradient(colors: colours, startPoint: .leading, endPoint: .trailing)
     }
+
+    var sweep: LinearGradient { LinearGradient(colors: colours, startPoint: .leading, endPoint: .trailing) }
 
     var glow: Color {
         switch self {
@@ -143,6 +144,8 @@ struct MenuView: View {
     @State private var cardFrom = UnitPoint.center
     /// UNSTIR_CLOCK: the dock's and the card's clips held that many seconds in.
     let clock: Double?
+    /// UNSTIR_DAILY's day, which the daily's row keeps in place of today's.
+    let day: Date?
     /// UNSTIR_CARDLEVELS: placeholder levels the card lists before its pack has any.
     let placeholders: Int
     /// UNSTIR_SHELFDEMO: opens Lens's card from the dock and back, through the calls a finger makes.
@@ -249,7 +252,7 @@ struct MenuView: View {
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
-         card: Binding<Offer?>, archive: Binding<Bool> = .constant(false), clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
+         card: Binding<Offer?>, archive: Binding<Bool> = .constant(false), clock: Double? = nil, day: Date? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
          peeking: Bool = false, playing: Level? = nil, slot: CGRect? = nil, revision: Int = 0, covered: Bool = false,
          onPick: @escaping (Level) -> Void) {
@@ -266,6 +269,7 @@ struct MenuView: View {
         _card = card
         _archive = archive
         self.clock = clock
+        self.day = day
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
         self.cardScroll = cardScroll
@@ -282,7 +286,7 @@ struct MenuView: View {
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
         _listed = State(initialValue: tier)
-        let now = Date.now
+        let now = day ?? .now
         _today = State(initialValue: now)
         _daily = State(initialValue: Self.daily(now))
         _past = State(initialValue: Self.past(now))
@@ -304,6 +308,23 @@ struct MenuView: View {
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
+
+    /// The daily row's line under its title, a frost day's (the only daily that seizes knobs) and a run of days from
+    /// two, and the row's detail for VoiceOver, its shape and that line. Nil on a plain day before a run.
+    static func dailyLines(_ day: Level, run: Int) -> (under: String?, detail: String?) {
+        let frost = !day.seized.isEmpty, running = run >= 2
+        let under: String? = switch (frost, running) {
+        case (true, true): String(localized: "frost day \u{00B7} \(run) days running",
+                                  comment: "The daily's row on a frost day, two knobs frozen: then the days in a row solved, from two")
+        case (true, false): String(localized: "frost day", comment: "The daily's row on a frost day, two knobs frozen")
+        case (false, true): String(localized: "\(run) days running", comment: "The daily's row: the days in a row solved, from two")
+        case (false, false): nil
+        }
+        return (under, under.map {
+            String(localized: "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \($0)",
+                   comment: "VoiceOver: the daily's row. Its rods, its par, then a frost day or the days in a row solved")
+        })
+    }
 
     private static func past(_ day: Date) -> (days: [(date: Date, level: Level)], atPar: Int) {
         let days = Archive.days(today: day).map { ($0, Level.daily($0, archived: true)) }
@@ -346,7 +367,7 @@ struct MenuView: View {
                 sideways = nil
             }
         }
-        .onChange(of: phase) { if phase == .active { today = .now } }
+        .onChange(of: phase) { if phase == .active { today = day ?? .now } }
         .onChange(of: today) {
             daily = Self.daily(today)
             past = Self.past(today)
@@ -569,13 +590,10 @@ struct MenuView: View {
                 // 24 under the chips as drawn, each 4 inside its target.
                 heading(Text("today")).padding(.top, 20)
                 // Marked until either is first opened.
-                let new = !Best.modesSeen, (day, run) = daily
-                // One line each: what a mode is its own note says. A run of days goes under the title, leaving the
-                // result where every row has it.
-                LevelRow(level: day, detail: run < 2 ? nil
-                             : String(localized: "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
-                                      comment: "VoiceOver: the daily's row. Its rods, its par, then the days in a row solved"),
-                         under: run < 2 ? nil : Text("\(run) days running", comment: "The daily's row: the days in a row solved, from two"), enabled: true, new: new, brief: true,
+                let new = !Best.modesSeen, (day, run) = daily, lines = Self.dailyLines(day, run: run)
+                // One line each: what a mode is its own note says. A frost day and a run of days go under the title,
+                // leaving the result where every row has it.
+                LevelRow(level: day, detail: lines.detail, under: lines.under.map { Text($0) }, enabled: true, new: new, brief: true, // loc: verbatim localized by dailyLines
                          playing: playing?.id == day.id, pick: pick, refuse: refuse)
                 // Unsaid until the store has read what the player owns, so an owner never meets the lock.
                 ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,

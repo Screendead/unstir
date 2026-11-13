@@ -372,8 +372,8 @@ struct PackTank: View {
         var stir = Unstirred(stack: on.map(\.0.twist), layout: level.layout, lenses: level.lenses, masks: level.masks,
                              liveRod: nil, liveAngle: 0, side: side, fillEntries: level.picture.fillEntries)
         stir.shares = on.map(\.1)
-        return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: stack.count - on.count, side: side)
-            .modifier(stir)
+        return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: stack.count - on.count, side: side,
+                            stir: stir)
             .overlay { controls(level, on: on.map { ($0.0.twist, $0.1) }) }
     }
 
@@ -385,8 +385,8 @@ struct PackTank: View {
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
                 if k == level.clocks.first?.rod {
                     ClockHint(radius: min(rods[k].z * r, r - 4)).position(at(k))
-                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core), plate: LevelView.ratchetReach * r,
-                                waits: level.waits, pawl: 0, lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true)
+                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core), plate: LevelView.ratchetReach * r, pawl: 0,
+                                lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true)
                         .position(at(k))
                 } else {
                     RodView(angle: angle(k), size: core, seized: level.kind(of: k) != .working, grabbed: false,

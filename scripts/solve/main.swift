@@ -7,10 +7,11 @@ if CommandLine.arguments.dropFirst().first == "escapement" { escapement(CommandL
 let all = CommandLine.arguments.dropFirst().map { $0 }
 let lensArg = all.dropFirst(2).first { $0.hasPrefix("lenses=") }
 let maskArg = all.dropFirst(2).first { $0.hasPrefix("masks=") }
-let args = all.filter { $0 != lensArg && $0 != maskArg }
+let decoysArg = all.dropFirst(2).contains("decoys")
+let args = all.filter { $0 != lensArg && $0 != maskArg && $0 != "decoys" }
 guard (2...3).contains(args.count), let layout = Layout(rawValue: args[0]) else {
     let layouts = (Layout.allCases + Layout.swirls).map(\.rawValue).joined(separator: "|")
-    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4] [lenses=0,2] [masks=0:r,1:c]")
+    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4] [lenses=0,2] [masks=0:r,1:c] [decoys]")
     exit(2)
 }
 let seized = Set((args.count > 2 ? args[2] : "").split(separator: ",").compactMap { Int($0) })
@@ -50,7 +51,7 @@ guard let optimal, let untwisting, let lazy else {
     print("unsolvable: some seam never comes under a working knob")
     exit(1)
 }
-let optimum = optimal.count
+let optimum = optimal.count, seen = solver.stacksSeen
 print("entries \(stack.count), seized \(seized.sorted().map(String.init).joined(separator: ",").ifEmpty("none"))"
       + (lenses.isEmpty ? "" : ", lenses \(lenses.sorted().map(String.init).joined(separator: ","))")
       + (masks.isEmpty ? "" : ", masks \(masks.sorted { $0.key < $1.key }.map { "\($0.key):\($0.value.letter!)" }.joined(separator: ","))"))
@@ -65,10 +66,39 @@ for ((reading, _), park) in zip(readings, parks) {
     print("park rule, \(reading): \(best == worst ? "\(worst) however ties go" : "\(best) to \(worst) as ties go") (\(verdict))")
 }
 print("no lookahead \(lazy.count) (planning gap \(lazy.count - optimum))")
+for (name, rule) in [("one-visit rule", Solver.Rule.oneVisit), ("last-ring rule", .lastRing)] {
+    guard let ties = solver.ties(stack, seized: seized, rule: rule) else {
+        print("\(name): some way its ties go strands a seam")
+        continue
+    }
+    let (best, worst) = (ties.best.count, ties.worst.count)
+    print("\(name): \(best == worst ? "\(worst) however ties go" : "\(best) to \(worst) as ties go")"
+          + " (\(worst == optimum ? "fair" : "\(worst - optimum) over"))")
+}
+let plan = solver.needsPlan(stack, seized: seized, optimum: optimum)!
+print("needs a plan: " + (!plan ? "no, a rule of thumb reaches the optimum as its ties go best"
+    : untwisting.count > optimum && !solver.needsPlan(stack, seized: seized, optimum: untwisting.count)!
+        ? "only for the detour; every rule of thumb's best ties untwisting alone"
+        : "yes, every rule of thumb misses the optimum however its ties go"))
+var decoys: [Solver.Decoy]?
+let lookahead = clock.measure { decoys = solver.decoys(stack, seized: seized, line: untwisting) }
+if let decoys, untwisting.count == optimum {
+    let ms = Double(lookahead.components.seconds) * 1e3 + Double(lookahead.components.attoseconds) / 1e15
+    let points = Set(decoys.map(\.at)), deep = Set(decoys.filter { $0.survives >= 3 }.map(\.at))
+    print("decoys: \(deep.count) of \(points.count) choice points need a lookahead of 3 or more moves to refute one"
+          + " (longest \(decoys.map(\.survives).max() ?? 0)), \(String(format: "%.2f", ms)) ms")
+    if decoysArg {
+        for d in decoys.sorted(by: { ($0.at, $0.survives) < ($1.at, $1.survives) }) {
+            print("  instead of move \(d.at + 1): \(d.move), refuted by a lookahead of \(d.survives)")
+        }
+    }
+} else {
+    print("decoys: not counted, as a detour beats untwisting")
+}
 print("optimal moves, one commit or turn each:")
 for (i, move) in optimal.moves.enumerated() { print("  \(i + 1). \(move)") }
 let ms = Double(took.components.seconds) * 1e3 + Double(took.components.attoseconds) / 1e15
-print("\(solver.stacksSeen) stacks, \(String(format: "%.2f", ms)) ms")
+print("\(seen) stacks, \(String(format: "%.2f", ms)) ms")
 
 extension String {
     func ifEmpty(_ other: String) -> String { isEmpty ? other : self }
