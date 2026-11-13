@@ -545,6 +545,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Tier achievements follow the gate | 2026-11-13 | The three tier achievements follow the new gate, a tier opening when every level below is solved. Jack's pick. | architecture |
 | Lens on the stored map | 2026-11-13 | A Lens level draws from the stored map by default, its detail packed into the map's own image, from the same 10 entries as any level; `UNSTIR_MAPLENS=0` is the probe that turns it off. Jack, on 32 MB a map for a tenth to a fifth of the deepest levels' frame: "32mb out of 6gb seems like a reasonable trade-off for 10-20% savings and thus better battery life." | architecture |
 | Brim on every level | 2026-11-13 | The tank's fullness shows as endless's brim on every level, not only endless. Jack: "show it all the time on every level". | HANDOFF |
+| The tank's limit at 48 | 2026-11-13 | Not decided yet: `Tank.maxStack` is built at 48, pending Jack's look, the brim's notches and "of 48" following it; endless's deepest tank (28) and the four-tap ceiling (42) stay where they were. | architecture |
 
 ## Undated, no round
 
