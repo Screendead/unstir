@@ -79,10 +79,16 @@ jobs:
           [[ -n "$udid" ]] || { xcrun simctl list devices available; echo "no iOS 27.2 Pro Max simulator" >&2; exit 1; }
           echo "$udid" > "$RUNNER_TEMP/udid"
           xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b
+      # The first StoreKit test on the runner's fresh simulator hung for as long as it was left (6 min 45 s), so one
+      # purchase test runs first, allowed to fail, and every test here is stopped at 60 s.
+      - name: Warm StoreKit up
+        shell: bash
+        run: |
+          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests/testPurchaseGrantsOnePack -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 | tee "$RUNNER_TEMP/warm.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began" || echo "the warm-up test failed"
       - name: StoreKit tests on iOS 27.2
         shell: bash
         run: |
-          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began"
+          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began"
       - name: Keep the test log
         if: always()
         uses: actions/upload-artifact@v7
@@ -90,6 +96,7 @@ jobs:
           name: store-ios27-log
           path: |
             ${{ runner.temp }}/build.log
+            ${{ runner.temp }}/warm.log
             ${{ runner.temp }}/test.log
             ${{ runner.temp }}/Test.xcresult
           retention-days: 14
