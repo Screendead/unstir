@@ -1,10 +1,10 @@
 menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list with no line over it, only level 01 unlocked, no daily or endless row, no pack dock.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
-menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
-menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played).
-menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked.
-menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level solved: its level 01 playable, vortex still locked.
+menu-vortex-locked.png  Menu looking at vortex, 20 of whirlpool's 27 solved (05, 12 and 18 over par): ticks 01 to 20 lit, and under them short: 21–27, opening 21, the first not played.
+menu-vortex-open.png  Menu on vortex, opened by every whirlpool level solved: its level 01 playable, maelstrom still locked.
+menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: two of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
@@ -33,7 +33,7 @@ menu-back-swiped.png  Back from plughole 12 by the edge swipe: the list centred 
 menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
 menu-mid-switch-scrolled.png  The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin.
 menu-switch-landing.png  Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir.
-menu-switch-locked.png  Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list.
+menu-switch-locked.png  Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 20 of whirlpool's 27 solved: vortex is locked, so the list landed on its header, over the gate and its short list.
 menu-back-up.png  Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole.
 card-back-solved.png  Back from Lens 02's result card after a solve, Lens's card up (UNSTIR_CARD): the card centred on 03, the row next › opens.
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
@@ -99,14 +99,14 @@ level-over-par.png  The same a push later: moves 6 / par 5 in magenta.
 result-veil.png  Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most.
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
 result-again-best.png  Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next.
-result-fullest.png  Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows.
+result-fullest.png  Plughole 27 replayed at par against a stored best of +6, every other plughole level at par: clean counts on the first try, the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows.
 result-pack-complete.png  Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's).
 result-every-tier.png  Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
 result-ladder-end.png  Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
 tier-up.png  Vortex 27 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing.
-tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
-tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
-tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
+tier-up-locked.png  The same with maelstrom still closed, no other vortex level solved (as levels open in order, plain play never reaches this): as bright, with a lock, saying how many vortex levels are unsolved; it opens the menu on maelstrom's gate.
+tier-up-midway.png  Plughole 05 solved at par, the last plughole level without a best: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
+tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, vortex 01 to 24 solved (04, 11 and 22 over par): 24 ticks lit, short: 25–27.
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and share, sharing the card's width, and next daily in 7 h under them (UNSTIR_NOW=17:00).
 daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet its share button opens, opened without a tap).
@@ -829,7 +829,7 @@ store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 st
 store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
 duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
-duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half.
+duo-open-fullest.png  Duo open: plughole 27's fullest card (at par on a replay, what clean takes, new best, again, up a notch) whole over the menu in the trailing half.
 duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note.
 duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them.
 duo-open-endless.png  Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it.
@@ -843,7 +843,7 @@ duo-folded-book.png  Duo half open like a book: the split clear of the fold's ba
 duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
 duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.
 duo-tabletop-daily-result.png  Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold.
-duo-tabletop-fullest.png  Duo tabletop: plughole 27 over par against a best of +6, the fullest card a tier level shows (new best, again, up a notch locked): the caption risen so the card ends above unstirred., clear of the fold.
+duo-tabletop-fullest.png  Duo tabletop: plughole 27 replayed at par against a best of +6, the fullest card a tier level shows (what clean takes, new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold.
 duo-tabletop-pack-complete.png  Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold.
 duo-tabletop-escapement.png  Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half.
 duo-tabletop-prism.png  Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half.
@@ -919,7 +919,7 @@ type-menu-ax3.png  The same at accessibility3: each row's result under its title
 type-level-xxxl.png  Level 01 at xxxLarge type: the header, title, note and controls grown, the tank still the screen's width.
 type-level-ax5.png  Level 01 at accessibility5: the play screen capped at xxxLarge, the same frame as type-level-xxxl.
 type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size.
-type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
+type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge, replayed at par: clean counts on the first try, the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
 type-result-clean-xxxl.png  Level 06's clean result card at xxxLarge.
 type-result-par-xxxl.png  Level 06 solved at par on a replay, at xxxLarge.
 type-tier-up-xxxl.png  Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM.

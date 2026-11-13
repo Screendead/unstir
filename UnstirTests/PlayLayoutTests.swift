@@ -525,13 +525,14 @@ final class PlayLayoutTests: XCTestCase {
         return box.last.map { ($0.0, $0.1, $0.2, box.times) }
     }
 
-    /// The fullest card a tier level shows: plughole 27 over par against a best of +6, every other plughole level at par,
-    /// so the next tier is a level short.
+    /// The fullest card a tier level shows: plughole 27 replayed at par against a best of +6, every other plughole level
+    /// at par, so its card says what clean takes and the new best, and goes up a notch to the open tier. As tiers open
+    /// on solved levels (Jack, 2026-11-13), a closed tier's longer way up never shows on a tier's last level.
     private func storeTheFullestCard() {
         for level in Tier.plughole.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) }
         Best(over: 6, seconds: 60).save(Tier.plughole.levels.last!.id)
     }
-    private let fullest = ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
+    private let fullest = ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
         // The cards that ran past the foot: the fullest at xxxLarge on the largest phone, and on the shortest at the

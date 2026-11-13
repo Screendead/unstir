@@ -6,13 +6,13 @@ shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONS
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
 shot menu-whirlpool-locked "Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
-shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked." \
+shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level solved: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
-shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played)." \
+shot menu-vortex-locked "Menu looking at vortex, 20 of whirlpool's 27 solved (05, 12 and 18 over par): ticks 01 to 20 lit, and under them short: 21–27, opening 21, the first not played." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$some
-shot menu-vortex-open "Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked." \
+shot menu-vortex-open "Menu on vortex, opened by every whirlpool level solved: its level 01 playable, maelstrom still locked." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
-shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit." \
+shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: two of vortex's 27 ticks lit." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
@@ -69,7 +69,7 @@ shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and h
 # A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
 hold=3.9 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
-hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list." \
+hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 20 of whirlpool's 27 solved: vortex is locked, so the list landed on its header, over the gate and its short list." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
 shot menu-back-up "Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole." \
   LEVEL=27 EXIT=up BESTS=plughole:$par27

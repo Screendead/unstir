@@ -72,7 +72,7 @@ FOUR TIERS, 108 LEVELS, FREE
 - Vortex: 27 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
 - Maelstrom: 27 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. The last free tier and the hardest: some levels need a plan, not just a good eye. Its pictures have a heartbeat.
 
-Each tier opens when every level of the one before it is at par.
+Each tier opens when every level of the one before it is solved.
 
 EVERY DAY
 
@@ -270,13 +270,13 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
 - **Review notes** (App Review Information, Notes; 4000 characters at most, assumed; check). App Review can't open the
-  later tiers without playing every level at par, and the developer unlock is off in a Release build (the editors'
+  later tiers without solving every level, and the developer unlock is off in a Release build (the editors'
   build has a labelled switch, but it is its own TestFlight group, never the one reviewed). Proposed 2026-11-13:
 
   ```
   No account or sign-in is needed, and the app has no server of its own: purchases go through StoreKit alone.
 
-  How the game opens: the four free tiers (Plughole, Whirlpool, Vortex, Maelstrom) open in turn, each once every level of the one before is solved at par. The release build has no unlock. Plughole's first levels teach the rule; the screenshots and preview show the later tiers.
+  How the game opens: the four free tiers (Plughole, Whirlpool, Vortex, Maelstrom) open in turn, each once every level of the one before is solved. The release build has no unlock. Plughole's first levels teach the rule; the screenshots and preview show the later tiers.
 
   The daily and Endless open once Plughole level 23 is solved. About one daily in seven is a frost day, with two knobs frozen under frosted glass: this is intended.
 
