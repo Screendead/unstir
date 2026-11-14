@@ -169,6 +169,27 @@ final class StirMapTests: XCTestCase {
         XCTAssertNil(glass.shader(scale: 2).mapped)
     }
 
+    /// A frame drawn from the map draws four taps at any depth, past the budget too, with a rod in hand riding over it;
+    /// a frame through the chain, the map's stack popped or merged since, keeps the budget's rule (Jack, 2026-11-13).
+    @MainActor func testAFrameFromTheMapDrawsFourTapsAtAnyDepth() throws {
+        try XCTSkipIf(StirMap.mode == nil)
+        let stack = (0..<60).map { Twist(rod: $0 % 3, steps: $0 % 2 == 0 ? 2 : -3) }
+        var glass = Unstirred(stack: stack, layout: .tri, liveAngle: 0, side: 100, budget: 40)
+        let budget = glass.shader(scale: 3).fourTaps
+        XCTAssertEqual(budget, 40)
+        XCTAssertGreaterThan(Float(stack.count), budget, "past the budget, the chain draws two taps")
+        glass.map = made(try XCTUnwrap(StirMap.key(glass, scale: 3)))
+        XCTAssertEqual(glass.shader(scale: 3).fourTaps, TankShader.everyTap)
+        var held = glass
+        (held.liveRod, held.liveAngle) = (1, 0.4)
+        XCTAssertNotNil(held.shader(scale: 3).mapped)
+        XCTAssertEqual(held.shader(scale: 3).fourTaps, TankShader.everyTap)
+        var popped = glass
+        popped.stack.removeLast()
+        XCTAssertNil(popped.shader(scale: 3).mapped)
+        XCTAssertEqual(popped.shader(scale: 3).fourTaps, budget)
+    }
+
     /// No map is asked for a short stack, one winding in or a cover's shares; a Lens level's holds its lenses' flow
     /// (but under UNSTIR_MAPLENS=0), and Prism's counts its channels' maps for its depth and holds a tile a word.
     @MainActor func testOnlyADeepGlassAsksForAMap() throws {

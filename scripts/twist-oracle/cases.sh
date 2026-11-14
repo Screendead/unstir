@@ -12,8 +12,9 @@ m24=(TIER=maelstrom LEVEL=24 TANKTURNED=1 CLEAN=1)
 still m24 "${m24[@]}" CLOCK=3
 still m24-deep "${m24[@]}" CLOCK=3 DEEP=36
 still m24-shallow "${m24[@]}" CLOCK=3 DEEP=4
-# Two taps: the look past the four-tap budget, on a hot phone or the Duo.
-better=m24-deep still m24-deep-two "${m24[@]}" CLOCK=3 DEEP=36 TAPS=12
+# Two taps: the look past the four-tap budget, on a hot phone or the Duo, through the chain: a frame from the map
+# draws four whatever the budget.
+better=m24-deep still m24-deep-two "${m24[@]}" CLOCK=3 DEEP=36 TAPS=12 MAP=off
 # The live picture at rest, at other times: early, past the marbling's 10 s loop and near the twin's 60 s one.
 still m24-clock-0.5 "${m24[@]}" CLOCK=0.5
 still m24-clock-11.3 "${m24[@]}" CLOCK=11.3
@@ -74,6 +75,15 @@ still card-lens CARD=lens CLOCK=3
 # Reduce Motion: the live picture held on its rest frame with no clock given.
 calm=1 still m24-calm "${m24[@]}"
 
+# The tank's limit, 48 (Tank.maxStack): maelstrom 24 full, at rest, a rod in hand a twist short, the wind-in part way;
+# plughole 20, Prism 30 and Lens 25 full. Past the four-tap budget these draw two taps.
+still m24-48 "${m24[@]}" CLOCK=3 DEEP=48
+sweep m24-rod-48 LIVE "0:-2.30 0:-2.34" "${m24[@]}" CLOCK=3 DEEP=47
+sweep m24-wind-48 WIND "0.50 0.52 0.54" "${m24[@]}" CLOCK=3 DEEP=48
+still p20-48 TIER=plughole LEVEL=20 CLEAN=1 DEEP=48
+still prism-30-48 PACK=prism OWNED=prism LEVEL=30 CLEAN=1 DEEP=48
+still lens-25-48 PACK=lens OWNED=lens LEVEL=25 CLEAN=1 DEEP=48
+
 # Takes in motion, for shimmer no still shows.
 film open 7 "${m24[@]}" OPEN=1
 film drag 14 "${m24[@]}" TAPDRAG=2
@@ -85,3 +95,7 @@ film esc 9 PACK=escapement LEVEL=2 CLEAN=1 MOVES=2:4,w,1:-3 PACE=1.5
 film prism 9 PACK=prism OWNED=prism LEVEL=8 CLEAN=1 MOVES=1:2,0:-3,u PACE=1.5
 film lens-deep 9 "${l25d[@]}" MOVES=0:3,2:-2,0:-3 PACE=1.5
 film prism-deep 9 "${p30d[@]}" MOVES=0:2,1:-2,u PACE=1.5
+# Past the four-tap budget a push rides over the map at four taps; the undo pops what the map holds, so the chain
+# draws two taps until the next map lands, then the map four. Held clocks keep the picture still, so only that moves.
+film undo-deep 12 "${m24[@]}" DEEP=47 MOVES=0:2,u PACE=2
+film undo-deep-held 12 "${m24[@]}" CLOCK=3 DEEP=47 MOVES=0:2,u PACE=2

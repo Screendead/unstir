@@ -122,8 +122,9 @@ struct TapLaw: Equatable {
 
     /// The fewest committed work units drawn with four taps on any glass, however it drops frames (TAPS-FLOOR).
     static let floor = 12
-    /// The most: every stack the game allows on every picture (TAPS-CEIL).
-    static let ceiling = Tank.maxStack + (Picture.allCases.map(\.fillEntries).max() ?? 0)
+    /// The most (TAPS-CEIL): the full stack of 36 the game allowed when Jack set it, on the heaviest live picture's fill
+    /// of 6. It doesn't follow `Tank.maxStack`, as a higher ceiling is his call.
+    static let ceiling = 42
     /// Steps down still waiting on their checks, oldest first.
     static let checksKept = 8
 

@@ -609,14 +609,15 @@ import XCTest
         XCTAssertEqual(h.overdue(0), 1)
     }
 
-    /// Jack's call D1 (round 9): a move whose tick a full stack would refuse, as the 37th entry, is refused, the wait too.
+    /// Jack's call D1 (round 9): a move whose tick a full stack would refuse, as the entry past `Tank.maxStack`, is
+    /// refused, the wait too.
     func testAMoveAFullStackWouldRefuseTheTickOfIsRefused() {
         var level = Level.escapement[1]
         level.id = "test-escapement"
-        level.scramble = [Twist(rod: 0, steps: -1)] + (0..<35).map { Twist(rod: 1 + $0 % 2, steps: 1) }
+        level.scramble = [Twist(rod: 0, steps: -1)] + (0..<Tank.maxStack - 1).map { Twist(rod: 1 + $0 % 2, steps: 1) }
         XCTAssertEqual(level.scramble.count, Tank.maxStack)
         let g = Game(level: level, tankTurned: true, bank: (1, nil))
-        // Merges into the top entry, so the stack stays full, and the clock's tick would push a 37th.
+        // Merges into the top entry, so the stack stays full, and the clock's tick would push one past it.
         g.commit(rod: 1, steps: 1)
         g.wait(on: 0)
         XCTAssertEqual(g.stack, level.scramble)

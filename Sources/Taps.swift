@@ -10,6 +10,9 @@ struct TapWindow: Equatable {
     let work: Int
     let held: String
     let picture: String
+    /// The glass draws from its stored map, four taps whatever the budget: its frames are logged but never judged, as
+    /// no budget changes what they cost.
+    var mapped = false
 }
 
 /// The four-tap budget the level's glass draws, learnt per glass (`TapKey`) from the frames its drags miss by `TapLaw`
@@ -233,11 +236,11 @@ final class Taps {
         let key = drawn[TapKey.side(w.pixels)]?.key ?? key(w.pixels)
         if adapts {
             _ = law(key, pixels: w.pixels)
-            laws[key]?.open(work: w.work)
+            if !w.mapped { laws[key]?.open(work: w.work) }
         }
         let b = budget(pixels: w.pixels) ?? Tank.fourTaps(pixels: w.pixels)
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
-        open = Open(key: key, window: w, budget: b, four: Unstirred.drawsFourTaps(work: w.work, budget: b), scene: scene)
+        open = Open(key: key, window: w, budget: b, four: w.mapped || Unstirred.drawsFourTaps(work: w.work, budget: b), scene: scene)
         watch.start(hz: key.hz, stall: stall)
     }
 
@@ -299,7 +302,7 @@ final class Taps {
         let t = o.tally
         if verbose || t.late > 0 || !lines.isEmpty || !t.frozen.isEmpty {
             let frozen = t.frozen.map { "\($0.key) \($0.value)" }.sorted().joined(separator: ", ")
-            Log.write("taps drag \(o.key.name) \(o.window.held) B \(o.budget) Wc \(o.window.work) \(o.four ? "four" : "two")-tap: "
+            Log.write("taps drag \(o.key.name) \(o.window.held) B \(o.budget) Wc \(o.window.work) \(o.four ? "four" : "two")-tap\(o.window.mapped ? " mapped" : ""): "
                       + "\(t.counted) counted, \(t.late) late (gpu \(t.gpu), cpu \(t.cpu), other \(t.other)), \(t.still) still, "
                       + "\(t.skipped) skipped\(frozen.isEmpty ? "" : ", frozen \(frozen)"), granted \(Tally.median(t.periods)) ms, "
                       + "main cpu p50 \(Tally.median(t.cpus)) ms, late \(Tally.median(t.lateCPUs)) ms, "

@@ -33,10 +33,6 @@ struct PlayLayout: Equatable {
         var ring: CGFloat = 0
         /// Above the rim only, in points: the tank's rim lesson, its arc and ghost finger over twelve o'clock.
         var above: CGFloat = 0
-        /// A level's brim past the rim, as `ring`: its lit ticks and pin out to `Brim.levelReach`. Only the split
-        /// makes room for it, and only above, where the pin would reach into the title; the rest reaches no further
-        /// into the margins than on a phone, whose glass keeps its size.
-        var brim: CGFloat = 0
     }
 
     /// The split's chrome round the tank, in points, from the level's shape, whether Prism's swatches show and the type
@@ -114,12 +110,7 @@ struct PlayLayout: Equatable {
         guard window.width > window.height || f.width > 0, min(tank.width, menu.width) >= minPane else { return column }
         // Between the title and the caption, with the column's 12 pt over the stage, or what reaches further there; the
         // ring reaches below it too.
-        let room = tank.height - c.above - c.below
-        let side = min(tank.width / (rim + h.ring), (room - max(PlayStack.gap, h.above)) / (rim + h.ring),
-                       room / (rim + h.ring / 2 + max(h.ring, h.brim) / 2), cap)
-        // The brim's room over the stage, in points, as the lesson's is.
-        var h = h
-        h.above = max(h.above, h.brim * side / 2)
+        let side = min(tank.width / (rim + h.ring), (tank.height - c.above - c.below - max(PlayStack.gap, h.above)) / (rim + h.ring))
         return PlayLayout(kind: .split, side: min(side, cap), tankPane: tank, chromePane: tank, menuPane: menu, halo: h, chrome: c)
     }
 
@@ -490,7 +481,6 @@ extension PlayLayout.Halo {
     /// turns the tank.
     init(_ level: Level) {
         ring = level.run == nil ? 0 : CGFloat((Brim.rOut + Brim.reach) / Brim.unit) - PlayLayout.rim
-        brim = level.run == nil ? CGFloat((Brim.rOut + Brim.levelReach) / Brim.unit) - PlayLayout.rim : 0
         above = level.motion == .none ? 0 : RimLesson.overRim
     }
 }

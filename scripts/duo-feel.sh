@@ -1,12 +1,13 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/duo-feel.sh [--sim udid] [drags] [budgets...]   Plays the deepest levels (whirlpool, maelstrom and
-# vortex 27, endless's tank 20), each as dealt and repeated to the full stack of 36 (UNSTIR_DEEP), on the phone
+# vortex 27, endless's tank 20), each as dealt and repeated to the full stack (Tank.maxStack, UNSTIR_DEEP), on the phone
 # UNSTIR_DEVICE names with the build scripts/run-ios.sh Release installed (or on the simulator given: a dry run of the
 # plumbing), at each four-tap budget pinned (UNSTIR_TAPS=watch:n), a knob dragged 4 s at a time through the real
 # let-go `drags` times (UNSTIR_TAPDRAG, 2 unset), and prints each run's taps lines from the flight recorder. Budgets
-# unset: 42, four taps on every stack, and 23, the open Duo upright's starting limit (r16c-duoprior), its rule on this
-# glass. Lets the phone cool past serious.
+# unset: 42, the four-tap ceiling (four taps on every stack to 36, the limit it was set for), and 23, the open Duo upright's starting limit (r16c-duoprior), its rule on this
+# glass. Lets the phone cool past serious. A frame from the stored map draws four taps whatever the budget (2026-11-13),
+# so every run turns the map off (UNSTIR_MAP=off), which only a Debug or PROBES=YES build reads.
 #
 # What it reads: FrameWatch's display link in the app, one `taps drag` line a drag (counted frames, late ones by
 # cause, the granted period, the main thread's CPU time, thermal state). The link times its own callbacks, not frames
@@ -25,6 +26,7 @@ if [[ "${1:-}" == --sim ]]; then sim=$2; shift 2; fi
 drags=${1:-2}
 shift || true
 budgets=("$@")
+limit=$(sed -nE 's/^ *static let maxStack = ([0-9]+)$/\1/p' Sources/Twist.swift)
 (( ${#budgets[@]} )) || budgets=(42 23)
 levels=(
   'whirlpool 27|"UNSTIR_TIER":"whirlpool","UNSTIR_LEVEL":"27"'
@@ -36,9 +38,9 @@ log=$(mktemp)
 source scripts/harness.sh
 finished() { harness_pull "$sim" "$log"; grep -c 'tapdrag done' "$log" || true; }
 for entry in "${levels[@]}"; do
-  for deep in dealt 36; do
-    vars="\"UNSTIR_UNLOCK\":\"1\",\"UNSTIR_TAPDRAG\":\"$drags\",${entry#*|}"
-    [[ $deep == 36 ]] && vars+=',"UNSTIR_DEEP":"36"'
+  for deep in dealt "$limit"; do
+    vars="\"UNSTIR_MAP\":\"off\",\"UNSTIR_UNLOCK\":\"1\",\"UNSTIR_TAPDRAG\":\"$drags\",${entry#*|}"
+    [[ $deep == "$limit" ]] && vars+=",\"UNSTIR_DEEP\":\"$limit\""
     for b in "${budgets[@]}"; do
       before=$(finished)
       harness_launch "$sim" "$vars,\"UNSTIR_TAPS\":\"watch:$b\""

@@ -73,8 +73,8 @@ shot menu-endless-continue "The menu with an endless run saved on tank 6, brim 3
   BESTS=plughole:$par27,endless:9 MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
-full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
-hold=2 shot sandbox-full "The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset." \
+full=$(for i in $(seq 0 $((limit - 1))); do printf '%d:+1,' $((i % 2)); done)
+hold=2 shot sandbox-full "The sandbox with a full stack of $limit, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset." \
   MODE=sandbox STACK=${full%,} MOVES=2:1
 shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls in full where they fit." \
   MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
