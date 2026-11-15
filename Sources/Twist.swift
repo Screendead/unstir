@@ -49,8 +49,8 @@ enum Tank {
     /// Inside plateau * radius a knob's disc turns rigidly; all shear lives in the ring out to its edge, so each twist
     /// leaves one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other.
     static let plateau = 0.6
-    /// The swirl has no rigid core: its turn fades smoothly from the full angle at the centre to 0 at the glass's edge,
-    /// so it shears through every knob's core rather than carrying them round as a block.
+    /// The swirl has no rigid core: turned inside out (`twist`), its turn grows smoothly from 0 at the centre to the full
+    /// angle at the glass's edge, so it shears through every knob's core rather than carrying them round as a block.
     static let swirlPlateau = 0.0
     /// Pushes past this are refused, the knob shaking, though no level shows the limit (Jack, 2026-11-13: the tank has
     /// none the player sees): a safety cap only. A glass at rest or in hand draws its stack from the stored map
