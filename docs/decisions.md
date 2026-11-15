@@ -37,7 +37,7 @@ The pitch page's first answers, 2026-10-24 (HANDOFF numbers only the later round
 | First Stir's heal ring | 2026-10-24 | Magenta only for a heal that plays a beat; cancelling your own stir flashes white. | HANDOFF |
 | Analytics | 2026-10-24 | Anonymous counts only, no tracking prompt, no advertising partners, one settings switch; check whether EU law wants a consent prompt. | HANDOFF |
 | Firestore | 2026-10-24 | No server: purchases through StoreKit, progress through iCloud key-value storage, and a test pins every stored level id and product id. | HANDOFF |
-| Vortex and charybdis reserved | 2026-10-24 | Vortex and charybdis are free; their mechanics are reserved from the packs now, each with its own phone go/no-go. | HANDOFF (sources differ: see disagreements) |
+| Vortex and charybdis free | 2026-10-24 | Vortex and charybdis are free tiers, each with its own phone go/no-go; Vortex is in v1, charybdis's orbits later and unscheduled. Reserving their mechanics from the packs was a recommendation, never his rule: see "Free-tier mechanics open" (2026-11-15). | HANDOFF |
 
 ## Round 3
 
@@ -78,7 +78,7 @@ The pitch page's first answers, 2026-10-24 (HANDOFF numbers only the later round
 
 | Call | Date | Decided | Where |
 |---|---|---|---|
-| W3. The whole-tank swirl's map | 2026-10-25 | Option D: the swirl shears to its centre (plateau 0) while knobs keep 0.6, over today's map and softer maps (sources differ on the date). | HANDOFF, architecture |
+| W3. The whole-tank swirl's map | 2026-10-25 | Option D: the swirl shears to its centre (plateau 0) while knobs keep 0.6, over today's map and softer maps. Turned inside out the next day after play on the phone ("Swirl's profile"); both stand, and the game plays the second. | HANDOFF, architecture |
 
 ## Round 6
 
@@ -122,7 +122,7 @@ The pitch page's first answers, 2026-10-24 (HANDOFF numbers only the later round
 | F4 = A | 2026-10-26 | Each change stays inside its own core, checked by a test over every picture; level 1's boat stern and lamp shards are redrawn. | HANDOFF |
 | F5 = A | 2026-10-26 | The lab harbour is used twice, as picture 16 (midnight) and its dawn view as picture 1. | HANDOFF |
 | E1 = A | 2026-10-26 | Every let-go is final in Escapement: the clock clicks on the lift and no re-grab takes it back (book J1 and J2 = A). | HANDOFF, architecture |
-| E2 = B | 2026-10-26 | If the last clock stops with twists left, the problem fails like a bad click (J4 = B); replaced in play by EL1 in round 11 (sources differ). | HANDOFF, CLAUDE.md, architecture |
+| E2 = B | 2026-10-26 | If the last clock stops with twists left, the problem fails like a bad click (J4 = B); in play EL1's tick budget replaced it in round 11, while the book's prover (`scripts/escapement.sh`) keeps this rule on purpose. | HANDOFF, CLAUDE.md, architecture |
 | E3 = A | 2026-10-26 | Searched problems are fine once Jack has played them on the phone and vetoed any that feel random (J9 = A). | HANDOFF |
 | L1 = A | 2026-10-26 | Run the phone test of the hard lens before any of Lens's art is drawn. | HANDOFF |
 | Lens drag direction | 2026-10-26 | After the first phone session, a lens follows the finger up and down, not round; up zooms in. | HANDOFF, architecture |
@@ -389,7 +389,7 @@ Main calls 2026-11-02 (finish-and-pitch page); follow-up picks 2026-11-03; third
 | r16c-ci-limit = B | 2026-11-08 | The PR job's time limit is 15 minutes (#147); the rule to raise a build over 10 minutes with Jack stands. | HANDOFF, CLAUDE.md |
 | r16c-ci-nightly = B | 2026-11-08 | Leave the nightly unsplit. | HANDOFF |
 | r16c-ci-firststir = A | 2026-11-08 | First Stir's two stray tests are skipped on PRs and kept nightly (#147). | HANDOFF, CLAUDE.md |
-| Dock covers draw knobs | 2026-11-08 | In chat: every dock cover draws its knobs so a cover shows how its pack plays (#146); the promoted-purchase images are recorded differently (sources differ). | HANDOFF, architecture |
+| Dock covers draw knobs | 2026-11-08 | In chat: every dock cover draws its knobs so a cover shows how its pack plays (#146); the promoted-purchase images draw them too (#149), Jack's word given 2026-11-15 ("Knobs on promo images"). | HANDOFF, architecture |
 
 ## Round 17
 
@@ -472,7 +472,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Call | Date | Decided | Where |
 |---|---|---|---|
 | Escapement's wait, reversed | 2026-11-12 | The waiting move comes back as the labelled wait button (#191, merged into #207), and the game makes clear that a clock can tick with no knob turned. This reverses ESCWAIT (round 18), and the twenty problems dealt again go back to their earlier deals. Jack: "Okay, then I reverse my decision, and choose the tick button to wait and make it clear that the ratchets can move without a rod being manually turned." | HANDOFF |
-| Maelstrom needs plans | 2026-11-12 | Maelstrom's promise that a sensible player (the park rule, however its ties go) always reaches par is removed; levels that need a plan replace some rows. Jack: it "can be broken (well, removed). It's the last free tier; it's supposed to be a challenge." Which rows is open until he sees them. | HANDOFF, architecture |
+| Maelstrom needs plans | 2026-11-12 | Maelstrom's promise that a sensible player (the park rule, however its ties go) always reaches par is removed; levels that need a plan replace some rows. Jack: it "can be broken (well, removed). It's the last free tier; it's supposed to be a challenge." He kept all twelve re-dealt levels (2026-11-15, "Maelstrom's twelve kept"). | HANDOFF, architecture |
 | Frost days ship | 2026-11-12 | Frost days ship (#211), and the menu's daily row says "frost day" under its title on one. Jack picked "ship, and mark frost days on the menu". | HANDOFF, architecture |
 | Frost day's ice | 2026-11-12 | A frost day's frozen knobs sit under one pane of frosted glass over their discs: Jack picked the glaze ("a frozen & frosted watch glass kinda feel", clear that the rod's circle is frozen, not overdone), then the lusher feathers over the fine ones. The ice thaws on the solve, and a thawed knob is a plain working knob. | architecture |
 | CI time | 2026-11-12 | The 10-minute line is gone: Claude tells Jack when CI's time jumps or otherwise looks wrong. Replaces "CI line" (2026-11-01) and the second half of r16c-ci-limit; the job's 15-minute stop stays. | CLAUDE.md |
@@ -521,7 +521,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Breath stops once the swirl is used | 2026-10-25 | The breath runs only until the player's first swirl stir commits, then never on any level. | HANDOFF, architecture |
 | Breath's wait after a move | 2026-10-25 | The wait after a move stays 10 s. | HANDOFF, architecture |
 | Sandbox picture cycle | 2026-10-25 | The sandbox's picture cycle takes vortex's family, skipping only the twins. | HANDOFF, architecture |
-| Swirl's profile | 2026-10-26 | The swirl's profile is turned inside out: the glass's edge goes round whole and the swirl lets go towards its still centre (sources differ on the date versus W3). | architecture |
+| Swirl's profile | 2026-10-26 | The swirl's profile is turned inside out: the glass's edge goes round whole and the swirl lets go towards its still centre, the day after W3 chose a swirl with no solid middle; both stand, and the game plays this one. | architecture |
 | V26 call | 2026-10-27 | A drag the system cuts off, a second finger or a change of pose lets go as the lift would; extended by C13. | architecture |
 | Phone builds are playtests | 2026-10-27 | Every build `run-ios.sh` installs is a playtest, so Jack's own play never lands in real players' numbers. | CLAUDE.md |
 | UI design pass | 2026-11-01 | Redraw the text, buttons, cards and sheets as a design system and mock-ups for Jack's call before any SwiftUI changes. | HANDOFF |
@@ -555,6 +555,11 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | The tank's limit at 48 | 2026-11-13 | Superseded the same day by the open tank below: 48 was built and never decided. | architecture |
 | The open tank | 2026-11-13 | The tank has no limit the player sees: no level, pack or daily shows the brim, which stays endless's alone, and VoiceOver's level value drops its "brim N of M". `Tank.maxStack` becomes a silent cap at 96, a turn past it still refused with the knob's shake; 96 is Claude's pick of where the backstop sits. `Run.deepest` stays 28 and the four-tap ceiling 42. Jack: "yes drop the visible limit, ring stays in endless only". | architecture |
 | The budget learns from shallow stacks | 2026-11-15 | With a mapped glass always at four taps (#231), a drag over it no longer teaches the four-tap budget, which now learns only from drags on stacks too shallow for a map; the chain's frames after an undo, merge or reset keep the budget's rule. Put to Jack as a side effect of taps-keep = C, with merging as is recommended. Jack: "merge the (1) pr". | architecture |
+| Maelstrom's twelve kept | 2026-11-15 | The twelve Maelstrom levels re-dealt to need a planned tank turn stay as dealt. Jack: "Keep all twelve as they are." | HANDOFF |
+| AGE_RANGE on phone builds | 2026-11-15 | Once the first upload proves the App ID has the Declared Age Range permission, `AGE_RANGE` defaults to YES for phone builds, without asking again. Jack: "switch it without asking again." | HANDOFF |
+| Knobs on promo images | 2026-11-15 | The promoted-purchase images draw each pack's knobs, as #149 built them. Jack: "Yes, the purchase images show the knobs, as built." | HANDOFF |
+| Free-tier mechanics open | 2026-11-15 | No rule keeps the swirl or the orbits from paid packs: a later pack may use either. Open, and back to Jack when a pack wants one. Jack: "No rule: a later pack may use the swirl or the orbits. Record it as open." | HANDOFF |
+| Swirl and Escapement records | 2026-11-15 | The swirl's two calls (W3, then its profile turned inside out) and Escapement's two loss rules (E2 in the prover, EL1 in play) both stand; the rows are reworded, not changed. Jack: "Both readings are right; reword the records." | HANDOFF |
 
 ## Undated, no round
 
