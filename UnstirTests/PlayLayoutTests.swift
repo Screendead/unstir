@@ -301,29 +301,31 @@ final class PlayLayoutTests: XCTestCase {
             layout(window: open.window, insets: open.insets, halo: PlayLayout.Halo(level),
                    chrome: PlayLayout.Chrome(level, swatches: swatches)).side
         }
-        // A bare glass, as tall as the chrome leaves the leading half with the column's 12 pt over it.
+        // Stage 1's glass, as tall as the chrome leaves the leading half: every tier's level, Lens's, and Prism's read by
+        // colour.
         let plain = PlayLayout.Chrome()
-        let bare = layout(window: open.window, insets: open.insets).side
-        XCTAssertEqual(bare, (624 - plain.above - plain.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
-        XCTAssertEqual(bare, 417, accuracy: 1)
-        // Stage 1's glass, every tier's level, Lens's, and Prism's read by colour: the brim's pin over twelve, under the
-        // title, 9 pt less. The rim lesson's arc, on maelstrom and a frost day, reaches no higher.
-        let brim = PlayLayout.Halo(Level.plughole[10]).brim, over = PlayLayout.rim + brim / 2
-        let stage1 = (624 - plain.above - plain.below) / over
-        XCTAssertEqual(bare - stage1, 9, accuracy: 1)
+        let stage1 = layout(window: open.window, insets: open.insets).side
+        XCTAssertEqual(stage1, (624 - plain.above - plain.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(stage1, 417, accuracy: 1)
         for level in [Level.plughole[10], Level.whirlpool[0], Level.vortex[0], Level.lens[0], Level.prism[0],
-                      Level.daily(Self.plainDay), Level.plughole[0], Level.maelstrom[0], Level.daily(Self.frostDay)] {
+                      Level.daily(Self.plainDay), Level.plughole[0]] {
             XCTAssertEqual(side(level), stage1, accuracy: 0.001, level.id)
         }
-        XCTAssertLessThan(stage1, (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim, "the lesson's room")
         // Escapement's taller header and two lines of serif: 5 pt less.
         let escapement = PlayLayout.Chrome(Level.escapement[0], swatches: false)
-        XCTAssertEqual(side(Level.escapement[0]), (624 - escapement.above - escapement.below) / over, accuracy: 0.001)
+        XCTAssertEqual(side(Level.escapement[0]), (624 - escapement.above - escapement.below - PlayStack.gap) / PlayLayout.rim,
+                       accuracy: 0.001)
         XCTAssertEqual(stage1 - side(Level.escapement[0]), 5, accuracy: 1)
-        // Prism read by its letters, the swatches under the caption, a row of buttons: 44 pt less.
+        // Maelstrom's rim lesson over twelve, under the title: 8 pt less.
+        XCTAssertEqual(side(Level.maelstrom[0]), (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim,
+                       accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 8, accuracy: 1)
+        XCTAssertEqual(side(Level.daily(Self.frostDay)), side(Level.maelstrom[0]), accuracy: 0.001, "a frost day's rim lesson")
+        // Prism read by its letters, the swatches under the caption, a row of buttons: 46 pt less.
         let swatches = 4 + max(ButtonFace.height, 24 + TypeRole.button.line(at: .large).height)
-        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - swatches) / over, accuracy: 0.5)
-        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 44, accuracy: 1)
+        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - swatches - PlayStack.gap) / PlayLayout.rim,
+                       accuracy: 0.5)
+        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 46, accuracy: 1)
         // Endless's brim reaches round the glass.
         XCTAssertEqual(side(Level.endless(Run(seed: 7))), 342, accuracy: 1)
         // Every level of a tier or a pack takes one glass, so the tank keeps its size as the list beside it is played on.
@@ -805,42 +807,10 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(endless.ring, CGFloat((Brim.rOut + Brim.reach) / Brim.unit) - PlayLayout.rim, accuracy: 1e-9)
         XCTAssertEqual(endless.ring, 0.229, accuracy: 0.001, "the brim's glow and drops, out to Brim.reach")
         XCTAssertEqual(endless.above, 0)
-        XCTAssertEqual(endless.brim, 0, "endless's own brim")
-        // A level's brim reaches 0.1 of the radius past the rim, which only the split leaves room for.
-        let brim = CGFloat((Brim.rOut + Brim.levelReach) / Brim.unit) - PlayLayout.rim
-        XCTAssertEqual(brim, 0.1, accuracy: 0.001)
-        XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim, brim: brim), "the rim lesson's arc")
-        XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(brim: brim), "the stack's brim round the rim")
-        XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo(brim: brim))
-        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo(brim: brim))
-    }
-
-    /// The Duo's split shrinks a level's glass just enough for its brim's pin to clear the title; the column, the
-    /// tabletop and every phone keep the glass they had.
-    func testALevelsBrimTakesRoomOnlyInTheSplit() {
-        for level in [Level.plughole[10], Level.maelstrom[26]] {
-            let halo = PlayLayout.Halo(level), bare = PlayLayout.Halo(ring: 0, above: halo.above)
-            for (pose, fold) in [("open", nil), ("book", book)] as [(String, CGRect?)] {
-                let l = layout(window: open.window, insets: open.insets, fold: fold, halo: halo)
-                XCTAssertEqual(l.kind, .split, pose)
-                XCTAssertEqual(l.halo.ring, 0, pose)
-                XCTAssertGreaterThanOrEqual(l.stage.minY - halo.brim * l.side / 2, l.tankPane.minY + l.chrome.above - 0.001,
-                                            "\(pose): the pin clear of the title")
-                XCTAssertLessThanOrEqual(l.stage.maxY, l.tankPane.maxY - l.chrome.below + 0.001, pose)
-                let was = layout(window: open.window, insets: open.insets, fold: fold, halo: bare)
-                XCTAssertLessThanOrEqual(l.side, was.side, pose)
-                // No smaller than the pin's room needs.
-                XCTAssertGreaterThan(l.side, was.side * PlayLayout.rim / (PlayLayout.rim + halo.brim / 2) - 1, pose)
-            }
-            let upright = (window: CGSize(width: 669, height: 951), insets: (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0)))
-            for (pose, window, insets, fold) in [("upright", upright.window, upright.insets, nil), ("tabletop", upright.window, upright.insets, table),
-                                                 ("Pro Max", CGSize(width: 440, height: 956), (top: CGFloat(62), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0)), nil)]
-                as [(String, CGSize, (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat), CGRect?)] {
-                let l = layout(window: window, insets: insets, fold: fold, halo: halo)
-                XCTAssertEqual(l.side, layout(window: window, insets: insets, fold: fold, halo: bare).side, pose)
-                XCTAssertEqual(l.stage, layout(window: window, insets: insets, fold: fold, halo: bare).stage, pose)
-            }
-        }
+        XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim), "the rim lesson's arc")
+        XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(), "drawn wholly on the glass and rim")
+        XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo())
+        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo())
     }
 
     func testEndlesssBrimStaysInsideTheTanksPaneInEveryPose() {

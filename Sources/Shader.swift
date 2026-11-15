@@ -118,6 +118,10 @@ struct Unstirred: ViewModifier, Animatable {
             // The plain shader reads a map from its image's top.
             shader.mapped = nil
         }
+        // A frame from the map costs about the same at any depth, so it draws four taps whatever the budget, and so do
+        // the pixels it runs through the chain (Lens's insets, the oracle's `chain` mode), so no seam shows between
+        // them (Jack, 2026-11-13). Only a frame through the chain keeps the budget's rule.
+        if shader.mapped != nil { shader.fourTaps = TankShader.everyTap }
         return shader
     }
 }
@@ -167,6 +171,8 @@ struct TankShader {
     var twists: [Float]
     /// Past this many entries' work only two taps run.
     var fourTaps: Float
+    /// A `fourTaps` no work reaches: a frame drawn from the stored map takes it.
+    static let everyTap = Float(1 << 24)
     var plateau = Tank.plateau
     var swirlPlateau = Tank.swirlPlateau
     var lensEdge = Tank.lensEdge

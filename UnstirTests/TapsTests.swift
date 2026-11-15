@@ -90,6 +90,26 @@ final class TapsTests: XCTestCase {
         XCTAssertEqual(taps.budget(pixels: px), 30)
     }
 
+    /// A drag on a glass drawn from its stored map draws four taps whatever the budget, so its misses step nothing.
+    @MainActor
+    func testADragOverTheMapStepsNothing() {
+        let taps = Taps(rate: { 120 })
+        taps.use(.adapt(from: 30, stores: false))
+        let px = Tank.tunedPixels, period = 1.0 / 120
+        let miss = FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)
+        taps.still(pixels: px, "open")
+        taps.window(TapWindow(pixels: px, work: 29, held: "rod 0", picture: "grid", mapped: true))
+        for _ in 0..<(4 * Taps.cuts.near) { taps.frame(miss) }
+        taps.window(nil)
+        taps.still(pixels: px, "move")
+        XCTAssertEqual(taps.budget(pixels: px), 30)
+        taps.window(TapWindow(pixels: px, work: 29, held: "rod 0", picture: "grid"))
+        for _ in 0..<Taps.cuts.near { taps.frame(miss) }
+        taps.window(nil)
+        taps.still(pixels: px, "move")
+        XCTAssertEqual(taps.budget(pixels: px), 28, "the same misses through the chain step it down")
+    }
+
     /// Every new glass starts at its own static limit, whatever other glasses have kept (Jack's call taps-keep = C).
     @MainActor
     func testAFreshGlassStartsAtItsStaticLimitWhateverOthersKept() throws {

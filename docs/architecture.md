@@ -96,7 +96,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   steepest edges 16 levels a pixel before, 211 after, of 216). In the simulator (2026-11-11, the Mac's GPU, 1284 px)
   the GPU bench put it at 1.6 plain entries' work on Lens 01 and 3.8 on Lens 25, the deepest (12 entries, four
   lenses); unmeasured on a phone, and not counted against the four-tap limit, which Lens's stacks stay far inside.
-  The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (40) limits are tuned against 120 Hz on an
+  The shader's tap count and the `Tank.fourTaps` (40) limit, with `Tank.maxStack` as it then stood (36), are tuned against 120 Hz on an
   iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 the most the game allows, a full stack of 36
   on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
   load the game reaches missed, so 40 is a held point, not the edge (Jack's call taps-keep = C). The level's glass draws the budget `Taps` learns on the phone (`Unstirred.budget`, below); every other
@@ -104,7 +104,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   up to 1300 px, so every iPhone and every pose drawn before the upright Duo's keeps one limit, and past that the
   phones' 40 and the entry in flight (`Tank.scaledFrom`, 41) scaled down by the area, less the one in flight, so the
   open Duo upright's 1471 px starts at 23 (Jack's call r16c-duoprior = B, round 16, which rescaled duocap2 = D's 17,
-  scaled from the 31 measured before 2026-11-04); `Tank.maxStack` stays 36 at every size, so every level plays as on an iPhone, its stacks as deep, while the
+  scaled from the 31 measured before 2026-11-04); `Tank.maxStack` is the same at every size, so every level plays as on an iPhone, its stacks as deep, while the
   four-tap limit shrinks to 23 on the Duo upright, where every stack whose work is past 23 draws two taps (Jack's
   call r16c-duoprior = B). On a phone every level is dealt within 40 (whirlpool 27, the deepest on a live picture, has 28
   stirs on the glass's fill of 4, 32), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
@@ -113,7 +113,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (GPUBench.swift, `UNSTIR_GPUBENCH`, `scripts/gpu-bench.sh`) times a plain entry with four taps and with two at 1137,
   1284 and 1471 px, as the slope from 18 to 36 entries with each tap count forced (`fourTaps` 99 or -1), and
   whirlpool 27's whole frame at 1137 and 1471: the glass's fill (`benchGlass` in Glass.metal, `glass`'s body as a
-  kernel, since a kernel can't call a stitchable) into the texture its stack then samples, at 28 and 36 entries. Its
+  kernel, since a kernel can't call a stitchable) into the texture its stack then samples, at 28 entries and a full stack (`Tank.maxStack`; 36 until 2026-11-13). Its
   Prism sweep, at 1284, keeps the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
   go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
@@ -211,7 +211,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   frame with no step (by the arithmetic; the films show none, and can't rule one out), provided the new map has landed, which in the simulator it does some 55 to 80 ms after the let-go (40 asked
   for, 13 to 36 drawing) against a settle of 0.3 s. A pop, a merge into the top entry, a reset and the opening's wind change what the map
   holds, and those frames draw through the chain until the next map lands; so do a shallower stack and
-  every glass but a level's. The two-tap rule and the four-tap budget are the chain's, unchanged.
+  every glass but a level's. The two-tap rule and the four-tap budget are the chain's alone: a frame drawn from the map
+  draws four taps at any depth (Jack, 2026-11-13), `Unstirred.shader` giving it `TankShader.everyTap` for `fourTaps`,
+  and so do the pixels such a frame runs through the chain (a Lens inset, the `chain` mode), so no seam shows between
+  them. On the reference phone (2026-11-13, 1137 px, GPU clock) a mapped frame cost 1.2 to 2.3 ms at 36 to 96 entries,
+  against the chain's 5.6 at 36 with four taps, 4.5 at 48, 7.3 at 72 and 10.4 at 96 with two; drawing a map 6.0, 7.9,
+  13.2 and 19.0 at 36, 48, 72 and 96. So past the budget a pop, a merge or a reset draws the chain at two taps for the
+  80 to 100 ms until the next map lands, then four again. A drag over a mapped glass (`TapWindow.mapped`, the glass
+  asking for a map, `StirMap.key`) is logged but never judged by `TapLaw`: no budget changes what its frames cost, so
+  its misses would step down only the chain's frames, which no drag draws once the map is in.
   Prism's map (`unstirChannelsMapped`) holds a tile a chain, each a square as the one map is, stacked down one image:
   a channel's word is the committed entries whose mask holds it, channels whose words are the same share a tile and a
   channel no entry holds has none (`StirMap.tiles`; `-1` in `tiles`, its point then run through its empty word), so
@@ -322,6 +330,31 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `chain`; the held read turning white near the count (bench only), its white pixels within 21 of today's. Prism's
   three mapped takes of its deep line and Lens's one, aligned to the frame, change frame to frame within the
   spread of two takes of today's. The let-go has no still under the rule: only the takes show it.
+  The tank's limit went from 36 to 48 with the map in (2026-11-13; he picked raising it once the map was in), then,
+  the same day, to a silent cap of 96 that no level shows (Jack: "yes drop the visible limit, ring stays in endless
+  only"; 96 is Claude's pick of where the backstop sits, the deepest stack measured below). Nothing in the shaders is sized by it: they take the entries as a pointer and a count, and SwiftUI's
+  `Shader.Argument.floatArray` states no limit (iOS 27.2 SDK). On the iOS 18.5 and 26.5 simulators, with the map off, a
+  48th entry moved 6% to 9% of the glass's pixels on plughole 20, maelstrom 24 and Prism 30, and so did a 96th in a
+  build with the limit at 96 (a refused shader draws nothing, as the black glass of two images did). The four-tap budget is unchanged, and until
+  2026-11-13 a mapped frame obeyed it too (`unstirMappedBody`'s stride), so past it a glass drew two taps, map or not:
+  from 41 entries on a baked picture, 37 on a live one's fill of 4; on maelstrom 24 at 48, from its map, two taps
+  carried 43% more gradient energy than four (grain). A frame from the map now draws four at any depth (above), so
+  only the chain's frames past the budget draw two. On the oracle (the Mac's GPU, 1137 px, medians of three launches, the twist pass alone):
+  maelstrom 24 at 48 at rest from its map 0.10 to 0.12 ms (two taps; 0.17 with four forced, against 0.16 to 0.18 at
+  36), a rod in hand 0.13 to 0.15 (0.24); through the chain, as after a pop, a merge or a reset and in the wind-in,
+  0.61 (1.10 with four), against 0.77 at 36 with four, the load that held 120 Hz on the 13 Pro Max, but 1.35 times
+  the 0.45 of 36 with two, so where 36 already drew two taps (the Duo upright, a phone the law has stepped down, the
+  twin neurons' fill) 48 is that glass's heaviest frame yet; plughole 20 0.56 (0.99) against 0.72; Prism 30 at 48
+  1.05 (2.03), the one frame drawn as built that is over the 0.77, its map 0.28 to 0.30 (0.43); Lens 25 dealt four
+  times over, its lenses' steps with it, 0.95 (1.09), its map 0.69 (0.72), as the lenses' cores run the chain. No
+  deal is past 28 and the opening winds in only the deal, so a 48-deep chain is reached by a pop, a merge into the
+  top entry or a reset, until the next map lands. Drawing a map took 1.9 to 4.8 ms at 48 against 1.5 to 2.9 at 36 on
+  the Mac. In the simulator a map landed 78 to 103 ms after a commit that changed it, at 35 or 47 entries alike, its
+  GPU time 4 to 9 ms either way; the map's memory (22.0 MB at 1172 px) and the app's (36 MB) were the same at 36 and 48.
+  The chain grows linearly: maelstrom 24 at 72 0.996 ms with two taps (1.85 with four), at 96 1.50 with two (two
+  launches each). On the screen the chain's frame and the map's differ in the deep stir's noise by a mean of 0.2 to
+  1.0 levels at 36, 0.9 to 2.4 at 48 and 11 to 12 at 96 (iOS 26.5; plughole 20 and maelstrom 24; Prism 30 under 1
+  throughout), which is the step a landing map makes: deeper stirs carry more of the two kernels' rounding.
 - **Hand.swift**, **DragProbe.swift** and `scripts/drag-probe.sh`: the turn in hand, kept out of `LevelView`'s own
   state so a frame of a drag re-evaluates the parts that draw the turn and not the play screen (Jack, 2026-11-12:
   find a faster way to draw twists, provided it doesn't look worse). `Hand` is an observable reference `LevelView`
@@ -377,7 +410,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
   committed work, `Tank.fourTaps`' unit: a frame draws four taps where its work (`Unstirred.committedWork`: Prism's
   channel cost or the entry count, plus the fill, what is in flight riding over as it always has, `Unstirred.weigh`)
-  is at most B, and two otherwise, as the shader can't split one chain. `Taps` learns B per glass (`TapKey`: the
+  is at most B, and two otherwise, as the shader can't split one chain; a frame from the stored map draws four
+  whatever B (Jack, 2026-11-13), so the budget governs only the chain's frames, and a drag over a glass that asks for a
+  map (`TapWindow.mapped`) opens no window of the law's: its frames are logged ("four-tap mapped") but judged by
+  nothing, so on a phone the law now learns only from drags on stacks too shallow for a map. `Taps` learns B per glass (`TapKey`: the
   screen's top rate and the glass's side to 16 px) and drives only the level's glass, `LevelView.tank()`'s
   `Unstirred`; the dock's covers, the cards' clips, the icon, the menu's stir and the GPU bench keep their static
   limits. It runs where the build's `ADAPTIVE_TAPS` (`Config/Unstir.xcconfig`, YES: Jack's call taps-keep = C, the
@@ -393,8 +429,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   of B (`TapCuts.unattributed`'s `near`), once a drag, and only where that draws the missed work with two taps, so
   never from work at or under `floor` (12 on every device, Jack's call TAPS-FLOOR = A); misses further below step
   nothing, hot or cool (its `far` is unbounded; the attributed cuts would let 6 of them step while hot). It
-  climbs one after 600 clean four-tap frames at its edge, never past `ceiling` (`Tank.maxStack` plus the largest fill,
-  42, Jack's call TAPS-CEIL = A) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
+  climbs one after 600 clean four-tap frames at its edge, never past `ceiling` (42, Jack's call TAPS-CEIL = A: the
+  full stack of 36 the game then allowed plus the largest fill; it no longer follows `Tank.maxStack`, which went to 48
+  and then to a silent 96, as a higher ceiling is his call) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
   by a second miss there or erased by 600 clean at it; a cap is always over the cool budget bar a probe's, and a
   stored one that isn't is dropped. Each step waits on its effect check: two-tap frames at its work or under it, or up
   to 4 over, that still miss 4 in 30 take back the oldest step they cover and every step since, and pause the steps
@@ -452,21 +489,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
   and the card follows at `Brim.card`, or at once under Reduce Motion (Jack's call R-spill, round 15). The tests reach only the Swift side.
-  Every other level's bezel carries the same jug for its stack (Jack's call "Tank's fullness", 2026-11-13): `BrimRing`
-  with `stack` set reads `Game.stack`'s count against `Tank.maxStack`, so 36 notches, 5° apart, to the pin at twelve,
-  and a full tank refuses the turn as before ("the tank is full: undo or reset"). `spills` false makes the last notch a
-  held level like any other, the warn pulse and tremble still on it, with no crest, pour, murk or card. Only
-  `Brim.levelReach` (48 of the jug's 480) past the bezel is drawn, the lit tick ends and the pin's cap fading out by
-  there, as no level's `PlayLayout.Halo` leaves endless's room: no phone's glass shrinks for it. Only the split beside the
-  menu makes room, above the stage (`Halo.brim`, kept in `halo.above` once the side is known), where the pin would
-  otherwise reach into the title: 9 pt off the Duo's open glass, which takes the place of the rim lesson's 8. Its liquid is the level's
-  colour (`Level.colour`, `Brim.colours(flat:)`), as only the grid has a CPU sampler to read the rim off. `LevelView`
-  keeps its own record of the stack's size (`StackBrimClock`: a `Brim.Event` per change of the count, the older folded
-  into the base past eight), runs its timeline only for `Brim.settle` after a change and while the stack is within a
-  notch of full, holds it under Reduce Motion as endless's, strikes it with the picture, and draws it under the knurl so
-  a turning tank's milled edge reads over the liquid. `UNSTIR_CLEAN`'s bare glass, the dock covers and the card clips
-  draw the bezel alone. VoiceOver hears it in the tank's value, "3 moves, par 7, brim 26 of 36" (`Game.tankSpoken`);
-  the ring itself is hidden from it.
+  Only endless draws it. From 2026-11-13 to the same day's later call every other level's bezel carried the jug for
+  its stack against `Tank.maxStack`; Jack then dropped it ("yes drop the visible limit, ring stays in endless only"):
+  the tank has no limit a level shows, and `Tank.maxStack` (96) is a silent cap, a turn past it refused with the
+  knob's shake and "the tank is full: undo or reset" as before. `BrimRing`, `Brim.frame` and `PlayLayout.Halo` are
+  endless's alone again, so no glass sizes itself for a ring on a level, the Duo's split included.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
   maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best, at
@@ -522,7 +549,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
   that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13), and a best the archive
   saved (`Best.archived`) never counts. Endless changes only what
-  it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
+  it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, `Run.deepest`, frozen apart from `Tank.maxStack`, which it
+  was 36 of, less the brim's 8; at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
   (`Best`, started flags, undo bank, and each unfinished level's resume) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
   the first time a level other than the sandbox or endless opens on a local calendar day later than the stored day of
@@ -1380,7 +1408,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   ..."; the daily, endless and the sandbox by name), value (its result, `Spoken.result`: "clean", "at par" or "solved, 2 over par"; "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, solve
   every Plughole level first") and hint (its rods and par), a lit hairline's reason first (`Spoken.marked`:
-  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, or Escapement's ticks left, then the brim, the stack's "brim 26 of 36" or endless's "brim 3 of 8"), and
+  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, or Escapement's ticks left, then endless's brim, "brim 3 of 8"; a level's says nothing of its stack), and
   the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared.", a completion after it in words: "Lens complete, 25 panels."), which
   labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a

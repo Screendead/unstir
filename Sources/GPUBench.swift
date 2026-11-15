@@ -133,13 +133,13 @@ enum GPUBench {
             }
         }
         let estuary = Level.whirlpool.last!
-        var estuary36 = estuary.scramble
-        while estuary36.count < Tank.maxStack { estuary36 += estuary.scramble }
-        estuary36 = Array(estuary36.prefix(Tank.maxStack))
+        var estuaryFull = estuary.scramble
+        while estuaryFull.count < Tank.maxStack { estuaryFull += estuary.scramble }
+        estuaryFull = Array(estuaryFull.prefix(Tank.maxStack))
         for s in [sides.first!, sides.last!] {
             cases.append(Case(name: "\(s)-fill", picture: estuary.picture, layout: estuary.layout, stack: [], side: s, kind: .fill))
             for (taps, f) in [("four", four), ("two", two)] {
-                for stack in [estuary.scramble, estuary36] {
+                for stack in [estuary.scramble, estuaryFull] {
                     cases.append(Case(name: "\(s)-\(estuary.id)-\(taps)-\(stack.count)", picture: estuary.picture,
                                       layout: estuary.layout, stack: stack, side: s, fourTaps: f, kind: .frame))
                 }

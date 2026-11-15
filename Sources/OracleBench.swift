@@ -124,6 +124,7 @@ enum OracleBench {
             { f, enc in
                 guard let key = f.map, let map = maps.made[f.name] else { return today(f, enc) }
                 var a = f.args, m = StirMap.args(key, mode: mode)
+                a.fourTaps = TankShader.everyTap
                 enc.setComputePipelineState(f.shader.prism != nil ? channelsMapped : f.shader.fine != nil ? lensMapped : mapped)
                 enc.setTexture(f.picture, index: 0)
                 enc.setTexture(f.out, index: 1)
@@ -312,7 +313,8 @@ enum OracleBench {
                 say(String(format: "ORACLE %@ %@ frame %.3f ms (%.3f to %.3f) x%.3f of today, %d entries %d committed, %@ taps%@",
                            name, m.name, sorted[7] * 1000, sorted[0] * 1000, sorted[14] * 1000, ratios[7],
                            shader.twists.count / 4, committed,
-                           (shader.prism.map { Float($0.cost) } ?? Float(shader.twists.count / 4)) > shader.fourTaps ? "two" : "four",
+                           m.name.hasPrefix("map") && map != nil
+                               || (shader.prism.map { Float($0.cost) } ?? Float(shader.twists.count / 4)) <= shader.fourTaps ? "four" : "two",
                            commits[k].map { String(format: ", commit %.3f ms", $0 * 1000) } ?? ""))
             }
         }

@@ -14,7 +14,9 @@
 #          clean frames, or finds the edge.
 #   edgestall  edge with stall's main-thread work: about 2 late frames in any 30, under the 4 that step, so it holds
 #          or climbs.
-# Every run unset.
+# Every run unset. A drag over the stored map draws four taps whatever the budget and the law never judges it
+# (2026-11-13), so every run turns the map off (UNSTIR_MAP=off), which only a Debug or PROBES=YES build reads: on any
+# other build these runs measure the map, not the budget.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 sim=
@@ -23,13 +25,13 @@ runs=("$@")
 (( ${#runs[@]} )) || runs=(gpu calm stall adapt prior edge)
 vars() {
   case $1 in
-    gpu) echo '"UNSTIR_TAPS":"watch:42","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4"' ;;
-    calm) echo '"UNSTIR_TAPS":"watch:12","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4"' ;;
-    stall) echo '"UNSTIR_TAPS":"watch:12","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4","UNSTIR_TAPSTALL":"20"' ;;
-    adapt) echo '"UNSTIR_TAPS":"adapt:42","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"8"' ;;
-    prior) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4"' ;;
-    edge) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"36","UNSTIR_TAPDRAG":"12"' ;;
-    edgestall) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"36","UNSTIR_TAPDRAG":"12","UNSTIR_TAPSTALL":"20"' ;;
+    gpu) echo '"UNSTIR_TAPS":"watch:42","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4","UNSTIR_MAP":"off"' ;;
+    calm) echo '"UNSTIR_TAPS":"watch:12","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4","UNSTIR_MAP":"off"' ;;
+    stall) echo '"UNSTIR_TAPS":"watch:12","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4","UNSTIR_TAPSTALL":"20","UNSTIR_MAP":"off"' ;;
+    adapt) echo '"UNSTIR_TAPS":"adapt:42","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"8","UNSTIR_MAP":"off"' ;;
+    prior) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4","UNSTIR_MAP":"off"' ;;
+    edge) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"36","UNSTIR_TAPDRAG":"12","UNSTIR_MAP":"off"' ;;
+    edgestall) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"36","UNSTIR_TAPDRAG":"12","UNSTIR_TAPSTALL":"20","UNSTIR_MAP":"off"' ;;
     *) echo "unknown run $1" >&2; exit 1 ;;
   esac
 }
