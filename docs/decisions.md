@@ -554,6 +554,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Four taps from the map | 2026-11-13 | A frame drawn from the stored map draws four taps at any depth; frames through the chain (after an undo, merge or reset until the next map lands, the wind-in, the map off) keep the four-tap budget's rule. Jack's pick. | architecture |
 | The tank's limit at 48 | 2026-11-13 | Superseded the same day by the open tank below: 48 was built and never decided. | architecture |
 | The open tank | 2026-11-13 | The tank has no limit the player sees: no level, pack or daily shows the brim, which stays endless's alone, and VoiceOver's level value drops its "brim N of M". `Tank.maxStack` becomes a silent cap at 96, a turn past it still refused with the knob's shake; 96 is Claude's pick of where the backstop sits. `Run.deepest` stays 28 and the four-tap ceiling 42. Jack: "yes drop the visible limit, ring stays in endless only". | architecture |
+| The budget learns from shallow stacks | 2026-11-15 | With a mapped glass always at four taps (#231), a drag over it no longer teaches the four-tap budget, which now learns only from drags on stacks too shallow for a map; the chain's frames after an undo, merge or reset keep the budget's rule. Put to Jack as a side effect of taps-keep = C, with merging as is recommended. Jack: "merge the (1) pr". | architecture |
 
 ## Undated, no round
 

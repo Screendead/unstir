@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-11-13. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-11-15. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -28,7 +28,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
 | Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. Round 2 on today's game (2026-10-27, branch `sound-r2`, PR #56): `sound` merged with master and passing every test; the heal's note now counts moves that pop one of the scramble's entries, as endless's brim does; vortex has its own bed (open fifths and a ninth, high sparse pings, water circling three times a loop); every button added since September taps (the consent card, the settings sheet, the pack cards, the dock, the tier-up); a push that fills the brim sounds only as the spill. Jack's call (2026-10-28, SN1 = A): "In, with early undo and step-back heals. Keep the vortex bed." So the undo is the early one (its body peaks about 0.2 s after the press, against September's 0.5 s), an undo steps the heal notes back, and the vortex bed stays; the three temporary switches under the menu's list (`sound`, `undo`, `heal undo`) and the first sketch (`sound-src/sketch.py`, `scripts/sounds.sh sketch`) are gone, applied on PR #56. `scripts/sounds.sh listen <dir>` writes every sound and bed to m4a for a listen off the phone. The sounds add about 9 MB of CAF and AAC to git (rendered from `sound-src/`, so they could be rendered at build time instead, at the cost of Csound in CI). Endless has no par now, so the old question of a solve one over par is gone. The smaller list is closed by round 16 (PR #129, merged 2026-11-02): the detent's tick during a drag is dropped (SND1 = B), cancelling the player's own push flashes white everywhere, magenta and the heavy tap meaning a real heal (SND2 = A), and the share links tap through `ShareButton`, which opens the share sheet itself (SND3 = B). Its side effects went to Jack as snd1-clunk (B, the tank's drag silent too) and snd2-sandbox (the sandbox out of v1), both merged in #133. Escapement's ratchet tick is the steel pawl (soundsk2 = D, #138). A purchase landing on an open card plays the solve's chime and a success haptic since round 13's F38 (PR #81). Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Merged 2026-10-28 and 29 | PRs #55 (the consent link opens and closes its list), #57 (a locked next tier's up-a-notch button opens its gate), #53 (Lens, lenses on rods of every size) and #58 (drag guard) on 2026-10-28; #50 (plughole eased), #56 (sound round 2), #51 (live pack clips), #54 (First Stir's 25 scenes, FS17 C), #60 (v1 without First Stir) and #52 (Escapement's book, the tick budget and the flip counter) on 2026-10-29. Jack's calls on them are in rounds 10 and 11 under "Jack's calls on the pitch" |
-| Open PRs and branches (2026-11-13) | Open: #228 (the map for Prism and Lens). Local: `clean-daily`. Merged 2026-11-13, later: #223 to #227 (see "Open work (2026-11-13)"). Merged 2026-11-12: #201 (the curtain call), #205 (Prism's held rod drawn in its own colours, white fading in near the count), #207 (Escapement's wait back as a labelled button), #209 (CI keeps the test log and result bundle), #210 (the solver's "needs a plan" verdict), #211 (frost days, marked "frost day" on the menu), #212 (Maelstrom's planning levels), #213 (the frost day's ice), #214 (Lens's dock cover and card clip drawn with the fine lens), #215 (the 10-minute CI line dropped) and #216 (`scripts/archive-ios.sh`, the rising build number and the `AGE_RANGE` switch). Merged 2026-11-13: #217 (the twist oracle and `PROBES`), #218 (drag invalidation), #219 (the step tap loop) and #220 (thermal state and charger logged). Branches in flight are under "Open work (2026-11-13)". (2026-11-08:) None open. Merged 2026-11-08: #144 (the proprietary licence), #145 and #146 (the dock covers), #147 (CI's 15-minute limit), #139 (the tick sounds), #140 (the four-tap budget, `ADAPTIVE_TAPS` on) and #135 (Duo stage 5, the menu beside play); #137 closed, superseded by #140. Merged 2026-11-03: #131 to #134 (round 16's records and follow-up picks, the iCloud picks, the tank's silent drag and the sandbox out of v1), #124 (Duo stage 4), #136 (the archive reads "✕ close" beside the list; the store copy drops the sandbox) and #138 (Escapement's steel ratchet tick, soundsk2 = D). Local, unpushed: `archive/present-probe` (the in-app presentation probe, off #140), `duo-feel` (the bench at every glass size, a playtest-only DuoFeel probe and `scripts/duo-feel.sh`; its frame readout is the display link, which the probe showed sees the render server's misses), `sound-packs` (the pack layers rendered under real play, `scripts/sounds.sh layers`, renders in the tools folder) and `archive/stage5-wip`. Merged on the night of 2026-11-02: #126 (the app-size guard and pipefail), #127 (iCloud sync of bests, behind `ICLOUD = NO`), #128 (store-media fixes), #129 (round 16's play calls) and #130 (Escapement on bone paper). Local, unpushed: `sound-packs` (the ratchet ticks C, D and E for soundsk2). Outside the repo: the Eyes Shut test site, a local repo in the tools folder (`eyes-shut-site`, no remote). Merged late on 2026-11-02: #115, #119 (LG3's leftovers), #121 (store media), #123 (round 16's calls), #120 (Duo stage 2) and #122 (Duo stage 3). Merged earlier on 2026-11-02: #85, #91, #100, #104, #107 to #114, #116 (the Duo's stage 1) and #117 (round 15's calls). Earlier: merged on 2026-11-01 in round 13's merge train, in this order: #81 (`store-polish`), #86 (`taste-end`), #87 (`play-polish`), #83 (`a11y-system`) and #84 (`nav-focus`, the menu's navigation, to-do 74's F1, F2 and F19 to F22); the lanes have their own rows and notes. Merged since 2026-11-01's first list: #74 to #78, #80, #82 (N1's names) and #88. Merged since 2026-10-29's list: #60 (v1 without First Stir, FS17 C), #62 (v1 ships with no analytics, AN1 = A), #64 (the store page and privacy policy, ST1 to ST7 = A), #65 (`esc-hub-flaps`, ES2 = B: each clock's own flip count in its hub, the header their sum), #59 and #67 to #71 (Prism: the prototype, the 30 specimens, colour-blind reading, the GPU bench, the ship PR, plates 3 and 4 as medusae and radiolarians, PL1), #63 and #66 (CI split, nightly without the slow tests), #72 and #73 (below); #61 recorded rounds 10 to 12. Prism is on the Release shelf. The Escapement book still waits on Jack's play on the phone. Local branch `keep-analytics` (the other side of AN1) has no PR |
+| Open PRs and branches (2026-11-15) | None open. Merged 2026-11-13, late: #228 (the map for Prism and Lens), #230 (clean on any try for levels, again unless clean, No Wake on the daily, a result card that never scrolls), #232 (the layout tests trimmed, the simulator's first launch timed on CI). Merged 2026-11-15: #231 (the open tank) and #233 (a drawn finger's turn reaches the glass every time). (2026-11-13:) Merged 2026-11-13, later: #223 to #227 (see "Open work (2026-11-13)"). Merged 2026-11-12: #201 (the curtain call), #205 (Prism's held rod drawn in its own colours, white fading in near the count), #207 (Escapement's wait back as a labelled button), #209 (CI keeps the test log and result bundle), #210 (the solver's "needs a plan" verdict), #211 (frost days, marked "frost day" on the menu), #212 (Maelstrom's planning levels), #213 (the frost day's ice), #214 (Lens's dock cover and card clip drawn with the fine lens), #215 (the 10-minute CI line dropped) and #216 (`scripts/archive-ios.sh`, the rising build number and the `AGE_RANGE` switch). Merged 2026-11-13: #217 (the twist oracle and `PROBES`), #218 (drag invalidation), #219 (the step tap loop) and #220 (thermal state and charger logged). Branches in flight are under "Open work (2026-11-13)". (2026-11-08:) None open. Merged 2026-11-08: #144 (the proprietary licence), #145 and #146 (the dock covers), #147 (CI's 15-minute limit), #139 (the tick sounds), #140 (the four-tap budget, `ADAPTIVE_TAPS` on) and #135 (Duo stage 5, the menu beside play); #137 closed, superseded by #140. Merged 2026-11-03: #131 to #134 (round 16's records and follow-up picks, the iCloud picks, the tank's silent drag and the sandbox out of v1), #124 (Duo stage 4), #136 (the archive reads "✕ close" beside the list; the store copy drops the sandbox) and #138 (Escapement's steel ratchet tick, soundsk2 = D). Local, unpushed: `archive/present-probe` (the in-app presentation probe, off #140), `duo-feel` (the bench at every glass size, a playtest-only DuoFeel probe and `scripts/duo-feel.sh`; its frame readout is the display link, which the probe showed sees the render server's misses), `sound-packs` (the pack layers rendered under real play, `scripts/sounds.sh layers`, renders in the tools folder) and `archive/stage5-wip`. Merged on the night of 2026-11-02: #126 (the app-size guard and pipefail), #127 (iCloud sync of bests, behind `ICLOUD = NO`), #128 (store-media fixes), #129 (round 16's play calls) and #130 (Escapement on bone paper). Local, unpushed: `sound-packs` (the ratchet ticks C, D and E for soundsk2). Outside the repo: the Eyes Shut test site, a local repo in the tools folder (`eyes-shut-site`, no remote). Merged late on 2026-11-02: #115, #119 (LG3's leftovers), #121 (store media), #123 (round 16's calls), #120 (Duo stage 2) and #122 (Duo stage 3). Merged earlier on 2026-11-02: #85, #91, #100, #104, #107 to #114, #116 (the Duo's stage 1) and #117 (round 15's calls). Earlier: merged on 2026-11-01 in round 13's merge train, in this order: #81 (`store-polish`), #86 (`taste-end`), #87 (`play-polish`), #83 (`a11y-system`) and #84 (`nav-focus`, the menu's navigation, to-do 74's F1, F2 and F19 to F22); the lanes have their own rows and notes. Merged since 2026-11-01's first list: #74 to #78, #80, #82 (N1's names) and #88. Merged since 2026-10-29's list: #60 (v1 without First Stir, FS17 C), #62 (v1 ships with no analytics, AN1 = A), #64 (the store page and privacy policy, ST1 to ST7 = A), #65 (`esc-hub-flaps`, ES2 = B: each clock's own flip count in its hub, the header their sum), #59 and #67 to #71 (Prism: the prototype, the 30 specimens, colour-blind reading, the GPU bench, the ship PR, plates 3 and 4 as medusae and radiolarians, PL1), #63 and #66 (CI split, nightly without the slow tests), #72 and #73 (below); #61 recorded rounds 10 to 12. Prism is on the Release shelf. The Escapement book still waits on Jack's play on the phone. Local branch `keep-analytics` (the other side of AN1) has no PR |
 | Merged 2026-11-01 | PR #72 turned Escapement's pawl to trail the wheel's free turn (it pointed against the turn), and let playtest builds (`scripts/run-ios.sh`) open every pack level with `UNSTIR_UNLOCK=1`, since the phone cannot buy through StoreKit. PR #73 added to-dos 72 to 74: the UI design pass, the level-name audit and the pedantic polish pass |
 | Round 13's store lane (2026-11-01, PR #81, `store-polish`) | Built: F13 (a) to (e), F14, F15, F16 (Lens keeps "four issues", now N1b heads its list), F29's restore and version, F34, F35, F36, F38; F13 (f), a stored "asked" date, is not, so the store still stores nothing. A review's fixes are on the branch: the pending pill reads "asked" (F13c's word) and asks again only for the product's own request; a pack waiting on Complete's Ask to Buy says Complete is waiting, its pill buys the pack alone (Claude's reading; master disabled it) and Complete's line waits; an ask again that fails keeps the request pending and says why; the launch's first read never chimes on an open card (F14's "checking purchases…" placeholder on the card is not built); a restore is announced to VoiceOver and said only on its own card; back from a pack's card opened on Complete's returns there, its button reading "‹ Complete" (Claude's call in the merge, `108901c`; Jack kept it, 2026-11-01); an owned Complete card plays on in the first pack with a level left. CI passed on the fixes (2026-11-01). Waiting on: the shots retaken when the Mac is free (those indexed predate N1's titles and Lens's chapters), then Jack's review |
 | Round 13's F8, F9, F26, F27 and F28 (PR #83, `a11y-system`) | Built: VoiceOver basics (F8); Reduce Motion where it was missing (F9); the dock's covers and the card's clip held still under the settings sheet, Low Power Mode, a hot phone, 20 s idle or out of sight, carrying on from the frame they held (F26); Lens's halftone bake cached in every build, the opening waiting for its strike (F27); a black launch screen, the log cut after the first frame off the main actor, and a device line (F28). A review's fixes went in on 2026-11-01. Open checks, on a device: the light-appearance cold launch; the halftone's bake time on the oldest phone (the XS, C22), to record in CLAUDE.md's halftone paragraph in place of "unmeasured on a phone"; VoiceOver end to end, the finish taking focus as the card shows among it; the GPU bench (`scripts/gpu-bench.sh phone`). Films to take once the Mac is free: `scripts/film.sh calm-` (the Reduce Motion opening and solve) and the dock waking from idle |
@@ -45,82 +45,55 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 Closed: moved word for word to `docs/history.md`.
 
-### Open work (2026-11-13)
+### Open work (2026-11-15)
 
-**Merged 2026-11-13:** #224 (the tank's fullness as endless's brim on every level's bezel, with no spill on a level,
-the Duo's split glass giving it room); #227 (the approved store, policy and TestFlight wording, the bundle's product id
-renamed `com.screendead.Unstir.triptych1`, the StoreKit test file's names, caption 9, and the TestFlight paragraph kept
-12 months at most); #226 (a tier opens when every level below is solved; the three tier achievements follow the gate,
-Jack's pick); #225 (the StoreKit tests on iOS 27.2: the scheme's test action given the StoreKit configuration; the
-decline test holds the app to what StoreKit granted and skips where the 27.2 simulator's session grants a declined Ask
-to Buy; the refund tests wait until nothing is unfinished; a nightly `store-ios27` job on GitHub's xcode-27 image with
-a warm-up, since the first StoreKit test process on a never-booted 27.2 simulator hangs, cause unknown); #223 (the
-stored map, StirMap, for a level's glass). #221, an earlier records branch, was closed and its branch deleted.
+**Merged 2026-11-15:** #231, the open tank: no level, pack or daily shows the brim, a silent cap of 96, four taps
+whenever the stored map draws. Its side effect went to Jack as a call and he merged it: the four-tap budget now learns
+only from drags on stacks too shallow for a map. #233: after #231 a drawn fingertip's turn (lessons, films, the store
+preview) sometimes left the glass still until the release, which Jack saw in the retaken films. `Hand` now tells each
+change again once the value is in (`Hand.tell`, `docs/architecture.md`); the brim's ring had hidden the race since
+#218. A real finger's drag sets the angle without an animation and was not seen to fail; not checked on a phone.
 
-**The stored map on the reference phone (iPhone 13 Pro Max):** the twist bench's shares of today's frame: Maelstrom 24
-at rest 0.31 (3.26 ms to 1.00 ms), a 36-entry stack at rest 0.25, a rod in hand at 35 deep 0.28, the rim 0.50, Vortex
-27's breath 0.41, Whirlpool 27 0.25. Drawing a map took 4.4 to 6.5 ms of GPU time in the bench, a median of 10.7 ms in
-play. In ten minutes of play with the map (217 landings) the longest frame at a landing was the usual 16.7 ms in 199,
-25.0 ms in 17 and 34.2 ms in 1; there is no matching figure for the old drawing. Jack felt no difference, and merged it
-on that ("felt the same, merge it").
+**Store media retaken (2026-11-15), awaiting Jack's look:** on master with #233, in the tools folder outside the repo
+(`store-media-2026-11-15`): the ten screenshots plain and captioned, the 25 s preview, four social clips (silent), the
+four promoted-purchase images, the editors' reel (62 s), `heartbeat-maelstrom22-chainmail` on its new deal, and
+contact sheets. Not done: the clips with sound (`store-media.sh sound` switches the Mac's audio output, so it waits
+for Jack's word), and the pack layers' films. Lens's promoted-purchase image had been blank since at least
+2026-11-12: its 860 px panel bakes in about 40 s on the simulator and the shot held 30, now 60. Drags were checked
+frame by frame in whirlpool 03's take and two of the reel's segments, not in every take. `shots/index.txt`'s three
+stale lines were shot again and none changed, so that loose end is closed. `film.sh` fails inside the agent
+sandbox (its process substitution), and a build there can fail on an unmounted Metal toolchain until `xcrun metal
+--version` is run outside it once.
 
-**Heat, closed:** every run that heated was on a charger, and every unplugged run stayed nominal. On 2026-11-13,
-unplugged, ten minutes of Maelstrom 25 to 27 by hand stayed nominal with the old drawing and with the map. On the
-charger with the map: fair at 1 min 50 s, serious at 10 min; on the charger with the old drawing (3 min 23 s only):
-fair at 37 s. The two by-hand tests of 2026-11-12 that went serious within four minutes were both on power. The leading
-suspect is no longer the hand but charging while playing, inferred from seven runs, not a controlled test. Jack ended
-the tests ("seems clear enough to me"); no further heat work is planned unless he asks. The owed cold-start pair and
-the held replay are closed by this.
+**Open for Jack (a page of five calls, sent 2026-11-15):**
 
-**In flight:**
-
-- PR #228: the stored map for Prism (a tile per distinct channel word, three tiles; maps only at 20 or more
-  channel-maps, so past the deal) and Lens (the detail atlas packed into the map's image, because iOS 18.5 refuses a
-  shader given two images; on by default, Jack's call). CI running; merge when it passes.
-- `clean-daily` (local, unpushed, commit 9126447): "clean" shows on the daily only. Its PR follows Jack's three calls
-  below.
-
-**Open for Jack:**
-
-- Whether levels show two discs.
-- Whether the No Wake achievement becomes daily-only.
-- When a level's card offers "again".
-- Whether he has seen Maelstrom's twelve re-dealt rows (M6, M11 to M14, M19 to M22, M24 to M26; #212's table):
-  which rows need a plan was his to see first.
-- `AGE_RANGE` defaulting to YES for phone builds, once a signed archive shows the App ID takes it.
-- His own items: hosting the privacy policy on his domain, the policy's remaining tokens, ICO registration, a
-  trademark search, a launch date.
+- Maelstrom's twelve re-dealt levels: keep all (recommended), play them first, or put them back.
+- `AGE_RANGE` for phone builds: on once the first upload proves the App ID takes it (recommended), never, or now.
+- Whether the promoted-purchase images draw the knobs (#149 built it as his call; no words of his are recorded).
+- Whether "no paid pack takes the swirl or the orbits" is his rule (recorded as his under a heading of
+  recommendations).
+- Two records read as both sides right: the swirl's two calls (2026-10-25, then turned inside out 2026-10-26) and
+  Escapement's loss rule (the prover plays round 9's, the game the tick budget). On his OK: reword the rows, drop
+  "sources differ", and correct the comment on the swirl's disc in Twist.swift, which still describes the first.
+- Still his own: the account night (not started, Jack 2026-11-15), ICO registration,
+  hosting the privacy policy, the policy's remaining tokens, a trademark search, a launch date.
+- Claude's picks still open to him: the open tank's cap of 96, and the 30% floor the glass shrinks to under a card.
 
 **Next:**
 
-- Merge #228; then the three calls above and the `clean-daily` PR.
-- Raise the tank's limit once the map is in for every level (Jack's call; 48 is the suggested next step, not
-  decided), after #228; the brim scales to whatever the limit becomes.
-- Retake every store screenshot, the preview, the promo images, the editors' reel and the films, stale since the
-  brim, after the clean calls. The Maelstrom 22 film (`heartbeat-maelstrom22-chainmail`) shows the old deal.
+- Jack's look at the retaken media, then his five answers recorded here and in `docs/decisions.md`.
+- The clips with sound, if he wants them.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
+- The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac.
 
-**Loose ends:**
+**Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines: the TestFlight retention
+that nothing enforces, the harness crash in `Game.settle`, Escapement 29's layer, the curtain call on the phone,
+Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged worktrees and
+branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
 
-- Nothing enforces the 12-month TestFlight retention in `tools/tf-poll.py`; the policy's TestFlight paragraph names
-  no legal basis; `scripts/archive-ios.sh` does not refuse a build without `POLICY_URL`.
-- Two agents stalled overnight by ending their turn to wait; agents are now told to wait inside commands.
-- `UNSTIR_PLAYED` with a tank turn crashes in `Game.settle` (harness only).
-- `shots/index.txt` has lines that no longer match their shot's description (`seized-ring3-*` and `seized-hub-*` in
-  `scripts/shots/tiers.sh`, `card-prism-no-complete` in `scripts/shots/shelf.sh`); shooting them again rewrites them.
-- Owed from the closed 2026-11-11 and 11-12 records, not recorded as done: Escapement 29's layer rendered again on
-  its restored deal; the curtain call's frame rate on the phone and its sounds by ear; Stopwatch (Escapement 11)
-  still rests on one proved line.
-- CI's Test step took 2:55 to 6:40 on the night's last four PR runs; most of it is the start, still unexplained
-  (CLAUDE.md's 2026-11-08 reading, not measured again).
-- Worktrees whose branches are merged into master, to remove with their branches: `cover-knobs-build`,
-  `esc-plates-1`, `esc-wait-clear`, `frost-days`, `frost-glaze`, `icloud-picks`, `lens-cover-fine`, `oracle-tool`,
-  `plate-cover`, `prism-read`, `r16-picks-play`, `r17-overpar`, `r17-tfpoll`, `twist-step`, and `owed-shots`
-  (detached). About 115 more local branches are merged with no worktree (`git branch --merged origin/master`), among
-  them `frost-look`, `tf-archive`, `thermal-log`, `ci-time-rule` and the `r13-` to `r17-` lanes.
+### Open work (2026-11-13)
 
-Closed since the morning's list: a tier finished over par (tiers now open on solved); Escapement's wording (chapter 2's
-line in the code is "Sometimes the first move is to wait." and the button stays "wait", Jack).
+Closed: moved word for word to `docs/history.md`.
 
 ### Maelstrom levels that need a plan (2026-11-12)
 

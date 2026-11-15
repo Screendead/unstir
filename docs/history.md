@@ -27,6 +27,83 @@ Leading suspect, inferred and not measured: the hand around the phone traps the 
 lying on the table stayed under serious. Still owed: a cold-start pair by hand, the old drawing against the new; the
 replay while Jack holds the phone.
 
+### Open work (2026-11-13)
+
+**Merged 2026-11-13:** #224 (the tank's fullness as endless's brim on every level's bezel, with no spill on a level,
+the Duo's split glass giving it room); #227 (the approved store, policy and TestFlight wording, the bundle's product id
+renamed `com.screendead.Unstir.triptych1`, the StoreKit test file's names, caption 9, and the TestFlight paragraph kept
+12 months at most); #226 (a tier opens when every level below is solved; the three tier achievements follow the gate,
+Jack's pick); #225 (the StoreKit tests on iOS 27.2: the scheme's test action given the StoreKit configuration; the
+decline test holds the app to what StoreKit granted and skips where the 27.2 simulator's session grants a declined Ask
+to Buy; the refund tests wait until nothing is unfinished; a nightly `store-ios27` job on GitHub's xcode-27 image with
+a warm-up, since the first StoreKit test process on a never-booted 27.2 simulator hangs, cause unknown); #223 (the
+stored map, StirMap, for a level's glass). #221, an earlier records branch, was closed and its branch deleted.
+
+**The stored map on the reference phone (iPhone 13 Pro Max):** the twist bench's shares of today's frame: Maelstrom 24
+at rest 0.31 (3.26 ms to 1.00 ms), a 36-entry stack at rest 0.25, a rod in hand at 35 deep 0.28, the rim 0.50, Vortex
+27's breath 0.41, Whirlpool 27 0.25. Drawing a map took 4.4 to 6.5 ms of GPU time in the bench, a median of 10.7 ms in
+play. In ten minutes of play with the map (217 landings) the longest frame at a landing was the usual 16.7 ms in 199,
+25.0 ms in 17 and 34.2 ms in 1; there is no matching figure for the old drawing. Jack felt no difference, and merged it
+on that ("felt the same, merge it").
+
+**Heat, closed:** every run that heated was on a charger, and every unplugged run stayed nominal. On 2026-11-13,
+unplugged, ten minutes of Maelstrom 25 to 27 by hand stayed nominal with the old drawing and with the map. On the
+charger with the map: fair at 1 min 50 s, serious at 10 min; on the charger with the old drawing (3 min 23 s only):
+fair at 37 s. The two by-hand tests of 2026-11-12 that went serious within four minutes were both on power. The leading
+suspect is no longer the hand but charging while playing, inferred from seven runs, not a controlled test. Jack ended
+the tests ("seems clear enough to me"); no further heat work is planned unless he asks. The owed cold-start pair and
+the held replay are closed by this.
+
+**In flight:**
+
+- PR #228: the stored map for Prism (a tile per distinct channel word, three tiles; maps only at 20 or more
+  channel-maps, so past the deal) and Lens (the detail atlas packed into the map's image, because iOS 18.5 refuses a
+  shader given two images; on by default, Jack's call). CI running; merge when it passes.
+- `clean-daily` (local, unpushed, commit 9126447): "clean" shows on the daily only. Its PR follows Jack's three calls
+  below.
+
+**Open for Jack:**
+
+- Whether levels show two discs.
+- Whether the No Wake achievement becomes daily-only.
+- When a level's card offers "again".
+- Whether he has seen Maelstrom's twelve re-dealt rows (M6, M11 to M14, M19 to M22, M24 to M26; #212's table):
+  which rows need a plan was his to see first.
+- `AGE_RANGE` defaulting to YES for phone builds, once a signed archive shows the App ID takes it.
+- His own items: hosting the privacy policy on his domain, the policy's remaining tokens, ICO registration, a
+  trademark search, a launch date.
+
+**Next:**
+
+- Merge #228; then the three calls above and the `clean-daily` PR.
+- Raise the tank's limit once the map is in for every level (Jack's call; 48 is the suggested next step, not
+  decided), after #228; the brim scales to whatever the limit becomes.
+- Retake every store screenshot, the preview, the promo images, the editors' reel and the films, stale since the
+  brim, after the clean calls. The Maelstrom 22 film (`heartbeat-maelstrom22-chainmail`) shows the old deal.
+- A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
+
+**Loose ends:**
+
+- Nothing enforces the 12-month TestFlight retention in `tools/tf-poll.py`; the policy's TestFlight paragraph names
+  no legal basis; `scripts/archive-ios.sh` does not refuse a build without `POLICY_URL`.
+- Two agents stalled overnight by ending their turn to wait; agents are now told to wait inside commands.
+- `UNSTIR_PLAYED` with a tank turn crashes in `Game.settle` (harness only).
+- `shots/index.txt` has lines that no longer match their shot's description (`seized-ring3-*` and `seized-hub-*` in
+  `scripts/shots/tiers.sh`, `card-prism-no-complete` in `scripts/shots/shelf.sh`); shooting them again rewrites them.
+- Owed from the closed 2026-11-11 and 11-12 records, not recorded as done: Escapement 29's layer rendered again on
+  its restored deal; the curtain call's frame rate on the phone and its sounds by ear; Stopwatch (Escapement 11)
+  still rests on one proved line.
+- CI's Test step took 2:55 to 6:40 on the night's last four PR runs; most of it is the start, still unexplained
+  (CLAUDE.md's 2026-11-08 reading, not measured again).
+- Worktrees whose branches are merged into master, to remove with their branches: `cover-knobs-build`,
+  `esc-plates-1`, `esc-wait-clear`, `frost-days`, `frost-glaze`, `icloud-picks`, `lens-cover-fine`, `oracle-tool`,
+  `plate-cover`, `prism-read`, `r16-picks-play`, `r17-overpar`, `r17-tfpoll`, `twist-step`, and `owed-shots`
+  (detached). About 115 more local branches are merged with no worktree (`git branch --merged origin/master`), among
+  them `frost-look`, `tf-archive`, `thermal-log`, `ci-time-rule` and the `r13-` to `r17-` lanes.
+
+Closed since the morning's list: a tier finished over par (tiers now open on solved); Escapement's wording (chapter 2's
+line in the code is "Sometimes the first move is to wait." and the button stays "wait", Jack).
+
 ### Maelstrom levels that need a plan (2026-11-12)
 
 Jack dropped maelstrom's promise that the park rule reaches par however its ties go: "It's the last free tier; it's
