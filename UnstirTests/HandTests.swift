@@ -64,6 +64,23 @@ final class HandTests: XCTestCase {
         XCTAssertEqual(told.n, 3)
     }
 
+    /// A body SwiftUI draws while a change is being told reads the old value: it is told again once the new one is
+    /// in, or a drawn finger's turn, animated just after its rod is taken up, never reaches the glass.
+    @MainActor func testAReaderThatWatchesDuringAChangeIsToldOfIt() {
+        let hand = Hand(tankStep: .pi / 3)
+        let told = Told()
+        let changes: [(Hand) -> Void] = [{ $0.angle = 1 }, { $0.turn = 1 }, { $0.turning = true }, { $0.spin = 1 }, { $0.spun = true }]
+        for (i, change) in changes.enumerated() {
+            withObservationTracking { hand.readAll() } onChange: {
+                MainActor.assumeIsolated {
+                    withObservationTracking { hand.readAll() } onChange: { told.n += 1 }
+                }
+            }
+            change(hand)
+            XCTAssertEqual(told.n, i + 1)
+        }
+    }
+
     /// `Unstirred.draws(sameAs:)` lets the level's glass skip a frame's arguments where nothing changed, so it reads
     /// every stored field: a new one changes the count here, and joins the comparison and this list.
     @MainActor func testTheGlassComparesEveryField() throws {

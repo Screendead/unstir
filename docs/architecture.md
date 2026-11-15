@@ -367,7 +367,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   built without one (a modifier of its own, as the turn must reach `Unstirred.animatableData` for a settle to play),
   and `InHand` round the held knob, its dial or track, the tank's dial, the knurl, each count's place, the drawn
   fingertip and `TapHooks`' watch for a frame that moved. A value set to what it is tells no one, as a view's state
-  does. The handlers still read and write `liveAngle`, `liveTurn`, `spun`, `lastSpin`, `finger`, `detent`, `path`
+  does. A change is told twice, again once the value is in (`Hand.tell`,
+  `testAReaderThatWatchesDuringAChangeIsToldOfIt`): told of a change set with an animation, SwiftUI first draws what
+  is pending, inside the telling, and a body drawn there reads the old value and watches for a telling that has
+  gone. A drawn finger sets its rod, then animates the angle, so about one of its drags in three held the glass
+  still until the release (2026-11-15; the brim's ring had hidden it since #218, and #231 took the ring away). The handlers still read and write `liveAngle`, `liveTurn`, `spun`, `lastSpin`, `finger`, `detent`, `path`
   and `twist`, now `LevelView`'s computed properties over the hand: **never read one in `body`, or in `tank()`
   outside an `InHand`**, or every frame of a drag evaluates `LevelView` again; no test sees that, only `DragProbe`'s
   `level` count a frame (0.05 on a drag that crosses a dozen counts, 1 if a read has crept in), so run
