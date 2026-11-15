@@ -15,7 +15,7 @@ import SwiftUI
         get { access(keyPath: \.angle); return stored.angle }
         set {
             guard newValue != stored.angle else { return }
-            withMutation(keyPath: \.angle) { stored.angle = newValue }
+            tell(\.angle) { stored.angle = newValue }
             count()
         }
     }
@@ -25,7 +25,7 @@ import SwiftUI
         get { access(keyPath: \.turn); return stored.turn }
         set {
             guard newValue != stored.turn else { return }
-            withMutation(keyPath: \.turn) { stored.turn = newValue }
+            tell(\.turn) { stored.turn = newValue }
             count()
         }
     }
@@ -34,7 +34,7 @@ import SwiftUI
         get { access(keyPath: \.turning); return stored.turning }
         set {
             guard newValue != stored.turning else { return }
-            withMutation(keyPath: \.turning) { stored.turning = newValue }
+            tell(\.turning) { stored.turning = newValue }
             count()
         }
     }
@@ -44,7 +44,7 @@ import SwiftUI
         get { access(keyPath: \.spin); return stored.spin }
         set {
             guard newValue != stored.spin else { return }
-            withMutation(keyPath: \.spin) { stored.spin = newValue }
+            tell(\.spin) { stored.spin = newValue }
             count()
         }
     }
@@ -53,7 +53,7 @@ import SwiftUI
         get { access(keyPath: \.spun); return stored.spun }
         set {
             guard newValue != stored.spun else { return }
-            withMutation(keyPath: \.spun) { stored.spun = newValue }
+            tell(\.spun) { stored.spun = newValue }
             count()
         }
     }
@@ -96,6 +96,15 @@ import SwiftUI
         stored.turn = turn ?? 0
         stored.turning = turn != nil
         count()
+    }
+
+    /// Tells a change twice, the second time once the value is in. Told the first time, SwiftUI may draw what is
+    /// pending before the value changes, as it does for a change set with an animation just after one set without;
+    /// a body drawn then reads the old value and waits for a telling that already went, so a drawn finger's turn
+    /// held the glass still until it let go.
+    private func tell<Value>(_ keyPath: KeyPath<Hand, Value>, _ change: () -> Void) {
+        withMutation(keyPath: keyPath, change)
+        withMutation(keyPath: keyPath) {}
     }
 
     private func count() {
