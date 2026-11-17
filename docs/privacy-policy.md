@@ -4,9 +4,9 @@
 > has no analytics, and iCloud sync and Game Center off. `{{DEVELOPER_NAME}}` (the developer's own legal name),
 > `{{CONTACT_ADDRESS}}`, `{{EMAIL_PROVIDER}}`, `{{EMAIL_PROVIDER_COUNTRY}}` and `{{WEB_HOST}}` are filled in at
 > publishing, never in this public repo, so the published copy lives on the developer's own domain (Jack's call C17 = A),
-> and the app's settings row (`POLICY_URL`) and App Store Connect point there. If the mailbox is kept outside the UK, add
-> the safeguard for that transfer after the country. v1 is not sold in the EU or EEA. If iCloud sync or Game Center
-> ships on, this policy changes first. Remove this box before publishing.
+> and the app's settings row (`POLICY_URL`) and App Store Connect point there. The mailbox's country has UK adequacy
+> regulations (2026-11-17), the transfer's safeguard; a move to a country without them changes that sentence. v1 is not
+> sold in the EU or EEA. If iCloud sync or Game Center ships on, this policy changes first. Remove this box before publishing.
 
 *Last updated: [date of publishing]*
 
@@ -72,8 +72,8 @@ you choose where it goes. The game sends nothing by itself.
 If you email it, or email us at all, we receive your email address, your message and anything you attach. We use them
 only to answer you and to fix the game. Our legal basis is our legitimate interest in answering you and keeping the
 game working. You never have to send anything; if you don't, we can't look into the bug. Our email is held by
-{{EMAIL_PROVIDER}} in {{EMAIL_PROVIDER_COUNTRY}}. Nobody else sees it, unless the law requires us to show it, for
-example to the regulator. We delete the email and any log once the report is dealt with, and within 12 months of your
+{{EMAIL_PROVIDER}} in {{EMAIL_PROVIDER_COUNTRY}}, a country UK law recognises as protecting personal data adequately.
+Nobody else sees it, unless the law requires us to show it, for example to the regulator. We delete the email and any log once the report is dealt with, and within 12 months of your
 last message at the latest.
 
 ## If you test a beta
