@@ -7,25 +7,25 @@ import Foundation
 /// everything they have already done, and nothing counts twice. Every input only ever grows (a best only improves, a
 /// flag only sets, `Best.tanks` is a most), so a percent never goes down, which Game Center ignores anyway.
 ///
-/// The raw value ends the id App Store Connect knows it by: once an achievement is live it can't be deleted nor its
+/// The raw value ends the id App Store Connect knows it by, which takes only letters, digits, underscores and periods: once an achievement is live it can't be deleted nor its
 /// points changed (AchievementTests pins them), so never rename a case.
 enum Achievement: String, CaseIterable, Sendable {
-    case firstDrop = "first-drop"
-    case downThePlughole = "down-the-plughole"
-    case intoTheVortex = "into-the-vortex"
-    case theMaelstrom = "the-maelstrom"
+    case firstDrop = "first_drop"
+    case downThePlughole = "down_the_plughole"
+    case intoTheVortex = "into_the_vortex"
+    case theMaelstrom = "the_maelstrom"
     case unstirred
-    case noWake = "no-wake"
-    case turnOfTheTide = "turn-of-the-tide"
-    case theEdgeTurns = "the-edge-turns"
-    case todaysTank = "todays-tank"
-    case aWeekOfTanks = "a-week-of-tanks"
+    case noWake = "no_wake"
+    case turnOfTheTide = "turn_of_the_tide"
+    case theEdgeTurns = "the_edge_turns"
+    case todaysTank = "todays_tank"
+    case aWeekOfTanks = "a_week_of_tanks"
     case brim
-    case overTheLip = "over-the-lip"
-    case inFocus = "in-focus"
-    case timeWellSpent = "time-well-spent"
-    case whiteLight = "white-light"
-    case wholeShelf = "whole-shelf"
+    case overTheLip = "over_the_lip"
+    case inFocus = "in_focus"
+    case timeWellSpent = "time_well_spent"
+    case whiteLight = "white_light"
+    case wholeShelf = "whole_shelf"
 
     var id: String { "com.screendead.Unstir.achievement.\(rawValue)" }
 

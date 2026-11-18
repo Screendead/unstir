@@ -1322,7 +1322,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Achievements.swift** and **GameCenter.swift** hold Game Center's achievements (Jack's call F5 = B, round 14: sign-in
   and achievements, no leaderboards; the list is the pitch's 16, 255 points, awaiting his pick, its pressure flags kept
-  and marked `flagged`). `Achievement`'s raw value ends its id (`com.screendead.Unstir.achievement.first-drop`), and
+  and marked `flagged`). `Achievement`'s raw value ends its id (`com.screendead.Unstir.achievement.first_drop`), and
   `AchievementTests` pins every id, title, point and hidden flag as literals: a live achievement can't be deleted nor
   its points changed, so never rename one. Each is earned from what the game already stores, read afresh
   (`Achievement.Record.stored()`: the bests, a daily's clean one (No Wake, "Solve a daily clean", daily-only; Jack, 2026-11-13), dailies with a best, `Best.tankTurned`, `swirled`,
