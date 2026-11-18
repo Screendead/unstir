@@ -13,12 +13,14 @@ the token `{{CONTACT_ADDRESS}}`; the address itself is kept outside the repo, in
 Store Connect and the hosted pages, never into a tracked file. The same goes for the developer's name in the policy:
 `{{DEVELOPER_NAME}}`.
 
-What it is true to: `master` on 2026-11-13, built for release with its tracked defaults (no analytics, iCloud sync
-and Game Center off): four tiers of 27 levels, the daily with its frost days, endless, the daily archive and the
+What it is true to: `master` on 2026-11-18, built for release with its tracked defaults (no analytics and iCloud sync
+off, Game Center on): four tiers of 27 levels, the daily with its frost days, endless, the daily archive and the
 supporter mark that any purchase opens, and the three packs as built, Lens's 25 panels, Escapement's 30 problems and
 Prism's 30 specimens, with Triptych I. First Stir is out of v1 and compiled out of Release. Built but off in v1, so left
-out of the copy: iCloud sync of bests (`ICLOUD = NO`) and Game Center (`GAME_CENTER = NO`); turning either on changes
-the description's last line and the privacy policy. Not built: charybdis. Out of v1: the sandbox (Jack's call
+out of the copy: iCloud sync of bests (`ICLOUD = NO`); turning it on changes the description's last line and the
+privacy policy. Game Center ships on (Jack, 2026-11-18): the last line drops "and the game sends nothing" and says "No
+account to make", and the policy has a Game Center section; the label stays Data Not Collected, as Apple's guidance
+leaves data Apple collects out of a developer's label. Not built: charybdis. Out of v1: the sandbox (Jack's call
 store-sandbox = A, round 16).
 
 ## Name (30 characters at most)
@@ -91,7 +93,7 @@ Three packs add their own pictures, tanks and rules. The first three levels of e
 
 Triptych I unlocks Lens, Escapement and Prism in one purchase. Packs and Triptych I can be shared with your family through Family Sharing. Any purchase also opens the archive of past dailies and adds a small supporter mark by the title and in your share line, which you can switch off.
 
-No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
+No ads. No timers. No account to make. Your progress stays on your phone.
 ```
 
 Choices and checks in it:
@@ -334,8 +336,9 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 6. ~~The send-log button's label answer (ST7 = A, don't declare it) was decided for a share-sheet button; the button
    now opens a mail already addressed to the developer.~~ Jack decided it again for the mail as it now works
    (2026-11-13): the label stays Data Not Collected and the mail is not declared.
-7. iCloud sync and Game Center are built but off (`ICLOUD = NO`, `GAME_CENTER = NO` by default). If either ships on, the description's last line, the privacy label and the privacy policy
-   change before the build goes to review.
+7. iCloud sync is built but off (`ICLOUD = NO` by default). If it ships on, the description's last line, the privacy
+   label and the privacy policy change before the build goes to review. Game Center ships on in 1.0 (2026-11-18), with
+   the last line and the policy changed for it.
 8. `Share.url` and `Share.firstDay` are still empty, so the share line names the date and carries no link (Jack's calls
    D1 and M2 = A want daily #1 set to launch day and an App Store link on the line in the build that goes to review).
 9. `scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings

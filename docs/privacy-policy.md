@@ -1,12 +1,12 @@
 # Unstir privacy policy
 
-> **Draft, 2026-11-01, revised 2026-11-13 against the game as built; not for publishing yet.** The policy for v1, which
-> has no analytics, and iCloud sync and Game Center off. `{{DEVELOPER_NAME}}` (the developer's own legal name),
+> **Draft, 2026-11-01, revised 2026-11-18 against the game as built; not for publishing yet.** The policy for v1, which
+> has no analytics and iCloud sync off, and Game Center on. `{{DEVELOPER_NAME}}` (the developer's own legal name),
 > `{{CONTACT_ADDRESS}}`, `{{EMAIL_PROVIDER}}`, `{{EMAIL_PROVIDER_COUNTRY}}` and `{{WEB_HOST}}` are filled in at
 > publishing, never in this public repo, so the published copy lives on the developer's own domain (Jack's call C17 = A),
 > and the app's settings row (`POLICY_URL`) and App Store Connect point there. The mailbox's country has UK adequacy
 > regulations (2026-11-17), the transfer's safeguard; a move to a country without them changes that sentence. v1 is not
-> sold in the EU or EEA. If iCloud sync or Game Center ships on, this policy changes first. Remove this box before publishing.
+> sold in the EU or EEA. If iCloud sync ships on, this policy changes first. Remove this box before publishing.
 
 *Last updated: [date of publishing]*
 
@@ -15,8 +15,8 @@ Unstir is a puzzle game made by {{DEVELOPER_NAME}}, its developer ("we", "us").
 ## In short
 
 The game itself collects no personal data. It has no account, no ads, no analytics and no tracking. It talks only to
-Apple's services: the App Store, through StoreKit, for prices and purchases, and, where a US state law asks, Apple's
-age-range check. The one exception is this policy's web page, which the game loads when you open it from settings.
+Apple's services: the App Store, through StoreKit, for prices and purchases; Game Center, if you're signed in, for
+achievements; and, where a US state law asks, Apple's age-range check. The one exception is this policy's web page, which the game loads when you open it from settings.
 The only data we ever receive is an email you choose to send us and, if you test a beta through Apple's TestFlight,
 what Apple passes on about your testing.
 
@@ -51,6 +51,13 @@ Packs and bundles of packs are sold through Apple's App Store. Apple handles pay
 Apple ID. The game checks Apple's signed record of what you own on the phone, with no server of ours. To show prices
 and know what you own, the game asks Apple's App Store when it starts and when you buy or restore. That is Apple's
 service, and Apple's privacy policy covers it.
+
+## Game Center
+
+If you're signed in to Game Center on your phone, the game reports the achievements you earn, worked out from your
+progress on the phone. Game Center is Apple's service: Apple keeps your achievements with your Apple Account, under
+Apple's privacy policy. We don't receive them, and the game sends Game Center nothing else. Sign out of Game Center in
+your phone's settings and the game reports nothing.
 
 ## Your age range
 
