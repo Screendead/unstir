@@ -364,13 +364,19 @@ struct Harness {
         case "sandbox": Level.sandbox
         default: tier.levels[n - 1]
         }
-        #if DEBUG
-        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder past the levels it has.
-        if let pack = env["UNSTIR_PACK"].flatMap(Pack.init(rawValue:)) {
+        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder past the levels it has in Debug. Release opens
+        // only a sold pack's own levels, for shots of the build players get (the iPhone Duo's open screen shows the
+        // menu beside play); its harness owns no pack (`Pack.access`).
+        if let pack = env["UNSTIR_PACK"].flatMap(Pack.init(rawValue:)), Pack.sold().contains(pack) {
             let number = max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1)
-            level = pack.levels.indices.contains(number - 1) ? pack.levels[number - 1] : pack.placeholder(number)
+            if pack.levels.indices.contains(number - 1) {
+                level = pack.levels[number - 1]
+            } else {
+                #if DEBUG
+                level = pack.placeholder(number)
+                #endif
+            }
         }
-        #endif
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
