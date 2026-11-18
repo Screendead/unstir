@@ -528,8 +528,9 @@ struct LevelView: View {
         screen
             .dynamicTypeSize(...PlayLayout.typeCap)
             .statusBarHidden(clean)
-            // The Info.plist's dark style draws the status bar white, which paper would swallow.
-            .preferredColorScheme(page.paper ? .light : nil)
+            // The Info.plist's dark style draws the status bar white, which paper would swallow; beside the menu the
+            // open Duo's clock sits over the menu's black (`menuGround`) until a card turns it to paper.
+            .preferredColorScheme(page.paper && (!beside || showResult) ? .light : nil)
             .persistentSystemOverlays(clean ? .hidden : .automatic)
             // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
             .overlay(alignment: .leading) {
