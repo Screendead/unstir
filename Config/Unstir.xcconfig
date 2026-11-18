@@ -26,10 +26,10 @@ EDITORS_CONDITION_YES = EDITORS
 PROBES = NO
 PROBES_CONDITION_YES = PROBES
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS)) $(PROBES_CONDITION_$(PROBES))
-// YES builds Game Center in: a sign-in at the menu and the achievements (Sources/GameCenter.swift). NO, v1's until the
-// sign-in overlay test passes, makes no GameKit call. A build with it YES needs the Game Center capability on its App
-// ID and the com.apple.developer.game-center entitlement.
-GAME_CENTER = NO
+// YES builds Game Center in: a sign-in at the menu and the achievements (Sources/GameCenter.swift), v1's since the
+// sign-in overlay test passed on the phone (Jack, 2026-11-18). NO makes no GameKit call. A build with it YES signs with
+// the com.apple.developer.game-center entitlement, which the App ID's Game Center capability allows.
+GAME_CENTER = YES
 // YES syncs bests through the player's iCloud key-value store (Sources/Sync.swift) and signs with
 // iCloud's entitlement. NO, until the App ID has the iCloud capability with key-value storage, makes no call to the
 // store and signs without it, as a device build with that entitlement fails to provision without it. Before it turns

@@ -276,6 +276,7 @@ The pitch page's first answers, 2026-10-24 (HANDOFF numbers only the later round
 | G-hidden = A | 2026-11-02 | Five achievements hidden, as built. | HANDOFF |
 | G-playtest = A | 2026-11-02 | Playtest builds report to Game Center's sandbox; only screenshot and test launches never report. | HANDOFF |
 | G-banner = A | 2026-11-02 | Game Center's completion banner shows, over the result card. | HANDOFF |
+| G-ship | 2026-11-18 | Game Center ships in 1.0: the sign-in overlay test passed on the phone, so `GAME_CENTER` is YES by default. The achievement images are the game's own tanks (`scripts/achievement-art.sh`). | architecture |
 | G-link = A | 2026-11-02 | GameKit is linked but never called while the switch is off. | HANDOFF |
 | D-layout = 3 | 2026-11-02 | The open Duo gets split play (tank in one half, chrome and cards in the other) plus the menu beside play. | HANDOFF, architecture |
 | D-tent = A | 2026-11-02 | Portrait on the closed display. | HANDOFF |
