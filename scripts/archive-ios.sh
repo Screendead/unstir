@@ -68,12 +68,17 @@ support=$(read_plist SupportAddress)
 entitlements=$(codesign -d --entitlements - --xml "$app" 2>/dev/null || true)
 echo "archived $archive: version $(read_plist CFBundleShortVersionString) ($built)," \
   "support address $([[ -n "$support" ]] && echo set || echo EMPTY)," \
-  "age range entitlement $([[ "$entitlements" == *com.apple.developer.declared-age-range* ]] && echo signed in || echo absent)"
+  "age range entitlement $([[ "$entitlements" == *com.apple.developer.declared-age-range* ]] && echo signed in || echo absent)," \
+  "Game Center $(read_plist GameCenter), its entitlement $([[ "$entitlements" == *com.apple.developer.game-center* ]] && echo signed in || echo absent)"
 [[ "$built" == "$number" ]] || { echo "the archive's build number is $built, not $number" >&2; exit 1; }
 [[ "$mode" == archive ]] && exit 0
 [[ -n "$support" ]] || { echo "the archive's SupportAddress is empty: not exporting it" >&2; exit 1; }
 if [[ "$AGE_RANGE" == YES && "$entitlements" != *com.apple.developer.declared-age-range* ]]; then
   echo "the archive isn't signed with Declared Age Range's entitlement: not exporting it" >&2
+  exit 1
+fi
+if [[ "$(read_plist GameCenter)" == YES && "$entitlements" != *com.apple.developer.game-center* ]]; then
+  echo "the archive builds Game Center in but isn't signed with its entitlement: not exporting it" >&2
   exit 1
 fi
 

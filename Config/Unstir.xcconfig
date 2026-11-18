@@ -40,11 +40,15 @@ ICLOUD = NO
 // of an app calling the API (Sources/AgeRange.swift); scripts/archive-ios.sh sets it. NO, until a phone build on the
 // paid team shows the App ID takes it, keeps scripts/run-ios.sh's signing as it was. Unsigned builds ignore both.
 AGE_RANGE = NO
-// One file per pair of switches, ICLOUD's then AGE_RANGE's; a later entitlement (Game Center's) joins these.
-ENTITLEMENTS_YES_NO = Config/iCloud.entitlements
-ENTITLEMENTS_NO_YES = Config/AgeRange.entitlements
-ENTITLEMENTS_YES_YES = Config/iCloudAgeRange.entitlements
-CODE_SIGN_ENTITLEMENTS = $(ENTITLEMENTS_$(ICLOUD)_$(AGE_RANGE))
+// One file per set of switches, ICLOUD's, AGE_RANGE's then GAME_CENTER's.
+ENTITLEMENTS_YES_NO_NO = Config/iCloud.entitlements
+ENTITLEMENTS_NO_YES_NO = Config/AgeRange.entitlements
+ENTITLEMENTS_YES_YES_NO = Config/iCloudAgeRange.entitlements
+ENTITLEMENTS_NO_NO_YES = Config/GameCenter.entitlements
+ENTITLEMENTS_YES_NO_YES = Config/iCloudGameCenter.entitlements
+ENTITLEMENTS_NO_YES_YES = Config/AgeRangeGameCenter.entitlements
+ENTITLEMENTS_YES_YES_YES = Config/iCloudAgeRangeGameCenter.entitlements
+CODE_SIGN_ENTITLEMENTS = $(ENTITLEMENTS_$(ICLOUD)_$(AGE_RANGE)_$(GAME_CENTER))
 // YES lets a plain launch on a phone learn each glass's four-tap budget from the frames its drags miss and keep it
 // (Sources/Taps.swift), starting from the static limit, so it steps down only where a phone drops frames, hot or on a
 // larger glass (Jack's call taps-keep = C). NO draws the static limit; UNSTIR_TAPS still runs the law for a launch.
