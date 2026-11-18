@@ -42,9 +42,9 @@ final class AchievementTests: XCTestCase {
         XCTAssertEqual(Achievement.shelf.map(\.1), [.lens, .escapement, .prism])
     }
 
-    /// v1 builds without Game Center until the sign-in overlay test passes, and the test host never signs in.
-    @MainActor func testV1BuildsWithoutGameCenter() {
-        XCTAssertFalse(GameCenter.built)
+    /// v1 builds Game Center in, as the sign-in overlay test passed on the phone, and the test host never signs in.
+    @MainActor func testV1BuildsGameCenterInButTheTestHostNeverSignsIn() {
+        XCTAssertTrue(GameCenter.built)
         XCTAssertFalse(GameCenter.shared.plays)
         GameCenter.shared.signIn()
         XCTAssertFalse(GameCenter.shared.signedIn)
