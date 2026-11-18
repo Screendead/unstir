@@ -26,10 +26,10 @@ EDITORS_CONDITION_YES = EDITORS
 PROBES = NO
 PROBES_CONDITION_YES = PROBES
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS)) $(PROBES_CONDITION_$(PROBES))
-// YES builds Game Center in: a sign-in at the menu and the achievements (Sources/GameCenter.swift). NO, v1's until the
-// sign-in overlay test passes, makes no GameKit call. A build with it YES needs the Game Center capability on its App
-// ID and the com.apple.developer.game-center entitlement.
-GAME_CENTER = NO
+// YES builds Game Center in: a sign-in at the menu and the achievements (Sources/GameCenter.swift), v1's since the
+// sign-in overlay test passed on the phone (Jack, 2026-11-18). NO makes no GameKit call. A build with it YES signs with
+// the com.apple.developer.game-center entitlement, which the App ID's Game Center capability allows.
+GAME_CENTER = YES
 // YES syncs bests through the player's iCloud key-value store (Sources/Sync.swift) and signs with
 // iCloud's entitlement. NO, until the App ID has the iCloud capability with key-value storage, makes no call to the
 // store and signs without it, as a device build with that entitlement fails to provision without it. Before it turns
@@ -40,11 +40,15 @@ ICLOUD = NO
 // of an app calling the API (Sources/AgeRange.swift); scripts/archive-ios.sh sets it. NO, until a phone build on the
 // paid team shows the App ID takes it, keeps scripts/run-ios.sh's signing as it was. Unsigned builds ignore both.
 AGE_RANGE = NO
-// One file per pair of switches, ICLOUD's then AGE_RANGE's; a later entitlement (Game Center's) joins these.
-ENTITLEMENTS_YES_NO = Config/iCloud.entitlements
-ENTITLEMENTS_NO_YES = Config/AgeRange.entitlements
-ENTITLEMENTS_YES_YES = Config/iCloudAgeRange.entitlements
-CODE_SIGN_ENTITLEMENTS = $(ENTITLEMENTS_$(ICLOUD)_$(AGE_RANGE))
+// One file per set of switches, ICLOUD's, AGE_RANGE's then GAME_CENTER's.
+ENTITLEMENTS_YES_NO_NO = Config/iCloud.entitlements
+ENTITLEMENTS_NO_YES_NO = Config/AgeRange.entitlements
+ENTITLEMENTS_YES_YES_NO = Config/iCloudAgeRange.entitlements
+ENTITLEMENTS_NO_NO_YES = Config/GameCenter.entitlements
+ENTITLEMENTS_YES_NO_YES = Config/iCloudGameCenter.entitlements
+ENTITLEMENTS_NO_YES_YES = Config/AgeRangeGameCenter.entitlements
+ENTITLEMENTS_YES_YES_YES = Config/iCloudAgeRangeGameCenter.entitlements
+CODE_SIGN_ENTITLEMENTS = $(ENTITLEMENTS_$(ICLOUD)_$(AGE_RANGE)_$(GAME_CENTER))
 // YES lets a plain launch on a phone learn each glass's four-tap budget from the frames its drags miss and keep it
 // (Sources/Taps.swift), starting from the static limit, so it steps down only where a phone drops frames, hot or on a
 // larger glass (Jack's call taps-keep = C). NO draws the static limit; UNSTIR_TAPS still runs the law for a launch.

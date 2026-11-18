@@ -1322,7 +1322,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Achievements.swift** and **GameCenter.swift** hold Game Center's achievements (Jack's call F5 = B, round 14: sign-in
   and achievements, no leaderboards; the list is the pitch's 16, 255 points, awaiting his pick, its pressure flags kept
-  and marked `flagged`). `Achievement`'s raw value ends its id (`com.screendead.Unstir.achievement.first-drop`), and
+  and marked `flagged`). `Achievement`'s raw value ends its id (`com.screendead.Unstir.achievement.first_drop`), and
   `AchievementTests` pins every id, title, point and hidden flag as literals: a live achievement can't be deleted nor
   its points changed, so never rename one. Each is earned from what the game already stores, read afresh
   (`Achievement.Record.stored()`: the bests, a daily's clean one (No Wake, "Solve a daily clean", daily-only; Jack, 2026-11-13), dailies with a best, `Best.tankTurned`, `swirled`,
@@ -1330,13 +1330,14 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `Best.spilled` (`endless.spilled`), set by a spill that stores progress. Tiers read `isOpen(unlocked: false)`, so the
   developer unlock earns nothing; a pack's needs every planned level with a best, and Whole Shelf the three fixed packs
   (`Achievement.shelf`). Only A Week of Tanks and Brim report a share on the way, and `due` sends only a rise past 0,
-  so a hidden one never shows unearned. The build's `GAME_CENTER` (`Config/Unstir.xcconfig`, NO until the sign-in
-  overlay test on an iOS 26.2 phone passes) sets Info.plist's `GameCenter`, read as `GameCenter.built`; off, no GameKit
+  so a hidden one never shows unearned. The build's `GAME_CENTER` (`Config/Unstir.xcconfig`, YES since the sign-in
+  overlay test passed on the phone, 2026-11-18) sets Info.plist's `GameCenter`, read as `GameCenter.built`; off, no GameKit
   call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once the menu has
   been up with nothing over it for `settle` (`RootView.calm`, the age check's moment), holding a sign-in sheet GameKit
   hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports as every
-  finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
-  aren't set up.
+  finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the swirl. It signs with Game Center's entitlement (`Config/*GameCenter.entitlements`,
+  picked with iCloud's and Declared Age Range's), and App Store Connect holds the 16 achievements, their images made by
+  `scripts/achievement-art.sh`.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
   bests, endless's best (`Best.tanks`) and the started flags (`Best.started`) (Jack's calls icloud-endless and
   icloud-started = A, round 16), never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO

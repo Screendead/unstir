@@ -10,22 +10,22 @@ final class AchievementTests: XCTestCase {
     /// every value here is a literal on purpose.
     func testTheListNeverChanges() {
         let pinned: [(String, String, Int, Bool)] = [
-            ("first-drop", "First Drop", 5, false),
-            ("down-the-plughole", "Down the Plughole", 15, false),
-            ("into-the-vortex", "Into the Vortex", 20, false),
-            ("the-maelstrom", "The Maelstrom", 25, false),
+            ("first_drop", "First Drop", 5, false),
+            ("down_the_plughole", "Down the Plughole", 15, false),
+            ("into_the_vortex", "Into the Vortex", 20, false),
+            ("the_maelstrom", "The Maelstrom", 25, false),
             ("unstirred", "Unstirred", 50, false),
-            ("no-wake", "No Wake", 10, false),
-            ("turn-of-the-tide", "Turn of the Tide", 5, false),
-            ("the-edge-turns", "The Edge Turns", 5, false),
-            ("todays-tank", "Today's Tank", 5, false),
-            ("a-week-of-tanks", "A Week of Tanks", 10, false),
+            ("no_wake", "No Wake", 10, false),
+            ("turn_of_the_tide", "Turn of the Tide", 5, false),
+            ("the_edge_turns", "The Edge Turns", 5, false),
+            ("todays_tank", "Today's Tank", 5, false),
+            ("a_week_of_tanks", "A Week of Tanks", 10, false),
             ("brim", "Brim", 10, false),
-            ("over-the-lip", "Over the Lip", 5, true),
-            ("in-focus", "In Focus", 20, true),
-            ("time-well-spent", "Time Well Spent", 20, true),
-            ("white-light", "White Light", 20, true),
-            ("whole-shelf", "Whole Shelf", 30, true),
+            ("over_the_lip", "Over the Lip", 5, true),
+            ("in_focus", "In Focus", 20, true),
+            ("time_well_spent", "Time Well Spent", 20, true),
+            ("white_light", "White Light", 20, true),
+            ("whole_shelf", "Whole Shelf", 30, true),
         ]
         XCTAssertEqual(Achievement.allCases.count, pinned.count)
         for (a, p) in zip(Achievement.allCases, pinned) {
@@ -42,9 +42,9 @@ final class AchievementTests: XCTestCase {
         XCTAssertEqual(Achievement.shelf.map(\.1), [.lens, .escapement, .prism])
     }
 
-    /// v1 builds without Game Center until the sign-in overlay test passes, and the test host never signs in.
-    @MainActor func testV1BuildsWithoutGameCenter() {
-        XCTAssertFalse(GameCenter.built)
+    /// v1 builds Game Center in, as the sign-in overlay test passed on the phone, and the test host never signs in.
+    @MainActor func testV1BuildsGameCenterInButTheTestHostNeverSignsIn() {
+        XCTAssertTrue(GameCenter.built)
         XCTAssertFalse(GameCenter.shared.plays)
         GameCenter.shared.signIn()
         XCTAssertFalse(GameCenter.shared.signedIn)
