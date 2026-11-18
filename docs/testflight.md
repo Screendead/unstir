@@ -32,11 +32,14 @@ archive, and settings after the mode go to it (`CODE_SIGNING_ALLOWED=NO` archive
   drops each phone's kept four-tap budget and baked halftones, as any rebuild does.
 - **Signing.** `UNSTIR_TEAM`, if set, signs for that team in place of `project.yml`'s. With `ASC_KEY_PATH`,
   `ASC_KEY_ID` and `ASC_ISSUER_ID` (the same variables as the poll's) it signs and uploads with that API key
-  (`-authenticationKeyPath` and its pair); with none set, with the account signed in to Xcode.
+  (`-authenticationKeyPath` and its pair); with none set, with the account signed in to Xcode. Upload with the Xcode
+  account: the export signs through Apple's cloud-managed distribution certificate, which an App Manager key may not
+  use ("You haven't been given access to cloud-managed distribution certificates", 2026-11-18), so a key would need
+  Admin, more than anything else here needs.
 
-Unchecked until the paid team signs: whether `project.yml`'s team is the paid team's, whether the App ID takes Declared
-Age Range's entitlement as automatic signing registers it, the role an API key needs to make the distribution
-certificate and upload (App Manager or Admin likely; the poll's Developer key may not do), and the upload itself.
+Read on 2026-11-18, the first signed upload: `project.yml`'s team is the paid team's; the App ID took Declared Age
+Range once the capability was ticked on it in the developer portal (App Store Connect's API has no capability type for
+it); an App Manager key can't export (above); and the archive uploaded with the Xcode account.
 Read on 2026-11-12: an unsigned editors archive builds, carrying its build number and support address, and `export`
 then stops on signing ("No Team Found in Archive"), past the export options.
 
