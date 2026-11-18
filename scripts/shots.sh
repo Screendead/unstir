@@ -5,7 +5,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
 
-# UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max, made if there is none.
+# UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max, made if there is none. UNSTIR_DISPLAY=n picks
+# which of a two-screen simulator's displays to capture (the iPhone Duo's: `simctl io <udid> screenshot` names them).
+# SHOTS_CONFIG=Release shoots the build players get, whose menu has no sandbox row (`Level.playsSandbox`), for a screen
+# that shows the menu beside play; SHOTS_ENV adds its KEY=VALUE words to every case, e.g. the bests a player has.
 udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
 if [[ -z "$udid" ]]; then
   type=$(xcrun simctl list devicetypes | grep 'Pro Max' | head -1 | grep -oE 'com\.apple[^)]+')
@@ -15,10 +18,11 @@ fi
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b >/dev/null
 
-scripts/build-ios.sh Debug sim
+config=${SHOTS_CONFIG:-Debug}
+scripts/build-ios.sh "$config" sim
 # Fresh install so the menu shows first-launch progress.
 xcrun simctl uninstall "$udid" "$bundle" 2>/dev/null || true
-xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.app
+xcrun simctl install "$udid" "build/Build/Products/$config-iphonesimulator/Unstir.app"
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 
 mkdir -p shots
@@ -31,7 +35,7 @@ shot() {  # name description KEY=VALUE...
   shift 2
   echo "$name.png  $desc" >> shots/index.txt
   [[ -n "${pattern:-}" && "$name" != *$pattern* ]] && return
-  for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
+  for kv in "$@" ${SHOTS_ENV:-}; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   touch "$launched"
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   local wait=${hold:-$settle}
@@ -48,7 +52,7 @@ shot() {  # name description KEY=VALUE...
   if [[ " $* " == *" SCREEN=result "* || " $* " == *" SCREEN=clean "* || " $* " == *" SCREEN=undone "* ]] && ((wait < 5)); then wait=5; fi
   sleep "$wait"
   settle=3
-  xcrun simctl io "$udid" screenshot "shots/$name.png" >/dev/null 2>&1
+  xcrun simctl io "$udid" screenshot ${UNSTIR_DISPLAY:+--display="$UNSTIR_DISPLAY"} "shots/$name.png" >/dev/null 2>&1
   echo "shot $name"
 }
 pattern=${1:-}

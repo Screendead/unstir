@@ -3,7 +3,8 @@
 """The App Store's captions (docs/store-page.md), drawn with Pillow: this ffmpeg has no drawtext.
 
   store-captions.py screens <shots dir> <out dir>   each store-NN-*.png as the store takes it (RGB, no alpha), and
-                                                     captioned: the caption over the screen shrunk under it
+                                                     captioned: the caption over the screen shrunk under it, at
+                                                     the shot's own size (a Pro Max's, or either iPhone Duo screen)
   store-captions.py film <text> <out.png>           a caption for the preview, transparent, at the screen's size
 """
 import sys
@@ -11,7 +12,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-# The App Store's 6.9-inch size, the Pro Max simulator's own.
+# The App Store's 6.9-inch size, the Pro Max simulator's own, which STYLE's numbers are drawn for.
 W, H = 1320, 2868
 FONT = "/System/Library/Fonts/SFNSMono.ttf"  # the app's monospaced face (Font.mono is .monospaced)
 
@@ -72,32 +73,34 @@ def lines(text, f, width):
     return out
 
 
-def draw_centred(d, text, f, cy, width, paid_first):
+def draw_centred(d, text, f, cy, width, paid_first, page_width=W):
     ls = lines(text, f, width)
     step = f.size * 1.35
     y = cy - step * len(ls) / 2
     for i, l in enumerate(ls):
         ink = STYLE["paid"] if paid_first and i == 0 else STYLE["ink"]
-        d.text((W / 2, y + step / 2), l, font=f, fill=ink, anchor="mm")
+        d.text((page_width / 2, y + step / 2), l, font=f, fill=ink, anchor="mm")
         y += step
 
 
 def screens(src, out):
     out.mkdir(parents=True, exist_ok=True)
-    f = font(STYLE["size"])
     for path in sorted(src.glob("store-[0-9][0-9]-*.png")):
         n = path.stem.split("-")[1]
         shot = Image.open(path).convert("RGB")
-        assert shot.size == (W, H), f"{path.name} is {shot.size}, not {W} x {H}"
+        w, h = shot.size
+        # STYLE is drawn for the Pro Max; a screen of another shape takes it scaled by its tighter side.
+        k = min(w / W, h / H)
         name = path.stem.removeprefix("store-")
         shot.save(out / f"{name}.png")
-        page = Image.new("RGB", (W, H), "black")
-        band = STYLE["band"]
-        scale = (H - band) / H
-        small = shot.resize((round(W * scale), H - band), Image.LANCZOS)
-        page.paste(small, ((W - small.width) // 2, band))
+        page = Image.new("RGB", (w, h), "black")
+        band = round(STYLE["band"] * k)
+        scale = (h - band) / h
+        small = shot.resize((round(w * scale), h - band), Image.LANCZOS)
+        page.paste(small, ((w - small.width) // 2, band))
         text = CAPTIONS[n]
-        draw_centred(ImageDraw.Draw(page), text, f, band / 2 + 20, W - 160, text.startswith(PAID))
+        draw_centred(ImageDraw.Draw(page), text, font(round(STYLE["size"] * k)), band / 2 + 20 * k, w - 160 * k,
+                     text.startswith(PAID), w)
         page.save(out / f"{name}-captioned.png")
         print(f"{name}: {text}")
 
