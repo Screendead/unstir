@@ -85,10 +85,13 @@ jobs:
         shell: bash
         run: |
           UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests/testPurchaseGrantsOnePack -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 | tee "$RUNNER_TEMP/warm.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began" || echo "the warm-up test failed"
+      # Past the warm-up the simulator's StoreKit can still hang or stall a test (2026-11-16 and -18), which passes in
+      # the process xcodebuild restarts, so a failed test runs once more there. The test job runs StoreTests on iOS 26
+      # without a retry, so a real break still shows.
       - name: StoreKit tests on iOS 27.2
         shell: bash
         run: |
-          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began"
+          UNSTIR_SIM=$(cat "$RUNNER_TEMP/udid") scripts/test-store.sh test-without-building -only-testing:UnstirTests/StoreTests -retry-tests-on-failure -test-iterations 2 -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 60 -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite |Test Case |\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began"
       - name: Keep the test log
         if: always()
         uses: actions/upload-artifact@v7
