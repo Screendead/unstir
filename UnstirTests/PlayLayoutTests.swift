@@ -554,7 +554,7 @@ final class PlayLayoutTests: XCTestCase {
     /// as laid out and, in the column, its room and fit. Nil where no card came up.
     @MainActor private func placedCard(_ env: [String: String], _ screen: Screen, type: DynamicTypeSize)
         -> (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?)? {
-        final class Box: @unchecked Sendable { var frame: CGRect?; var seen: CGRect?; var last: (CGFloat, CGFloat, PlayLayout.Finished)? }
+        final class Box: @unchecked Sendable { var frame: CGRect?; var seen: CGRect?; var still = 0; var last: (CGFloat, CGFloat, PlayLayout.Finished)? }
         let registered = UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)
         defer { UserDefaults.standard.setVolatileDomain(registered, forName: UserDefaults.registrationDomain) }
         let box = Box(), harness = Harness(env)
@@ -563,10 +563,13 @@ final class PlayLayoutTests: XCTestCase {
             .environment(\.finishedMeasured) { box.last = ($0, $1, $2) }
             .environment(\.cardPlaced) { box.frame = $0 }
             .dynamicTypeSize(type)
-        // Past the card's arrival and the tank's shrink, until the card stops moving: its frame the same a tenth apart.
+        // Past the card's arrival and the tank's shrink, until the card stops moving: its frame the same for half a
+        // second, longer than the shrink's 0.3 s delay, in which a card that has just come up on a slow runner stands
+        // still at its place before the lift.
         host(level, window: screen.window, insets: screen.insets, fold: screen.fold, seconds: 1) {
             defer { box.seen = box.frame }
-            return box.frame != nil && box.frame == box.seen
+            box.still = box.frame != nil && box.frame == box.seen ? box.still + 1 : 0
+            return box.still >= 5
         }
         return box.frame.map { ($0, box.last?.0, box.last?.1, box.last?.2) }
     }
