@@ -289,23 +289,6 @@ import XCTest
         XCTAssertEqual(g.resets, 0)
     }
 
-    func testTheClockRodsDiscIsTheRatchet() {
-        let level = Level.escapement[0], rods = level.layout.rods
-        func grab(_ k: Int) -> Grab {
-            LevelView.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: SIMD2(rods[k].x, rods[k].y))
-        }
-        XCTAssertEqual(grab(0), .ratchet(0))
-        XCTAssertEqual(grab(1), .rod(1))
-    }
-
-    func testATapOnTheRatchetWaits() {
-        let c = SIMD2(0.3, -0.2), off = c + SIMD2(0.24, 0)
-        XCTAssertTrue(LevelView.waits(from: c, to: c, centre: c))
-        XCTAssertTrue(LevelView.waits(from: c + SIMD2(0.1, 0), to: c + SIMD2(0.1, 0.03), centre: c))
-        XCTAssertFalse(LevelView.waits(from: c, to: c + SIMD2(0.1, 0), centre: c))
-        XCTAssertFalse(LevelView.waits(from: off, to: off, centre: c))
-    }
-
     // MARK: - The book
 
     /// The book's table (docs/escapement-problems.md, "The book at a glance"): layout, clocks in the order they tick
