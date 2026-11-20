@@ -86,8 +86,9 @@ sandbox (its process substitution), and a build there can fail on an unmounted M
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac.
 
-**Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines: the TestFlight retention
-that nothing enforces, the harness crash in `Game.settle`, Escapement 29's layer, the curtain call on the phone,
+**Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines and the TestFlight
+retention (`tools/tf-poll.py` now forgets polls past 12 months on every run, 2026-11-20; the policy's missing legal
+basis and `scripts/archive-ios.sh` building without `POLICY_URL` stay open), the harness crash in `Game.settle`, Escapement 29's layer, the curtain call on the phone,
 Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged worktrees and
 branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
 

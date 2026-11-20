@@ -101,6 +101,10 @@ Then:
   poll shows nothing new). `--force` replaces the day's poll; it is for a poll that failed or ran too early, never
   for a fresher number.
 - `tools/tf-poll.py --report` prints the report from the CSV alone.
+- Every poll and report first forgets polls more than 12 months old: their CSV rows and their raw responses, as the
+  privacy policy tells testers ("keep it no longer than 12 months"). A poll on the date a year ago stays. Once
+  polls are forgotten, the report may read the earliest poll left as a tester's day 1, and says it may hold
+  earlier play. If polling stops, nothing runs to forget: delete the CSV's folder within the year.
 - `tools/tf-poll.py --dry-run` needs no key: it replays the three saved responses in `tools/tf-poll-samples/`
   (written from Apple's schema, fake ids), each named for its poll date, into a throwaway CSV. It should end
   `day-2 return: 1 of 3 (33%), 1 waiting`. `--dry-run a.json b.json` replays chosen ones, e.g. two days apart, to see

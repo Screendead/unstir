@@ -3,7 +3,7 @@
 """Checks tf-poll.py without an App Store Connect key: its token verifies against a throwaway P-256 key; a poll
 against a local stand-in for the API follows links.next, stores every tester and keeps the raw response; a second
 poll the same day keeps the first unless forced; and the report's readings (day-2 return over the saved samples,
-both gaps, a falling total) hold. Run: python3 tools/tf-poll-test.py"""
+both gaps, a falling total) hold; and polls older than 12 months are forgotten. Run: python3 tools/tf-poll-test.py"""
 
 import base64
 import contextlib
@@ -199,10 +199,28 @@ def check_points_and_fall():
     assert "note: u's total fell at 2026-12-03" in text, text
 
 
+def check_forget():
+    import datetime
+    with tempfile.TemporaryDirectory() as scratch:
+        path = os.path.join(scratch, "usage.csv")
+        for date in ["2025-11-19", "2025-11-20", "2026-11-20"]:
+            tf.poll(path, date, f"{date}T09:00:00Z", "P365D", lambda: [page({"u": 1})], out=io.StringIO())
+        out = io.StringIO()
+        tf.forget(path, datetime.date(2026, 11, 20), out)
+        assert [r["poll_date"] for r in tf.load(path)] == ["2025-11-20", "2026-11-20"], tf.load(path)
+        assert sorted(os.listdir(os.path.join(scratch, "raw"))) == ["2025-11-20.json", "2026-11-20.json"]
+        assert "forgot 1 row(s) and 1 raw response(s) from before 2025-11-20" in out.getvalue(), out.getvalue()
+        out = io.StringIO()
+        tf.forget(path, datetime.date(2026, 11, 20), out)
+        assert out.getvalue() == "", out.getvalue()
+    assert tf.year_before(datetime.date(2028, 2, 29)) == datetime.date(2027, 2, 28)
+
+
 with tempfile.TemporaryDirectory() as scratch:
     check_token(scratch)
     check_poll(scratch, os.path.join(scratch, "AuthKey_TEST.p8"))
 check_report()
 check_same_day()
 check_points_and_fall()
+check_forget()
 print("tf-poll: all checks pass")

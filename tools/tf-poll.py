@@ -12,7 +12,9 @@
 
 Environment: ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH (the .p8) sign the token; ASC_APP_ID names the app;
 TF_POLL_CSV is where the counts go (default ~/.unstir-testflight/usage.csv), each poll's raw response
-going to raw/<poll date>.json beside it; TF_POLL_PERIOD is the window asked for (default P365D). Needs python3 and openssl, nothing else.
+going to raw/<poll date>.json beside it; TF_POLL_PERIOD is the window asked for (default P365D). Every run but a dry
+run forgets polls more than 12 months old, rows and raw responses, as the privacy policy promises testers. Needs
+python3 and openssl, nothing else.
 """
 
 import argparse
@@ -203,6 +205,36 @@ def poll(path, poll_date, polled_at, period, fetch, force=False, out=None):
     return True
 
 
+def year_before(today):
+    """The same date a year earlier; 29 February goes back to the 28th."""
+    try:
+        return today.replace(year=today.year - 1)
+    except ValueError:
+        return today.replace(year=today.year - 1, day=28)
+
+
+def forget(path, today, out=None):
+    """Deletes every poll more than 12 months before today, its CSV rows and its raw response: the privacy policy
+    tells testers TestFlight's data is kept no longer than 12 months. A poll on the date a year ago stays."""
+    out = out or sys.stdout
+    cutoff = year_before(today).isoformat()
+    rows = load(path)
+    kept = [r for r in rows if r["poll_date"] >= cutoff]
+    if len(kept) < len(rows):
+        def write(f):
+            writer = csv.DictWriter(f, fieldnames=FIELDS)
+            writer.writeheader()
+            writer.writerows(kept)
+        write_atomically(path, write)
+    raws = glob.glob(os.path.join(os.path.dirname(os.path.abspath(path)), "raw", "????-??-??.json"))
+    old = sorted(r for r in raws if os.path.basename(r)[:-5] < cutoff)
+    for raw in old:
+        os.remove(raw)
+    if len(kept) < len(rows) or old:
+        print(f"tf-poll: forgot {len(rows) - len(kept)} row(s) and {len(old)} raw response(s) from before "
+              f"{cutoff} (kept 12 months at most)", file=out)
+
+
 def day(text):
     return datetime.date.fromisoformat(text)
 
@@ -306,7 +338,9 @@ def main():
         return
 
     if args.report:
-        report(load(args.csv or default_csv()))
+        path = args.csv or default_csv()
+        forget(path, datetime.date.today())
+        report(load(path))
         return
 
     if args.app_id:
@@ -317,6 +351,7 @@ def main():
 
     path = args.csv or default_csv()
     now = datetime.datetime.now(datetime.timezone.utc)
+    forget(path, datetime.date.today())
     poll(path, datetime.date.today().isoformat(), now.strftime("%Y-%m-%dT%H:%M:%SZ"), period,
          lambda: fetch_pages(getter(), usage_url(env("ASC_APP_ID"), period)), force=args.force)
     report(load(path))
