@@ -549,7 +549,6 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Marks.line(.lens, owned: true, fits: true, played: nil)?.words, "new")
     }
 
-    /// A pack's ids never read as another pack's or a tier's.
     /// A Release shelf shows a pack it sells once it has levels past its taste, and Triptych I once it shows every pack
     /// it sells; a build outside Release shows them all.
     func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
@@ -593,6 +592,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Pack.firstStir.access(4, owned: [], unlocked: true, release: true, playtest: true), .withheld)
     }
 
+    /// A pack's ids never read as another pack's or a tier's.
     func testPackIdsBelongToOnePack() {
         let tierIds = Tier.allCases.flatMap { $0.levels.map(\.id) } + ["endless", "sandbox", "daily-20261025"]
         for pack in Pack.allCases {
