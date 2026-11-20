@@ -568,32 +568,28 @@ final class PlayLayoutTests: XCTestCase {
         ]
     }
 
-    /// The tallest of `candidates` on `screen` at `type`, by the card's height as laid out, with where it stood.
-    @MainActor private func tallestCard(_ screen: Screen, type: DynamicTypeSize)
-        -> (what: String, env: [String: String], store: () -> Void,
-            p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?)) {
-        var tallest: (String, [String: String], () -> Void, (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))?
-        for c in candidates {
-            forgetEveryBest()
-            c.store()
-            let p = try! XCTUnwrap(placedCard(c.env, screen, type: type), "\(screen.name): \(c.what)")
-            print("card candidate: \(screen.name) at \(type): \(c.what): \(p.frame.height)")
-            if p.frame.height > tallest?.3.frame.height ?? 0 { tallest = (c.what, c.env, c.store, p) }
-        }
-        forgetEveryBest()
-        let t = tallest!
-        return (t.0, t.1, t.2, t.3)
-    }
-
     private typealias Tallest = (what: String, env: [String: String], store: () -> Void,
                                  p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))
     @MainActor private static var shortestsTallest: Tallest?
-    /// The tallest candidate on the shortest phone at the play screen's largest type, measured once a run.
+    /// The tallest of `candidates` on the shortest phone at the play screen's largest type, by the card's height as
+    /// laid out, with where it stood; measured once a run.
     @MainActor private func shortestsTallest() -> Tallest {
         if let kept = Self.shortestsTallest { return kept }
-        let t = tallestCard(screens[0], type: PlayLayout.typeCap)
-        Self.shortestsTallest = t
-        return t
+        var tallest: (what: String, env: [String: String], store: () -> Void, card: CGFloat)?
+        for c in candidates {
+            forgetEveryBest()
+            c.store()
+            let card = try! XCTUnwrap(measuredCard(c.env, se, type: PlayLayout.typeCap), c.what).card
+            print("card candidate: SE at the cap: \(c.what): \(card)")
+            if card > tallest?.card ?? 0 { tallest = (c.what, c.env, c.store, card) }
+        }
+        let t = tallest!
+        forgetEveryBest()
+        t.store()
+        let p = try! XCTUnwrap(placedCard(t.env, screens[0], type: PlayLayout.typeCap), t.what)
+        forgetEveryBest()
+        Self.shortestsTallest = (t.what, t.env, t.store, p)
+        return Self.shortestsTallest!
     }
 
     /// The play screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"). On the shortest phone
