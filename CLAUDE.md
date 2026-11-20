@@ -45,16 +45,11 @@ leaving its heading and a pointer.
   inode and the current time, so the job stamps each tracked file with a time drawn from its blob's hash and each
   tracked folder from its tree's, and tells the build system to ignore inode changes; the restored build then stays
   incremental, asset catalog and all. The job builds for testing (`scripts/test-store.sh build-for-testing`, for a
-  generic simulator, so it reads no device list, passing every phase and task line, flushed so GitHub stamps each, and
-  the timing summary), then boots the simulator and runs `test-without-building`. Booting beside the build, as the job
-  did until 2026-11-08, can stall it: one build description took 164 s against 3 to 5 s without the boot, for at most
-  the 20 s of a cache hit's build hidden. Each run's environment (`GITHUB_RUN_ID` and the like) still makes a new build
-  description, as the build system hashes the whole environment into its signature and no setting or flag leaves it
-  out (`-UseSanitizedBuildSystemEnvironment=YES` doesn't), but alone that costs 3 to 5 s. On 2026-11-08, on an exact
-  cache hit, the build step took 12 to 33 s (Metal recompiles every run, about 6 s), the boot 72 to 113 s and the test
-  step 150 to 380 s, of which the tests are 45 to 95 s: the rest is `test-without-building` starting on the freshly
-  booted simulator, not yet explained, and the next place to look. A push that changes `Sources/` adds the recompile.
-  Every step's time moves with the runner's speed. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
+  generic simulator, so it reads no device list), boots the simulator once the build is done (booting beside it can
+  stall the build), warms it with one launch and runs `test-without-building`. Each run's environment still makes a
+  new build description (3 to 5 s; no setting leaves it out), and a push that changes `Sources/` adds the Metal
+  recompile (about 6 s). The workflow's comments hold the measurements.
+  After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
   call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
   That build is Debug for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the
   Release binary (11.2 MB), and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle
