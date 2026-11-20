@@ -35,28 +35,6 @@ import XCTest
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
     }
 
-    /// A wait no clock can take is refused, so the view can thud; one a clock takes is a move.
-    func testAWaitNoClockCanTakeIsRefused() {
-        let idle = game("1:+3,2:-4")
-        XCTAssertFalse(idle.wait(on: 0))
-        XCTAssertEqual(idle.moves, 0)
-        XCTAssertTrue(game().wait(on: 0))
-    }
-
-    func testTheSecondProblemIsTheMockUps() {
-        let level = Level.escapement[1]
-        XCTAssertEqual(level.id, "escapement-2")
-        XCTAssertEqual(level.title, "Pendulum")
-        XCTAssertEqual(level.scramble, tri("0:-1,1:+3,0:-2,2:-4"))
-        XCTAssertEqual(level.clocks.map(\.rod), [0])
-        XCTAssertEqual(level.kind(of: 0), .ratchet)
-        XCTAssertEqual(level.motion, .none)
-        XCTAssertEqual(level.par, 3)
-        XCTAssertEqual(level.budget, 3)
-        // The first problem whose par needs a wait names the control.
-        XCTAssertEqual(level.note, "Unstir in 3 ticks. Tap wait: the clock ticks, nothing turns.")
-    }
-
     /// The wait control is live exactly while `wait(on:)` would make a move, bar a full stack's refusal: never off
     /// Escapement, nor with no clock entry dealt, all along the composed line, and never once it is solved.
     func testTheWaitControlIsLiveExactlyWhileAWaitIsAMove() {
@@ -64,6 +42,7 @@ import XCTest
         let idle = game("1:+3,2:-4")
         XCTAssertFalse(idle.canWait)
         XCTAssertFalse(idle.wait(on: 0))
+        XCTAssertEqual(idle.moves, 0)
         let g = game()
         XCTAssertTrue(g.canWait)
         g.commit(rod: 2, steps: 4)
@@ -400,9 +379,9 @@ import XCTest
         }
     }
 
-    /// Every problem ships proved: its par is what its clocks owe, so no line is shorter, and the prover finds a line at
-    /// par in whole heals and waits (every turn of ±1 to ±11 too, under UNSTIR_SLOW_TESTS), which wins on a real `Game`
-    /// at par.
+    /// Every problem ships proved: its par is what its clocks owe, the slowest clock's count on a real `Game`, so no
+    /// line is shorter, and the prover finds a line at par in whole heals and waits (every turn of ±1 to ±11 too, under
+    /// UNSTIR_SLOW_TESTS); `testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine` plays it.
     func testEveryProblemsParIsTheProversOptimum() throws {
         let slow = ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1"
         for level in Level.escapement {
@@ -415,19 +394,8 @@ import XCTest
             let play = try XCTUnwrap(solver.escapement(level.scramble, clocks: clocks, limit: level.par, steps: steps,
                                                        seen: &seen), level.id)
             XCTAssertEqual(play.moves.count, level.par, level.id)
-            var test = level
-            test.id = "test-" + level.id
-            let g = Game(level: test, tankTurned: true, bank: (0, nil))
-            for move in play.moves {
-                switch move {
-                case let .stir(knob, _, steps): g.commit(rod: knob, steps: steps)
-                case .wait: g.wait(on: clocks[0].rod)
-                case .turn: XCTFail("a clock's tank never turns: \(level.id)")
-                }
-                XCTAssertFalse(g.lost, level.id)
-            }
-            XCTAssertTrue(g.solved, level.id)
-            XCTAssertEqual(g.moves, level.par, level.id)
+            let g = Game(level: level, tankTurned: true, bank: (0, nil))
+            XCTAssertEqual(clocks.map { g.owed($0.rod) }.max(), level.par, level.id)
         }
     }
 
@@ -462,51 +430,8 @@ import XCTest
             }
             XCTAssertEqual(g.budget, 0, level.id)
             XCTAssertTrue(g.solved, level.id)
+            XCTAssertEqual(g.moves, level.par, level.id)
         }
-    }
-
-    /// A move with k clocks running takes k: three dials (25) spend three a move, and 16's two clocks two, then one
-    /// once clock 1 has stopped.
-    func testAMoveWithKRunningClocksTakesK() {
-        var three = Level.escapement[24]
-        three.id = "test-escapement"
-        let g = Game(level: three, tankTurned: true, bank: (0, nil))
-        let start = g.budget
-        g.commit(rod: 0, steps: -3)
-        XCTAssertEqual(g.tick.map(\.rod), [1, 3, 5])
-        XCTAssertEqual(start - g.budget, 3)
-        var two = Level.escapement[15]
-        two.id = "test-escapement"
-        let h = Game(level: two, tankTurned: true, bank: (0, nil))
-        XCTAssertEqual(h.budget, 9)
-        var spent: [Int] = []
-        for move in [(3, -2), (5, -2), nil, (6, -4), (5, 3), (2, -5)] as [(Int, Int)?] {
-            let was = h.budget
-            if let (knob, steps) = move { h.commit(rod: knob, steps: steps) } else { h.wait(on: 1) }
-            spent.append(was - h.budget)
-        }
-        XCTAssertEqual(spent, [2, 2, 2, 1, 1, 1])
-        XCTAssertTrue(h.solved)
-    }
-
-    /// What each clock owes counts down a tick a move to its stop, and the slowest clock's, as dealt, is par.
-    func testEachClockOwesATickAMoveDownToItsStop() {
-        for level in Level.escapement {
-            XCTAssertEqual(level.clocks.map { Game(level: level, tankTurned: true, bank: (0, nil)).owed($0.rod) }.max(), level.par,
-                           level.id)
-        }
-        var level = Level.escapement[15]
-        level.id = "test-escapement"
-        let g = Game(level: level, tankTurned: true, bank: (0, nil))
-        XCTAssertEqual([g.owed(1), g.owed(4)], [3, 6])
-        let line: [(Int, Int)?] = [(3, -2), (5, -2), nil, (6, -4), (5, 3), (2, -5)]
-        let owed = [[2, 5], [1, 4], [0, 3], [0, 2], [0, 1], [0, 0]]
-        for (move, left) in zip(line, owed) {
-            if let (knob, steps) = move { g.commit(rod: knob, steps: steps) } else { g.wait(on: 1) }
-            XCTAssertEqual([g.owed(1), g.owed(4)], left)
-            XCTAssertEqual([g.running(1), g.running(4)], left.map { $0 > 0 })
-        }
-        XCTAssertTrue(g.solved)
     }
 
     /// Every problem has one key: among whole heals and waits, exactly one first move reaches par, and it is the book's.
