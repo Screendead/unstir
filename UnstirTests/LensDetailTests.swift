@@ -48,9 +48,10 @@ final class LensDetailTests: XCTestCase {
     private struct Glass {
         let kit: ShaderKit
         let pipeline: MTLComputePipelineState
-        let n = LensDetailTests.n
+        let n: Int
 
-        init() throws {
+        init(n: Int = LensDetailTests.n) throws {
+            self.n = n
             kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: LensDetailTests.kernels)
             pipeline = try kit.pipeline("draw")
         }
@@ -115,9 +116,10 @@ final class LensDetailTests: XCTestCase {
     }
 
     /// Where nothing magnifies both ways, a Lens level's glass is `unstir`'s to the byte: the clean panel, twists, a
-    /// lens zoomed out, with four taps and with two. Under a lens zoomed in, only its core differs.
+    /// lens zoomed out, with four taps and with two. Under a lens zoomed in, only its core differs. Drawn smaller than a
+    /// Pro Max's glass: away from the detail both bodies run the same code at any size.
     func testALensGlassDrawsAsBeforeWhereNothingMagnifies() throws {
-        let glass = try Glass(), n = Self.n
+        let n = 512, glass = try Glass(n: n)
         var rng = SplitMix64(state: 11)
         let noise = (0..<4 * n * n).map { _ in UInt8(truncatingIfNeeded: rng.next()) }
         let picture = try glass.texture(noise, n, n)
@@ -142,7 +144,7 @@ final class LensDetailTests: XCTestCase {
                 }
             }
             XCTAssertEqual(outside, 0, "fourTaps \(taps)")
-            XCTAssertGreaterThan(inside, 10_000, "fourTaps \(taps)")
+            XCTAssertGreaterThan(inside, 1_500, "fourTaps \(taps)")
         }
     }
 
@@ -164,8 +166,9 @@ final class LensDetailTests: XCTestCase {
         let drawn = try glass.draw(try glass.texture(baked, n, n), stack: [], layout: level.layout, lenses: level.lenses,
                                    detail: detail, table: table)
         var sum = 0, count = 0, far = 0
-        for j in 0..<n {
-            for i in 0..<n {
+        let cx = Int((centre.x + 1) / 2 * Double(n)), cy = Int((centre.y + 1) / 2 * Double(n)), reach = Int(inner * Double(n) / 2) + 2
+        for j in max(cy - reach, 0)..<min(cy + reach, n) {
+            for i in max(cx - reach, 0)..<min(cx + reach, n) {
                 let p = SIMD2((Double(i) + 0.5) * 2 / Double(n) - 1, (Double(j) + 0.5) * 2 / Double(n) - 1) - centre
                 guard max(abs(p.x), abs(p.y)) < inner - 2.0 / Double(n) else { continue }
                 for c in 0..<3 {
