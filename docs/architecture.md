@@ -1617,7 +1617,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   on disk, so thirty plates cost no storage and no cache to cap. A plate is composed round its layout: no knob, and
   no hub a clock on any rod would wear, sits on the part it is named for, a ruled tint leaves no core flat, and the
   second ink keeps to one small part, never a dashed circle, which reads as a clock's disc
-  (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every pixel a mix of bone, ink and vermilion,
+  (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every other pixel each way a mix of bone, ink and vermilion,
   the second ink's marks within a circle 0.4 of the tank across and under 3% of the glass, and the step measure in
   every core of the problem's own layout, baked as an SE draws its glass at default type, 328 pt at 2x, not at the
   shared plate's 512 px at 1x, where the 2.2 px hairline is heavier than on any phone and close hatching runs solid). `scripts/escapement-art.sh` renders a plate on the Mac, with a layout

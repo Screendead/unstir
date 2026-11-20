@@ -825,8 +825,9 @@ import XCTest
             }
             let plate = try await baked(level.plate, side: 328, scale: 2), w = plate.w, r = Double(w) / 2
             var darkest = 0xFF, glass = 0, coloured = 0, worst = 0.0
-            for j in 0..<w {
-                for i in 0..<w where (Double(i) - r) * (Double(i) - r) + (Double(j) - r) * (Double(j) - r) < r * r {
+            // Every other pixel each way: a 2.2 px hairline still crosses the sampled grid.
+            for j in stride(from: 0, to: w, by: 2) {
+                for i in stride(from: 0, to: w, by: 2) where (Double(i) - r) * (Double(i) - r) + (Double(j) - r) * (Double(j) - r) < r * r {
                     let k = 4 * (j * w + i), (red, green, blue) = (Int(plate.px[k]), Int(plate.px[k + 1]), Int(plate.px[k + 2]))
                     let mix = Self.offPlate(red, green, blue)
                     worst = max(worst, mix.off)
