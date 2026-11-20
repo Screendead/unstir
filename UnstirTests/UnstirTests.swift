@@ -82,18 +82,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(s.commit(rod: 1, steps: 2, in: .quad), .cancelled)
     }
 
-    /// The old rule's stack on whirlpool 11, captured by debugger, less its bottom 0:+4: the identity. Taking a twist off the
-    /// top leaves it standing, so only the fine pass can call the win.
+    /// The old rule's stack on whirlpool 11, captured by debugger, less its bottom 0:+4 and its top 0:+1: the identity.
+    private static let identity = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2"
+        .split(separator: " ").map { t in Twist(rod: Int(t.prefix(1))!, steps: Int(t.dropFirst(2))!) }
+
+    /// Waits for the fine pass, which runs off the main actor, about 1 s in Debug, to call the win.
+    @MainActor private func settled(_ games: Game...) async throws {
+        let deadline = ContinuousClock.now + .seconds(10)
+        while games.contains(where: { !$0.solved }), .now < deadline { try await Task.sleep(for: .milliseconds(10)) }
+        for game in games { XCTAssertTrue(game.solved) }
+    }
+
+    /// Taking a twist off the top of the identity leaves it standing, so only the fine pass can call the win.
     @MainActor func testIdentityStackIsSolved() async throws {
-        let captured = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2 0:+1"
-        let scramble = captured.split(separator: " ").map { t in Twist(rod: Int(t.prefix(1))!, steps: Int(t.dropFirst(2))!) }
-        let game = Game(level: Level(id: "test", label: "", title: "", layout: .quad, scramble: scramble))
+        let game = Game(level: Level(id: "test", label: "", title: "", layout: .quad, scramble: Self.identity + [Twist(rod: 0, steps: 1)]))
         game.commit(rod: 0, steps: -1)
         XCTAssertFalse(game.solved)
-        // The fine pass runs off the main actor, about 1 s in Debug.
-        let deadline = ContinuousClock.now + .seconds(10)
-        while !game.solved, .now < deadline { try await Task.sleep(for: .milliseconds(10)) }
-        XCTAssertTrue(game.solved)
+        try await settled(game)
     }
 
     @MainActor func testResetZeroesMovesButCostsClean() {
@@ -399,24 +404,18 @@ final class UnstirTests: XCTestCase {
     /// Where the fine pass calls the win on a stack that isn't empty, the move that got there is the tank's last heal,
     /// and settles one notch in all.
     @MainActor func testALooksSolvedWinSettlesOneNotch() async throws {
-        // testIdentityStackIsSolved's identity, less the 0:+1 on top.
-        let identity = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2"
-            .split(separator: " ").map { t in Twist(rod: Int(t.prefix(1))!, steps: Int(t.dropFirst(2))!) }
-        func solved(_ scramble: [Twist], _ moves: [(Int, Int)]) async throws -> Game {
+        func played(_ scramble: [Twist], _ moves: [(Int, Int)]) -> Game {
             let game = Game(level: Level(id: "endless", label: "", title: "", layout: .quad, scramble: scramble, run: Run(seed: 1, brim: 2)))
             for (rod, steps) in moves { game.commit(rod: rod, steps: steps) }
             XCTAssertFalse(game.solved)
-            // The fine pass runs off the main actor, about 1 s in Debug.
-            let deadline = ContinuousClock.now + .seconds(10)
-            while !game.solved, .now < deadline { try await Task.sleep(for: .milliseconds(10)) }
-            XCTAssertTrue(game.solved)
             return game
         }
         // The heal of the scramble's 0:+1 settled one already.
-        let healed = try await solved(identity + [Twist(rod: 0, steps: 1)], [(0, -1)])
-        XCTAssertEqual(healed.brim, 1)
+        let healed = played(Self.identity + [Twist(rod: 0, steps: 1)], [(0, -1)])
         // A push turned back leaves the identity: no heal cancelled anything, so the win settles one.
-        let turnedBack = try await solved(identity, [(0, 1), (0, -1)])
+        let turnedBack = played(Self.identity, [(0, 1), (0, -1)])
+        try await settled(healed, turnedBack)
+        XCTAssertEqual(healed.brim, 1)
         XCTAssertEqual(turnedBack.pushes, 1)
         XCTAssertEqual(turnedBack.brim, 2)
     }
@@ -637,34 +636,33 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(solve(sea.last!, tier: .maelstrom))
     }
 
+    private static let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
+    private static func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
+
     /// The pointer names the first pack on the shelf the player doesn't own, never the one just completed, and none
     /// once all are owned or nothing completed.
     @MainActor func testThePointerSkipsOwnedPacks() {
-        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
-        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
-        XCTAssertNil(Offer.pointer(after: nil, shelf: shelf, owned: owning([])))
-        XCTAssertEqual(Offer.pointer(after: .free, shelf: shelf, owned: owning([])), .lens)
-        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.lens])), .escapement)
-        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.escapement])), .prism)
-        XCTAssertNil(Offer.pointer(after: .pack(.prism), shelf: shelf, owned: owning([.lens, .escapement, .prism])))
-        XCTAssertNil(Offer.pointer(after: .free, shelf: shelf, owned: owning([.lens, .escapement, .prism])))
+        XCTAssertNil(Offer.pointer(after: nil, shelf: Self.shelf, owned: Self.owning([])))
+        XCTAssertEqual(Offer.pointer(after: .free, shelf: Self.shelf, owned: Self.owning([])), .lens)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: Self.shelf, owned: Self.owning([.lens])), .escapement)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: Self.shelf, owned: Self.owning([.escapement])), .prism)
+        XCTAssertNil(Offer.pointer(after: .pack(.prism), shelf: Self.shelf, owned: Self.owning([.lens, .escapement, .prism])))
+        XCTAssertNil(Offer.pointer(after: .free, shelf: Self.shelf, owned: Self.owning([.lens, .escapement, .prism])))
     }
 
     /// "more puzzles in the packs ›" shows on maelstrom 27's card alone, once, opening the first pack on the shelf the
     /// player doesn't own; never where a completion already points to one, nor once every pack is owned.
     @MainActor func testTheLadderEndPointsToThePacksOnce() {
-        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
-        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
         let end = Level.maelstrom.last!
-        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf, owned: owning([])), .lens)
-        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf, owned: owning([.lens])), .escapement)
-        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: true, shelf: shelf, owned: owning([])))
-        XCTAssertNil(Offer.ladderEnd(end, completed: .free, shown: false, shelf: shelf, owned: owning([])),
+        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: Self.shelf, owned: Self.owning([])), .lens)
+        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: Self.shelf, owned: Self.owning([.lens])), .escapement)
+        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: true, shelf: Self.shelf, owned: Self.owning([])))
+        XCTAssertNil(Offer.ladderEnd(end, completed: .free, shown: false, shelf: Self.shelf, owned: Self.owning([])),
                      "the completion's own pointer says it")
-        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf,
-                                     owned: owning([.lens, .escapement, .prism])))
+        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: false, shelf: Self.shelf,
+                                     owned: Self.owning([.lens, .escapement, .prism])))
         for level in [Level.maelstrom[25], Level.vortex.last!, Level.plughole.last!] {
-            XCTAssertNil(Offer.ladderEnd(level, completed: nil, shown: false, shelf: shelf, owned: owning([])), level.id)
+            XCTAssertNil(Offer.ladderEnd(level, completed: nil, shown: false, shelf: Self.shelf, owned: Self.owning([])), level.id)
         }
     }
 
@@ -1609,13 +1607,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
+    /// The daily for noon on that day of October 2026.
+    private static func daily(october day: Int) throws -> Level {
+        .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
+    }
+
     /// Only a frost day's daily is drawn frozen, and a day's ice is the same crystals every time it is baked, its own.
     @MainActor func testAFrostDayIsFrozenAndItsIceIsSeeded() throws {
-        func noon(_ day: Int) throws -> Level {
-            .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
-        }
-        XCTAssertTrue(try noon(15).frosty)
-        XCTAssertFalse(try noon(1).frosty)
+        XCTAssertTrue(try Self.daily(october: 15).frosty)
+        XCTAssertFalse(try Self.daily(october: 1).frosty)
         XCTAssertFalse(try XCTUnwrap(Level.maelstrom.first { !$0.seized.isEmpty }).frosty, "maelstrom's stay jammed")
         let discs = [FrostLook.Disc(x: 40, y: 40, r: 36), FrostLook.Disc(x: 80, y: 60, r: 36)]
         func ice(_ seed: Int) -> Data? { FrostLook.bake(discs, seed: seed, scale: 2).pngData() }
@@ -1626,10 +1626,7 @@ final class UnstirTests: XCTestCase {
 
     /// The daily's row says a frost day under its title, before a run of days, and VoiceOver hears it with the shape.
     @MainActor func testTheDailyRowSaysAFrostDay() throws {
-        func noon(_ day: Int) throws -> Level {
-            .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
-        }
-        let frost = try noon(15), plain = try noon(1)
+        let frost = try Self.daily(october: 15), plain = try Self.daily(october: 1)
         XCTAssertFalse(frost.seized.isEmpty)
         XCTAssertTrue(plain.seized.isEmpty)
         XCTAssertEqual(MenuView.dailyLines(frost, run: 0).under, "frost day")
@@ -1641,22 +1638,24 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(MenuView.dailyLines(plain, run: 3).under, "3 days running")
     }
 
+    /// Bests for plughole's first n levels.
+    private static func solved(_ n: Int) -> (String) -> Best? {
+        let ids = Set(Level.plughole.prefix(n).map(\.id))
+        return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+    }
+
     /// The menu's top follows plughole 23: the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
-        func solved(_ n: Int) -> (String) -> Best? {
-            let ids = Set(Tier.plughole.levels.prefix(n).map(\.id))
-            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
-        }
-        let fresh = MenuView.lead(unlocked: false, best: solved(0))
+        let fresh = MenuView.lead(unlocked: false, best: Self.solved(0))
         XCTAssertFalse(fresh.modes)
         XCTAssertTrue(fresh.sandbox)
-        let one = MenuView.lead(unlocked: false, best: solved(1))
+        let one = MenuView.lead(unlocked: false, best: Self.solved(1))
         XCTAssertFalse(one.modes)
         XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
-        XCTAssertFalse(MenuView.lead(unlocked: false, best: solved(22)).modes)
-        let modes = MenuView.lead(unlocked: false, best: solved(23))
+        XCTAssertFalse(MenuView.lead(unlocked: false, best: Self.solved(22)).modes)
+        let modes = MenuView.lead(unlocked: false, best: Self.solved(23))
         XCTAssertTrue(modes.modes)
-        let unlocked = MenuView.lead(unlocked: true, best: solved(0))
+        let unlocked = MenuView.lead(unlocked: true, best: Self.solved(0))
         XCTAssertTrue(unlocked.modes)
         XCTAssertTrue(unlocked.sandbox)
     }
@@ -1712,17 +1711,13 @@ final class UnstirTests: XCTestCase {
 
     /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
     @MainActor func testTheDockWaitsForLevelNine() {
-        func solved(_ n: Int) -> (String) -> Best? {
-            let ids = Set(Level.plughole.prefix(n).map(\.id))
-            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
-        }
         let none: (Pack) -> Purchase = { _ in .unowned }
-        XCTAssertFalse(PackDock.shown(best: solved(8), unlocked: false, state: none))
-        XCTAssertTrue(PackDock.shown(best: solved(9), unlocked: false, state: none))
-        XCTAssertTrue(PackDock.shown(best: solved(0), unlocked: true, state: none))
+        XCTAssertFalse(PackDock.shown(best: Self.solved(8), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: Self.solved(9), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: Self.solved(0), unlocked: true, state: none))
         let pack = Pack.sold()[0]
         for (state, shown) in [(Purchase.owned, true), (.pending, true), (.revoked, true), (.failed, false), (.unowned, false)] {
-            XCTAssertEqual(PackDock.shown(best: solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
+            XCTAssertEqual(PackDock.shown(best: Self.solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
                            "\(state)")
         }
     }
