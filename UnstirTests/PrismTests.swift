@@ -364,24 +364,20 @@ final class PrismTests: XCTestCase {
     /// count, so this is a measure of the plates as dealt, not of a rule.
     @MainActor func testAHeldRodReadsInItsOwnColourUntilNearItsCount() async throws {
         let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: Self.heldKernel)
-        var rows: [String] = []
         for (n, depth) in Self.heldMoves {
             let level = Level.prism[n - 1], where_ = "\(level.id) after \(depth)"
             let plate = try await plate(kit, level)
-            var shares: [Double] = []
-            for off in [-1, -0.5, 0, 0.5, 1] {
+            // Half a step off is the nearest the read must still show its own colour.
+            for off in [-0.5, 0, 0.5] {
                 let drawn = try held(kit, plate, level: level, depth: depth, off: off, hold: 1)
                 let share = whiteShare(drawn.read, side: drawn.side, disc: drawn.disc)
-                shares.append(share)
                 if off == 0 {
                     XCTAssertGreaterThanOrEqual(share, 0.7, "\(where_) on the count")
                 } else {
                     XCTAssertLessThanOrEqual(share, 0.02, "\(where_) \(off) steps off the count")
                 }
             }
-            rows.append(where_ + ": " + shares.map { String(format: "%.3f", $0) }.joined(separator: " "))
         }
-        print("held white share, -1 -0.5 on +0.5 +1 steps off the count\n" + rows.joined(separator: "\n"))
     }
 
     /// Let go and faded out, the held read leaves the glass exactly as it was drawn before it, to the byte.

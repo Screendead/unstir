@@ -1590,7 +1590,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   take the turn's own with it, and at once under Reduce Motion. A white rod, and hold 0, skip it, so the glass is
   then the plain one to the byte (`testAHeldRodsReadLeavesTheGlassAsItWasWhenLetGo`). `testAHeldRodReadsInItsOwnColourUntilNearItsCount`
   runs the shader's body at 1200 px over four moves of once-stirred coloured rods (Frond's cyan and red, Thistle's
-  blue, specimen 14's yellow), each held a step and half a step either side of its count and on it, and measures the white share of the lit pixels in its
+  blue, specimen 14's yellow), each held half a step either side of its count and on it, and measures the white share of the lit pixels in its
   rigid disc outside the cap: at most 0.001 off the count, 0.79 to 1.00 on it (2026-11-11). The GPU bench times
   each specimen with its first move's rod in hand half a step short, four taps forced, the read drawn against not:
   on the Mac's GPU a median 1.07x, 1.14x at most, 1.2 plain entries' work (1.9 at most) that `channelCost` and the
