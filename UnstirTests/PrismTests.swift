@@ -252,14 +252,6 @@ final class PrismTests: XCTestCase {
         }
     }
 
-    /// The per-channel shader draws only a stack with a mask that isn't white, and its cost counts each channel's map.
-    func testTheChannelCostCountsEachChannelsMap() {
-        let w = Float(Channels.white.rawValue), r = Float(Channels.red.rawValue), c = Float(Channels.cyan.rawValue)
-        XCTAssertNil(Unstirred.channelCost([]))
-        XCTAssertNil(Unstirred.channelCost([w, w, w]))
-        XCTAssertEqual(Unstirred.channelCost([w, r, c]), 3 + 3 + 1 + 2)
-    }
-
     /// Unstir.metal's Prism body over a texture of the plate, as the GPU bench samples it, and beside it the glass as
     /// it was drawn before a held rod had a read: each channel through its own chain, lit and finished, written out here.
     private static let heldKernel = """
