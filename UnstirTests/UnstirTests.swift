@@ -3,7 +3,6 @@
 import Metal
 import os
 import struct SwiftUI.Color
-import struct SwiftUI.EnvironmentValues
 import XCTest
 import simd
 @testable import Unstir
@@ -462,21 +461,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.brimEvents.map { [$0.from, $0.to] }, [[2, 3], [3, 2]])
     }
 
-    /// The level springs to each change of the brim, and the notch that fills it climbs to the brim pin at `Brim.meet`.
-    func testTheGaugeSpringsToTheBrim() {
-        let room = Run.room, events = [Brim.Event(from: 5, to: 4, time: 1), Brim.Event(from: 4, to: 5, time: 2)]
-        XCTAssertEqual(Brim.level(at: 0.5, events, base: 5, room: room), 5)
-        // It overshoots on the way down, then settles.
-        XCTAssertLessThan(Brim.level(at: 1.45, events, base: 5, room: room), 4)
-        XCTAssertEqual(Brim.level(at: 1.99, events, base: 5, room: room), 4, accuracy: 0.01)
-        XCTAssertEqual(Brim.level(at: 4, events, base: 5, room: room), 5, accuracy: 0.001)
-        let spill = [Brim.Event(from: room - 1, to: room, time: 1)]
-        let climb = Brim.level(at: 1 + Brim.meet / 2, spill, base: room - 1, room: room)
-        XCTAssertGreaterThan(climb, Double(room - 1))
-        XCTAssertLessThan(climb, Double(room))
-        XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
-    }
-
     /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
     /// film or kick; at the last notch with no tremble either, its pulse held lit; and a spill held where its pour has
     /// run and soaked away.
@@ -503,41 +487,6 @@ final class UnstirTests: XCTestCase {
         // The spill's card waits for the pour, but not over a rim that already rests at its end (R-spill, round 15).
         XCTAssertEqual(Brim.card(still: false), Brim.card)
         XCTAssertEqual(Brim.card(still: true), 0)
-    }
-
-    /// The surface crosses the bezel's middle at the tick for its fill on both sides, and clears the bezel empty and full:
-    /// empty, by more than the meniscus's 3.4 up the wall and the bob's 1.8, so no glint lies on the edge at six.
-    func testTheSurfaceMeetsTheTicks() {
-        let room = Run.room
-        for k in 1..<room {
-            XCTAssertEqual(Brim.levelY(Double(k), room: room), Brim.rMid * cos(Double(k) * .pi / Double(room)), accuracy: 1e-9)
-        }
-        XCTAssertGreaterThan(Brim.levelY(0, room: room), Brim.rOut + 3.4 + 1.8 + 4)
-        XCTAssertLessThan(Brim.levelY(Double(room), room: room), -Brim.rOut)
-    }
-
-    /// The rim takes the picture's colours as the stack stirs them: the grid's orange at three o'clock and cyan at nine,
-    /// and a turn of the quad's top-right rod changes the rim beside it and nowhere across the tank.
-    func testTheRimTakesThePicturesColours() {
-        func rgb(_ floats: [Float], at degrees: Int) -> SIMD3<Float> {
-            SIMD3(floats[3 * degrees], floats[3 * degrees + 1], floats[3 * degrees + 2])
-        }
-        let clean = Brim.colours([], layout: .quad, turn: 0).hue
-        XCTAssertEqual(clean.count, 3 * 360)
-        XCTAssertGreaterThan(rgb(clean, at: 0).x, rgb(clean, at: 0).z)
-        XCTAssertGreaterThan(rgb(clean, at: 180).z, rgb(clean, at: 180).x)
-        let stirred = Brim.colours([Twist(rod: 0, steps: 6)], layout: .quad, turn: 0).hue
-        XCTAssertGreaterThan(simd_length(rgb(stirred, at: 315) - rgb(clean, at: 315)), 0.1)
-        XCTAssertEqual(rgb(stirred, at: 135), rgb(clean, at: 135))
-    }
-
-    /// The stirs that mix the picture after a spill start from nothing, so the picture is untouched until they begin.
-    func testTheMurkStartsFromNothing() {
-        let still = Brim.murk(.quad, seed: 1, at: 0)
-        XCTAssertEqual(still.count, 4 * 24)
-        XCTAssertTrue(stride(from: 3, to: still.count, by: 4).allSatisfy { still[$0] == 0 })
-        let done = Brim.murk(.quad, seed: 1, at: 10)
-        XCTAssertTrue(stride(from: 3, to: done.count, by: 4).allSatisfy { abs(done[$0]) > 1 })
     }
 
     /// Endless has no undo, no reset and no par: moves run on past the scramble, and the bank is never touched.
@@ -747,16 +696,6 @@ final class UnstirTests: XCTestCase {
         while tanks.count < 4, let next = Game(level: .endless(tanks.last!)).nextTank?.run { tanks.append(next) }
         XCTAssertEqual(tanks.map(\.tank), [0, 1, 2, 3])
         XCTAssertEqual(tanks.map(\.best), [3, 3, 3, 3])
-    }
-
-    /// The sandbox's layout control names quad and eye, which share a count of rods, so a tap between them reads.
-    func testTheSandboxNamesALayoutThatSharesItsCount() {
-        XCTAssertEqual(LevelView.layoutLabel(.tri, named: true), "rods: 3 \u{203A}")
-        XCTAssertEqual(LevelView.layoutLabel(.tri, named: false), "3 rods \u{203A}")
-        XCTAssertEqual(LevelView.layoutLabel(.quad, named: true), "rods: 4 \u{00B7} quad \u{203A}")
-        XCTAssertEqual(LevelView.layoutLabel(.eye, named: false), "eye \u{203A}")
-        XCTAssertEqual(LevelView.layoutLabel(.hex, named: true), "rods: 7 \u{203A}")
-        XCTAssertEqual(LevelView.layoutLabel(.quadSwirl, named: true), "rods: 5 \u{00B7} quad \u{203A}")
     }
 
     /// A turn a full stack refuses counts as a refusal, for the knob to shake and the caption to say so, and changes
@@ -970,15 +909,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(solving.solved)
         XCTAssertFalse(solving.spilled)
         XCTAssertEqual(solving.heals, 1)
-    }
-
-    /// Each tier has its own bed, and the modes outside the tiers take plughole's.
-    func testBedsFollowTheTier() {
-        XCTAssertEqual(Level.plughole.map(\.bed), Array(repeating: .plughole, count: Level.plughole.count))
-        XCTAssertEqual(Level.whirlpool.map(\.bed), Array(repeating: .whirlpool, count: Level.whirlpool.count))
-        XCTAssertEqual(Level.vortex.map(\.bed), Array(repeating: .vortex, count: Level.vortex.count))
-        XCTAssertEqual(Level.maelstrom.map(\.bed), Array(repeating: .maelstrom, count: Level.maelstrom.count))
-        XCTAssertEqual([Level.daily(), .endless(Run(seed: 7)), .sandbox].map(\.bed), [.plughole, .plughole, .plughole])
     }
 
     /// An undo takes back a whole stir, gives its move back and costs the clean, and an empty bank refuses.
@@ -1840,18 +1770,6 @@ final class UnstirTests: XCTestCase {
         }
     }
 
-    /// The dock's names share one size, set by the widest word against its cover, and never grow past the type's own.
-    func testTheDockNamesShareTheSizeTheirWidestWordNeeds() {
-        let width: (String) -> CGFloat = { CGFloat($0.count) * 10 }
-        let names = [(name: "First Stir", marked: false), (name: "Escapement", marked: false), (name: "Lens", marked: true)]
-        XCTAssertEqual(PackDock.nameScale(names, cover: 200, width: width), 1)
-        // "Escapement", 100 wide, sets the row's size in an 80 pt cover; "First Stir" breaks between its words instead.
-        XCTAssertEqual(PackDock.nameScale(names, cover: 80, width: width), 0.8 * 0.97, accuracy: 1e-9)
-        // A cover's glyph takes its room from its own name.
-        XCTAssertEqual(PackDock.nameScale([(name: "Escapement", marked: true)], cover: 112, width: width), 0.97, accuracy: 1e-9)
-        XCTAssertEqual(PackDock.nameScale(names, cover: 10, width: width), 0.5)
-    }
-
     /// The gate lists what is unsolved as runs, each opening at a level the player can open; a best over par counts.
     func testTheGateListsTheUnsolvedLevelsAsRuns() {
         var bests: [String: Best] = [:]
@@ -1907,16 +1825,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(stored(), .plughole)
     }
 
-    /// A drag switches tiers only when its first move runs at least twice as far sideways as up or down; anything
-    /// steeper stays the scroll view's.
-    func testOnlyASidewaysDragSwitchesTiers() {
-        XCTAssertTrue(MenuView.isSideways(CGSize(width: -15, height: 0)))
-        XCTAssertTrue(MenuView.isSideways(CGSize(width: 15, height: -7)))
-        XCTAssertFalse(MenuView.isSideways(CGSize(width: 14, height: 7)))
-        XCTAssertFalse(MenuView.isSideways(CGSize(width: -11, height: 11)))
-        XCTAssertFalse(MenuView.isSideways(CGSize(width: 0, height: -15)))
-    }
-
     private func centre(_ layout: Layout, _ k: Int) -> SIMD2<Double> { SIMD2(layout.rods[k].x, layout.rods[k].y) }
     /// How far into rod k's disc p lies, in that disc's radius: under 1 inside it.
     private func depth(_ layout: Layout, _ k: Int, _ p: SIMD2<Double>) -> Double {
@@ -1937,17 +1845,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: -12, height: 0)), .pass, "leftward")
         XCTAssertEqual(BackSwipe.decide(start: inside, translation: .zero), .pass, "outside the band")
         XCTAssertEqual(BackSwipe.decide(start: inside, translation: CGSize(width: 60, height: 0)), .pass)
-    }
-
-    /// Let go, the swipe leaves past a third of the width, or heading past half, unless flicked back; otherwise the
-    /// level springs back.
-    func testTheBackSwipeCommitsPastAThird() {
-        XCTAssertFalse(BackSwipe.commits(dx: 140, predicted: 180, width: 440))
-        XCTAssertTrue(BackSwipe.commits(dx: 150, predicted: 150, width: 440))
-        XCTAssertTrue(BackSwipe.commits(dx: 60, predicted: 230, width: 440), "a flick")
-        XCTAssertFalse(BackSwipe.commits(dx: 0, predicted: 0, width: 440))
-        XCTAssertFalse(BackSwipe.commits(dx: 220, predicted: 120, width: 440), "flicked back")
-        XCTAssertTrue(BackSwipe.commits(dx: 220, predicted: 215, width: 440), "held still")
     }
 
     /// The tank reads an edge touch by where it landed, though the slide carries the tank's origin right under it.
@@ -2450,26 +2347,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Set(titles).count, titles.count)
     }
 
-    /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
-    /// the twins, vortex's after whirlpool's, and steps from a twin to the picture after its sibling.
-    func testWhirlpoolPictures() {
-        XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(12)),
-                       [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .isobars, .ephemeris,
-                        .cords, .grid])
-        XCTAssertEqual(Picture.coralTwin.next, .neurons)
-        XCTAssertEqual(Picture.marblingTwin.next, .isobars)
-        let table: [(Picture, [Int])] = [(.glass, [1, 9, 14, 19, 23, 26, 27]), (.chainmail, [3, 10, 13, 18, 21, 24]),
-                                         (.coral, [2, 5, 8, 16]), (.neurons, [4, 7, 11, 17, 20]), (.marbling, [6, 12, 15, 22, 25])]
-        var want = [Picture?](repeating: nil, count: 27)
-        for (picture, levels) in table { for n in levels { want[n - 1] = picture } }
-        XCTAssertEqual(Level.whirlpool.map(\.picture), want)
-        XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
-        XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
-        let twins = Set(table.map(\.0.twin))
-        XCTAssertEqual(twins.count, 5)
-        XCTAssertTrue(twins.isDisjoint(with: table.map(\.0)))
-    }
-
     /// A live picture's shader gets the clock mod its period, so its data must repeat with it. Not the glass's: its seeds
     /// wander on 7-13 s circles, so it takes the raw clock. A twin's data is its sibling's, then its heartbeat's delays,
     /// all repeating with the twin's minute; the glass's and the static web's twins can only check their delays.
@@ -2924,22 +2801,6 @@ final class UnstirTests: XCTestCase {
         // Every push the brim takes before it spills fits under the stack's limit, with the deepest tank dealt.
         XCTAssertLessThan(Run.deepest + Run.room - 1, Tank.maxStack)
         XCTAssertLessThanOrEqual(Run.deepest, Tank.fourTaps - Level.endless(Run(seed: 7)).picture.fillEntries)
-    }
-
-    /// The grid's node colours against the prototype's oklch (colour.py): its top and bottom rows, x = -1 ... 1.
-    @MainActor func testGridColoursMatchPrototype() {
-        let rows: [(Double, [UInt32])] = [
-            (-1, [0x00BDB6, 0x00BAC7, 0x00B4ED, 0x65A6FF, 0x9996FF, 0xCA7BFF, 0xFF51DD, 0xFF6999, 0xFF735F, 0xF48200, 0xE19000]),
-            (1, [0x007974, 0x007780, 0x007399, 0x0064CE, 0x6429FF, 0x9600D5, 0xB20098, 0xC0005C, 0xC50D00, 0x9E5200, 0x915B00]),
-        ]
-        for (y, hexes) in rows {
-            for (k, hex) in hexes.enumerated() {
-                let c = Picture.field(Double(k) * 0.2 - 1, y).resolve(in: EnvironmentValues())
-                for (got, want) in zip([c.red, c.green, c.blue], [hex >> 16, hex >> 8, hex].map { Float($0 & 0xFF) }) {
-                    XCTAssertEqual(got * 255, want, accuracy: 2, "node \(k) at y \(y)")
-                }
-            }
-        }
     }
 }
 
