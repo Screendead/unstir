@@ -266,7 +266,7 @@ extension Picture {
             for slot in 0..<3 {
                 let b = step(a, slot)
                 guard b >= 0 else { continue }
-                // Once a draw to drop some edges: still spent, so each seed keeps the web it was designed with.
+                // A draw nothing reads, still spent so each seed's later draws, and so its web, stay as designed.
                 _ = random(0, 1)
                 let q = Int(random(-3.5, 3.5).rounded()), spur = random(0, 1) < spurs, fromFar = random(0, 1) < 0.5
                 guard ends[a] && ends[b] else { continue }

@@ -129,7 +129,7 @@ enum Picture: String, CaseIterable {
             .frame(width: side, height: side))
         r.scale = scale
         r.isOpaque = true
-        // Float storage, so the glow adds in linear light as the design renders did; 8-bit .linear bands the dark skies.
+        // Float storage, so the glow adds in linear light; 8-bit .linear bands the dark skies.
         r.colorMode = .extendedLinear
         return r.uiImage
     }

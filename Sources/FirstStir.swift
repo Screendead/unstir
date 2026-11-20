@@ -13,7 +13,7 @@ enum Story: Hashable, Sendable {
     case rescue(Rescue)
     /// Chapter 3, The Flood: scenes 11 to 15.
     case flood(Flood)
-    /// Chapter 4, The Storm: scenes 16 to 20, the first of them the lab's harbour.
+    /// Chapter 4, The Storm: scenes 16 to 20.
     case storm(Storm)
     /// Chapter 5, Dusk Before: scenes 21 to 25.
     case dusk(Dusk)
@@ -57,7 +57,7 @@ extension Level {
     ]
 }
 
-/// What the pack's scenes share: the line, the fades and the memory budget the lab's harbour first set.
+/// What the pack's scenes share: the line, the fades and the memory budget.
 enum Harbour {
     /// Every stroke's width, in tank radii.
     static let line = 0.0075
