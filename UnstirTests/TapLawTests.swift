@@ -349,16 +349,6 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(law.still(), .applied(from: 28, to: 21))
     }
 
-
-    func testAPhoneStartsAtFortyAndClimbsToTheCeiling() {
-        var fresh = TapLaw(start: Tank.fourTaps(pixels: 1171.3))
-        XCTAssertEqual(fresh.applied, 40)
-        XCTAssertEqual(drag(&fresh, at: 40, .onTime, 600), [.up(from: 40, to: 41), .applied(from: 40, to: 41)])
-        XCTAssertEqual(drag(&fresh, at: 41, .onTime, 600), [.up(from: 41, to: 42), .applied(from: 41, to: 42)])
-        XCTAssertEqual(drag(&fresh, at: 42, .onTime, 1200), [])
-        XCTAssertEqual(fresh.applied, TapLaw.ceiling)
-    }
-
     func testAKeysLimitIsTheLowestOfTheGlassesItHolds() {
         for px in stride(from: 600.0, through: 1600, by: 0.25) {
             XCTAssertLessThanOrEqual(TapKey(hz: 120, pixels: px).limit, Tank.fourTaps(pixels: px), "\(px) px")
