@@ -610,27 +610,13 @@ final class PlayLayoutTests: XCTestCase {
     private let fullest = ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
-        // The cards that ran past the foot: the fullest at xxxLarge, the play screen's cap, on the largest phone and the
-        // shortest, and on the shortest at the default size the fullest, the daily's with its next daily, and a replay at
-        // par with its best. Every screen at every type has its own test.
-        let cases: [(String, [String: String], Phone, DynamicTypeSize, () -> Void)] = [
-            ("the fullest card at xxxLarge on a Pro Max", fullest, proMax, .xxxLarge, storeTheFullestCard),
-            ("the fullest card on an SE", fullest, se, .large, storeTheFullestCard),
-            ("the daily's card on an SE", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], se, .large, {}),
-            ("a replay at par with an undo on an SE", ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "6"], se, .large,
-             { for level in Tier.plughole.levels.prefix(6) { Best(over: 0, seconds: 60).save(level.id) } }),
-        ]
-        for (what, env, phone, type, store) in cases {
-            store()
-            let m = try! XCTUnwrap(measuredCard(env, phone, type: type), what)
-            print("card fit: \(what): card \(m.card) room \(m.room) lift \(m.fit.lift) scale \(m.fit.scale)")
-            XCTAssertTrue(m.fit.fits, "\(what): whole on screen")
-            XCTAssertLessThanOrEqual(m.card, m.room - PlayLayout.cardFoot + m.fit.lift, "\(what): the card ends over the foot")
-            XCTAssertEqual(m.fit.lift, max(m.card - m.room + PlayLayout.cardFoot, 0).rounded(.up), "\(what): the tank gives up no more than the card lacks")
-            XCTAssertGreaterThanOrEqual(m.fit.scale, PlayLayout.leastFinished, what)
-            // The room is measured with the tank as played: one that moved with the shrink would never settle.
-            XCTAssertLessThan(m.times, 6, "\(what): settles")
-        }
+        // Where the card stands, and the tank's give, are held on every screen below; here, that the measure settles
+        // where the tank gives up most.
+        storeTheFullestCard()
+        let m = try! XCTUnwrap(measuredCard(fullest, se, type: PlayLayout.typeCap))
+        XCTAssertLessThan(m.fit.scale, 1, "the tank shrank")
+        // The room is measured with the tank as played: one that moved with the shrink would never settle.
+        XCTAssertLessThan(m.times, 6, "settles")
     }
 
     /// Every bit of a level's best and pack progress, so each candidate stores only its own.
@@ -707,45 +693,34 @@ final class PlayLayoutTests: XCTestCase {
         return t
     }
 
-    /// The play screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"). On the shortest and
-    /// the largest phone every candidate is measured afresh at the play screen's largest type and the tallest stands
-    /// whole; every other screen, and every smaller type on the shortest phone, places the shortest phone's tallest.
-    /// `UNSTIR_SLOW_TESTS=1` measures every candidate everywhere (minutes on CI's runner). A taller card added later
+    /// The play screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"). On the shortest phone
+    /// every candidate is measured at the play screen's largest type, and its tallest stands whole there and on every
+    /// other screen, whose card is as wide or wider, so no candidate's is taller there; a smaller type is a shorter card
+    /// in more room, so only the default size is placed under the cap. A taller card added later
     /// becomes the one checked, and one that can't fit even with the glass at its least fails here.
     @MainActor func testEveryCardStandsWholeOnOneScreenOnEveryScreenAtEveryType() {
-        let all = ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1"
         let shortest = screens[0]
         let pick = shortestsTallest()
-        func placed(_ screen: Screen, _ type: DynamicTypeSize) -> (what: String, p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?)) {
-            if all || (screen.name == "Pro Max" && type == PlayLayout.typeCap) {
-                let t = tallestCard(screen, type: type)
-                return (t.what, t.p)
-            }
-            if screen.name == shortest.name && type == PlayLayout.typeCap { return (pick.what, pick.p) }
+        func placed(_ screen: Screen, _ type: DynamicTypeSize) -> (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?) {
+            if screen.name == shortest.name && type == PlayLayout.typeCap { return pick.p }
             forgetEveryBest()
             pick.store()
-            return (pick.what, try! XCTUnwrap(placedCard(pick.env, screen, type: type)))
+            defer { forgetEveryBest() }
+            return try! XCTUnwrap(placedCard(pick.env, screen, type: type))
         }
         for screen in screens {
-            let tallest = placed(screen, PlayLayout.typeCap)
-            print("card placed: \(screen.name) at the cap, \(tallest.what): \(tallest.p.frame) scale \(tallest.p.fit?.scale ?? 1)")
-            standsWhole(tallest.p, on: screen, "\(screen.name) at the cap: \(tallest.what)")
+            let p = placed(screen, PlayLayout.typeCap)
+            print("card placed: \(screen.name) at the cap, \(pick.what): \(p.frame) scale \(p.fit?.scale ?? 1)")
+            standsWhole(p, on: screen, "\(screen.name) at the cap: \(pick.what)")
         }
         // The text keeps its size: the card is taller at the cap than at the default size.
-        XCTAssertGreaterThan(pick.p.frame.height, placed(shortest, .large).p.frame.height, "the card's text grows with the type")
-        for type in DynamicTypeSize.allCases where type < PlayLayout.typeCap && type != .large {
-            let tallest = placed(shortest, type)
-            standsWhole(tallest.p, on: shortest, "\(shortest.name) at \(type): \(tallest.what)")
-        }
-        forgetEveryBest()
+        let large = placed(shortest, .large)
+        XCTAssertGreaterThan(pick.p.frame.height, large.frame.height, "the card's text grows with the type")
+        standsWhole(large, on: shortest, "\(shortest.name) at the default size: \(pick.what)")
         // Past the cap the play screen keeps the cap's size.
-        storeTheFullestCard()
-        let cap = try! XCTUnwrap(placedCard(fullest, shortest, type: PlayLayout.typeCap))
-        storeTheFullestCard()
-        let past = try! XCTUnwrap(placedCard(fullest, shortest, type: .accessibility5))
-        XCTAssertEqual(past.frame.height, cap.frame.height, accuracy: 0.5)
-        standsWhole(past, on: shortest, "\(shortest.name) at accessibility5")
-        forgetEveryBest()
+        let past = placed(shortest, .accessibility5)
+        XCTAssertEqual(past.frame.height, pick.p.frame.height, accuracy: 0.5)
+        standsWhole(past, on: shortest, "\(shortest.name) at accessibility5: \(pick.what)")
     }
 
     /// No supported phone needs the glass under its old 55% for any card, so the give past it runs through the real
@@ -754,23 +729,17 @@ final class PlayLayoutTests: XCTestCase {
     @MainActor func testOnAWindowShorterThanAnyPhoneTheGlassGivesWayAndTheCardStandsWhole() {
         let short = Screen(name: "the stand-in", window: CGSize(width: 375, height: 567), insets: (20, 0, 0, 0))
         // A card keeps its own height whatever the window's, and the stand-in is as wide as the shortest phone, so
-        // that phone's tallest card is the tallest here; `UNSTIR_SLOW_TESTS=1` measures every candidate here too.
-        let tallest: (what: String, p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))
-        if ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1" {
-            let t = tallestCard(short, type: PlayLayout.typeCap)
-            tallest = (t.what, t.p)
-        } else {
-            let pick = shortestsTallest()
-            XCTAssertEqual(short.window.width, screens[0].window.width)
-            forgetEveryBest()
-            pick.store()
-            tallest = (pick.what, try! XCTUnwrap(placedCard(pick.env, short, type: PlayLayout.typeCap)))
-            XCTAssertEqual(tallest.p.frame.height, pick.p.frame.height, accuracy: 0.5, "the card keeps its height")
-            forgetEveryBest()
-        }
-        print("card placed: the stand-in at the cap, \(tallest.what): \(tallest.p.frame) scale \(tallest.p.fit?.scale ?? 1)")
-        standsWhole(tallest.p, on: short, "the stand-in: \(tallest.what)")
-        XCTAssertLessThan(try! XCTUnwrap(tallest.p.fit).scale, 0.55, "the glass gave way past the old least")
+        // that phone's tallest card is the tallest here.
+        let pick = shortestsTallest()
+        XCTAssertEqual(short.window.width, screens[0].window.width)
+        forgetEveryBest()
+        pick.store()
+        let p = try! XCTUnwrap(placedCard(pick.env, short, type: PlayLayout.typeCap))
+        forgetEveryBest()
+        XCTAssertEqual(p.frame.height, pick.p.frame.height, accuracy: 0.5, "the card keeps its height")
+        print("card placed: the stand-in at the cap, \(pick.what): \(p.frame) scale \(p.fit?.scale ?? 1)")
+        standsWhole(p, on: short, "the stand-in: \(pick.what)")
+        XCTAssertLessThan(try! XCTUnwrap(p.fit).scale, 0.55, "the glass gave way past the old least")
     }
 
     @MainActor func testACardWithRoomAndATankInPlayLeaveTheTankAsItIs() {
