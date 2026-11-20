@@ -22,7 +22,7 @@ leaving its heading and a pointer.
 - **Branch and PR for every change.** Never commit to `master`. Jack has given standing permission to create branches
   and open PRs without asking.
 - **Jack reviews at the PR.** When a feature or a round of ideation is finished, commit it and open the PR without
-  asking first (Jack, 2026-09-28). Don't commit partway through the work.
+  asking first (Jack, 2026-09-28). Commit on the branch as the work goes; open the PR when it is finished.
 - **Atomic commits.** Changes that belong together go in one commit. Separate changes go in separate commits, even when
   that means splitting one file's diff line by line (`git add -p` is interactive, so build the partial patch and use
   `git apply --cached`).
@@ -83,20 +83,10 @@ after a script's shebang, and so does every `.py`, `.csd` and `.udo` file, every
 `Config/Unstir.xcconfig`. The code is all rights reserved under
 `LICENSE.md`, the proprietary licence: never add an open-source licence.
 
-## Pushing back
+## How work is done
 
-Claude is the implementer under Jack's supervision and also the project's advisor. Jack has asked for pushback,
-hard if needed, whenever an idea of his looks wrong. Say so plainly, give the reasons, and propose something better.
-Once Jack has heard the argument and still decides, carry out his decision.
-
-## Calls for Jack
-
-A call goes to Jack as a pitch he can pick from, with the options built and shown. Each wave of calls gets a new
-Artifact page: never add calls to a page he has already been sent; carry an unanswered call over written out in
-full, and leave answered ones off. Write every call so it stands alone, for a busy, technical reader who has read
-none of the repo's notes: no call ids, pick codes, round numbers or branch names, and no pointing at `HANDOFF.md`,
-`docs/decisions.md` or a design doc, which are Claude's working files. What he needs from them goes in the call:
-what exists today, what would change on screen, why it is asked now, each option's cost, and what waits on it.
+`CONSTITUTION.md` (Jack, 2026-11-20) governs every brief and worker: the studio, one owner per piece, done means
+impeccable on the phone, the eye over tests, pushback and how calls go to Jack. Read it before planning work.
 
 ## Commands
 
