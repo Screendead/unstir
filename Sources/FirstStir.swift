@@ -13,7 +13,7 @@ enum Story: Hashable, Sendable {
     case rescue(Rescue)
     /// Chapter 3, The Flood: scenes 11 to 15.
     case flood(Flood)
-    /// Chapter 4, The Storm: scenes 16 to 20.
+    /// Chapter 4, The Storm: scenes 16 to 20, the first of them the harbour.
     case storm(Storm)
     /// Chapter 5, Dusk Before: scenes 21 to 25.
     case dusk(Dusk)

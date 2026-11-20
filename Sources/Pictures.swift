@@ -377,8 +377,8 @@ enum Picture: String, CaseIterable {
     }
 }
 
-/// The names shown for a picture and a layout, the sandbox's controls (R3: a raw value is stored, never shown). Each
-/// reads as its raw value did.
+/// The names shown for a picture and a layout on the sandbox's controls: a raw value is stored, never shown. Each
+/// English default is its raw value.
 extension Picture {
     var display: LocalizedStringResource {
         switch self {
