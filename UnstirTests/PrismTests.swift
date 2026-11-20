@@ -11,15 +11,13 @@ import simd
 final class PrismTests: XCTestCase {
     private let redCyan: [Int: Channels] = [0: .red, 1: .cyan]
 
-    /// A knob spells its channels in the swatches' letters, so a mask reads without telling its colour.
+    /// A knob spells its channels in the swatches' letters, so a mask reads without telling its colour, and a mask
+    /// parses from its one letter.
     func testEveryMaskSpellsItsPrimaries() {
         XCTAssertEqual([Channels.red, .green, .blue, .cyan, .magenta, .yellow, .white].map(\.letters),
                        ["R", "G", "B", "GB", "RB", "RG", "RGB"])
         XCTAssertEqual(Level.prism[0].channels(of: 1), .cyan)
         XCTAssertNil(Level.lens[0].channels(of: 0))
-    }
-
-    func testMasksParse() {
         XCTAssertEqual(Channels.masks("0:r,1:C,2:w"), [0: .red, 1: .cyan, 2: .white])
         XCTAssertEqual(Channels.masks(""), [:])
         XCTAssertNil(Channels.masks("0:x"))
