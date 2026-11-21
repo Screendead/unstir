@@ -22,8 +22,11 @@ archive, and settings after the mode go to it (`CODE_SIGNING_ALLOWED=NO` archive
   `SUPPORT_ADDRESS`, `POLICY_URL`, `EDITORS`, `PROBES`), over `Config/Local.xcconfig`, with `AGE_RANGE` YES unless set, so the
   build signs with Declared Age Range's entitlement. `EDITORS=YES` makes the editors' build, archived as
   `Unstir-<build>-editors`.
-- **Support address.** It refuses to upload or export without `SUPPORT_ADDRESS`, from the shell or
-  `Config/Local.xcconfig` (see the day-3 log below), checked before the archive and again in the archived Info.plist.
+- **Support address and policy.** It refuses to upload or export without `SUPPORT_ADDRESS` (see the day-3 log below)
+  or `POLICY_URL` (without it settings' privacy policy opens the repo's draft), from the shell or
+  `Config/Local.xcconfig`, checked before the archive and again in the archived Info.plist, where the policy must be an
+  http or https URL, as the app reads it. Until the policy is hosted, setting `POLICY_URL` to the draft's github.com
+  page uploads a build that opens the draft on purpose.
   It also refuses an archive whose signature lacks Declared Age Range's entitlement while `AGE_RANGE` is YES.
 - **Build number.** `CFBundleVersion` is `BUILD_NUMBER` if set, else the UTC date and minute, e.g. `20261112.1530`
   (the minute without a leading zero, as each part is an integer), so every archive rises with no tracked edit;
