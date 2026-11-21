@@ -9,18 +9,28 @@ universal canvas's diagonal (`picture-lab.sh render cords <png> 7 0 6100`) and a
 unstirred, softened and dimmed. Apple doesn't say how it crops the universal asset into the other two, so each placement
 gets its own; `check-*.png` outline each safe area. Specs: App Store Connect Help, "Creative assets specifications",
 read 2026-11-18. Needs Pillow.
+
+The search results asset is the exception. App Store Connect's Device Preview shows it in a 2.22:1 card cut from the
+file's top, keeping its top 67.7% (#278), so a tank centred in Apple's safe area sat on the card's bottom edge, cut off.
+Its glass is placed instead to sit whole and centred in that card and still whole in a 2.22:1 crop from the middle, at
+860 px rather than 990: the first card is cyan and the second yellow in `check-search.png`, and
+`preview-search.png` is the first as the preview shows it.
 """
 import sys
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
-# Each placement's canvas and art safe area (left, top, width, height).
+# Each placement's canvas, art safe area and the box the glass is centred in, 40 px wider than the glass (left, top,
+# width, height).
 PLACEMENTS = {
-    "universal": ((5244, 2950), (1921, 660, 1402, 962)),
-    "header": ((3840, 1646), (1097, 493, 1646, 661)),
-    "search": ((3840, 2560), (836, 765, 2168, 1030)),
+    "universal": ((5244, 2950), (1921, 660, 1402, 962), (1921, 660, 1402, 962)),
+    "header": ((3840, 1646), (1097, 493, 1646, 661), (1097, 493, 1646, 661)),
+    # Centred in the preview's card, rows 0 to 1730 (3840 / 2.22): 860 px keeps it 20 px inside a middle crop's 415 to 2145.
+    "search": ((3840, 2560), (836, 765, 2168, 1030), (1470, 415, 900, 900)),
 }
+# The cards a 2.22:1 search result shows: from the file's top, as App Store Connect's preview cuts it, and from the middle.
+CARDS = [((0, 0, 3840, 1730), (0, 255, 255)), ((0, 415, 3840, 2145), (255, 255, 0))]
 
 
 def tank_bounds(shot):
@@ -77,11 +87,17 @@ def main(backdrop_path, shot_path, out):
     backdrop = Image.open(backdrop_path).convert("RGB")
     shot = Image.open(shot_path).convert("RGB")
     tank = shot.crop(tank_bounds(shot))
-    for name, (size, safe) in PLACEMENTS.items():
-        image = compose(backdrop, tank, size, safe)
+    for name, (size, safe, glass) in PLACEMENTS.items():
+        image = compose(backdrop, tank, size, glass)
         image.save(out / f"{name}.png", optimize=True)
+        if name == "search":
+            image.crop(CARDS[0][0]).save(out / "preview-search.png")
+        draw = ImageDraw.Draw(image)
         sx, sy, sw, sh = safe
-        ImageDraw.Draw(image).rectangle((sx, sy, sx + sw, sy + sh), outline=(255, 0, 0), width=6)
+        draw.rectangle((sx, sy, sx + sw, sy + sh), outline=(255, 0, 0), width=6)
+        if name == "search":
+            for box, colour in CARDS:
+                draw.rectangle(box, outline=colour, width=6)
         image.save(out / f"check-{name}.png")
 
 
