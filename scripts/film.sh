@@ -300,8 +300,8 @@ film card-lens-lands-list 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens ST
 # whirlpool 01 on the live glass, Lens 03 on the halftone and Prism 01 on the fern. The first two are store-media.sh's
 # social clips, so each runs on past its solve for the clip's last second after the wave.
 whole="fps=2,scale=150:-1,tile=8x4:padding=4"  # the whole screen, so anything left over the level would show
-film clean-plughole-05 18 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
-film clean-whirlpool-01 15 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
+film clean-plughole-05 24 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
+film clean-whirlpool-01 20 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
 # The halftone bakes for half a minute on a Debug install that hasn't drawn it, and the opening waits for it, so its strip
 # starts 12 s in, a frame a second.
 film clean-lens-03 46 "trim=start=12,setpts=PTS-STARTPTS,fps=1,scale=150:-1,tile=8x4:padding=4" PACK=lens LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:-3,2:-4,1:+2
