@@ -107,7 +107,12 @@ game plays.
 **Next:**
 
 - The search results' image: the file is right (#273), so which file App Store Connect holds, and how it shows it,
-  is Jack's to check; asked of him (#276).
+  was asked of Jack (#276, closed 2026-11-21). He answered with a screenshot, not an option: "**Jack's answer:**
+  [a 1699 x 860 screenshot] from [App Store Connect's URL, kept out of the repo]": the app's version page there, the
+  version in flight. So the cut-off tank shows on App Store Connect's own version page. The screenshot is a GitHub
+  attachment this Linux machine cannot fetch: the Mac compares it with `store-header-272`'s search, header and
+  universal art and says which file and which crop it shows (#278). Then either a re-upload of the right file, or a
+  version that survives App Store Connect's crop.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
