@@ -104,14 +104,17 @@ game plays.
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
   the hosted policy, or until then the draft's github.com page on purpose.
 
-**Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines and the TestFlight
-retention (`tools/tf-poll.py` now forgets polls past 12 months on every run, 2026-11-20) and the archive without a
-policy (`scripts/archive-ios.sh` refuses to upload or export without `POLICY_URL`, 2026-11-21; the policy's missing
-legal basis stays open) and the harness crash in `Game.settle` (`UNSTIR_PLAYED` committed a tank turn as a turn of
-knob -1; its line now goes through `Game.commit(line:)`, which turns the tank, 2026-11-21, not yet launched with one).
-Escapement 29's layer is rendered again (#260, above). Still open: the curtain call on the phone,
-Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged worktrees and
-branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
+**Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines and the TestFlight retention
+(`tools/tf-poll.py` now forgets polls past 12 months on every run, 2026-11-20) and the archive without a policy
+(`scripts/archive-ios.sh` refuses to upload or export without `POLICY_URL`, 2026-11-21; the policy's missing legal
+basis stays open) and the harness crash in `Game.settle` (`UNSTIR_PLAYED` committed a tank turn as a turn of knob -1;
+its line now goes through `Game.commit(line:)`, which turns the tank, 2026-11-21; launched on the simulator, #267: the
+tank's turn alone, then a knob, and the rim-seized par line, which solved at par 4, with no crash or `settle` error).
+From that launch, two small notes: the recorder logged a played line two or three times in one launch (the harness
+game built again; the end state was right), and `scripts/pull-log.sh --sim` reads the `booted` simulator, so it fails
+while a second one is booted. Escapement 29's layer is rendered again (#260, above). Still open: the curtain call on
+the phone, Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged
+worktrees and branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
 
 ### Open work (2026-11-13)
 
