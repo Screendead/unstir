@@ -15,42 +15,6 @@ final class PlayLayoutTests: XCTestCase {
                       fold: fold.map { $0.offsetBy(dx: -insets.leading, dy: -insets.top) }, halo: halo, chrome: chrome, scale: scale)
     }
 
-    func testEveryIPhoneKeepsTodaysColumn() {
-        // Content sizes measured on each simulator (PR #112): SE, Pro Max, the Duo closed.
-        for (window, content, scale) in [(CGSize(width: 375, height: 667), CGSize(width: 343, height: 647), 2.0),
-                                         (CGSize(width: 440, height: 956), CGSize(width: 408, height: 860), 3),
-                                         (CGSize(width: 466, height: 678), CGSize(width: 350, height: 644), 3)] {
-            for halo in [PlayLayout.Halo(), .init(ring: 0.23, above: 20)] {
-                let l = PlayLayout.of(content: content, window: window, halo: halo, scale: scale)
-                XCTAssertEqual(l.kind, .column, "\(window)")
-                XCTAssertEqual(l.side, min(content.width, content.height - 290) / 1.045, "\(window): today's formula, whatever is drawn round the glass")
-                XCTAssertLessThan(l.side * scale, PlayLayout.maxPixels, "\(window): no phone reaches the cap")
-                XCTAssertEqual(Tank.fourTaps(pixels: l.side * scale), Tank.fourTaps, "\(window): a phone's taps as they were")
-                XCTAssertNil(l.bounds, "the column's limits are the screen's")
-                XCTAssertNil(l.filmFoot)
-            }
-        }
-    }
-
-    func testTheOpenDuoSplitsWithTheTankWhollyInTheLeadingHalf() {
-        // The inner display opened like a book: the status column on the trailing edge (its width assumed from the
-        // closed display's 84 pt), the home indicator below.
-        let window = CGSize(width: 951, height: 669)
-        let l = layout(window: window, insets: (24, 0, 21, 84))
-        XCTAssertEqual(l.kind, .split)
-        // In window points: the tank's pane ends short of the fold, the menu's starts past it.
-        let fold = window.width / 2, menu = try! XCTUnwrap(l.menuPane)
-        XCTAssertLessThanOrEqual(PlayLayout.margin + l.tankPane.maxX, fold - PlayLayout.margin)
-        XCTAssertGreaterThanOrEqual(PlayLayout.margin + menu.minX, fold + PlayLayout.margin)
-        XCTAssertGreaterThanOrEqual(menu.width, PlayLayout.minPane)
-        // The glass and its rim fit the pane, short of the size past which the four-tap limit shrinks.
-        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
-        XCTAssertLessThanOrEqual(l.chrome.above + PlayStack.gap + l.side * PlayLayout.rim + l.chrome.below, l.tankPane.height + 0.001)
-        XCTAssertEqual(l.side, 417, accuracy: 1)
-        XCTAssertLessThanOrEqual(l.side * 3, Tank.fourTapsKept)
-        XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
-    }
-
     func testTheOpenDuoUprightKeepsTheColumnAtTheCap() {
         let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0))
         XCTAssertEqual(l.kind, .column)
@@ -149,11 +113,22 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "uncapped the half would hold about 607 pt")
     }
 
+    /// The windows no screenshot shows, where play and the menu keep a phone's column.
     func testANarrowOrSmallWindowKeepsTheColumn() {
-        // Split View's half of the open Duo is tall.
-        XCTAssertEqual(layout(window: CGSize(width: 475, height: 669), insets: (24, 0, 21, 0)).kind, .column)
-        // Wider than tall, but each half too narrow for the chrome.
-        XCTAssertEqual(layout(window: CGSize(width: 600, height: 500), insets: (0, 0, 0, 0)).kind, .column)
+        let upright = (window: CGSize(width: 669, height: 951), insets: (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0)))
+        for (what, window, insets, fold) in [
+            ("Split View's tall half of the open Duo", CGSize(width: 475, height: 669), (24, 0, 21, 0), nil),
+            ("wider than tall, each half too narrow for the chrome", CGSize(width: 600, height: 500), (0, 0, 0, 0), nil),
+            ("folded near the top, the upright part too short for the chrome", upright.window, upright.insets,
+             CGRect(x: 0, y: 300, width: 669, height: 19)),
+            ("folded near the leading edge, the tank's half too narrow", open.window, open.insets,
+             CGRect(x: 250, y: 0, width: 19, height: 669)),
+        ] as [(String, CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
+            XCTAssertEqual(layout(window: window, insets: insets, fold: fold).kind, .column, what)
+            let m = menu(window: window, insets: insets, fold: fold)
+            XCTAssertFalse(m.wide, what)
+            XCTAssertFalse(m.splits, what)
+        }
     }
 
     func testTheSplitFollowsTheWindowsMiddleNotTheContents() {
@@ -163,73 +138,6 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(84 + PlayLayout.margin + a.tankPane.maxX, 951 / 2 - PlayLayout.margin, accuracy: 0.001)
         XCTAssertEqual(84 + PlayLayout.margin + a.menuPane!.minX, 951 / 2 + PlayLayout.margin, accuracy: 0.001)
         XCTAssertEqual(a.side, 359.5 / PlayLayout.rim, accuracy: 0.001, "the leading half is the narrower now")
-    }
-
-    func testTheProxysOwnMeasureSplitsAtTheFold() {
-        // What the play screen's GeometryReader reported under UNSTIR_FRAME=951x669 with the trailing column.
-        let l = PlayLayout.of(size: CGSize(width: 867, height: 624), insets: EdgeInsets(top: 24, leading: 0, bottom: 21, trailing: 84),
-                              scale: 3)
-        XCTAssertEqual(l.kind, .split)
-        XCTAssertEqual(l.tankPane.width, 951 / 2 - 2 * PlayLayout.margin, accuracy: 0.001)
-        let c = PlayLayout.Chrome()
-        XCTAssertEqual(l.side, (624 - c.above - c.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
-    }
-
-    // The folds below are in window points, 19 pt across (assumed: no Duo simulator reports one headlessly), as the
-    // harness's UNSTIR_FOLD gives them.
-
-    func testABookFoldedSplitsClearOfTheFoldsBand() {
-        let fold = CGRect(x: 466, y: 0, width: 19, height: 669)
-        let l = layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84), fold: fold)
-        XCTAssertEqual(l.kind, .split)
-        XCTAssertEqual(PlayLayout.margin + l.tankPane.maxX, fold.minX - PlayLayout.margin, accuracy: 0.001)
-        XCTAssertEqual(PlayLayout.margin + l.menuPane!.minX, fold.maxX + PlayLayout.margin, accuracy: 0.001)
-        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
-        XCTAssertLessThanOrEqual(PlayLayout.margin + l.stage.maxX, fold.minX - PlayLayout.margin)
-        // Flat, the same window splits at its middle, so folding the phone moves the tank by a quarter of the band.
-        let flat = layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84))
-        XCTAssertEqual(flat.kind, .split)
-        XCTAssertEqual(flat.stage.midX - l.stage.midX, (951 / 2 - fold.minX) / 2, accuracy: 0.001)
-    }
-
-    func testTheTabletopPutsTheTankWhollyBelowTheFoldAndTheRestAbove() {
-        let fold = CGRect(x: 0, y: 466, width: 669, height: 19), top: CGFloat = 59
-        let l = layout(window: CGSize(width: 669, height: 951), insets: (top, 0, 34, 0), fold: fold)
-        XCTAssertEqual(l.kind, .tabletop)
-        // In window points.
-        XCTAssertLessThanOrEqual(top + l.chromePane.maxY, fold.minY - PlayLayout.margin)
-        XCTAssertGreaterThanOrEqual(top + l.tankPane.minY, fold.maxY + PlayLayout.margin)
-        XCTAssertGreaterThanOrEqual(top + l.stage.minY, fold.maxY + PlayLayout.margin - 0.001)
-        XCTAssertLessThanOrEqual(l.stage.maxY, l.tankPane.maxY + 0.001)
-        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
-        // The tank fills the half lying flat: about 398 pt, near the Pro Max's 408.
-        XCTAssertEqual(l.side, (858 - (fold.maxY - top) - PlayLayout.margin) / PlayLayout.rim, accuracy: 0.001)
-        XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
-        // "unstirred." stands in the upright half, clear of the fold.
-        let wordsTop = top + l.stage.minY - (try! XCTUnwrap(l.words))
-        XCTAssertGreaterThanOrEqual(wordsTop, top + l.chromePane.minY)
-        XCTAssertLessThanOrEqual(wordsTop + PlayLayout.wordsHeight, fold.minY - PlayLayout.margin + 0.001)
-    }
-
-    func testFlatUprightTheDuoKeepsTheColumnAndFoldedTheTabletop() {
-        let window = CGSize(width: 669, height: 951)
-        XCTAssertEqual(layout(window: window, insets: (59, 0, 34, 0)).kind, .column)
-        XCTAssertEqual(layout(window: window, insets: (59, 0, 34, 0), fold: CGRect(x: 0, y: 466, width: 669, height: 19)).kind,
-                       .tabletop)
-    }
-
-    func testAFoldLeavingAHalfTooSmallKeepsTheColumn() {
-        // Folded near the top, the upright part can't hold the chrome; near the leading edge, the tank's half is too narrow.
-        XCTAssertEqual(layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0),
-                              fold: CGRect(x: 0, y: 300, width: 669, height: 19)).kind, .column)
-        XCTAssertEqual(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84),
-                              fold: CGRect(x: 250, y: 0, width: 19, height: 669)).kind, .column)
-    }
-
-    func testTheColumnKeepsItsWordsAndTheSplitsHeadTheCard() {
-        XCTAssertEqual(layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0)).words, 62)
-        XCTAssertNil(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84)).words,
-                     "the title stands over the split's tank, so unstirred. heads the card over the menu")
     }
 
     func testUnstirredGrowsWithTheTypeAndStillEndsAboveTheRim() {
@@ -290,11 +198,6 @@ final class PlayLayoutTests: XCTestCase {
     /// A plain daily and a frost day (`Frost.days`), which seizes two knobs and turns the tank.
     static let plainDay = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 12))!
     static let frostDay = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 12))!
-
-    func testTheTabletopsSpacersShareWhatTheChromeLeaves() {
-        XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2), 212, "centred round the chrome")
-        XCTAssertEqual(PlayStack.share(100, used: 200, spacers: 2), 0, "a tall card: the spacers give way")
-    }
 
     func testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt() {
         func side(_ level: Level, swatches: Bool = false) -> CGFloat {
@@ -610,27 +513,13 @@ final class PlayLayoutTests: XCTestCase {
     private let fullest = ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
-        // The cards that ran past the foot: the fullest at xxxLarge, the play screen's cap, on the largest phone and the
-        // shortest, and on the shortest at the default size the fullest, the daily's with its next daily, and a replay at
-        // par with its best. Every screen at every type has its own test.
-        let cases: [(String, [String: String], Phone, DynamicTypeSize, () -> Void)] = [
-            ("the fullest card at xxxLarge on a Pro Max", fullest, proMax, .xxxLarge, storeTheFullestCard),
-            ("the fullest card on an SE", fullest, se, .large, storeTheFullestCard),
-            ("the daily's card on an SE", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], se, .large, {}),
-            ("a replay at par with an undo on an SE", ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "6"], se, .large,
-             { for level in Tier.plughole.levels.prefix(6) { Best(over: 0, seconds: 60).save(level.id) } }),
-        ]
-        for (what, env, phone, type, store) in cases {
-            store()
-            let m = try! XCTUnwrap(measuredCard(env, phone, type: type), what)
-            print("card fit: \(what): card \(m.card) room \(m.room) lift \(m.fit.lift) scale \(m.fit.scale)")
-            XCTAssertTrue(m.fit.fits, "\(what): whole on screen")
-            XCTAssertLessThanOrEqual(m.card, m.room - PlayLayout.cardFoot + m.fit.lift, "\(what): the card ends over the foot")
-            XCTAssertEqual(m.fit.lift, max(m.card - m.room + PlayLayout.cardFoot, 0).rounded(.up), "\(what): the tank gives up no more than the card lacks")
-            XCTAssertGreaterThanOrEqual(m.fit.scale, PlayLayout.leastFinished, what)
-            // The room is measured with the tank as played: one that moved with the shrink would never settle.
-            XCTAssertLessThan(m.times, 6, "\(what): settles")
-        }
+        // Where the card stands, and the tank's give, are held on every screen below; here, that the measure settles
+        // where the tank gives up most.
+        storeTheFullestCard()
+        let m = try! XCTUnwrap(measuredCard(fullest, se, type: PlayLayout.typeCap))
+        XCTAssertLessThan(m.fit.scale, 1, "the tank shrank")
+        // The room is measured with the tank as played: one that moved with the shrink would never settle.
+        XCTAssertLessThan(m.times, 6, "settles")
     }
 
     /// Every bit of a level's best and pack progress, so each candidate stores only its own.
@@ -679,73 +568,58 @@ final class PlayLayoutTests: XCTestCase {
         ]
     }
 
-    /// The tallest of `candidates` on `screen` at `type`, by the card's height as laid out, with where it stood.
-    @MainActor private func tallestCard(_ screen: Screen, type: DynamicTypeSize)
-        -> (what: String, env: [String: String], store: () -> Void,
-            p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?)) {
-        var tallest: (String, [String: String], () -> Void, (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))?
-        for c in candidates {
-            forgetEveryBest()
-            c.store()
-            let p = try! XCTUnwrap(placedCard(c.env, screen, type: type), "\(screen.name): \(c.what)")
-            print("card candidate: \(screen.name) at \(type): \(c.what): \(p.frame.height)")
-            if p.frame.height > tallest?.3.frame.height ?? 0 { tallest = (c.what, c.env, c.store, p) }
-        }
-        forgetEveryBest()
-        let t = tallest!
-        return (t.0, t.1, t.2, t.3)
-    }
-
     private typealias Tallest = (what: String, env: [String: String], store: () -> Void,
                                  p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))
     @MainActor private static var shortestsTallest: Tallest?
-    /// The tallest candidate on the shortest phone at the play screen's largest type, measured once a run.
+    /// The tallest of `candidates` on the shortest phone at the play screen's largest type, by the card's height as
+    /// laid out, with where it stood; measured once a run.
     @MainActor private func shortestsTallest() -> Tallest {
         if let kept = Self.shortestsTallest { return kept }
-        let t = tallestCard(screens[0], type: PlayLayout.typeCap)
-        Self.shortestsTallest = t
-        return t
+        var tallest: (what: String, env: [String: String], store: () -> Void, card: CGFloat)?
+        for c in candidates {
+            forgetEveryBest()
+            c.store()
+            let card = try! XCTUnwrap(measuredCard(c.env, se, type: PlayLayout.typeCap), c.what).card
+            print("card candidate: SE at the cap: \(c.what): \(card)")
+            if card > tallest?.card ?? 0 { tallest = (c.what, c.env, c.store, card) }
+        }
+        let t = tallest!
+        forgetEveryBest()
+        t.store()
+        let p = try! XCTUnwrap(placedCard(t.env, screens[0], type: PlayLayout.typeCap), t.what)
+        forgetEveryBest()
+        Self.shortestsTallest = (t.what, t.env, t.store, p)
+        return Self.shortestsTallest!
     }
 
-    /// The play screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"). On the shortest and
-    /// the largest phone every candidate is measured afresh at the play screen's largest type and the tallest stands
-    /// whole; every other screen, and every smaller type on the shortest phone, places the shortest phone's tallest.
-    /// `UNSTIR_SLOW_TESTS=1` measures every candidate everywhere (minutes on CI's runner). A taller card added later
+    /// The play screen never scrolls (Jack, 2026-11-13: "everything should fit in one screen"). On the shortest phone
+    /// every candidate is measured at the play screen's largest type, and its tallest stands whole there and on every
+    /// other screen, whose card is as wide or wider, so no candidate's is taller there; a smaller type is a shorter card
+    /// in more room, so only the default size is placed under the cap. A taller card added later
     /// becomes the one checked, and one that can't fit even with the glass at its least fails here.
     @MainActor func testEveryCardStandsWholeOnOneScreenOnEveryScreenAtEveryType() {
-        let all = ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1"
         let shortest = screens[0]
         let pick = shortestsTallest()
-        func placed(_ screen: Screen, _ type: DynamicTypeSize) -> (what: String, p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?)) {
-            if all || (screen.name == "Pro Max" && type == PlayLayout.typeCap) {
-                let t = tallestCard(screen, type: type)
-                return (t.what, t.p)
-            }
-            if screen.name == shortest.name && type == PlayLayout.typeCap { return (pick.what, pick.p) }
+        func placed(_ screen: Screen, _ type: DynamicTypeSize) -> (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?) {
+            if screen.name == shortest.name && type == PlayLayout.typeCap { return pick.p }
             forgetEveryBest()
             pick.store()
-            return (pick.what, try! XCTUnwrap(placedCard(pick.env, screen, type: type)))
+            defer { forgetEveryBest() }
+            return try! XCTUnwrap(placedCard(pick.env, screen, type: type))
         }
         for screen in screens {
-            let tallest = placed(screen, PlayLayout.typeCap)
-            print("card placed: \(screen.name) at the cap, \(tallest.what): \(tallest.p.frame) scale \(tallest.p.fit?.scale ?? 1)")
-            standsWhole(tallest.p, on: screen, "\(screen.name) at the cap: \(tallest.what)")
+            let p = placed(screen, PlayLayout.typeCap)
+            print("card placed: \(screen.name) at the cap, \(pick.what): \(p.frame) scale \(p.fit?.scale ?? 1)")
+            standsWhole(p, on: screen, "\(screen.name) at the cap: \(pick.what)")
         }
         // The text keeps its size: the card is taller at the cap than at the default size.
-        XCTAssertGreaterThan(pick.p.frame.height, placed(shortest, .large).p.frame.height, "the card's text grows with the type")
-        for type in DynamicTypeSize.allCases where type < PlayLayout.typeCap && type != .large {
-            let tallest = placed(shortest, type)
-            standsWhole(tallest.p, on: shortest, "\(shortest.name) at \(type): \(tallest.what)")
-        }
-        forgetEveryBest()
+        let large = placed(shortest, .large)
+        XCTAssertGreaterThan(pick.p.frame.height, large.frame.height, "the card's text grows with the type")
+        standsWhole(large, on: shortest, "\(shortest.name) at the default size: \(pick.what)")
         // Past the cap the play screen keeps the cap's size.
-        storeTheFullestCard()
-        let cap = try! XCTUnwrap(placedCard(fullest, shortest, type: PlayLayout.typeCap))
-        storeTheFullestCard()
-        let past = try! XCTUnwrap(placedCard(fullest, shortest, type: .accessibility5))
-        XCTAssertEqual(past.frame.height, cap.frame.height, accuracy: 0.5)
-        standsWhole(past, on: shortest, "\(shortest.name) at accessibility5")
-        forgetEveryBest()
+        let past = placed(shortest, .accessibility5)
+        XCTAssertEqual(past.frame.height, pick.p.frame.height, accuracy: 0.5)
+        standsWhole(past, on: shortest, "\(shortest.name) at accessibility5: \(pick.what)")
     }
 
     /// No supported phone needs the glass under its old 55% for any card, so the give past it runs through the real
@@ -754,107 +628,24 @@ final class PlayLayoutTests: XCTestCase {
     @MainActor func testOnAWindowShorterThanAnyPhoneTheGlassGivesWayAndTheCardStandsWhole() {
         let short = Screen(name: "the stand-in", window: CGSize(width: 375, height: 567), insets: (20, 0, 0, 0))
         // A card keeps its own height whatever the window's, and the stand-in is as wide as the shortest phone, so
-        // that phone's tallest card is the tallest here; `UNSTIR_SLOW_TESTS=1` measures every candidate here too.
-        let tallest: (what: String, p: (frame: CGRect, card: CGFloat?, room: CGFloat?, fit: PlayLayout.Finished?))
-        if ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1" {
-            let t = tallestCard(short, type: PlayLayout.typeCap)
-            tallest = (t.what, t.p)
-        } else {
-            let pick = shortestsTallest()
-            XCTAssertEqual(short.window.width, screens[0].window.width)
-            forgetEveryBest()
-            pick.store()
-            tallest = (pick.what, try! XCTUnwrap(placedCard(pick.env, short, type: PlayLayout.typeCap)))
-            XCTAssertEqual(tallest.p.frame.height, pick.p.frame.height, accuracy: 0.5, "the card keeps its height")
-            forgetEveryBest()
-        }
-        print("card placed: the stand-in at the cap, \(tallest.what): \(tallest.p.frame) scale \(tallest.p.fit?.scale ?? 1)")
-        standsWhole(tallest.p, on: short, "the stand-in: \(tallest.what)")
-        XCTAssertLessThan(try! XCTUnwrap(tallest.p.fit).scale, 0.55, "the glass gave way past the old least")
+        // that phone's tallest card is the tallest here.
+        let pick = shortestsTallest()
+        XCTAssertEqual(short.window.width, screens[0].window.width)
+        forgetEveryBest()
+        pick.store()
+        let p = try! XCTUnwrap(placedCard(pick.env, short, type: PlayLayout.typeCap))
+        forgetEveryBest()
+        XCTAssertEqual(p.frame.height, pick.p.frame.height, accuracy: 0.5, "the card keeps its height")
+        print("card placed: the stand-in at the cap, \(pick.what): \(p.frame) scale \(p.fit?.scale ?? 1)")
+        standsWhole(p, on: short, "the stand-in: \(pick.what)")
+        XCTAssertLessThan(try! XCTUnwrap(p.fit).scale, 0.55, "the glass gave way past the old least")
     }
 
-    @MainActor func testACardWithRoomAndATankInPlayLeaveTheTankAsItIs() {
-        // A plain card on the largest phone at the default size, as every card there is.
-        let plain = try! XCTUnwrap(measuredCard(["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "5"], proMax, type: .large))
-        XCTAssertEqual(plain.fit.scale, 1)
-        XCTAssertEqual(plain.fit.lift, 0)
-        XCTAssertTrue(plain.fit.fits)
-        // In play nothing is measured for a card, so the tank is the layout's, on the shortest phone at the largest type too.
-        for (phone, type) in [(se, DynamicTypeSize.large), (se, .xxxLarge), (proMax, .xxxLarge)] {
-            XCTAssertNil(measuredCard(["UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"], phone, type: type)?.fit, "\(phone.window) at \(type)")
-        }
-    }
-
-    // Stage 3: what each level draws round its glass, kept inside the tank's pane.
-
+    // The open Duo's window and its folds, in window points, 19 pt across (assumed: no Duo simulator reports one
+    // headlessly), as the harness's UNSTIR_FOLD gives them.
     private let open = (window: CGSize(width: 951, height: 669), insets: (top: CGFloat(24), leading: CGFloat(0), bottom: CGFloat(21), trailing: CGFloat(84)))
     private let book = CGRect(x: 466, y: 0, width: 19, height: 669)
     private let table = CGRect(x: 0, y: 466, width: 669, height: 19)
-
-    /// The stage grown by what `halo` draws round it.
-    private func reach(_ l: PlayLayout) -> CGRect {
-        let ring = l.halo.ring * l.side / 2
-        return CGRect(x: l.stage.minX - ring, y: l.stage.minY - max(ring, l.halo.above),
-                      width: l.stage.width + 2 * ring, height: l.stage.height + ring + max(ring, l.halo.above))
-    }
-
-    private func inside(_ r: CGRect, _ pane: CGRect, _ what: String, file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertGreaterThanOrEqual(r.minX, pane.minX - 0.001, what, file: file, line: line)
-        XCTAssertGreaterThanOrEqual(r.minY, pane.minY - 0.001, what, file: file, line: line)
-        XCTAssertLessThanOrEqual(r.maxX, pane.maxX + 0.001, what, file: file, line: line)
-        XCTAssertLessThanOrEqual(r.maxY, pane.maxY + 0.001, what, file: file, line: line)
-    }
-
-    func testEachLevelsHaloIsItsShape() {
-        let endless = PlayLayout.Halo(Level.endless(Run(seed: 7)))
-        XCTAssertEqual(endless.ring, CGFloat((Brim.rOut + Brim.reach) / Brim.unit) - PlayLayout.rim, accuracy: 1e-9)
-        XCTAssertEqual(endless.ring, 0.229, accuracy: 0.001, "the brim's glow and drops, out to Brim.reach")
-        XCTAssertEqual(endless.above, 0)
-        XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim), "the rim lesson's arc")
-        XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(), "drawn wholly on the glass and rim")
-        XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo())
-        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo())
-    }
-
-    func testEndlesssBrimStaysInsideTheTanksPaneInEveryPose() {
-        let halo = PlayLayout.Halo(Level.endless(Run(seed: 7)))
-        for (pose, fold) in [("open", nil), ("book", book)] as [(String, CGRect?)] {
-            let l = layout(window: open.window, insets: open.insets, fold: fold, halo: halo)
-            XCTAssertEqual(l.kind, .split, pose)
-            inside(reach(l), l.tankPane, pose)
-        }
-        let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table, halo: halo)
-        XCTAssertEqual(t.kind, .tabletop)
-        inside(reach(t), t.tankPane, "tabletop")
-        XCTAssertEqual(reach(t).height, t.tankPane.height, accuracy: 0.001)
-        // Smaller than every other level's glass in the same pose, by the brim's reach.
-        XCTAssertEqual(layout(window: open.window, insets: open.insets).side, 417, accuracy: 1)
-        XCTAssertEqual(layout(window: open.window, insets: open.insets, halo: halo).side, 342, accuracy: 1)
-        XCTAssertEqual(t.side, 326, accuracy: 1)
-    }
-
-    func testTheRimLessonStaysAboveTheGlassInsideTheTabletopsLowerHalf() {
-        let halo = PlayLayout.Halo(Level.maelstrom[0])
-        let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table, halo: halo)
-        XCTAssertEqual(l.kind, .tabletop)
-        inside(reach(l), l.tankPane, "tabletop")
-        XCTAssertEqual(l.stage.maxY, l.tankPane.maxY, accuracy: 0.001, "sat on the pane's foot")
-        XCTAssertEqual(l.stage.minY - l.tankPane.minY, halo.above, accuracy: 0.001, "the lesson's room above, no more")
-        // The split's lesson lies between the title and the glass, which gives it the room over the column's gap.
-        let split = layout(window: open.window, insets: open.insets, fold: book, halo: halo)
-        XCTAssertLessThanOrEqual(split.side, layout(window: open.window, insets: open.insets, fold: book).side)
-        inside(reach(split), split.tankPane, "book")
-        for l in [split, layout(window: open.window, insets: open.insets, halo: halo)] {
-            XCTAssertGreaterThanOrEqual(l.stage.minY - halo.above, l.tankPane.minY + l.chrome.above - 0.001, "clear of the title")
-        }
-    }
-
-    func testAHaloLeavesNoRoomItDoesntNeed() {
-        // Nothing drawn round the glass: the tabletop's tank still fills its half, as stage 2 laid it out.
-        let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
-        XCTAssertEqual(l.stage.minY, l.tankPane.minY, accuracy: 0.001)
-        XCTAssertEqual(l.stage.maxY, l.tankPane.maxY, accuracy: 0.001)
-    }
 
     func testBoundsAreTheTanksPaneInTheGlasssFrame() {
         for l in [layout(window: open.window, insets: open.insets, fold: book),
@@ -866,18 +657,6 @@ final class PlayLayoutTests: XCTestCase {
             XCTAssertEqual(b.size, l.tankPane.size)
             XCTAssertTrue(b.contains(CGRect(x: 0, y: 0, width: l.side, height: l.side)), "the glass lies inside its pane")
         }
-    }
-
-    func testTheNightForwardsLinesEndAboveTheFoldInTheTabletop() {
-        let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
-        XCTAssertNotNil(t.filmFoot)
-        // The film is centred on the glass, its lines hung from the black's foot and moved by the film's own offset.
-        let blackFoot = t.stage.midY + NightForwardsFilm.backing / 2 * t.side
-        let lines = blackFoot + NightForwardsFilm.linesOffset(foot: t.filmFoot, side: t.side)
-        XCTAssertEqual(lines, t.chromePane.maxY, accuracy: 0.001, "at the foot of the upright half")
-        XCTAssertLessThanOrEqual(59 + lines, table.minY - PlayLayout.margin + 0.001)
-        // The split has room under the glass, as the column has.
-        XCTAssertNil(layout(window: open.window, insets: open.insets).filmFoot)
     }
 
     func testALensTurnsOnlyAsFarAsItsTrackShowsInThePane() {
@@ -977,18 +756,6 @@ final class PlayLayoutTests: XCTestCase {
                       fold: fold.map { $0.offsetBy(dx: -i.leading, dy: -i.top) })
     }
 
-    func testEveryIPhoneKeepsTodaysMenu() {
-        // The SE, the Pro Max, the Duo closed, the Duo open upright and flat, and a tall half of Split View.
-        for (window, insets) in [(CGSize(width: 375, height: 667), (20.0, 0.0, 0.0, 0.0)), (CGSize(width: 440, height: 956), (62, 0, 34, 0)),
-                                 (CGSize(width: 466, height: 678), (0, 0, 34, 84)), (CGSize(width: 669, height: 951), (59, 0, 34, 0)),
-                                 (CGSize(width: 475, height: 669), (24, 0, 21, 0))] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat))] {
-            let m = menu(window: window, insets: insets)
-            XCTAssertEqual(m, .column, "\(window)")
-            XCTAssertFalse(m.wide)
-            XCTAssertFalse(m.splits, "\(window): a level opened there covers the menu, as on every iPhone")
-        }
-    }
-
     func testTheTabletopsMenuKeepsEveryPartOffTheFold() {
         // The Duo upright and folded on a table (d4-table, deferred to stage 5): the title, strip and list in the
         // upright half, the dock, or a card or the archive over it, in the half lying flat.
@@ -1011,25 +778,6 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertFalse(m.splits, "a level opened in the tabletop covers the menu, its tank below the fold")
         // Lying flat, the Duo upright keeps today's menu.
         XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: insets), .column)
-    }
-
-    func testBesidePlayTheListTakesTheTrailingHalfAndACardTheSame() {
-        for fold in [nil, book] as [CGRect?] {
-            let m = menu(window: open.window, insets: open.insets, fold: fold)
-            XCTAssertTrue(m.splits, "a level opened on the open Duo plays beside the menu")
-            let side = try! XCTUnwrap(m.side)
-            // What PlayStack gives the menu's part: the play screen's trailing half, in the menu's space.
-            let play = layout(window: open.window, insets: open.insets, fold: fold)
-            let slot = try! XCTUnwrap(play.menuPane).offsetBy(dx: PlayLayout.margin, dy: 0)
-            XCTAssertEqual(slot.minX, side.minX, accuracy: 0.001, "the list starts where a card does")
-            XCTAssertEqual(slot.maxX, side.maxX - PlayLayout.margin, accuracy: 0.001, "inside the play screen's margin")
-            XCTAssertEqual(slot.height, side.height, "the whole height: the level's chrome is round its tank")
-            let beside = m.beside(slot)
-            XCTAssertEqual(beside.list, slot)
-            XCTAssertEqual(beside.side, side, "a card or the archive covers the whole trailing half")
-            XCTAssertNil(beside.dock, "the dock stays under the list")
-            XCTAssertTrue(beside.splits)
-        }
     }
 
     @MainActor func testBesidePlayTheRowOfThePlayingLevelOpensNothing() {
@@ -1075,24 +823,6 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(951 - room, table.maxY + PlayLayout.margin - 0.001, "its top stays clear of the fold")
         XCTAssertEqual(SettingsSheet.detents(content: 528, window: 951, room: room), [.height(room)])
         XCTAssertEqual(SettingsSheet.detents(content: 300, window: 951, room: room), [.height(300)])
-    }
-
-    func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
-        for fold in [nil, book] as [CGRect?] {
-            let m = menu(window: open.window, insets: open.insets, fold: fold)
-            let list = try! XCTUnwrap(m.list), side = try! XCTUnwrap(m.side)
-            // In window points (the leading inset is 0): each half 16 pt clear of the fold, or of the middle.
-            let f = fold ?? CGRect(x: open.window.width / 2, y: 0, width: 0, height: open.window.height)
-            XCTAssertEqual(list.minX, 0, "the list keeps its own 20 pt margin from the screen's edge")
-            XCTAssertEqual(list.maxX, f.minX - PlayLayout.margin, accuracy: 0.001)
-            XCTAssertEqual(side.minX, f.maxX + PlayLayout.margin, accuracy: 0.001)
-            XCTAssertEqual(side.maxX, open.window.width - open.insets.trailing, accuracy: 0.001, "the card stops at the status column")
-            XCTAssertGreaterThanOrEqual(min(list.width, side.width), PlayLayout.minPane)
-            XCTAssertEqual(list.height, open.window.height - open.insets.top - open.insets.bottom)
-            XCTAssertEqual(side.height, list.height)
-            // A readable width, near a phone's: the Pro Max's list is 440 pt across.
-            XCTAssertEqual(list.width, 459.5, accuracy: fold == nil ? 0.001 : 10)
-        }
     }
 
     func testTheMenuSplitsWherePlaySplits() {

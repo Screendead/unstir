@@ -1041,9 +1041,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   past the foot (`Finished.fits` false), which the tests fail. No card measured comes near it: on 2026-11-13 the
   tallest, plughole 27 replayed at par with an undo against an older best (what clean takes, the best line, again and
   up a notch), at xxxLarge took the SE's glass to 59% and the closed Duo's to 58%, every other screen less. `testEveryCardStandsWholeOnOneScreenOnEveryScreenAtEveryType` measures every
-  candidate card on each screen the game runs on (the SE, a 6.1 inch, the Pro Max and the Duo closed, upright, beside
-  the menu and flat) at the type cap, and every one on the SE at every type up to it, and holds the tallest to stand
-  whole on one screen at its own height (`LevelView`'s `cardPlaced` hands the tests its frame);
+  candidate card on the SE, the narrowest, at the type cap, and holds the tallest to stand whole at its own height there
+  and on each other screen the game runs on (a 6.1 inch, the Pro Max and the Duo closed, upright, beside the menu and
+  flat), and on the SE at the default size and past the cap (`LevelView`'s `cardPlaced` hands the tests its frame);
   `testOnAWindowShorterThanAnyPhoneTheGlassGivesWayAndTheCardStandsWhole` runs the give past the old 55% through the
   real layout on a stand-in window 100 pt shorter than an SE's.
   The split's card goes over the menu and the tabletop's stack makes room for its own, so neither shrinks. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
