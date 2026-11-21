@@ -113,7 +113,8 @@ game plays.
   attachment this Linux machine cannot fetch: the Mac compares it with `store-header-272`'s search, header and
   universal art and says which file and which crop it shows (#278). Then either a re-upload of the right file, or a
   version that survives App Store Connect's crop.
-- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
+- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all: asked on his Calls page (#284,
+  2026-11-21), keep all three, change some, or hear them filmed in the game first.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
