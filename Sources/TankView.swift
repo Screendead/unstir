@@ -435,9 +435,7 @@ struct LevelView: View {
             }
         }
         if resumed == nil, let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
-        for m in resumed == nil ? harness?.played ?? [] : [] {
-            if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
-        }
+        if resumed == nil { game.commit(line: harness?.played ?? []) }
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)

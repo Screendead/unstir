@@ -89,7 +89,9 @@ game plays.
 **Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines and the TestFlight
 retention (`tools/tf-poll.py` now forgets polls past 12 months on every run, 2026-11-20) and the archive without a
 policy (`scripts/archive-ios.sh` refuses to upload or export without `POLICY_URL`, 2026-11-21; the policy's missing
-legal basis stays open), the harness crash in `Game.settle`, Escapement 29's layer, the curtain call on the phone,
+legal basis stays open) and the harness crash in `Game.settle` (`UNSTIR_PLAYED` committed a tank turn as a turn of
+knob -1; its line now goes through `Game.commit(line:)`, which turns the tank, 2026-11-21, not yet launched with one).
+Still open: Escapement 29's layer, the curtain call on the phone,
 Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged worktrees and
 branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
 
