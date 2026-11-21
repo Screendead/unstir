@@ -124,9 +124,13 @@ game plays.
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
   `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
-  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280); filming again is on
-  the Mac (#281).
-  Then Jack's listen before any post.
+  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280). Filmed again on the
+  Mac with it (#281, closed 2026-11-21): all four clean, no take lost sound, no digital silence inside the sound and
+  no sample jumps; 48 kHz, -15.7 to -16.0 LUFS, true peak -1.5 dBTP but plughole 05's -1.4. They are mono: the
+  recorder took one channel. The Mac's run fixed four things on the way (plughole 05's take
+  too short for a first launch's late strike, the second loudness pass trimming the wrong input, the app playing on
+  through the speakers after a take, ffmpeg's summary after loudnorm's measure). The clips wait in the Mac's tools
+  folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
   2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
