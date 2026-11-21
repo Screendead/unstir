@@ -24,14 +24,45 @@ PLACEMENTS = {
 
 
 def tank_bounds(shot):
-    """The tank's disc, bezel included: the first and last lit pixels across and down through the shot's middle."""
+    """The tank's disc, bezel included, as a square box. The column centres the tank across the shot, so each row's lit
+    pixels nearest either edge give its chord where they sit symmetrically about the middle; the disc is the circle,
+    centred across, whose chords best match the rows' over its height. Its top and bottom are found from the fit, not
+    scanned for, as lit chrome above or below the bezel (the title, the caption) would join it."""
     w, h = shot.size
-    lit = lambda p: sum(p) > 60
-    cy = h // 2
-    xs = [x for x in range(w) if lit(shot.getpixel((x, cy)))]
-    cx = (xs[0] + xs[-1]) // 2
-    ys = [y for y in range(h // 4, 3 * h // 4) if lit(shot.getpixel((cx, y)))]
-    return xs[0], ys[0], xs[-1] + 1, ys[-1] + 1
+    grey = shot.convert("L")
+    px = grey.load()
+    half = [None] * h
+    for y in range(h):
+        left = next((x for x in range(w) if px[x, y] > 20), None)
+        if left is None:
+            continue
+        right = next(x for x in range(w - 1, -1, -1) if px[x, y] > 20)
+        if abs(left + right + 1 - w) <= 4:
+            half[y] = (right + 1 - left) / 2
+    best = None
+    for cy in range(h):
+        r = half[cy]
+        if r is None or r < w / 4:
+            continue
+        span = int(r * 0.95)
+        if cy - span < 0 or cy + span >= h:
+            continue
+        rows = range(cy - span, cy + span + 1, 4)
+        hits = sum(1 for y in rows if half[y] is not None and abs(half[y] ** 2 + (y - cy) ** 2 - r * r) <= 6 * r)
+        score = hits / len(rows)
+        if best is None or (score, r) > (best[0], best[2]):
+            best = (score, cy, r)
+    if best is None or best[0] < 0.9:
+        sys.exit(f"no tank found in the shot (best fit {best and round(best[0], 2)}): is it a play shot?")
+    # Refine over every row the fit matched: on the circle, half² + y² = 2·cy·y + (r² − cy²), a line in y.
+    _, cy, r = best
+    ys = [y for y in range(h) if half[y] is not None and abs(half[y] ** 2 + (y - cy) ** 2 - r * r) <= 6 * r]
+    zs = [half[y] ** 2 + y * y for y in ys]
+    my, mz = sum(ys) / len(ys), sum(zs) / len(zs)
+    slope = sum((y - my) * (z - mz) for y, z in zip(ys, zs)) / sum((y - my) ** 2 for y in ys)
+    cy = slope / 2
+    r = (mz - slope * my + cy * cy) ** 0.5
+    return round(w / 2 - r), round(cy - r), round(w / 2 + r), round(cy + r)
 
 
 def compose(backdrop, tank, size, safe):
