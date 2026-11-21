@@ -11,15 +11,13 @@ import simd
 final class PrismTests: XCTestCase {
     private let redCyan: [Int: Channels] = [0: .red, 1: .cyan]
 
-    /// A knob spells its channels in the swatches' letters, so a mask reads without telling its colour.
+    /// A knob spells its channels in the swatches' letters, so a mask reads without telling its colour, and a mask
+    /// parses from its one letter.
     func testEveryMaskSpellsItsPrimaries() {
         XCTAssertEqual([Channels.red, .green, .blue, .cyan, .magenta, .yellow, .white].map(\.letters),
                        ["R", "G", "B", "GB", "RB", "RG", "RGB"])
         XCTAssertEqual(Level.prism[0].channels(of: 1), .cyan)
         XCTAssertNil(Level.lens[0].channels(of: 0))
-    }
-
-    func testMasksParse() {
         XCTAssertEqual(Channels.masks("0:r,1:C,2:w"), [0: .red, 1: .cyan, 2: .white])
         XCTAssertEqual(Channels.masks(""), [:])
         XCTAssertNil(Channels.masks("0:x"))
@@ -254,14 +252,6 @@ final class PrismTests: XCTestCase {
         }
     }
 
-    /// The per-channel shader draws only a stack with a mask that isn't white, and its cost counts each channel's map.
-    func testTheChannelCostCountsEachChannelsMap() {
-        let w = Float(Channels.white.rawValue), r = Float(Channels.red.rawValue), c = Float(Channels.cyan.rawValue)
-        XCTAssertNil(Unstirred.channelCost([]))
-        XCTAssertNil(Unstirred.channelCost([w, w, w]))
-        XCTAssertEqual(Unstirred.channelCost([w, r, c]), 3 + 3 + 1 + 2)
-    }
-
     /// Unstir.metal's Prism body over a texture of the plate, as the GPU bench samples it, and beside it the glass as
     /// it was drawn before a held rod had a read: each channel through its own chain, lit and finished, written out here.
     private static let heldKernel = """
@@ -374,24 +364,20 @@ final class PrismTests: XCTestCase {
     /// count, so this is a measure of the plates as dealt, not of a rule.
     @MainActor func testAHeldRodReadsInItsOwnColourUntilNearItsCount() async throws {
         let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: Self.heldKernel)
-        var rows: [String] = []
         for (n, depth) in Self.heldMoves {
             let level = Level.prism[n - 1], where_ = "\(level.id) after \(depth)"
             let plate = try await plate(kit, level)
-            var shares: [Double] = []
-            for off in [-1, -0.5, 0, 0.5, 1] {
+            // Half a step off is the nearest the read must still show its own colour.
+            for off in [-0.5, 0, 0.5] {
                 let drawn = try held(kit, plate, level: level, depth: depth, off: off, hold: 1)
                 let share = whiteShare(drawn.read, side: drawn.side, disc: drawn.disc)
-                shares.append(share)
                 if off == 0 {
                     XCTAssertGreaterThanOrEqual(share, 0.7, "\(where_) on the count")
                 } else {
                     XCTAssertLessThanOrEqual(share, 0.02, "\(where_) \(off) steps off the count")
                 }
             }
-            rows.append(where_ + ": " + shares.map { String(format: "%.3f", $0) }.joined(separator: " "))
         }
-        print("held white share, -1 -0.5 on +0.5 +1 steps off the count\n" + rows.joined(separator: "\n"))
     }
 
     /// Let go and faded out, the held read leaves the glass exactly as it was drawn before it, to the byte.

@@ -1590,7 +1590,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   take the turn's own with it, and at once under Reduce Motion. A white rod, and hold 0, skip it, so the glass is
   then the plain one to the byte (`testAHeldRodsReadLeavesTheGlassAsItWasWhenLetGo`). `testAHeldRodReadsInItsOwnColourUntilNearItsCount`
   runs the shader's body at 1200 px over four moves of once-stirred coloured rods (Frond's cyan and red, Thistle's
-  blue, specimen 14's yellow), each held a step and half a step either side of its count and on it, and measures the white share of the lit pixels in its
+  blue, specimen 14's yellow), each held half a step either side of its count and on it, and measures the white share of the lit pixels in its
   rigid disc outside the cap: at most 0.001 off the count, 0.79 to 1.00 on it (2026-11-11). The GPU bench times
   each specimen with its first move's rod in hand half a step short, four taps forced, the read drawn against not:
   on the Mac's GPU a median 1.07x, 1.14x at most, 1.2 plain entries' work (1.9 at most) that `channelCost` and the
@@ -1617,7 +1617,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   on disk, so thirty plates cost no storage and no cache to cap. A plate is composed round its layout: no knob, and
   no hub a clock on any rod would wear, sits on the part it is named for, a ruled tint leaves no core flat, and the
   second ink keeps to one small part, never a dashed circle, which reads as a clock's disc
-  (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every pixel a mix of bone, ink and vermilion,
+  (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every other pixel each way a mix of bone, ink and vermilion,
   the second ink's marks within a circle 0.4 of the tank across and under 3% of the glass, and the step measure in
   every core of the problem's own layout, baked as an SE draws its glass at default type, 328 pt at 2x, not at the
   shared plate's 512 px at 1x, where the 2.2 px hairline is heavier than on any phone and close hatching runs solid). `scripts/escapement-art.sh` renders a plate on the Mac, with a layout

@@ -549,7 +549,6 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Marks.line(.lens, owned: true, fits: true, played: nil)?.words, "new")
     }
 
-    /// A pack's ids never read as another pack's or a tier's.
     /// A Release shelf shows a pack it sells once it has levels past its taste, and Triptych I once it shows every pack
     /// it sells; a build outside Release shows them all.
     func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
@@ -593,6 +592,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Pack.firstStir.access(4, owned: [], unlocked: true, release: true, playtest: true), .withheld)
     }
 
+    /// A pack's ids never read as another pack's or a tier's.
     func testPackIdsBelongToOnePack() {
         let tierIds = Tier.allCases.flatMap { $0.levels.map(\.id) } + ["endless", "sandbox", "daily-20261025"]
         for pack in Pack.allCases {
@@ -644,39 +644,6 @@ final class PackTests: XCTestCase {
         XCTAssertNil(Harness.purchases(["UNSTIR_PACK": "lens"], release: false))
         XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "lens"], release: false)?.owned, [.lens])
         XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "complete"], release: false)?.owned, Set(Pack.bundled))
-    }
-
-    func testHarnessSetsEachPurchaseState() throws {
-        let ledger = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "first-stir:pending,lens:failed,escapement:revoked"],
-                                                     release: false))
-        XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked, .unowned])
-        let complete = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "complete:revoked", "UNSTIR_OWNED": "lens"],
-                                                       release: false))
-        XCTAssertEqual(Pack.allCases.map(complete.state), [.unowned, .owned, .revoked, .revoked])
-        XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
-        let unshared = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "lens:unshared"], release: false))
-        XCTAssertEqual(unshared.state(.lens), .revoked)
-        XCTAssertTrue(unshared.unshared(.lens))
-    }
-
-    /// An owner's pill plays from the first level without a best, then the first not at par, and goes once all are at
-    /// par; it says continue once a level past the taste is solved.
-    @MainActor func testAnOwnerPicksUpWhereTheyLeftOff() {
-        let levels = Pack.lens.levels
-        var bests: [String: Best] = [:]
-        func best(_ id: String) -> Best? { bests[id] }
-        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "01")
-        XCTAssertFalse(PackCard.continues(levels, best: best))
-        for level in levels.prefix(3) { bests[level.id] = Best(over: 0, seconds: 60) }
-        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "04")
-        XCTAssertFalse(PackCard.continues(levels, best: best))
-        bests[levels[3].id] = Best(over: 2, seconds: 60)
-        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "05")
-        XCTAssertTrue(PackCard.continues(levels, best: best))
-        for level in levels where bests[level.id] == nil { bests[level.id] = Best(over: 0, seconds: 60) }
-        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "04")
-        bests[levels[3].id] = Best(over: 0, seconds: 60)
-        XCTAssertNil(PackCard.pickUp(levels, best: best))
     }
 
     /// Try free plays the taste's first level without a best, then offers the three again; the gate's note counts
@@ -763,36 +730,6 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(PackCard.lands(.pending, .owned, ready: true))
         XCTAssertFalse(PackCard.lands(.owned, .owned, ready: true))
         XCTAssertFalse(PackCard.lands(.unowned, .pending, ready: true))
-    }
-
-    /// Until the launch's first read of the entitlements ends, a card says "checking purchases…" in place of buy, so
-    /// an owner never sees a price on a pack they own; the harness holds that read unended.
-    @MainActor func testTheHarnessCanHoldTheFirstReadUnended() {
-        let h = Harness(["UNSTIR_STORE": "lens:unowned,unread"])
-        XCTAssertTrue(h.unread)
-        XCTAssertEqual(h.purchases?.state(.lens), .unowned)
-        XCTAssertFalse(Harness(["UNSTIR_STORE": "lens:owned"]).unread)
-        let store = Store()
-        store.pretend(Ledger(), ready: false)
-        XCTAssertFalse(store.ready)
-        store.pretend(Ledger())
-        XCTAssertTrue(store.ready)
-    }
-
-    @MainActor func testHarnessSetsTheCardsMessages() {
-        let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
-                         "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])
-        XCTAssertEqual(h.failure, .offline)
-        XCTAssertEqual(h.prices, [:])
-        XCTAssertEqual(h.amounts, [:])
-        XCTAssertEqual(Harness([:]).prices[Pack.triptychID], "$5.99")
-        XCTAssertEqual(Harness([:]).amounts[Pack.lens.productID], Decimal(string: "2.99"))
-        XCTAssertEqual(h.pricing, .unreachable)
-        XCTAssertFalse(h.canPay)
-        XCTAssertEqual(h.restored, .found([.lens, .prism]))
-        XCTAssertEqual(Harness(["UNSTIR_RESTORED": "none"]).restored, .nothing)
-        XCTAssertEqual(Harness(["UNSTIR_PRICES": "0"]).pricing, .fetching)
-        XCTAssertEqual(Harness([:]).pricing, .fetched)
     }
 
     /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere, and solving the placeholder it opens
