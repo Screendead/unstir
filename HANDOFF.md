@@ -83,7 +83,16 @@ game plays.
   centre, instead touching the bottom side only and being cut off." Everything else on the page stays as uploaded.
   Which image he means is not certain from here: a search result shows the app preview first, as its poster frame
   (App Store Connect's default is said to be about 5 s in, which is whirlpool 03's play screen), else the first
-  screenshots. The Mac finds the frame and shot that match (#270), then it is fixed and retaken.
+  screenshots. The Mac's look (#270, closed 2026-11-21) found no other match: in the preview's frames at 0 to 8 s
+  (the 5 s frame is whirlpool 03, its tank whole from 28% to 71% of the height), screenshots 01 to 03 plain and
+  captioned and the Duo shots, the tank is whole and centred. That left the 3:2 search results asset, which
+  `scripts/store-header.py` composed on 2026-11-18. A disc fit for its measure of the tank was written (#272) on the
+  guess that its scan down the shot's middle began inside the disc, but the Mac's render on the real shot (#273,
+  2026-11-21) disproved it: the old measure gave (47, 816, 1272, 2041), the fit (47, 815, 1273, 2041), and in the
+  search, header and universal art the whole bezel shows, round and centred in the safe area, as it did on 18 Nov.
+  So the script was kept as it was (#272 merged only this record), and the fault is downstream of its file: App
+  Store Connect's own crop or preview of the asset, or an older file than the 18 Nov render being the one uploaded.
+  The re-rendered art is in the tools folder outside the repo (`store-header-272`), the same as 18 Nov's.
 - Answered on his Calls page (2026-11-21, rows in `docs/decisions.md`): the clips with sound (#261): "**Jack's
   answer:** A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc.
   That's happened before from CPU throttling." Claude's two picks (#262): "**Jack's answer:** A · Keep both": the open
@@ -97,7 +106,8 @@ game plays.
 
 **Next:**
 
-- The search results' image (#270 on the Mac finds it), fixed and retaken; the rest of the media is final.
+- The search results' image: the file is right (#273), so which file App Store Connect holds, and how it shows it,
+  is Jack's to check; asked of him (#276).
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
