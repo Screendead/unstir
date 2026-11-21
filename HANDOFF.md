@@ -106,6 +106,7 @@ game plays.
 **Next:**
 
 - The search results' image: the store header art rendered again (#273, PR #272), then Jack uploads the three.
+  Asked of Jack (#275): merge the fix now or wait for the Mac's render; recommended wait.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
