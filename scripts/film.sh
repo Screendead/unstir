@@ -69,6 +69,8 @@ for line in sys.stdin:
   # comment keeps how long it ran, which scripts/store-media.sh cuts by.
   [[ -n "$v0" ]] && took=$(awk -v a="$v0" -v b="$v1" 'BEGIN { printf "%.3f", b - a }') length=(-metadata comment="take $took s")
   if [[ -n "$snd" ]]; then
+    # Left running, the app plays on through the speakers once the caller switches the output back.
+    xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
     kill -INT "$snd"
     wait "$snd" || { echo "$name: its sound didn't record whole; film it again" >&2; exit 1; }
     [[ -n "$v0" ]] || { echo "$name: recordVideo never said it started, so its sound can't be placed" >&2; exit 1; }
