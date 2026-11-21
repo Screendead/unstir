@@ -76,8 +76,14 @@ game plays.
 
 - Still his own: the account night (not started, Jack 2026-11-15), ICO registration,
   hosting the privacy policy, the policy's remaining tokens, a trademark search, a launch date.
-- Asked on his Calls page (2026-11-21, open): whether the store media on the App Store page is final (#263,
-  recommended: final as uploaded).
+- Answered on his Calls page (2026-11-21, row in `docs/decisions.md`): whether the store media on the App Store page
+  is final (#263): "**Jack's answer:** B · Change some
+
+  the one thing i don't like is the search results page's image. it renders in the preview with the tank not in the
+  centre, instead touching the bottom side only and being cut off." Everything else on the page stays as uploaded.
+  Which image he means is not certain from here: a search result shows the app preview first, as its poster frame
+  (App Store Connect's default is said to be about 5 s in, which is whirlpool 03's play screen), else the first
+  screenshots. The Mac finds the frame and shot that match (#270), then it is fixed and retaken.
 - Answered on his Calls page (2026-11-21, rows in `docs/decisions.md`): the clips with sound (#261): "**Jack's
   answer:** A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc.
   That's happened before from CPU throttling." Claude's two picks (#262): "**Jack's answer:** A · Keep both": the open
@@ -91,7 +97,7 @@ game plays.
 
 **Next:**
 
-- Jack's look at the retaken media.
+- The search results' image (#270 on the Mac finds it), fixed and retaken; the rest of the media is final.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
