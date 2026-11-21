@@ -77,6 +77,10 @@ game plays.
 - Still his own: the account night (not started, Jack 2026-11-15), ICO registration,
   hosting the privacy policy, the policy's remaining tokens, a trademark search, a launch date.
 - Claude's picks still open to him: the open tank's cap of 96, and the 30% floor the glass shrinks to under a card.
+- Asked on his Calls page (2026-11-21, open): the clips with sound (#261, recommended: film them), the two picks
+  above (#262, recommended: keep both), and whether the store media on the App Store page is final (#263,
+  recommended: final as uploaded).
+- On the Mac (2026-11-21, #260): the packs' layers rendered again on master, for Escapement 29's restored deal.
 
 **Next:**
 
