@@ -111,14 +111,22 @@ game plays.
   [a 1699 x 860 screenshot] from [App Store Connect's URL, kept out of the repo]": the app's version page there, the
   version in flight. So the cut-off tank shows on App Store Connect's own version page. The screenshot is a GitHub
   attachment this Linux machine cannot fetch: the Mac compares it with `store-header-272`'s search, header and
-  universal art and says which file and which crop it shows (#278). Then either a re-upload of the right file, or a
-  version that survives App Store Connect's crop.
+  universal art and says which file and which crop it shows (#278, closed 2026-11-21): it is App Store Connect's
+  Device Preview of the "Search Results Page" slot, showing `search.png` (3840 x 2560, 3:2) in a 2.22:1 card, cropped
+  from the top: the card keeps the file's top 67.7% and loses its bottom 32.3%, so the tank sits low with its rim on
+  the card's edge. The dialog says the preview may not match what customers see. The art that survives it is below.
 - Jack's listen to the layers in play, Escapement 29's above all: asked on his Calls page (#284, closed 2026-11-21):
   "**Jack's answer:** C · Hear them in the game first". Once #280's recorder is checked on the Mac (#281) and merged,
   ask the Mac to film the three levels with sound (`scripts/layers-film.sh`, under #268's conditions: mains power,
   `pmset -g therm` clear, nothing else running beside the takes) and check each film for dropouts; then Jack watches
   them and keeps or changes the layers.
-- The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
+- The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
+  every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
+  The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
+  `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
+  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280); filming again is on
+  the Mac (#281).
+  Then Jack's listen before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
   2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
