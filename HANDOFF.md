@@ -111,10 +111,17 @@ game plays.
   [a 1699 x 860 screenshot] from [App Store Connect's URL, kept out of the repo]": the app's version page there, the
   version in flight. So the cut-off tank shows on App Store Connect's own version page. The screenshot is a GitHub
   attachment this Linux machine cannot fetch: the Mac compares it with `store-header-272`'s search, header and
-  universal art and says which file and which crop it shows (#278). Then either a re-upload of the right file, or a
-  version that survives App Store Connect's crop.
+  universal art and says which file and which crop it shows (#278, closed 2026-11-21): it is App Store Connect's
+  Device Preview of the "Search Results Page" slot, showing `search.png` (3840 x 2560, 3:2) in a 2.22:1 card, cropped
+  from the top: the card keeps the file's top 67.7% and loses its bottom 32.3%, so the tank sits low with its rim on
+  the card's edge. The dialog says the preview may not match what customers see. Next: art that survives that crop.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
-- The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
+- The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
+  every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
+  The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
+  `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
+  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm; filming again is on the Mac.
+  Then Jack's listen before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
   the hosted policy, or until then the draft's github.com page on purpose.
