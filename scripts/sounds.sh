@@ -5,6 +5,9 @@
 # spectrograms go to build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun renders
 # the same samples; the AAC encoder isn't byte-deterministic, so a bed's .m4a may still come out with new bytes.
 set -euo pipefail
+# Csound 6 ends a good log with "0 errors in performance"; Csound 7 prints only "end of Performance" and keeps the
+# error count for runs that fail.
+csound_ok() { ! grep -qE "[1-9][0-9]* errors in performance" "$1" && grep -qE "0 errors in performance|end of Performance" "$1"; }
 cd "$(dirname "$0")/.."
 ROOT=$PWD
 
@@ -125,7 +128,7 @@ sketch-escapement-b-tick-e escBtickE 20 2102 = sketch-escapement-b
     for pid in "${pids[@]}"; do wait "$pid"; done
     while read -r name _ _ _ meter target; do
         [ -z "$name" ] && continue
-        grep -q "0 errors in performance" "$L/$name.log" || { echo "csound failed: $L/$name.log"; tail -20 "$L/$name.log"; exit 1; }
+        csound_ok "$L/$name.log" || { echo "csound failed: $L/$name.log"; tail -20 "$L/$name.log"; exit 1; }
         if [ "$meter" = = ]; then
             g=$(cat "$L/$target.gain")
         else
@@ -183,7 +186,7 @@ if [ "${1:-}" = layers ]; then
         shift 3
         (cd sound-src && csound --omacro:SKETCH="$sk" --omacro:SEED="$seed" "$@" --omacro:OUT="$ROOT/$out" sketches.csd \
             >"$ROOT/$out.log" 2>&1)
-        grep -q "0 errors in performance" "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
+        csound_ok "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
     }
     LIST=$D/layers-in-play.txt
     {
@@ -314,7 +317,7 @@ while read -r name fx arg dur seed target trim; do
 done <<<"$EFFECTS"
 for pid in "${pids[@]}"; do wait "$pid"; done
 for log in "$B"/raw/*.log; do
-    grep -q "0 errors in performance" "$log" || { echo "csound failed: $log"; tail -20 "$log"; exit 1; }
+    csound_ok "$log" || { echo "csound failed: $log"; tail -20 "$log"; exit 1; }
 done
 
 echo "levels"
@@ -375,7 +378,7 @@ layer() {  # sketch seed out [macros...]
     shift 3
     (cd "$SRC" && csound --omacro:SKETCH="$sk" --omacro:SEED="$seed" "$@" --omacro:OUT="$ROOT/$out" sketches.csd \
         >"$ROOT/$out.log" 2>&1)
-    grep -q "0 errors in performance" "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
+    csound_ok "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
 }
 echo "layers"
 pids=()
