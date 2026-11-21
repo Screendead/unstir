@@ -115,7 +115,8 @@ game plays.
   Device Preview of the "Search Results Page" slot, showing `search.png` (3840 x 2560, 3:2) in a 2.22:1 card, cropped
   from the top: the card keeps the file's top 67.7% and loses its bottom 32.3%, so the tank sits low with its rim on
   the card's edge. The dialog says the preview may not match what customers see. Next: art that survives that crop.
-- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
+- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all: asked on his Calls page (#284,
+  2026-11-21), keep all three, change some, or hear them filmed in the game first.
 - The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
