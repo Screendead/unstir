@@ -60,6 +60,8 @@ for line in sys.stdin:
   v1=$(python3 -c 'import time; print(time.clock_gettime(time.CLOCK_UPTIME_RAW))')
   kill -INT "$rec"
   wait "$rec" || true
+  # The app's sound outlives the take otherwise, and the caller hands the Mac's output back to its speakers.
+  xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   v0=$(cat "$began")
   trash "$began"
   # recordVideo writes a frame only when the screen changes, so a take that ends on a still screen ends early; its
