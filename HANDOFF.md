@@ -114,9 +114,12 @@ game plays.
   universal art and says which file and which crop it shows (#278, closed 2026-11-21): it is App Store Connect's
   Device Preview of the "Search Results Page" slot, showing `search.png` (3840 x 2560, 3:2) in a 2.22:1 card, cropped
   from the top: the card keeps the file's top 67.7% and loses its bottom 32.3%, so the tank sits low with its rim on
-  the card's edge. The dialog says the preview may not match what customers see. Next: art that survives that crop.
-- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all: asked on his Calls page (#284,
-  2026-11-21), keep all three, change some, or hear them filmed in the game first.
+  the card's edge. The dialog says the preview may not match what customers see. The art that survives it is below.
+- Jack's listen to the layers in play, Escapement 29's above all: asked on his Calls page (#284, closed 2026-11-21):
+  "**Jack's answer:** C · Hear them in the game first". Once #280's recorder is checked on the Mac (#281) and merged,
+  ask the Mac to film the three levels with sound (`scripts/layers-film.sh`, under #268's conditions: mains power,
+  `pmset -g therm` clear, nothing else running beside the takes) and check each film for dropouts; then Jack watches
+  them and keeps or changes the layers.
 - The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
@@ -125,6 +128,17 @@ game plays.
   the Mac (#281).
   Then Jack's listen before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
+- The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
+  2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
+  crop from the middle, above Apple's stated safe area. The Mac rendered it from the real inputs (#283, closed
+  2026-11-21): in `preview-search.png` the whole bezel shows, round, centred (449.5 of 900 across, 201.5 of 405 down),
+  about 850 px across; in `check-search.png` it sits inside both cards; `header.png` and `universal.png` are
+  byte-identical to master's script on the same inputs. The vortex shot kept now differs from #272's inside the glass
+  only (about 3% of pixels), so they match `store-header-272`'s by eye. Files, and `before-after.png` ("Now" as the
+  preview cuts #272's, "New"), are in the tools folder outside the repo (`store-header-282`). #282 merged. Answered on
+  his Calls page (#286, 2026-11-21, row in `docs/decisions.md`): "**Jack's answer:** A · Upload the new image". Jack
+  replaces the search results image in App Store Connect with `store-header-282/search.png` from the tools folder;
+  the header and universal images stay as uploaded. The upload is his (App Store Connect); nothing else waits here.
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
   the hosted policy, or until then the draft's github.com page on purpose.
 
