@@ -88,7 +88,10 @@ game plays.
   `scripts/store-header.py` composed on 2026-11-18: its measure of the tank in the play shot scanned only the shot's
   middle half, so its crop began inside the disc and ran down into the caption, and the glass sat low in its circle,
   cut off at the top, in the header and universal assets too. It now fits the disc (#272); the Mac renders the three
-  again (#273). If #270 finds the fault elsewhere, that is fixed as well.
+  again (#273). The Mac's look (#270, closed 2026-11-21) found no other match: in the preview's frames at 0 to 8 s
+  (the 5 s frame is whirlpool 03, its tank whole from 28% to 71% of the height), screenshots 01 to 03 plain and
+  captioned and the Duo shots, the tank is whole and centred, and no Duo shot was refitted to another shape. So it is
+  the search results art; #273 confirms the old crop on the real shot.
 - Answered on his Calls page (2026-11-21, rows in `docs/decisions.md`): the clips with sound (#261): "**Jack's
   answer:** A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc.
   That's happened before from CPU throttling." Claude's two picks (#262): "**Jack's answer:** A · Keep both": the open
@@ -102,7 +105,7 @@ game plays.
 
 **Next:**
 
-- The search results' image: the store header art rendered again (#273, PR #272), #270's finding, then Jack uploads.
+- The search results' image: the store header art rendered again (#273, PR #272), then Jack uploads the three.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
