@@ -80,11 +80,16 @@ game plays.
 - Asked on his Calls page (2026-11-21, open): the clips with sound (#261, recommended: film them), the two picks
   above (#262, recommended: keep both), and whether the store media on the App Store page is final (#263,
   recommended: final as uploaded).
-- On the Mac (2026-11-21, #260): the packs' layers rendered again on master, for Escapement 29's restored deal.
+- Rendered on the Mac (2026-11-21, #260, closed): the packs' layers in play on master, Escapement 29 on its restored
+  deal, in the tools folder outside the repo (`layers-260`). The Escapement line runs to its solve at 196 s with the
+  reed at each move and the resolution after; `escapement.mp3` I -27.1 LUFS. How it sounds waits for Jack's ear. The
+  first try stopped on Homebrew's Csound 7, whose log no longer says "0 errors in performance": the fix to
+  `scripts/sounds.sh`'s check is #265, opened from the Mac.
 
 **Next:**
 
 - Jack's look at the retaken media.
+- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound, if he wants them.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
@@ -95,7 +100,7 @@ retention (`tools/tf-poll.py` now forgets polls past 12 months on every run, 202
 policy (`scripts/archive-ios.sh` refuses to upload or export without `POLICY_URL`, 2026-11-21; the policy's missing
 legal basis stays open) and the harness crash in `Game.settle` (`UNSTIR_PLAYED` committed a tank turn as a turn of
 knob -1; its line now goes through `Game.commit(line:)`, which turns the tank, 2026-11-21, not yet launched with one).
-Still open: Escapement 29's layer, the curtain call on the phone,
+Escapement 29's layer is rendered again (#260, above). Still open: the curtain call on the phone,
 Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged worktrees and
 branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
 
