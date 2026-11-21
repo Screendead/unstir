@@ -561,6 +561,8 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Knobs on promo images | 2026-11-15 | The promoted-purchase images draw each pack's knobs, as #149 built them. Jack: "Yes, the purchase images show the knobs, as built." | HANDOFF |
 | Free-tier mechanics open | 2026-11-15 | No rule keeps the swirl or the orbits from paid packs: a later pack may use either. Open, and back to Jack when a pack wants one. Jack: "No rule: a later pack may use the swirl or the orbits. Record it as open." | HANDOFF |
 | Swirl and Escapement records | 2026-11-15 | The swirl's two calls (W3, then its profile turned inside out) and Escapement's two loss rules (E2 in the prover, EL1 in play) both stand; the rows are reworded, not changed. Jack: "Both readings are right; reword the records." | HANDOFF |
+| Social clips with sound | 2026-11-21 | The four social clips are filmed again with the game's sound (`store-media.sh sound`), beside the silent ones, by the Mac's render routine. Jack: "A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc. That's happened before from CPU throttling." | HANDOFF |
+| Tank cap and glass floor kept | 2026-11-21 | The open tank's hidden cap of 96 twists and the 30% floor the glass shrinks to under a result card, both Claude's picks, stay as built. Jack: "A · Keep both". | HANDOFF |
 
 ## Undated, no round
 
