@@ -120,7 +120,8 @@ game plays.
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
   `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
-  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm; filming again is on the Mac.
+  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280); filming again is on
+  the Mac (#281).
   Then Jack's listen before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
