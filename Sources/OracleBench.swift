@@ -152,9 +152,7 @@ enum OracleBench {
         let game = Game(level: level, tankTurned: h.tankTurned, swirled: h.swirled, bank: h.bank, storesProgress: false)
         game.turnTank(h.tank)
         if let t = h.turned { game.commit(rod: t.rod, steps: t.steps) }
-        for m in h.played {
-            if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
-        }
+        game.commit(line: h.played)
         let live = h.live.map { (slot: game.slot(of: $0.rod), angle: $0.steps * Tank.step) }
         let turn = Double(game.position) * level.layout.tankStep
         var u = Unstirred(stack: h.bare ? [] : game.stack, layout: level.layout, lenses: level.lenses, masks: level.masks,

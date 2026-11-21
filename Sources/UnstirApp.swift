@@ -40,6 +40,18 @@ struct UnstirApp: App {
     }
 }
 
+extension Game {
+    /// Plays a harness line (`UNSTIR_PLAYED`) through the real path, as `UNSTIR_MOVES` names its moves: rod `Game.tank`
+    /// turns the tank and a ratchet's move is a wait.
+    func commit(line: [Twist]) {
+        for m in line {
+            if m.rod == Game.tank { turnTank(m.steps) }
+            else if level.kind(of: m.rod) == .ratchet { wait(on: m.rod) }
+            else { commit(rod: m.rod, steps: m.steps) }
+        }
+    }
+}
+
 /// Launch-time state for screenshots without touch (set via SIMCTL_CHILD_UNSTIR_*).
 struct Harness {
     let screen: String
