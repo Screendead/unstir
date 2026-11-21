@@ -116,6 +116,10 @@ game plays.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
+- The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
+  2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
+  crop from the middle, above Apple's stated safe area. The Mac renders it from the real inputs (#283); then it goes
+  to Jack as a call, as uploading is his.
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
   the hosted policy, or until then the draft's github.com page on purpose.
 
