@@ -147,11 +147,9 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    /// Lens's 25 panels, each on its own halftone panel once that is drawn (`panel`, `LensArt.levels`) and on the test
-    /// panel until then, `docs/lens-tables.md`'s table A: the draft table with lenses on rods
-    /// of every size, but for 8, 11 and 18, moved off the four-rod glass. A rod is a lens or a twist for the whole level; every dealt lens entry magnifies by 1 to 3 steps
-    /// and each lens nets at most +3. No entry merges as it is dealt, and par is the depth (`testLensLevels`), the
-    /// solver's optimum (`testLensParIsTheOptimum`).
+    /// Lens's 25 panels, each on its own halftone panel (`panel`, `LensArt.levels`). A rod is a lens or a twist for the
+    /// whole level; every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3. No entry merges as
+    /// it is dealt, and par is the depth (`testLensLevels`), the solver's optimum (`testLensParIsTheOptimum`).
     static let lens: [Level] = [
         (Layout.tri, [0], "0:+2",
          String(localized: "level.lens-1.title", defaultValue: "Keyhole",

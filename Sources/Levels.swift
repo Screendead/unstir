@@ -10,9 +10,9 @@ struct Run: Hashable, Sendable, Codable {
     /// The most tanks a run had cleared as this one began, carried from tank to tank, so a spill can say it beat them.
     var best = Best.tanks
 
-    /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
+    /// Notches the brim holds: the one that fills it spills the run.
     static let room = 8
-    /// The deepest tank a run deals, frozen as every run's deals are: it was `Tank.maxStack` (36) less `room`.
+    /// The deepest tank a run deals, frozen as every run's deals are.
     static let deepest = 28
 }
 
@@ -41,9 +41,7 @@ enum Tier: String, CaseIterable {
         }
     }
 
-    /// Starts each of the tier's level ids. Progress is stored by id, so changing a prefix loses it unless the stored
-    /// keys are remapped. Whirlpool's is from its old name, nightmare; maelstrom's levels replaced nightmare+'s, so
-    /// its N+ became M and their bests never land on the new levels.
+    /// Starts each of the tier's level ids. Progress is stored by id, so a prefix never changes.
     var prefix: String {
         switch self {
         case .plughole: "L"
@@ -179,7 +177,7 @@ struct Level: Hashable, Sendable {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
     }
 
-    /// 19 to 27 eased (2026-10-27), dealt by the frozen generator as layout-depth-inversions #seed: pent-5-0 #1,
+    /// Dealt by the frozen generator as layout-depth-inversions #seed: pent-5-0 #1,
     /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, picked by
     /// scripts/plughole-levels/pick.py so each layout's curve rises.
     static let plughole: [Level] = ([
@@ -301,8 +299,8 @@ struct Level: Hashable, Sendable {
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Twice the stirs of the same-numbered plughole level as first written (19 to 27 have since eased), more of them
-    /// hidden under louder ones, live pictures, nothing replayed.
+    /// Twice the stirs of the same-numbered plughole level, more of them hidden under louder ones, live pictures,
+    /// nothing replayed.
     static let whirlpool: [Level] = ([
         (.tri, "0:-5,1:+3",
          String(localized: "level.N1.title", defaultValue: "Spring",
@@ -402,8 +400,8 @@ struct Level: Hashable, Sendable {
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// The swirl: a rod the size of the tank, held from the rim. PROVISIONAL (2026-10-24), for Jack's playtest: quad
-    /// teaches it, then tri, eye, pent and hex, each opening easier than the last one's showpiece. No knob seizes, so
+    /// The swirl: a rod the size of the tank, held from the rim. Quad teaches it, then tri, eye, pent and hex, each
+    /// opening easier than the last one's showpiece. No knob seizes, so
     /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py.
     static let vortex: [Level] = ([
         (.quadSwirl, "0:+3,4:+4", Picture.isobars,
@@ -773,11 +771,9 @@ enum Daily {
     }
 }
 
-/// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
     var over: Int, seconds: Int
-    /// Stored, because a daily's later try can match a clean first try's numbers. Optional so saves from the
-    /// test builds that predate it still decode and keep the next level open; v1 saves never decode, as they lack `over`.
+    /// Stored, because a daily's later try can match a clean first try's numbers.
     var clean: Bool?
     /// A daily's best saved from the archive, after its day; nil for every other, so older saves count as on the day.
     var archived: Bool?

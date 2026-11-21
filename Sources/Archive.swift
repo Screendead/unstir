@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-/// The daily archive: every past daily, opened by any purchase (to-do 47). Its days play as the daily they were, from
+/// The daily archive: every past daily, opened by any purchase. Its days play as the daily they were, from
 /// the frozen generator, and keep their bests under their own `daily-yyyymmdd` ids.
 enum Archive {
     /// Days back-filled before daily #1, so the archive isn't empty on launch day (Jack's call, round 6).

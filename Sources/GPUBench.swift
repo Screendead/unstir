@@ -7,13 +7,7 @@ import SwiftUI
 /// UNSTIR_GPUBENCH=1: times the tank's shader on the GPU's own clock, off screen, then quits. The display-link bench
 /// (UNSTIR_BENCH) sees only main-thread stalls; this runs the stitchables' own bodies (`benchUnstir` in Unstir.metal) on
 /// a texture of the picture and reads each command buffer's GPU start and end. It prints and logs one line a case
-/// (`scripts/gpu-bench.sh`, or `scripts/pull-log.sh` off the phone): a plain stack at 0, 18 and 36 entries, with four
-/// taps and with two, on glasses of 1137 px (the iPhone 13 Pro Max's), 1284 and 1471 (the open Duo's upright one); the
-/// glass's own fill (`benchGlass` in Glass.metal) and whirlpool 27's whole frame, that fill under its stack, at 1137 and
-/// 1471; then, at 1284, a plain stack at 0 and 24 entries and every Prism specimen as dealt through the per-channel
-/// shader and, for comparison, the same stack read white through the plain one, and with its first move's rod in hand,
-/// its held read drawn and not, four taps forced; then Lens 01 and 25 on their own panels,
-/// as dealt and with every lens at x8. Last, Lens's first-open bake on the CPU.
+/// (`scripts/gpu-bench.sh`, or `scripts/pull-log.sh` off the phone).
 enum GPUBench {
     static var wanted: Bool { ProcessInfo.processInfo.environment["UNSTIR_GPUBENCH"] == "1" }
 
