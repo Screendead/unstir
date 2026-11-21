@@ -564,6 +564,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Social clips with sound | 2026-11-21 | The four social clips are filmed again with the game's sound (`store-media.sh sound`), beside the silent ones, by the Mac's render routine. Jack: "A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc. That's happened before from CPU throttling." | HANDOFF |
 | Tank cap and glass floor kept | 2026-11-21 | The open tank's hidden cap of 96 twists and the 30% floor the glass shrinks to under a result card, both Claude's picks, stay as built. Jack: "A · Keep both". | HANDOFF |
 | Store media final but one | 2026-11-21 | The App Store page's media stays as uploaded, except the image the search results show, which is fixed and retaken. Jack: "B · Change some. the one thing i don't like is the search results page's image. it renders in the preview with the tank not in the centre, instead touching the bottom side only and being cut off." | HANDOFF |
+| Search image: what Jack saw | 2026-11-21 | Asked to re-upload the Mac's search image or show what he saw, Jack showed it: a screenshot of App Store Connect's version page (inflight) with the tank cut off. Jack's answer: "[screenshot] from [App Store Connect's URL, kept out of the repo]". The Mac matches it before anything is uploaded (#278). | HANDOFF |
 
 ## Undated, no round
 
