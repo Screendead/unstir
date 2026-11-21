@@ -139,7 +139,7 @@ if [[ "$what" == social || "$what" == sound || "$what" == all ]]; then
       norm=$(ffmpeg -hide_banner -nostats -i "shots/film/$name.mp4" -map 0:a -af "$trimmed,loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json" -f null - 2>&1 |
         python3 -c 'import json, sys; t = sys.stdin.read(); m = json.loads(t[t.rindex("{"):])
 print(":".join("measured_%s=%s" % (k, m["input_" + k.lower()]) for k in ("I", "TP", "LRA", "thresh")) + ":offset=" + m["target_offset"])')
-      suffix=-sound audio=(-map 0:a -ar 48000 -c:a aac -b:a 256k -af "$clip,loudnorm=I=-16:TP=-1.5:LRA=11:$norm,afade=t=out:st=$(awk -v k="$keep" 'BEGIN { print k - 0.3 }'):d=0.3,apad")
+      suffix=-sound audio=(-map 0:a -ar 48000 -c:a aac -b:a 256k -af "$trimmed,loudnorm=I=-16:TP=-1.5:LRA=11:$norm,afade=t=out:st=$(awk -v k="$keep" 'BEGIN { print k - 0.3 }'):d=0.3,apad")
     fi
     # 9:16 out of the 1320 x 2868 screen, centred on the tank.
     ffmpeg -loglevel error -y -fflags +igndts -i "shots/film/$name.mp4" -map 0:v \
