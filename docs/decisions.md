@@ -566,6 +566,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Store media final but one | 2026-11-21 | The App Store page's media stays as uploaded, except the image the search results show, which is fixed and retaken. Jack: "B · Change some. the one thing i don't like is the search results page's image. it renders in the preview with the tank not in the centre, instead touching the bottom side only and being cut off." | HANDOFF |
 | Search image: what Jack saw | 2026-11-21 | Asked to re-upload the Mac's search image or show what he saw, Jack showed it: a screenshot of App Store Connect's version page (inflight) with the tank cut off. Jack's answer: "[screenshot] from [App Store Connect's URL, kept out of the repo]". The Mac matches it before anything is uploaded (#278). | HANDOFF |
 | Layers heard in the game first | 2026-11-21 | Before deciding whether the packs' music layers (Lens, Escapement, Prism) ship as rendered, Jack hears them filmed in the game with the picture (`scripts/layers-film.sh`), once the sound recorder fix (#280, #281) has landed. Jack: "C · Hear them in the game first". | HANDOFF |
+| Search image re-centred | 2026-11-21 | The search results image in App Store Connect is replaced with the re-centred render (`store-header-282/search.png`, from #282's `store-header.py`), whole and centred in App Store Connect's preview crop; the header and universal images stay. Jack uploads it. Jack's answer: "A · Upload the new image". | HANDOFF |
 
 ## Undated, no round
 
