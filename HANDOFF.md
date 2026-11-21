@@ -113,8 +113,11 @@ game plays.
   attachment this Linux machine cannot fetch: the Mac compares it with `store-header-272`'s search, header and
   universal art and says which file and which crop it shows (#278). Then either a re-upload of the right file, or a
   version that survives App Store Connect's crop.
-- Jack's listen to the layers in play (`layers-260`), Escapement 29's above all: asked on his Calls page (#284,
-  2026-11-21), keep all three, change some, or hear them filmed in the game first.
+- Jack's listen to the layers in play, Escapement 29's above all: asked on his Calls page (#284, closed 2026-11-21):
+  "**Jack's answer:** C · Hear them in the game first". Once #280's recorder is checked on the Mac (#281) and merged,
+  ask the Mac to film the three levels with sound (`scripts/layers-film.sh`, under #268's conditions: mains power,
+  `pmset -g therm` clear, nothing else running beside the takes) and check each film for dropouts; then Jack watches
+  them and keeps or changes the layers.
 - The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
