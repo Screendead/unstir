@@ -11,6 +11,10 @@ udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | he
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b >/dev/null
 scripts/build-ios.sh Debug sim
+if [[ -n "${FILM_SOUND:-}" ]] && { [[ ! -x build/film-sound/record ]] || [[ scripts/film-sound/main.swift -nt build/film-sound/record ]]; }; then
+  mkdir -p build/film-sound
+  swiftc -O -o build/film-sound/record scripts/film-sound/main.swift
+fi
 # Fresh install, so no level has been started and autoplay can finish clean.
 xcrun simctl uninstall "$udid" "$bundle" 2>/dev/null || true
 xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.app
@@ -34,17 +38,16 @@ film() {  # name seconds strip-filter KEY=VALUE...
   wants "$name" || return 0
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-  local snd="" began wav="shots/film/$name.nut" v0 v1 a0 took length=()
+  local snd="" began heard wav="shots/film/$name.caf" v0 v1 a0 took length=()
   began=$(mktemp)
   # FILM_SOUND=1 plays the take's sound and records it from BlackHole, which the caller has made the Mac's output
   # (scripts/store-media.sh sound); recordVideo records no audio. Neither recorder's file says when it started, so
-  # both are placed on the host clock (CLOCK_UPTIME_RAW, which avfoundation stamps audio on): the audio keeps its own
-  # stamps (-copyts), so a buffer a busy Mac drops stays a gap rather than pulling the rest early, and the video starts
-  # when recordVideo says it has.
+  # both are placed on the host clock (CLOCK_UPTIME_RAW): when the recorder says BlackHole's first sample came, and
+  # when recordVideo says it has started. The recorder fails a take that lost sound.
   if [[ -n "${FILM_SOUND:-}" ]]; then
     vars+=(SIMCTL_CHILD_UNSTIR_SOUND=1)
-    ffmpeg -loglevel error -y -thread_queue_size 8192 -f avfoundation -i ":BlackHole 2ch" -copyts -c:a pcm_f32le "$wav" \
-      < /dev/null &
+    heard=$(mktemp)
+    build/film-sound/record "BlackHole 2ch" "$wav" > "$heard" &
     snd=$!
     sleep 1  # the audio first, so the take's first sounds are in it
   fi
@@ -66,14 +69,21 @@ for line in sys.stdin:
   # comment keeps how long it ran, which scripts/store-media.sh cuts by.
   [[ -n "$v0" ]] && took=$(awk -v a="$v0" -v b="$v1" 'BEGIN { printf "%.3f", b - a }') length=(-metadata comment="take $took s")
   if [[ -n "$snd" ]]; then
+    # Left running, the app plays on through the speakers once the caller switches the output back.
+    xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
     kill -INT "$snd"
-    wait "$snd" || true
+    wait "$snd" || { echo "$name: its sound didn't record whole; film it again" >&2; exit 1; }
     [[ -n "$v0" ]] || { echo "$name: recordVideo never said it started, so its sound can't be placed" >&2; exit 1; }
-    a0=$(ffprobe -v error -show_entries stream=start_time -of csv=p=0 "$wav")
-    # async fills a dropped buffer's gap with silence; the sound runs to the take's end, past a still screen's last frame.
-    ffmpeg -loglevel error -y -i "$mp4" -itsoffset "$(awk -v a="$a0" -v v="$v0" 'BEGIN { print a - v }')" -i "$wav" \
-      -map 0:v -map 1:a -c:v copy -af aresample=async=1:first_pts=0,apad -t "$took" -c:a aac -b:a 256k "${length[@]}" \
-      "${mp4%.mp4}-sound.mp4"
+    a0=$(awk -v v="$v0" '{ print $1 - v }' "$heard")
+    trash "$heard"
+    # The recorder found its samples unbroken, so they time the sound from the first one on.
+    # Audio that began before the video (as it does, by the 2.5 s the recorder is given) loses that much; a later start
+    # waits in silence. It runs to the take's end, past a still screen's last frame, at the 48 kHz the store's previews
+    # take (BlackHole runs at 96).
+    local place
+    place=$(awk -v a="$a0" 'BEGIN { if (a < 0) printf "atrim=start=%.6f,asetpts=PTS-STARTPTS", -a; else printf "adelay=%d:all=1", a * 1000 }')
+    ffmpeg -loglevel error -y -i "$mp4" -i "$wav" -map 0:v -map 1:a -c:v copy \
+      -af "asetpts=N/SR/TB,$place,apad" -t "$took" -ar 48000 -c:a aac -b:a 256k "${length[@]}" "${mp4%.mp4}-sound.mp4"
     mv "${mp4%.mp4}-sound.mp4" "$mp4"
     trash "$wav"
   elif (( ${#length[@]} )); then
@@ -292,8 +302,8 @@ film card-lens-lands-list 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens ST
 # whirlpool 01 on the live glass, Lens 03 on the halftone and Prism 01 on the fern. The first two are store-media.sh's
 # social clips, so each runs on past its solve for the clip's last second after the wave.
 whole="fps=2,scale=150:-1,tile=8x4:padding=4"  # the whole screen, so anything left over the level would show
-film clean-plughole-05 18 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
-film clean-whirlpool-01 15 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
+film clean-plughole-05 24 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
+film clean-whirlpool-01 20 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
 # The halftone bakes for half a minute on a Debug install that hasn't drawn it, and the opening waits for it, so its strip
 # starts 12 s in, a frame a second.
 film clean-lens-03 46 "trim=start=12,setpts=PTS-STARTPTS,fps=1,scale=150:-1,tile=8x4:padding=4" PACK=lens LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:-3,2:-4,1:+2

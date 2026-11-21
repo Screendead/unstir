@@ -155,7 +155,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Both take the first "Pro Max" simulator, or `UNSTIR_SIM`'s. A film over 9.5 MB is shrunk
   to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
   BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
-  video's clock by when each recorder started. recordVideo writes a frame only when the screen changes, so a take
+  video's clock by when each recorder started; its recorder (`scripts/film-sound/main.swift`, built by `swiftc`) fails
+  a take that lost sound, as ffmpeg's avfoundation input did, about 85 ms a second. recordVideo writes a frame only when the screen changes, so a take
   ending on a still screen ends early: each take's comment tag says how long it really ran (`take 19.520 s`). It also
   gives two frames the same time now and then, after which ffmpeg times the rest of the take by its dts, which step
   back about a second there (0.99 s in two takes), and `fps=` drops that much: every command that decodes a take
@@ -178,7 +179,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   all five hold, from the end their line names, and plan step 3's social clips, 1080 x 1920 and silent,
   three drawn clean and one with the hand. `sound` films those clips again with the game's sound, switching the
   Mac's output to BlackHole for the takes and back (needs Homebrew's `blackhole-2ch` and `switchaudio-osx`), into
-  `<name>-sound.mp4`, aimed at -16 LUFS (one-pass loudnorm lands them near -15). It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
+  `<name>-sound.mp4`, at 48 kHz, two-pass loudnorm to -16 LUFS. It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
   it meets are in its header, with where they were read.
 - Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
