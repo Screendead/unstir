@@ -247,7 +247,7 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
 - **Privacy policy URL** (required): the policy's page on Jack's own domain (Jack's call C17 = A, round 13, which
   replaced ST7's GitHub Pages), written here only as `{{POLICY_URL}}`. The build reads it from `POLICY_URL`, set in the
   shell or `Config/Local.xcconfig` for the archive; a build without it opens the plain github.com page of
-  `docs/privacy-policy.md`, the draft, and `scripts/archive-ios.sh` does not refuse one (proposed 2026-11-13).
+  `docs/privacy-policy.md`, the draft, and `scripts/archive-ios.sh` refuses to upload or export one (2026-11-21).
 - **Support URL** (required): a support page on the same domain, `{{SUPPORT_URL}}`, giving `{{CONTACT_ADDRESS}}`
   (proposed 2026-11-13).
 - **Contact address** for privacy and support: `{{CONTACT_ADDRESS}}` everywhere in the repo. Jack has picked it; it is
@@ -341,7 +341,8 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
    the last line and the policy changed for it.
 8. `Share.url` and `Share.firstDay` are still empty, so the share line names the date and carries no link (Jack's calls
    D1 and M2 = A want daily #1 set to launch day and an App Store link on the line in the build that goes to review).
-9. `scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings
-   row would then open this repo's draft policy, a page that goes dark if the repo goes private (CIPRIVATE = A).
+9. ~~`scripts/archive-ios.sh` refuses an archive without `SUPPORT_ADDRESS` but not one without `POLICY_URL`, whose settings
+   row would then open this repo's draft policy, a page that goes dark if the repo goes private (CIPRIVATE = A).~~ It
+   refuses to upload or export one without `POLICY_URL` too since 2026-11-21.
 10. ~~Follow-ups outside the docs: shot 9's caption in `scripts/store-captions.py`, the StoreKit test file's names and
     descriptions, and `Config/Unstir.xcconfig`'s comment on `ICLOUD`.~~ All three match these docs since 2026-11-13.

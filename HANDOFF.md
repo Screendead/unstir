@@ -83,11 +83,13 @@ game plays.
 - Jack's look at the retaken media.
 - The clips with sound, if he wants them.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
-- The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac.
+- The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
+  the hosted policy, or until then the draft's github.com page on purpose.
 
 **Loose ends:** carried from 2026-11-13's list in `docs/history.md`, less the index lines and the TestFlight
-retention (`tools/tf-poll.py` now forgets polls past 12 months on every run, 2026-11-20; the policy's missing legal
-basis and `scripts/archive-ios.sh` building without `POLICY_URL` stay open), the harness crash in `Game.settle`, Escapement 29's layer, the curtain call on the phone,
+retention (`tools/tf-poll.py` now forgets polls past 12 months on every run, 2026-11-20) and the archive without a
+policy (`scripts/archive-ios.sh` refuses to upload or export without `POLICY_URL`, 2026-11-21; the policy's missing
+legal basis stays open), the harness crash in `Game.settle`, Escapement 29's layer, the curtain call on the phone,
 Stopwatch's one proved line, CI's unexplained test start (#233's job took 10 min 1 s), and the merged worktrees and
 branches to remove. The main checkout is behind master: an agent's sandbox cannot write there.
 
