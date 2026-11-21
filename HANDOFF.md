@@ -118,8 +118,13 @@ game plays.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
   2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
-  crop from the middle, above Apple's stated safe area. The Mac renders it from the real inputs (#283); then it goes
-  to Jack as a call, as uploading is his.
+  crop from the middle, above Apple's stated safe area. The Mac rendered it from the real inputs (#283, closed
+  2026-11-21): in `preview-search.png` the whole bezel shows, round, centred (449.5 of 900 across, 201.5 of 405 down),
+  about 850 px across; in `check-search.png` it sits inside both cards; `header.png` and `universal.png` are
+  byte-identical to master's script on the same inputs. The vortex shot kept now differs from #272's inside the glass
+  only (about 3% of pixels), so they match `store-header-272`'s by eye. Files, and `before-after.png` ("Now" as the
+  preview cuts #272's, "New"), are in the tools folder outside the repo (`store-header-282`). #282 merged; whether to
+  upload the new file is Jack's call (needs-jack).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
   the hosted policy, or until then the draft's github.com page on purpose.
 
