@@ -78,8 +78,8 @@ import SwiftUI
     @ObservationIgnored var path: (grab: Grab, down: Date, trail: Trail<SIMD2<Double>>)?
     @ObservationIgnored var twist: (down: Date, trail: Trail<Double>)?
 
-    /// UNSTIR_BROADDRAG=1: `LevelView.body` reads the turn itself, so every frame of a drag re-evaluates it as when the
-    /// turn was its own state, for `scripts/drag-probe.sh` to time the two in one build. `alt`: UNSTIR_TAPDRAG's drags
+    /// UNSTIR_BROADDRAG=1: `LevelView.body` reads the turn itself, so every frame of a drag re-evaluates it, for
+    /// `scripts/drag-probe.sh` to time against the build's own. `alt`: UNSTIR_TAPDRAG's drags
     /// take it in turn after the first, which only warms up: as built, broad, broad, as built, so both are timed in
     /// one launch, each turning each way. A probe's switch: a plain Release build has neither (`DragProbe`).
     #if PROBES || DEBUG

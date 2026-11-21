@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-/// What the shelf sells: a pack, or the bundle (`complete`, its old name), which grants `Pack.bundled`.
+/// What the shelf sells: a pack, or the bundle (`complete`), which grants `Pack.bundled`.
 enum Offer: Hashable, Sendable {
     /// The bundle's name wherever a player reads it, and the App Store's display name with it (Jack's pick, M1).
     static let bundleName = "Triptych I"

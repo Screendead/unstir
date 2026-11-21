@@ -877,7 +877,6 @@ struct LevelView: View {
         .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
         .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
         .accessibilityHidden(game.level.run != nil || showResult || ending)
-        // 4 where the 40 pt capsules had 8, so the taller buttons leave the tank where it was.
         .padding(.bottom, 4)
         .modifier(Unseen(staged))
     }
