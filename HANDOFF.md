@@ -76,10 +76,13 @@ game plays.
 
 - Still his own: the account night (not started, Jack 2026-11-15), ICO registration,
   hosting the privacy policy, the policy's remaining tokens, a trademark search, a launch date.
-- Claude's picks still open to him: the open tank's cap of 96, and the 30% floor the glass shrinks to under a card.
-- Asked on his Calls page (2026-11-21, open): the clips with sound (#261, recommended: film them), the two picks
-  above (#262, recommended: keep both), and whether the store media on the App Store page is final (#263,
+- Asked on his Calls page (2026-11-21, open): whether the store media on the App Store page is final (#263,
   recommended: final as uploaded).
+- Answered on his Calls page (2026-11-21, rows in `docs/decisions.md`): the clips with sound (#261): "**Jack's
+  answer:** A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc.
+  That's happened before from CPU throttling." Claude's two picks (#262): "**Jack's answer:** A · Keep both": the open
+  tank's cap of 96 and the 30% floor the glass shrinks to under a card stay as built. The clips with sound are asked
+  of the Mac (#268), with nothing else rendering or building beside the takes.
 - Rendered on the Mac (2026-11-21, #260, closed): the packs' layers in play on master, Escapement 29 on its restored
   deal, in the tools folder outside the repo (`layers-260`). The Escapement line runs to its solve at 196 s with the
   reed at each move and the resolution after; `escapement.mp3` I -27.1 LUFS. How it sounds waits for Jack's ear. The
@@ -90,7 +93,7 @@ game plays.
 
 - Jack's look at the retaken media.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
-- The clips with sound, if he wants them.
+- The clips with sound (#268, on the Mac), then Jack's listen to them before any post.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac. It needs `POLICY_URL` set:
   the hosted policy, or until then the draft's github.com page on purpose.
