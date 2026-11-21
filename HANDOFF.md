@@ -85,10 +85,17 @@ game plays.
   reed at each move and the resolution after; `escapement.mp3` I -27.1 LUFS. How it sounds waits for Jack's ear. The
   first try stopped on Homebrew's Csound 7, whose log no longer says "0 errors in performance": the fix to
   `scripts/sounds.sh`'s check is #265, opened from the Mac.
+- Answered on his Calls page (2026-11-21, row in `docs/decisions.md`): whether the store media is final (#263):
+  "**Jack's answer:** B · Change some / the one thing i don't like is the search results page's image. it renders in
+  the preview with the tank not in the centre, instead touching the bottom side only and being cut off." The cause
+  was `scripts/store-header.py`'s measure of the tank in the play shot: it scanned the shot's middle half, so its crop
+  began inside the disc and ran down into the caption, and the glass sat low in its circle, cut off at the top, in
+  the header and universal assets too. It now fits the disc (#272); the Mac renders the three again (#273). Every
+  other shot, the preview and the promoted-purchase images are final as uploaded.
 
 **Next:**
 
-- Jack's look at the retaken media.
+- The header, search results and universal art rendered again (#273), then Jack uploads them to the App Store page.
 - Jack's listen to the layers in play (`layers-260`), Escapement 29's above all.
 - The clips with sound, if he wants them.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
