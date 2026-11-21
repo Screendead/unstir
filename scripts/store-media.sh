@@ -137,7 +137,7 @@ if [[ "$what" == social || "$what" == sound || "$what" == all ]]; then
       # range, at -19.2 LUFS (#268); the second, given the first's measure, lands each on -16.
       trimmed="atrim=start=$start:duration=$keep,asetpts=PTS-STARTPTS"
       norm=$(ffmpeg -hide_banner -nostats -i "shots/film/$name.mp4" -map 0:a -af "$trimmed,loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json" -f null - 2>&1 |
-        python3 -c 'import json, sys; t = sys.stdin.read(); m = json.loads(t[t.rindex("{"):])
+        python3 -c 'import json, sys; t = sys.stdin.read(); m = json.JSONDecoder().raw_decode(t[t.rindex("{"):])[0]
 print(":".join("measured_%s=%s" % (k, m["input_" + k.lower()]) for k in ("I", "TP", "LRA", "thresh")) + ":offset=" + m["target_offset"])')
       suffix=-sound audio=(-map 0:a -ar 48000 -c:a aac -b:a 256k -af "$trimmed,loudnorm=I=-16:TP=-1.5:LRA=11:$norm,afade=t=out:st=$(awk -v k="$keep" 'BEGIN { print k - 0.3 }'):d=0.3,apad")
     fi
