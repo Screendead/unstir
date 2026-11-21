@@ -16,10 +16,13 @@ final class ShareTests: XCTestCase {
         XCTAssertNil(Share.number(2026_10_24, from: first))
     }
 
+    /// Until launch day is set, and on a day before it, the line names the date.
     func testUntilLaunchDayIsSetTheLineNamesTheDate() {
         XCTAssertNil(Share.number(2026_10_25, from: nil))
         XCTAssertEqual(Share.text(day: 2026_10_25, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, firstDay: nil),
                        "Unstir 2026-10-25 \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 3 moves (par 3) \u{00B7} clean")
+        XCTAssertEqual(Share.text(day: 2026_09_28, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, firstDay: first),
+                       "Unstir 2026-09-28 \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 3 moves (par 3) \u{00B7} clean")
     }
 
     /// A player who owns a pack carries the supporter mark after the daily's name.
@@ -55,11 +58,6 @@ final class ShareTests: XCTestCase {
     func testPracticeSaysSo() {
         XCTAssertEqual(Share.text(day: 2026_10_27, moves: 6, par: 6, firstTry: false, clean: false, undos: 1, resets: 0, firstDay: first),
                        "Unstir #3 \u{00B7} \u{25CF}\u{25CF}\u{25CB} \u{00B7} practice \u{00B7} 6 moves (par 6) \u{00B7} 1 undo")
-    }
-
-    func testBeforeTheFirstDayTheLineNamesTheDate() {
-        XCTAssertEqual(Share.text(day: 2026_09_28, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, firstDay: first),
-                       "Unstir 2026-09-28 \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 3 moves (par 3) \u{00B7} clean")
     }
 
     @MainActor func testADailysSolveSharesItsDots() {

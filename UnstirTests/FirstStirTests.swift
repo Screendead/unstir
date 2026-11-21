@@ -271,12 +271,10 @@ final class FirstStirTests: XCTestCase {
         }
     }
 
-    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, by
-    /// more than 8 in 255, past the renderer's own noise (up to 6 where nothing changed).
-    @MainActor private func footprint(_ story: Story, _ played: Set<Int>, side: Int) throws -> [SIMD2<Double>] {
+    /// The scene's `story` drawn `side` pixels across with `played` played, as RGBA bytes.
+    @MainActor private func pixels(_ story: Story, _ played: Set<Int>, side: Int) throws -> [UInt8] {
         // Each render in its own pool: without them the test host was killed (signal kill) in a later test of the suite.
-        func pixels(_ played: Set<Int>) throws -> [UInt8] { try autoreleasepool { try render(played) } }
-        func render(_ played: Set<Int>) throws -> [UInt8] {
+        try autoreleasepool {
             let image = try XCTUnwrap(story.scene?.render(played: played, side: CGFloat(side), scale: 1, colorMode: .nonLinear)?.cgImage)
             var bytes = [UInt8](repeating: 0, count: 4 * side * side)
             let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
@@ -284,11 +282,22 @@ final class FirstStirTests: XCTestCase {
             ctx.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
             return bytes
         }
-        let held = try pixels([]), played = try pixels(played)
+    }
+
+    /// The pixels, in tank units, where `played` differs from `held` (both `side` across), glow included, by more than 8
+    /// in 255, past the renderer's own noise (up to 6 where nothing changed).
+    private func footprint(_ held: [UInt8], _ played: [UInt8], side: Int) -> [SIMD2<Double>] {
         var marks: [SIMD2<Double>] = []
-        for i in 0..<side * side where (0..<4).contains(where: { abs(Int(held[4 * i + $0]) - Int(played[4 * i + $0])) > 8 }) {
-            let px = SIMD2(Double(i % side), Double(i / side)) + 0.5
-            marks.append(px / Double(side) * 2 - 1)
+        held.withUnsafeBufferPointer { a in
+            played.withUnsafeBufferPointer { b in
+                for i in 0..<side * side {
+                    let o = 4 * i
+                    if abs(Int(a[o]) - Int(b[o])) > 8 || abs(Int(a[o + 1]) - Int(b[o + 1])) > 8
+                        || abs(Int(a[o + 2]) - Int(b[o + 2])) > 8 || abs(Int(a[o + 3]) - Int(b[o + 3])) > 8 {
+                        marks.append((SIMD2(Double(i % side), Double(i / side)) + 0.5) / Double(side) * 2 - 1)
+                    }
+                }
+            }
         }
         return marks
     }
@@ -304,21 +313,17 @@ final class FirstStirTests: XCTestCase {
             let story = try XCTUnwrap(level.story)
             let layout = level.layout, rods = layout.rods
             func centre(_ rod: Int) -> SIMD2<Double> { SIMD2(rods[rod].x, rods[rod].y) }
-            // The two layers the game bakes, every vignette held back and every one played, differ only in their cores.
-            let stray = try footprint(story, story.vignettes, side: side).filter { p in
-                !story.vignettes.contains { simd_distance(p, centre($0)) <= Tank.plateau * rods[$0].z + pixel }
-            }
-            XCTAssertTrue(stray.isEmpty, "\(level.id): the baked layers differ outside every core, at \(stray.prefix(3))")
-            // Again at the largest phone's own pixels, the tank's side at 3x, where a stray the coarser render hides would
-            // show.
+            // The two layers the game bakes, every vignette held back and every one played, differ only in their cores,
+            // read at the largest phone's own pixels, the tank's side at 3x, where a stray a coarser render hides shows.
             let phone = 1263, fine = 2.0 / Double(phone)
-            let strays = try footprint(story, story.vignettes, side: phone).filter { p in
+            let strays = try footprint(pixels(story, [], side: phone), pixels(story, story.vignettes, side: phone), side: phone).filter { p in
                 !story.vignettes.contains { simd_distance(p, centre($0)) <= Tank.plateau * rods[$0].z + fine }
             }
             XCTAssertTrue(strays.isEmpty, "\(level.id): at the phone's scale the baked layers differ outside every core, at \(strays.prefix(3))")
+            let held = try pixels(story, [], side: side)
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
-                let m = try footprint(story, [k], side: side)
+                let m = try footprint(held, pixels(story, [k], side: side), side: side)
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
@@ -332,6 +337,9 @@ final class FirstStirTests: XCTestCase {
                 marks[k] = m
             }
             var seen: Set<[Twist]> = []
+            // Whether k's light reaches a rod's core, and whether a rod's entries move it, depend on k, the rod and
+            // those entries alone, whichever heal order left them.
+            var reaches: [[Int]: Bool] = [:], smears: [[Twist]: Bool] = [:]
             func heal(_ entries: [Game.Entry]) {
                 guard seen.insert(entries.map(\.twist)).inserted else { return }
                 let stack = entries.map(\.twist)
@@ -342,15 +350,16 @@ final class FirstStirTests: XCTestCase {
                     for k in Set(entries.flatMap(\.tags)).subtracting(next.flatMap(\.tags)) {
                         for j in layout.removable(left) {
                             let rod = left[j].rod, core = Tank.plateau * rods[rod].z
-                            if marks[k]!.contains(where: { simd_distance($0, centre(rod)) < core + pixel }) {
-                                faults.insert("\(level.id): vignette \(k)'s light reaches rod \(rod)'s core, removable next")
-                            }
+                            let reach = reaches[[k, rod]] ?? marks[k]!.contains { simd_distance($0, centre(rod)) < core + pixel }
+                            reaches[[k, rod]] = reach
+                            if reach { faults.insert("\(level.id): vignette \(k)'s light reaches rod \(rod)'s core, removable next") }
                         }
                         for rod in Set(left.map(\.rod)) {
-                            let word = left.filter { $0.rod == rod }
-                            let moved = marks[k]!.contains { p in
+                            let word = left.filter { $0.rod == rod }, key = [Twist(rod: k, steps: 0)] + word
+                            let moved = smears[key] ?? marks[k]!.contains { p in
                                 simd_distance(word.reduce(p) { Tank.twist($0, rod: rods[rod], angle: Double($1.steps) * Tank.step) }, p) > Tank.halfPixel
                             }
+                            smears[key] = moved
                             if moved { faults.insert("\(level.id): vignette \(k) plays smeared by rod \(rod)") }
                         }
                     }

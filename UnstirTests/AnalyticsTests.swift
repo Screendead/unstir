@@ -97,7 +97,8 @@ final class AnalyticsTests: XCTestCase {
         let wire = Wire(status: 503)
         let a = analytics(wire)
         a.decide(true)
-        await settle(a)
+        // The send fails, so the queue never empties: wait for the attempt.
+        for _ in 0..<100 where wire.requests.isEmpty { try? await Task.sleep(for: .milliseconds(20)) }
         XCTAssertTrue(FileManager.default.fileExists(atPath: queue.path))
         // The queue outlives the app.
         let relaunched = Sender(endpoint: endpoint, file: queue, transport: Wire(status: 503).transport)

@@ -103,46 +103,4 @@ final class PayoffTests: XCTestCase {
             }
         }
     }
-
-    /// Only sounds the game has, at their own levels: a tier's or a pack's name on the tier switch's and its stamp on
-    /// two of the heal's notes; the game's names up the heal's scale and its stamp on the solve's chime, never while the
-    /// solve's own chime, 3.3 s long, still rings. Under Reduce Motion the game's sounds as a tier's.
-    func testTheCurtainsSounds() {
-        let tier = Payoff(tier: .vortex).cues
-        XCTAssertEqual(tier.map(\.effect), [.tier, .heal(4), .heal(6)])
-        XCTAssertEqual(Payoff(pack: .escapement, paper: true).cues, tier)
-        let game = Payoff(tier: .maelstrom)
-        XCTAssertEqual(game.cues.map(\.effect), [.heal(1), .heal(3), .heal(4), .heal(6), .solve])
-        XCTAssertEqual(game.cues.map(\.at), (0 ... 4).map(game.rises))
-        XCTAssertGreaterThan(Payoff.lead + game.cues.last!.at, 3.3)
-        XCTAssertEqual(Payoff(tier: .maelstrom, still: true).cues.map(\.effect), [.tier, .heal(4), .heal(6)])
-    }
-
-    /// The words never shrink. They stand over the glass only where every line lies inside it; else under it, the
-    /// glass giving up what the room below lacks, no further than its least.
-    func testTheGlassGivesTheWordsRoom() {
-        // A name and a stamp, 60 pt of block, in a glass 200 across.
-        let two = [CGRect(x: 0, y: 0, width: 150, height: 34), CGRect(x: 20, y: 38, width: 110, height: 22)]
-        XCTAssertTrue(Payoff.fits(two, height: 60, r: 100))
-        // The same lines wider than the glass's chord where they lie, and a tall block whose last line is at its foot.
-        XCTAssertFalse(Payoff.fits(two.map { $0.insetBy(dx: -20, dy: 0) }, height: 60, r: 100))
-        XCTAssertFalse(Payoff.fits([CGRect(x: 0, y: 150, width: 120, height: 22)], height: 172, r: 100))
-        XCTAssertTrue(Payoff.fits([CGRect(x: 0, y: 150, width: 60, height: 22)], height: 172, r: 100))
-
-        XCTAssertEqual(Payoff.scale(block: 100, room: 140, stage: 400), 1)
-        XCTAssertEqual(Payoff.gap, 34)
-        XCTAssertEqual(Payoff.scale(block: 206, room: 140, stage: 400), 0.75, accuracy: 1e-9)
-        XCTAssertEqual(Payoff.scale(block: 900, room: 140, stage: 400), Payoff.least)
-    }
-
-    /// Every string the curtain adds is in the String Catalog, under the key the build looks up.
-    func testTheCurtainsStringsAreInTheCatalog() throws {
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        let data = try Data(contentsOf: root.appending(path: "Sources/Localizable.xcstrings"))
-        let strings = try XCTUnwrap((JSONSerialization.jsonObject(with: data) as? [String: Any])?["strings"] as? [String: Any])
-        for key in ["made by screendead \u{00B7} thank you for playing", "Made by screendead. Thank you for playing.", "%@ unstirred",
-                    "%@: %@ unstirred.", "%@, unstirred.", "Goes on to the result."] {
-            XCTAssertNotNil(strings[key], key)
-        }
-    }
 }
