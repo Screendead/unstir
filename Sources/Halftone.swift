@@ -269,9 +269,6 @@ enum Halftone {
         return LensArt.levels[level] ?? test
     }
 
-    /// The test panel's light at p, which the tests read.
-    static func light(_ p: SIMD2<Double>, aa: Double) -> SIMD3<Double> { test.light(p, aa: aa) }
-
     /// Coverage at p of a screen at `degrees`: the nearest cell's dot, sized by the tone at its own centre, so dots are
     /// whole and a shape's edge is dotted, as in print.
     private static func screen(_ p: SIMD2<Double>, _ degrees: Double, aa: Double, tone: (SIMD2<Double>) -> Double) -> Double {

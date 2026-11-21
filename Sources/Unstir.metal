@@ -12,7 +12,7 @@ static float lensFlow(float u, float t, float a, float e) {
 // Entry e's inverse map at q: (rod centre x, y, disc radius, angle), as `twists` below lays it out. The entry comes
 // already read, once for every point it moves, and a point past its disc is cleared by the squared distance, before
 // the root and the divide: with the taps in step (tapsThrough) that takes about a third off the twist pass on the
-// Mac's GPU (2026-11-12), and the gain is in this arrangement, not in less arithmetic, so time a change to it
+// Mac's GPU, and the gain is in this arrangement, not in less arithmetic, so time a change to it
 // (scripts/twist-oracle.sh time).
 static float2 unmap(float2 q, float4 e, float plateau, float swirlPlateau, float lensEdge) {
     float2 c = e.xy;
@@ -125,7 +125,7 @@ static half4 unstirBody(float2 pos, L layer, float2 centre, float radius, device
     // Four taps a quarter device pixel off centre, each through the whole inverse chain (tapsThrough): the stretching
     // is in the map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the
     // diagonal pair runs: on an iPhone 13 Pro Max's glass, about 1137 px, a full stack of 36 and the drag over a live picture's fill
-    // of 4, 41 entries' work in all, held 120 Hz with four taps (2026-11-04).
+    // of 4, 41 entries' work in all, held 120 Hz with four taps.
     int stride = n > fourTaps ? 3 : 1;
     Taps taps = tapsThrough(pos, centre, radius, twists, min(int(n), count / 4), stride, plateau, swirlPlateau, lensEdge,
                             scale, turn);
@@ -325,7 +325,7 @@ static void storeTaps(texture2d<float, access::write> map, uint2 pixel, float2 c
 // map's turn (cr and sr its cosine and sine), lands on the layer, in device pixels: read between the map's four
 // nearest texels where those lie as a straight map would put them, to `bend` pixels, and elsewhere the nearest texel's
 // point whole. Deep in a stir the map folds within half a pixel, and a point between two of its points is not one of
-// them: read between them everywhere, vortex 27's breath drew 0.4 of a level brighter (2026-11-12).
+// them: read between them everywhere, vortex 27's breath draws 0.4 of a level brighter.
 static float2 between(texture2d<half> map, float2 x, float2 centre, float radius, float scale, float cr, float sr,
                       float quant, float bend, int tile = 0, int skip = 0) {
     // No disc reaches past the glass's edge (testEveryDiscLiesWithinTheGlass), so a point outside it is its own.
@@ -618,7 +618,7 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
     out.write(c, gid);
 }
 
-// Today's bodies a kernel each, as the mapped ones are timed (`OracleBench`'s `today-own`): `benchUnstir` holds all
+// The three bodies a kernel each, as the mapped ones are timed (`OracleBench`'s `today-own`): `benchUnstir` holds all
 // three, which can cost a body some of its speed.
 kernel void benchPlainOwn(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
                           device const float *twists [[buffer(0)]], constant BenchArgs &a [[buffer(2)]],
@@ -669,7 +669,7 @@ kernel void stirMap(texture2d<float, access::write> map [[texture(0)]], device c
 }
 
 // The bench's frame over a stored map, a kernel a body, as each stitchable is its own function: one kernel holding all
-// three ran the plain body some 5 to 14% slower on the Mac (2026-11-13).
+// three runs the plain body some 5 to 14% slower on the Mac.
 kernel void benchMapped(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
                         texture2d<half> map [[texture(3)]], device const float *twists [[buffer(0)]],
                         constant BenchArgs &a [[buffer(2)]], constant MapArgs &m [[buffer(4)]],

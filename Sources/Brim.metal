@@ -64,7 +64,7 @@ static float lineGlow(float d, float width) {
     return width * (0.8 * exp(-sq(d / 5.6) / 2) / (5.6 * 2.5066) + 0.65 * exp(-sq(d / 22) / 2) / (22 * 2.5066));
 }
 
-// s is Brim.Frame.floats: 0 t, 1 surface y, 2 tan(tilt), 3 bob, 4-5 tremble left and right, 6 warn, 7 ripple, 8 the
+// s is Brim.frame's floats: 0 t, 1 surface y, 2 tan(tilt), 3 bob, 4-5 tremble left and right, 6 warn, 7 ripple, 8 the
 // surface's y as the newest notch began, 9 seconds into that notch's spread, 10 the wet film's y, 11 its strength,
 // 12 kick, 13 pulse, 14 fullness, 15 seconds since the fronts met at the brim (negative before), 16 flash, 17 brim pin
 // brightness, 18 soak, 19 reach past the bezel, 20 degrees per tick, 21-22 as 8-9 for the notch before the newest,

@@ -129,7 +129,7 @@ enum Picture: String, CaseIterable {
             .frame(width: side, height: side))
         r.scale = scale
         r.isOpaque = true
-        // Float storage, so the glow adds in linear light as the design renders did; 8-bit .linear bands the dark skies.
+        // Float storage, so the glow adds in linear light; 8-bit .linear bands the dark skies.
         r.colorMode = .extendedLinear
         return r.uiImage
     }
@@ -377,8 +377,8 @@ enum Picture: String, CaseIterable {
     }
 }
 
-/// The names shown for a picture and a layout, the sandbox's controls (R3: a raw value is stored, never shown). Each
-/// reads as its raw value did.
+/// The names shown for a picture and a layout on the sandbox's controls: a raw value is stored, never shown. Each
+/// English default is its raw value.
 extension Picture {
     var display: LocalizedStringResource {
         switch self {

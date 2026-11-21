@@ -41,8 +41,6 @@ enum Engraving {
 
     static func circle(_ c: SIMD2<Double>, _ r: Double, _ n: Int) -> [SIMD2<Double>] { arc(c, r, n) }
 
-    static func segment(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> [SIMD2<Double>] { [a, b] }
-
     /// Points of the quadratic from a through control c to b.
     static func curve(_ a: SIMD2<Double>, _ c: SIMD2<Double>, _ b: SIMD2<Double>, _ n: Int = 24) -> [SIMD2<Double>] {
         (0...n).map { i in
@@ -112,7 +110,7 @@ enum Fern {
             let h = headings[i] + lr * 0.95
             out.append(Line(points: lobe(rib[i], heading: h, length: size), width: fine))
             if sori, lr < 0, size > 0.014 {
-                out.append(Line(points: circle(rib[i] + 0.55 * size * dir(h), 0.0045, 10), width: fine))
+                out.append(Line(points: Engraving.circle(rib[i] + 0.55 * size * dir(h), 0.0045, 10), width: fine))
             }
         }
     }
@@ -131,8 +129,6 @@ enum Fern {
         }
         return out + back
     }
-
-    private static func circle(_ c: SIMD2<Double>, _ r: Double, _ n: Int) -> [SIMD2<Double>] { Engraving.circle(c, r, n) }
 
     /// A crozier unrolling off a stem from the ground, scaled along its outer curl.
     private static func fiddlehead(_ out: inout [Line], _ rng: inout SplitMix64) {

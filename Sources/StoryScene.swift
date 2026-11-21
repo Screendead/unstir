@@ -220,8 +220,8 @@ struct SceneComposite: View {
         .frame(width: side, height: side)
     }
 
-    /// The core's mask, its pixels wholly in or out: where its cover fell partway, the cut-in edge drew a ring however
-    /// it was composited, though both layers held the same there.
+    /// The core's mask, its pixels wholly in or out: an edge pixel covered partway draws a ring however it is
+    /// composited, though both layers hold the same there.
     private func core(_ k: Int) -> some View {
         let rod = scene.layout.rods[k], d = Tank.plateau * rod.z * side
         return Image(uiImage: layers.cores[k]!).interpolation(.none).resizable()
