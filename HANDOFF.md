@@ -65,23 +65,22 @@ stale lines were shot again and none changed, so that loose end is closed. `film
 sandbox (its process substitution), and a build there can fail on an unmounted Metal toolchain until `xcrun metal
 --version` is run outside it once.
 
-**Open for Jack (a page of five calls, sent 2026-11-15):**
+**Jack's five answers (2026-11-15, rows in `docs/decisions.md`):** Maelstrom's twelve re-dealt levels stay as
+dealt. `AGE_RANGE` defaults to YES for phone builds once the first upload proves the App ID takes it, without asking
+him again. The promoted-purchase images keep their knobs, as #149 built them. No rule keeps the swirl or the orbits
+from paid packs: open, and back to him when a pack wants one. The swirl's two calls and Escapement's two loss rules
+both stand: the rows are reworded, and the comment on the swirl's profile in Twist.swift now describes the one the
+game plays.
 
-- Maelstrom's twelve re-dealt levels: keep all (recommended), play them first, or put them back.
-- `AGE_RANGE` for phone builds: on once the first upload proves the App ID takes it (recommended), never, or now.
-- Whether the promoted-purchase images draw the knobs (#149 built it as his call; no words of his are recorded).
-- Whether "no paid pack takes the swirl or the orbits" is his rule (recorded as his under a heading of
-  recommendations).
-- Two records read as both sides right: the swirl's two calls (2026-10-25, then turned inside out 2026-10-26) and
-  Escapement's loss rule (the prover plays round 9's, the game the tick budget). On his OK: reword the rows, drop
-  "sources differ", and correct the comment on the swirl's disc in Twist.swift, which still describes the first.
+**Open for Jack:**
+
 - Still his own: the account night (not started, Jack 2026-11-15), ICO registration,
   hosting the privacy policy, the policy's remaining tokens, a trademark search, a launch date.
 - Claude's picks still open to him: the open tank's cap of 96, and the 30% floor the glass shrinks to under a card.
 
 **Next:**
 
-- Jack's look at the retaken media, then his five answers recorded here and in `docs/decisions.md`.
+- Jack's look at the retaken media.
 - The clips with sound, if he wants them.
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The account night and the first upload (`scripts/archive-ios.sh`), with Jack at the Mac.
@@ -989,7 +988,7 @@ TestFlight is ready, not earlier; that gives the first year the most selling tim
   (`scripts/archive-ios.sh`), which needs `SUPPORT_ADDRESS` set.
 - Declared Age Range's entitlement: `AGE_RANGE=YES` signs it in and `scripts/archive-ios.sh` sets it (2026-11-12).
   Still owed: the first signed archive shows the App ID takes it (the script refuses to export one without it); then
-  decide whether `AGE_RANGE` defaults to YES for phone builds too.
+  make `AGE_RANGE` default to YES for phone builds too, without asking (Jack, 2026-11-15).
 - Before each paid pack ships, send Apple the significant-change notice Texas requires (a new purchase is one).
 - Once a year, with the ICO renewal (remind Jack): delete Unstir support mail and logs older than 12 months, and
   complaint records older than two years, as the privacy policy promises.
