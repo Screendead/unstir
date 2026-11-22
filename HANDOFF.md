@@ -116,10 +116,10 @@ game plays.
   from the top: the card keeps the file's top 67.7% and loses its bottom 32.3%, so the tank sits low with its rim on
   the card's edge. The dialog says the preview may not match what customers see. The art that survives it is below.
 - Jack's listen to the layers in play, Escapement 29's above all: asked on his Calls page (#284, closed 2026-11-21):
-  "**Jack's answer:** C · Hear them in the game first". Once #280's recorder is checked on the Mac (#281) and merged,
-  ask the Mac to film the three levels with sound (`scripts/layers-film.sh`, under #268's conditions: mains power,
-  `pmset -g therm` clear, nothing else running beside the takes) and check each film for dropouts; then Jack watches
-  them and keeps or changes the layers.
+  "**Jack's answer:** C · Hear them in the game first". #280's recorder is checked on the Mac (#281) and merged, so
+  the Mac is asked to film the three levels with sound (#289, 2026-11-22: `scripts/layers-film.sh` on master, under
+  #268's conditions: mains power, `pmset -g therm` clear, nothing else running beside the takes) and check each film
+  for dropouts; then Jack watches them and keeps or changes the layers.
 - The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
