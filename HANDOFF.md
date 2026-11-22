@@ -119,7 +119,14 @@ game plays.
   "**Jack's answer:** C · Hear them in the game first". #280's recorder is checked on the Mac (#281) and merged, so
   the Mac is asked to film the three levels with sound (#289, 2026-11-22: `scripts/layers-film.sh` on master, under
   #268's conditions: mains power, `pmset -g therm` clear, nothing else running beside the takes) and check each film
-  for dropouts; then Jack watches them and keeps or changes the layers.
+  for dropouts. Filmed (#289, closed 2026-11-22, at `8c16c31`, `FILM_FULL=1`): the recorder failed no take; no
+  digital silence between the first and last sound and no sample-clock jumps; 48 kHz, mono. Takes run 156.3 s (Lens
+  25), 144.5 s (Escapement 29) and 141.8 s (Prism 30): the harness halves the studies, so Escapement plays its line in
+  about 145 s, not the TSV's 196. Loudness as captured, not normalised: Lens -36.9 LUFS, peak -18.3 dBFS; Escapement
+  -38.1, -13.3; Prism -37.1, -18.9. Each plays its line, wrong moves and undos too, to the solve at par, the picture
+  striking and moving with the drawn finger; Lens's and Escapement's films stop on the solved screen before the card,
+  as recordVideo writes no frame on a still screen. Films in the tools folder outside the repo
+  (`layers-film-20261122`). Jack watches them and keeps, changes or drops the layers: asked on his Calls page (#291).
 - The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
