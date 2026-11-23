@@ -36,7 +36,7 @@ private func glowRing(_ colour: Color, _ width: CGFloat, _ underlay: CGFloat, un
 }
 
 /// UNSTIR_CLEAN: a part of the play screen kept where it lies but not drawn, so the tank stays where films crop it.
-private struct Unseen: ViewModifier {
+struct Unseen: ViewModifier {
     let hidden: Bool
     init(_ hidden: Bool) { self.hidden = hidden }
 
@@ -627,10 +627,7 @@ struct LevelView: View {
 
     /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) } // loc: verbatim localized by Level.back
-                .accessibilityLabel(Spoken.back(game.level))
-            Spacer()
+        PlayHeader(back: game.level.back, backSpoken: Spoken.back(game.level), hidden: staged, leave: leave) {
             if game.level.sandbox {
                 // Each says what it steps through where there is room for it.
                 ViewThatFits(in: .horizontal) {
@@ -641,48 +638,19 @@ struct LevelView: View {
                 tickBudget.opacity(showResult && !game.lost ? 0 : 1)
             } else {
                 // Endless has no par; its brim is on the rim.
-                (game.level.run == nil ? Text("moves \(game.moves) / par \(game.par)", comment: "The play screen's count. Moves, then par")
-                    : Text("moves \(game.moves)", comment: "The play screen's count, endless. Moves"))
-                    // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
-                    .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { [tone = countTone] text, t in
-                        text.foregroundStyle(t > 0.5 ? Color.alarm : tone)
-                    } keyframes: { _ in
-                        // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
-                        MoveKeyframe(1.0)
-                        LinearKeyframe(0.0, duration: 0.8)
-                    }
-                    .opacity(showResult || ending ? 0 : 1)
-                    .accessibilityLabel(game.movesSpoken)
+                MovesCount(moves: game.moves, par: game.level.run == nil ? game.par : nil, pushes: game.pushes,
+                           tone: countTone, hidden: showResult || ending, spoken: game.movesSpoken)
             }
         }
-        .font(.ui(.label))
-        .padding(.top, 8)
-        .modifier(Unseen(staged))
     }
 
     private var titleRow: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 14) {
-            Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour) // loc: verbatim a number, or localized by Level
-                .shadow(color: page.glow(game.level.colour), radius: 4)
-            // Endless's tank beside its name, where it can't read as the brim's count.
-            Text(game.level.run.map { // loc: verbatim localized by Level and here
-                String(localized: "\(game.level.title), tank \($0.tank + 1)", comment: "Endless's title. Its name, then the tank")
-            } ?? game.level.title)
-        }
-        .font(.ui(.headline, .medium))
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(alignment: .topLeading) {
-            // In the gap above the title, so a pack level's tank sits where every other level's does.
-            if let pack = game.level.pack {
-                // The size the title's 18 pt gap holds.
-                Text(verbatim: pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large) // loc: verbatim a pack's name, never translated
-                    .foregroundStyle(game.level.colour).opacity(0.75)
-                    .offset(y: -TypeRole.eyebrow.line(at: .large).height - 2)
-                    .accessibilityHidden(true)
-            }
-        }
-        .padding(.top, 18)
-        .modifier(Unseen(staged))
+        PlayTitle(label: game.level.label,
+                  // Endless's tank beside its name, where it can't read as the brim's count.
+                  title: game.level.run.map {
+                      String(localized: "\(game.level.title), tank \($0.tank + 1)", comment: "Endless's title. Its name, then the tank")
+                  } ?? game.level.title,
+                  colour: game.level.colour, glow: page.glow(game.level.colour), pack: game.level.pack?.name, hidden: staged)
     }
 
     /// How a card arrives, and the tank's shrink for it with it.
@@ -740,8 +708,7 @@ struct LevelView: View {
         Text("unstirred.").font(fixed ? .game(22, .semibold) : .ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
     }
 
-    /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
-    /// is an overlay, so the solved tank stays exactly where it was played.
+    /// The caption, which the result and lost cards hang from (`PlayCaption`), the card in its slot.
     private func caption(_ layout: PlayLayout) -> some View {
         let toSkip = String(localized: "tap to skip", comment: "The caption over an opening's stir")
         let practice = game.level.archived
@@ -749,28 +716,15 @@ struct LevelView: View {
             : String(localized: "Practice: only the first try counts.", comment: "The caption of a daily replayed")
         let opening = game.level.replay
             ? String(localized: "watch the stir \u{00B7} tap to skip", comment: "The caption over a replay's opening stir") : toSkip
-        return Text(notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening)) // loc: verbatim localized here, by Game and by say
-            .font(page.caption).opacity(captionOpacity)
-            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does. Beside the
-            // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
-            .overlay(alignment: .bottom) {
-                if pointing && !beside {
-                    Self.pointer.font(.ui(.detail)).fixedSize()
-                        .opacity(showResult || ending || shown != nil ? 0 : page.tone(.text3).alpha)
-                        .animation(.easeOut(duration: 0.4), value: shown == nil)
-                        .accessibilityLabel(Self.pointerSpoken) // loc: verbatim localized by pointerSpoken
-                        .accessibilityHidden(showResult || ending || shown != nil)
-                        // A gap below the note's last line.
-                        .offset(y: TypeRole.detail.line(at: playType).height + 7)
-                }
-            }
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity, minHeight: Self.captionLines(paper: page.paper, type: playType), alignment: .top)
-            .padding(.top, 14)
-            .accessibilityHidden(showResult || ending)
-            .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-            .overlay(alignment: .top) { if showResult { card(layout) } }
-            .modifier(Unseen(staged))
+        let away = showResult || ending || shown != nil
+        return PlayCaption(text: notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening),
+                           font: page.caption, opacity: captionOpacity,
+                           minHeight: Self.captionLines(paper: page.paper, type: playType),
+                           pointing: pointing && !beside, pointerOpacity: away ? 0 : page.tone(.text3).alpha,
+                           pointerHidden: away, settled: shown == nil, type: playType, quiet: showResult || ending,
+                           skips: demoing || shown != nil, skip: { skip() }, hidden: staged) {
+            if showResult { card(layout) }
+        }
     }
 
     /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
@@ -829,39 +783,23 @@ struct LevelView: View {
     /// The gap between the wait's own row and the row under it.
     nonisolated static let controlRows: CGFloat = 8
 
-    /// Undo and reset, and on Escapement the wait: between them where the row holds all three on a line each, stepping
-    /// aside while reset is armed, as "reset? tap again" needs the room; else on a row of its own over them
-    /// (`PlayLayout.waitTakesARow`), where it stays. Where the row can't hold undo beside an armed reset on a line
-    /// each, undo steps aside too until the reset is made or lapses, so no label wraps and the row keeps its height.
+    /// Undo and reset, and on Escapement the wait (`PlayControls`). Where the row can't hold undo beside an armed reset
+    /// on a line each, undo steps aside too until the reset is made or lapses, so no label wraps and the row keeps its
+    /// height.
     private func controls(_ layout: PlayLayout) -> some View {
         let clocks = !game.level.ratchets.isEmpty, width = layout.chromePane.width
         let waitRow = PlayLayout.waitTakesARow(game.level, width: width, type: playType)
         let undoLabel = game.level.sandbox ? String(localized: "undo") : String(localized: "undo \u{00B7} \(game.bank)")
         let alone = armedAt != nil
             && !PlayLayout.rowHolds([undoLabel, String(localized: "reset? tap again")], width: width, type: playType)
-        return VStack(spacing: Self.controlRows) {
-            if waitRow { waitControl }
-            HStack {
-                if !alone {
-                    // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats
-                    // too. An empty bank only says when it refills, so it only taps.
-                    UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
-                        if settling { undoQueued = true } else { undo() }
-                    } label: {
-                        if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
-                    }
-                        .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
-                                            : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
-                        .disabled(game.history.isEmpty)
-                        .overlay(alignment: .topTrailing) { refillBadge }
-                }
-                Spacer()
-                if clocks && !waitRow && armedAt == nil {
-                    waitControl
-                    Spacer()
-                }
-                resetControl
-            }
+        return PlayControls(waitRow: waitRow, inlineWait: clocks && !waitRow && armedAt == nil, alone: alone,
+                            sandbox: game.level.sandbox, bank: game.bank, spent: spent, nothingToUndo: game.history.isEmpty,
+                            badge: RefillBadge(badge: badge, first: game.firstRefill, colour: page.signal(.lime),
+                                               frozen: frozenClock, type: playType),
+                            undo: { if settling { undoQueued = true } else { undo() } }) {
+            waitControl
+        } reset: {
+            resetControl
         }
         .task(id: waits) {
             guard waits > 0 else { return }
@@ -1760,25 +1698,8 @@ struct LevelView: View {
         }
     }
 
-    /// The day's refill, over the undo control's count once the opening is over and the control live. Always present, to
-    /// see `badge` change.
-    private var refillBadge: some View {
-        KeyframeAnimator(initialValue: Self.refillTime, trigger: badge) { s in
-            (game.firstRefill ? Text("+\(badge) undos", comment: "Over the undo button: the day's first refill") : Text(verbatim: "+\(badge)"))
-                .font(.ui(.detail)).foregroundStyle(page.signal(.lime))
-                .opacity(badge > 0 ? Self.refillShown(frozenClock ?? s) : 0)
-        } keyframes: { _ in
-            MoveKeyframe(0.0)
-            LinearKeyframe(Self.refillTime, duration: Self.refillTime)
-        }
-        // Its trailing edge on the count's, just above the capsule.
-        .offset(x: -22, y: -TypeRole.detail.line(at: playType).height - 8)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
     /// Seconds from a refill until its count has gone.
-    nonisolated private static let refillTime = 3.0
+    nonisolated static let refillTime = 3.0
 
     /// The refill's count `s` seconds after the opening ends, or after the level opens where it has none: up after a
     /// beat, gone by `refillTime`.

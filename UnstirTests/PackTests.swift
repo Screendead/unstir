@@ -400,9 +400,9 @@ final class PackTests: XCTestCase {
 
         let store = Store()
         XCTAssertFalse(store.shelved, "the dock waits for the launch's read and price fetch")
-        XCTAssertNil(PackDock.saying(.pack(.lens), covered: false, shelved: false), "no approval said over a blank dock")
-        XCTAssertNil(PackDock.saying(.pack(.lens), covered: true, shelved: true))
-        XCTAssertEqual(PackDock.saying(.pack(.lens), covered: false, shelved: true), .pack(.lens))
+        XCTAssertNil(Shop.saying(.pack(.lens), covered: false, shelved: false), "no approval said over a blank dock")
+        XCTAssertNil(Shop.saying(.pack(.lens), covered: true, shelved: true))
+        XCTAssertEqual(Shop.saying(.pack(.lens), covered: false, shelved: true), .pack(.lens))
         for prices in [[:], amounts] {
             let read = [Pricing.fetching, .fetched, .unreachable].map { pricing in
                 store.pretend(Ledger(), amounts: prices, pricing: pricing)
@@ -652,48 +652,48 @@ final class PackTests: XCTestCase {
         let levels = Pack.lens.levels
         var bests: [String: Best] = [:]
         func best(_ id: String) -> Best? { bests[id] }
-        XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "false"])
+        XCTAssertEqual(Shop.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "false"])
         bests[levels[0].id] = Best(over: 1, seconds: 60)
         bests[levels[2].id] = Best(over: 0, seconds: 60)
-        XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["02", "false"])
+        XCTAssertEqual(Shop.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["02", "false"])
         bests[levels[1].id] = Best(over: 0, seconds: 60)
-        XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "true"])
-        XCTAssertNil(PackCard.taste([], best: best))
-        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: best),
+        XCTAssertEqual(Shop.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "true"])
+        XCTAssertNil(Shop.taste([], best: best))
+        XCTAssertEqual(Shop.arrival(.pack(.lens), levels, state: .unowned, best: best),
                        "You've played the free three. 22 more in Lens.")
-        XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels, state: .pending, best: { _ in
+        XCTAssertEqual(Shop.arrival(.pack(.escapement), Pack.escapement.levels, state: .pending, best: { _ in
             Best(over: 0, seconds: 60) }), "You've played the free three. 27 more in Escapement.")
-        XCTAssertNil(PackCard.arrival(.complete, [], state: .unowned, best: best))
+        XCTAssertNil(Shop.arrival(.complete, [], state: .unowned, best: best))
         // Only while it is true: before every free level has a best, that they are free (Jack's call C1A = B, round
         // 16); nothing to an owner or a refunded one, whose revocation line says it.
-        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }),
+        XCTAssertEqual(Shop.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }),
                        "The first three are free. 22 more in Lens.")
-        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { $0 == levels[2].id ? Best(over: 0, seconds: 60) : nil }),
+        XCTAssertEqual(Shop.arrival(.pack(.lens), levels, state: .unowned, best: { $0 == levels[2].id ? Best(over: 0, seconds: 60) : nil }),
                        "The first three are free. 22 more in Lens.")
-        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: { _ in nil }))
-        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: best))
-        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .owned, best: best))
+        XCTAssertNil(Shop.arrival(.pack(.lens), levels, state: .revoked, best: { _ in nil }))
+        XCTAssertNil(Shop.arrival(.pack(.lens), levels, state: .revoked, best: best))
+        XCTAssertNil(Shop.arrival(.pack(.lens), levels, state: .owned, best: best))
     }
 
     /// Over the menu a card goes back to it; beside the list, with the menu in sight, it closes (d4-menuback = B, round 16).
     /// Back to Triptych I's card reads the same in every pose.
     @MainActor func testACardBesideTheMenuClosesRatherThanGoingBack() {
-        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: false).text, "\u{2039} menu")
-        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: false).spoken, "Back")
-        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: true).text, "\u{2715} close")
-        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: true).spoken, "Close")
+        XCTAssertEqual(Shop.back(to: Shop.menu, beside: false).text, "\u{2039} menu")
+        XCTAssertEqual(Shop.back(to: Shop.menu, beside: false).spoken, "Back")
+        XCTAssertEqual(Shop.back(to: Shop.menu, beside: true).text, "\u{2715} close")
+        XCTAssertEqual(Shop.back(to: Shop.menu, beside: true).spoken, "Close")
         for beside in [false, true] {
-            XCTAssertEqual(PackCard.back(to: Offer.bundleName, beside: beside).text, "\u{2039} Triptych I")
-            XCTAssertEqual(PackCard.back(to: Offer.bundleName, beside: beside).spoken, "Back")
+            XCTAssertEqual(Shop.back(to: Offer.bundleName, beside: beside).text, "\u{2039} Triptych I")
+            XCTAssertEqual(Shop.back(to: Offer.bundleName, beside: beside).spoken, "Back")
         }
     }
 
     /// Beside a playing level, a card over its result card closes onto that card, which covers the menu (s5b-back = B);
     /// over the menu beside play, from the dock or a gate before a finish, it goes back to the menu, as on a phone.
     func testACardOverAResultBesideTheMenuCloses() {
-        XCTAssertTrue(MenuView.closes(playing: true, covered: true))
-        XCTAssertFalse(MenuView.closes(playing: true, covered: false))
-        XCTAssertFalse(MenuView.closes(playing: false, covered: false))
+        XCTAssertTrue(Menu.closes(playing: true, covered: true))
+        XCTAssertFalse(Menu.closes(playing: true, covered: false))
+        XCTAssertFalse(Menu.closes(playing: false, covered: false))
     }
 
     /// Where a pack's card came from lasts only while that card is up. Beside play the menu outlives the root's own
@@ -701,8 +701,8 @@ final class PackTests: XCTestCase {
     /// Lens" over its result card, must read "✕ close", not "‹ Triptych I"; and the parked card back reads "‹ menu".
     func testWhereACardCameFromGoesWithAnyChangeOfCard() {
         func label(_ trail: CameFrom?, _ card: Offer?, closes: Bool) -> String {
-            let back = trail?.returns(card: card, offersComplete: true)?.name ?? PackCard.menu
-            return PackCard.back(to: back, beside: closes).text
+            let back = trail?.returns(card: card, offersComplete: true)?.name ?? Shop.menu
+            return Shop.back(to: back, beside: closes).text
         }
         // The bundle's card, its Lens link: back returns to the bundle.
         var card: Offer? = .complete
@@ -716,7 +716,7 @@ final class PackTests: XCTestCase {
         card = .pack(.lens)
         trail = trail?.kept(as: card)
         XCTAssertNil(trail)
-        XCTAssertEqual(label(trail, card, closes: MenuView.closes(playing: true, covered: true)), "\u{2715} close")
+        XCTAssertEqual(label(trail, card, closes: Menu.closes(playing: true, covered: true)), "\u{2715} close")
         // Or the parked card brought back as the level leaves: the menu, as on a phone.
         XCTAssertEqual(label(trail, card, closes: false), "\u{2039} menu")
         // Triptych I stops saving once a pack is bought: back goes to the menu.
@@ -725,11 +725,11 @@ final class PackTests: XCTestCase {
 
     /// Only a change after the launch's first read lands: before it, an owner's card reads unowned until the read does.
     @MainActor func testTheLaunchsFirstReadIsNoLanding() {
-        XCTAssertFalse(PackCard.lands(.unowned, .owned, ready: false))
-        XCTAssertTrue(PackCard.lands(.unowned, .owned, ready: true))
-        XCTAssertTrue(PackCard.lands(.pending, .owned, ready: true))
-        XCTAssertFalse(PackCard.lands(.owned, .owned, ready: true))
-        XCTAssertFalse(PackCard.lands(.unowned, .pending, ready: true))
+        XCTAssertFalse(Shop.lands(.unowned, .owned, ready: false))
+        XCTAssertTrue(Shop.lands(.unowned, .owned, ready: true))
+        XCTAssertTrue(Shop.lands(.pending, .owned, ready: true))
+        XCTAssertFalse(Shop.lands(.owned, .owned, ready: true))
+        XCTAssertFalse(Shop.lands(.unowned, .pending, ready: true))
     }
 
     /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere, and solving the placeholder it opens
