@@ -28,12 +28,13 @@ let kernel = """
     kernel void lab(texture2d<float, access::write> out [[texture(0)]], device const float *g [[buffer(0)]],
                     constant float4 &view [[buffer(1)]], constant float4 &play [[buffer(2)]],
                     constant float4 &lone [[buffer(3)]], constant float4 &more [[buffer(4)]],
+                    constant float4 &upper [[buffer(5)]],
                     uint2 gid [[thread_position_in_grid]]) {
         if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
         float2 pos = (float2(gid) + 0.5) / view.x;
         out.write(float4(more.w > 0.0 ? slopeHollow(pos, half4(0.0h), more.xy, view, float2(0.5 * more.x, 0.3 * more.y),
                                                     float3(1.0, 0.16, 0.16), float3(0.16, 1.0, 0.3), float3(0.2, 0.4, 1.0))
-                                      : slope(pos, half4(0.0h), more.xy, view, play, lone, more.z, g, 0)), gid);
+                                      : slope(pos, half4(0.0h), more.xy, view, play, lone, more.z, upper, g, 0)), gid);
     }
     """
 let state = try device.makeComputePipelineState(function: device.makeLibrary(source: source + kernel, options: nil)
@@ -68,6 +69,8 @@ let buffer = device.makeBuffer(bytes: uniforms, length: uniforms.count * 4, opti
 var view = SIMD4<Float>(Float(scale), Float(number("t", 3)), Float(number("near", 1)), Float(number("motes", 1)))
 var play = SIMD4<Float>(Float(number("level", 0)), Float(number("glint", 0)), Float(number("clear", 0)), Float(number("light", 1)))
 var lone = SIMD4<Float>(1, 0.86, 0.6, Float(number("rock", 0)))
+// upper=1 stands a second terrace over the lone one, at the screen's middle.
+var upper = SIMD4<Float>(Float(size.width / 2), Float(size.height - 118), 85, Float(number("upper", 0)))
 var more = SIMD4<Float>(Float(size.width), Float(size.height), Float(number("paper", 0)), Float(number("hollow", 0)))
 
 /// GPU seconds for one pass, the least of `tries`.
@@ -82,6 +85,7 @@ func pass(tries: Int) -> Double {
         enc.setBytes(&play, length: 16, index: 2)
         enc.setBytes(&lone, length: 16, index: 3)
         enc.setBytes(&more, length: 16, index: 4)
+        enc.setBytes(&upper, length: 16, index: 5)
         enc.dispatchThreads(MTLSize(width: pw, height: ph, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
         enc.endEncoding()
         cb.commit()

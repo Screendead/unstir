@@ -118,7 +118,7 @@ enum SlopeInk: CaseIterable {
 
     /// The least depth under the surface, in points, at which words in this ink keep their floor: the surface's own
     /// light is brighter than any ink reads over, and the quieter inks need the water a little darker again. In the
-    /// air over the surface every ink reads.
+    /// air they keep as far above the water line.
     var shallowest: CGFloat {
         switch self {
         case .ink, .ink4: 24

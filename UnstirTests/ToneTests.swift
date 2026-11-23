@@ -128,7 +128,7 @@ final class ToneTests: XCTestCase {
                               device float4 *out [[buffer(2)]], constant float2 &size [[buffer(3)]],
                               uint id [[thread_position_in_grid]]) {
                 out[id] = float4(slopeGround(at[id], size, float4(1.0, 3.0, 0.0, 0.0), float4(0.0, 0.0, 0.0, 1.0),
-                                             float4(1.0, 0.86, 0.6, 0.0), 0.0, g), 1.0);
+                                             float4(1.0, 0.86, 0.6, 0.0), 0.0, float4(0.0), g), 1.0);
             }
             """)
         let g = try kit.buffer(lay.uniforms(top: top)), at = try kit.buffer(points)
@@ -145,7 +145,8 @@ final class ToneTests: XCTestCase {
 
     /// The slope's inks keep their floors on what the shader draws (docs/slope.md, 1.4): `ink` to `ink3` read at 4.5:1
     /// and `ink4` at 3:1 over the water beside the shelf, where every row's words stand (from x = 180 at the overview,
-    /// from 18 pt past the ninth lip in the dive), from each ink's `shallowest` down to the drop-off; and `ink` over the rock's heart in the dive, where a
+    /// from 18 pt past the ninth lip in the dive), from each ink's `shallowest` down to the drop-off, and in the air
+    /// as far over the water line; and `ink` over the rock's heart in the dive, where a
     /// hollow's name goes. In the 300 pt under its `shallowest`, where the sun's rays reach, one pixel in a thousand
     /// may fall short, a ray's brightest thread; deeper, none.
     func testTheSlopesInksReadOnItsWater() throws {
@@ -160,8 +161,10 @@ final class ToneTests: XCTestCase {
                 : Array(stride(from: travel.lowerBound, through: travel.upperBound, by: size.height))
             for top in tops {
                 var points: [SIMD2<Float>] = []
-                for y in stride(from: Float(1), to: Float(size.height), by: 5) where top + CGFloat(y) > SlopeInk.ink.shallowest {
-                    for x in stride(from: Float(21), to: Float(size.width) - 16, by: 5) where x >= words || (z == 1 && x < 76) {
+                for y in stride(from: Float(1), to: Float(size.height), by: 5) where abs(top + CGFloat(y)) > SlopeInk.ink.shallowest {
+                    // In the air words stand anywhere: the wordmark, and the bank's stone's.
+                    let air = top + CGFloat(y) < 0
+                    for x in stride(from: Float(21), to: Float(size.width) - 16, by: 5) where air || x >= words || (z == 1 && x < 76) {
                         points.append(SIMD2(x, y))
                     }
                 }
@@ -169,8 +172,8 @@ final class ToneTests: XCTestCase {
                 for (point, colour) in zip(points, try ground(lay, top: top, size: size, at: points)) {
                     let under = Color(red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
                     let depth = top + CGFloat(point.y)
-                    if point.x >= words {
-                        for ink in SlopeInk.allCases where depth > ink.shallowest {
+                    if point.x >= words || depth < 0 {
+                        for ink in SlopeInk.allCases where abs(depth) > ink.shallowest {
                             let short = ratio(ink.colour, on: under) < (ink == .ink4 ? 3 : 4.5)
                             if depth < ink.shallowest + rays {
                                 sunlit[ink, default: (0, 0)].of += 1
