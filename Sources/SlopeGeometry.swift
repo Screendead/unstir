@@ -93,10 +93,12 @@ struct SlopeCamera: Equatable, Sendable {
 }
 
 /// Where a camera holds the column: ledge `ledge`'s top at `share` of the screen's height. A ledge past the last is
-/// the foot, endless's word.
+/// the foot, endless's word. A dive travels when its aim changes, so going back to a place the finger has scrolled
+/// away from takes a new `stamp`.
 struct SlopeAim: Equatable, Sendable {
     var ledge: Int
     var share: CGFloat = 0.49
+    var stamp = 0
 }
 
 /// A column laid out at one zoom: where each ledge is, where its pebble sits, and what the shader is given, all from

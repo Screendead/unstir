@@ -243,7 +243,7 @@ private struct SlopeStandIns: View {
             : view.y(lay.headers[t + 1]) + lay.column.stretches[t + 1].header * 0.45
         if shown(y) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(tier.word).font(.slope(.place, .title)).ink(.ink)
+                Text(verbatim: tier.word).font(.slope(.place, .title)).ink(.ink) // loc: verbatim a stand-in
                 Text(verbatim: "\(min(max(solved - t * 27, 0), 27))/27 at par") // loc: verbatim a stand-in
                     .font(.slope(.data, .detail)).ink(.ink3)
             }
@@ -264,7 +264,7 @@ private struct SlopeStandIns: View {
                 let x = words(n)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 9) {
-                        Text(level.label).font(.slope(.data, next ? .body : .label)).ink(done || next ? .ink3 : .ink4)
+                        Text(verbatim: level.label).font(.slope(.data, next ? .body : .label)).ink(done || next ? .ink3 : .ink4) // loc: verbatim a stand-in
                         Text(level.title).font(next ? .slope(.name, .title) : .slope(.ui, .body)).ink(done || next ? .ink : .ink4)
                     }
                     Text(verbatim: "\(level.layout.rods.count) rods · par \(level.fixedPar ?? level.scramble.count)") // loc: verbatim a stand-in

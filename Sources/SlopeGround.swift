@@ -166,7 +166,7 @@ struct SlopeDive<Content: View>: View {
             let size = geo.whole
             let lay = SlopeLay(column, z: z), travel = lay.travel(height: size.height)
             let base = SlopeView(lay: lay, top: travel.lowerBound, size: size)
-            let rest = aim.map { lay.rest($0, height: size.height) } ?? travel.lowerBound
+            let rest = aim.map { lay.rest($0, height: size.height) }
             ScrollViewReader { reader in
                 ScrollView(.vertical, showsIndicators: false) {
                     SlopeLayer {
@@ -179,7 +179,8 @@ struct SlopeDive<Content: View>: View {
                         }
                         // The scroll's one target: the content's line that the aim puts at the screen's middle, which
                         // lies inside the content at both ends of the travel, as the line at the screen's top does not.
-                        Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: base.y(rest) + size.height / 2))
+                        Color.clear.frame(width: 1, height: 1)
+                            .slopePlace(CGPoint(x: 0, y: base.y(rest ?? travel.lowerBound) + size.height / 2))
                             .id(Self.mark)
                         content(base)
                     }
@@ -194,6 +195,8 @@ struct SlopeDive<Content: View>: View {
                 .onPreferenceChange(SlopeDiveTop.self) { top in onMove?(top) }
                 .onAppear { if aim != nil { reader.scrollTo(Self.mark, anchor: .center) } }
                 .onChange(of: aim) {
+                    // An aim taken away leaves the dive where the finger has it.
+                    guard aim != nil else { return }
                     withAnimation(reduceMotion ? nil : .easeOut(duration: seconds)) { reader.scrollTo(Self.mark, anchor: .center) }
                 }
             }
@@ -253,7 +256,8 @@ private extension GeometryProxy {
 
 /// Lays views out at points of its own frame, as the slope's screens place everything: a child says where it goes
 /// with `slopePlace`, `slopeLine`, `seated` or `rested`, and one that says nothing fills the frame. A placed child is offered
-/// the width from its point to 16 pt short of the frame's side, so its words wrap there; one that would fill what
+/// the width from its point to 16 pt short of the frame's side (one placed by its middle, the frame's width less
+/// both margins, and it moves aside to stay inside them), so its words wrap there; one that would fill what
 /// it is offered (a spacer, a bare shape) needs its own frame. Each child keeps its own frame where it is drawn, so a
 /// scroll's targets, VoiceOver and taps find it there.
 struct SlopeLayer: SwiftUI.Layout {
@@ -300,10 +304,15 @@ struct SlopeLayer: SwiftUI.Layout {
             // the screen and are never cut off.
             let ax = place.line ? 0 : place.anchor.x
             let before = place.point.x - Self.margin, after = bounds.width - Self.margin - place.point.x
-            let room = max(min(ax > 0 ? before / ax : .infinity, ax < 1 ? after / (1 - ax) : .infinity), Self.least)
-            let proposal = ProposedViewSize(width: room, height: nil)
+            // Words that lead from their point have the room after it, ones that trail the room before it; anything
+            // else may be as wide as the frame less its margins, and gives way sideways to stay inside them.
+            let room = ax == 0 ? after : ax == 1 ? before : bounds.width - 2 * Self.margin
+            let proposal = ProposedViewSize(width: max(room, Self.least), height: nil)
             let own = subview.dimensions(in: proposal)
-            let x = place.point.x - own.width * ax
+            var x = place.point.x - own.width * ax
+            if ax > 0, ax < 1, own.width > Self.least {
+                x = max(Self.margin, min(x, bounds.width - Self.margin - own.width))
+            }
             let y = place.point.y - (place.line ? own[.firstTextBaseline] * 0.62 : own.height * place.anchor.y)
             subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), anchor: .topLeading, proposal: proposal)
         }
