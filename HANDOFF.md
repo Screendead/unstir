@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-11-15. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-11-23. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -44,6 +44,36 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 ### The heat investigation (2026-11-12, live)
 
 Closed: moved word for word to `docs/history.md`.
+
+### Open work (2026-11-23)
+
+**The design pass gets its direction (to-do 72):** Jack's brief of 2026-11-23, below under to-do 72. A dedicated cloud
+session started that day owns it; its draft PR is the claim, and the lead leaves the item alone.
+Built 2026-11-23 on `design/negative-space` (draft PR #298): three directions drawn by `design/negative-space/` over
+glass cut from master's shots, seven screens each (the menu mid-way and all done, plughole 01, plughole 27's result, Prism 01, Prism's card,
+settings), with films, Reduce Motion stills and B at the third accessibility size. A subtracts within today's look; B
+("still water") puts one thing in focus, SF Pro titles over mono numbers, colour as a glow behind the focus, a slow
+settle (Prism's number stays white: a red and blue edge read as off-register channels); C ("mist") whitens the chrome and moves colour into a drifting blurred light. Recommended: B (fewest things at
+once; its glows are still images, so no GPU cost in play, where C's moving light competes with the glass). Pitch page
+https://claude.ai/artifact/4GRkKarS6skJBqCkmWSyu4; the call is issue #302 (`needs-jack`). Waiting on Jack's pick; no
+SwiftUI changed. Each direction's removals, which Jack's pick approves as a set, are listed on the page.
+Jack's answer (2026-11-23): none looked different enough; keep Still Water, add three radical directions: a complete
+redesign of everything outside the tank, an experience rather than an app, custom-rendered (one Metal pass), no boxes,
+lists or straight lines, efficient on battery; then (same day) strictly 2D or 2.5D, and no stirring anywhere in the UI.
+He liked the Descent's idea and said Ink needed work for its stirring. Built on the same branch under
+`design/negative-space/world/` (a shader-and-type harness, `render.mjs`): the Descent (a side view down a water
+column, tiers as deeper water, levels as lanterns), Ink (ink blooming and dissolving in still water, a typographic
+page) and the Basin (a pool seen from above, levels as droplets on a current). Recommended: the Descent, keeping
+level numbers rather than its depth labels. Second pitch page https://claude.ai/artifact/AogjiJuH1w1hzJFZGaiGkm; the
+call is issue #303, which replaces #302 (closed).
+Jack picked the Descent (#303) and asked for three versions of it: the Plumb Line (a fine line from a float, levels as
+beads), Lamplight (dark water, a lamp at the next level, solved levels stay lit as a trail) and the Shelf (an
+illustrated slope of ledges, a pebble per level), in `world/plumb`, `world/lamplight` and `world/shelf`.
+Recommended: Lamplight, with dim levels naming themselves on a tap and a dithered ground. Third pitch page
+https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304.
+Jack picked the Shelf (#304): build it for real, and pitch easter egg ideas (e.g. something seen or done on an
+overscroll). In code the world is called the slope (`Slope*`), as `Shelf.swift` and "the shelf" already mean the pack
+dock and shop. The build lands on its own branch and PR, screen by screen, each shown to Jack before it merges.
 
 ### Open work (2026-11-15)
 
@@ -110,40 +140,13 @@ The merges, the store media's retake and Jack's five answers of 2026-11-15 are c
   There is a quality issue with the videos. It seems they've been recorded on a system under load, so they're not as
   smooth as the actual game is. We need to be really sure that any promotional videos aren't like that, so double-check
   them, and then ensure the MacBook is completely quiet before recording any corrections." The layers ship as rendered.
-- Promotional films' smoothness (from #291): the layer films were taken under #268's conditions (mains power, nothing
-  else rendering) and still looked loaded to Jack, so that is not quiet enough, or the take itself (simulator,
-  recordVideo, the sound recorder) costs frames. The Mac measures every promotional film (the preview and its takes,
-  the social clips silent and with sound, the editors' reel) and the layer films for dropped frames in motion, finds
-  the cause on one take filmed as is, completely quiet, and quiet with the sound recorder, and retakes whatever hitches
-  on a completely quiet Mac into a new folder (#293). From now on every film is taken only on a completely quiet Mac:
-  every other app, routine, simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power. The Mac's first three passes (2026-11-23) measured the finished films and flagged for retakes the preview, the editors' reel, editors-vortex-02 (both), clean-whirlpool-01 with sound and the three layer films, but took nothing, as the load never fell under 1 and the runs would not close Jack's apps. Jack (2026-11-23): "You should be able to do #293 now. Feel free to push off the work currently running on my mac; this is higher priority." So the Mac may now pause other routines, jobs and simulators and quit apps gracefully to get quiet, then restore them after the takes (asked on #293).
-- The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
-  every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
-  The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
-  `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
-  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280). Filmed again on the
-  Mac with it (#281, closed 2026-11-21): all four clean, no take lost sound, no digital silence inside the sound and
-  no sample jumps; 48 kHz, -15.7 to -16.0 LUFS, true peak -1.5 dBTP but plughole 05's -1.4. They are mono: the
-  recorder took one channel. The Mac's run fixed four things on the way (plughole 05's take
-  too short for a first launch's late strike, the second loudness pass trimming the wrong input, the app playing on
-  through the speakers after a take, ffmpeg's summary after loudnorm's measure). The clips wait in the Mac's tools
-  folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
-- The promotional films' smoothness, measured and retaken (#293, closed 2026-11-23, at `a527f91`): the Mac paused
-  every other routine and job but closed no apps (Jack was using the Mac and asked for the films anyway), so the takes
-  ran at the lowest load reached, 2 to 5, with Spotlight indexing at times; mains power, `pmset -g therm` clear. Its
-  measure (`hitch3.py` in the tools folder's `promo-smooth-20261123/`) counts a raw take's gap over 40 ms only where
-  the picture moves on both sides; recordVideo writes jittered frames near 120 Hz in motion, so a share of 16.7 ms
-  frames says nothing. Load caused the 160 to 650 ms stalls Jack saw: on the quieter Mac they are gone. Retaken clean
-  and kept in `promo-smooth-20261123/`: the three layer films (with every pause cut to 3 s, Jack's word in PR #297),
-  the 25 s preview, the editors' reel (one borderline held frame at 8.27 s, at a move's start), and the clean
-  whirlpool 01, plughole 05 and store whirlpool 03 clips, silent and with sound. Step 2's three takes of store
-  whirlpool 03 (simulator booted inside the take, quiet silent, quiet with sound) each had 4 to 8 gaps of 85 to 100 ms
-  at the edges of slow motion; the sound recorder costs nothing measurable. Two hitches remain that load does not
-  explain: editors-vortex-02 has paired 65 to 100 ms gaps every 1.5 to 2 s through every take, idle retake too, at
-  the same places and not following the moves, so likely the recorder or the simulator; and Lens 25's layer film
-  has one 205 ms stall 1.2 to 1.6 s after the strike in both its takes. No vortex-02 clip is to be used until that is
-  settled. The Mac records vortex-02 and Lens 25's opening with a second recorder (a screen capture of the Simulator
-  window) beside recordVideo and, if the app is dropping the frames, traces it to name what runs then (#301).
+- Promotional films' smoothness, the plan (#291, #293, closed): in `docs/history.md` under "Open work (2026-11-15):
+  its closed parts". Standing: every film is taken only on a completely quiet Mac (every other app, routine,
+  simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power), and the Mac may pause other
+  routines, jobs and simulators and quit apps gracefully to get quiet, restoring them after (Jack, 2026-11-23).
+- The clips with sound (#268, #280, #281) and the films' smoothness, measured and retaken (#293): closed, in
+  `docs/history.md` under "Open work (2026-11-15): its closed parts". The four clips with sound wait in the Mac's
+  tools folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
 - The two hitches, settled on the phone (2026-11-23; tables in the tools folder, `promo-smooth-20261123/phone/RESULTS.md`):
   the 13 Pro Max shows neither. vortex-02 holds no frame past 50 ms (13 of 1,831 at 33 to 50 ms, seven on a state
   change, the main thread re-evaluating `LevelView`); its paired gaps stay most likely recordVideo's, unproven. Lens
@@ -982,6 +985,13 @@ Closed: moved word for word to `docs/history.md`.
     (`scripts/shots.sh`), critiqued and redrawn as a design system and mock-ups for Jack's call before any SwiftUI
     changes. Claude Design (now Artifact types in Claude: Design System and Design) is the review surface: Jack
     comments inline on the mock-ups, and Claude ports the agreed design to SwiftUI.
+    **Direction (Jack, 2026-11-23):** the chrome is too busy. Like most machine-made design it never lets anything
+    rest: no negative space. Jack wants it in theme with the tank: airy (or "fluid"), spacious, gently animated, UI that
+    looks and feels custom without being trashy. Fewer things on screen at once, room around what stays, motion that
+    breathes rather than decorates. The pass starts as options, not code: a few distinct directions shown on the
+    same screens as images and films, each with a Reduce Motion still, one recommended, to Jack as a call. C9's result
+    marks and Prism's level colour (P2), both left to this pass, are drawn in it. The glass stays as it is; text never
+    shrinks (the tank scales instead). Owned by a dedicated cloud session from 2026-11-23 (its draft PR is the claim).
 73. A full audit of every level name, tiers and packs alike (Jack, 2026-11-01). Many read as nonsense, as in-jokes
     too technical or niche for a mass market, or as unrelated to their level. They need not all be clever or
     descriptive: a naming system per tier or pack (or one for the game) is welcome. Jack gave philosophers
