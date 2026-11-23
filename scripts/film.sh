@@ -10,14 +10,23 @@ bundle=com.screendead.Unstir
 udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')}
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b >/dev/null
-scripts/build-ios.sh Debug sim
+# FILM_CONFIG=Release films the build players get, at its speed. It takes no UNSTIR_OWNED or UNSTIR_STORE: a pack's
+# level opens by the developer unlock of a playtest build, and a case with store states is not filmed.
+config=${FILM_CONFIG:-Debug}
+unlock=(SIMCTL_CHILD_UNSTIR_OWNED=lens)  # what opens a pack's level in a launch outside film()
+if [[ "$config" == Release ]]; then
+  unlock=(SIMCTL_CHILD_UNSTIR_UNLOCK=1)
+  ANALYTICS_PLAYTEST=YES scripts/build-ios.sh Release sim
+else
+  scripts/build-ios.sh Debug sim
+fi
 if [[ -n "${FILM_SOUND:-}" ]] && { [[ ! -x build/film-sound/record ]] || [[ scripts/film-sound/main.swift -nt build/film-sound/record ]]; }; then
   mkdir -p build/film-sound
   swiftc -O -o build/film-sound/record scripts/film-sound/main.swift
 fi
 # Fresh install, so no level has been started and autoplay can finish clean.
 xcrun simctl uninstall "$udid" "$bundle" 2>/dev/null || true
-xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.app
+xcrun simctl install "$udid" "build/Build/Products/$config-iphonesimulator/Unstir.app"
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 mkdir -p shots/film
 pattern=${1:-}
@@ -36,7 +45,12 @@ film() {  # name seconds strip-filter KEY=VALUE...
   local name=$1 secs=$2 strip=$3 vars=() mp4="shots/film/$1.mp4"
   shift 3
   wants "$name" || return 0
-  for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
+  for kv in "$@"; do
+    if [[ "$config" == Release && "$kv" == OWNED=* ]]; then continue; fi
+    if [[ "$config" == Release && "$kv" == PACK=* ]]; then vars+=("${unlock[@]}"); fi
+    if [[ "$config" == Release && "$kv" == STORE=* ]]; then echo "$name: a Release build takes no store states: not filmed" >&2; return 0; fi
+    vars+=("SIMCTL_CHILD_UNSTIR_$kv")
+  done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   local snd="" began heard wav="shots/film/$name.caf" v0 v1 a0 took length=()
   began=$(mktemp)
@@ -51,7 +65,9 @@ film() {  # name seconds strip-filter KEY=VALUE...
     snd=$!
     sleep 1  # the audio first, so the take's first sounds are in it
   fi
-  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2> >(python3 -u -c '
+  # recordVideo's H.264 drops some five frames, twice, about every two seconds, on an idle Mac and in a Release build
+  # alike (29 frames repeated in 20 s of editors-vortex-02 at 30 a second, 2026-11-23); its HEVC keeps them (2).
+  xcrun simctl io "$udid" recordVideo --codec="${FILM_CODEC:-hevc}" --force "$mp4" >/dev/null 2> >(python3 -u -c '
 import sys, time
 for line in sys.stdin:
     if "Recording started" in line:
@@ -265,7 +281,7 @@ warm() {  # level
   local caches stamp=shots/film/.warmed
   caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
   touch "$stamp"
-  SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL=$1 \
+  env SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$1" "${unlock[@]}" \
     xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   for _ in $(seq 120); do [[ -n "$(find "$caches" -name 'halftone-*' -newer "$stamp" 2>/dev/null)" ]] && break; sleep 1; done
   sleep 2
@@ -339,7 +355,7 @@ layer() {  # name pack level ratchet
   local secs line
   read -r secs line < <(python3 scripts/layers.py moves sound-src/layers-in-play.tsv "$2" "$4" 0.5 3)
   if [[ "$2" == lens ]]; then
-    SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens \
+    env SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" "${unlock[@]}" \
       xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
     local caches
     caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
