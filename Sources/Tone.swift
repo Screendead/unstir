@@ -88,9 +88,9 @@ extension Offer {
 }
 
 /// The ink on the slope's water (docs/slope.md, 1.4): one colour, `text`'s, at four strengths, each defined by what it
-/// reads at over the lightest ground words lie on there, the shallows in sun and the rock's lit heart: `ink` to
-/// `ink3` at 4.5:1 or more, `ink4` at 3:1 (`ToneTests` measures them on what Slope.metal draws). No word is set on a
-/// lit ledge top, nor within `shallowest` of the surface, whose own light no ink reads over.
+/// reads at over the lightest ground its words lie on: `ink` to `ink3` at 4.5:1 or more, `ink4` at 3:1 (`ToneTests`
+/// measures them on what Slope.metal draws, at the overview and in the dive). The lightest ground is the shallows in
+/// sun, and how near the surface a word may stand is its ink's `shallowest`. No word is set on a lit ledge top.
 enum SlopeInk: CaseIterable {
     /// Names and the way on.
     case ink
@@ -112,8 +112,15 @@ enum SlopeInk: CaseIterable {
 
     var colour: Color { Color.text.opacity(strength) }
 
-    /// The least depth under the surface at which words read, in points.
-    static let shallowest: CGFloat = 96
+    /// The least depth under the surface, in points, at which words in this ink keep their floor: the surface's own
+    /// light is brighter than any ink reads over, and the quieter inks need the water a little darker again. In the
+    /// air over the surface every ink reads.
+    var shallowest: CGFloat {
+        switch self {
+        case .ink, .ink4: 24
+        case .ink2, .ink3: 64
+        }
+    }
 }
 
 extension View {
