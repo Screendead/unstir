@@ -114,6 +114,7 @@
 		D7B47E903167691787C1EB50 /* Marbling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0D958FCA92212546745A433D /* Marbling.metal */; };
 		D90B92AEBB41C6429CB55D32 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551B7907E2001DBDBAC8A1B9 /* Store.swift */; };
 		D97B6716323430A910684B48 /* LensArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9671F664A49B27787D8573AD /* LensArt.swift */; };
+		DA4F35AC1CE4E2C876CB1639 /* SlopePlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43FF2E81528BF804B347B9DA /* SlopePlay.swift */; };
 		DD5B7017920B9A36A69EE0BF /* StirMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F123D1849608C9B7734F338 /* StirMapTests.swift */; };
 		DDC10BD09FEBD9AE2335CDA4 /* TapLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3E166CF7D5345846B794E8 /* TapLaw.swift */; };
 		DE428BEF42CED2D968A33849 /* TapLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8235408DE6DD3E0A6017F00E /* TapLawTests.swift */; };
@@ -177,6 +178,7 @@
 		3E2F5EACFB0A4F616F37323F /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		3F123D1849608C9B7734F338 /* StirMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StirMapTests.swift; sourceTree = "<group>"; };
 		42AC3DE97359E1AB3D8F6FAF /* Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taps.swift; sourceTree = "<group>"; };
+		43FF2E81528BF804B347B9DA /* SlopePlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopePlay.swift; sourceTree = "<group>"; };
 		440714978B35CD68A9F562DA /* EscapementViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementViews.swift; sourceTree = "<group>"; };
 		492677BE451A3DA88096CDF8 /* DragProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragProbe.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
@@ -434,6 +436,7 @@
 				6F759F3B5689BB554B5D6699 /* SlopeGeometry.swift */,
 				B8E865B896C1EAD2C9122B80 /* SlopeGround.swift */,
 				734228145564BCCF7996DDD5 /* SlopeHarness.swift */,
+				43FF2E81528BF804B347B9DA /* SlopePlay.swift */,
 				D89654A86FE88E89D5339382 /* Sound.swift */,
 				4CE724B24586C771A00348BD /* Spoken.swift */,
 				5D1B40452790F8A476242FC3 /* StirMap.swift */,
@@ -635,6 +638,7 @@
 				4411640D2FD996948570E903 /* SlopeGeometry.swift in Sources */,
 				EB7078BFCB2A52B0B6CB8D7D /* SlopeGround.swift in Sources */,
 				D0F4FB199F957BC9E5CD2030 /* SlopeHarness.swift in Sources */,
+				DA4F35AC1CE4E2C876CB1639 /* SlopePlay.swift in Sources */,
 				87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */,
 				826769813DDDA6BD96FAE06E /* Spoken.swift in Sources */,
 				C43751B4CB5DE9A84EE3C2CB /* StirMap.swift in Sources */,
