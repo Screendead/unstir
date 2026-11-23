@@ -65,7 +65,13 @@ He liked the Descent's idea and said Ink needed work for its stirring. Built on 
 column, tiers as deeper water, levels as lanterns), Ink (ink blooming and dissolving in still water, a typographic
 page) and the Basin (a pool seen from above, levels as droplets on a current). Recommended: the Descent, keeping
 level numbers rather than its depth labels. Second pitch page https://claude.ai/artifact/AogjiJuH1w1hzJFZGaiGkm; the
-call is issue #303, which replaces #302 (closed). Waiting on Jack's pick.
+call is issue #303, which replaces #302 (closed).
+Jack picked the Descent (#303) and asked for three versions of it: the Plumb Line (a fine line from a float, levels as
+beads), Lamplight (dark water, a lamp at the next level, solved levels stay lit as a trail) and the Shelf (an
+illustrated slope of ledges, a pebble per level), in `world/plumb`, `world/lamplight` and `world/shelf`.
+Recommended: Lamplight, with dim levels naming themselves on a tap and a dithered ground. Third pitch page
+https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304. Waiting on
+Jack's pick.
 
 ### Open work (2026-11-15)
 
