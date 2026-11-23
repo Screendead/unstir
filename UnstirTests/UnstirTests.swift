@@ -1629,13 +1629,13 @@ final class UnstirTests: XCTestCase {
         let frost = try Self.daily(october: 15), plain = try Self.daily(october: 1)
         XCTAssertFalse(frost.seized.isEmpty)
         XCTAssertTrue(plain.seized.isEmpty)
-        XCTAssertEqual(MenuView.dailyLines(frost, run: 0).under, "frost day")
-        XCTAssertEqual(MenuView.dailyLines(frost, run: 4).under, "frost day \u{00B7} 4 days running")
-        XCTAssertEqual(MenuView.dailyLines(frost, run: 0).detail,
+        XCTAssertEqual(Menu.dailyLines(frost, run: 0).under, "frost day")
+        XCTAssertEqual(Menu.dailyLines(frost, run: 4).under, "frost day \u{00B7} 4 days running")
+        XCTAssertEqual(Menu.dailyLines(frost, run: 0).detail,
                        "\(frost.layout.rods.count) rods \u{00B7} par \(frost.par) \u{00B7} frost day")
-        XCTAssertNil(MenuView.dailyLines(plain, run: 1).under, "a plain day before a run: one line")
-        XCTAssertNil(MenuView.dailyLines(plain, run: 1).detail)
-        XCTAssertEqual(MenuView.dailyLines(plain, run: 3).under, "3 days running")
+        XCTAssertNil(Menu.dailyLines(plain, run: 1).under, "a plain day before a run: one line")
+        XCTAssertNil(Menu.dailyLines(plain, run: 1).detail)
+        XCTAssertEqual(Menu.dailyLines(plain, run: 3).under, "3 days running")
     }
 
     /// Bests for plughole's first n levels.
@@ -1646,16 +1646,16 @@ final class UnstirTests: XCTestCase {
 
     /// The menu's top follows plughole 23: the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
-        let fresh = MenuView.lead(unlocked: false, best: Self.solved(0))
+        let fresh = Menu.lead(unlocked: false, best: Self.solved(0))
         XCTAssertFalse(fresh.modes)
         XCTAssertTrue(fresh.sandbox)
-        let one = MenuView.lead(unlocked: false, best: Self.solved(1))
+        let one = Menu.lead(unlocked: false, best: Self.solved(1))
         XCTAssertFalse(one.modes)
         XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
-        XCTAssertFalse(MenuView.lead(unlocked: false, best: Self.solved(22)).modes)
-        let modes = MenuView.lead(unlocked: false, best: Self.solved(23))
+        XCTAssertFalse(Menu.lead(unlocked: false, best: Self.solved(22)).modes)
+        let modes = Menu.lead(unlocked: false, best: Self.solved(23))
         XCTAssertTrue(modes.modes)
-        let unlocked = MenuView.lead(unlocked: true, best: Self.solved(0))
+        let unlocked = Menu.lead(unlocked: true, best: Self.solved(0))
         XCTAssertTrue(unlocked.modes)
         XCTAssertTrue(unlocked.sandbox)
     }
@@ -1668,13 +1668,13 @@ final class UnstirTests: XCTestCase {
         let one: (String) -> Best? = { $0 == Level.plughole[0].id ? Best(over: 0, seconds: 9) : nil }
         let bests: [(String) -> Best?] = [{ _ in nil }, one]
         for best in bests {
-            let shipped = MenuView.lead(unlocked: false, release: true, best: best)
-            let debug = MenuView.lead(unlocked: false, release: false, best: best)
+            let shipped = Menu.lead(unlocked: false, release: true, best: best)
+            let debug = Menu.lead(unlocked: false, release: false, best: best)
             XCTAssertFalse(shipped.sandbox)
             XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
         }
-        XCTAssertFalse(MenuView.lead(unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(Menu.lead(unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
         for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {

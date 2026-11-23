@@ -691,9 +691,9 @@ final class PackTests: XCTestCase {
     /// Beside a playing level, a card over its result card closes onto that card, which covers the menu (s5b-back = B);
     /// over the menu beside play, from the dock or a gate before a finish, it goes back to the menu, as on a phone.
     func testACardOverAResultBesideTheMenuCloses() {
-        XCTAssertTrue(MenuView.closes(playing: true, covered: true))
-        XCTAssertFalse(MenuView.closes(playing: true, covered: false))
-        XCTAssertFalse(MenuView.closes(playing: false, covered: false))
+        XCTAssertTrue(Menu.closes(playing: true, covered: true))
+        XCTAssertFalse(Menu.closes(playing: true, covered: false))
+        XCTAssertFalse(Menu.closes(playing: false, covered: false))
     }
 
     /// Where a pack's card came from lasts only while that card is up. Beside play the menu outlives the root's own
@@ -716,7 +716,7 @@ final class PackTests: XCTestCase {
         card = .pack(.lens)
         trail = trail?.kept(as: card)
         XCTAssertNil(trail)
-        XCTAssertEqual(label(trail, card, closes: MenuView.closes(playing: true, covered: true)), "\u{2715} close")
+        XCTAssertEqual(label(trail, card, closes: Menu.closes(playing: true, covered: true)), "\u{2715} close")
         // Or the parked card brought back as the level leaves: the menu, as on a phone.
         XCTAssertEqual(label(trail, card, closes: false), "\u{2039} menu")
         // Triptych I stops saving once a pack is bought: back goes to the menu.

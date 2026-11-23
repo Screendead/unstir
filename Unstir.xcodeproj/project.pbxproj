@@ -14,6 +14,7 @@
 		0A6DEA91F79707B833C82ACA /* EscapementArtPlates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BBB36CAD79FB810C40F7003 /* EscapementArtPlates.swift */; };
 		0ED25749C2CA58123B100D5E /* FreshDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */; };
 		12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8582290C096A27A793005B80 /* LensArtCloseUp.swift */; };
+		165C6C66586D2C84CC9DA0DE /* SupporterMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C658E19379E25BACACBC6356 /* SupporterMark.swift */; };
 		18F4207A2B3955DA16ECDC18 /* ShaderKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 254553325D43A8E887B3C94D /* ShaderKit.swift */; };
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		1C81C4836870BE840077E00B /* LensArtDoubleTake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A48099D8C6DA81CFAC630E /* LensArtDoubleTake.swift */; };
@@ -108,6 +109,7 @@
 		DD5B7017920B9A36A69EE0BF /* StirMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F123D1849608C9B7734F338 /* StirMapTests.swift */; };
 		DDC10BD09FEBD9AE2335CDA4 /* TapLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3E166CF7D5345846B794E8 /* TapLaw.swift */; };
 		DE428BEF42CED2D968A33849 /* TapLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8235408DE6DD3E0A6017F00E /* TapLawTests.swift */; };
+		E0F1BF6E95D31DC3772A0ADF /* MenuModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69949920C5700A3E061FCC8A /* MenuModel.swift */; };
 		E1CABF4A6915387E15F59DD0 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 517BAC88FDF90B3147BC41A1 /* ShareSheet.swift */; };
 		E3A16EF831A2BE537DEDCFBB /* FrostLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7308CEB6975B30328EE4E9 /* FrostLook.swift */; };
 		E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */; };
@@ -183,6 +185,7 @@
 		64A48099D8C6DA81CFAC630E /* LensArtDoubleTake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtDoubleTake.swift; sourceTree = "<group>"; };
 		67E7B4754B893A8AD4AC3AD4 /* CatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogTests.swift; sourceTree = "<group>"; };
 		680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirEnding.swift; sourceTree = "<group>"; };
+		69949920C5700A3E061FCC8A /* MenuModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuModel.swift; sourceTree = "<group>"; };
 		6BCC0A4E08C966E2AD0FA13B /* Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
 		6CDB9648767C314FCCCA618D /* Achievements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievements.swift; sourceTree = "<group>"; };
 		6DC78A03B7B4D5363A8E010A /* AgeRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeRange.swift; sourceTree = "<group>"; };
@@ -229,6 +232,7 @@
 		BE1236B8C3FCA3EA697DF254 /* EscapementArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArt.swift; sourceTree = "<group>"; };
 		C22F2052D681E2C63BE5D832 /* PrismTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismTests.swift; sourceTree = "<group>"; };
 		C45CEE9950106BAFE3A297A1 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
+		C658E19379E25BACACBC6356 /* SupporterMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupporterMark.swift; sourceTree = "<group>"; };
 		C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeTests.swift; sourceTree = "<group>"; };
 		CAAABE968196C7403939ADC9 /* AchievementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementTests.swift; sourceTree = "<group>"; };
 		CBBF51F07B822677549432BB /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
@@ -384,6 +388,7 @@
 				536CF149EF97D4429DC2751F /* Loom.metal */,
 				0D958FCA92212546745A433D /* Marbling.metal */,
 				12E8193F7A9FB37B678695D2 /* Menu.swift */,
+				69949920C5700A3E061FCC8A /* MenuModel.swift */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				18BFB7C893FE494190410F59 /* OracleBench.swift */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
@@ -408,6 +413,7 @@
 				5D1B40452790F8A476242FC3 /* StirMap.swift */,
 				551B7907E2001DBDBAC8A1B9 /* Store.swift */,
 				FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */,
+				C658E19379E25BACACBC6356 /* SupporterMark.swift */,
 				112F826A2BEC3C22065DD94A /* Sync.swift */,
 				4C0CD5709FED7976550A2E52 /* TankView.swift */,
 				5A3E166CF7D5345846B794E8 /* TapLaw.swift */,
@@ -575,6 +581,7 @@
 				3F40391B2B57058C26788864 /* Loom.metal in Sources */,
 				D7B47E903167691787C1EB50 /* Marbling.metal in Sources */,
 				52972B0C126203096364F0AF /* Menu.swift in Sources */,
+				E0F1BF6E95D31DC3772A0ADF /* MenuModel.swift in Sources */,
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
@@ -598,6 +605,7 @@
 				C43751B4CB5DE9A84EE3C2CB /* StirMap.swift in Sources */,
 				D90B92AEBB41C6429CB55D32 /* Store.swift in Sources */,
 				A381D1DEF77AFA6955900C8D /* StoryScene.swift in Sources */,
+				165C6C66586D2C84CC9DA0DE /* SupporterMark.swift in Sources */,
 				C6759CD4F33AD9A639A6742C /* Sync.swift in Sources */,
 				D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */,
 				DDC10BD09FEBD9AE2335CDA4 /* TapLaw.swift in Sources */,

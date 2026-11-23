@@ -1201,7 +1201,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
   level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
   has read what the player owns, decided again once it has); the playing level's own row opens nothing and doesn't tap
-  (`MenuView.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
+  (`Menu.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
   and up a notch open in place without the switch (`RootView.proceed`), as on a phone, so a cleared tank sends no run's
   quit. The list follows the playing level (`MenuView.playing`: its tier, switched to without the switch's sound; its
   row centred, again once the list has glided to a new slot, as the phone folds; its hairline at full and
@@ -1209,7 +1209,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   on each return, reads its rows, run and dailies afresh on `RootView.revision`, bumped by every level opened, left or
   finished. A pack's card or the archive opens over the whole trailing half, its ground running on to the fold, as a
   phone's covers the menu (its way out "‹ menu", modal
-  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `MenuView.closes`, Jack's call
+  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `Menu.closes`, Jack's call
   s5b-back = B), the level playing on under it: from the dock, a result card's pointer, a gate or a promoted purchase.
   A level opened from a card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that
   level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a
@@ -1449,7 +1449,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   own, as `rawValue` is the stored one), and a translated name is cased for the locale (`localizedUppercase`). The
   version line is drawn verbatim and the editors' switch's words are do-not-translate keys (CAT7); a switch's name is
   a `LocalizedStringResource`, so its `settings:` log line keeps the English key.
-- **Menu.swift** holds `MenuView`. What it leads with follows plughole 23 (`MenuView.lead`, Jack's call C4,
+- **Menu.swift** holds `MenuView` and its views; **MenuModel.swift** what the menu shows and does apart from how it
+  draws, with nothing of SwiftUI's views in it: `Tier.step`, `frontier`, `short` and `landing`, `Level.focus(solved:)`,
+  `Menu` (`lead`, `dailyLines`, `opens`, `closes`, a closed row's line, `closedLine` and `reached`, and the gate's
+  ticks, `gate`), `Refusal` (a closed row's shake and its two seconds' line), `NewRunArm` (endless's "new run", armed as
+  reset is) and `CameFrom`; **SupporterMark.swift** the supporter mark. What it leads with follows plughole 23 (`Menu.lead`, Jack's call C4,
   round 13). The tank's rule, "Every stir in this tank has an exact inverse.", left the menu for the App Store page
   (Jack's call D1 = A, round 13), and the "next: 07 · Sprinkle ›" line that took its place went too (Jack,
   2026-11-11), so the first header, "today" or the tier's, stands 24 pt under the chips as drawn, with no gap kept
@@ -1462,7 +1466,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
-  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`MenuView.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`Menu.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
   leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip holds every tier as a chip, 36 pt tall in a 44 pt target: the picked one stroked in its tier's sweep over its glow at 0.12, an open one in `line`, a locked one in `rule` with a lock after its dimmed name; the picked face moves to its chip as it is picked (`matchedGeometryEffect`), ahead of the list. The strip

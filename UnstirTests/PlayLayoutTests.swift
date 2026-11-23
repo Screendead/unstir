@@ -782,14 +782,14 @@ final class PlayLayoutTests: XCTestCase {
 
     @MainActor func testBesidePlayTheRowOfThePlayingLevelOpensNothing() {
         let l11 = Level.plughole[10], l12 = Level.plughole[11]
-        XCTAssertTrue(MenuView.opens(l12, playing: nil))
-        XCTAssertTrue(MenuView.opens(l12, playing: l11))
-        XCTAssertFalse(MenuView.opens(l11, playing: l11), "the playing level is open already")
+        XCTAssertTrue(Menu.opens(l12, playing: nil))
+        XCTAssertTrue(Menu.opens(l12, playing: l11))
+        XCTAssertFalse(Menu.opens(l11, playing: l11), "the playing level is open already")
         // Endless's row would deal a new run over the one playing; its new run does.
         let run = Level.endless(Run(seed: 7)), other = Level.endless(Run(seed: 8))
-        XCTAssertFalse(MenuView.opens(other, playing: run))
-        XCTAssertTrue(MenuView.opens(other, playing: run, anew: true))
-        XCTAssertTrue(MenuView.opens(run, playing: l11))
+        XCTAssertFalse(Menu.opens(other, playing: run))
+        XCTAssertTrue(Menu.opens(other, playing: run, anew: true))
+        XCTAssertTrue(Menu.opens(run, playing: l11))
     }
 
     @MainActor func testACardPutAwayBesidePlayReturnsOnlyWithTheLevelItOpened() {
