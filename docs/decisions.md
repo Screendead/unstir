@@ -579,3 +579,4 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Pushback | — | Jack asked for hard pushback whenever one of his ideas looks wrong; once he has heard it and still decides, carry out his decision. | CLAUDE.md |
 | Phone benches | — | No phone benches before the performance pass: they are slow and heat skews them. | HANDOFF |
 | Escapement lab branches | — | `esc-lost-line`, `esc-lost-flash`, `esc-tap-anywhere`, `esc-tap-lesson` and `esc-budget-stopwork` are not merged and stay local. | HANDOFF |
+| Layer films' pauses | — | Every pause in the layer films is cut to 3 s; the stuck player's studies left 15-23 s of a still tank (Jack, 2026-11-23: "yeah cap them"). | HANDOFF |

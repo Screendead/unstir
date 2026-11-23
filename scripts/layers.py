@@ -8,10 +8,11 @@ and times what the game sounds for it as Sound.swift and LevelView play it.
                                 mixes the level as heard: the menu's bed crossfading to plughole's, the layer's loop and
                                 its resolution at the gain, and every effect at its own level; only, the layer alone
   layers.py line <tsv> <pack>   prints the line with each action's time and sounds, for the listing
-  layers.py moves <tsv> <pack> <ratchet> [study scale]
+  layers.py moves <tsv> <pack> <ratchet> [study scale] [cap]
                                 prints the seconds a film of the line takes and the line as UNSTIR_MOVES with
                                 UNSTIR_FINGER plays it: each action's step, its gap to the next made up by p<s> rests,
-                                a study's (a gap over STUDY) scaled; a wait taps the clock on rod <ratchet>
+                                a study's (a gap over STUDY) scaled, and any gap cut to cap seconds; a wait taps the
+                                clock on rod <ratchet>
 
 <dir> holds the effects and beds decoded to WAV (as listen decodes them, bed-menu.wav and bed-loop.wav) and the
 layer's renders, <pack>-loop.wav (one period) and <pack>-end.wav.
@@ -182,14 +183,14 @@ def lead(action):
     return 0.45 + 0.1 * abs(int(action.split(":")[1])) + 0.25 + 0.25
 
 
-def moves(tsv, pack, ratchet, scale):
+def moves(tsv, pack, ratchet, scale, cap):
     steps, clock, was, t = [], OPENING, 0.0, 0.0
     for _, at, action, _ in line(tsv, pack):
         if action == "open":
             continue
         gap = at - was
         was = at
-        t += STUDY + (gap - STUDY) * scale if gap > STUDY else gap
+        t += min(STUDY + (gap - STUDY) * scale if gap > STUDY else gap, cap)
         # The step starts so the game sounds it at its time on the film.
         start = t - lead(action)
         if start > clock + 0.05:
@@ -209,4 +210,5 @@ if __name__ == "__main__":
     elif cmd == "line":
         listing(sys.argv[2], sys.argv[3])
     elif cmd == "moves":
-        moves(sys.argv[2], sys.argv[3], int(sys.argv[4]), float(sys.argv[5]) if len(sys.argv) > 5 else 1.0)
+        moves(sys.argv[2], sys.argv[3], int(sys.argv[4]), float(sys.argv[5]) if len(sys.argv) > 5 else 1.0,
+              float(sys.argv[6]) if len(sys.argv) > 6 else math.inf)

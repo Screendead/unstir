@@ -330,13 +330,14 @@ film editors-lens-03 24 "$whole" PACK=lens LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVE
 film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=0.2 MOVES=2:4,0:1,1:-3
 film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-4,1:+3,2:-3
 # The packs' layers in play (scripts/layers-film.sh films them with sound): Lens 25, Escapement 29 and Prism 30 each
-# played by a drawn fingertip through its line in sound-src/layers-in-play.tsv, wrong moves and undos and all, its
-# studies halved, to the solve and on under the card, each pack owned. Lens's halftone is baked first, as for
+# played by a drawn fingertip through its line in sound-src/layers-in-play.tsv, wrong moves and undos and all, every
+# pause cut to 3 s (Jack, 2026-11-23: the stuck player's studies left 15-23 s of a still tank), to the solve and on
+# under the card, each pack owned. Lens's halftone is baked first, as for
 # editors-lens-03.
 layer() {  # name pack level ratchet
   wants "$1" || return 0
   local secs line
-  read -r secs line < <(python3 scripts/layers.py moves sound-src/layers-in-play.tsv "$2" "$4" 0.5)
+  read -r secs line < <(python3 scripts/layers.py moves sound-src/layers-in-play.tsv "$2" "$4" 0.5 3)
   if [[ "$2" == lens ]]; then
     SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens \
       xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
