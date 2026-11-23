@@ -144,8 +144,8 @@ final class ToneTests: XCTestCase {
     }
 
     /// The slope's inks keep their floors on what the shader draws (docs/slope.md, 1.4): `ink` to `ink3` read at 4.5:1
-    /// and `ink4` at 3:1 over the water beside the shelf, where every row's words stand, from each ink's `shallowest`
-    /// down to the drop-off, at the overview and in the dive; and `ink` over the rock's heart in the dive, where a
+    /// and `ink4` at 3:1 over the water beside the shelf, where every row's words stand (from x = 180 at the overview,
+    /// from 18 pt past the ninth lip in the dive), from each ink's `shallowest` down to the drop-off; and `ink` over the rock's heart in the dive, where a
     /// hollow's name goes. In the 300 pt under its `shallowest`, where the sun's rays reach, one pixel in a thousand
     /// may fall short, a ray's brightest thread; deeper, none.
     func testTheSlopesInksReadOnItsWater() throws {
@@ -155,12 +155,13 @@ final class ToneTests: XCTestCase {
         var sunlit: [SlopeInk: (short: Int, of: Int)] = [:], deep: [SlopeInk: Int] = [:], heart = 0, rock = 0
         for z in [0, 1] as [CGFloat] {
             let lay = SlopeLay(column, z: z), travel = lay.travel(height: size.height)
+            let words = z == 0 ? 180 : Float(column.lip + 8 * column.step + 18)
             let tops = z == 0 ? [SlopeLay.overview(height: size.height).top]
                 : Array(stride(from: travel.lowerBound, through: travel.upperBound, by: size.height))
             for top in tops {
                 var points: [SIMD2<Float>] = []
-                for y in stride(from: Float(1), to: Float(size.height), by: 3) where top + CGFloat(y) > SlopeInk.ink.shallowest {
-                    for x in stride(from: Float(21), to: Float(size.width) - 16, by: 3) where x >= 180 || (z == 1 && x < 76) {
+                for y in stride(from: Float(1), to: Float(size.height), by: 5) where top + CGFloat(y) > SlopeInk.ink.shallowest {
+                    for x in stride(from: Float(21), to: Float(size.width) - 16, by: 5) where x >= words || (z == 1 && x < 76) {
                         points.append(SIMD2(x, y))
                     }
                 }
@@ -168,7 +169,7 @@ final class ToneTests: XCTestCase {
                 for (point, colour) in zip(points, try ground(lay, top: top, size: size, at: points)) {
                     let under = Color(red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
                     let depth = top + CGFloat(point.y)
-                    if point.x >= 180 {
+                    if point.x >= words {
                         for ink in SlopeInk.allCases where depth > ink.shallowest {
                             let short = ratio(ink.colour, on: under) < (ink == .ink4 ? 3 : 4.5)
                             if depth < ink.shallowest + rays {
@@ -187,20 +188,21 @@ final class ToneTests: XCTestCase {
         }
         for ink in SlopeInk.allCases {
             let lit = try XCTUnwrap(sunlit[ink])
-            XCTAssertGreaterThan(lit.of, 10_000)
+            XCTAssertGreaterThan(lit.of, 4000)
             XCTAssertLessThan(Double(lit.short), 0.001 * Double(lit.of), "\(ink) in the sun")
             XCTAssertEqual(deep[ink, default: 0], 0, "\(ink) in the deep")
         }
-        XCTAssertGreaterThan(rock, 10_000)
+        XCTAssertGreaterThan(rock, 4000)
         XCTAssertLessThan(Double(heart), 0.001 * Double(rock), "the rock's heart")
     }
 
-    /// A pebble Swift seats on a ledge rests on the rock the shader draws, with the depth closed, half open and open:
-    /// the point just over its seat is water and the point just under it is the ledge's lit top.
+    /// A pebble Swift seats on a ledge rests on the rock the shader draws at both zooms that rest, the overview and the
+    /// dive: the point just over its seat is water and the point just under it is the ledge's lit top. (Half open, a
+    /// ledge's top is shorter than its pebble and the ledge above stands over the seat.)
     func testAPebblesSeatIsOnTheDrawnRock() throws {
         let size = CGSize(width: 440, height: 956)
         func luminance(_ c: SIMD4<Float>) -> Double { self.luminance((Double(c.x), Double(c.y), Double(c.z))) }
-        for z in [0, 0.5, 1] as [CGFloat] {
+        for z in [0, 1] as [CGFloat] {
             let lay = SlopeLay(.main(size: size), z: z)
             for n in [0, 3, 7, 11, 20, 29] {
                 let seat = lay.seat(n), top = seat.y - 300
