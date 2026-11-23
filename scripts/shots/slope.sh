@@ -25,3 +25,11 @@ shot slope-hollow "The inside of a hollow: still dark water between two jambs of
 shot slope-pack "A pack's own column: five trays of six in pale rock and still water, scrolled." SLOPE=pack CLOCK=3
 shot slope-stones "Every state of the stone on open water: lit, the way on, dull, armed, pending, pale, and one with its words leading." SLOPE=stones CLOCK=3
 shot slope-stones-ax3 "The same at accessibility3: the words full size, the stones a little larger." SLOPE=stones CLOCK=3 TYPESIZE=accessibility3
+# Piece F: settings and consent on the slope (UNSTIR_SLOPEF, SlopeFHarness).
+shot slope-settings "Settings on the slope: the surface high, \"settings\" in the air, a ledge per row of the settings' sandstone column, each switch a stone lit when on, the links with ↗, the version, \"↓ back into the water\"." \
+  SLOPEF=settings
+shot slope-settings-ax "The same at accessibility3: every row's words whole, the column scrolling." SLOPEF=settings TYPESIZE=accessibility3
+shot slope-settings-editors "The editors' build's settings: \"open every tier\" among the switches, \"editors\" after the version." SLOPEF=settings EDITORS=1
+shot slope-consent "Consent on the slope: the overview at 0.35 of its light, its words, pebbles and hollows hidden; the question, its line, \"What does it send? ›\", and Yes and No alike on one bowed sill." \
+  SLOPEF=consent CONSENT=ask
+shot slope-consent-sends "The same with the list of what it sends open, \"Hide the list ‹\" over it." SLOPEF=consent CONSENT=sends
