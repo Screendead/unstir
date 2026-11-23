@@ -1129,8 +1129,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     it. It opens on `aim` (`SlopeAim`: a ledge and a share, the camera a scene at that ledge and share has, kept
     inside the travel), travels there when `aim` changes and tells `onMove` its depth. The scroll view's safe-area
     insets are given back with negative `safeAreaPadding`: with them a scroll target stops 62 pt short of the top.
-    `SlopeLayer` places children at points of one frame (`slopePlace`, `slopeLine`, `seated`) and offers each the
-    width from its point to 16 pt short of the side, so words wrap and are never cut.
+    A cleared aim leaves the dive where the finger has it, and a new `stamp` goes back to a place already aimed at.
+    `SlopeLayer` places children at points of one frame (`slopePlace`, `slopeLine`, `seated`, `rested`) and offers each
+    the width from its point to 16 pt short of the side (one placed by its middle, the frame's width less both
+    margins, moving aside to stay inside them), so words wrap and are never cut. `rested(at:)` sets a stone by its
+    pebble's underside (the alignments `stoneSeat` and `stoneMiddle`, which `SlopePebble` carries) on a seat, the
+    lone terrace or the bank (`SlopeView.bankSeat`).
   - `SlopePebble` is the stone as a mark (lit, next, dull, pale, engraved; `dimmed` for a closed level's) and `Stone`
     the one control: a pebble with words beside it in a `Button`, its state (`StoneState`: lit, next, dull, armed,
     pending) the caller's to say, 44 pt either way at the least (`testEveryStoneIsFortyFourEitherWay`), sinking 2 pt
