@@ -20,7 +20,7 @@ shot slope-dive-428 "The dive at plughole 14 on the reference phone's 428 x 926 
 shot slope-play "The ground as a level holds it at plughole 14: the shelf drawn aside, one terrace under the tank's place, two stones on it." \
   SLOPE=play SLOPEAT=L14 CLOCK=3
 shot slope-play-prism "The same in Prism's clear water and white light, its stone pale." SLOPE=play SLOPEAT=L14 SLOPELOOK=clear CLOCK=3
-shot slope-play-paper "The same on Escapement's paper: the terrace an engraving in ink on bone, the stones engraved." SLOPE=play SLOPEAT=L14 SLOPELOOK=paper CLOCK=3
+shot slope-play-paper "The same on Escapement's paper: the terrace an engraving in ink on bone, the stones engraved, wait on a second terrace over the first." SLOPE=play SLOPEAT=L14 SLOPELOOK=paper CLOCK=3
 shot slope-play-dim "The same at 0.35 of the ground's light, as consent draws it." SLOPE=play SLOPEAT=L14 SLOPELOOK=dim CLOCK=3
 shot slope-hollow "The inside of a hollow: still dark water between two jambs of pale stone, a floor, a ledge, the cover's light in three beams." SLOPE=hollow
 shot slope-pack "A pack's own column: five trays of six in pale rock and still water, scrolled." SLOPE=pack CLOCK=3

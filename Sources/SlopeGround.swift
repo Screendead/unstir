@@ -5,7 +5,7 @@ import SwiftUI
 /// What a screen asks of the ground beyond the camera, each from 0 to 1 and each animatable: how far a level has
 /// taken the screen (the shelf draws aside and one terrace rises under the tank, `SlopeLay.terrace`), a solved tank's
 /// glint, Prism's clear water, the ground's light (consent and the wide result draw it at 0.35) and how far it is
-/// Escapement's page. The lone terrace is cut from `rock` and lit in `glow`.
+/// Escapement's page. The lone terrace is cut from `rock` and lit in `glow`, and `upper` stands a second over it.
 struct SlopeLook: Equatable {
     var level = 0.0
     var glint = 0.0
@@ -15,6 +15,10 @@ struct SlopeLook: Equatable {
     var rock = SlopeColumn.Rock.sand
     /// The terrace's and the glint's light; warm when nil.
     var glow: SIMD3<Float>?
+    /// A second terrace over the lone one, for a stone with a row of its own (wait, up a notch): the middle of its
+    /// top on the screen, where that stone rests, and its width. It comes and goes with `level`.
+    var upper: CGPoint?
+    var upperWidth: CGFloat = 170
 }
 
 /// A column laid out and seen from a camera on a screen: what a screen's own views read their places from.
@@ -66,6 +70,7 @@ struct SlopeGround: View {
                     .float4(look.level, look.glint, look.clear, look.light),
                     .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
                     .float(look.paper),
+                    .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
                     .floatArray(view.lay.uniforms(top: view.top))))
         }
         .onChange(of: still, initial: true) {

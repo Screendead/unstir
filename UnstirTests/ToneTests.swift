@@ -128,7 +128,7 @@ final class ToneTests: XCTestCase {
                               device float4 *out [[buffer(2)]], constant float2 &size [[buffer(3)]],
                               uint id [[thread_position_in_grid]]) {
                 out[id] = float4(slopeGround(at[id], size, float4(1.0, 3.0, 0.0, 0.0), float4(0.0, 0.0, 0.0, 1.0),
-                                             float4(1.0, 0.86, 0.6, 0.0), 0.0, g), 1.0);
+                                             float4(1.0, 0.86, 0.6, 0.0), 0.0, float4(0.0), g), 1.0);
             }
             """)
         let g = try kit.buffer(lay.uniforms(top: top)), at = try kit.buffer(points)

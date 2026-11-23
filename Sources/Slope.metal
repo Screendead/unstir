@@ -112,7 +112,10 @@ static float3 slopeSand(float3 rock, float3 lit, float3 water, float tone, float
 // tank's glint, Prism's clear water, and the ground's light (1 its own; consent draws it at 0.35).
 // lone: the lone terrace's light, and its rock.
 // paper: how far the ground is Escapement's page, an engraving in ink on bone.
-static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, device const float *g) {
+// upper: a second terrace over the lone one, a short lip of the same rock for a stone with a row of its own: the
+// middle of its top on the screen, half its width, and how far it is there.
+static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, float4 upper,
+                          device const float *g) {
     float top = g[0], open = g[1], count = g[3], foot = g[4];
     float tm = view.y;
     float x = pos.x + 280.0 * play.x;
@@ -275,6 +278,25 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         tc = mix(tc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
         col = mix(col, tc, slopeStep(terrace));
     }
+    // The second terrace: its top bows up a few points, its ends are rounded noses and its underside is cut back.
+    float lipIn = 0.0, lipEdge = 0.0, lipLow = 0.0;
+    if (upper.w > 0.0 && play.x > 0.0) {
+        float u = (pos.x - upper.x) / max(upper.z, 1.0), a = min(abs(u), 1.0);
+        float over = pos.y - (upper.y + 4.0 * u * u), deep = 17.0 * sqrt(1.0 - a * a * a * a) - 4.0 * u * u;
+        float sides = (upper.z - abs(pos.x - upper.x)) * 0.5;
+        float inside = min(min(over, deep - over), sides);
+        lipIn = slopeStep(inside) * upper.w * play.x;
+        lipLow = deep - over;
+        lipEdge = (1.0 - smoothstep(0.5, 1.3, abs(inside))) * upper.w * play.x;
+        if (paper < 1.0) {
+            float tone = mix(1.3, 0.5, smoothstep(0.0, 16.0, over)) * (0.82 + 0.3 * sun) * (0.96 + 0.08 * slopeNoise(pos * 0.11));
+            float3 lit = mix(slopeLit(lone.w), lone.rgb, 0.6);
+            float3 lc = slopeSand(slopeRock(lone.w), lit, wc, tone,
+                                  (exp(-max(over, 0.0) / 2.6) * 0.5 + exp(-max(over, 0.0) / 9.0) * 0.14) * (0.5 + 0.5 * sun + 0.5 * play.y));
+            lc = mix(lc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
+            col = mix(col, lc, lipIn);
+        }
+    }
     // A solved tank catches the light.
     col += lone.rgb * play.y * slopeBell((pos.x - 0.57 * size.x + (pos.y - 0.47 * size.y) * 0.3) / 170.0) * exp(-pos.y / 900.0) * 0.085;
 
@@ -316,14 +338,18 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
             hatch = max(hatch, smoothstep(2.0, 5.0, terrace) * (1.0 - smoothstep(5.0, 22.0, terrace))
                         * (1.0 - smoothstep(0.2, 0.5, abs(fract((pos.x + pos.y) / 5.0) - 0.5) * 2.0 + terrace / 30.0)));
         }
+        // The second terrace is drawn over the page: its outline, and a little hatching along its underside.
+        line = max(line * (1.0 - lipIn), lipEdge);
+        hatch = max(hatch * (1.0 - lipIn), lipIn * (1.0 - smoothstep(0.2, 0.5, abs(fract((pos.x + pos.y) / 5.0) - 0.5) * 2.0
+                                                                       + lipLow / 9.0)));
         col = mix(col, mix(bone, ink, max(line, hatch * 0.8) * 0.9), paper);
     }
     return col;
 }
 
 [[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
-                             device const float *g, int count) {
-    float3 col = slopeGround(pos, size, view, play, lone, paper, g);
+                             float4 upper, device const float *g, int count) {
+    float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g);
     // The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel,
     // keeps them from banding and never crawls.
     float2 pixel = floor(pos * view.x);

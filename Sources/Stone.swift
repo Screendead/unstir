@@ -158,14 +158,20 @@ struct Stone<Label: View>: View {
     var ink: Color?
     /// Bump it to refuse a tap.
     var refused = 0
+    /// What a tap sounds: undo's and reset's are their own.
+    var effect = Sound.Effect.tap
+    /// How far the pebble stands under its words' middle: on the lone terrace the pebble rests on the sand while its
+    /// words stay over the water above it.
+    var sunk: CGFloat = 0
     var action: () -> Void
     @ViewBuilder var label: () -> Label
 
     var body: some View {
         Button(action: action) {
-            Face(state: state, pale: pale, engraved: engraved, trailing: trailing, glow: glow, ink: ink, refused: refused, label: label)
+            Face(state: state, pale: pale, engraved: engraved, trailing: trailing, glow: glow, ink: ink, refused: refused, sunk: sunk,
+                 label: label)
         }
-        .buttonStyle(Sounding(presses: true))
+        .buttonStyle(Sounding(effect: effect, presses: true))
     }
 
     private struct Face: View {
@@ -176,6 +182,7 @@ struct Stone<Label: View>: View {
         var glow: Color?
         var ink: Color?
         var refused: Int
+        var sunk: CGFloat
         @ViewBuilder var label: () -> Label
 
         @Environment(\.buttonPressed) private var pressed
@@ -199,6 +206,7 @@ struct Stone<Label: View>: View {
                             glow: state == .armed ? Page.night.stop : glow,
                             breath: state == .next ? 3 : state == .pending ? 1.2 : nil, dimmed: state == .dull)
                     .modifier(StoneRock(refused: refused, still: reduceMotion))
+                    .alignmentGuide(VerticalAlignment.center) { $0[VerticalAlignment.center] - sunk }
                     .offset(y: pressed && !reduceMotion ? 2 : 0)
                     .scaleEffect(pressed ? 0.97 : 1)
                     .brightness(pressed && reduceMotion ? -0.12 : 0)
@@ -244,7 +252,9 @@ extension SlopePebble {
 
 extension Stone where Label == Text {
     init(_ words: Text, state: StoneState = .lit, pale: Bool = false, engraved: Bool = false, trailing: Bool = false,
-         glow: Color? = nil, ink: Color? = nil, refused: Int = 0, action: @escaping () -> Void) {
-        self.init(state: state, pale: pale, engraved: engraved, trailing: trailing, glow: glow, ink: ink, refused: refused, action: action) { words }
+         glow: Color? = nil, ink: Color? = nil, refused: Int = 0, effect: Sound.Effect = .tap, sunk: CGFloat = 0,
+         action: @escaping () -> Void) {
+        self.init(state: state, pale: pale, engraved: engraved, trailing: trailing, glow: glow, ink: ink, refused: refused, effect: effect,
+                  sunk: sunk, action: action) { words }
     }
 }

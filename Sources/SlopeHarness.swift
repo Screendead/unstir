@@ -113,14 +113,19 @@ struct SlopeHarness: View {
                 }
             case .play:
                 let paper = look == "paper"
+                // Escapement's wait stands on a second terrace over the first.
+                let upper = paper ? CGPoint(x: size.width / 2, y: size.height - 118) : nil
                 SlopeScene(column: column, focus: focus, at: share, z: 1, held: true,
                            look: SlopeLook(level: 1, clear: look == "clear" ? 1 : 0, light: look == "dim" ? 0.35 : 1, paper: paper ? 1 : 0,
-                                           rock: deep.rocks[focus]),
+                                           rock: deep.rocks[focus], upper: upper),
                            clock: clock, near: false) { _ in
                     SlopeLayer {
-                        Stone(Text(verbatim: "undo · 10"), state: .dull, engraved: paper) { taps += 1 } // loc: verbatim a stand-in
+                        if let upper {
+                            Stone(Text(verbatim: "wait"), engraved: paper, sunk: 6) { taps += 1 }.rested(at: upper) // loc: verbatim a stand-in
+                        }
+                        Stone(Text(verbatim: "undo · 10"), state: .dull, engraved: paper, effect: .undo, sunk: 6) { taps += 1 } // loc: verbatim a stand-in
                             .rested(at: CGPoint(x: 52, y: SlopeLay.terrace(52, height: size.height)))
-                        Stone(Text(verbatim: "reset"), pale: look == "clear", engraved: paper, trailing: true) { taps += 1 } // loc: verbatim a stand-in
+                        Stone(Text(verbatim: "reset"), pale: look == "clear", engraved: paper, trailing: true, effect: .reset, sunk: 6) { taps += 1 } // loc: verbatim a stand-in
                             .rested(at: CGPoint(x: size.width - 52, y: SlopeLay.terrace(size.width - 52, height: size.height)))
                     }
                 }

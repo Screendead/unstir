@@ -1115,7 +1115,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     built from the numbers the pebbles are seated by (`testAPebblesSeatIsOnTheDrawnRock`): water by depth, the
     surface, two far ridges that are never lighter than the water, the shelf, the near silhouette, three layers of
     motes, then the looks (`SlopeLook`): `level` draws the shelf aside and raises one terrace alone under a tank
-    (`SlopeLay.terrace` is its top, `rock` and `glow` its stone and light), `glint`, `clear` (Prism's water), `light`
+    (`SlopeLay.terrace` is its top, `rock` and `glow` its stone and light), `upper` a second, a short lip over it), `glint`, `clear` (Prism's water), `light`
     (consent's 0.35) and `paper` (Escapement's page: the same edges as an engraving in ink on bone). It ends in a
     triangular dither of one part in 255 fixed to the pixel. `slopeHollow` is a hollow's inside (`SlopeHollowGround`).
     A change to a ledge's shape changes `slopeEdge`, `slopeScale` and the lean in `slopeGround` together with
@@ -1138,7 +1138,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopePebble` is the stone as a mark (lit, next, dull, pale, engraved; `dimmed` for a closed level's) and `Stone`
     the one control: a pebble with words beside it in a `Button`, its state (`StoneState`: lit, next, dull, armed,
     pending) the caller's to say, 44 pt either way at the least (`testEveryStoneIsFortyFourEitherWay`), sinking 2 pt
-    and drawing in to 0.97 while pressed, rocking when `refused` changes, sounding through `Sounding`.
+    and drawing in to 0.97 while pressed, rocking when `refused` changes, sounding `effect` through `Sounding`; `sunk`
+    stands its pebble under its words' middle, for the terrace.
   - The inks are Tone.swift's `SlopeInk`, one colour at four strengths; each reads at its floor from its own
     `shallowest` depth down (`testTheSlopesInksReadOnItsWater`, on the shader's own output at the overview and in the
     dive). The voices and sizes are Type.swift's `Font.slope(_:_:)`, `SlopeVoice` and `SlopeSize`.
