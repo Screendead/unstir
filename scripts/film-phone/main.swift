@@ -1,25 +1,38 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
-// Usage: build/film-phone/record [--sound] <out.mov> [device name]   (scripts/film.sh builds it)
+// Usage: build/film-phone/record [--sound] [--from-black] <out.mov> [device name]   (scripts/film.sh builds it)
 // Records the screen of an iPhone plugged into the Mac, as QuickTime's movie recording does, until SIGINT: every frame
-// the phone sends, at the time the Mac's capture stamps on it, as H.264. --sound records the phone's sound with it,
-// which takes the phone's output for as long as the recording runs. Then prints when its first frame was captured, in
-// seconds of CLOCK_UPTIME_RAW, the clock scripts/film.sh times a take on, and a line of the take's frame times on
-// stderr. Exits 1 if the capture dropped a frame: the take would hitch where the phone did not.
+// the phone sends, at the time the Mac's capture stamps on it, as H.264. The phone sends 60 frames a second and,
+// while its picture moves, leaves one out now and then (one in 14 to 19 on a 13 Pro Max, 2026-11-23): a 33 ms step
+// that a film cut at 30 frames a second does not show.
+// --sound records the phone's sound with it, which takes the phone's output for as long as the recording runs.
+// --from-black keeps the phone's home screen, which is the owner's own, out of the file: nothing is written until
+// SIGUSR1, sent once the app is launched, and then not before a frame is black, as the app's launch is.
+// Says "watching" on stderr once frames arrive. On SIGINT prints when its first written frame was captured, in seconds
+// of CLOCK_UPTIME_RAW, the clock scripts/film.sh times a take on, and a line of the take's frame times on stderr.
+// Exits 1 if the Mac dropped a frame the phone sent: the take would hitch where the phone did not.
 // The process that runs it needs the Mac's Camera permission (and Microphone with --sound); the phone must be
 // unlocked and have trusted this Mac.
 import AVFoundation
 import CoreMediaIO
 import Darwin
 
+func say(_ message: String) { FileHandle.standardError.write(Data("record: \(message)\n".utf8)) }
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write(Data("record: \(message)\n".utf8))
+    say(message)
     exit(1)
 }
 
 var arguments = Array(CommandLine.arguments.dropFirst())
-let sound = arguments.first == "--sound"
-if sound { arguments.removeFirst() }
-guard (1...2).contains(arguments.count) else { fail("usage: record [--sound] <out.mov> [device name]") }
+var sound = false, fromBlack = false
+while let flag = arguments.first, flag.hasPrefix("--") {
+    switch flag {
+    case "--sound": sound = true
+    case "--from-black": fromBlack = true
+    default: fail("unknown option \(flag)")
+    }
+    arguments.removeFirst()
+}
+guard (1...2).contains(arguments.count) else { fail("usage: record [--sound] [--from-black] <out.mov> [device name]") }
 let out = URL(fileURLWithPath: arguments[0])
 let wanted = arguments.count == 2 ? arguments[1] : nil
 
@@ -60,17 +73,27 @@ guard let device = found else {
     fail("no iPhone\(wanted.map { " named \($0)" } ?? "") to record: plug it in, unlock it and trust this Mac")
 }
 
+/// Everything here runs on the capture's one queue.
 final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
+    /// Frames the encoder may fall behind by before the take fails: it catches up between them, and a frame is never
+    /// dropped to keep time.
+    static let room = 180
     let writer: AVAssetWriter
     let audio: AVAssetWriterInput?
     var video: AVAssetWriterInput?
+    var waiting: [CMSampleBuffer] = []
     var times: [Double] = []
     var size = CMVideoDimensions(width: 0, height: 0)
-    var dropped = 0
+    /// Frames the capture gave up on before handing them over.
+    var late = 0
     var problem: String?
+    var seen = false
+    var armed = false
+    private var writes: Bool
 
-    init(_ url: URL, sound: Bool) throws {
+    init(_ url: URL, sound: Bool, fromBlack: Bool) throws {
         writer = try AVAssetWriter(outputURL: url, fileType: .mov)
+        writes = !fromBlack
         if sound {
             let input = AVAssetWriterInput(mediaType: .audio, outputSettings: [
                 AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 48000, AVNumberOfChannelsKey: 2, AVEncoderBitRateKey: 256_000,
@@ -83,13 +106,65 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AV
         }
     }
 
+    /// A frame's mean luma, from a grid of its pixels: black is 16 in the video range the phone's frames come in.
+    private func dark(_ buffer: CMSampleBuffer) -> Bool {
+        guard let pixels = CMSampleBufferGetImageBuffer(buffer) else { return false }
+        CVPixelBufferLockBaseAddress(pixels, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixels, .readOnly) }
+        let planar = CVPixelBufferIsPlanar(pixels)
+        guard let base = planar ? CVPixelBufferGetBaseAddressOfPlane(pixels, 0) : CVPixelBufferGetBaseAddress(pixels) else { return false }
+        let width = planar ? CVPixelBufferGetWidthOfPlane(pixels, 0) : CVPixelBufferGetWidth(pixels)
+        let height = planar ? CVPixelBufferGetHeightOfPlane(pixels, 0) : CVPixelBufferGetHeight(pixels)
+        let row = planar ? CVPixelBufferGetBytesPerRowOfPlane(pixels, 0) : CVPixelBufferGetBytesPerRow(pixels)
+        // A packed frame is BGRA: its green stands for its luma.
+        let (step, offset) = planar ? (1, 0) : (4, 1)
+        var sum = 0, n = 0
+        for y in stride(from: 0, to: height, by: 16) {
+            let line = base.advanced(by: y * row).assumingMemoryBound(to: UInt8.self)
+            for x in stride(from: 0, to: width, by: 16) {
+                sum += Int(line[x * step + offset])
+                n += 1
+            }
+        }
+        return n > 0 && sum < 28 * n
+    }
+
+    private func drain() {
+        guard let video else { return }
+        while let next = waiting.first, video.isReadyForMoreMediaData {
+            guard video.append(next) else {
+                problem = "writing failed: \(String(describing: writer.error))"
+                return
+            }
+            times.append(CMSampleBufferGetPresentationTimeStamp(next).seconds)
+            waiting.removeFirst()
+        }
+    }
+
+    /// Writes what the encoder still owes, once the capture has stopped.
+    func finish() {
+        let limit = Date().addingTimeInterval(20)
+        while problem == nil, !waiting.isEmpty, Date() < limit {
+            drain()
+            if !waiting.isEmpty { usleep(2000) }
+        }
+        if problem == nil, !waiting.isEmpty { problem = "the encoder never took the last \(waiting.count) frames" }
+    }
+
     func captureOutput(_ output: AVCaptureOutput, didOutput buffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard problem == nil else { return }
         guard output is AVCaptureVideoDataOutput else {
             if video != nil, let audio, audio.isReadyForMoreMediaData { audio.append(buffer) }
             return
         }
-        let time = CMSampleBufferGetPresentationTimeStamp(buffer)
+        if !seen {
+            seen = true
+            say("watching")
+        }
+        if !writes {
+            guard armed, dark(buffer) else { return }
+            writes = true
+        }
         if video == nil {
             guard let format = CMSampleBufferGetFormatDescription(buffer) else { return }
             size = CMVideoFormatDescriptionGetDimensions(format)
@@ -104,25 +179,21 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AV
             guard writer.canAdd(input) else { problem = "can't encode \(size.width) x \(size.height)"; return }
             writer.add(input)
             guard writer.startWriting() else { problem = "can't write: \(String(describing: writer.error))"; return }
-            writer.startSession(atSourceTime: time)
+            writer.startSession(atSourceTime: CMSampleBufferGetPresentationTimeStamp(buffer))
             video = input
         }
-        if video!.isReadyForMoreMediaData, video!.append(buffer) {
-            times.append(time.seconds)
-        } else if writer.status == .failed {
-            problem = "writing failed: \(String(describing: writer.error))"
-        } else {
-            dropped += 1
-        }
+        waiting.append(buffer)
+        drain()
+        if waiting.count > Self.room { problem = "the encoder fell \(waiting.count) frames behind" }
     }
 
     func captureOutput(_ output: AVCaptureOutput, didDrop buffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        if output is AVCaptureVideoDataOutput { dropped += 1 }
+        if output is AVCaptureVideoDataOutput, writes { late += 1 }
     }
 }
 
 let recorder: Recorder
-do { recorder = try Recorder(out, sound: sound) } catch { fail("can't write \(out.path): \(error)") }
+do { recorder = try Recorder(out, sound: sound, fromBlack: fromBlack) } catch { fail("can't write \(out.path): \(error)") }
 try? FileManager.default.removeItem(at: out)
 
 let session = AVCaptureSession()
@@ -147,14 +218,20 @@ if sound {
 }
 session.startRunning()
 
+signal(SIGUSR1, SIG_IGN)
+let arm = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+arm.setEventHandler { queue.async { recorder.armed = true } }
+arm.resume()
+
 signal(SIGINT, SIG_IGN)
 let stop = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
 stop.setEventHandler {
     session.stopRunning()
-    queue.sync {}
+    queue.sync { recorder.finish() }
     if let problem = recorder.problem { fail(problem) }
     guard let video = recorder.video, let first = recorder.times.first, let last = recorder.times.last else {
-        fail("\(device.localizedName) sent no frames: is it unlocked?")
+        fail(recorder.seen ? "no frame was black after the launch, so nothing was written"
+                           : "\(device.localizedName) sent no frames: is it unlocked?")
     }
     video.markAsFinished()
     recorder.audio?.markAsFinished()
@@ -164,12 +241,10 @@ stop.setEventHandler {
     guard recorder.writer.status == .completed else { fail("can't finish \(out.path): \(String(describing: recorder.writer.error))") }
     let steps = zip(recorder.times, recorder.times.dropFirst()).map { $1 - $0 }.sorted()
     let median = steps.isEmpty ? 0 : steps[steps.count / 2]
-    let long = steps.filter { $0 > 1.5 * median }
-    FileHandle.standardError.write(Data(String(
-        format: "record: %@, %d x %d, %d frames in %.3f s, median step %.2f ms, %d steps over 1.5 of it (longest %.1f ms), %d dropped\n",
-        device.localizedName, recorder.size.width, recorder.size.height, recorder.times.count, last - first, median * 1000,
-        long.count, (steps.last ?? 0) * 1000, recorder.dropped).utf8))
-    if recorder.dropped > 0 { fail("the capture dropped \(recorder.dropped) frames") }
+    say(String(format: "%@, %d x %d, %d frames in %.3f s, median step %.2f ms, %d steps over 25 ms, %d over 42 ms (longest %.1f ms)",
+               device.localizedName, recorder.size.width, recorder.size.height, recorder.times.count, last - first, median * 1000,
+               steps.filter { $0 > 0.025 }.count, steps.filter { $0 > 0.042 }.count, (steps.last ?? 0) * 1000))
+    if recorder.late > 0 { fail("the Mac dropped \(recorder.late) frames the phone sent") }
     print(String(format: "%.6f", first))
     exit(0)
 }

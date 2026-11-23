@@ -2,7 +2,8 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/editors-film.sh [--join]   Films the editors' reel's segments (scripts/film.sh editors-) and joins them
 # into shots/film/editors-reel.mp4, about a minute of the later tiers and three packs for the App Store nomination's
-# supplemental links. --join only joins segments already filmed. Takes the simulator scripts/film.sh takes (UNSTIR_SIM).
+# supplemental links. --join only joins segments already filmed. Takes the simulator scripts/film.sh takes (UNSTIR_SIM),
+# or the phone with FILM_PHONE=1, whose screen is a hair narrower: each segment fills the reel's frame and loses the rest.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -28,7 +29,7 @@ for i in "${!segments[@]}"; do
   inputs+=(-fflags +igndts -i "$mp4")  # dts ignored, as scripts/film.sh says
   # recordVideo writes a frame only when the screen changes, so fps= first; film.sh may have shrunk a large segment,
   # so every one is scaled to the same size.
-  chains+="[$i:v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,fps=30,scale=1080:2346,setsar=1[v$i];"
+  chains+="[$i:v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,fps=30,scale=1080:2346:force_original_aspect_ratio=increase,crop=1080:2346,setsar=1[v$i];"
   labels+="[v$i]"
   echo "$name from $start s, $keep s"
 done

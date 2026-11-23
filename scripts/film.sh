@@ -2,23 +2,44 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/film.sh [pattern]   Records the animations in the simulator into shots/film/, each with a frame strip:
 # every case whose name holds pattern, or with a trailing $ (quoted), the one case of that name.
+# FILM_PHONE=1 films the phone UNSTIR_DEVICE names instead, over its cable (scripts/film-phone/main.swift), from a
+# shell whose app holds the Mac's Camera permission: a Release build, installed over the phone's own, drawing at the
+# phone's pace, 1284 x 2778 on a 13 Pro Max. simctl's recordVideo holds frames the simulator drew (two or three at a
+# time every few seconds, 2026-11-23); the phone's takes hold none at the 30 frames a second the finished films are
+# cut at. A Release build takes no UNSTIR_OWNED or UNSTIR_STORE: a pack's level opens by the developer unlock, which
+# the last take leaves as it set it, and a case with store states is the simulator's. The phone keeps its own
+# progress, so a film that shows bests shows the phone's.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
 
-# UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max.
-udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')}
-xcrun simctl boot "$udid" 2>/dev/null || true
-xcrun simctl bootstatus "$udid" -b >/dev/null
-scripts/build-ios.sh Debug sim
-if [[ -n "${FILM_SOUND:-}" ]] && { [[ ! -x build/film-sound/record ]] || [[ scripts/film-sound/main.swift -nt build/film-sound/record ]]; }; then
-  mkdir -p build/film-sound
-  swiftc -O -o build/film-sound/record scripts/film-sound/main.swift
+phone=${FILM_PHONE:-}
+if [[ -n "$phone" ]]; then
+  source scripts/harness.sh
+  : "${UNSTIR_DEVICE:?set UNSTIR_DEVICE to a UDID from xcrun devicectl list devices}"
+  ANALYTICS_PLAYTEST=YES scripts/build-ios.sh Release
+  if [[ ! -x build/film-phone/record ]] || [[ scripts/film-phone/main.swift -nt build/film-phone/record ]]; then
+    mkdir -p build/film-phone
+    # AVAssetWriter's inputs are deprecated from macOS 27, whose replacement an earlier macOS lacks.
+    swiftc -O -suppress-warnings -o build/film-phone/record scripts/film-phone/main.swift
+  fi
+  # Over the phone's own copy, never uninstalled: its progress is its owner's.
+  xcrun devicectl device install app --device "$UNSTIR_DEVICE" build/Build/Products/Release-iphoneos/Unstir.app >/dev/null
+else
+  # UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max.
+  udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')}
+  xcrun simctl boot "$udid" 2>/dev/null || true
+  xcrun simctl bootstatus "$udid" -b >/dev/null
+  scripts/build-ios.sh Debug sim
+  if [[ -n "${FILM_SOUND:-}" ]] && { [[ ! -x build/film-sound/record ]] || [[ scripts/film-sound/main.swift -nt build/film-sound/record ]]; }; then
+    mkdir -p build/film-sound
+    swiftc -O -o build/film-sound/record scripts/film-sound/main.swift
+  fi
+  # Fresh install, so no level has been started and autoplay can finish clean.
+  xcrun simctl uninstall "$udid" "$bundle" 2>/dev/null || true
+  xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.app
+  xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 fi
-# Fresh install, so no level has been started and autoplay can finish clean.
-xcrun simctl uninstall "$udid" "$bundle" 2>/dev/null || true
-xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.app
-xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 mkdir -p shots/film
 pattern=${1:-}
 wants() {  # case
@@ -27,7 +48,77 @@ wants() {  # case
   [[ "$1" == *$pattern* ]]
 }
 
+# A film only the simulator takes: says so and fails on the phone.
+simulator() {  # what
+  [[ -z "$phone" ]] && return 0
+  echo "$1: the simulator's to film, not the phone's" >&2
+  return 1
+}
+# The phone's Release build bakes a Lens panel in a third of a second (290 ms on a 13 Pro Max): a launch and a wait
+# bake it, where the simulator's films poll its Caches.
+phone_warm() {  # level
+  harness_launch "" "\"UNSTIR_UNLOCK\":\"1\",\"UNSTIR_PACK\":\"lens\",\"UNSTIR_LEVEL\":\"$1\""
+  sleep 3
+}
+
 tank=crop=1200:1200:60:820  # the tank on a 1320 x 2868 Pro Max screen
+fit=  # the phone's takes, scaled to that screen for a strip's crops
+[[ -n "$phone" ]] && fit=scale=1320:2868,
+# The take's strip, and its shrink for a PR comment.
+finish() {  # name strip-filter sound
+  local name=$1 strip=$2 snd=$3 mp4="shots/film/$1.mp4"
+  # The strip starts at the first dark frame: the home screen is bright and the app is black.
+  local start
+  start=$(ffprobe -v error -f lavfi -i "movie=$mp4:format_opts=fflags=+igndts,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
+    -of csv=p=0 | awk -F, '$2 < 40 && s == "" { s = $1 } END { print s }')
+  # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
+  ffmpeg -loglevel error -y -fflags +igndts -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$fit$strip" -frames:v 1 "shots/film/$name-strip.png"
+  # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
+  # FILM_FULL=1 keeps the recorded size, for the store's preview and clips; the shrink would drop a take's sound.
+  if [[ -z "${FILM_FULL:-}" && -z "$snd" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
+    ffmpeg -loglevel error -y -fflags +igndts -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
+    mv "${mp4%.mp4}-small.mp4" "$mp4"
+  fi
+  echo "filmed $name"
+}
+# FILM_PHONE's take. The recorder writes nothing until the app is launched and its black is up, so the phone's home
+# screen is never in the file, and records the phone's own sound in step with its frames (FILM_SOUND).
+film_phone() {  # name seconds strip-filter KEY=VALUE...
+  local name=$1 secs=$2 strip=$3 mp4="shots/film/$1.mp4" mov="shots/film/$1.mov" pairs=() flags=(--from-black) kv unlock=
+  shift 3
+  for kv in "$@"; do
+    case ${kv%%=*} in
+      STORE) echo "$name: its store states are the simulator's, as a Release build takes none: not filmed" >&2; return 0 ;;
+      OWNED) unlock=1 ;;
+      *) pairs+=("\"UNSTIR_${kv%%=*}\":\"${kv#*=}\"") ;;
+    esac
+  done
+  [[ -n "$unlock" ]] && pairs+=('"UNSTIR_UNLOCK":"1"')
+  [[ -n "${FILM_SOUND:-}" ]] && { pairs+=('"UNSTIR_SOUND":"1"'); flags+=(--sound); }
+  local began log rec v1 took
+  began=$(mktemp) log=$(mktemp)
+  build/film-phone/record "${flags[@]}" "$mov" > "$began" 2> "$log" &
+  rec=$!
+  for _ in $(seq 200); do
+    grep -q watching "$log" && break
+    kill -0 "$rec" 2>/dev/null || break
+    sleep 0.1
+  done
+  grep -q watching "$log" || { kill -INT "$rec" 2>/dev/null; wait "$rec" || true; cat "$log" >&2; exit 1; }
+  harness_launch "" "$(IFS=,; echo "${pairs[*]}")" || { kill -INT "$rec"; wait "$rec" || true; echo "$name: the app didn't launch: is the phone unlocked?" >&2; exit 1; }
+  kill -USR1 "$rec"
+  sleep "$secs"
+  v1=$(python3 -c 'import time; print(time.clock_gettime(time.CLOCK_UPTIME_RAW))')
+  # Left running, the app would sound from the phone's speaker once the recording lets its output go.
+  [[ -n "${FILM_SOUND:-}" ]] && harness_launch "" "\"UNSTIR_SCREEN\":\"menu\"${unlock:+,\"UNSTIR_UNLOCK\":\"1\"}"
+  kill -INT "$rec"
+  wait "$rec" || { cat "$log" >&2; echo "$name: film it again" >&2; exit 1; }
+  sed -n 's/^record: /  /p' "$log" | tail -1
+  took=$(awk -v a="$(cat "$began")" -v b="$v1" 'BEGIN { printf "%.3f", b - a }')
+  ffmpeg -loglevel error -y -i "$mov" -map 0 -c copy -movflags +faststart -metadata comment="take $took s" "$mp4"
+  trash "$mov" "$began" "$log"
+  finish "$name" "$strip" "${FILM_SOUND:-}"
+}
 # recordVideo sometimes gives two frames the same pts. ffmpeg's decoder then guesses the rest of the take's times from
 # its dts, which step back about a second there (0.99 s in two takes), and fps= drops that much as having gone back:
 # the take jumps ahead. So every command that decodes a take reads it with dts ignored (-fflags +igndts, or movie='s
@@ -36,6 +127,10 @@ film() {  # name seconds strip-filter KEY=VALUE...
   local name=$1 secs=$2 strip=$3 vars=() mp4="shots/film/$1.mp4"
   shift 3
   wants "$name" || return 0
+  if [[ -n "$phone" ]]; then
+    film_phone "$name" "$secs" "$strip" "$@"
+    return
+  fi
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   local snd="" began heard wav="shots/film/$name.caf" v0 v1 a0 took length=()
@@ -90,19 +185,7 @@ for line in sys.stdin:
     ffmpeg -loglevel error -y -i "$mp4" -map 0 -c copy "${length[@]}" "${mp4%.mp4}-tagged.mp4"
     mv "${mp4%.mp4}-tagged.mp4" "$mp4"
   fi
-  # The strip starts at the first dark frame: the home screen is bright and the app is black.
-  local start
-  start=$(ffprobe -v error -f lavfi -i "movie=$mp4:format_opts=fflags=+igndts,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
-    -of csv=p=0 | awk -F, '$2 < 40 && s == "" { s = $1 } END { print s }')
-  # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
-  ffmpeg -loglevel error -y -fflags +igndts -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
-  # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
-  # FILM_FULL=1 keeps the recorded size, for the store's preview and clips; the shrink would drop a take's sound.
-  if [[ -z "${FILM_FULL:-}" && -z "$snd" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
-    ffmpeg -loglevel error -y -fflags +igndts -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
-    mv "${mp4%.mp4}-small.mp4" "$mp4"
-  fi
-  echo "filmed $name"
+  finish "$name" "$strip" "$snd"
 }
 
 film open-L01 4.5 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=1 OPEN=1
@@ -112,7 +195,7 @@ film ignition-L12 2.5 "$tank,fps=30,scale=200:-1,tile=8x3:padding=4" LEVEL=12 OP
 film autoplay-L09 9 "fps=3,scale=220:-1,tile=9x3:padding=4" LEVEL=9 OPEN=1 AUTOPLAY=1
 # Under Reduce Motion: the opening fades through black instead of winding in, the picture fades on, and the solve
 # swells in place with no wave, pulse or easing home.
-if wants calm-open-L12 || wants calm-autoplay-L09; then
+if { wants calm-open-L12 || wants calm-autoplay-L09; } && simulator "Reduce Motion's films"; then
   calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
   # Off again however the films end, or every later shot and film records the calm opening.
   trap 'calm false' EXIT
@@ -215,7 +298,7 @@ film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=le
 # Each card's clip (`Clip`), twice round its loop.
 clip=crop=1100:1180:110:610  # the card's clip and First Stir's time under it
 # A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the films.
-if wants clip-lens || wants clip-complete; then
+if [[ -z "$phone" ]] && { wants clip-lens || wants clip-complete; }; then
   SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   sleep 25
 fi
@@ -262,6 +345,10 @@ film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escape
 # A Lens level bakes its own panel the first time a Debug install draws it, half a minute or more, and the opening
 # waits on it: a launch of the level first bakes it into Caches, which its films then read.
 warm() {  # level
+  if [[ -n "$phone" ]]; then
+    phone_warm "$1"
+    return
+  fi
   local caches stamp=shots/film/.warmed
   caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
   touch "$stamp"
@@ -318,7 +405,9 @@ film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNE
   MOVES=-1:+1,2:+8,3:-7,0:+4
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
-if wants editors-lens-03; then
+if wants editors-lens-03 && [[ -n "$phone" ]]; then
+  phone_warm 3
+elif wants editors-lens-03; then
   SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL=3 \
     xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
@@ -337,7 +426,9 @@ layer() {  # name pack level ratchet
   wants "$1" || return 0
   local secs line
   read -r secs line < <(python3 scripts/layers.py moves sound-src/layers-in-play.tsv "$2" "$4" 0.5)
-  if [[ "$2" == lens ]]; then
+  if [[ "$2" == lens && -n "$phone" ]]; then
+    phone_warm "$3"
+  elif [[ "$2" == lens ]]; then
     SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens \
       xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
     local caches
@@ -371,7 +462,7 @@ film payoff-lens 12 "$pay,tile=8x4:padding=4" PACK=lens LEVEL=25 OWNED=first-sti
   BESTS=lens:cc0c0cc0cc0ccc0c0ccc0c0c-
 film payoff-escapement 11 "$pay,tile=10x3:padding=4" PACK=escapement LEVEL=30 OWNED=escapement STACK=0:+3 AUTOPLAY=1 PACE=1.2 \
   BESTS=escapement:ccccccccccccccccccccccccccccc-
-if wants calm-payoff-game || wants calm-payoff-tier; then
+if { wants calm-payoff-game || wants calm-payoff-tier; } && simulator "Reduce Motion's films"; then
   calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
   trap 'calm false' EXIT
   calm true
