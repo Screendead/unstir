@@ -60,6 +60,8 @@ struct SlopeLedgeRow: View {
     let n: Int
     /// How far the words have arrived, 0 to 1: they fade in as the depth opens.
     var near = 1.0
+    /// The top bars' height: the words fade out as they rise to the bars.
+    var bars: CGFloat = 0
     /// A closed row's line held up, for a still.
     var held = false
     /// A tap on an open row.
@@ -97,7 +99,7 @@ struct SlopeLedgeRow: View {
             Button {
                 ledge.closed ? refuse() : open()
             } label: {
-                words.frame(width: at.width, alignment: .leading).opacity(near)
+                words.frame(width: at.width, alignment: .leading).opacity(near).slopeUnderBars(bars)
                     .padding(.leading, at.x)
                     .hit(10, 0)
                     .overlay(alignment: Alignment(horizontal: .leading, vertical: .firstTextBaseline)) {
@@ -190,6 +192,15 @@ struct SlopeLedgeRow: View {
         Task {
             try? await Task.sleep(for: .seconds(Refusal.hold))
             refusal.lapse(tap)
+        }
+    }
+}
+
+extension View {
+    /// Words on a column that fade out as they rise to the status bar, `bars` tall, and are gone before they reach it.
+    func slopeUnderBars(_ bars: CGFloat) -> some View {
+        visualEffect { words, place in
+            words.opacity(bars > 0 ? min(max((place.frame(in: .global).maxY - bars) / 28, 0), 1) : 1)
         }
     }
 }

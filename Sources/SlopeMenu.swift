@@ -43,6 +43,10 @@ struct SlopeMenu: View {
     var revision = 0
     /// Endless's saved run, as the root last read it.
     var run: Resume?
+    /// The ground's light, 1 unless something dims the world: consent draws it at 0.35. It animates.
+    var light = 1.0
+    /// Only the ground: the words, pebbles and hollows hidden and dead, as under the consent question.
+    var bare = false
     /// A pack's hollow in plughole's wall (`SlopeHollow`, piece D): a view whose top centre goes at the spot's point.
     /// Until it lands, a plain dull pebble.
     var hollow: ((Offer, SlopeSpot) -> AnyView)?
@@ -94,7 +98,7 @@ struct SlopeMenu: View {
 
     init(start: Tier? = nil, focus: Level? = nil, returning: Bool = false, settings: Binding<Bool>, card: Binding<Offer?>,
          archive: Binding<Bool> = .constant(false), day: Date? = nil, clock: Double? = nil, held: String? = nil, peeking: Bool = false,
-         playing: Level? = nil, revision: Int = 0, run: Resume? = nil, hollow: ((Offer, SlopeSpot) -> AnyView)? = nil,
+         playing: Level? = nil, revision: Int = 0, run: Resume? = nil, light: Double = 1, bare: Bool = false, hollow: ((Offer, SlopeSpot) -> AnyView)? = nil,
          archiveLedge: ((SlopeSpot) -> AnyView)? = nil, onPick: @escaping (Level, CGPoint?) -> Void) {
         self.start = start
         self.focus = focus
@@ -109,6 +113,8 @@ struct SlopeMenu: View {
         self.playing = playing
         self.revision = revision
         self.run = run
+        self.light = light
+        self.bare = bare
         self.hollow = hollow
         self.archiveLedge = archiveLedge
         self.onPick = onPick
@@ -170,7 +176,7 @@ struct SlopeMenu: View {
             } else {
                 scene(plan)
             }
-            chrome(plan, below: below)
+            chrome(plan, below: below && !bare)
         }
         .onAppear { settle(plan) }
         .onChange(of: dragging) { if !dragging { released(plan) } }
@@ -187,7 +193,7 @@ struct SlopeMenu: View {
     /// The overview, and every move of the camera.
     private func scene(_ plan: SlopeMenuPlan) -> some View {
         let at = share ?? plan.overview(holding: hold)
-        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, clock: clock, near: !plan.large) { view in
+        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
             world(view, plan, cull: true)
         }
         .allowsHitTesting(!moving)
@@ -199,7 +205,7 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, clock: clock, near: !plan.large) { view in
+        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
             world(view, plan, cull: false)
             sounding(view, plan) { top in
                 scroll.top = top
@@ -221,7 +227,7 @@ struct SlopeMenu: View {
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, clock: clock, near: false) { view in
+        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false) { view in
             world(view, plan, cull: false)
             sounding(view, plan) { scroll.wide = $0 }
         }
@@ -248,6 +254,8 @@ struct SlopeMenu: View {
                            saved = nil
                            pick(.endless(Run(seed: .random(in: .min ... .max))), ledge: nil, plan, anew: true)
                        })
+            .opacity(bare ? 0 : 1).allowsHitTesting(!bare).accessibilityHidden(bare)
+            .animation(.easeOut(duration: 0.6), value: bare)
     }
 
     // MARK: Travel
@@ -761,6 +769,8 @@ private struct SlopeMenuWorld: View {
     /// 1 at the overview, gone a fifth of the way in.
     private var wide: Double { lay.e <= 0 ? 1 : 1 - min(lay.e / 0.2, 1) }
     private var large: Bool { plan.large }
+    /// The status bar's room, which the dive's words fade under.
+    private var bars: CGFloat { plan.top + 8 }
 
     private func shown(_ y: CGFloat, _ reach: CGFloat = 120) -> Bool { !cull || y > -reach && y < view.size.height + reach }
 
@@ -774,7 +784,7 @@ private struct SlopeMenuWorld: View {
                 ForEach(Array(tier.ledges.enumerated()), id: \.offset) { i, ledge in
                     let n = SlopeColumn.ledge(tier: t, level: i + 1)
                     if shown(view.y(lay.tops[n])) {
-                        SlopeLedgeRow(ledge: ledge, view: view, n: n, near: near, held: tier.levels[i].id == held) {
+                        SlopeLedgeRow(ledge: ledge, view: view, n: n, near: near, bars: bars, held: tier.levels[i].id == held) {
                             pick(tier.levels[i], n)
                         }
                     }
@@ -851,10 +861,10 @@ private struct SlopeMenuWorld: View {
                     .slopeLine(CGPoint(x: plan.beside, y: seat.y - 8))
                 }
                 if near > 0 {
-                    Text("today").font(.slope(.place, .title)).ink(.ink).accessibilityAddTraits(.isHeader).opacity(near)
+                    Text("today").font(.slope(.place, .title)).ink(.ink).accessibilityAddTraits(.isHeader).opacity(near).slopeUnderBars(bars)
                         .slopePlace(CGPoint(x: plan.words(n).x, y: view.y(lay.tops[n]) - SlopeMenuPlan.headerFoot + 8), anchor: .bottomLeading)
                 }
-                SlopeLedgeRow(ledge: daily.ledge, view: view, n: n, near: near) { pick(daily.level, n) }
+                SlopeLedgeRow(ledge: daily.ledge, view: view, n: n, near: near, bars: bars) { pick(daily.level, n) }
             }
             let a = SlopeColumn.archive, at = view.seat(a)
             if shown(at.y) {
@@ -935,6 +945,7 @@ private struct SlopeMenuWorld: View {
                 }
             }
             .opacity(near)
+            .slopeUnderBars(bars)
             .slopePlace(CGPoint(x: at.x, y: foot), anchor: .bottomLeading)
         }
     }
