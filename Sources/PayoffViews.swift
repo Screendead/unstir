@@ -23,6 +23,9 @@ struct PayoffCurtain: View {
     /// Whether the lines fit over the glass, and the height they take under it.
     let measured: (_ over: Bool, _ height: CGFloat) -> Void
     let skip: () -> Void
+    /// On the slope (docs/slope.md, 6): a tier's name in the place voice and a pack's in the name voice, each in its
+    /// sweep and lower case, over "unstirred." in the place voice at display, as the result's stamp.
+    var slope = SlopeResult.on
     @State private var lines: [Int: CGRect] = [:]
     @State private var height: CGFloat = 0
     @Environment(\.page) private var page
@@ -76,7 +79,7 @@ struct PayoffCurtain: View {
                 .frame(maxWidth: min(width, 2 * Self.nameReach * r))
                 .opacity(up(i)).scaleEffect(payoff.still ? 1 : 0.92 + 0.08 * up(i))
             }
-            Text(payoff.stamp).font(.ui(.stamp)).foregroundStyle(page.ink) // loc: verbatim localized by Payoff
+            Text(payoff.stamp).font(slope ? .slope(.place, .display) : .ui(.stamp)).foregroundStyle(page.ink) // loc: verbatim localized by Payoff
                 .shadow(color: paper ? .clear : .white.opacity(0.5), radius: 6)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[tiers.count] = $0 }
                 .padding(.top, whole ? 10 : 2).opacity(up(tiers.count))
@@ -91,8 +94,8 @@ struct PayoffCurtain: View {
 
     /// The name's own width is read, not the frame that bounds it.
     private func name(_ part: Payoff.Part, _ role: TypeRole, tracking: CGFloat, line: Int) -> some View {
-        Text(part.name.localizedUppercase) // loc: verbatim localized by Tier, and a pack's name is never translated
-            .font(.ui(role)).tracking(tracking).lineLimit(1).fixedSize()
+        Text(slope ? part.word ?? part.name : part.name.localizedUppercase) // loc: verbatim localized by Tier, and a pack's name is never translated
+            .font(slope ? Self.slopeName(part, role) : .ui(role)).tracking(slope ? 0 : tracking).lineLimit(1).fixedSize()
             .foregroundStyle(LinearGradient(colors: payoff.paper ? [.plateVermilion] : part.colours, startPoint: .leading, endPoint: .trailing))
             // Its place from the block, its size its own: the frame in the block shrinks while the name scales up.
             .onGeometryChange(for: CGRect.self) { proxy in
@@ -102,11 +105,18 @@ struct PayoffCurtain: View {
             .shadow(color: payoff.paper ? .clear : part.glow.opacity(0.9), radius: 14)
     }
 
+    /// The slope's voice for a name, at display or, where today's sets it smaller, 22 pt (`displaySmall`'s title2).
+    private static func slopeName(_ part: Payoff.Part, _ role: TypeRole) -> Font {
+        let voice: SlopeVoice = part.word == nil ? .name : .place
+        guard role == .displaySmall else { return .slope(voice, .display) }
+        return voice == .place ? .system(.title2, design: .serif, weight: .light).italic() : .system(.title2, weight: .light)
+    }
+
     /// Broken at its dot, which goes (Jack's call): on one line it is wider than the glass's chord at the foot of the
     /// block on every phone, and two stacked lines need no separator.
     private var credit: some View {
         Text(Payoff.Credit.shown.replacingOccurrences(of: " \u{00B7} ", with: "\n")) // loc: verbatim localized by Payoff
-            .font(.ui(.detail)).foregroundStyle(page.ink).tone(page.tone(.text3))
+            .font(slope ? .slope(.ui, .detail) : .ui(.detail)).foregroundStyle(page.ink).tone(page.tone(.text3))
             .fixedSize()
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[payoff.parts.count + 1] = $0 }
             .opacity(up(payoff.parts.count + 1))
