@@ -250,7 +250,7 @@ struct Harness {
     let promo: Offer?
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
-    /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
+    /// Any UNSTIR_ variable but the phone's (UNSTIR_UNLOCK, UNSTIR_ANALYTICS, UNSTIR_TAPS, UNSTIR_SLOPE=1 or =0): analytics is then off unless UNSTIR_ANALYTICS=log
     /// logs it, and stores nothing either way.
     let harnessed: Bool
     let resume: Resume?
@@ -264,9 +264,12 @@ struct Harness {
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
         // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"].contains($0) }
+        // UNSTIR_SLOPE=1 or =0 is for the phone too, as UNSTIR_UNLOCK is; its other values are the slope's stages.
+        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + (SlopeWorld.phone(env) ? ["UNSTIR_SLOPE"] : [])
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !phone.contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
+        SlopeWorld.read(env, harnessed: harnessed)
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0,lens:000: a best for each of a tier's or a pack's levels from 01, one
         // character each: a digit is that many over par, c clean, - is none. For this launch only.
@@ -624,6 +627,32 @@ final class Bench: NSObject {
     }
 }
 
+/// The slope's world (docs/slope.md) in place of today's screens, until it becomes the default. A launch with
+/// UNSTIR_SLOPE=1 stores it and one with UNSTIR_SLOPE=0 clears it, so the phone's home screen keeps opening it;
+/// alongside any other UNSTIR_ variable, unset clears it too, as the developer unlock does. Debug builds only: no
+/// Release build reads the variable or the stored flag.
+enum SlopeWorld {
+    static let key = "slope.world"
+
+    static var on: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: key)
+        #else
+        false
+        #endif
+    }
+
+    /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
+    static func phone(_ env: [String: String]) -> Bool { env["UNSTIR_SLOPE"] == "1" || env["UNSTIR_SLOPE"] == "0" }
+
+    static func read(_ env: [String: String], harnessed: Bool) {
+        #if DEBUG
+        // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(env["UNSTIR_SLOPE"] == "1", forKey: key) }
+        #endif
+    }
+}
+
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
@@ -734,7 +763,10 @@ struct RootView: View {
     /// UNSTIR_SLOPE's stage (`SlopeHarness`), which no Release build has.
     private var slopeStage: AnyView? {
         #if DEBUG
-        harness.flatMap { SlopeHarness(ProcessInfo.processInfo.environment, clock: $0.clock) }.map { AnyView($0) }
+        let env = ProcessInfo.processInfo.environment
+        guard harness != nil else { return nil }
+        if let f = SlopeFHarness(env) { return AnyView(f) }
+        return harness.flatMap { SlopeHarness(env, clock: $0.clock) }.map { AnyView($0) }
         #else
         nil
         #endif
