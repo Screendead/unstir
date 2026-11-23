@@ -1014,6 +1014,9 @@ struct LevelView: View {
         .foregroundStyle(page.ink)
         .tint(page.ink)
         .background(ground)
+        // Today's black takes every touch the parts leave, so the edge's back swipe and a tap that skips the opening
+        // land anywhere; the slope's ground takes none, so a clear layer over it takes them, safe areas and all.
+        .background { if slope { Color.clear.contentShape(.rect).ignoresSafeArea() } }
         .background { if slope { SlopePlayGround(level: game.level, glint: glint).equatable() } }
         // The terrace under a solved tank catches the light as it settles (docs/slope.md, 1.5); not under Reduce Motion.
         .onChange(of: showResult && game.solved, initial: true) { _, lit in
