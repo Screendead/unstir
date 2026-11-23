@@ -10,7 +10,8 @@
 // SIGUSR1, sent once the app is launched, and then not before a frame is black, as the app's launch is.
 // Says "watching" on stderr once frames arrive. On SIGINT prints when its first written frame was captured, in seconds
 // of CLOCK_UPTIME_RAW, the clock scripts/film.sh times a take on, and a line of the take's frame times on stderr.
-// Exits 1 if the Mac dropped a frame the phone sent: the take would hitch where the phone did not.
+// Exits 1 if the Mac dropped a frame the phone sent, as the take would hitch where the phone did not, or if the phone
+// sent half its frames.
 // The process that runs it needs the Mac's Camera permission, which a phone's screen falls under, and Microphone with
 // --sound; the phone must be unlocked, awake and have trusted this Mac.
 import AVFoundation
@@ -270,6 +271,8 @@ stop.setEventHandler {
                device.localizedName, recorder.size.width, recorder.size.height, recorder.times.count, last - first, median * 1000,
                steps.filter { $0 > 0.025 }.count, steps.filter { $0 > 0.042 }.count, (steps.last ?? 0) * 1000))
     if sound { say(String(format: "%.3f s of sound", recorder.heard)) }
+    // Seen once, just after the phone was plugged in (2026-11-23); the device offers no rate to ask for.
+    if median > 0.02 { fail(String(format: "the phone sent %.0f frames a second, not 60", 1 / median)) }
     if recorder.late > 0 { fail("the Mac dropped \(recorder.late) frames the phone sent") }
     if recorder.unheard > 0 { fail("the Mac dropped \(recorder.unheard) buffers of the phone's sound") }
     if sound, recorder.heard < (last - first) - 0.5 { fail("the phone sent \(recorder.heard) s of sound for \(last - first) s of frames") }

@@ -30,14 +30,17 @@ else
   udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')}
   xcrun simctl boot "$udid" 2>/dev/null || true
   xcrun simctl bootstatus "$udid" -b >/dev/null
-  scripts/build-ios.sh Debug sim
+  # FILM_CONFIG=Release films the build players get, at its speed; like the phone's it takes no UNSTIR_OWNED or
+  # UNSTIR_STORE, so a pack's level opens by the developer unlock.
+  config=${FILM_CONFIG:-Debug}
+  if [[ "$config" == Release ]]; then ANALYTICS_PLAYTEST=YES scripts/build-ios.sh Release sim; else scripts/build-ios.sh Debug sim; fi
   if [[ -n "${FILM_SOUND:-}" ]] && { [[ ! -x build/film-sound/record ]] || [[ scripts/film-sound/main.swift -nt build/film-sound/record ]]; }; then
     mkdir -p build/film-sound
     swiftc -O -o build/film-sound/record scripts/film-sound/main.swift
   fi
   # Fresh install, so no level has been started and autoplay can finish clean.
   xcrun simctl uninstall "$udid" "$bundle" 2>/dev/null || true
-  xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.app
+  xcrun simctl install "$udid" "build/Build/Products/$config-iphonesimulator/Unstir.app"
   xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 fi
 mkdir -p shots/film
@@ -142,7 +145,11 @@ film() {  # name seconds strip-filter KEY=VALUE...
     film_phone "$name" "$secs" "$strip" "$@"
     return
   fi
-  for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
+  for kv in "$@"; do
+    if [[ "$config" == Release && "$kv" == OWNED=* ]]; then kv=UNLOCK=1; fi
+    if [[ "$config" == Release && "$kv" == STORE=* ]]; then echo "$name: a Release build takes no store states: not filmed" >&2; return 0; fi
+    vars+=("SIMCTL_CHILD_UNSTIR_$kv")
+  done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   local snd="" began heard wav="shots/film/$name.caf" v0 v1 a0 took length=()
   began=$(mktemp)
@@ -157,7 +164,7 @@ film() {  # name seconds strip-filter KEY=VALUE...
     snd=$!
     sleep 1  # the audio first, so the take's first sounds are in it
   fi
-  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2> >(python3 -u -c '
+  xcrun simctl io "$udid" recordVideo --codec="${FILM_CODEC:-h264}" --force "$mp4" >/dev/null 2> >(python3 -u -c '
 import sys, time
 for line in sys.stdin:
     if "Recording started" in line:
@@ -440,7 +447,7 @@ layer() {  # name pack level ratchet
   if [[ "$2" == lens && -n "$phone" ]]; then
     phone_warm "$3"
   elif [[ "$2" == lens ]]; then
-    SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens \
+    SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens SIMCTL_CHILD_UNSTIR_UNLOCK=1 \
       xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
     local caches
     caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
