@@ -56,13 +56,13 @@ vec3 eWater(vec2 p, float d) { // the moon on the water: a bright stretch of the
 float eRip1(float x, float x0, float a, float amp) { // a skip's ring, seen from the side: two bumps running apart
   if (a <= 0.) return 0.;
   float f = abs(x - x0) - 30. * a;
-  return amp * exp(-a * 1.1) * cos(f * .3) * exp(-f * f / (40. + 320. * a));
+  return amp * exp(-a * 1.1) * cos(f * .14) * exp(-f * f / (170. + 700. * a));
 }
 float eRip(float x) {
   float s = 0.;
   for (int i = 0; i < 4; i++) {
-    s += eRip1(x, eRipX[i], eRipA[i], 4.8 * pow(.88, float(i)));
-    s += eRip1(x, eRipX2[i], eRipA2[i], 4.8 * pow(.88, float(i + 4)));
+    s += eRip1(x, eRipX[i], eRipA[i], 3.4 * pow(.9, float(i)));
+    s += eRip1(x, eRipX2[i], eRipA2[i], 3.4 * pow(.9, float(i + 4)));
   }
   return s;
 }
@@ -172,7 +172,7 @@ EGGS.below = {
 };
 
 // Flick along the water line: a flat stone off the bank skips, each touch a ring, and goes under.
-const SKIP = { t0: 1000, at: [360, 800, 1180, 1500, 1770, 1990, 2170], x: [170, 228, 277, 318, 352, 379, 399],
+const SKIP = { t0: 1000, at: [360, 800, 1180, 1500, 1770, 1990, 2170], x: [226, 272, 311, 343, 369, 390, 406],
   h: [0, 15, 11, 8, 5.6, 3.6, 2.2] };
 EGGS.skim = {
   dur: 7600, shot: 2020, caption: 'flick along the water line',
@@ -187,7 +187,7 @@ EGGS.skim = {
     let x, y, rot = -0.16, a = 1;
     if (u < SKIP.at[0]) { // off the fingertip, low and flat
       const k = u / SKIP.at[0];
-      x = mix(124, SKIP.x[0], k); y = mix(166, wet(0), k * k);
+      x = mix(202, SKIP.x[0], k); y = mix(169, wet(0), k * k);
     } else if (u < SKIP.at[n - 1]) {
       let i = 1; while (u >= SKIP.at[i]) i++;
       const k = (u - SKIP.at[i - 1]) / (SKIP.at[i] - SKIP.at[i - 1]);
@@ -219,7 +219,7 @@ EGGS.skim = {
   top(t) {
     const a = ease(ramp(t, 400, 650)) * (1 - ease(ramp(t, 1000, 1250)));
     const k = Math.pow(ramp(t, 760, 1000), 2);
-    touch(mix(62, 150, k), mix(171, 169, k), a, 0.4 * ramp(t, 400, 700));
+    touch(mix(142, 212, k), mix(174, 171, k), a, 0.4 * ramp(t, 400, 700));   // clear of the settings stone and its word
   },
 };
 
