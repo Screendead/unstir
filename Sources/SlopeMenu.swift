@@ -205,9 +205,16 @@ struct SlopeMenu: View {
             }
         }
         .coordinateSpace(.named(Self.space))
-        .simultaneousGesture(backSwipe(plan))
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
+        // The edge swipe has the screen's leading edge to itself: a drag over the whole dive would take the rows' taps.
+        .overlay(alignment: .leading) {
+            Color.clear.frame(width: Self.edge).contentShape(Rectangle()).gesture(backSwipe(plan)).ignoresSafeArea()
+                .accessibilityHidden(true)
+        }
     }
+
+    /// How far in from the leading edge the back swipe starts.
+    private static let edge: CGFloat = 20
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
@@ -350,7 +357,7 @@ struct SlopeMenu: View {
     private func backSwipe(_ plan: SlopeMenuPlan) -> some Gesture {
         DragGesture(minimumDistance: 12)
             .onChanged { drag in
-                guard !reduceMotion, drag.startLocation.x < 28 else { return }
+                guard !reduceMotion else { return }
                 if !swiping {
                     guard diving, !moving, drag.translation.width > abs(drag.translation.height) else { return }
                     swiping = true
@@ -361,7 +368,7 @@ struct SlopeMenu: View {
             .onEnded { drag in
                 let far = drag.translation.width > 0.4 * plan.size.width || drag.predictedEndTranslation.width > 0.8 * plan.size.width
                 if reduceMotion {
-                    if drag.startLocation.x < 28, far, drag.translation.width > abs(drag.translation.height) { rise(plan) }
+                    if far, drag.translation.width > abs(drag.translation.height) { rise(plan) }
                     return
                 }
                 guard swiping else { return }
@@ -737,9 +744,9 @@ private struct SlopeMenuWorld: View {
 
     private var lay: SlopeLay { view.lay }
     /// 1 in the dive, 0 until the depth is nearly open: the names fade in as the pitch passes 44 pt.
-    private var near: Double { min(max((lay.e - 0.8) / 0.2, 0), 1) }
+    private var near: Double { lay.e >= 1 ? 1 : min(max((lay.e - 0.8) / 0.2, 0), 1) }
     /// 1 at the overview, gone a fifth of the way in.
-    private var wide: Double { 1 - min(lay.e / 0.2, 1) }
+    private var wide: Double { lay.e <= 0 ? 1 : 1 - min(lay.e / 0.2, 1) }
     private var large: Bool { plan.large }
 
     private func shown(_ y: CGFloat, _ reach: CGFloat = 120) -> Bool { !cull || y > -reach && y < view.size.height + reach }
