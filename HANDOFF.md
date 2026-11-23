@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-11-15. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-11-23. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -44,6 +44,36 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 ### The heat investigation (2026-11-12, live)
 
 Closed: moved word for word to `docs/history.md`.
+
+### Open work (2026-11-23)
+
+**The design pass gets its direction (to-do 72):** Jack's brief of 2026-11-23, below under to-do 72. A dedicated cloud
+session started that day owns it; its draft PR is the claim, and the lead leaves the item alone.
+Built 2026-11-23 on `design/negative-space` (draft PR #298): three directions drawn by `design/negative-space/` over
+glass cut from master's shots, seven screens each (the menu mid-way and all done, plughole 01, plughole 27's result, Prism 01, Prism's card,
+settings), with films, Reduce Motion stills and B at the third accessibility size. A subtracts within today's look; B
+("still water") puts one thing in focus, SF Pro titles over mono numbers, colour as a glow behind the focus, a slow
+settle (Prism's number stays white: a red and blue edge read as off-register channels); C ("mist") whitens the chrome and moves colour into a drifting blurred light. Recommended: B (fewest things at
+once; its glows are still images, so no GPU cost in play, where C's moving light competes with the glass). Pitch page
+https://claude.ai/artifact/4GRkKarS6skJBqCkmWSyu4; the call is issue #302 (`needs-jack`). Waiting on Jack's pick; no
+SwiftUI changed. Each direction's removals, which Jack's pick approves as a set, are listed on the page.
+Jack's answer (2026-11-23): none looked different enough; keep Still Water, add three radical directions: a complete
+redesign of everything outside the tank, an experience rather than an app, custom-rendered (one Metal pass), no boxes,
+lists or straight lines, efficient on battery; then (same day) strictly 2D or 2.5D, and no stirring anywhere in the UI.
+He liked the Descent's idea and said Ink needed work for its stirring. Built on the same branch under
+`design/negative-space/world/` (a shader-and-type harness, `render.mjs`): the Descent (a side view down a water
+column, tiers as deeper water, levels as lanterns), Ink (ink blooming and dissolving in still water, a typographic
+page) and the Basin (a pool seen from above, levels as droplets on a current). Recommended: the Descent, keeping
+level numbers rather than its depth labels. Second pitch page https://claude.ai/artifact/AogjiJuH1w1hzJFZGaiGkm; the
+call is issue #303, which replaces #302 (closed).
+Jack picked the Descent (#303) and asked for three versions of it: the Plumb Line (a fine line from a float, levels as
+beads), Lamplight (dark water, a lamp at the next level, solved levels stay lit as a trail) and the Shelf (an
+illustrated slope of ledges, a pebble per level), in `world/plumb`, `world/lamplight` and `world/shelf`.
+Recommended: Lamplight, with dim levels naming themselves on a tap and a dithered ground. Third pitch page
+https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304.
+Jack picked the Shelf (#304): build it for real, and pitch easter egg ideas (e.g. something seen or done on an
+overscroll). In code the world is called the slope (`Slope*`), as `Shelf.swift` and "the shelf" already mean the pack
+dock and shop. The build lands on its own branch and PR, screen by screen, each shown to Jack before it merges.
 
 ### Open work (2026-11-15)
 
@@ -971,6 +1001,13 @@ Closed: moved word for word to `docs/history.md`.
     (`scripts/shots.sh`), critiqued and redrawn as a design system and mock-ups for Jack's call before any SwiftUI
     changes. Claude Design (now Artifact types in Claude: Design System and Design) is the review surface: Jack
     comments inline on the mock-ups, and Claude ports the agreed design to SwiftUI.
+    **Direction (Jack, 2026-11-23):** the chrome is too busy. Like most machine-made design it never lets anything
+    rest: no negative space. Jack wants it in theme with the tank: airy (or "fluid"), spacious, gently animated, UI that
+    looks and feels custom without being trashy. Fewer things on screen at once, room around what stays, motion that
+    breathes rather than decorates. The pass starts as options, not code: a few distinct directions shown on the
+    same screens as images and films, each with a Reduce Motion still, one recommended, to Jack as a call. C9's result
+    marks and Prism's level colour (P2), both left to this pass, are drawn in it. The glass stays as it is; text never
+    shrinks (the tank scales instead). Owned by a dedicated cloud session from 2026-11-23 (its draft PR is the claim).
 73. A full audit of every level name, tiers and packs alike (Jack, 2026-11-01). Many read as nonsense, as in-jokes
     too technical or niche for a mass market, or as unrelated to their level. They need not all be clever or
     descriptive: a naming system per tier or pack (or one for the game) is welcome. Jack gave philosophers

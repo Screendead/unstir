@@ -1,0 +1,173 @@
+<title>Beyond the Tank</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the call and four films first; then every screen five across, today beside each world. */
+:root {
+  --bg: #04060a; --panel: #0b0f16; --line: #1a2130; --fg: #e9eef6; --muted: #98a2b3; --pick: #7ee8d8;
+  --body: "Geist", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+main { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 72px; }
+main > * { min-width: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -.02em; line-height: 1.05; }
+h2 { font-size: 1.8rem; letter-spacing: -.01em; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; max-width: 70ch; }
+.label { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+section { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+header { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+.call { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.opt.rec { border-color: var(--pick); }
+.opt .tag { font: 500 12px var(--mono); color: var(--pick); }
+.opt video { width: 100%; aspect-ratio: 880 / 1912; border-radius: 20px; background: #000; display: block; border: 1px solid var(--line); }
+.opt dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.opt dt { color: var(--muted); font: 12px var(--mono); padding-top: 2px; }
+.opt dd { margin: 0; }
+.why { border-left: 2px solid var(--pick); padding-left: 18px; display: flex; flex-direction: column; gap: 10px; }
+.wall { overflow-x: auto; max-width: 100%; }
+.grid { display: grid; grid-template-columns: 90px repeat(5, minmax(150px, 1fr)); gap: 12px; min-width: 900px; align-items: start; }
+.grid .head { font: 500 13px var(--mono); color: var(--muted); padding: 8px 0; }
+.grid .head.rec { color: var(--pick); }
+.grid .rowname { font: 500 13px var(--mono); color: var(--muted); padding-top: 8px; }
+.phone { width: 100%; aspect-ratio: 660 / 1434; border-radius: 18px; border: 1px solid var(--line); display: block; background: #000; }
+figure { margin: 0; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.ledgers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+.ledgers > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .call { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ledgers { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .call { grid-template-columns: 1fr; } }
+:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
+</style>
+
+<main>
+<header>
+  <span class="label">Unstir · everything outside the tank</span>
+  <h1>Four ways to redraw everything outside the tank</h1>
+  <p>You asked for a complete redesign of everything outside the tank, so it feels less like an app and more like a place. It had to be flat (2D, or layered at most), with no boxes, lists or straight lines, and nothing that stirs. Still Water stays as the restrained option; three new directions go much further. Every screen is drawn over the real glass, which is untouched, and no text is smaller than today. Each would run as one drawing pass that freezes while you play.</p>
+</header>
+
+<section aria-labelledby="call">
+  <h2 id="call">The call</h2>
+  <div class="call">
+    <div class="opt rec">
+      <span class="tag">recommended</span><h3>The Descent</h3>
+      <video src="film/descent.mp4" poster="img/descent-today.webp" controls muted loop playsinline aria-label="The Descent in motion"></video>
+      <p>The game is one column of water seen from the side. The surface and today's daily are at the top; each tier is a deeper, darker band of water; endless glows in the abyss. Levels are lanterns on a slow current; packs drift past as portholes; settings are buoys on the surface. You dive to go on and rise to go back.</p>
+      <dl><dt>build</dt><dd>about 9–11 days</dd><dt>risk</dt><dd>medium; the most to build, and settings and the tier view have to be found, not seen</dd></dl>
+    </div>
+    <div class="opt">
+      <h3>Ink</h3>
+      <video src="film/ink.mp4" poster="img/ink-midway.webp" controls muted loop playsinline aria-label="Ink in motion"></video>
+      <p>Everything is ink in still water, set like a beautiful page in New York italic. Words arrive as a drop that blooms and sharpens, and leave by dissolving. Solved levels read as a paragraph, the next one stands large, locked ones are haze that turns into words as you solve. Settings is a short letter: "Music is on."</p>
+      <dl><dt>build</dt><dd>about 5 days</dd><dt>risk</dt><dd>low-medium; words as buttons need to read as tappable</dd></dl>
+    </div>
+    <div class="opt">
+      <h3>The Basin</h3>
+      <video src="film/basin.mp4" poster="img/basin-midway.webp" controls muted loop playsinline aria-label="The Basin in motion"></video>
+      <p>You look straight down into a calm round pool. Levels are droplets resting on a current that spirals to the drain; you drag along it and they glide. The daily is the moon reflected on the water, endless is the drain, packs float like lily pads, settings rise as ripple rings.</p>
+      <dl><dt>build</dt><dd>about 6–8 days</dd><dt>risk</dt><dd>medium-high; only the next level is named, so finding an old one takes a glide</dd></dl>
+    </div>
+    <div class="opt">
+      <h3>Still Water</h3>
+      <video src="film/water.mp4" poster="img/water-today.webp" controls muted loop playsinline aria-label="Still Water in motion"></video>
+      <p>Kept from the first round. Today's app, calmed: one thing in focus at a time, the rest one quiet line, colour as a glow behind the focus, everything settling slowly into place. Still menus and cards, just with room to breathe.</p>
+      <dl><dt>build</dt><dd>about 3 days</dd><dt>risk</dt><dd>low; it still feels like an app</dd></dl>
+    </div>
+  </div>
+  <div class="why">
+    <h3>Why The Descent</h3>
+    <p>It is the only one where the game's own structure becomes the place: harder tiers are literally deeper, darker water, so progress is something you see and travel through rather than a list you scroll. Every screen belongs to one world (the surface, the dive, the porthole you play in), which is what makes it feel like an experience instead of an app. It is one flat, layered drawing pass, drawn once and frozen while a level plays, so the glass keeps its full budget and the battery cost at rest is about that of a dim live wallpaper.</p>
+    <p>One change I'd make: the mock-up relabels levels by depth ("14 m", and whirlpool 01 as "28 m"). Levels should keep their own numbers, with depth carried by the water's colour, so nothing players are told stops matching.</p>
+    <p class="muted">If you want the same idea for less: Ink is the most legible and the cheapest at about 5 days, and scales best to large text. If you do nothing, the chrome ships as it is today, and the App Store screenshots and preview film are retaken on today's look.</p>
+  </div>
+</section>
+
+<section aria-labelledby="side">
+  <h2 id="side">Every screen, side by side</h2>
+  <p class="muted">The same moment in each: the menu part-way through plughole (13 solved, 14 next), where the daily, endless, archive and tiers live, the first level in play, the last plughole level solved, a Prism level (its number stays white, as colour on Prism means a channel), Prism's shop page, and settings.</p>
+  <div class="wall"><div class="grid" id="grid">
+    <span></span><span class="head">today</span><span class="head rec">The Descent</span><span class="head">Ink</span><span class="head">The Basin</span><span class="head">Still Water</span>
+  </div></div>
+</section>
+
+<section aria-labelledby="ledger">
+  <h2 id="ledger">What the player would lose or see change</h2>
+  <p class="muted">Picking an option approves its list. Prices, "free", "restore purchases" and every lock reason stay in all four.</p>
+  <div class="ledgers">
+    <div><h3>The Descent</h3><ul>
+      <li>The tier capsules go: the opening view shows the whole dive, and you tap a tier's water to go there.</li>
+      <li>Levels become lanterns on a current; "3 rods · par 1" shows only on the next level; locked levels are dark lanterns.</li>
+      <li>The result marks become small bubbles; "at par", "moves 9 · par 9" and "new best" become one line, "at par · new best, was +6".</li>
+      <li>"Up a notch" becomes "deeper: whirlpool ›"; "‹ levels" becomes "↑ levels".</li>
+      <li>The dock's heading goes; covers drift as portholes; "new" becomes a dot.</li>
+      <li>The gear becomes a buoy; settings lose their explanation lines and read "on" or "off" under each buoy.</li>
+      <li>Prism's shop page loses its "pack · paid add-on" label, the "for / free / holds" keys and the tray headings; its specimens become 30 small lights.</li>
+    </ul></div>
+    <div><h3>Ink</h3><ul>
+      <li>Rows become a paragraph of level names with their marks as ink dots; only the next level shows rods and par.</li>
+      <li>Locked level names become unreadable haze until they open.</li>
+      <li>The tier capsules go: a swipe moves between tiers, the next one waiting at the page's edge.</li>
+      <li>The daily, endless and archive become sentences: "Today's daily, four days running." "Endless, best nine." "The archive comes with any pack."</li>
+      <li>The gear becomes the word "settings"; settings become a letter ("Music is on.") and lose their explanation lines.</li>
+      <li>All capsule buttons become words with a soft brushed underline; "moves 9 · par 9" goes from the result.</li>
+      <li>Prism's shop page loses its label and "for / free / holds" keys; its level list becomes one line.</li>
+    </ul></div>
+    <div><h3>The Basin</h3><ul>
+      <li>Only the next level and its two neighbours are named; other levels are droplets, locked ones dim specks.</li>
+      <li>Tier names ride the rim; vortex and maelstrom are a drag along the rim away.</li>
+      <li>The daily loses its date ("daily"); the archive drops "30 past dailies"; endless becomes the drain.</li>
+      <li>The dock's heading and cover names go; "new" becomes a dot.</li>
+      <li>The result's moves line goes; marks become motes; "up a notch" becomes "whirlpool ›" on a droplet.</li>
+      <li>Prism's shop page loses its level names: its specimens become 30 dots round the clip.</li>
+      <li>Settings become ripple rings ("music · on") and lose every explanation line.</li>
+    </ul></div>
+    <div><h3>Still Water</h3><ul>
+      <li>The menu leads with one large item and "play ›"; everything else is one quiet line; level numbers lose their colours.</li>
+      <li>Titles move to SF Pro; numbers stay mono.</li>
+      <li>The result keeps "at par" and "new best"; the clean hint waits behind a tap on the empty mark.</li>
+      <li>Capsule buttons, divider lines, the dock's heading and settings' explanation lines go.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section aria-labelledby="rm">
+  <h2 id="rm">Reduce Motion and the largest text</h2>
+  <p class="muted">Under Reduce Motion each world is still: no drifting light, no bloom, no ripples; things fade in. At the third accessibility text size the text keeps its size and the layout and tank make room.</p>
+  <div class="strip" id="strip"></div>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">What happens next</h2>
+  <p>On your pick, the chosen direction is built in the app screen by screen, and each screen comes back to you as screenshots and films on the phone before it merges. You can also take one direction and borrow a single piece of another (for example The Descent with Ink's letter for settings). The App Store screenshots and preview film are retaken after this.</p>
+</section>
+</main>
+
+<script>
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  for (const v of document.querySelectorAll('video')) { v.autoplay = true; v.play().catch(() => {}); }
+}
+const rows = [['midway', 'menu, part-way'], ['today', 'daily, endless, tiers'], ['play', 'level 1'], ['result', 'result'],
+  ['prism', 'Prism level'], ['pack', 'shop page'], ['settings', 'settings']];
+const cols = [['today', 'today'], ['descent', 'The Descent'], ['ink', 'Ink'], ['basin', 'The Basin'], ['water', 'Still Water']];
+const grid = document.getElementById('grid');
+for (const [r, name] of rows) {
+  grid.insertAdjacentHTML('beforeend', `<span class="rowname">${name}</span>` +
+    cols.map(([c, n]) => `<img class="phone" loading="lazy" src="img/${c}-${r}.webp" alt="${n}: ${name}">`).join(''));
+}
+const strip = document.getElementById('strip');
+for (const [src, cap] of [['descent-menu-rm', 'The Descent, Reduce Motion'], ['descent-menu-ax', 'The Descent, largest text'],
+  ['ink-menu-rm', 'Ink, Reduce Motion'], ['ink-menu-ax', 'Ink, largest text'], ['basin-menu-rm', 'The Basin, Reduce Motion'],
+  ['basin-menu-ax', 'The Basin, largest text'], ['water-result-rm', 'Still Water, Reduce Motion'], ['water-menu-ax', 'Still Water, largest text']]) {
+  strip.insertAdjacentHTML('beforeend', `<figure><img class="phone" loading="lazy" src="img/${src}.webp" alt="${cap}"><figcaption>${cap}</figcaption></figure>`);
+}
+</script>

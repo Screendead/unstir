@@ -1,0 +1,169 @@
+<title>Three Descents</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the call and four films first; then every screen five across, today beside each world. */
+:root {
+  --bg: #04060a; --panel: #0b0f16; --line: #1a2130; --fg: #e9eef6; --muted: #98a2b3; --pick: #7ee8d8;
+  --body: "Geist", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+main { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 72px; }
+main > * { min-width: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -.02em; line-height: 1.05; }
+h2 { font-size: 1.8rem; letter-spacing: -.01em; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; max-width: 70ch; }
+.label { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+section { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+header { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+.call { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.opt.rec { border-color: var(--pick); }
+.opt .tag { font: 500 12px var(--mono); color: var(--pick); }
+.opt video { width: 100%; aspect-ratio: 880 / 1912; border-radius: 20px; background: #000; display: block; border: 1px solid var(--line); }
+.opt dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.opt dt { color: var(--muted); font: 12px var(--mono); padding-top: 2px; }
+.opt dd { margin: 0; }
+.why { border-left: 2px solid var(--pick); padding-left: 18px; display: flex; flex-direction: column; gap: 10px; }
+.wall { overflow-x: auto; max-width: 100%; }
+.grid { display: grid; grid-template-columns: 90px repeat(5, minmax(150px, 1fr)); gap: 12px; min-width: 900px; align-items: start; }
+.grid .head { font: 500 13px var(--mono); color: var(--muted); padding: 8px 0; }
+.grid .head.rec { color: var(--pick); }
+.grid .rowname { font: 500 13px var(--mono); color: var(--muted); padding-top: 8px; }
+.phone { width: 100%; aspect-ratio: 660 / 1434; border-radius: 18px; border: 1px solid var(--line); display: block; background: #000; }
+figure { margin: 0; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.ledgers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+.ledgers > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .call { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ledgers { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .call { grid-template-columns: 1fr; } }
+:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
+</style>
+
+<main>
+<header>
+  <span class="label">Unstir · everything outside the tank</span>
+  <h1>Three ways to build The Descent</h1>
+  <p>You picked The Descent: the game as one column of water seen from the side, with the daily at the surface, each tier a deeper, darker band and endless at the bottom. Here are three distinct versions of it. All three are flat or layered, with no boxes, lists or stirring. The glass is untouched, no text is smaller than today, and levels keep their own numbers ("14 Lather"), not depths in metres. Each would run as one drawing pass that is held still while a level plays.</p>
+</header>
+
+<section aria-labelledby="call">
+  <h2 id="call">The call</h2>
+  <div class="call">
+    <div class="opt">
+      <h3>The Plumb Line</h3>
+      <video src="film/plumb.mp4" poster="img/plumb-midway.webp" controls muted loop playsinline aria-label="The Plumb Line in motion"></video>
+      <p>The sparest version. One hair-fine line hangs from a float at the surface, with a small weight at its tip that is always where you are. Levels are beads on the line, the next one largest. The water's colour alone carries the tiers, with thin white type and wide empty water. Packs hang on their own side lines, and settings are small floats at the surface.</p>
+      <dl><dt>build</dt><dd>about 8–10 days</dd><dt>risk</dt><dd>medium: the level view is the closest of the three to a list with a line through it, and thin type on the mid-teal shallows has the lowest contrast</dd></dl>
+    </div>
+    <div class="opt rec">
+      <span class="tag">recommended</span><h3>Lamplight</h3>
+      <video src="film/lamplight.mp4" poster="img/lamplight-midway.webp" controls muted loop playsinline aria-label="Lamplight in motion"></video>
+      <p>The water is dark, and you carry one warm lamp, which sits at your next level and lights it and the two after it. Every level you have solved stays lit behind you as a small glow in its tier's colour, so your progress is a trail of light you can look back up at. The surface is at dusk; packs are distant glows; settings are lamps afloat on the waterline.</p>
+      <dl><dt>build</dt><dd>about 8–10 days</dd><dt>risk</dt><dd>medium: dark screens can show banding and are harder to read in sunlight; levels beyond the lamp show no name</dd></dl>
+    </div>
+    <div class="opt">
+      <h3>The Shelf</h3>
+      <video src="film/shelf.mp4" poster="img/shelf-midway.webp" controls muted loop playsinline aria-label="The Shelf in motion"></video>
+      <p>The most illustrated version, with depth from parallax layers. A sand slope falls away beside the water in soft overhung ledges. Each level is a pebble on its own ledge, and solved pebbles catch the light. Each tier is its own colour of rock. Packs are lit hollows in the slope, and settings are stones on the first ledges under the surface.</p>
+      <dl><dt>build</dt><dd>about 10–12 days</dd><dt>risk</dt><dd>medium-high: the most to build and the longest scroll; packs no longer appear on the opening screen, which could cost sales</dd></dl>
+    </div>
+  </div>
+  <div class="why">
+    <h3>Why Lamplight</h3>
+    <p>It adds the one thing the other two lack: your history is drawn into the place. Each solve leaves a light, so coming back to the menu shows how far down you have come, and a new tier means swimming into water you have never lit. The dark water also gives the glass the strongest stage of the three in play: the tank's neon is the brightest thing on screen. It costs about the same as The Plumb Line and less than The Shelf.</p>
+    <p>Two fixes I'd make while building it. Every level's name stays readable on request (tap a dim one and it names itself and its lock reason, and VoiceOver reads them all), so the dark never hides information. The ground is dithered so the near-black doesn't band on the phone.</p>
+    <p class="muted">If you'd rather keep everything readable at a glance, The Plumb Line is the calmest and most legible of the three. If you do nothing, the build waits, and the App Store screenshots and preview film wait with it.</p>
+  </div>
+</section>
+
+<section aria-labelledby="side">
+  <h2 id="side">Every screen, side by side</h2>
+  <p class="muted">The same moment in each, beside today's app and The Descent as first drawn. The screens are: the dive part-way through plughole (13 solved, 14 next); the whole column (daily, archive, tiers, endless); the first level in play; the last plughole level solved; a Prism level, whose number stays white because colour on Prism means a channel; Prism's shop page; and settings.</p>
+  <div class="wall"><div class="grid" id="grid">
+    <span></span><span class="head">today</span><span class="head">The Plumb Line</span><span class="head rec">Lamplight</span><span class="head">The Shelf</span><span class="head">as first drawn</span>
+  </div></div>
+</section>
+
+<section aria-labelledby="ledger">
+  <h2 id="ledger">What the player would lose or see change</h2>
+  <p class="muted">All three share these changes from today:</p>
+  <ul>
+    <li>The tier tabs become bands of water you tap or dive into.</li>
+    <li>Coloured level numbers become plain.</li>
+    <li>Capsule buttons, divider lines and the gear icon go.</li>
+    <li>The gradient UNSTIR becomes plain letter-spaced type.</li>
+    <li>"‹ levels" becomes "↑ levels".</li>
+    <li>"n rods · par n" shows only on the next level (except in The Shelf).</li>
+  </ul>
+  <p class="muted">Prices, "free", "restore purchases", the play hint and every lock reason stay word for word in all three. Picking a version approves its list.</p>
+  <div class="ledgers">
+    <div><h3>The Plumb Line</h3><ul>
+      <li>Lock icons become hollow beads on dimmed rows.</li>
+      <li>The daily, archive and endless are only on the whole-column view, not beside the levels.</li>
+      <li>The pack strip becomes packs on side lines at their own depths; its caption is kept on the whole-column view. First Stir isn't shown.</li>
+      <li>The result merges "at par" and "new best" into one line: "at par · new best, was +6".</li>
+      <li>The shop page loses its "pack · paid add-on" label, its "for / free / holds" labels and its level list. The 30 specimens become dots, with no names or per-tray progress.</li>
+      <li>Settings lose the explanation line under each switch.</li>
+      <li>About seven levels fit on a screen, against nine today.</li>
+    </ul></div>
+    <div><h3>Lamplight</h3><ul>
+      <li>Lock icons go: a locked level is a dark mote with no name until the lamp is within two levels of it. Locked tiers keep their written reason.</li>
+      <li>The pack strip and its caption become glows at depths along the dive. First Stir isn't shown.</li>
+      <li>The result merges "at par" and "new best" into one line, and the "moves 9 · par 9" line goes. "Up a notch" becomes "deeper".</li>
+      <li>The shop page loses its "pack · paid add-on" label, the "for: after plughole · reading by colour" line and its level list. The specimens become five shoals of lights.</li>
+      <li>Settings lose the explanation line under each switch.</li>
+      <li>About eight levels fit on a screen, against nine today.</li>
+    </ul></div>
+    <div><h3>The Shelf</h3><ul>
+      <li>The packs leave the opening screen: they are found only by diving. Their caption moves under plughole's name.</li>
+      <li>Lock icons become dull pebbles and dimmer text.</li>
+      <li>"n rods · par n" stays on every level.</li>
+      <li>The result keeps "at par", the moves line and "new best".</li>
+      <li>The shop page loses its "for / free / holds" labels and its level list. The 30 specimens become pebbles, and a new line reads "0/30 at par".</li>
+      <li>Settings keep every explanation line.</li>
+      <li>About eight levels fit on a screen, and a tier is a long dive.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section aria-labelledby="rm">
+  <h2 id="rm">Reduce Motion and the largest text</h2>
+  <p class="muted">Under Reduce Motion nothing drifts or sways: moves become cuts and things fade in. At the third accessibility text size the text keeps its size and the layout and tank make room. These stills cover the dive and play; the other screens at that size come with the build.</p>
+  <div class="strip" id="strip"></div>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">What happens next</h2>
+  <p>On your pick, that version is built in the app screen by screen. Each screen comes back to you as screenshots and films from the phone before it merges. You can also take one version and borrow a single piece of another, for example Lamplight with The Shelf's settings, which keep their explanation lines. The App Store screenshots and preview film are retaken after this.</p>
+</section>
+</main>
+
+<script>
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  for (const v of document.querySelectorAll('video')) { v.autoplay = true; v.play().catch(() => {}); }
+}
+const rows = [['midway', 'the dive'], ['today', 'the whole column'], ['play', 'level 1'], ['result', 'result'],
+  ['prism', 'Prism level'], ['pack', 'shop page'], ['settings', 'settings']];
+const cols = [['today', 'today'], ['plumb', 'The Plumb Line'], ['lamplight', 'Lamplight'], ['shelf', 'The Shelf'], ['descent', 'as first drawn']];
+const grid = document.getElementById('grid');
+for (const [r, name] of rows) {
+  grid.insertAdjacentHTML('beforeend', `<span class="rowname">${name}</span>` +
+    cols.map(([c, n]) => `<img class="phone" loading="lazy" src="img/${c}-${r}.webp" alt="${n}: ${name}">`).join(''));
+}
+const strip = document.getElementById('strip');
+for (const [w, n] of [['plumb', 'The Plumb Line'], ['lamplight', 'Lamplight'], ['shelf', 'The Shelf']]) {
+  for (const [x, c] of [['menu-rm', 'Reduce Motion'], ['menu-ax', 'largest text'], ['play-ax', 'largest text, play']]) {
+    strip.insertAdjacentHTML('beforeend', `<figure><img class="phone" loading="lazy" src="img/${w}-${x}.webp" alt="${n}, ${c}"><figcaption>${n}, ${c}</figcaption></figure>`);
+  }
+}
+</script>
