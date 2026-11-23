@@ -12,6 +12,8 @@ struct ResultMarks: View {
     var card = false
     /// A row's "+n" before the dots, in magenta: the dots alone can't say how far over par.
     var margin: String? = nil
+    /// The slope's result: a filled disc glows faintly, in the stone's warm light.
+    var glows = false
     /// The proposal's 8 and 16 pt at the default size, scaled with the words beside them, as a fixed disc all but
     /// vanishes next to accessibility-sized text.
     @ScaledMetric(relativeTo: .footnote) private var rowSide = 8.0
@@ -47,7 +49,7 @@ struct ResultMarks: View {
             ForEach(0 ..< 3, id: \.self) { i in
                 Group {
                     if i < filled {
-                        Circle().fill(Color.text)
+                        Circle().fill(Color.text).shadow(color: glows ? Color(0xFFEEC8).opacity(0.55) : .clear, radius: side * 0.55)
                     } else {
                         Circle().strokeBorder(Color.line, lineWidth: 1)
                     }
