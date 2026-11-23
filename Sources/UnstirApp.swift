@@ -731,6 +731,15 @@ struct RootView: View {
     /// Where the menu and a level beside it measure from.
     static let space = "root"
 
+    /// UNSTIR_SLOPE's stage (`SlopeHarness`), which no Release build has.
+    private var slopeStage: AnyView? {
+        #if DEBUG
+        harness.flatMap { SlopeHarness(ProcessInfo.processInfo.environment, clock: $0.clock) }.map { AnyView($0) }
+        #else
+        nil
+        #endif
+    }
+
     /// A level plays beside the menu.
     private var beside: Bool { wide && level != nil }
 
@@ -748,6 +757,8 @@ struct RootView: View {
                 IconView(n: n)
             } else if let offer = harness?.promo {
                 PromoArt(offer: offer)
+            } else if let slope = slopeStage {
+                slope
             } else {
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the

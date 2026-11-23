@@ -118,4 +118,87 @@ final class ToneTests: XCTestCase {
         let host = UIHostingController(rootView: Text("undo").modifier(ButtonFace(emphasis: .secondary)))
         XCTAssertEqual(host.sizeThatFits(in: CGSize(width: 400, height: 400)).height, ButtonFace.height, accuracy: 1)
     }
+
+    // MARK: The slope
+
+    /// What Slope.metal draws at each of `points` (screen points) for `lay` seen from `top`, motes off, as sRGB.
+    private func ground(_ lay: SlopeLay, top: CGFloat, size: CGSize, at points: [SIMD2<Float>]) throws -> [SIMD4<Float>] {
+        let kit = try ShaderKit("Slope.metal", helpersOnly: false, kernels: """
+            kernel void probe(device const float *g [[buffer(0)]], device const float2 *at [[buffer(1)]],
+                              device float4 *out [[buffer(2)]], constant float2 &size [[buffer(3)]],
+                              uint id [[thread_position_in_grid]]) {
+                out[id] = float4(slopeGround(at[id], size, float4(1.0, 3.0, 0.0, 0.0), float4(0.0, 0.0, 0.0, 1.0),
+                                             float4(1.0, 0.86, 0.6, 0.0), 0.0, g), 1.0);
+            }
+            """)
+        let g = try kit.buffer(lay.uniforms(top: top)), at = try kit.buffer(points)
+        let out = try kit.buffer(SIMD4<Float>.self, count: points.count)
+        var screen = SIMD2<Float>(Float(size.width), Float(size.height))
+        try kit.run("probe", count: points.count) { enc in
+            enc.setBuffer(g, offset: 0, index: 0)
+            enc.setBuffer(at, offset: 0, index: 1)
+            enc.setBuffer(out, offset: 0, index: 2)
+            enc.setBytes(&screen, length: 8, index: 3)
+        }
+        return kit.read(out, as: SIMD4<Float>.self)
+    }
+
+    /// The slope's inks keep their floors on what the shader draws (docs/slope.md, 1.4): `ink` to `ink3` read at 4.5:1
+    /// and `ink4` at 3:1 over the water beside the ledges, where every row's words stand, from the surface's own glow
+    /// down to the drop-off, and `ink` over the rock's heart, where a hollow's name goes. One pixel in a thousand may
+    /// fall short: a sun ray's brightest thread.
+    func testTheSlopesInksReadOnItsWater() throws {
+        let size = CGSize(width: 440, height: 956)
+        let column = SlopeColumn.main(size: size), lay = SlopeLay(column, z: 1)
+        let travel = lay.travel(height: size.height)
+        let words = Float(column.lip + 8 * column.step + 18)
+        var short: [SlopeInk: Int] = [:], heart = 0, water = 0, rock = 0
+        for top in stride(from: travel.lowerBound, through: travel.upperBound, by: size.height) {
+            var points: [SIMD2<Float>] = []
+            for y in stride(from: Float(1), to: Float(size.height), by: 3) where top + CGFloat(y) > SlopeInk.shallowest {
+                for x in stride(from: Float(21), to: Float(size.width) - 16, by: 3) where x >= words || x < 92 { points.append(SIMD2(x, y)) }
+            }
+            guard !points.isEmpty else { continue }
+            for (point, colour) in zip(points, try ground(lay, top: top, size: size, at: points)) {
+                let under = Color(red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
+                if point.x >= words {
+                    water += 1
+                    for ink in SlopeInk.allCases where ratio(ink.colour, on: under) < (ink == .ink4 ? 3 : 4.5) { short[ink, default: 0] += 1 }
+                } else if top + CGFloat(point.y) < lay.tops[lay.count - 1] {
+                    rock += 1
+                    if ratio(SlopeInk.ink.colour, on: under) < 4.5 { heart += 1 }
+                }
+            }
+        }
+        XCTAssertGreaterThan(water, 100_000)
+        for ink in SlopeInk.allCases { XCTAssertLessThan(Double(short[ink, default: 0]), 0.001 * Double(water), "\(ink)") }
+        XCTAssertLessThan(Double(heart), 0.001 * Double(rock), "the rock's heart")
+        XCTAssertEqual(SlopeInk.allCases.map(\.strength), [1, 0.9, 0.84, 0.66])
+    }
+
+    /// A pebble Swift seats on a ledge rests on the rock the shader draws, with the depth closed, half open and open:
+    /// the point just over its seat is water and the point just under it is the ledge's lit top.
+    func testAPebblesSeatIsOnTheDrawnRock() throws {
+        let size = CGSize(width: 440, height: 956)
+        func luminance(_ c: SIMD4<Float>) -> Double { self.luminance((Double(c.x), Double(c.y), Double(c.z))) }
+        for z in [0, 0.5, 1] as [CGFloat] {
+            let lay = SlopeLay(.main(size: size), z: z)
+            for n in [0, 3, 7, 11, 20, 29] {
+                let seat = lay.seat(n), top = seat.y - 300
+                let got = try ground(lay, top: top, size: size, at: [SIMD2(Float(seat.x), 298.8), SIMD2(Float(seat.x), 301.2)])
+                XCTAssertGreaterThan(luminance(got[1]), luminance(got[0]) * 1.5 + 0.02, "ledge \(n) at zoom \(z)")
+            }
+        }
+    }
+
+    /// Every stone's target is 44 pt either way at the least, whatever its words and state.
+    @MainActor func testEveryStoneIsFortyFourEitherWay() {
+        for size in [DynamicTypeSize.xSmall, .large, .accessibility3] {
+            for state in [StoneState.lit, .next, .dull] {
+                let host = UIHostingController(rootView: Stone(Text(verbatim: "a"), state: state) {}.dynamicTypeSize(size))
+                let fitted = host.sizeThatFits(in: CGSize(width: 400, height: 400))
+                XCTAssertGreaterThanOrEqual(min(fitted.width, fitted.height), SlopePebble.target, "\(state) at \(size)")
+            }
+        }
+    }
 }
