@@ -954,18 +954,19 @@ ach-brim.png  Achievement Brim: endless with 5 of the brim's 8 notches.
 ach-over-the-lip.png  Achievement Over the Lip: endless's brim pouring over the rim, 1.1 s into the spill.
 slope-overview.png  The slope's overview: the whole main column, the surface under the wordmark, the shallows' three ledges, each tier's three terraces of nine pebbles in its own rock, the drop-off; plughole's first 13 lit, the 14th the way on.
 slope-dive-top.png  The dive at the top of its travel: the bank and its stone, the surface, the shallows' ledges, plughole's header.
-slope-dive-plughole-14.png  The dive at plughole 14: a pebble seated on each ledge's lip, its number, name and facts beside it, the lips stepping out in nines, hollows in the wall.
+slope-dive-plughole-14.png  The dive at plughole 14: a pebble seated on each ledge, clear of the wall, its number, name and facts beside it, the lips stepping out in nines, hollows in the wall.
 slope-dive-whirlpool.png  The dive at whirlpool 05, plughole done: mauve scallops in purple water.
 slope-dive-vortex.png  The dive at vortex 12: slate plates in blue water.
 slope-dive-maelstrom.png  The dive at maelstrom 20: basalt pillows in red-black water.
 slope-drop-off.png  The dive's foot: under maelstrom's last ledge the rock curves back off the screen, the ridges end and the water goes to near black; endless in the open water.
 slope-dive-ax3.png  The dive at plughole 14 at accessibility3: the slope at the leading edge, a taller pitch, no near silhouette, the words full size and whole.
-slope-overview-ax3.png  The overview at accessibility3.
+slope-overview-ax3.png  The overview at accessibility3: the slope drawn in to the leading edge, each stretch grown to its words, which start at 96 full size; it scrolls on to endless.
 slope-dive-428.png  The dive at plughole 14 on the reference phone's 428 x 926 points: the lips 6 pt further in.
 slope-play.png  The ground as a level holds it at plughole 14: the shelf drawn aside, one terrace under the tank's place, two stones on it.
 slope-play-prism.png  The same in Prism's clear water and white light, its stone pale.
-slope-play-paper.png  The same on Escapement's paper: the terrace an engraving in ink on bone, the stones engraved.
+slope-play-paper.png  The same on Escapement's paper: the terrace an engraving in ink on bone, the stones engraved, wait on a second terrace over the first.
 slope-play-dim.png  The same at 0.35 of the ground's light, as consent draws it.
 slope-hollow.png  The inside of a hollow: still dark water between two jambs of pale stone, a floor, a ledge, the cover's light in three beams.
 slope-pack.png  A pack's own column: five trays of six in pale rock and still water, scrolled.
 slope-stones.png  Every state of the stone on open water: lit, the way on, dull, armed, pending, pale, and one with its words leading.
+slope-stones-ax3.png  The same at accessibility3: the words full size, the stones a little larger.
