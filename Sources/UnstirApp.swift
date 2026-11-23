@@ -783,7 +783,8 @@ struct RootView: View {
     /// The slope's menu (`SlopeMenu`), with what covers it: settings, the consent question, and until pieces D and E
     /// land, today's pack card and archive over it.
     private var slopeMenu: some View {
-        SlopeMenu(start: level == nil ? harness?.menuTier ?? look : nil, focus: focus, returning: revision > 0,
+        // A cold launch rests on the overview, so only a closed tier's "up a notch" names a tier.
+        SlopeMenu(start: level == nil ? look : nil, focus: focus, returning: revision > 0,
                   settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
                   held: harness?.lockTap, peeking: level != nil, revision: revision,
                   run: Self.save("endless", harnessed: harnessed, harnessSave)) { next, _ in
