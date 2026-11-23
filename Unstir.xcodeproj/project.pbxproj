@@ -57,12 +57,15 @@
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
 		652A1046F612B40F05EC8A23 /* Resume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D9845C51771ED7A1D7776C /* Resume.swift */; };
 		6559B5B214DCB1651EDE0051 /* DragProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492677BE451A3DA88096CDF8 /* DragProbe.swift */; };
+		6B375A454A60E6B542448903 /* SlopeLedge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99542BC8C4CFB734E554D839 /* SlopeLedge.swift */; };
+		6C9F949E5CE24B72EE39731B /* SlopeMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B61942472FBC72F4039541 /* SlopeMenu.swift */; };
 		730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD78B993A35245B095AA159 /* EscapementTests.swift */; };
 		7387F87E72AA8B35A9B1C115 /* Engraving.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA44B6DE028AB83D502C8EC5 /* Engraving.swift */; };
 		73CE5E561F50B4F1DEC2E63C /* ResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */; };
 		79D52A8EF45A795194455A50 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2926E44D61C37EEF53C771BA /* Sky.metal */; };
 		8029D154CD95A9663D6FC89A /* Stone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E477D8FA93CEBE82F3B14BB /* Stone.swift */; };
 		826769813DDDA6BD96FAE06E /* Spoken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE724B24586C771A00348BD /* Spoken.swift */; };
+		85C7438178DA53A1FE97D036 /* SlopeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5150380D8EDFC2492B87D722 /* SlopeGate.swift */; };
 		87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89654A86FE88E89D5339382 /* Sound.swift */; };
 		880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBF51F07B822677549432BB /* StoreTests.swift */; };
 		89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */; };
@@ -185,6 +188,7 @@
 		492677BE451A3DA88096CDF8 /* DragProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragProbe.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
 		4CE724B24586C771A00348BD /* Spoken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spoken.swift; sourceTree = "<group>"; };
+		5150380D8EDFC2492B87D722 /* SlopeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeGate.swift; sourceTree = "<group>"; };
 		517BAC88FDF90B3147BC41A1 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		536CF149EF97D4429DC2751F /* Loom.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Loom.metal; sourceTree = "<group>"; };
 		551B7907E2001DBDBAC8A1B9 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
@@ -233,6 +237,7 @@
 		9671F664A49B27787D8573AD /* LensArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArt.swift; sourceTree = "<group>"; };
 		97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Power.swift; sourceTree = "<group>"; };
 		98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeConsent.swift; sourceTree = "<group>"; };
+		99542BC8C4CFB734E554D839 /* SlopeLedge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeLedge.swift; sourceTree = "<group>"; };
 		9AC7565D93EC5AC584CF0825 /* HandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandTests.swift; sourceTree = "<group>"; };
 		9B4B009E49499F923115A97B /* LensArtBigPicture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtBigPicture.swift; sourceTree = "<group>"; };
 		9C1D22B8050E976E3D264E88 /* ToneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTests.swift; sourceTree = "<group>"; };
@@ -256,6 +261,7 @@
 		C22F2052D681E2C63BE5D832 /* PrismTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismTests.swift; sourceTree = "<group>"; };
 		C45CEE9950106BAFE3A297A1 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		C658E19379E25BACACBC6356 /* SupporterMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupporterMark.swift; sourceTree = "<group>"; };
+		C7B61942472FBC72F4039541 /* SlopeMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeMenu.swift; sourceTree = "<group>"; };
 		C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeTests.swift; sourceTree = "<group>"; };
 		CAAABE968196C7403939ADC9 /* AchievementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementTests.swift; sourceTree = "<group>"; };
 		CBBF51F07B822677549432BB /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
@@ -438,9 +444,12 @@
 				2926E44D61C37EEF53C771BA /* Sky.metal */,
 				3B8449467A6C368062FC8096 /* Slope.metal */,
 				98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */,
+				5150380D8EDFC2492B87D722 /* SlopeGate.swift */,
 				6F759F3B5689BB554B5D6699 /* SlopeGeometry.swift */,
 				B8E865B896C1EAD2C9122B80 /* SlopeGround.swift */,
 				734228145564BCCF7996DDD5 /* SlopeHarness.swift */,
+				99542BC8C4CFB734E554D839 /* SlopeLedge.swift */,
+				C7B61942472FBC72F4039541 /* SlopeMenu.swift */,
 				43FF2E81528BF804B347B9DA /* SlopePlay.swift */,
 				EADAD8BDF2BF9AD5510DC396 /* SlopeSettings.swift */,
 				D89654A86FE88E89D5339382 /* Sound.swift */,
@@ -642,9 +651,12 @@
 				79D52A8EF45A795194455A50 /* Sky.metal in Sources */,
 				955132A99034C11E7E172767 /* Slope.metal in Sources */,
 				4F7A4713149E5208E53AB74D /* SlopeConsent.swift in Sources */,
+				85C7438178DA53A1FE97D036 /* SlopeGate.swift in Sources */,
 				4411640D2FD996948570E903 /* SlopeGeometry.swift in Sources */,
 				EB7078BFCB2A52B0B6CB8D7D /* SlopeGround.swift in Sources */,
 				D0F4FB199F957BC9E5CD2030 /* SlopeHarness.swift in Sources */,
+				6B375A454A60E6B542448903 /* SlopeLedge.swift in Sources */,
+				6C9F949E5CE24B72EE39731B /* SlopeMenu.swift in Sources */,
 				DA4F35AC1CE4E2C876CB1639 /* SlopePlay.swift in Sources */,
 				D44A6BB83585EEC490C1A712 /* SlopeSettings.swift in Sources */,
 				87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */,
