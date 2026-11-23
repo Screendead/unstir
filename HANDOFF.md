@@ -144,6 +144,17 @@ The merges, the store media's retake and Jack's five answers of 2026-11-15 are c
   has one 205 ms stall 1.2 to 1.6 s after the strike in both its takes. No vortex-02 clip is to be used until that is
   settled. The Mac records vortex-02 and Lens 25's opening with a second recorder (a screen capture of the Simulator
   window) beside recordVideo and, if the app is dropping the frames, traces it to name what runs then (#301).
+- The two hitches, settled on the phone (2026-11-23; tables in the tools folder, `promo-smooth-20261123/phone/RESULTS.md`):
+  the 13 Pro Max shows neither. vortex-02 holds no frame past 50 ms (13 of 1,831 at 33 to 50 ms, seven on a state
+  change, the main thread re-evaluating `LevelView`); its paired gaps stay most likely recordVideo's, unproven. Lens
+  25's 0.94 s gap is the opening's still; its 1.6 s stall is the simulator's alone: the Debug build bakes the detail
+  in 1.5 s, it lands mid wind-in, its shader compiles then and the rest of the wind-in is not drawn (34 ms on the
+  phone, before the first frame). `FILM_PHONE=1 scripts/film.sh` films the phone over its cable (Jack, 2026-11-23, who
+  gave the Claude app the Mac's Camera permission for it): cut at 30 a second, vortex-02's takes repeat 0 to 2 frames
+  in motion (the simulator's 21 and 35) and Lens 25's wind-in none. The app holds its black 2.5 s first
+  (`UNSTIR_HOLD`), past iOS's launch animation and the home indicator. Open: sound from the phone (built, untried);
+  the store set (`store-media.sh` wants 1320 x 2868) and the reel from the phone; the app's own one-frame holds
+  (recommended, not decided: cache `TypeRole.font`, then measure).
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
   2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
