@@ -78,6 +78,8 @@ struct SlopePebble: View {
             }
         }
         .frame(width: width, height: height)
+        .alignmentGuide(.stoneSeat) { $0[.bottom] - 0.07 * $0.height }
+        .alignmentGuide(.stoneMiddle) { $0[HorizontalAlignment.center] }
         .onAppear {
             guard let breath, !reduceMotion else { return }
             withAnimation(.easeInOut(duration: breath / 2).repeatForever(autoreverses: true)) { swollen = true }
@@ -105,6 +107,25 @@ struct SlopePebble: View {
         .frame(width: width, height: height)
         .rotationEffect(lean)
     }
+}
+
+extension VerticalAlignment {
+    private enum StoneSeat: AlignmentID {
+        static func defaultValue(in context: ViewDimensions) -> CGFloat { context[.bottom] }
+    }
+
+    /// A pebble's underside, a little into the sand: what `rested(at:)` sets on the ground, through whatever the
+    /// pebble stands in (a `Stone` and its words).
+    static let stoneSeat = VerticalAlignment(StoneSeat.self)
+}
+
+extension HorizontalAlignment {
+    private enum StoneMiddle: AlignmentID {
+        static func defaultValue(in context: ViewDimensions) -> CGFloat { context[HorizontalAlignment.center] }
+    }
+
+    /// A pebble's middle.
+    static let stoneMiddle = HorizontalAlignment(StoneMiddle.self)
 }
 
 /// What a stone is doing (1.4). The look follows: lit, the way on, dull, armed in amber, or pending.
