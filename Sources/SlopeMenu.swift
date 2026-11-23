@@ -73,8 +73,10 @@ struct SlopeMenu: View {
     /// Where the finger has left the camera, in the dive and on an overview that scrolls; nothing is drawn from it.
     @State private var scroll = SlopeScroll()
     @State private var surfaced = true
-    /// The back swipe following the finger.
+    /// The back swipe following the finger, how far across the screen it has pulled, and the finger on it.
     @State private var swiping = false
+    @State private var pull: CGFloat = 0
+    @GestureState private var dragging = false
 
     @State private var rest: Menu.Rest?
     @State private var shown = Tier.stored()
@@ -171,6 +173,7 @@ struct SlopeMenu: View {
             chrome(plan, below: below)
         }
         .onAppear { settle(plan) }
+        .onChange(of: dragging) { if !dragging { released(plan) } }
         .onChange(of: start) { if let start { enter(start, plan) } }
     }
 
@@ -236,7 +239,7 @@ struct SlopeMenu: View {
 
     private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
         SlopeMenuWorld(view: view, plan: plan, model: model, cull: cull, held: held, supporter: Store.shared.bought && supporter,
-                       saved: saved, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
+                       saved: saved, yours: yours, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
                        openSettings: { settings = true },
                        enter: { enter($0, plan) },
                        pick: { level, ledge in pick(level, ledge: ledge, plan) },
@@ -356,32 +359,40 @@ struct SlopeMenu: View {
     /// width, or flicked, it rises; else it springs back. Under Reduce Motion nothing follows the finger.
     private func backSwipe(_ plan: SlopeMenuPlan) -> some Gesture {
         DragGesture(minimumDistance: 12)
+            .updating($dragging) { _, dragging, _ in dragging = true }
             .onChanged { drag in
+                pull = drag.translation.width / plan.size.width
                 guard !reduceMotion else { return }
                 if !swiping {
                     guard diving, !moving, drag.translation.width > abs(drag.translation.height) else { return }
                     swiping = true
                     lift(plan)
                 }
-                zoom = 1 - 0.4 * min(max(drag.translation.width / plan.size.width, 0), 1)
+                zoom = 1 - 0.4 * min(max(pull, 0), 1)
             }
             .onEnded { drag in
-                let far = drag.translation.width > 0.4 * plan.size.width || drag.predictedEndTranslation.width > 0.8 * plan.size.width
-                if reduceMotion {
-                    if far, drag.translation.width > abs(drag.translation.height) { rise(plan) }
-                    return
-                }
-                guard swiping else { return }
-                swiping = false
-                if far {
-                    withAnimation(.easeOut(duration: 0.9)) { surface(plan) } completion: { moving = false }
-                } else {
-                    journeys += 1
-                    let journey = journeys
-                    travel = Travel(aim: SlopeAim(ledge: hold, share: share ?? 0.49), then: {})
-                    withAnimation(.spring(duration: 0.4)) { zoom = 1 } completion: { arrive(journey) }
-                }
+                if drag.predictedEndTranslation.width > 0.8 * plan.size.width { pull = 1 }
             }
+    }
+
+    /// The finger has left the edge swipe, lifted or taken by the system.
+    private func released(_ plan: SlopeMenuPlan) {
+        let far = pull > 0.4
+        pull = 0
+        if reduceMotion {
+            if far { rise(plan) }
+            return
+        }
+        guard swiping else { return }
+        swiping = false
+        if far {
+            withAnimation(.easeOut(duration: 0.9)) { surface(plan) } completion: { moving = false }
+        } else {
+            journeys += 1
+            let journey = journeys
+            travel = Travel(aim: SlopeAim(ledge: hold, share: share ?? 0.49), then: {})
+            withAnimation(.spring(duration: 0.4)) { zoom = 1 } completion: { arrive(journey) }
+        }
     }
 
     // MARK: Opening a level
@@ -533,7 +544,7 @@ struct SlopeMenuPlan {
             column.stretches[t + 1].rows = rows
             // At the overview a stretch is as tall as its words need, where that is more than its share of the screen.
             var need = Self.bandLead + line(.title) + 3 + SlopeMeasure.height(tier.reason ?? tier.progress, .detail, width: beside, at: type) + 8
-            if model.wayOn?.tier == tier.tier { need += line(.body) + 8 }
+            if model.wayOn?.tier == tier.tier { need += line(.body) + 14 }
             column.stretches[t + 1].height = max(column.stretches[t + 1].height ?? 0, need)
         }
         // Endless's word, its line and "new run" under its middle; the default sizes fit what the overview leaves.
@@ -731,6 +742,8 @@ private struct SlopeMenuWorld: View {
     let held: String?
     let supporter: Bool
     let saved: Resume?
+    /// "Lens is yours", standing under the wordmark while it is said (2.10).
+    let yours: Offer?
     @Binding var arm: NewRunArm
     let voiceOver: Bool
     let hollow: ((Offer, SlopeSpot) -> AnyView)?
@@ -790,10 +803,18 @@ private struct SlopeMenuWorld: View {
             .accessibilityLabel(supporter ? Text("Unstir, supporter", comment: "VoiceOver: the menu's title, with the supporter mark") // loc: verbatim a key, or the name
                                 : Text(verbatim: "Unstir")).accessibilityAddTraits(.isHeader)
             .slopePlace(CGPoint(x: 32, y: bank.y - 30), anchor: .bottomLeading)
-            Stone(action: openSettings) {
-                Text("settings", comment: "The slope's menu: the stone on the bank, which opens settings").font(.slope(.ui, .detail))
+            // The stone's own line holds a message while one stands: "Lens is yours" (2.10).
+            HStack(spacing: 18) {
+                Stone(action: openSettings) {
+                    Text("settings", comment: "The slope's menu: the stone on the bank, which opens settings").font(.slope(.ui, .detail))
+                }
+                .accessibilityLabel("Settings")
+                if let yours, wide > 0 {
+                    Text(yours.yours).font(.slope(.place, .body)).foregroundStyle(yours.ink).opacity(wide) // loc: verbatim localized by Offer
+                        .accessibilityHidden(true).transition(.opacity)
+                }
             }
-            .accessibilityLabel("Settings")
+            .animation(.easeInOut(duration: 0.4), value: yours)
             .slopePlace(CGPoint(x: bank.x - 10, y: bank.y), anchor: UnitPoint(x: 0, y: 0.62))
         }
     }
@@ -863,8 +884,9 @@ private struct SlopeMenuWorld: View {
             .allowsHitTesting(wide >= 1)
             .slopePlace(CGPoint(x: 0, y: top - 10), anchor: .topLeading)
             VStack(alignment: .leading, spacing: 3) {
-                Text(tier.tier.word).font(.slope(.place, .title)).ink(tier.open ? .ink : .ink4) // loc: verbatim localized by Tier.word
-                Text(tier.reason ?? tier.progress).font(.slope(tier.open ? .data : .ui, .detail)).ink(.ink3) // loc: verbatim localized by Menu
+                // The band's own button says both to VoiceOver.
+                Text(tier.tier.word).font(.slope(.place, .title)).ink(tier.open ? .ink : .ink4).accessibilityHidden(true) // loc: verbatim localized by Tier.word
+                Text(tier.reason ?? tier.progress).font(.slope(tier.open ? .data : .ui, .detail)).ink(.ink3).accessibilityHidden(true) // loc: verbatim localized by Menu
                 if let way = model.wayOn, way.tier == tier.tier { Color.clear.frame(height: wayHeight) }
             }
             .multilineTextAlignment(.leading)
