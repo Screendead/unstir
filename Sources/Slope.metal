@@ -151,7 +151,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         col = wc;
         float sx = pos.x + d * 0.32 + tm * 4.0;
         float rays = slopeNoise(float2(sx * 0.016, 1.7)) * slopeNoise(float2(sx * 0.041 + 9.0, tm * 0.12));
-        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / 8.0) * 0.10;
+        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / 8.0) * 0.08;
         col += float3(0.55, 0.50, 0.30) * exp(-d / 46.0) * 0.16;
         col += float3(0.45, 0.30, 0.10) * exp(-length((pos - float2(40.0, surface)) * float2(0.004, 0.0046))) * 0.16;
         col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * 0.5;
@@ -291,7 +291,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     if (paper > 0.0) {
         // Escapement's page: the rock in ink on bone, an outline that thickens on its shaded side and hatching under
         // each lip, with no fills, no glows and no motes; the water is the bare page.
-        float3 bone = float3(0.914, 0.886, 0.816), ink = float3(0.094, 0.086, 0.110);
+        float3 bone = float3(0.953, 0.918, 0.847), ink = float3(0.102, 0.102, 0.102);
         float shaded = smoothstep(thick * 0.5, thick, f) * step(0.0, k);
         float line = (1.0 - smoothstep(0.5 + 0.9 * shaded, 1.3 + 0.9 * shaded, abs(across))) * below;
         float hatch = shade * mask * below * (1.0 - smoothstep(0.25, 0.6, abs(fract((pos.x + depth) / 5.0) - 0.5) * 2.0 + (1.0 - shade) * 0.6));
