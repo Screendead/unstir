@@ -59,6 +59,9 @@ static float slopeScale(float4 ledge, float4 shape, device const float *g) {
     return min(0.75 * min(ledge.z, g[2]) / shape.x, 1.0);
 }
 
+// How far the overview lifts the rock at x (SlopeLay.lift).
+static float slopeLift(float x) { return 22.0 * x / sqrt(x * x + 40000.0); }
+
 // The rock's edge in x, f under ledge k's top: out to the lip round its nose, back under it by the undercut and away
 // to where the next ledge begins. Where that is a long way back, under a terrace's last ledge, the underside thins
 // towards the nose as an eave does. Under the column's last ledge the foot decides: the wall goes on, or at the
@@ -113,9 +116,10 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     float top = g[0], open = g[1], count = g[3], foot = g[4];
     float tm = view.y;
     float x = pos.x + 280.0 * play.x;
-    // At the overview no ledge's top is straight: the whole shelf bows a few points (SlopeLay.bow).
+    // At the overview no ledge's top is straight: the whole shelf bows a few points, and lifts towards its lips
+    // (SlopeLay.bow).
     float plain = top + pos.y;
-    float depth = plain - (3.4 * sin(x * 0.021 + plain * 0.033) + 0.03 * (x - 60.0)) * (1.0 - open);
+    float depth = plain - (3.4 * sin(x * 0.021 + plain * 0.033) - slopeLift(x)) * (1.0 - open);
     // Grain and banding are the dive's: they would shimmer as the depth opens.
     float fine = smoothstep(0.7, 1.0, open);
 
@@ -128,14 +132,17 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     }
     float k = lo;
     float4 ledge = slopeLedge(g, k);
-    float f = depth - ledge.x;
+    float2 more = slopeMore(g, k);
+    // Each ledge leans down from its back by what the overview lifts it, so its top lies level on the screen
+    // (SlopeLay.crown).
+    float level = depth - ledge.x;
+    float f = level - (k < 0.0 ? 0.0 : max(slopeLift(x) - slopeLift(more.x), 0.0) * (1.0 - open));
     float4 first = slopeLedge(g, 0.0), end = slopeLedge(g, count - 1.0);
     // Past the foot, in the last ledge's drops.
     float past = (depth - foot) / end.z;
 
-    float2 more = slopeMore(g, k);
     float m = g[7] < 0.0 ? g[8] : k < 0.0 ? more.y - 0.8 * (first.x - depth) / first.x
-        : more.y + (k > count - 1.5 ? 1.0 : slopeMore(g, k + 1.0).y - more.y) * f / ledge.z;
+        : more.y + (k > count - 1.5 ? 1.0 : slopeMore(g, k + 1.0).y - more.y) * level / ledge.z;
     float3 wc = slopeWater(m);
     if (g[5] == 1.0) wc = mix(wc, float3(0.008, 0.006, 0.014), smoothstep(-0.5, 2.0, past));
     float surface = -top;
@@ -186,6 +193,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     }
     float din = e0 - x, across = din / sqrt(1.0 + lean * lean);
     float mask = slopeStep(across);
+    // Over a leaning ledge's top the edge runs nearly level, and its softness would reach out past the lip as a line.
+    if (f < 0.0) mask *= 1.0 - smoothstep(ledge.y - 1.0, ledge.y + 1.0, x);
     float below = 1.0;
     if (g[6] > 0.0) {
         // The bank's shoulder under the water line, and its dry top over it: drawn by the screen, as the stone on it is.
@@ -193,9 +202,9 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         below = slopeStep(pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0)));
     }
     float thick = sp.x * sc;
-    // 1 on the wall under a lip, where its shadow falls.
-    float shade = exp(-max(din, 0.0) / (14.0 * sc + 1.0)) * smoothstep(thick * 0.45, thick, f) * (1.0 - smoothstep(thick, thick + 36.0 * sc + 2.0, f))
-        * step(0.0, k);
+    // 1 on the wall under a lip, where its shadow falls, gone by the next ledge's top.
+    float shade = exp(-max(din, 0.0) / (14.0 * sc + 1.0)) * smoothstep(thick * 0.45, thick, f)
+        * (1.0 - smoothstep(thick, min(thick + 36.0 * sc + 2.0, ledge.z), f)) * step(0.0, k);
     if (mask * below > 0.001 && paper < 1.0) {
         float tip = ledge.y, back = more.x;
         float tone = f < thick * 1.15 ? mix(1.32, 0.56, smoothstep(0.0, thick * 1.15, f))
