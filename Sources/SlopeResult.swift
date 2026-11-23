@@ -142,7 +142,7 @@ struct SlopeResult: View {
             words.font(.slope(.ui, .detail)).foregroundStyle(page.slope(.ink3)).hit()
         }
         .buttonStyle(Sounding())
-        .accessibilityLabel(spoken)
+        .accessibilityLabel(spoken) // loc: verbatim each a key at the call
     }
 }
 
@@ -364,6 +364,9 @@ struct SlopeLightSettling: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.page) private var page
 
+    /// How far past the result's edges a mote may sink.
+    private static let reach: CGFloat = 60
+
     /// The last mote's start and life.
     private static let span = 0.2 + 8 * 0.21 + 3.4
 
@@ -375,7 +378,7 @@ struct SlopeLightSettling: View {
                 }
             }
         }
-        .frame(width: max(width, 0), height: 0, alignment: .top)
+        .frame(width: max(width, 0) + 2 * Self.reach, height: 0, alignment: .top)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .task {
@@ -406,8 +409,9 @@ struct SlopeLightSettling: View {
                              with: .color(Color(0xFFF6E2).opacity(min(strength * 1.8, 1))))
             }
         }
-        // From the screen's top to under the lines, the result's top `top` down it.
-        .frame(width: width, height: max(top, 0) + 400)
+        // From the screen's top to under the lines, the result's top `top` down it, and wide enough for the motes
+        // beside the widest tank: a Canvas clips at its frame.
+        .frame(width: width + 2 * Self.reach, height: max(top, 0) + 400)
         .offset(y: -max(top, 0))
     }
 }
