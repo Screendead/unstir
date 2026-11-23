@@ -695,6 +695,8 @@ struct RootView: View {
     @Environment(\.harnessFold) private var harnessFold
     /// The slope's world draws the screens (`SlopeFlag`), read once at launch.
     private let slope: Bool
+    /// UNSTIR_TIER is set, so the slope's first menu opens on that tier rather than the overview.
+    private let namesTier = ProcessInfo.processInfo.environment["UNSTIR_TIER"] != nil
     /// The settings' supporter mark switch, which the slope's settings move.
     @State private var supporter = Settings.supporter
     /// Kept apart from `harness`, which a first move to another screen drops.
@@ -784,16 +786,17 @@ struct RootView: View {
     /// The slope's menu (`SlopeMenu`), with what covers it: settings, the consent question, and until pieces D and E
     /// land, today's pack card and archive over it.
     private var slopeMenu: some View {
-        // A cold launch rests on the overview, so only a closed tier's "up a notch" names a tier.
-        SlopeMenu(start: level == nil ? look : nil, focus: focus, returning: revision > 0,
+        // A cold launch rests on the overview, so only a closed tier's "up a notch", or the harness's UNSTIR_TIER, names a tier.
+        SlopeMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
                   settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
                   held: harness?.lockTap, peeking: level != nil, revision: revision,
-                  run: Self.save("endless", harnessed: harnessed, harnessSave)) { next, _ in
+                  run: Self.save("endless", harnessed: harnessed, harnessSave),
+                  light: asking ? SlopeConsent.light : 1, bare: asking) { next, _ in
             show(next)
         }
         .overlay { slopeCovers }
         .animation(.easeOut(duration: 0.25), value: settings)
-        .animation(.easeOut(duration: 0.25), value: asking)
+        .animation(.easeInOut(duration: 0.6), value: asking)
     }
 
     /// The time a level takes to come in over the slope, or to leave it, while the slope draws aside or back in.
@@ -833,12 +836,7 @@ struct RootView: View {
             SlopeSettings(supporter: $supporter, back: { settings = false }, clock: harness?.clock)
                 .transition(.opacity)
         }
-        if asking {
-            // Until the menu draws its ground at SlopeConsent.light, the dusk is laid over it.
-            Color.black.opacity(1 - SlopeConsent.light).ignoresSafeArea()
-                .overlay { SlopeConsent() }
-                .transition(.opacity)
-        }
+        if asking { SlopeConsent().transition(.opacity) }
     }
 
     /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
