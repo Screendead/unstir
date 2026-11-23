@@ -828,7 +828,7 @@ struct LevelView: View {
     /// Undo and reset, and on Escapement the wait (`PlayControls`). Where the row can't hold undo beside an armed reset
     /// on a line each, undo steps aside too until the reset is made or lapses, so no label wraps and the row keeps its
     /// height.
-    private func controls(_ layout: PlayLayout, ground: CGFloat) -> some View {
+    private func controls(_ layout: PlayLayout, ground: SlopeTerrace.Ground) -> some View {
         let clocks = !game.level.ratchets.isEmpty, width = layout.chromePane.width
         let waitRow = PlayLayout.waitTakesARow(game.level, width: width, type: playType)
         let undoLabel = game.level.sandbox ? String(localized: "undo") : String(localized: "undo \u{00B7} \(game.bank)")
@@ -837,7 +837,7 @@ struct LevelView: View {
         return Group {
             if slope {
                 SlopeTerrace(seats: playSeats(waitRow: waitRow, inlineWait: clocks && !waitRow && armedAt == nil, alone: alone),
-                             ground: ground)
+                             ground: ground, rock: terraceRock)
                     // Where the result's seats stand once the level has finished (`TerraceSeats`).
                     .anchorPreference(key: TerraceSeats.Key.self, value: .bounds) { .init(row: $0) }
             } else {
@@ -899,10 +899,24 @@ struct LevelView: View {
     /// tank is never other than the layout's; in the split and the tabletop, whose cards have their own places; and
     /// until the card and the caption's place are measured.
     /// `drop` is what "unstirred." needs of the tank's top, where it stands.
-    private func finished(_ layout: PlayLayout, foot: CGFloat, drop: CGFloat) -> PlayLayout.Finished? {
+    private func finished(_ layout: PlayLayout, foot: CGFloat, drop: CGFloat, inset: CGFloat) -> PlayLayout.Finished? {
         guard showResult, !clean, layout.kind == .column, let captionTop, cardReach > 0 else { return nil }
-        return PlayLayout.finished(card: cardReach, room: foot - captionTop - (slope ? terraceRoom : 0), stage: layout.side * PlayLayout.rim,
+        let terrace = slope ? terraceRoom + SlopePlay.lift(inset: inset) : 0
+        return PlayLayout.finished(card: cardReach, room: foot - captionTop - terrace, stage: layout.side * PlayLayout.rim,
                                    drop: game.solved ? drop : 0)
+    }
+
+    /// The rock the play terrace is cut from, which a second terrace takes too.
+    private var terraceRock: SlopeColumn.Rock {
+        if game.level.pack == .prism { return .pale }
+        if game.level.run != nil { return .basalt }
+        guard game.level.pack == nil, !game.level.sandbox, !game.level.id.hasPrefix("daily-") else { return .sand }
+        return switch game.level.tier {
+        case .plughole: .sand
+        case .whirlpool: .mauve
+        case .vortex: .slate
+        case .maelstrom: .basalt
+        }
     }
 
     /// Today's black or paper; the slope's ground is drawn behind it.
@@ -916,11 +930,11 @@ struct LevelView: View {
     }
 
     /// The result's stones on the terrace, where the play controls stood (`TerraceSeats`).
-    @ViewBuilder private func resultSeats(_ value: TerraceSeats.Key.Value, ground: CGFloat) -> some View {
+    @ViewBuilder private func resultSeats(_ value: TerraceSeats.Key.Value, ground: SlopeTerrace.Ground) -> some View {
         if slope, showResult, let seats = value.seats, let row = value.row {
             GeometryReader { geo in
                 let r = geo[row]
-                SlopeTerrace(seats: seats, ground: ground)
+                SlopeTerrace(seats: seats, ground: ground, rock: terraceRock)
                     .frame(width: r.width, height: r.height, alignment: .bottom)
                     .position(x: r.midX, y: r.midY)
             }
@@ -931,11 +945,11 @@ struct LevelView: View {
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
-            let whole = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
-                               height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
+            let ground = SlopeTerrace.Ground(height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom,
+                                             top: geo.safeAreaInsets.top, space: Self.column)
             let words: (words: CGFloat?, drop: CGFloat) = layout.kind == .column
                 ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType, slope: slope) : (layout.words, 0)
-            let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop)
+            let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop, inset: geo.safeAreaInsets.bottom)
             let curtain = fit == nil ? curtained(layout, foot: foot) : nil
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
@@ -962,7 +976,7 @@ struct LevelView: View {
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls(layout, ground: whole.height).modifier(PlayPart.chrome(read: 0))
+                controls(layout, ground: ground).modifier(PlayPart.chrome(read: 0))
                 if besideMenu && layout.kind == .split {
                     Color.clear.accessibilityHidden(true)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
@@ -972,7 +986,7 @@ struct LevelView: View {
             // VoiceOver reads the parts in the column's order, header to controls, whatever the pose puts where: by
             // place alone the tabletop's tank, below the fold, would come last.
             .accessibilityElement(children: .contain)
-            .overlayPreferenceValue(TerraceSeats.Key.self) { resultSeats($0, ground: whole.height) }
+            .overlayPreferenceValue(TerraceSeats.Key.self) { resultSeats($0, ground: ground) }
             .onPreferenceChange(TerraceSeats.Upper.self) { upper in MainActor.assumeIsolated { upperSeat = upper } }
             // Not from a first measure, which can be empty, nor under Reduce Motion.
             .animation(pose.map { $0.side > 0 } == true && !reduceMotion ? .smooth(duration: 0.45) : nil, value: layout)
@@ -1000,7 +1014,7 @@ struct LevelView: View {
         .foregroundStyle(page.ink)
         .tint(page.ink)
         .background(ground)
-        .background { if slope { SlopePlayGround(level: game.level, glint: glint) } }
+        .background { if slope { SlopePlayGround(level: game.level, glint: glint).equatable() } }
         // The terrace under a solved tank catches the light as it settles (docs/slope.md, 1.5); not under Reduce Motion.
         .onChange(of: showResult && game.solved, initial: true) { _, lit in
             guard slope, !reduceMotion else { return }
@@ -1850,7 +1864,7 @@ struct LevelView: View {
 
     private func sandboxControls(named: Bool) -> some View {
         let picture = String(localized: game.level.picture.display)
-        return HStack(spacing: 8) {
+        return HStack(spacing: slope ? 18 : 8) {
             sandboxControl(named ? String(localized: "picture: \(picture) \u{203A}", comment: "The sandbox's picture control. The picture")
                            : "\(picture) \u{203A}", game.nextPicture)
             // A turn in hand, or snapping to commit, names a rod of the current layout.
@@ -1875,11 +1889,19 @@ struct LevelView: View {
     }
 
     /// Narrower than a secondary's 20 pt sides, so both fit the header beside the way out.
-    private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14)) // loc: verbatim localized by the caller
+    @ViewBuilder private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
+        if slope {
+            // Quiet words on the water, as every control without a stone on the slope (docs/slope.md, 1.4).
+            Button(action: action) {
+                Text(label).font(.slope(.data, .label)).ink(.ink2).hit() // loc: verbatim localized by the caller
+            }
+            .buttonStyle(Sounding())
+        } else {
+            Button(action: action) {
+                Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14)) // loc: verbatim localized by the caller
+            }
+            .buttonStyle(Sounding(presses: true))
         }
-        .buttonStyle(Sounding(presses: true))
     }
 
     /// The knob shows only the player's own turning, so it can neither give away nor misstate the scramble.

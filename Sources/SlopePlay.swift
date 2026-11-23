@@ -8,9 +8,12 @@ import SwiftUI
 
 /// The ground under a level (4.1): the slope drawn aside, the water at the level's depth and one terrace rising from the
 /// screen's foot in its rock. A still while the level plays; `glint` lights the terrace once it is solved.
-struct SlopePlayGround: View {
+struct SlopePlayGround: View, Equatable {
     let level: Level
     var glint = 0.0
+
+    /// Drawn again only when what it shows changes, never for the play screen's own state as a finger drags.
+    nonisolated static func == (a: Self, b: Self) -> Bool { a.level == b.level && a.glint == b.glint }
 
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -125,7 +128,6 @@ struct SlopePlayTitle: View {
     let hidden: Bool
 
     @Environment(\.page) private var page
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 11) {
@@ -138,10 +140,11 @@ struct SlopePlayTitle: View {
         .frame(maxWidth: .infinity)
         .overlay(alignment: .top) {
             if let pack {
-                Text(verbatim: pack).font(.slope(.data, .detail)) // loc: verbatim a pack's name, never translated
+                // The size the title's 18 pt gap holds, as today's (`PlayTitle`).
+                Text(verbatim: pack).font(.slope(.data, .detail)).dynamicTypeSize(.large) // loc: verbatim a pack's name, never translated
                     .foregroundStyle(page.paper ? page.ink : SlopeInk.ink3.colour)
                     .fixedSize()
-                    .offset(y: -TypeRole.detail.line(at: typeSize).height - 4)
+                    .offset(y: -TypeRole.detail.line(at: .large).height - 2)
                     .accessibilityHidden(true)
             }
         }
@@ -205,30 +208,53 @@ struct SlopeCaption<Card: View>: View {
 /// layout's arithmetic stands.
 struct SlopeTerrace: View {
     let seats: TerraceSeats
-    /// The screen's height, safe areas in, which the ground's terrace is drawn for: each stone on the first row is set
-    /// down on the terrace's top where it stands (`SlopeLay.terrace`), which rises and falls a few points across it.
-    var ground: CGFloat?
+    /// The screen the ground's terrace is drawn for: each stone on the first row is set down on the terrace's top where
+    /// it stands (`SlopeLay.terrace`), which rises and falls a few points across it.
+    var ground: Ground?
+    /// The second terrace's rock, or the paper's ink.
+    var rock = SlopeColumn.Rock.sand
 
-    /// The row in the window, as laid out.
+    /// The screen's height, safe areas in, and the space the row is measured in, whose origin is `top` under the
+    /// screen's, so the row moves with the screen and its ground, as under the back swipe.
+    struct Ground {
+        var height: CGFloat
+        var top: CGFloat
+        var space: String
+    }
+
+    /// The row, as laid out in `ground`'s space.
     @State private var row = CGRect.zero
 
     var body: some View {
         VStack(spacing: LevelView.controlRows) {
-            if let upper = seats.upper { upper.frame(maxWidth: .infinity) }
-            ZStack {
-                HStack(spacing: 0) {
-                    seats.leading.offset(y: settle(row.minX + PlayStone.reach))
+            if let upper = seats.upper {
+                // Its ledge's top a point over the pebble's underside, `rest` under the row's middle.
+                // Lifted with the row under it, which its stones' terrace lifts.
+                upper.frame(maxWidth: .infinity, minHeight: SlopePebble.target)
+                    .background(alignment: .bottom) {
+                        TerraceLedge(rock: rock).offset(y: PlayStone.rest - 1 - SlopePebble.target / 2 + TerraceLedge.height)
+                    }
+                    .offset(y: settle(row.midX))
+            }
+            // The middle stone halfway between its neighbours, as today's row spaces its three.
+            HStack(spacing: 0) {
+                seats.leading.offset(y: settle(row.minX + PlayStone.reach))
+                Spacer(minLength: PlayLayout.controlGap)
+                if let middle = seats.middle {
+                    middle.offset(y: settle(row.midX))
                     Spacer(minLength: PlayLayout.controlGap)
-                    seats.trailing.offset(y: settle(row.maxX - PlayStone.reach))
                 }
-                seats.middle.offset(y: settle(row.midX))
+                seats.trailing.offset(y: settle(row.maxX - PlayStone.reach))
             }
             .frame(minHeight: SlopePebble.target)
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { row = $0 }
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(ground?.space ?? "")) } action: { row = $0 }
         }
         .overlay(alignment: .bottom) {
-            // Into the safe area's foot, under the row: nothing in the column moves for it.
-            seats.under?.fixedSize().alignmentGuide(.bottom) { $0[.top] - 6 }
+            // Into the safe area's foot, under the row, where the terrace's sand is: the water's shade behind it, as no
+            // word is set on lit sand (1.4). Nothing in the column moves for it.
+            seats.under?.fixedSize()
+                .background { Ellipse().fill(Color(0x061016).opacity(0.6)).padding(.horizontal, -14).padding(.vertical, -6).blur(radius: 7) }
+                .alignmentGuide(.bottom) { $0[.top] - 6 }
         }
     }
 }
@@ -237,7 +263,50 @@ extension SlopeTerrace {
     /// How far a stone whose pebble stands at `x` moves so the pebble rests on the terrace, a point into its sand.
     private func settle(_ x: CGFloat) -> CGFloat {
         guard let ground, row.height > 0 else { return 0 }
-        return SlopeLay.terrace(x, height: ground) + 1 - (row.midY + PlayStone.rest)
+        return SlopeLay.terrace(x, height: ground.height) + 1 - (ground.top + row.midY + PlayStone.rest)
+    }
+}
+
+/// A second terrace's ledge, a short overhung lip of the play terrace's rock standing out of the water over the first,
+/// for a stone that needs a row of its own (4.5, 5.2). A stand-in until the ground draws it (Slope.metal draws one
+/// terrace): its top bows, and on paper it is an ink outline.
+struct TerraceLedge: View {
+    var rock: SlopeColumn.Rock
+    var width: CGFloat = 170
+
+    static let height: CGFloat = 16
+
+    @Environment(\.page) private var page
+
+    var body: some View {
+        let shape = Lip()
+        Group {
+            if page.paper {
+                shape.stroke(page.ink, lineWidth: 1.2)
+            } else {
+                shape.fill(Color(0x2A2E36))
+                    .overlay(shape.fill(LinearGradient(colors: [rock.light.opacity(0.7), rock.light.opacity(0.08)],
+                                                       startPoint: .top, endPoint: .bottom)))
+                    .overlay(shape.stroke(rock.light.opacity(0.35), lineWidth: 0.8).mask(alignment: .top) { Rectangle().frame(height: 3) })
+            }
+        }
+        .frame(width: width, height: Self.height)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// The lip: a top that bows up a few points, rounded noses at either end, and an underside cut back under them.
+    private struct Lip: Shape {
+        func path(in r: CGRect) -> Path {
+            Path { p in
+                p.move(to: CGPoint(x: r.minX, y: r.minY + 5))
+                p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + 4), control: CGPoint(x: r.midX, y: r.minY - 3))
+                p.addQuadCurve(to: CGPoint(x: r.maxX - 16, y: r.maxY), control: CGPoint(x: r.maxX + 2, y: r.maxY - 2))
+                p.addQuadCurve(to: CGPoint(x: r.minX + 18, y: r.maxY), control: CGPoint(x: r.midX, y: r.maxY - 5))
+                p.addQuadCurve(to: CGPoint(x: r.minX, y: r.minY + 5), control: CGPoint(x: r.minX - 3, y: r.maxY - 3))
+                p.closeSubpath()
+            }
+        }
     }
 }
 
@@ -279,7 +348,7 @@ extension PlayStone {
 
 /// A stone on the terrace that sounds as today's control did: undo's and reset's own sounds where `Stone` plays the
 /// tap. Drawn as `Stone` draws one (1.4): the pebble with its words beside it, sinking while touched, rocking when
-/// `refused` changes, and dimmed while the controls are dead through an opening.
+/// `refused` changes.
 struct PlayStone: View {
     var label: Text
     var state = StoneState.lit
@@ -316,7 +385,6 @@ struct PlayStone: View {
         var lit: Bool
 
         @Environment(\.buttonPressed) private var pressed
-        @Environment(\.isEnabled) private var enabled
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.page) private var page
         @ScaledMetric(relativeTo: .body) private var grain = 1.0
@@ -352,7 +420,6 @@ struct PlayStone: View {
             }
             .frame(minWidth: SlopePebble.target, minHeight: SlopePebble.target)
             .contentShape(Rectangle())
-            .opacity(enabled ? 1 : 0.6)
             .animation(.easeOut(duration: 0.2), value: pressed)
             .animation(.easeOut(duration: 0.15), value: lit)
             .onChange(of: refused) { Sound.shared.play(.seized) }
@@ -401,6 +468,13 @@ struct SlopeSwatches: View {
 
 /// The slope's play screen's words and measures.
 enum SlopePlay {
+    /// The most the terrace lifts its stones over the row the column lays out at the safe area's foot, `inset` over the
+    /// screen's: the terrace's top stands 54 pt over the screen's foot, give or take 11 across it (`SlopeLay.terrace`),
+    /// and a stone's underside `PlayStone.rest` under its row's middle, the row 4 pt over the safe area's foot.
+    static func lift(inset: CGFloat) -> CGFloat {
+        max(0, 54 + 11 - inset - 4 - SlopePebble.target / 2 + PlayStone.rest)
+    }
+
     /// How far under the surface the shallows' camera stands, so no word is set within `SlopeInk.shallowest` of it.
     static let under: CGFloat = 48
 
