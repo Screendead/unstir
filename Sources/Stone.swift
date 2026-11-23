@@ -2,30 +2,40 @@
 
 import SwiftUI
 
-/// A smooth stone resting on the slope, lit from up and to the left, where the sun is. It is the slope's one mark: a
-/// level's pebble on its ledge, and with a word beside it (`SlopeStone`) every control that was a capsule.
+/// A smooth stone resting on the slope, lit from up and to the left, where the sun is (docs/slope.md, 1.4). It is
+/// the slope's one mark: a level's pebble on its ledge, and with words beside it (`Stone`) every control.
 struct SlopePebble: View {
     enum Kind {
-        /// Done, or switched on: pale and warm, with a glow.
+        /// Done, switched on, or able to act: pale and warm, with a glow.
         case lit
-        /// The one to take next: the brightest. Its wider glow is the caller's, as it breathes.
+        /// The one way on: the brightest, its glow breathing.
         case next
-        /// Not yet reached, or switched off: the water's own grey, no highlight.
+        /// Closed, or switched off: the water's own grey, no glow or highlight.
         case dull
         /// Prism's: cool white.
         case pale
+        /// On Escapement's paper: an ink outline hatched on its shaded side.
+        case engraved
     }
 
     var kind = Kind.lit
-    /// The stone's width in points; it is 0.72 as tall.
+    /// The stone's width in points; it is 0.72 as tall (`SlopeLay.half` is half of it on a ledge).
     var width: CGFloat
     /// Each stone lies a little off level, its own way.
     var lean = Angle.zero
-    /// The glow's colour, a tier's light (`Slope.light`); warm when nil.
+    /// The glow's colour: a tier's or a pack's, amber while armed; warm when nil.
     var glow: Color?
+    /// The glow swells and falls over this many seconds: 3 for the way on, 1.2 while something is pending. Reduce
+    /// Motion holds it full.
+    var breath: Double?
+    /// Dull and dimmed, as a closed level's; a dull stone that is open stays whole.
+    var dimmed = false
 
     /// How a stone numbered `n` leans.
     static func lean(_ n: Int) -> Angle { .radians(0.22 * sin(Double(n) * 1.7 + 0.5)) }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var swollen = false
 
     private var stops: [Color] {
         switch kind {
@@ -33,104 +43,175 @@ struct SlopePebble: View {
         case .next: [Color(0xFFFFFA), Color(0xFAF0D6), Color(0xC4AA82)]
         case .dull: [Color(0x687A82), Color(0x42545E), Color(0x222E38)]
         case .pale: [Color(0xECF0F6), Color(0xC4CCD8), Color(0x707888)]
+        case .engraved: [.bone, .bone, .bone]
         }
     }
 
     var body: some View {
-        let height = width * (kind == .dull ? 0.66 : 0.72), rx = width / 2
+        let height = width * 0.72, rx = width / 2
         ZStack {
-            if kind != .dull {
+            if kind != .dull, kind != .engraved {
                 let light = glow ?? (kind == .pale ? Color(0xE2ECFF) : Color(0xFFE8B4))
-                Circle().fill(RadialGradient(colors: [light.opacity(0.3), light.opacity(0)], center: .center, startRadius: 0, endRadius: rx * 2.9))
-                    .frame(width: rx * 5.8, height: rx * 5.8)
+                let reach = rx * (kind == .next ? 5.9 : 2.9), strength = kind == .next ? 0.24 : 0.3
+                Circle().fill(RadialGradient(colors: [light.opacity(strength), light.opacity(0)], center: .center, startRadius: 0, endRadius: reach))
+                    .frame(width: reach * 2, height: reach * 2)
+                    .opacity(breath != nil && !reduceMotion && !swollen ? 0.86 : 1)
             }
-            // The shadow where it rests.
-            Ellipse().fill(.black.opacity(0.3)).frame(width: width * 1.02, height: height * 0.3).offset(x: 1, y: height * 0.46)
-            ZStack {
-                Ellipse().fill(RadialGradient(stops: [.init(color: stops[0], location: 0), .init(color: stops[1], location: 0.45),
-                                                      .init(color: stops[2], location: 1)],
-                                              center: UnitPoint(x: 0.36, y: 0.3), startRadius: 0, endRadius: rx * 1.45))
-                if kind != .dull {
-                    Ellipse().fill(.white.opacity(0.75)).frame(width: width * 0.26, height: height * 0.15)
-                        .rotationEffect(.radians(-0.2)).offset(x: -rx * 0.3, y: -height * 0.24)
+            if kind == .engraved {
+                engraving(height)
+            } else {
+                // The shadow where it rests.
+                Ellipse().fill(.black.opacity(0.3)).frame(width: width * 1.02, height: height * 0.3).offset(x: 1, y: height * 0.46)
+                ZStack {
+                    Ellipse().fill(RadialGradient(stops: [.init(color: stops[0], location: 0), .init(color: stops[1], location: 0.45),
+                                                          .init(color: stops[2], location: 1)],
+                                                  center: UnitPoint(x: 0.36, y: 0.3), startRadius: 0, endRadius: rx * 1.45))
+                    if kind != .dull {
+                        Ellipse().fill(.white.opacity(0.75)).frame(width: width * 0.26, height: height * 0.15)
+                            .rotationEffect(.radians(-0.2)).offset(x: -rx * 0.3, y: -height * 0.24)
+                    }
                 }
+                .frame(width: width, height: height)
+                .rotationEffect(lean)
+                .opacity(dimmed ? 0.9 : 1)
             }
-            .frame(width: width, height: height)
-            .rotationEffect(lean)
-            .opacity(kind == .dull ? 0.9 : 1)
         }
         .frame(width: width, height: height)
+        .onAppear {
+            guard let breath, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: breath / 2).repeatForever(autoreverses: true)) { swollen = true }
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// The paper's stone: its outline, heavier underneath, and a few strokes of hatching on the side away from the sun.
+    private func engraving(_ height: CGFloat) -> some View {
+        ZStack {
+            Ellipse().fill(Color.bone)
+            Ellipse().stroke(Color.ink, lineWidth: 1)
+            Ellipse().trim(from: 0.02, to: 0.42).stroke(Color.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            Canvas { context, size in
+                for i in 0 ..< 4 {
+                    let x = size.width * (0.5 + 0.1 * CGFloat(i))
+                    var stroke = Path()
+                    stroke.move(to: CGPoint(x: x, y: size.height * (0.86 - 0.05 * CGFloat(i))))
+                    stroke.addLine(to: CGPoint(x: x + size.width * 0.12, y: size.height * (0.56 - 0.02 * CGFloat(i))))
+                    context.stroke(stroke, with: .color(.ink), lineWidth: 0.8)
+                }
+            }
+            .clipShape(Ellipse())
+        }
+        .frame(width: width, height: height)
+        .rotationEffect(lean)
     }
 }
 
-extension View {
-    /// Sets the view in a top-leading `ZStack` with its `anchor` at `point`, its frame its own, so what reads frames
-    /// (a scroll's targets, VoiceOver, a tap) finds it where it is drawn.
-    func slopePlace(_ point: CGPoint, anchor: UnitPoint = .center) -> some View {
-        alignmentGuide(.leading) { $0.width * anchor.x - point.x }
-            .alignmentGuide(.top) { $0.height * anchor.y - point.y }
-    }
-
-    /// A pebble set on its seat (`Slope.Frame.seat`, as `point` gives it): its underside a little into the sand.
-    func seated(at seat: CGPoint) -> some View { slopePlace(seat, anchor: UnitPoint(x: 0.5, y: 0.93)) }
+/// What a stone is doing (1.4). The look follows: lit, the way on, dull, armed in amber, or pending.
+enum StoneState {
+    /// A control that can act; a switch that is on.
+    case lit
+    /// The one way on. One stone a screen.
+    case next
+    /// Switched off, or with nothing to act on. It still takes its tap, to say why.
+    case dull
+    /// Waiting on a second tap, as reset: its glow and words amber.
+    case armed
+    /// Waiting on an answer, as a purchase: its glow breathing, its words quieter.
+    case pending
 }
 
-/// A stone with words beside it, to tap: the slope's button. The words keep their size at every Dynamic Type setting
-/// and the stone grows a little with them; the target is 44 points at the least, whatever is drawn. Pressed, the
-/// stone settles into the sand and dims. It sounds as every button does.
-struct SlopeStone<Label: View>: View {
-    var kind = SlopePebble.Kind.lit
-    /// The stone after the words, as on a screen's trailing side.
+/// A stone with words beside it, to tap: the slope's one control. The words keep their size at every Dynamic Type
+/// setting and the stone grows a little with them; the target is the stone and its words together, never under 44
+/// points either way. Touched, the stone sinks 2 points and draws in to 0.97. `refused` rocks it when it changes, as a
+/// closed level's does, with the `seized` sound. It sounds as every button does.
+struct Stone<Label: View>: View {
+    var state = StoneState.lit
+    /// Prism's own controls are pale, and every stone on Escapement's paper engraved.
+    var pale = false
+    var engraved = false
+    /// The stone after the words: the words stand on the open-water side.
     var trailing = false
+    /// A tier's or a pack's colour for the way on's glow, and its ink for the words.
     var glow: Color?
+    var ink: Color?
+    /// Bump it to refuse a tap.
+    var refused = 0
     var action: () -> Void
     @ViewBuilder var label: () -> Label
 
     var body: some View {
         Button(action: action) {
-            Face(kind: kind, trailing: trailing, glow: glow, label: label)
+            Face(state: state, pale: pale, engraved: engraved, trailing: trailing, glow: glow, ink: ink, refused: refused, label: label)
         }
         .buttonStyle(Sounding(presses: true))
     }
 
     private struct Face: View {
-        var kind: SlopePebble.Kind
+        var state: StoneState
+        var pale: Bool
+        var engraved: Bool
         var trailing: Bool
         var glow: Color?
+        var ink: Color?
+        var refused: Int
         @ViewBuilder var label: () -> Label
 
         @Environment(\.buttonPressed) private var pressed
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @ScaledMetric(relativeTo: .body) private var grain = 1.0
 
+        private var kind: SlopePebble.Kind {
+            if engraved { return .engraved }
+            switch state {
+            case .dull: return .dull
+            case .next: return pale ? .pale : .next
+            case .lit, .armed, .pending: return pale ? .pale : .lit
+            }
+        }
+
         var body: some View {
-            let width = (kind == .dull ? 17 : 20) * min(grain, 1.4)
+            let width = (state == .next ? 25 : state == .dull ? 17 : 20) * min(grain, 1.4)
             HStack(spacing: 12) {
                 if trailing { words }
-                SlopePebble(kind: kind, width: width, lean: .radians(trailing ? 0.1 : -0.08), glow: glow)
-                    .offset(y: pressed && !reduceMotion ? 1.5 : 0)
-                    .brightness(pressed ? -0.12 : 0)
+                SlopePebble(kind: kind, width: width, lean: .radians(trailing ? 0.1 : -0.08),
+                            glow: state == .armed ? Page.night.stop : glow,
+                            breath: state == .next ? 3 : state == .pending ? 1.2 : nil)
+                    .keyframeAnimator(initialValue: 0.0, trigger: refused) { stone, degrees in
+                        stone.rotationEffect(.degrees(reduceMotion ? 0 : degrees), anchor: .bottom)
+                    } keyframes: { _ in
+                        CubicKeyframe(6, duration: 0.05)
+                        CubicKeyframe(-6, duration: 0.08)
+                        CubicKeyframe(6, duration: 0.07)
+                        CubicKeyframe(-6, duration: 0.06)
+                        CubicKeyframe(0, duration: 0.04)
+                    }
+                    .offset(y: pressed && !reduceMotion ? 2 : 0)
+                    .scaleEffect(pressed ? 0.97 : 1)
+                    .brightness(pressed && reduceMotion ? -0.12 : 0)
                 if !trailing { words }
             }
-            .frame(minWidth: SlopeStone.target, minHeight: SlopeStone.target)
+            .frame(minWidth: SlopePebble.target, minHeight: SlopePebble.target)
             .contentShape(Rectangle())
-            .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: pressed)
+            .animation(.easeOut(duration: 0.2), value: pressed)
+            .onChange(of: refused) { Sound.shared.play(.seized) }
         }
 
         private var words: some View {
-            label().font(.slope(.plain, .body)).foregroundStyle(Color.text.opacity(kind == .dull ? 0.82 : 1))
-                .opacity(pressed ? 0.7 : 1)
+            let colour: Color = engraved ? .ink : state == .armed ? Page.night.stop : ink ?? SlopeInk.ink.colour
+            return label().font(.slope(.ui, .body, state == .next ? .medium : nil)).foregroundStyle(colour)
+                .opacity(engraved ? 1 : state == .dull ? SlopeInk.ink4.strength : state == .pending ? SlopeInk.ink2.strength : 1)
         }
     }
 }
 
-extension SlopeStone {
-    /// Apple's smallest target.
-    static var target: CGFloat { 44 }
+extension SlopePebble {
+    /// Apple's smallest target, which no stone's is under either way.
+    static let target: CGFloat = 44
 }
 
-extension SlopeStone where Label == Text {
-    init(_ words: Text, kind: SlopePebble.Kind = .lit, trailing: Bool = false, glow: Color? = nil, action: @escaping () -> Void) {
-        self.init(kind: kind, trailing: trailing, glow: glow, action: action) { words }
+extension Stone where Label == Text {
+    init(_ words: Text, state: StoneState = .lit, pale: Bool = false, engraved: Bool = false, trailing: Bool = false,
+         glow: Color? = nil, ink: Color? = nil, refused: Int = 0, action: @escaping () -> Void) {
+        self.init(state: state, pale: pale, engraved: engraved, trailing: trailing, glow: glow, ink: ink, refused: refused, action: action) { words }
     }
 }
