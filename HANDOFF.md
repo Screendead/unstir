@@ -70,8 +70,10 @@ Jack picked the Descent (#303) and asked for three versions of it: the Plumb Lin
 beads), Lamplight (dark water, a lamp at the next level, solved levels stay lit as a trail) and the Shelf (an
 illustrated slope of ledges, a pebble per level), in `world/plumb`, `world/lamplight` and `world/shelf`.
 Recommended: Lamplight, with dim levels naming themselves on a tap and a dithered ground. Third pitch page
-https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304. Waiting on
-Jack's pick.
+https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304.
+Jack picked the Shelf (#304): build it for real, and pitch easter egg ideas (e.g. something seen or done on an
+overscroll). In code the world is called the slope (`Slope*`), as `Shelf.swift` and "the shelf" already mean the pack
+dock and shop. The build lands on its own branch and PR, screen by screen, each shown to Jack before it merges.
 
 ### Open work (2026-11-15)
 
