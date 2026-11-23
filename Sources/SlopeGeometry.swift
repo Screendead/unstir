@@ -55,8 +55,9 @@ struct SlopeColumn: Equatable, Sendable {
     /// A ledge's pitch inside a terrace at the overview.
     static let fine: CGFloat = 1.3
     static let full = 9
-    /// How far a ledge's top runs back from its lip in the dive, at the least.
-    static let shelf: CGFloat = 56
+    /// How far a ledge's top runs back from its lip in the dive, at the least: room for the largest pebble clear of the
+    /// wall, which still stands wide enough of the leading edge to hold a hollow.
+    static let shelf: CGFloat = 48
 
     /// The main column on a screen of `size`: the shallows (today, a bare ledge, the archive), the four tiers and the
     /// drop-off. `headers` is the room each tier's header takes in the dive, `pitch`, `lip` and `step` the type
