@@ -28,7 +28,8 @@ struct SlopePebble: View {
     /// The glow swells and falls over this many seconds: 3 for the way on, 1.2 while something is pending. Reduce
     /// Motion holds it full.
     var breath: Double?
-    /// Dull and dimmed, as a closed level's; a dull stone that is open stays whole.
+    /// A dull stone drawn at 0.9: a closed level's, a control with nothing to act on. A level that is open but
+    /// unsolved is dull and whole.
     var dimmed = false
 
     /// How a stone numbered `n` leans.
@@ -175,16 +176,8 @@ struct Stone<Label: View>: View {
                 if trailing { words }
                 SlopePebble(kind: kind, width: width, lean: .radians(trailing ? 0.1 : -0.08),
                             glow: state == .armed ? Page.night.stop : glow,
-                            breath: state == .next ? 3 : state == .pending ? 1.2 : nil)
-                    .keyframeAnimator(initialValue: 0.0, trigger: refused) { stone, degrees in
-                        stone.rotationEffect(.degrees(reduceMotion ? 0 : degrees), anchor: .bottom)
-                    } keyframes: { _ in
-                        CubicKeyframe(6, duration: 0.05)
-                        CubicKeyframe(-6, duration: 0.08)
-                        CubicKeyframe(6, duration: 0.07)
-                        CubicKeyframe(-6, duration: 0.06)
-                        CubicKeyframe(0, duration: 0.04)
-                    }
+                            breath: state == .next ? 3 : state == .pending ? 1.2 : nil, dimmed: state == .dull)
+                    .modifier(StoneRock(refused: refused, still: reduceMotion))
                     .offset(y: pressed && !reduceMotion ? 2 : 0)
                     .scaleEffect(pressed ? 0.97 : 1)
                     .brightness(pressed && reduceMotion ? -0.12 : 0)
@@ -200,6 +193,25 @@ struct Stone<Label: View>: View {
             let colour: Color = engraved ? .ink : state == .armed ? Page.night.stop : ink ?? SlopeInk.ink.colour
             return label().font(.slope(.ui, .body, state == .next ? .medium : nil)).foregroundStyle(colour)
                 .opacity(engraved ? 1 : state == .dull ? SlopeInk.ink4.strength : state == .pending ? SlopeInk.ink2.strength : 1)
+        }
+    }
+}
+
+/// A refused stone rocks 6° either way twice in 0.3 s; under Reduce Motion it stays where it is.
+private struct StoneRock: ViewModifier {
+    var refused: Int
+    var still: Bool
+
+    func body(content: Content) -> some View {
+        let reach = still ? 0.0 : 6.0
+        content.keyframeAnimator(initialValue: 0.0, trigger: refused) { stone, degrees in
+            stone.rotationEffect(.degrees(degrees), anchor: .bottom)
+        } keyframes: { _ in
+            CubicKeyframe(reach, duration: 0.05)
+            CubicKeyframe(-reach, duration: 0.08)
+            CubicKeyframe(reach, duration: 0.07)
+            CubicKeyframe(-reach, duration: 0.06)
+            CubicKeyframe(0, duration: 0.04)
         }
     }
 }

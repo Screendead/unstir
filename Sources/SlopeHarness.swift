@@ -9,9 +9,9 @@ import SwiftUI
 /// - `overview`: the whole main column.
 /// - `dive`: the main column scrolled by a finger from the surface to endless, opening on UNSTIR_SLOPEAT: a tier's
 ///   level by its id (`L14`), or `endless`; the surface when unset.
-/// - `zoom`: the overview, then a second and a half in the depth opens onto UNSTIR_SLOPEAT, and four seconds later
-///   closes again.
-/// - `descent`: the dive's camera carried from the surface to the foot in UNSTIR_SLOPESECONDS (16).
+/// - `zoom`: the overview, then a second and a half in the depth opens onto UNSTIR_SLOPEAT, the scrolling dive takes
+///   over where the zoom lands, and four seconds later the depth closes again.
+/// - `descent`: the dive scrolled from the surface to the foot in UNSTIR_SLOPESECONDS (16), as a finger would.
 /// - `play`: the ground as a level holds it at UNSTIR_SLOPEAT, the shelf drawn aside and the lone terrace up, two
 ///   stones on it. UNSTIR_SLOPELOOK=paper is Escapement's page, =clear Prism's water, =dim the ground at 0.35 of
 ///   its light.
@@ -35,6 +35,7 @@ struct SlopeHarness: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.displayScale) private var scale
     @State private var moved = false
+    @State private var landed = false
     @State private var taps = 0
 
     init?(_ env: [String: String], clock: Double?) {
@@ -53,15 +54,17 @@ struct SlopeHarness: View {
             let size = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
                               height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
             let column = SlopeColumn.main(size: size, type: typeSize, header: TypeRole.body.line(at: typeSize).height * 3.4)
-            let deep = SlopeLay(column, z: 1), travel = deep.travel(height: size.height)
+            let deep = SlopeLay(column, z: 1)
             let near = !typeSize.isAccessibilitySize
-            // Where the dive holds its target: a level at the screen's middle, the surface or the foot at the travel's end.
-            let focus = at ?? (endless ? deep.count - 1 : 0)
-            let share = at != nil ? 0.49 : (deep.tops[focus] - (endless ? travel.upperBound : travel.lowerBound)) / size.height
+            // Where the dive holds its target: a level just over the screen's middle, the surface at the travel's top,
+            // endless at its foot. A scene holds the same camera by a real ledge and the share that puts it there.
+            let aim = at.map { SlopeAim(ledge: $0) } ?? SlopeAim(ledge: endless ? deep.count : 0, share: endless ? 0.5 : 1)
+            let focus = min(aim.ledge, deep.count - 1)
+            let share = (deep.tops[focus] - deep.rest(aim, height: size.height)) / size.height
             let wide = SlopeScene<EmptyView>.overview(column, holding: focus, height: size.height)
             switch stage {
             case .dive:
-                SlopeDive(column: column, start: at ?? (endless ? deep.count - 1 : nil), clock: clock, near: near) { view in
+                SlopeDive(column: column, aim: aim, clock: clock, near: near) { view in
                     SlopeStandIns(view: view, solved: solved, cull: false, taps: $taps)
                 }
             case .overview:
@@ -69,24 +72,38 @@ struct SlopeHarness: View {
                     SlopeStandIns(view: view, solved: solved, cull: true, taps: $taps)
                 }
             case .zoom:
-                SlopeScene(column: column, focus: focus, at: moved ? share : wide, z: moved ? 1 : 0, clock: clock, near: near) { view in
-                    SlopeStandIns(view: view, solved: solved, cull: true, taps: $taps)
+                // As a menu would: the scene carries the zoom, and the dive takes over where it comes to rest.
+                ZStack {
+                    if landed {
+                        SlopeDive(column: column, aim: aim, clock: clock, near: near) { view in
+                            SlopeStandIns(view: view, solved: solved, cull: false, taps: $taps)
+                        }
+                    } else {
+                        SlopeScene(column: column, focus: focus, at: moved ? share : wide, z: moved ? 1 : 0, clock: clock, near: near) { view in
+                            SlopeStandIns(view: view, solved: solved, cull: true, taps: $taps)
+                        }
+                    }
                 }
                 .task {
                     try? await Task.sleep(for: .seconds(1.5))
                     withAnimation(.easeOut(duration: 1.1)) { moved = true }
-                    try? await Task.sleep(for: .seconds(4))
+                    try? await Task.sleep(for: .seconds(1.6))
+                    landed = true
+                    try? await Task.sleep(for: .seconds(2.4))
+                    landed = false
+                    try? await Task.sleep(for: .seconds(0.3))
                     withAnimation(.easeOut(duration: 1.1)) { moved = false }
                 }
             case .descent:
-                let last = deep.count - 1
-                SlopeScene(column: column, focus: moved ? last : 0,
-                           at: (deep.tops[moved ? last : 0] - (moved ? travel.upperBound : travel.lowerBound)) / size.height, z: 1,
-                           clock: clock, near: near) { view in
-                    SlopeStandIns(view: view, solved: solved, cull: true, taps: $taps)
+                // The finger's own path, moved for it: the dive scrolls from the surface to the foot.
+                SlopeDive(column: column, aim: moved ? SlopeAim(ledge: deep.count, share: 0.5) : SlopeAim(ledge: 0, share: 1),
+                          seconds: seconds, clock: clock, near: near) { view in
+                    SlopeStandIns(view: view, solved: solved, cull: false, taps: $taps)
                 }
-                // The camera's depth, not its ledge, is what travels: both ends are written from the same ledge.
-                .modifier(Travel(deep: deep, height: size.height, moved: $moved, seconds: seconds))
+                .task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    moved = true
+                }
             case .play:
                 let paper = look == "paper"
                 SlopeScene(column: column, focus: focus, at: share, z: 1, held: true,
@@ -102,9 +119,7 @@ struct SlopeHarness: View {
                     }
                 }
             case .hollow:
-                Rectangle().fill(.black).ignoresSafeArea()
-                    .colorEffect(ShaderLibrary.slopeHollow(.float2(size), .float4(scale, 0, 0, 0), .float2(size.width / 2, size.height * 0.3),
-                                                           .float3(1, 0.16, 0.16), .float3(0.16, 1, 0.3), .float3(0.2, 0.4, 1)))
+                SlopeHollowGround(beams: (SIMD3(1, 0.16, 0.16), SIMD3(0.16, 1, 0.3), SIMD3(0.2, 0.4, 1)))
             case .pack:
                 let pack = SlopeColumn(stretches: (0 ..< 5).map { _ in .init(rock: .pale, terraces: [6], header: column.pitch) },
                                        foot: .floor, surface: false, pitch: column.pitch, lip: column.lip, step: column.step, first: nil)
@@ -136,21 +151,6 @@ struct SlopeHarness: View {
             }
         }
         .background(Color.black.ignoresSafeArea())
-    }
-
-    /// Starts the descent a second and a half in.
-    private struct Travel: ViewModifier {
-        let deep: SlopeLay
-        let height: CGFloat
-        @Binding var moved: Bool
-        let seconds: Double
-
-        func body(content: Content) -> some View {
-            content.task {
-                try? await Task.sleep(for: .seconds(1.5))
-                withAnimation(.timingCurve(0.3, 0, 0.7, 1, duration: seconds)) { moved = true }
-            }
-        }
     }
 }
 

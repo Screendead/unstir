@@ -55,6 +55,9 @@ struct SlopeColumn: Equatable, Sendable {
     /// A ledge's pitch inside a terrace at the overview.
     static let fine: CGFloat = 1.3
     static let full = 9
+    /// How far a ledge's top runs back from its lip in the dive, at the least: room for the largest pebble clear of the
+    /// wall, which still stands wide enough of the leading edge to hold a hollow.
+    static let shelf: CGFloat = 48
 
     /// The main column on a screen of `size`: the shallows (today, a bare ledge, the archive), the four tiers and the
     /// drop-off. `headers` is the room each tier's header takes in the dive, `pitch`, `lip` and `step` the type
@@ -80,6 +83,13 @@ struct SlopeColumn: Equatable, Sendable {
 struct SlopeCamera: Equatable, Sendable {
     var top: CGFloat
     var z: CGFloat = 1
+}
+
+/// Where a camera holds the column: ledge `ledge`'s top at `share` of the screen's height. A ledge past the last is
+/// the foot, endless's word.
+struct SlopeAim: Equatable, Sendable {
+    var ledge: Int
+    var share: CGFloat = 0.49
 }
 
 /// A column laid out at one zoom: where each ledge is, where its pebble sits, and what the shader is given, all from
@@ -156,7 +166,10 @@ struct SlopeLay: Sendable {
         var backs: [CGFloat] = [], fathoms: [CGFloat] = []
         for n in 0 ..< count {
             let above = max(n - 1, 0)
-            let usual = min(tips[above], tips[n]) - 0.85 * SlopeColumn.shapes[rocks[above].rawValue].under * sized(above)
+            // The top runs back at least `shelf` from its lip, so the largest pebble rests on its outer half, clear of
+            // the wall.
+            let usual = min(min(tips[above], tips[n]) - 0.85 * SlopeColumn.shapes[rocks[above].rawValue].under * sized(above),
+                            tips[n] - SlopeColumn.shelf * sized(n))
             // At the overview a terrace is one ledge that runs out from the wall.
             backs.append(places[n].2 == 0 ? usual + (min(usual, walls[n]) - usual) * (1 - e) : usual)
         }
@@ -195,9 +208,10 @@ struct SlopeLay: Sendable {
     func lip(_ n: Int) -> CGPoint { CGPoint(x: tips[n], y: tops[n] + 10 * scale(n)) }
 
     /// How far under its top line ledge `n`'s top lies at `x`: Slope.metal's `crown`, which rounds the top down to
-    /// the nose.
+    /// the nose in the dive and, at the overview, undoes the `lift`.
     func crown(_ n: Int, at x: CGFloat) -> CGFloat {
         10 * scale(n) * (1 - cbrt(min(max((tips[n] - x) / max(tips[n] - backs[n], 1), 0), 1)))
+            + max(SlopeLay.lift(x) - SlopeLay.lift(backs[n]), 0) * (1 - e)
     }
 
     /// Where a pebble rests on ledge `n`: the point of the ledge's top under the pebble's middle.
@@ -211,7 +225,12 @@ struct SlopeLay: Sendable {
         return depth
     }
 
-    static func bow(_ x: CGFloat, _ depth: CGFloat) -> CGFloat { 3.4 * sin(x * 0.021 + depth * 0.033) + 0.03 * (x - 60) }
+    static func bow(_ x: CGFloat, _ depth: CGFloat) -> CGFloat { 3.4 * sin(x * 0.021 + depth * 0.033) - lift(x) }
+
+    /// How far the overview lifts the rock at `x`, about what nine ledges step down along a terrace. Each ledge
+    /// leans down from its back by as much (`crown`), so on the screen every top lies level and a terrace of nine
+    /// reads as one long ledge. Slope.metal's `slopeLift`.
+    static func lift(_ x: CGFloat) -> CGFloat { 22 * x / sqrt(x * x + 40000) }
 
     /// The middle of the water's room beside ledges `a` and the next, where a hollow opens in the wall.
     func between(_ a: Int) -> CGFloat { tops[a] + drops[a] / 2 }
@@ -232,6 +251,15 @@ struct SlopeLay: Sendable {
     /// The camera that holds ledge `n`'s top `at` that share of a screen `height` tall.
     func camera(on n: Int, at share: CGFloat = 0.49, height: CGFloat) -> SlopeCamera {
         SlopeCamera(top: tops[min(max(n, 0), count - 1)] - share * height, z: z)
+    }
+
+    /// Ledge `n`'s top, as a depth; past the last ledge, the foot's word.
+    func depth(_ n: Int) -> CGFloat { n < count ? tops[max(n, 0)] : endless }
+
+    /// The camera's depth that holds `aim` on a screen `height` tall, kept inside the travel: where a dive rests on it.
+    func rest(_ aim: SlopeAim, height: CGFloat) -> CGFloat {
+        let travel = travel(height: height)
+        return min(max(depth(aim.ledge) - aim.share * height, travel.lowerBound), travel.upperBound)
     }
 
     /// The dive's travel on a screen `height` tall: from the surface at 0.188 of it, to the foot's word at its middle.
