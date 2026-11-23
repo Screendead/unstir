@@ -1,0 +1,7444 @@
+[
+ {
+  "key": null,
+  "text": "clean",
+  "files": [
+   "Archive.swift",
+   "ResultCard.swift",
+   "Share.swift",
+   "Spoken.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "The archive's mark for a day solved with nothing wasted",
+   "VoiceOver: a row's best, solved with nothing wasted",
+   "The card's best line: the best before, solved with nothing wasted",
+   "Share line: solved with nothing wasted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "par",
+  "files": [
+   "Archive.swift",
+   "ResultCard.swift",
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The archive's mark for a day solved at par",
+   "The card's best line: the best before, at par",
+   "A pack's row: its best, at par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "tried",
+  "files": [
+   "Archive.swift",
+   "Shelf.swift",
+   "Spoken.swift"
+  ],
+  "comments": [
+   "The archive's mark for a day started, with no best",
+   "VoiceOver: a row started, with no best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "at par",
+  "files": [
+   "Archive.swift",
+   "ResultCard.swift",
+   "Spoken.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: a row's best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(n) over par",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": [
+   "VoiceOver: an archive day's best. Moves over par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "not played",
+  "files": [
+   "Archive.swift",
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a menu row with no best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "past",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Archive",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "unlocked by purchasing any pack",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(days) past dailies",
+  "files": [
+   "Archive.swift",
+   "Spoken.swift"
+  ],
+  "comments": [
+   "The menu's archive row. Past dailies",
+   "VoiceOver: the archive row's hint"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(days) past dailies \\u{00B7} \\(atPar) at par",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": [
+   "The menu's archive row. Past dailies, then how many are at par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(days) past dailies \\u{00B7} comes with any pack",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": [
+   "The menu's archive row, shut until a purchase. Past dailies"
+  ]
+ },
+ {
+  "key": null,
+  "text": "PAST DAILIES",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Every daily as it was dealt. A best here is its own: only a daily solved on its day adds to the days running.",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "done \\(marks.filter { $0 == .clean || $0 == .par }.count)/\\(days.count) at par",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "today",
+  "files": [
+   "Archive.swift",
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "The archive's grid: today, whose daily is on the menu"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Today. Its daily is on the menu.",
+  "files": [
+   "Archive.swift"
+  ],
+  "comments": [
+   "VoiceOver: the archive's grid, on today"
+  ]
+ },
+ {
+  "key": null,
+  "text": "brim",
+  "files": [
+   "Brim.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's brim, the gauge round the tank's rim"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(brim) of \\(Run.room)",
+  "files": [
+   "Brim.swift"
+  ],
+  "comments": [
+   "VoiceOver: the brim's notches filled, of the notches it holds"
+  ]
+ },
+ {
+  "key": null,
+  "text": "spilled.",
+  "files": [
+   "Brim.swift"
+  ],
+  "comments": [
+   "Stamped over the tank as an endless run spills"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Help improve Unstir?",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: its question"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Let the game tell us how you play. Never who you are.",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: under its question"
+  ]
+ },
+ {
+  "key": null,
+  "text": "What does it send? \\u{203A}",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: the link that shows what is sent"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Hide the list \\u{2039}",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: the link that hides what is sent"
+  ]
+ },
+ {
+  "key": null,
+  "text": "If you say yes, the game tells us how you play: which puzzles you finish, how many moves and undos they take, which days you play, which packs you buy, and roughly which country you're in. It never sends your name, your Apple ID, or anything that tells us who you are. You can change your mind any time in settings.",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: what is sent. Keep in step with the privacy policy"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Yes",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: the answer that agrees"
+  ]
+ },
+ {
+  "key": null,
+  "text": "No",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Analytics consent: the answer that declines"
+  ]
+ },
+ {
+  "key": null,
+  "text": "settings",
+  "files": [
+   "Consent.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "The settings sheet's title",
+   "The slope's menu: the stone on the bank, which opens settings"
+  ]
+ },
+ {
+  "key": null,
+  "text": "analytics",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the analytics switch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "on \\u{00B7} how you play, never who you are",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the analytics switch, on"
+  ]
+ },
+ {
+  "key": null,
+  "text": "off \\u{00B7} nothing is sent",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the analytics switch, off"
+  ]
+ },
+ {
+  "key": null,
+  "text": "music",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the music switch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "the beds under the menu and the levels",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what the music switch plays"
+  ]
+ },
+ {
+  "key": null,
+  "text": "sounds",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the sounds switch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "every effect and button",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what the sounds switch plays"
+  ]
+ },
+ {
+  "key": null,
+  "text": "haptics",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the haptics switch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "the tank's knocks and taps",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what the haptics switch plays"
+  ]
+ },
+ {
+  "key": null,
+  "text": "report a problem",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the row that mails the log"
+  ]
+ },
+ {
+  "key": null,
+  "text": "with the log: touches, moves, purchases and errors",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what a report sends"
+  ]
+ },
+ {
+  "key": null,
+  "text": "privacy policy",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the row that opens the policy"
+  ]
+ },
+ {
+  "key": null,
+  "text": "restore purchases",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings and a pack's card: restore"
+  ]
+ },
+ {
+  "key": null,
+  "text": "packs bought on this Apple ID",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what restore brings back"
+  ]
+ },
+ {
+  "key": null,
+  "text": "what the game keeps, and why",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what the policy says"
+  ]
+ },
+ {
+  "key": null,
+  "text": "colour letters",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the switch for Prism's knob letters"
+  ]
+ },
+ {
+  "key": null,
+  "text": "R, G and B on Prism's knobs",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: what the colour letters switch shows"
+  ]
+ },
+ {
+  "key": null,
+  "text": "supporter mark",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: the supporter mark's switch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\u{2726} by the title and in the daily's share line",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Settings: where the supporter mark shows"
+  ]
+ },
+ {
+  "key": null,
+  "text": "open every tier",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Editors' build words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "every level and pack too, without buying",
+  "files": [
+   "Consent.swift"
+  ],
+  "comments": [
+   "Editors' build words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "shown",
+  "files": [
+   "Consent.swift",
+   "SlopeConsent.swift"
+  ],
+  "comments": [
+   "VoiceOver: the consent's list of what is sent, open"
+  ]
+ },
+ {
+  "key": null,
+  "text": "hidden",
+  "files": [
+   "Consent.swift",
+   "SlopeConsent.swift"
+  ],
+  "comments": [
+   "VoiceOver: the consent's list of what is sent, shut"
+  ]
+ },
+ {
+  "key": null,
+  "text": "on",
+  "files": [
+   "Consent.swift",
+   "TankView.swift",
+   "SlopePlay.swift",
+   "SlopeSettings.swift"
+  ],
+  "comments": [
+   "VoiceOver: a switch, on",
+   "Settings: a switch's state, on"
+  ]
+ },
+ {
+  "key": null,
+  "text": "off",
+  "files": [
+   "Consent.swift",
+   "TankView.swift",
+   "SlopePlay.swift",
+   "SlopeSettings.swift"
+  ],
+  "comments": [
+   "VoiceOver: a switch, off",
+   "Settings: a switch's state, off"
+  ]
+ },
+ {
+  "key": null,
+  "text": "out of ticks.",
+  "files": [
+   "EscapementViews.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Sunrise",
+  "files": [
+   "FirstStir.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The gallery",
+  "files": [
+   "FirstStir.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The rock pool",
+  "files": [
+   "FirstStir.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Righting the boat",
+  "files": [
+   "FirstStir.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Tea on the quay",
+  "files": [
+   "FirstStir.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Lighting the lamp",
+  "files": [
+   "FirstStirDuskBefore.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The path to the light",
+  "files": [
+   "FirstStirDuskBefore.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Doubling the lines",
+  "files": [
+   "FirstStirDuskBefore.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The float",
+  "files": [
+   "FirstStirDuskBefore.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "First stir",
+  "files": [
+   "FirstStirDuskBefore.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lantern is boarded up.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The boat is bailed, her mast stepped.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The door shuts; the fire is lit.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "A neighbour measures the broken panes.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The gulls come back to the rail.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Chimneys smoke across the town.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The rope is coiled, the door shut.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She finds the float in the pool.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The dog sits by her boots.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The haulers ease the rope and wave.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The boat comes upright.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Gulls wake into a paling sky.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lifeboat's lamp goes out.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She falls asleep against her father.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Three cups of tea, poured.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lifeboat comes into the harbour.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She leaves the torch on the sill.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Blankets are held out on the steps.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "They help Grandmother aboard.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lifeboat comes alongside.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The stair window goes dark.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lifeboat is launched.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lanterns reach the lighthouse.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Four lanterns held high in a row.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She is helped down; the lamp burns on.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Lanterns gather far below.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Father climbs, his lantern left below.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The signal lamp leaves the window.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Father ties the rope off.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The door opens; he is in.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The rope is tied at the quay.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Father starts out along the path.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "A lamp shows in the gallery.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The town clock reads five past two.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The street lamp drowns and goes out.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Two men row down the street.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She shines the torch from the window.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The weathervane bends over.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The water rises; the float drifts out.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The teacup floats off the table.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She carries the dog upstairs.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The float drifts for the door.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The boat sinks low.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lantern is washed away.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "A wave breaks over the wall.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lantern smashes.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The boat breaks loose and capsizes.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Father runs out; the lantern falls.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Lightning forks into the sea.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The power fails; a candle is lit.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She hides in her father's arms.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Spray climbs to the gallery.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The bell buoy heels over, ringing.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The hut's shutter tears off.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The awning tears to strips.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The bicycle blows over.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The shop sign swings from one chain.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The line snaps; a shirt flies off.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The neighbour bars her shutters.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She brings the dog in.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Grandmother lights the lamp.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The gulls flock inland.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Windows light across the town.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Grandmother reaches the lighthouse.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She waves from the quay rail.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "A thin moon rises by the star.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Father doubles the boat's lines.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The barometer falls to storm.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "A lamp is lit behind the float.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The float is hung in the window.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Father takes his oilskin and goes.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Grandmother gives her the float.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The sun sinks toward a curl of cloud.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The kitchen clock ticks on.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "She lays the spoon down.",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": [
+   "First Stir ending beat"
+  ]
+ },
+ {
+  "key": null,
+  "text": "tap to skip",
+  "files": [
+   "FirstStirEnding.swift",
+   "TankView.swift"
+  ],
+  "comments": [
+   "The caption over an opening's stir"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The night, played forwards",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Skips it",
+  "files": [
+   "FirstStirEnding.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "The breakwater path",
+  "files": [
+   "FirstStirFlood.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "High street under water",
+  "files": [
+   "FirstStirFlood.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The upstairs window",
+  "files": [
+   "FirstStirFlood.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The kitchen, flooded",
+  "files": [
+   "FirstStirFlood.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Over the quay",
+  "files": [
+   "FirstStirFlood.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Home light",
+  "files": [
+   "FirstStirRescue.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Off the breakwater",
+  "files": [
+   "FirstStirRescue.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lantern chain",
+  "files": [
+   "FirstStirRescue.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The stair",
+  "files": [
+   "FirstStirRescue.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The lighthouse door",
+  "files": [
+   "FirstStirRescue.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The harbour",
+  "files": [
+   "FirstStirTheStorm.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Lightning",
+  "files": [
+   "FirstStirTheStorm.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The bell buoy",
+  "files": [
+   "FirstStirTheStorm.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "High street, rain",
+  "files": [
+   "FirstStirTheStorm.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Washing",
+  "files": [
+   "FirstStirTheStorm.swift"
+  ],
+  "comments": [
+   "First Stir scene title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "That tick can't come back. Reset.",
+  "files": [
+   "Game.swift"
+  ],
+  "comments": [
+   "Escapement: a pushed tick, no undo left"
+  ]
+ },
+ {
+  "key": null,
+  "text": "That tick can't come back. Undo, or again.",
+  "files": [
+   "Game.swift"
+  ],
+  "comments": [
+   "Escapement: a pushed tick"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Plughole",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name: the easiest, water draining"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Whirlpool",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name: the second"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Vortex",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name: the third, the wind's swirl"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Maelstrom",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name: the hardest, a sea whirlpool"
+  ]
+ },
+ {
+  "key": null,
+  "text": "plughole",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name in lower case, on the menu: the easiest"
+  ]
+ },
+ {
+  "key": null,
+  "text": "whirlpool",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name in lower case, on the menu: the second"
+  ]
+ },
+ {
+  "key": null,
+  "text": "vortex",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name in lower case, on the menu: the third"
+  ]
+ },
+ {
+  "key": null,
+  "text": "maelstrom",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Tier name in lower case, on the menu: the hardest"
+  ]
+ },
+ {
+  "key": "level.L1.title",
+  "text": "Drop",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L1.note",
+  "text": "Turn a rod to look. Let go where you started and nothing happens.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L2.title",
+  "text": "Drip",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L3.title",
+  "text": "Trickle",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L3.note",
+  "text": "The last rod you saw turn is on top.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L4.title",
+  "text": "Ripple",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L4.note",
+  "text": "Where two rings cross, the later one runs unbroken.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L5.title",
+  "text": "Bubble",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L5.note",
+  "text": "Where two discs overlap, the order they come off matters.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L6.title",
+  "text": "Fizz",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L6.note",
+  "text": "One rod was stirred twice. Its newer stir comes off first.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L7.title",
+  "text": "Sprinkle",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L8.title",
+  "text": "Mist",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L8.note",
+  "text": "Turn a rod to look. A fresh hard ring means not that one.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L9.title",
+  "text": "Spray",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L9.note",
+  "text": "Rings that never meet come off in any order.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L10.title",
+  "text": "Splash",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L11.title",
+  "text": "Puddle",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L11.note",
+  "text": "Any whole ring can come off.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L12.title",
+  "text": "Froth",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L12.note",
+  "text": "A small stir is not an old one.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L13.title",
+  "text": "Suds",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L14.title",
+  "text": "Lather",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L14.note",
+  "text": "The small rods count as much as the big ones.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L15.title",
+  "text": "Steam",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L15.note",
+  "text": "The small stir is on top.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L16.title",
+  "text": "Gurgle",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L16.note",
+  "text": "Turned, stirred past, turned back: all it leaves is a tail.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L17.title",
+  "text": "Rinse",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L18.title",
+  "text": "Drizzle",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L19.title",
+  "text": "Shower",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L20.title",
+  "text": "Downpour",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L20.note",
+  "text": "Read where the rings cross, not their colours.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L21.title",
+  "text": "Overflow",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L21.note",
+  "text": "One ring is whole. Find it.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L22.title",
+  "text": "Bathwater",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L23.title",
+  "text": "Spin",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L24.title",
+  "text": "Whirl",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L24.note",
+  "text": "The hub's disc crosses every other.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.L25.title",
+  "text": "Spiral",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L26.title",
+  "text": "Last drop",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.L27.title",
+  "text": "Drain",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Plughole level title, a word for draining water"
+  ]
+ },
+ {
+  "key": "level.N1.title",
+  "text": "Spring",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N1.note",
+  "text": "Same rules, twice the stirs, no replays.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.N2.title",
+  "text": "Headwaters",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N3.title",
+  "text": "Creek",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N4.title",
+  "text": "Brook",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N4.note",
+  "text": "The newest ring is never broken.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.N5.title",
+  "text": "Stream",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N6.title",
+  "text": "Shallows",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N7.title",
+  "text": "Stepping stone",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N8.title",
+  "text": "Riverbend",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N9.title",
+  "text": "Millpond",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N10.title",
+  "text": "Dam",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N11.title",
+  "text": "Floodgate",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N11.note",
+  "text": "There is always a whole ring.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.N12.title",
+  "text": "Water wheel",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N13.title",
+  "text": "Rapids",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N14.title",
+  "text": "Cascade",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N15.title",
+  "text": "Waterfall",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N16.title",
+  "text": "Plunge pool",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N17.title",
+  "text": "Ravine",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N18.title",
+  "text": "Canyon",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N19.title",
+  "text": "Meander",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N20.title",
+  "text": "Sandbank",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N21.title",
+  "text": "Wetland",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N22.title",
+  "text": "Eddy",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N23.title",
+  "text": "Tributary",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N24.title",
+  "text": "Watershed",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N25.title",
+  "text": "Floodplain",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N26.title",
+  "text": "Salt marsh",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.N27.title",
+  "text": "Estuary",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Whirlpool level title, a word for a river from its source to the sea"
+  ]
+ },
+ {
+  "key": "level.V1.title",
+  "text": "Calm",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V1.note",
+  "text": "Turn the glass's edge. Everything inside it stirs.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.V2.title",
+  "text": "Light air",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V2.note",
+  "text": "A rod was stirred after the rim.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.V3.title",
+  "text": "Breeze",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V3.note",
+  "text": "The rim was stirred first.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.V4.title",
+  "text": "Gust",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V5.title",
+  "text": "Flurry",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V6.title",
+  "text": "Trade wind",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V7.title",
+  "text": "Headwind",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V8.title",
+  "text": "Tailwind",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V9.title",
+  "text": "Crosswind",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V10.title",
+  "text": "Slipstream",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V11.title",
+  "text": "Fresh breeze",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V12.title",
+  "text": "Westerly",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V12.note",
+  "text": "Read the edge before the middle.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.V13.title",
+  "text": "High wind",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V14.title",
+  "text": "Monsoon",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V15.title",
+  "text": "Jet stream",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V16.title",
+  "text": "Near gale",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V17.title",
+  "text": "Squall",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V18.title",
+  "text": "Gale",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V19.title",
+  "text": "Whirlwind",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V20.title",
+  "text": "Dust devil",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V21.title",
+  "text": "Storm's eye",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V22.title",
+  "text": "Waterspout",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V23.title",
+  "text": "Cyclone",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V24.title",
+  "text": "Typhoon",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V25.title",
+  "text": "Hurricane",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V26.title",
+  "text": "Funnel cloud",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.V27.title",
+  "text": "Tornado",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Vortex level title, a word for wind, gentle to wild"
+  ]
+ },
+ {
+  "key": "level.M1.title",
+  "text": "Swell",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M1.note",
+  "text": "One knob has seized. Turn the tank. Turns count as moves.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.M2.title",
+  "text": "Crest",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M2.note",
+  "text": "The tank turns the other way too.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.M3.title",
+  "text": "Whitecap",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M3.note",
+  "text": "Turn the tank so the seized knob is out of the way.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.M4.title",
+  "text": "Surf",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M5.title",
+  "text": "Breaker",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M6.title",
+  "text": "Sandbar",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M7.title",
+  "text": "Undertow",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M8.title",
+  "text": "Riptide",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M8.note",
+  "text": "Plan two turns of the tank ahead.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.M9.title",
+  "text": "Low tide",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M10.title",
+  "text": "High tide",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M10.note",
+  "text": "The nearer turn is not the shorter way.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.M11.title",
+  "text": "Turning tide",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M12.title",
+  "text": "Spring tide",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M13.title",
+  "text": "Crosscurrent",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M14.title",
+  "text": "Open sea",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M15.title",
+  "text": "Tidal race",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M16.title",
+  "text": "Offshore",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M17.title",
+  "text": "Deep water",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M18.title",
+  "text": "Groundswell",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M18.note",
+  "text": "The right stop is past the obvious one.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A level's lesson, one line under the tank"
+  ]
+ },
+ {
+  "key": "level.M19.title",
+  "text": "High seas",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M20.title",
+  "text": "Surge",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M21.title",
+  "text": "Rogue wave",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M22.title",
+  "text": "Tempest",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M23.title",
+  "text": "Fathom",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M24.title",
+  "text": "Seabed",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M25.title",
+  "text": "Shipwreck",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M26.title",
+  "text": "Trench",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": "level.M27.title",
+  "text": "Abyss",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Maelstrom level title, a word for the sea, rising to its depths"
+  ]
+ },
+ {
+  "key": null,
+  "text": "day",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The daily's row, in a level number's place"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Daily \\u{00B7} \\(day)",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The daily's title. Its date, short"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Frost day: two knobs are frozen. Turn the tank. Turns count as moves.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "A frost day's daily: two knobs seized. One line under the tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Endless",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The endless run's title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "A wrong stir fills the brim, even turned back. Eight and it spills.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "Endless's first tank: the brim's rule. Eight is the brim's room, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "box",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The sandbox's row, in a level number's place"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Sandbox",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The sandbox's title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Stir anything. Undo is free here.",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The sandbox's line under the tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next daily is out",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The daily's card, past midnight"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next daily in \\(minutes) minutes",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "VoiceOver: the daily's card. Minutes to the next"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next daily in \\(minutes) min",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The daily's card. Minutes to the next, short"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next daily in \\(hours) hours",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "VoiceOver: the daily's card. Hours to the next"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next daily in \\(hours) h",
+  "files": [
+   "Levels.swift"
+  ],
+  "comments": [
+   "The daily's card. Hours to the next, short"
+  ]
+ },
+ {
+  "key": null,
+  "text": "archive",
+  "files": [
+   "Menu.swift",
+   "SlopePlay.swift"
+  ],
+  "comments": [
+   "The play screen's back button, to the archive"
+  ]
+ },
+ {
+  "key": null,
+  "text": "levels",
+  "files": [
+   "Menu.swift",
+   "Shelf.swift",
+   "SlopePlay.swift"
+  ],
+  "comments": [
+   "The play screen's back button, to the menu",
+   "A pack's card: its list's heading, where it has no chapters"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(word), locked, opens with every \\(below.word) level solved, \\(lit) of \\(solved.count)",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": [
+   "VoiceOver: a shut tier. The tier, the tier below, then its levels solved, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Settings",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "any picture, any rods \\u{00B7} nothing counts",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": [
+   "The sandbox's row, under its title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "continue \\u{00B7} tank \\(tank) \\u{00B7} brim \\(brim) \\u{00B7} best \\(Best.tanks)",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": [
+   "Endless's row, a run saved: its tank, its brim, then the best run's tanks"
+  ]
+ },
+ {
+  "key": null,
+  "text": "continue \\u{00B7} tank \\(tank) \\u{00B7} brim \\(brim)",
+  "files": [
+   "Menu.swift",
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "Endless's row, a run saved: its tank, then its brim"
+  ]
+ },
+ {
+  "key": null,
+  "text": "deeper every tank \\u{00B7} eight wrong stirs and it spills",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's row. Eight is the brim's room, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "best \\(Best.tanks)",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": [
+   "Endless's row: the best run's tanks"
+  ]
+ },
+ {
+  "key": null,
+  "text": "anything goes",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "UNSTIR",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Unstir, supporter",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: the menu's title, with the supporter mark"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Tier",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Tap again for a new run",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's new run, armed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "new run",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "Endless's row: drops the saved run"
+  ]
+ },
+ {
+  "key": null,
+  "text": "new run? tap again",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "Endless's row: armed, a second tap drops the saved run"
+  ]
+ },
+ {
+  "key": null,
+  "text": "New run",
+  "files": [
+   "Menu.swift",
+   "ResultCard.swift",
+   "SlopeMenu.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: starts a new endless run"
+  ]
+ },
+ {
+  "key": null,
+  "text": "New run, tap again to confirm",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's new run, armed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Drops the saved run and starts another.",
+  "files": [
+   "Menu.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(par.filter { $0 }.count)/\\(par.count) at par",
+  "files": [
+   "Menu.swift",
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "A tier's header. Levels at par, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "locked",
+  "files": [
+   "Menu.swift",
+   "Spoken.swift"
+  ],
+  "comments": [
+   "A shut tier's header",
+   "VoiceOver: a shut menu row"
+  ]
+ },
+ {
+  "key": null,
+  "text": "opens with every \\(below.word) level solved",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": [
+   "A shut tier's gate. The tier below"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Locked. Opens with every \\(below.word) level solved: \\(lit) of \\(solved.count).",
+  "files": [
+   "Menu.swift"
+  ],
+  "comments": [
+   "VoiceOver: a shut tier's gate. The tier below, its levels solved, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "short:",
+  "files": [
+   "Menu.swift",
+   "SlopeGate.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(below.word) \\(first.label), unsolved",
+  "files": [
+   "Menu.swift",
+   "SlopeGate.swift"
+  ],
+  "comments": [
+   "VoiceOver: a level not yet solved. Its tier, its number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(below.word) \\(first.label) to \\(last.label), unsolved",
+  "files": [
+   "Menu.swift",
+   "SlopeGate.swift"
+  ],
+  "comments": [
+   "VoiceOver: levels not yet solved. Their tier, the first number, the last"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Opens \\(below.word) \\(first.label)",
+  "files": [
+   "Menu.swift",
+   "SlopeGate.swift"
+  ],
+  "comments": [
+   "VoiceOver: a level not yet solved. Its tier, its number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\($0.rods.count) rods + swirl",
+  "files": [
+   "Menu.swift",
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "A swirl layout's knobs, then its swirl"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(level.layout.rods.count) rods",
+  "files": [
+   "Menu.swift",
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "VoiceOver: a layout's rods"
+  ]
+ },
+ {
+  "key": null,
+  "text": "playing",
+  "files": [
+   "Menu.swift",
+   "Spoken.swift",
+   "SlopeLedge.swift"
+  ],
+  "comments": [
+   "VoiceOver: the menu row of the level in the tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(rods) \\u{00B7} par \\(level.par)",
+  "files": [
+   "Menu.swift",
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "A row's rods, then its par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "new",
+  "files": [
+   "Menu.swift",
+   "Offer.swift",
+   "Spoken.swift",
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "Under a pack's cover, until its card opens",
+   "VoiceOver: the daily or endless row, until either is opened"
+  ]
+ },
+ {
+  "key": null,
+  "text": "frost day \\u{00B7} \\(run) days running",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "The daily's row on a frost day, two knobs frozen: then the days in a row solved, from two"
+  ]
+ },
+ {
+  "key": null,
+  "text": "frost day",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "The daily's row on a frost day, two knobs frozen"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(run) days running",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "The daily's row: the days in a row solved, from two"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(day.layout.rods.count) rods \\u{00B7} par \\(day.par) \\u{00B7} \\($0)",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "VoiceOver: the daily's row. Its rods, its par, then a frost day or the days in a row solved"
+  ]
+ },
+ {
+  "key": null,
+  "text": "solve every \\($0.word) level to open",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "A shut tier's row, tapped. The tier below"
+  ]
+ },
+ {
+  "key": null,
+  "text": "solve \\(levels[i - 1].label) to open",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "A shut row, tapped. The level number before it"
+  ]
+ },
+ {
+  "key": null,
+  "text": "two",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A count of packs or levels, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "three",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A count of packs or levels, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "four",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A count of packs or levels, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "five",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A count of packs or levels, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "six",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A count of packs or levels, in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "a story told backwards",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "First Stir's pitch, on its card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "some rods zoom instead of turning",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Lens's pitch, on its card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "clocks tick after every move, on a budget of ticks",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Escapement's pitch, on its card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "each rod stirs only some colours",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Prism's pitch, on its card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "three packs, for less",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "The bundle's pitch, on its card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "anyone \\u{00B7} an evening, not a challenge",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Who First Stir is for"
+  ]
+ },
+ {
+  "key": null,
+  "text": "after plughole",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Who Lens is for. The first tier, in lower case"
+  ]
+ },
+ {
+  "key": null,
+  "text": "hard \\u{00B7} composed problems",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Who Escapement is for"
+  ]
+ },
+ {
+  "key": null,
+  "text": "after plughole \\u{00B7} reading by colour",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Who Prism is for. The first tier, in lower case"
+  ]
+ },
+ {
+  "key": null,
+  "text": "after plughole, then harder",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Who the bundle is for. The first tier, in lower case"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "What First Stir holds. Its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(Pack.lens.counted(Pack.lens.planned)) in four issues",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "What Lens holds. Its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "What Escapement holds. Its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(Pack.prism.counted(Pack.prism.planned)) in five trays",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "What Prism holds. Its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(Pack.named(Pack.bundled)) \\u{00B7} \\(Pack.bundled.map(\\.planned).reduce(0, +)) levels",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "What the bundle holds. Its packs, then their levels"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(name) is yours",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "The dock's header once an Ask to Buy is approved"
+  ]
+ },
+ {
+  "key": null,
+  "text": "letters for colour-blind play, in settings",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Prism's card, under its facts"
+  ]
+ },
+ {
+  "key": null,
+  "text": "levels 1\\u{2013}\\(p.taste) free, no purchase",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's card: its free levels"
+  ]
+ },
+ {
+  "key": null,
+  "text": "each pack's first 3 levels",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "The bundle's card: what is free"
+  ]
+ },
+ {
+  "key": null,
+  "text": "restoring\\u{2026}",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Restore purchases, running"
+  ]
+ },
+ {
+  "key": null,
+  "text": "restored \\(Pack.named(Pack.sold().filter(packs.contains)))",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Restore purchases, done. The packs it found"
+  ]
+ },
+ {
+  "key": null,
+  "text": "nothing to restore on this Apple ID",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Restore purchases, nothing found"
+  ]
+ },
+ {
+  "key": null,
+  "text": "couldn't reach the App Store",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Restore purchases, failed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "No connection. Try again when you're online.",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A purchase failed, offline"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Not sold in your country's App Store.",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A purchase failed: not sold here"
+  ]
+ },
+ {
+  "key": null,
+  "text": "In-app purchases are turned off on this iPhone.",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Purchases are barred on this phone"
+  ]
+ },
+ {
+  "key": null,
+  "text": "price loading",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "The buy pill, in the price's place while it loads"
+  ]
+ },
+ {
+  "key": null,
+  "text": "App Store unreachable",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "The buy pill, in the price's place, no App Store"
+  ]
+ },
+ {
+  "key": null,
+  "text": "owned",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's state"
+  ]
+ },
+ {
+  "key": null,
+  "text": "waiting for approval",
+  "files": [
+   "Offer.swift",
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's state: an Ask to Buy sent",
+   "A pack's card: its Ask to Buy sent"
+  ]
+ },
+ {
+  "key": null,
+  "text": "purchase failed",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's state"
+  ]
+ },
+ {
+  "key": null,
+  "text": "no longer shared with you",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's state: a family's share ended"
+  ]
+ },
+ {
+  "key": null,
+  "text": "no longer on this Apple ID",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's state: refunded"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(played)/\\(pack.taste) free",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "Under a pack's cover: its free levels solved, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(played) of \\(pack.taste) free levels solved",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's cover. Its free levels solved, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "menu",
+  "files": [
+   "Offer.swift",
+   "SlopePlay.swift"
+  ],
+  "comments": [
+   "A pack's card: its back button, to the menu",
+   "The slope's play screen's back, from the daily or endless to the menu"
+  ]
+ },
+ {
+  "key": null,
+  "text": "close",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's card beside the menu: closes it"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Close",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's card beside the menu, its close button"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Back",
+  "files": [
+   "Offer.swift",
+   "SlopeSettings.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's card, its back button",
+   "VoiceOver: settings' way back"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(levels.count - pack.taste) more in \\(pack.name).",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's card, over buying: the levels past the free ones. How many, then the pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "You've played the free \\(free). \\(more)",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's card, over buying. The free levels counted in words, then the levels past them"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The first \\(free) are free. \\(more)",
+  "files": [
+   "Offer.swift"
+  ],
+  "comments": [
+   "A pack's card, over buying. The free levels counted in words, then the levels past them"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(names.dropLast().joined(separator: ",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(n) scenes",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "First Stir's levels, counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(n) panels",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens's levels, counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(n) problems",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's levels, counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(n) specimens",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism's levels, counted"
+  ]
+ },
+ {
+  "key": "level.lens-1.title",
+  "text": "Keyhole",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-2.title",
+  "text": "Peephole",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-3.title",
+  "text": "Magnifying glass",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-4.title",
+  "text": "Monocle",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-5.title",
+  "text": "Goggles",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-6.title",
+  "text": "Spyglass",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-7.title",
+  "text": "Binoculars",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-8.title",
+  "text": "Spectacles",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-9.title",
+  "text": "Sunglasses",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-10.title",
+  "text": "Pinhole",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-11.title",
+  "text": "Bifocals",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-12.title",
+  "text": "3D glasses",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-13.title",
+  "text": "Porthole",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-14.title",
+  "text": "Periscope",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-15.title",
+  "text": "Telescope",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-16.title",
+  "text": "Eyepiece",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-17.title",
+  "text": "Microscope",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-18.title",
+  "text": "Night vision",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-19.title",
+  "text": "Camera",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-20.title",
+  "text": "Shutter",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-21.title",
+  "text": "Viewfinder",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-22.title",
+  "text": "Wide angle",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-23.title",
+  "text": "Fisheye",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-24.title",
+  "text": "Telephoto",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "level.lens-25.title",
+  "text": "Kaleidoscope",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens level title, a lens or a way of seeing"
+  ]
+ },
+ {
+  "key": "chapter.lens.1",
+  "text": "Close-up",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens chapter, a film-making word: the first six panels"
+  ]
+ },
+ {
+  "key": "chapter.lens.2",
+  "text": "Cut-in",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens chapter, a film-making word: panels 7 to 12"
+  ]
+ },
+ {
+  "key": "chapter.lens.3",
+  "text": "Double-take",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens chapter, a film-making word: panels 13 to 18"
+  ]
+ },
+ {
+  "key": "chapter.lens.4",
+  "text": "Big Picture",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Lens chapter, a film-making word: the last seven panels"
+  ]
+ },
+ {
+  "key": "level.escapement-1.title",
+  "text": "Mainspring",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-2.title",
+  "text": "Pendulum",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-3.title",
+  "text": "Clock face",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-4.title",
+  "text": "Cogwheel",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-5.title",
+  "text": "Winding key",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-6.title",
+  "text": "Clockwork",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-7.title",
+  "text": "Counterweight",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-8.title",
+  "text": "Snooze",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-9.title",
+  "text": "Hourglass",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-10.title",
+  "text": "Egg timer",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-11.title",
+  "text": "Stopwatch",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-12.title",
+  "text": "Standstill",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-13.title",
+  "text": "Twin dials",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-14.title",
+  "text": "Hour hand",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-15.title",
+  "text": "Minute hand",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-16.title",
+  "text": "Metronome",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-17.title",
+  "text": "Chime",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-18.title",
+  "text": "Cuckoo clock",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-19.title",
+  "text": "Rewind",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-20.title",
+  "text": "Fall back",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-21.title",
+  "text": "Mirror dial",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-22.title",
+  "text": "Anticlockwise",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-23.title",
+  "text": "Overwound",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-24.title",
+  "text": "Reverse",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-25.title",
+  "text": "Moon phase",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-26.title",
+  "text": "Calendar",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-27.title",
+  "text": "Time zones",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-28.title",
+  "text": "Leap year",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-29.title",
+  "text": "Eleventh hour",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "level.escapement-30.title",
+  "text": "Midnight",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement level title, a part of a clock or a word for time"
+  ]
+ },
+ {
+  "key": "chapter.escapement.1",
+  "text": "The Clock",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement chapter: one clock"
+  ]
+ },
+ {
+  "key": "chapter.escapement.2",
+  "text": "Tempo",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement chapter: a chess player's word for a move as a unit of time"
+  ]
+ },
+ {
+  "key": "chapter.escapement.3",
+  "text": "Two Clocks",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement chapter"
+  ]
+ },
+ {
+  "key": "chapter.escapement.4",
+  "text": "Wound Back",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement chapter: a clock that ticks the other way"
+  ]
+ },
+ {
+  "key": "chapter.escapement.5",
+  "text": "Grand Complication",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement chapter: a watchmaking word for a watch of many functions"
+  ]
+ },
+ {
+  "key": "rule.escapement.1",
+  "text": "Unstir in \\(budget) ticks. A clock ticks after every move. Each let-go is a move.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's note under the tank opening its first chapter: the tick budget, then the chapter's rule"
+  ]
+ },
+ {
+  "key": "rule.escapement.2",
+  "text": "Unstir in \\(budget) ticks. Sometimes the first move is to wait.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's note under the tank opening its second chapter: the tick budget, then the chapter's rule"
+  ]
+ },
+ {
+  "key": "rule.escapement.3",
+  "text": "Unstir in \\(budget) ticks. Two clocks tick in turn.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's note under the tank opening its third chapter: the tick budget, then the chapter's rule"
+  ]
+ },
+ {
+  "key": "rule.escapement.4",
+  "text": "Unstir in \\(budget) ticks. A wound-back clock ticks the other way.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's note under the tank opening its fourth chapter: the tick budget, then the chapter's rule"
+  ]
+ },
+ {
+  "key": "rule.escapement.5",
+  "text": "Unstir in \\(budget) ticks. Three clocks.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's note under the tank opening its fifth chapter: the tick budget, then the chapter's rule"
+  ]
+ },
+ {
+  "key": "rule.escapement.wait",
+  "text": "Unstir in \\(level.budget) ticks. Tap wait: the clock ticks, nothing turns.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's note under the tank on problem 2, the first that needs a wait: the tick budget, then what the wait control does"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstir in \\(level.budget) ticks.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Escapement's stipulation under the tank: the tick budget"
+  ]
+ },
+ {
+  "key": "level.prism-1.title",
+  "text": "Frond",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-2.title",
+  "text": "Bracken",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-3.title",
+  "text": "Fiddlehead",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-4.title",
+  "text": "Maidenhair",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-5.title",
+  "text": "Spore",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-6.title",
+  "text": "Tree fern",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-7.title",
+  "text": "Dandelion",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-8.title",
+  "text": "Thistle",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-9.title",
+  "text": "Sunflower",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-10.title",
+  "text": "Poppy",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-11.title",
+  "text": "Sycamore",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-12.title",
+  "text": "Acorn",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-13.title",
+  "text": "Jellyfish",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-14.title",
+  "text": "Moon jelly",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-15.title",
+  "text": "Sea nettle",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-16.title",
+  "text": "Tentacles",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-17.title",
+  "text": "Lion's mane",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-18.title",
+  "text": "Compass jelly",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-19.title",
+  "text": "Plankton",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-20.title",
+  "text": "Lattice",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-21.title",
+  "text": "Pollen",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-22.title",
+  "text": "Sunburst",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-23.title",
+  "text": "Sea urchin",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-24.title",
+  "text": "Honeycomb",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-25.title",
+  "text": "Ammonite",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-26.title",
+  "text": "Oyster",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-27.title",
+  "text": "Conch",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-28.title",
+  "text": "Pearl",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-29.title",
+  "text": "Scallop",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "level.prism-30.title",
+  "text": "Nautilus",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism level title, the plate's specimen"
+  ]
+ },
+ {
+  "key": "chapter.prism.1",
+  "text": "Two Colours",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism tray: red and cyan"
+  ]
+ },
+ {
+  "key": "chapter.prism.2",
+  "text": "Three Colours",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism tray: red, green and blue"
+  ]
+ },
+ {
+  "key": "chapter.prism.3",
+  "text": "Colour Order",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism tray: inks that block each other"
+  ]
+ },
+ {
+  "key": "chapter.prism.4",
+  "text": "Overprint",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism tray: a printing word, primaries and inks together"
+  ]
+ },
+ {
+  "key": "chapter.prism.5",
+  "text": "Spectrum",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism tray: every colour"
+  ]
+ },
+ {
+  "key": "rule.prism.1",
+  "text": "Each rod stirs only its knob's colours.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism's first tray's rule, under the tank"
+  ]
+ },
+ {
+  "key": "rule.prism.2",
+  "text": "Red, green and blue pass through each other.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism's second tray's rule, under the tank"
+  ]
+ },
+ {
+  "key": "rule.prism.3",
+  "text": "Inks that share a colour block each other.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism's third tray's rule, under the tank"
+  ]
+ },
+ {
+  "key": "rule.prism.4",
+  "text": "Red passes cyan, and blocks yellow and magenta.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism's fourth tray's rule, under the tank"
+  ]
+ },
+ {
+  "key": "rule.prism.5",
+  "text": "White stirs every colour.",
+  "files": [
+   "Pack.swift"
+  ],
+  "comments": [
+   "Prism's fifth tray's rule, under the tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(offer.name): \\(offer.pitch). A level from each pack, played.",
+  "files": [
+   "PackCovers.swift"
+  ],
+  "comments": [
+   "VoiceOver: the bundle's clip. Its name, then its pitch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(offer.name): \\(offer.pitch). A level played.",
+  "files": [
+   "PackCovers.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's clip. Its name, then its pitch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "made by screendead \\u{00B7} thank you for playing",
+  "files": [
+   "Payoff.swift"
+  ],
+  "comments": [
+   "The credit after the last free level. screendead is the maker's name, never translated"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Made by screendead. Thank you for playing.",
+  "files": [
+   "Payoff.swift"
+  ],
+  "comments": [
+   "VoiceOver: the credit after the last free level. screendead is the maker's name, never translated"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(pack.counted(pack.levels.count)) unstirred",
+  "files": [
+   "Payoff.swift"
+  ],
+  "comments": [
+   "The curtain after a pack's last level, under the pack's name: its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "unstirred.",
+  "files": [
+   "Payoff.swift",
+   "TankView.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "The curtain after a tier's last level, under the tier's name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(pack.name): \\(pack.counted(pack.levels.count)) unstirred.",
+  "files": [
+   "Payoff.swift"
+  ],
+  "comments": [
+   "VoiceOver: the curtain after a pack's last level. The pack, then its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(tier.name), unstirred.",
+  "files": [
+   "Payoff.swift"
+  ],
+  "comments": [
+   "VoiceOver: the curtain after a tier's last level. The tier"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Goes on to the result.",
+  "files": [
+   "PayoffViews.swift"
+  ],
+  "comments": [
+   "VoiceOver: the curtain call's hint, as activating it skips to the result card"
+  ]
+ },
+ {
+  "key": "picture.grid",
+  "text": "grid",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.sunset",
+  "text": "sunset",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.city",
+  "text": "city",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.glass",
+  "text": "glass",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.chainmail",
+  "text": "chainmail",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.coral",
+  "text": "coral",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.neurons",
+  "text": "neurons",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.marbling",
+  "text": "marbling",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.glassTwin",
+  "text": "glassTwin",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.chainmailTwin",
+  "text": "chainmailTwin",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.coralTwin",
+  "text": "coralTwin",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.neuronsTwin",
+  "text": "neuronsTwin",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.marblingTwin",
+  "text": "marblingTwin",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.isobars",
+  "text": "isobars",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.ephemeris",
+  "text": "ephemeris",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.cords",
+  "text": "cords",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.halftone",
+  "text": "halftone",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.fern",
+  "text": "fern",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.seeds",
+  "text": "seeds",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.medusae",
+  "text": "medusae",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.radiolaria",
+  "text": "radiolaria",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.nautilus",
+  "text": "nautilus",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "picture.engineTurned",
+  "text": "engineTurned",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A picture's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.tri",
+  "text": "tri",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.quad",
+  "text": "quad",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.eye",
+  "text": "eye",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.pent",
+  "text": "pent",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.hex",
+  "text": "hex",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.triSwirl",
+  "text": "triSwirl",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.quadSwirl",
+  "text": "quadSwirl",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.eyeSwirl",
+  "text": "eyeSwirl",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.pentSwirl",
+  "text": "pentSwirl",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": "layout.hexSwirl",
+  "text": "hexSwirl",
+  "files": [
+   "Pictures.swift"
+  ],
+  "comments": [
+   "A layout's name on the sandbox's control"
+  ]
+ },
+ {
+  "key": null,
+  "text": "moves \\(moves) / par \\($0)",
+  "files": [
+   "PlayChrome.swift"
+  ],
+  "comments": [
+   "The play screen's count. Moves, then par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "moves \\(moves)",
+  "files": [
+   "PlayChrome.swift"
+  ],
+  "comments": [
+   "The play screen's count, endless. Moves"
+  ]
+ },
+ {
+  "key": null,
+  "text": "undo",
+  "files": [
+   "PlayChrome.swift",
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "undo \\u{00B7} \\(bank)",
+  "files": [
+   "PlayChrome.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Undo",
+  "files": [
+   "PlayChrome.swift",
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: the undo button"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Undo, \\(bank) left",
+  "files": [
+   "PlayChrome.swift"
+  ],
+  "comments": [
+   "VoiceOver: the undo button. Undos left"
+  ]
+ },
+ {
+  "key": null,
+  "text": "+\\(badge) undos",
+  "files": [
+   "PlayChrome.swift",
+   "SlopePlay.swift"
+  ],
+  "comments": [
+   "Over the undo button: the day's first refill"
+  ]
+ },
+ {
+  "key": null,
+  "text": "undo \\u{00B7} \\(10)",
+  "files": [
+   "PlayLayout.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "wait",
+  "files": [
+   "PlayLayout.swift",
+   "TankView.swift"
+  ],
+  "comments": [
+   "Escapement's play control: a move that only ticks the clocks"
+  ]
+ },
+ {
+  "key": null,
+  "text": "reset",
+  "files": [
+   "PlayLayout.swift",
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(p.name) complete \\u{00B7} \\(p.counted(p.levels.count))",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "The card of a pack's last level. The pack, then its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "every tier unstirred",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "The card of the last tier's last level"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(p.name) complete, \\(p.counted(p.levels.count)).",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "VoiceOver: the card of a pack's last level. The pack, then its levels counted"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Every tier unstirred.",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "VoiceOver: the card of the last tier's last level"
+  ]
+ },
+ {
+  "key": null,
+  "text": "solved",
+  "files": [
+   "ResultCard.swift",
+   "Shelf.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "The card's best line: Escapement's best before",
+   "VoiceOver: Escapement's best, solved",
+   "A pack's row: Escapement's best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "new best \\u{00B7} was \\(mark(was))",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "The card: this solve beat the best. The best before"
+  ]
+ },
+ {
+  "key": null,
+  "text": "best \\u{00B7} \\(mark(was))",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "The card: this solve didn't beat the best. The best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "moves \\(game.moves)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "tanks cleared \\(run.tank) \\u{00B7} ",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "new best",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "tanks cleared \\(run.tank) \\u{00B7} best \\(Best.tanks)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "Endless's card, spilled. Tanks cleared, then the best run's"
+  ]
+ },
+ {
+  "key": null,
+  "text": "tank \\(run.tank + 1) \\u{00B7} brim \\(game.brim) / \\(Run.room)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "Endless's card. The tank, then the brim's notches of its room"
+  ]
+ },
+ {
+  "key": null,
+  "text": "moves \\(game.moves) \\u{00B7} par \\(game.par)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "clean needs no undo or reset",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "clean counts on the first try",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "try \\(pack.name) \\u{203A}",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Try \\(pack.name)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "more puzzles in the packs \\u{203A}",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "More puzzles in the packs",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "again \\u{21BA}",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Again",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "share \\u{2197}",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Share result",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "new run \\u{203A}",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "Endless's card, spilled: starts another run"
+  ]
+ },
+ {
+  "key": null,
+  "text": "more in \\($0.name) \\u{203A}",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "The card's next, past a pack's free levels. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next \\u{203A}",
+  "files": [
+   "ResultCard.swift"
+  ],
+  "comments": [
+   "The card's next level or tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Next tank",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's card, the next tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Next level",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: the card's next level"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(short) \\(from.word) levels unsolved",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "The card's way up, the next tier shut. Levels unsolved, then their tier"
+  ]
+ },
+ {
+  "key": null,
+  "text": "up a notch",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "The card's way up to the next tier"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Up a notch: \\(to.name)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: the card's way up. The next tier"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(to.name), locked. \\(shortLine), and solving every one opens it",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: the card's way up, shut. The next tier, then how many levels are unsolved"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Shows which \\(from.name) levels are unsolved",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": [
+   "VoiceOver: the card's way up, shut. The tier below"
+  ]
+ },
+ {
+  "key": null,
+  "text": "out of ticks on move \\(game.moves)",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "undo \\u{00B7} \\(game.bank)",
+  "files": [
+   "ResultCard.swift",
+   "TankView.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Undo, \\(game.bank) left",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift",
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: the undo button. Undos left"
+  ]
+ },
+ {
+  "key": null,
+  "text": "again \\u{203A}",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Try again",
+  "files": [
+   "ResultCard.swift",
+   "SlopeResult.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "practice",
+  "files": [
+   "Share.swift"
+  ],
+  "comments": [
+   "Share line: a daily played after its first try"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(moves) moves",
+  "files": [
+   "Share.swift",
+   "Spoken.swift"
+  ],
+  "comments": [
+   "Moves played"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(moved) (par \\(par))",
+  "files": [
+   "Share.swift"
+  ],
+  "comments": [
+   "Share line: moves played, then the daily's par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(undos) undos",
+  "files": [
+   "Share.swift"
+  ],
+  "comments": [
+   "Share line: undos taken"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(resets) resets",
+  "files": [
+   "Share.swift"
+  ],
+  "comments": [
+   "Share line: resets taken"
+  ]
+ },
+ {
+  "key": null,
+  "text": "BUNDLE",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's card, over its name, owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "BUNDLE \\u{00B7} PAID ADD-ON",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's card, over its name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "PACK",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card, over its name, owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "PACK \\u{00B7} PAID ADD-ON",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card, over its name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "for",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: the key beside who it is for"
+  ]
+ },
+ {
+  "key": null,
+  "text": "free",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: the key beside its free levels"
+  ]
+ },
+ {
+  "key": null,
+  "text": "done",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "An owned pack's card: the key beside its progress"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(par)/\\(levels.count) solved",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "Escapement's progress. Levels solved, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(par)/\\(levels.count) at par",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's progress. Levels at par, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "holds",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: the key beside what it holds"
+  ]
+ },
+ {
+  "key": null,
+  "text": "save",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's card: the key beside what it saves"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(saving) on the packs you don't have",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's saving. A price"
+  ]
+ },
+ {
+  "key": null,
+  "text": "More levels arrive in an update.",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "checking purchases\\u{2026}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\($0.over) over par",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: an archive day's best. Moves over par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "locked, needs the pack",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's row past its free levels, unowned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Shows where to buy \\(offer.name)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's locked row. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(par)/\\(chapter.count) solved",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "Escapement's chapter. Levels solved, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(par)/\\(chapter.count) at par",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's chapter. Levels at par, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\u{2713} owned \\u{00B7} all \\(Offer.countWord(Pack.bundled.count)) packs open",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's card, owned. Its packs, counted in words"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\u{2713} owned \\u{00B7} every level open",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card, owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(Offer.bundleName) is waiting for approval",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: the bundle's Ask to Buy sent"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Ask to Buy: the pack opens here once it's approved \\u{00B7} tap asked to send it again.",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: its Ask to Buy sent. Asked is the buy pill's word"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Ask to Buy: \\(offer.name) opens here once \\(Offer.bundleName) is approved.",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"
+  ]
+ },
+ {
+  "key": null,
+  "text": "the purchase didn't go through",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: its purchase failed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(offer.name) is no longer shared with you \\u{00B7} your progress is kept",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: a family's share ended. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(offer.name) isn't on this Apple ID any more \\u{00B7} your progress is kept",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: refunded. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "continue \\(pack.name) \\(level.label) \\u{203A}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's card, owned: plays on. The pack, then the level number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "continue \\(level.label) \\u{203A}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "An owned pack's card: plays on. The level number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "play \\(pack.name) \\(level.label) \\u{203A}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The bundle's card, owned: plays. The pack, then the level number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "play \\(level.label) \\u{203A}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "An owned pack's card: plays. The level number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Continue \\(name), level \\(level.label)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: an owned card's play button. The pack, the level number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Play \\(name), level \\(level.label)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: an owned card's play button. The pack, the level number"
+  ]
+ },
+ {
+  "key": null,
+  "text": "buying\\u{2026}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The buy pill, a purchase running"
+  ]
+ },
+ {
+  "key": null,
+  "text": "try again",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The buy pill, a purchase failed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "buy",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The buy pill"
+  ]
+ },
+ {
+  "key": null,
+  "text": "buy again",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The buy pill, refunded"
+  ]
+ },
+ {
+  "key": null,
+  "text": "asked",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The buy pill, an Ask to Buy sent: tapped, sends it again"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Buying\\u{2026} \\(offer.name)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: the buy pill, a purchase running. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Try Again \\(offer.name)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: the buy pill, a purchase failed. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Buy \\(offer.name)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: the buy pill. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Buy Again \\(offer.name)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: the buy pill, refunded. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Ask again for \\(offer.name)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: the buy pill, an Ask to Buy sent. The pack"
+  ]
+ },
+ {
+  "key": null,
+  "text": "replay 01\\u{2013}\\(String(format: ",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "try \\(n) free \\u{203A}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: plays its free levels. How many"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Replay the \\(n) free levels",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's card. How many"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Try the first \\(n) levels free",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's card. How many"
+  ]
+ },
+ {
+  "key": null,
+  "text": "or all \\(Offer.countWord(Pack.bundled.count)) in \\(Offer.bundleName)\\u{00A0}\\u{00B7}\\u{00A0}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: buys the bundle instead. Its packs counted in words, then its name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\u{00B7} save \\(saving) \\u{203A}",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "A pack's card: what the bundle saves. A price"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Buy \\(Offer.bundleName), \\(Pack.named(Pack.bundled))",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(complete), saves \\(saving)",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(Offer.bundleName)'s purchase didn't go through",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "PACKS \\u{00B7} PAID ADD-ONS",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The dock's header, nothing owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "PACKS",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "The dock's header"
+  ]
+ },
+ {
+  "key": null,
+  "text": "first 3 levels of each free",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(offer.name), pack",
+  "files": [
+   "Shelf.swift"
+  ],
+  "comments": [
+   "VoiceOver: a pack's cover. Its name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(base.rods.count) rods and a swirl",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a swirl layout's knobs, then its swirl"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(layout.rods.count) rods",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a layout's rods"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the menu row of the tier's first level without a best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Back to \\(pack.name)",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the back button. A pack's name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Back to the archive",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the back button of a daily opened from the archive"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Back to levels",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the back button, to the menu"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Daily archive",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the menu's archive row"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(atPar) of \\(days) at par",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the archive row's value. Days at par, of days"
+  ]
+ },
+ {
+  "key": null,
+  "text": "locked, comes with any pack",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the archive row, shut until a purchase"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(rods(level.layout)), par \\(level.par)",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a level's rods, then its par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Level \\($0), \\(level.title).",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a menu row. Level number, then its title"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Today's daily",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the menu's daily row"
+  ]
+ },
+ {
+  "key": null,
+  "text": "locked, solve level \\(number) first",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a shut row. The level number that opens it"
+  ]
+ },
+ {
+  "key": null,
+  "text": "locked, solve \\(n.tier.name) level \\(number) first",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a shut mode. The tier, then the level number, that opens it"
+  ]
+ },
+ {
+  "key": null,
+  "text": "locked, solve every \\(gate.name) level first",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a row of a shut tier. The tier below"
+  ]
+ },
+ {
+  "key": null,
+  "text": "run in progress, best \\(tanks) tanks",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the endless row, a run saved. Its best"
+  ]
+ },
+ {
+  "key": null,
+  "text": "run in progress",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the endless row, a run saved"
+  ]
+ },
+ {
+  "key": null,
+  "text": "best \\(tanks) tanks",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the endless row. The most tanks a run cleared"
+  ]
+ },
+ {
+  "key": null,
+  "text": "solved, \\(best.over) over par",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: a row's best. Moves over par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(moved), par \\(par), at par",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the header. Moves, then par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(moved), par \\(par), over par",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the header. Moves, then par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(moved), par \\(par)",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the header. Moves, then par"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(budget) ticks left",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: Escapement's tank. Ticks left"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(movesSpoken), brim \\(brim) of \\(Run.room)",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's tank. Moves, then the brim's notches of its room"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Out of ticks on move \\(moves).",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: Escapement's lost card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Spilled. \\(run.tank) tanks cleared.",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's card, the run spilled"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstirred. \\(moved). Brim \\(brim) of \\(Run.room).",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: endless's card, a tank cleared"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstirred. \\(moved), \\(level.budget) ticks. Clean.",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: Escapement's card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstirred. \\(moved), \\(level.budget) ticks.",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: Escapement's card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstirred. \\(moved), par \\(par). Clean.",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the result card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstirred. \\(moved), par \\(par). \\(over) over par.",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the result card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Unstirred. \\(moved), par \\(par). At par.",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": [
+   "VoiceOver: the result card"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Skip the opening",
+  "files": [
+   "Spoken.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(game.level.title), tank \\($0.tank + 1)",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "Endless's title. Its name, then the tank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Puzzle tank, \\(Spoken.rods(game.level.layout))",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Played by sight: drag a knob to turn its rod.",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Practice: this day's best was set on its day.",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The caption of an archive day replayed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Practice: only the first try counts.",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The caption of a daily replayed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "watch the stir \\u{00B7} tap to skip",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The caption over a replay's opening stir"
+  ]
+ },
+ {
+  "key": null,
+  "text": "reset? tap again",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "the tank is full: undo or reset",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "Said when a full stack refuses a stir"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(badge) undos added, \\(game.bank) in the bank",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: the day's refill. Undos added, then the bank"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Reset",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: the reset button"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Reset, tap again to confirm",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: the reset button, armed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Wait",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: Escapement's wait control"
+  ]
+ },
+ {
+  "key": null,
+  "text": "The clocks tick and nothing turns.",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: what Escapement's wait control does"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Tap again to reset",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: reset, armed"
+  ]
+ },
+ {
+  "key": null,
+  "text": "undos refill +2 each day you play",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "Said when undo is tapped with none left"
+  ]
+ },
+ {
+  "key": null,
+  "text": "sound, haptics, colour letters: \\(Image(systemName: ",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "Sound, haptics and colour letters are in settings, the gear on the menu.",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: plughole 01's pointer to the settings"
+  ]
+ },
+ {
+  "key": null,
+  "text": "wait: the clock ticks, nothing turns",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "Escapement's demonstration, as the wait control is pressed: a wait ticks the clock and turns no rod"
+  ]
+ },
+ {
+  "key": null,
+  "text": "picture: \\(picture) \\u{203A}",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The sandbox's picture control. The picture"
+  ]
+ },
+ {
+  "key": null,
+  "text": "rods: \\(rods) \\u{203A}",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The sandbox's layout control. Its rods"
+  ]
+ },
+ {
+  "key": null,
+  "text": "rods: \\(rods) \\u{00B7} \\(String(localized: base.display)) \\u{203A}",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The sandbox's layout control. Its rods, then the layout"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(rods) rods \\u{203A}",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "The sandbox's layout control, short. Its rods"
+  ]
+ },
+ {
+  "key": null,
+  "text": "ticks",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(game.budget) ticks left",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": []
+ },
+ {
+  "key": null,
+  "text": "\\(left) left",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "Escapement's lost tank: twists left on the picture"
+  ]
+ },
+ {
+  "key": null,
+  "text": "show red alone",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: Prism's red swatch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "show green alone",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: Prism's green swatch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "show blue alone",
+  "files": [
+   "TankView.swift"
+  ],
+  "comments": [
+   "VoiceOver: Prism's blue swatch"
+  ]
+ },
+ {
+  "key": null,
+  "text": "opens with every \\($0.word) level solved",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "A shut tier's gate. The tier below"
+  ]
+ },
+ {
+  "key": null,
+  "text": "packs \\u{00B7} paid add-ons \\u{00B7} first 3 levels of each free",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "The slope's menu, under plughole's name: the packs in its rock, none owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "packs \\u{00B7} first 3 levels of each free",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "The slope's menu, under plughole's name: the packs in its rock, one owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "packs",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "The slope's menu, under plughole's name: the packs in its rock, all owned"
+  ]
+ },
+ {
+  "key": null,
+  "text": "best \\(tanks)",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "Endless's row: the best run's tanks"
+  ]
+ },
+ {
+  "key": null,
+  "text": "continue \\u{00B7} tank \\(tank) \\u{00B7} brim \\(brim) \\u{00B7} best \\(tanks)",
+  "files": [
+   "MenuModel.swift"
+  ],
+  "comments": [
+   "Endless's row, a run saved: its tank, its brim, then the best run's tanks"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\u{2191} surface",
+  "files": [
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "The slope's menu, in the dive: rises to the whole column"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Surface",
+  "files": [
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: the slope's menu, in the dive. Rises to the whole column"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\(tier.word), \\(par.filter { $0 }.count) of \\(par.count) at par",
+  "files": [
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: a tier on the slope's overview. The tier, its levels at par, of all"
+  ]
+ },
+ {
+  "key": null,
+  "text": "next, \\(way.level.label), \\(way.level.title)",
+  "files": [
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "VoiceOver: the slope's overview, the way on. The next level's number, then its name"
+  ]
+ },
+ {
+  "key": null,
+  "text": "endless",
+  "files": [
+   "SlopeMenu.swift"
+  ],
+  "comments": [
+   "The slope's menu: endless, written as a place under the last ledge"
+  ]
+ },
+ {
+  "key": null,
+  "text": "sound, haptics, colour letters: in settings, at the surface",
+  "files": [
+   "SlopePlay.swift"
+  ],
+  "comments": [
+   "Plughole 01's pointer to the settings, on the slope"
+  ]
+ },
+ {
+  "key": null,
+  "text": "Sound, haptics and colour letters are in settings, at the surface of the menu.",
+  "files": [
+   "SlopePlay.swift"
+  ],
+  "comments": [
+   "VoiceOver: plughole 01's pointer to the settings, on the slope"
+  ]
+ },
+ {
+  "key": null,
+  "text": "\\u{2193} back into the water",
+  "files": [
+   "SlopeSettings.swift"
+  ],
+  "comments": [
+   "Settings: the way back to the menu"
+  ]
+ }
+]
