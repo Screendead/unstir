@@ -20,6 +20,7 @@ struct SlopeHollow: View {
     var beside: CGFloat?
     let open: () -> Void
     var store = Store.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let full: CGFloat = 58
     /// The opening's middle, from the screen's leading edge: in the wall, and at the accessibility sizes, where the
@@ -89,6 +90,10 @@ struct SlopeHollow: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(Sounding(presses: true))
+        // Unseen until the launch's read of what is owned and its price fetch have settled, then fading in once, so
+        // neither its glyph nor Triptych I's hollow changes in sight (the dock's rule).
+        .opacity(store.shelved ? 1 : 0)
+        .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: store.shelved)
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(offer.pack == nil // loc: verbatim names alone, or a key
@@ -152,10 +157,19 @@ struct SlopeHollow: View {
     }
 }
 
-/// Every hollow on a view of the main column, each where it lies, growing from 16 to 58 points as the depth opens and
+extension SlopeHollow {
+    /// The hollow the menu sets on a spot of its column, the opening's top centre at the spot's point: as big as the
+    /// depth has opened it, its words arriving with the dive's.
+    @MainActor init(_ offer: Offer, on spot: SlopeSpot, type: DynamicTypeSize, store: Store = .shared, open: @escaping () -> Void) {
+        self.init(offer: offer, side: spot.side, words: spot.near,
+                  beside: type.isAccessibilitySize ? max(spot.view.size.width - Self.wordsX - 16, 60) : nil, open: open, store: store)
+    }
+}
+
+/// Every hollow on a view of the main column as the harness shows them, each where it lies, growing from 16 to 58 points as the depth opens and
 /// its words fading in last; unseen until the dock's rule shows them (`SlopeHollow.shown`) and the store's first read
-/// and price fetch have settled, then fading in once. The menu sets this in its own `SlopeLayer`, or places each
-/// `SlopeHollow` itself from the same statics.
+/// and price fetch have settled, then fading in once. The menu places each `SlopeHollow`
+/// itself (`init(_:on:type:open:)`).
 struct SlopeHollows: View {
     let view: SlopeView
     /// The offer, and its opening's middle in the view, for its cover to rise from.
@@ -179,8 +193,7 @@ struct SlopeHollows: View {
                 }
             }
         }
-        .opacity(store.shelved ? shows : 0)
+        .opacity(shows)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: shelf)
-        .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: store.shelved)
     }
 }

@@ -837,11 +837,14 @@ private struct PackSlope: View {
     let onClosed: () -> Void
     let store: Store
 
+    /// While a purchase lands: how many ledges have opened so far, one after another; nil is as the store has them.
+    @State private var lit: Int?
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.page) private var page
 
     private var large: Bool { typeSize.isAccessibilitySize }
+    private var noPar: Bool { offer.pack == .escapement }
 
     var body: some View {
         GeometryReader { geo in
@@ -851,42 +854,46 @@ private struct PackSlope: View {
             let owned = offer.pack.map { store.state($0) == .owned } ?? false
             // The way on: an owner's next level, or the first free one without a best.
             let next = Shop.landing(levels, owned: owned).flatMap { n in Best.load(n.id) == nil ? n.id : nil }
-            SlopeDive(column: column, start: landing, look: SlopeLook(paper: page.paper ? 1 : 0, rock: .pale), clock: clock, near: false) { view in
+            let bars = insets.top + SlopeMeasure.line(.body, at: typeSize) + 34
+            SlopeDive(column: column, aim: landing.map { SlopeAim(ledge: $0) }, look: SlopeLook(paper: page.paper ? 1 : 0, rock: .pale),
+                      clock: clock, near: false) { view in
                 SlopeLayer {
                     ForEach(Array(Shop.chapters(levels).enumerated()), id: \.offset) { s, chapter in
-                        heading(chapter, stretch: s, view: view)
+                        heading(chapter, stretch: s, view: view).slopeUnderBars(bars)
                     }
                     ForEach(Array(levels.enumerated()), id: \.element.id) { n, level in
-                        PackLedge(offer: offer, level: level, ledge: n, view: view, large: large,
-                                  open: store.access(level) != .needsCard, next: level.id == next,
-                                  action: { store.access(level) != .needsCard ? onPlay(level) : onClosed() })
+                        let open = store.access(level) != .needsCard && n < (lit ?? .max)
+                        SlopeLedgeRow(ledge: ledge(level, open: open, next: level.id == next), view: view, n: n, bars: bars,
+                                      open: { onPlay(level) }, refused: onClosed)
                     }
                 }
             }
             .modifier(BareEdges())
             .overlay(alignment: .topLeading) {
-                ZStack(alignment: .topLeading) {
-                    if large {
-                        // Words as wide as the screen scroll under the way back: they go out into the water's shade.
-                        let shade = page.paper ? Color.bone : Color(0x06131A)
-                        LinearGradient(stops: [.init(color: shade, location: 0), .init(color: shade, location: 0.7),
-                                               .init(color: shade.opacity(0), location: 1)], startPoint: .top, endPoint: .bottom)
-                            .frame(width: size.width, height: insets.top + TypeRole.body.line(at: typeSize).height + 56)
-                            .allowsHitTesting(false)
+                Button(action: onRise) {
+                    Text(verbatim: "\u{2191} \(offer.name)").font(.slope(.ui, .body))
+                        .foregroundStyle(page.paper ? Color.ink : SlopeInk.ink.colour)
+                        .shadow(color: page.paper ? .clear : Color(0x03060A).opacity(0.8), radius: 4)
+                        // On the page the rock's line gives way to the words, as an engraver leaves room for a legend.
+                        .background { if page.paper { Color.bone.padding(-5).blur(radius: 4) } }
+                        .hit()
+                }
+                .buttonStyle(Sounding())
+                .accessibilityLabel(Text("Back", comment: "VoiceOver: a pack's card, its back button"))
+                .padding(.leading, 28)
+                .padding(.top, insets.top + (size.height > 800 ? 16 : 6))
+                .accessibilitySortPriority(1)
+            }
+            // A purchase landing lights the closed ledges one after another, 60 ms apart.
+            .onChange(of: owned) {
+                guard owned, !reduceMotion, let taste = offer.pack?.taste, levels.count > taste else { return }
+                lit = taste
+                Task {
+                    for n in taste ..< levels.count {
+                        try? await Task.sleep(for: .milliseconds(60))
+                        lit = n + 1
                     }
-                    Button(action: onRise) {
-                        Text(verbatim: "\u{2191} \(offer.name)").font(.slope(.ui, .body))
-                            .foregroundStyle(page.paper ? Color.ink : SlopeInk.ink.colour)
-                            .shadow(color: page.paper ? .clear : Color(0x03060A).opacity(0.8), radius: 4)
-                            // On the page the rock's line gives way to the words, as an engraver leaves room for a legend.
-                            .background { if page.paper { Color.bone.padding(-5).blur(radius: 4) } }
-                            .hit()
-                    }
-                    .buttonStyle(Sounding())
-                    .accessibilityLabel(Text("Back", comment: "VoiceOver: a pack's card, its back button"))
-                    .padding(.leading, 28)
-                    .padding(.top, insets.top + (size.height > 800 ? 16 : 6))
-                    .accessibilitySortPriority(1)
+                    lit = nil
                 }
             }
         }
@@ -895,138 +902,49 @@ private struct PackSlope: View {
     /// A chapter's name over its first ledge, and under it how many of its levels are at par, or solved.
     private func heading(_ chapter: (name: String?, levels: [Level]), stretch s: Int, view: SlopeView) -> some View {
         let lay = view.lay, first = lay.ledge(stretch: s)
-        let x = large ? SlopeHollow.wordsX : view.lip(first).x + 18
+        let at = SlopeLedgeRow.words(view, first, large: large)
         let y = view.y(lay.headers[s]) + lay.column.stretches[s].header * 0.42
         return VStack(alignment: .leading, spacing: 3) {
             Text(chapter.name?.localizedLowercase ?? String(localized: "levels", comment: "A pack's card: its list's heading, where it has no chapters")) // loc: verbatim localized by the pack's table
                 .font(.slope(.place, .title)).foregroundStyle(page.paper ? Color.ink : SlopeInk.ink.colour)
             Text(Shop.progress(chapter.levels, pack: offer.pack)).font(.slope(.data, .detail)) // loc: verbatim localized by Shop
-                .foregroundStyle(page.paper ? Color.ink.opacity(TextTone.text2.alpha) : SlopeInk.ink3.colour)
+                .foregroundStyle(page.paper ? Color.ink.opacity(SlopeInk.ink3.strength) : SlopeInk.ink3.colour)
         }
         .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
-        .frame(width: max(view.size.width - x - 16, 60), alignment: .leading)
+        .frame(width: at.width, alignment: .leading)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
-        .slopeLine(CGPoint(x: x, y: y))
-    }
-}
-
-/// A level's ledge on a pack's slope: its pebble, and beside it its number, name, result and facts, by 2.2's states.
-/// It stands in for the menu's own ledge row (`SlopeLedge`), whose inputs are these, until that lands.
-private struct PackLedge: View {
-    let offer: Offer
-    let level: Level
-    let ledge: Int
-    let view: SlopeView
-    let large: Bool
-    let open: Bool
-    /// The one way on.
-    let next: Bool
-    let action: () -> Void
-
-    @Environment(\.page) private var page
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var noPar: Bool { offer.pack == .escapement }
-
-    private func ink(_ ink: SlopeInk) -> Color {
-        guard page.paper else { return ink.colour }
-        switch ink {
-        case .ink: return .ink
-        case .ink2, .ink3: return Color.ink.opacity(TextTone.text2.alpha)
-        case .ink4: return Color.ink.opacity(TextTone.text3.alpha)
-        }
+        .slopeLine(CGPoint(x: at.x, y: y))
     }
 
-    var body: some View {
+    /// What a level's ledge says (2.2): its number, name, result and facts. Escapement, which has no par, has its
+    /// result in words and its rods alone for facts.
+    private func ledge(_ level: Level, open: Bool, next: Bool) -> SlopeLedge {
         let best = Best.load(level.id), tried = best == nil && Best.started(level.id)
-        let seat = view.seat(ledge), lay = view.lay
-        let prism = offer == .pack(.prism), taste = offer.pack?.taste ?? 0
-        let half = lay.half(best != nil ? .lit : next ? .next : .dull)
-        let x = large ? SlopeHollow.wordsX : view.lip(ledge).x + 18
-        // The pebble: closed and open both laid, so a purchase landing lights each in its turn.
-        ZStack {
-            SlopePebble(kind: page.paper ? .engraved : .dull, width: lay.half(.dull) * 2, lean: SlopePebble.lean(ledge), dimmed: true)
-                .opacity(open ? 0 : page.paper ? 0.45 : 1)
-            SlopePebble(kind: page.paper ? .engraved : best == nil && !next ? .dull : prism ? .pale : next ? .next : .lit,
-                        width: half * 2, lean: SlopePebble.lean(ledge), glow: prism ? nil : next ? offer.glow : lay.rocks[ledge].light,
-                        breath: next ? 3 : nil)
-                .opacity(open ? 1 : 0)
-        }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.3).delay(0.06 * Double(max(0, ledge - taste))), value: open)
-        .seated(at: seat)
-        Button(action: action) {
-            words(best: best, tried: tried)
-                .frame(width: max(view.size.width - x - 16, 60), alignment: .leading)
-                .frame(minHeight: SlopePebble.target)
-                // The whole ledge is the target, from the screen's leading edge to the end of its words.
-                .padding(.leading, x).contentShape(Rectangle()).padding(.leading, -x)
-        }
-        .buttonStyle(Sounding())
-        .accessibilityElement(children: .ignore)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(Text("Level \(Int(level.label) ?? 0), \(level.title).", comment: "VoiceOver: a menu row. Level number, then its title"))
-        .accessibilityValue(spokenValue(best: best, tried: tried)) // loc: verbatim localized there
-        .accessibilityHint(open ? Text(facts) // loc: verbatim localized by facts
-                           : Text("Shows where to buy \(offer.name)", comment: "VoiceOver: a pack's locked row. The pack"))
-        .slopeLine(CGPoint(x: x, y: seat.y - half * 0.6))
-    }
-
-    private func spokenValue(best: Best?, tried: Bool) -> String {
-        guard open else { return String(localized: "locked, needs the pack", comment: "VoiceOver: a pack's row past its free levels, unowned") }
+        let mark = Archive.Mark(best, started: tried)
+        let rods = level.layout.base.map { String(localized: "\($0.rods.count) rods + swirl", comment: "A swirl layout's knobs, then its swirl") }
+            ?? String(localized: "\(level.layout.rods.count) rods", comment: "VoiceOver: a layout's rods")
+        let facts = noPar ? rods : String(localized: "\(rods) \u{00B7} par \(level.par)", comment: "A row's rods, then its par")
         let said = best.map {
             noPar ? ($0.over == 0 ? String(localized: "solved", comment: "VoiceOver: Escapement's best, solved")
                      : String(localized: "\($0.over) over par", comment: "VoiceOver: an archive day's best. Moves over par"))
                 : Spoken.result($0)
         } ?? (tried ? String(localized: "tried", comment: "VoiceOver: a row started, with no best") : "")
-        return next ? [String(localized: "next", comment: "VoiceOver: the ledge that is the way on"), said].filter { !$0.isEmpty }.joined(separator: ", ") : said
-    }
-
-    /// "4 rods · par 4"; Escapement, with no par, its rods alone.
-    private var facts: String {
-        let rods = level.layout.base.map { String(localized: "\($0.rods.count) rods + swirl", comment: "A swirl layout's knobs, then its swirl") }
-            ?? String(localized: "\(level.layout.rods.count) rods", comment: "VoiceOver: a layout's rods")
-        return noPar ? rods : String(localized: "\(rods) \u{00B7} par \(level.par)", comment: "A row's rods, then its par")
-    }
-
-    @ViewBuilder private func words(best: Best?, tried: Bool) -> some View {
-        let number = Text(verbatim: level.label).font(.slope(.data, next ? .body : .label)).foregroundStyle(ink(open ? .ink3 : .ink4))
-        let name = Text(level.title).font(next ? .slope(.name, .title) : .slope(.ui, .body)).foregroundStyle(ink(open ? .ink : .ink4))
-        VStack(alignment: .leading, spacing: large ? 4 : 2) {
-            if large {
-                (number + Text(verbatim: "  ") + name).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                if open { result(best: best, tried: tried) }
-            } else {
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .firstTextBaseline, spacing: 9) {
-                        number
-                        name.lineLimit(1)
-                        if open { result(best: best, tried: tried) }
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        (number + Text(verbatim: "  ") + name).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                        if open { result(best: best, tried: tried) }
-                    }
-                }
-            }
-            Text(facts).font(.slope(.data, next ? .label : .detail)).foregroundStyle(ink(!open ? .ink4 : next ? .ink2 : .ink3)) // loc: verbatim localized by facts
-                .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    /// The result: three marks, or for Escapement, which has no par, a word.
-    @ViewBuilder private func result(best: Best?, tried: Bool) -> some View {
-        if noPar {
-            if let best {
-                Text(best.over == 0 ? String(localized: "solved", comment: "A pack's row: Escapement's best") : "+\(best.over)") // loc: verbatim localized here, or a number
-                    .font(.slope(.ui, .detail)).foregroundStyle(page.signal(best.over == 0 ? .amber : .magenta))
-            } else if tried {
-                Text("tried").font(.slope(.ui, .detail)).foregroundStyle(ink(.ink3))
-            }
-        } else if case let mark = Archive.Mark(best, started: tried), let filled = ResultMarks.filled(mark) {
-            ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
-        }
+        let word: String? = !noPar || !open ? nil
+            : best.map { $0.over == 0 ? String(localized: "solved", comment: "A pack's row: Escapement's best") : "+\($0.over)" }
+                ?? (tried ? String(localized: "tried", comment: "VoiceOver: a row started, with no best") : nil)
+        return SlopeLedge(
+            number: level.label, name: level.title,
+            state: !open ? .closed : best != nil ? .solved : next ? .frontier : tried ? .tried : .open,
+            marks: noPar || !open ? nil : ResultMarks.filled(mark), margin: ResultMarks.margin(mark), word: word, facts: facts,
+            look: page.paper ? .engraved : offer == .pack(.prism) ? .pale : .warm,
+            glow: offer == .pack(.prism) ? nil : next ? offer.glow : SlopeColumn.Rock.pale.light,
+            label: String(localized: "Level \(Int(level.label) ?? 0), \(level.title).", comment: "VoiceOver: a menu row. Level number, then its title"),
+            value: !open ? String(localized: "locked, needs the pack", comment: "VoiceOver: a pack's row past its free levels, unowned")
+                : next ? [String(localized: "next", comment: "VoiceOver: the ledge that is the way on"), said].filter { !$0.isEmpty }.joined(separator: ", ")
+                : said,
+            hint: open ? facts : String(localized: "Shows where to buy \(offer.name)", comment: "VoiceOver: a pack's locked row. The pack"))
     }
 }
 
@@ -1091,7 +1009,7 @@ struct SlopePackHarness: View {
                               height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
             let column = Self.column(size: size, type: typeSize)
             let at = env["UNSTIR_SLOPEAT"].flatMap { id in Tier.allCases.flatMap(\.levels).first { $0.id == id } }.flatMap(SlopeColumn.ledge(of:))
-            SlopeDive(column: column, start: at ?? SlopeColumn.ledge(tier: 0, level: 13), clock: clock, near: !typeSize.isAccessibilitySize) { view in
+            SlopeDive(column: column, aim: SlopeAim(ledge: at ?? SlopeColumn.ledge(tier: 0, level: 13)), clock: clock, near: !typeSize.isAccessibilitySize) { view in
                 SlopeLayer {
                     ForEach(Array(Tier.plughole.levels.prefix(27).enumerated()), id: \.offset) { i, level in
                         let n = SlopeColumn.ledge(tier: 0, level: i + 1), seat = view.seat(n), done = Best.load(level.id) != nil
