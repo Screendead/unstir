@@ -134,7 +134,8 @@ extension SlopeScene {
     }
 }
 
-/// The dive as a finger moves it: a column at full depth, scrolled natively from its surface to its foot. `content`
+/// The dive as a finger moves it: a column at full depth (or at any one zoom `z`), scrolled natively from its surface
+/// to its foot. `content`
 /// is laid out once, in the scrolled content's own frame (`SlopeView.point` gives a place in the column its place
 /// there), and the ground is drawn for wherever the scroll has reached, in the same pass that moves the content, so
 /// the two never part. It opens on `aim`, the same camera a `SlopeScene` at `z` 1 has for that ledge and share, kept
@@ -143,6 +144,8 @@ extension SlopeScene {
 struct SlopeDive<Content: View>: View {
     var column: SlopeColumn
     var aim: SlopeAim?
+    /// 1, the dive; 0 scrolls the overview, for a column grown past the screen at the largest type sizes.
+    var z: CGFloat = 1
     var seconds = 0.9
     var held = false
     var look = SlopeLook()
@@ -159,7 +162,7 @@ struct SlopeDive<Content: View>: View {
     var body: some View {
         GeometryReader { geo in
             let size = geo.whole
-            let lay = SlopeLay(column, z: 1), travel = lay.travel(height: size.height)
+            let lay = SlopeLay(column, z: z), travel = lay.travel(height: size.height)
             let base = SlopeView(lay: lay, top: travel.lowerBound, size: size)
             let rest = aim.map { lay.rest($0, height: size.height) } ?? travel.lowerBound
             ScrollViewReader { reader in
@@ -309,13 +312,19 @@ extension View {
 
 extension SlopeColumn {
     /// The main column on a screen of `size` at a Dynamic Type size (1.6): the pitch grows to hold a ledge's row, and
-    /// from accessibility1 up the slope keeps to the leading edge and steps less. On a narrower phone the lips move in
-    /// by half the width lost. `header` is the room a tier's header takes in the dive.
+    /// from accessibility1 up the slope keeps to the leading edge and steps less, at the overview too, where a screen
+    /// then gives each stretch the `height` its words need. On a narrower phone the lips move in by half the width
+    /// lost. `header` is the room a tier's header takes in the dive.
     static func main(size: CGSize, type: DynamicTypeSize, header: CGFloat? = nil) -> SlopeColumn {
         let large = type.isAccessibilitySize
         let row = TypeRole.body.line(at: type).height * (large ? 2 : 1) + TypeRole.detail.line(at: type).height
-        return main(size: size, pitch: max(110, row + 60), lip: large ? 62 : 132 - max(440 - size.width, 0) / 2,
-                    step: large ? 1.5 : 6, header: header)
+        var column = main(size: size, pitch: max(110, row + 60), lip: large ? 62 : 132 - max(440 - size.width, 0) / 2,
+                          step: large ? 1.5 : 6, header: header)
+        if large {
+            column.wall = 14
+            column.spread = 8
+        }
+        return column
     }
 
     /// The main column's ledge for `level`, a tier's own.

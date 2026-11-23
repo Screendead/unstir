@@ -68,8 +68,15 @@ struct SlopeHarness: View {
                     SlopeStandIns(view: view, solved: solved, cull: false, taps: $taps)
                 }
             case .overview:
-                SlopeScene(column: column, focus: focus, at: wide, z: 0, clock: clock, near: near) { view in
-                    SlopeStandIns(view: view, solved: solved, cull: true, taps: $taps)
+                if typeSize.isAccessibilitySize {
+                    // The words keep their size: each stretch grows to hold its own, and the overview scrolls.
+                    SlopeDive(column: grown(column, height: size.height), z: 0, clock: clock, near: false) { view in
+                        SlopeStandIns(view: view, solved: solved, cull: false, taps: $taps)
+                    }
+                } else {
+                    SlopeScene(column: column, focus: focus, at: wide, z: 0, clock: clock, near: near) { view in
+                        SlopeStandIns(view: view, solved: solved, cull: true, taps: $taps)
+                    }
                 }
             case .zoom:
                 // As a menu would: the scene carries the zoom, and the dive takes over where it comes to rest.
@@ -154,6 +161,18 @@ struct SlopeHarness: View {
     }
 }
 
+extension SlopeHarness {
+    /// The column with each stretch as tall at the overview as the stand-ins' words beside it.
+    fileprivate func grown(_ column: SlopeColumn, height: CGFloat) -> SlopeColumn {
+        var column = column
+        let title = SlopeSize.title.line(at: typeSize), detail = SlopeSize.detail.line(at: typeSize)
+        column.stretches[0].height = max(0.1255 * height, 3 * (0.6 * title + 8))
+        for s in 1 ..< column.stretches.count { column.stretches[s].height = max(0.125 * height, title + detail + 16) }
+        column.under = (title + detail + 4) / 2
+        return column
+    }
+}
+
 /// Stand-ins for what the screens will set on the main column: a pebble on every level's seat, its number, name and
 /// facts beside it, each tier's name, hollows, the stone on the bank and endless. Drawn from one view of the column,
 /// the overview's words while the depth is closed and the dive's once it has opened.
@@ -163,6 +182,8 @@ private struct SlopeStandIns: View {
     /// Leaves out what is off the screen: the scene lays everything out again each frame, the dive once.
     let cull: Bool
     @Binding var taps: Int
+
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var lay: SlopeLay { view.lay }
     /// 1 in the dive, 0 until the depth is nearly open; and 1 at the overview.
@@ -219,7 +240,8 @@ private struct SlopeStandIns: View {
     @ViewBuilder private func heading(_ t: Int, _ tier: Tier) -> some View {
         let first = SlopeColumn.ledge(tier: t, level: 1)
         // Beside the stretch at the overview; over its first ledge in the dive.
-        let y = wide > 0 ? view.y(lay.tops[first]) + 22 : view.y(lay.headers[t + 1]) + lay.column.stretches[t + 1].header * 0.45
+        let y = wide > 0 ? view.y(lay.tops[first]) + max(22, SlopeSize.title.line(at: typeSize) / 2 - 4)
+            : view.y(lay.headers[t + 1]) + lay.column.stretches[t + 1].header * 0.45
         if shown(y) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(tier.word).font(.slope(.place, .title)).ink(.ink)
