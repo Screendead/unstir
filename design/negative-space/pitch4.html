@@ -1,0 +1,192 @@
+<title>Slope Calls</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the call and four films first; then every screen five across, today beside each world. */
+:root {
+  --bg: #04060a; --panel: #0b0f16; --line: #1a2130; --fg: #e9eef6; --muted: #98a2b3; --pick: #7ee8d8;
+  --body: "Geist", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+main { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 72px; }
+main > * { min-width: 0; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -.02em; line-height: 1.05; }
+h2 { font-size: 1.8rem; letter-spacing: -.01em; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; max-width: 70ch; }
+.label { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+section { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+header { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+.call { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.opt.rec { border-color: var(--pick); }
+.opt .tag { font: 500 12px var(--mono); color: var(--pick); }
+.opt video { width: 100%; aspect-ratio: 880 / 1912; border-radius: 20px; background: #000; display: block; border: 1px solid var(--line); }
+.opt dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.opt dt { color: var(--muted); font: 12px var(--mono); padding-top: 2px; }
+.opt dd { margin: 0; }
+.why { border-left: 2px solid var(--pick); padding-left: 18px; display: flex; flex-direction: column; gap: 10px; }
+.wall { overflow-x: auto; max-width: 100%; }
+.grid { display: grid; grid-template-columns: 90px repeat(5, minmax(150px, 1fr)); gap: 12px; min-width: 900px; align-items: start; }
+.grid .head { font: 500 13px var(--mono); color: var(--muted); padding: 8px 0; }
+.grid .head.rec { color: var(--pick); }
+.grid .rowname { font: 500 13px var(--mono); color: var(--muted); padding-top: 8px; }
+.phone { width: 100%; aspect-ratio: 660 / 1434; border-radius: 18px; border: 1px solid var(--line); display: block; background: #000; }
+figure { margin: 0; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.ledgers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+.ledgers > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .call { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ledgers { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .call { grid-template-columns: 1fr; } }
+:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
+.eggs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.eggs video { width: 100%; aspect-ratio: 880 / 1912; border-radius: 20px; background: #000; display: block; border: 1px solid var(--line); }
+.c { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.c ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.rec { color: var(--pick); }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; }
+table { border-collapse: collapse; font-size: 15px; width: 100%; }
+td, th { text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 12px var(--mono); color: var(--muted); }
+@media (max-width: 900px) { .eggs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .eggs { grid-template-columns: 1fr; } }
+</style>
+<main>
+<header>
+  <span class="label">Unstir · building the Shelf</span>
+  <h1>Easter eggs, and eight questions before the Shelf is built</h1>
+  <p>The Shelf is being built in the app now: the game as a column of water beside a sand slope, a pebble per level, each tier its own rock. Working through every screen the mock-up didn't draw turned up a few places where it would change what players see beyond the list you approved. Those are below, each with a recommendation; the easter eggs you asked for come first. Answer only the ones you disagree with, and the build follows the recommendations for the rest.</p>
+</header>
+
+<section aria-labelledby="eggs">
+  <h2 id="eggs">1. Which easter eggs to build</h2>
+  <p class="muted">Each is found, not told; none awards anything, stirs, or takes a tap or scroll that plays the game. The line at the foot of each film names the trigger and isn't part of the game.</p>
+  <div class="eggs">
+    <div class="opt rec"><span class="tag">recommended</span><h3>The night above</h3>
+      <video src="film/above.mp4" poster="img/above.webp" controls muted loop playsinline aria-label="The night above"></video>
+      <p>Pull down past the surface on the first screen: the view lifts out of the water, the stars come out and the moon hangs at tonight's real phase, its light on the water. Let go and it settles back. About 5 hours.</p></div>
+    <div class="opt rec"><span class="tag">recommended</span><h3>The sky at the bottom</h3>
+      <video src="film/below.mp4" poster="img/below.webp" controls muted loop playsinline aria-label="The sky at the bottom"></video>
+      <p>Pull up past endless and hold: in the black under the last water, cold lights come out one by one, the sky's stars mirrored. The pair to the night above. About 3 hours on top of it.</p></div>
+    <div class="opt rec"><span class="tag">recommended</span><h3>Skimming stone</h3>
+      <video src="film/skim.mp4" poster="img/skim.webp" controls muted loop playsinline aria-label="Skimming stone"></video>
+      <p>Flick sideways along the surface: a flat stone skips, a ring and a tick of sound and haptics at each touch, then sinks, rocking, and a small number says how many skips. The one you do rather than see. About 8 hours.</p></div>
+    <div class="opt rec"><span class="tag">recommended</span><h3>Still water</h3>
+      <video src="film/still.mp4" poster="img/still.webp" controls muted loop playsinline aria-label="Still water"></video>
+      <p>Leave the menu alone for twenty seconds: the surface flattens, the motes hang, the light lengthens and the far rock clears out of the haze. A touch brings the movement back. The game's name, made visible, and the cheapest state to draw. About 4 hours.</p></div>
+    <div class="opt"><h3>The cairn</h3>
+      <video src="film/cairn.mp4" poster="img/cairn.webp" controls muted loop playsinline aria-label="The cairn"></video>
+      <p>Each day's daily solved sinks a flat stone onto a stack beside today's pebble, up to seven; it lies flat when the run breaks. About 6 hours. Not recommended: it repeats "4 days running", a second count of the same thing.</p></div>
+    <div class="opt"><h3>Water finds its level</h3>
+      <video src="film/tilt.mp4" poster="img/tilt.webp" controls muted loop playsinline aria-label="Water finds its level"></video>
+      <p>Tilt the phone: the rock turns with it, the water stays level, up to 5°, with a small slosh. About 6 hours. Not recommended: it keeps the motion sensor running while the menu is up.</p></div>
+  </div>
+  <p class="muted">Not filmed, smaller:</p>
+  <table>
+    <tr><th>egg</th><th>what happens</th><th>cost</th><th></th></tr>
+    <tr><td>The seam</td><td>Every level of a tier at par draws a thin vein of gold through that tier's rock, for good.</td><td>5 h</td><td class="rec">recommended</td></tr>
+    <tr><td>The unnumbered pebble</td><td>One unlit stone under the overhang below maelstrom's last ledge; a tap shows one line of credits, which fades.</td><td>2 h</td><td class="rec">recommended</td></tr>
+    <tr><td>Meteor nights</td><td>In the night sky above, a meteor now and then on the nights the Perseids and Geminids peak.</td><td>3 h</td><td class="rec">recommended</td></tr>
+    <tr><td>Running a finger along the pebbles</td><td>Dragging along lit pebbles on the whole-column view sounds a note at each, down the scale.</td><td>6 h</td><td></td></tr>
+    <tr><td>Cold light</td><td>A finger dragged through maelstrom's or endless's dark water leaves sparks that sink and fade.</td><td>5 h</td><td></td></tr>
+    <tr><td>The shelf keeps your hours</td><td>The sky follows the phone's clock: dawn, noon, the approved dusk, night. This changes the look you picked, so it's yours to choose.</td><td>8 h</td><td></td></tr>
+  </table>
+  <p><span class="rec">Recommended:</span> the night above, the sky at the bottom, skimming stone, still water, the seam, the unnumbered pebble and meteor nights, about 30 hours in all. Built after the screens, so none delays them.</p>
+</section>
+
+<section aria-labelledby="q2">
+  <h2 id="q2">2. Packs on the opening screen</h2>
+  <div class="c">
+    <p><b>Today</b> the pack covers sit along the foot of the menu on every tier once plughole 09 is solved. <b>As approved</b>, the Shelf's opening screen shows none: a player meets a pack only by diving into plughole's water, and a player deep in a later tier never passes one. That risks the game's only sales.</p>
+    <div class="pair">
+      <figure><img class="phone" src="img/overview-before.webp" alt="Opening screen as approved, no packs"><figcaption>as approved</figcaption></figure>
+      <figure><img class="phone" src="img/overview-packs.webp" alt="Opening screen with the pack hollows"><figcaption>proposed</figcaption></figure>
+    </div>
+    <p><b>Proposed:</b> the four hollows, small and lit, in plughole's rock on the opening screen, with "packs · first 3 levels of each free" and their names under plughole; a tap dives to them. Nothing approved moves. About half a day. <span class="rec">Recommended: proposed.</span> If you do nothing: as approved.</p>
+  </div>
+</section>
+
+<section aria-labelledby="q3">
+  <h2 id="q3">3. Where a launch lands</h2>
+  <div class="c">
+    <p><b>Today</b> a launch opens the level list centred on your next level: one tap to play. <b>The Shelf</b> opens on the whole column, so reaching that level would be a dive and a tap.</p>
+    <ol><li><b>Launch on the whole column, with the next level written under its tier</b> ("14 Lather ›"): one tap dives and opens it. This brings back a "next" line like the one you removed on 11 November, because the column has no list to mark it. <span class="rec">Recommended.</span></li>
+    <li>Launch straight into the dive at your next level, as today; the whole column is one tap up.</li></ol>
+  </div>
+</section>
+
+<section aria-labelledby="q4">
+  <h2 id="q4">4. Pack covers hold still on the menu</h2>
+  <div class="c">
+    <p><b>Today</b> each pack's cover stirs and unstirs on a seven-second loop, which you chose in October and kept in November. Nothing in the new world may stir, and up to four live covers are the menu's largest battery cost.</p>
+    <ol><li><b>Each hollow holds its cover still</b>, at the stirred frame; the live loop stays on the pack's own page. <span class="rec">Recommended.</span></li>
+    <li>Keep the covers live in the hollows.</li></ol>
+  </div>
+</section>
+
+<section aria-labelledby="q5">
+  <h2 id="q5">5. Changing tier</h2>
+  <div class="c">
+    <p><b>Today</b> it's one tap on a tier's chip or a sideways swipe on the list, which stirs one list away and unstirs the next. That stir has to go. On the Shelf the tiers are one column, top to bottom.</p>
+    <ol><li><b>Scroll down through the water, or "↑ surface" then tap the tier</b>: two taps, about two seconds, and no hidden gesture. <span class="rec">Recommended.</span></li>
+    <li>Also keep a sideways swipe in the dive that jumps to the next tier, as a gesture players have to discover.</li></ol>
+  </div>
+</section>
+
+<section aria-labelledby="q6">
+  <h2 id="q6">6. Choosing a level inside a pack</h2>
+  <div class="c">
+    <p>The approved Shelf replaces a pack page's level list with 30 unnamed pebbles, which on their own wouldn't let anyone pick a level.</p>
+    <ol><li><b>The pebbles become one control, "levels ↓", that sinks into the pack's own small slope</b>: a ledge per level under its chapter's name, built like a tier. Three taps from the menu to a given pack level, against two today. <span class="rec">Recommended.</span></li>
+    <li>Keep a plain level list on the pack page, as today.</li></ol>
+  </div>
+</section>
+
+<section aria-labelledby="q7">
+  <h2 id="q7">7. The daily, archive and endless</h2>
+  <div class="c">
+    <p><b>Today</b> they head every tier's list. <b>On the Shelf</b> the daily and archive are at the surface and endless is at the foot, so from deep in a tier they're two taps away instead of a scroll to the top. <span class="rec">Recommended: accept.</span> The alternative is a small "today" stone pinned in the dive's corner.</p>
+  </div>
+</section>
+
+<section aria-labelledby="q8">
+  <h2 id="q8">8. The first level's line about settings</h2>
+  <div class="c">
+    <p>Level 1's note ends "sound, haptics, colour letters: ⚙ on the menu", a line you twice ruled stays. The gear is gone on the Shelf.</p>
+    <ol><li><b>"sound, haptics, colour letters: in settings, at the surface"</b>. <span class="rec">Recommended.</span></li><li>Drop the line.</li></ol>
+  </div>
+</section>
+
+<section aria-labelledby="q9">
+  <h2 id="q9">9. Six small changes to confirm together</h2>
+  <div class="c">
+    <ul>
+      <li>The lock symbol goes everywhere, not only on level rows: closed tiers, the archive, pack levels and a closed "up a notch" say what opens them in words.</li>
+      <li>The amber "↗" on settings' links and the archive's "day / past / ∞" tags go.</li>
+      <li>The supporter mark shows on the opening screen and the share line only.</li>
+      <li>"PACK", "BUNDLE" and "UP A NOTCH" lose their capitals.</li>
+      <li>The result's buttons become stones at opposite ends of a ledge under the tank.</li>
+      <li>"unstirred." on the result grows from 22 pt to 34 pt italic serif.</li>
+    </ul>
+    <p><span class="rec">Recommended: accept all six.</span></p>
+  </div>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">What happens next</h2>
+  <p>The build continues on the recommendations, so nothing waits on you; an answer that differs changes that piece before it lands. First on your phone: the slope itself, the whole column and the dive from the surface to endless. Then each screen as screenshots and films before it merges.</p>
+</section>
+</main>
+<script>
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  for (const v of document.querySelectorAll('video')) { v.autoplay = true; v.play().catch(() => {}); }
+}
+</script>
