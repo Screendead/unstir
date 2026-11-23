@@ -138,7 +138,7 @@ game plays.
   the social clips silent and with sound, the editors' reel) and the layer films for dropped frames in motion, finds
   the cause on one take filmed as is, completely quiet, and quiet with the sound recorder, and retakes whatever hitches
   on a completely quiet Mac into a new folder (#293). From now on every film is taken only on a completely quiet Mac:
-  every other app, routine, simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power.
+  every other app, routine, simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power. The Mac's first three passes (2026-11-23) measured the finished films and flagged for retakes the preview, the editors' reel, editors-vortex-02 (both), clean-whirlpool-01 with sound and the three layer films, but took nothing, as the load never fell under 1 and the runs would not close Jack's apps. Jack (2026-11-23): "You should be able to do #293 now. Feel free to push off the work currently running on my mac; this is higher priority." So the Mac may now pause other routines, jobs and simulators and quit apps gracefully to get quiet, then restore them after the takes (asked on #293).
 - The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
