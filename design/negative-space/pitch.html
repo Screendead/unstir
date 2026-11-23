@@ -1,0 +1,207 @@
+<title>Room to Breathe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a black gallery wall, like the game's own ground; the call first, then every screen four across. */
+:root {
+  --bg: #050507; --panel: #0d0e12; --line: #1e2027; --fg: #eceef5; --muted: #9da1ad; --accent: #ff2bd6; --pick: #7cff4f;
+  --body: "Geist", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+main { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 72px; }
+h1, h2, h3 { font-weight: 300; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -.02em; line-height: 1.05; }
+h2 { font-size: 1.8rem; letter-spacing: -.01em; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.label { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); }
+section { display: flex; flex-direction: column; gap: 22px; }
+header { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+
+.call { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.opt.rec { border-color: var(--pick); }
+.opt .tag { font: 500 12px var(--mono); color: var(--pick); }
+.opt dl { margin: 6px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.opt dt { color: var(--muted); font-family: var(--mono); font-size: 12px; padding-top: 2px; }
+.opt dd { margin: 0; }
+.why { border-left: 2px solid var(--pick); padding-left: 18px; display: flex; flex-direction: column; gap: 10px; }
+
+.wall { overflow-x: auto; }
+.grid { display: grid; grid-template-columns: 92px repeat(4, minmax(170px, 1fr)); gap: 12px 12px; min-width: 820px; align-items: start; }
+.grid .head { font: 500 13px var(--mono); color: var(--muted); position: sticky; top: 0; padding: 8px 0; background: var(--bg); }
+.grid .head.b { color: var(--pick); }
+.grid .rowname { font: 500 13px var(--mono); color: var(--muted); padding-top: 8px; }
+figure { margin: 0; }
+.phone { width: 100%; aspect-ratio: 660 / 1434; border-radius: 18px; border: 1px solid var(--line); display: block; background: #000; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+.dir { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 36px; align-items: start; }
+.dir video { width: 100%; max-width: 300px; aspect-ratio: 880 / 1912; border-radius: 22px; border: 1px solid var(--line); background: #000; display: block; }
+.dir .text { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+ul.ledger { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+ul.ledger li::marker { color: var(--muted); }
+.pair { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.fact { background: var(--panel); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+@media (max-width: 760px) {
+  .call { grid-template-columns: 1fr; }
+  .dir { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { video { display: none !important; } .rmnote { display: block !important; } }
+.rmnote { display: none; }
+a { color: var(--fg); }
+:focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
+</style>
+
+<main>
+<header>
+  <span class="label">Unstir · the look of everything around the tank</span>
+  <h1>Room to breathe: pick one of three directions</h1>
+  <p>You said the text, buttons, cards and sheets around the tank are too busy and never let anything rest. Below are three ways to fix that, drawn on six real screens beside today's. The glass, pictures and covers are cut from real screenshots of today's build and are not touched. No text is smaller than today. Nothing in the app changes until you pick.</p>
+</header>
+
+<section aria-labelledby="call">
+  <h2 id="call">The call</h2>
+  <div class="call">
+    <div class="opt">
+      <span class="label">A</span><h3>Subtract</h3>
+      <p>Today's look kept whole: the mono type, the neon colours, the coloured level numbers. It gets calmer only by taking things away: one line per row, no outlined buttons or divider lines, wider margins.</p>
+      <dl><dt>build</dt><dd>about 1 day</dd><dt>risk</dt><dd>low; it may not feel different enough</dd></dl>
+    </div>
+    <div class="opt rec">
+      <span class="label">B</span><span class="tag">recommended</span><h3>Still water</h3>
+      <p>One thing in focus at a time. Today's daily, or the next level, is large and says "play ›"; everything else is one quiet line. Titles move to Apple's proportional face, numbers stay mono. Colour leaves the text and sits as a soft glow behind the one thing in focus. Things arrive by settling, like sediment; the result's dots drop in one by one.</p>
+      <dl><dt>build</dt><dd>about 3 days</dd><dt>risk</dt><dd>medium; a new type voice, and a rule for what is in focus</dd></dl>
+    </div>
+    <div class="opt">
+      <span class="label">C</span><h3>Mist</h3>
+      <p>All the chrome turns white, with no outlines or lines. The colour moves out of the words into a large, blurred light that drifts slowly at the top of each screen and blooms once when a tank is solved.</p>
+      <dl><dt>build</dt><dd>about 3 days</dd><dt>risk</dt><dd>medium-high; the haze can look muddy, and it costs the phone's graphics chip while the glass plays</dd></dl>
+    </div>
+  </div>
+  <div class="why">
+    <h3>Why B</h3>
+    <p>B is the only one that shows fewer things at once instead of restyling the same things. The menu leads with one action, the result card drops from four lines of text to two, and the play screen is the tank, its title and two words. Its motion is one slow settle everywhere, which reads as liquid rather than decoration. It keeps the neon identity where it counts: the wordmark, the covers, the glass, and a glow of the tier's colours behind the focus. Its glows are fixed images, so they cost the graphics chip nothing during play, unlike C's moving mist. A is safe but leaves the screens about as full as today.</p>
+    <p class="muted">If you do nothing, the chrome ships as it is today. The App Store screenshots and preview film are next in line after this pass, so they would be retaken on today's look.</p>
+  </div>
+</section>
+
+<section aria-labelledby="side">
+  <h2 id="side">Side by side</h2>
+  <p class="muted">The same moment on each screen: the menu with every first-tier level at par, the first level as dealt, the last first-tier level solved, a Prism level, Prism's shop card, and settings.</p>
+  <div class="wall"><div class="grid" id="grid">
+    <span></span><span class="head">today</span><span class="head">A · subtract</span><span class="head b">B · still water</span><span class="head">C · mist</span>
+  </div></div>
+</section>
+
+<section aria-labelledby="motion">
+  <h2 id="motion">How each one moves</h2>
+  <p class="muted">Each film plays the menu arriving, a solved tank's result arriving, then a shop card arriving. Today, things fade in quickly; the tier list still turns as a stir in all three.</p>
+  <p class="rmnote muted">Your device asks for reduced motion, so the films are hidden; the stills under each direction show what Reduce Motion draws.</p>
+
+  <div class="dir" id="dir-a">
+    <video src="film/a.mp4" autoplay muted loop playsinline aria-label="Direction A in motion"></video>
+    <div class="text">
+      <h3>A · Subtract</h3>
+      <p>Motion stays as today: quick fades. Reduce Motion: as today.</p>
+      <span class="label">What the player would see go or change</span>
+      <ul class="ledger">
+        <li>The tier buttons, "again", "up a notch", undo, reset, buy and "try 3 free" lose their outlined capsules and become words.</li>
+        <li>Every level row drops its second line ("3 rods · par 1"). The daily keeps its own.</li>
+        <li>The "today" heading, the divider lines and the dock's heading ("packs · paid add-ons", "first 3 levels of each free") go.</li>
+        <li>The archive's line shortens to "with any pack".</li>
+        <li>The shop card's "for / free / holds" labels and "after plughole · reading by colour" go.</li>
+        <li>Settings drops the explanation under every switch but colour letters.</li>
+      </ul>
+      <span class="label">Result marks and Prism's colour</span>
+      <p>The three dots as today, a little larger. Prism's level number stays white, as today.</p>
+    </div>
+  </div>
+
+  <div class="dir" id="dir-b">
+    <video src="film/b.mp4" autoplay muted loop playsinline aria-label="Direction B in motion"></video>
+    <div class="text">
+      <h3>B · Still water</h3>
+      <p>Everything arrives on one slow curve, rising a few points out of a slight blur and stopping softly, over about a second. The glow behind the focus swells and shrinks over nine seconds. Reduce Motion: things fade in, the dots appear filled, the glow holds still.</p>
+      <span class="label">What the player would see go or change</span>
+      <ul class="ledger">
+        <li>Everything in A's list, and:</li>
+        <li>Titles and buttons in SF Pro instead of SF Mono; numbers and counts stay mono.</li>
+        <li>The menu leads with one large item and "play ›": today's daily here, the next unplayed level when there is one. Endless and the archive share one line.</li>
+        <li>Level numbers lose their rainbow walk and glow; colour lives in the wordmark, the covers and the glow behind the focus.</li>
+        <li>The tier names lose their locks and dots; a locked tier still says why when opened.</li>
+        <li>The dock's names and "new" words go; a small dot marks a new pack.</li>
+        <li>In play the title is centred over the tank, larger. The "PRISM" tag over a Prism level goes.</li>
+        <li>The result: "unstirred." moves under the tank; "moves 9 · par 9" goes when the verdict is "at par"; "clean needs no undo or reset" waits behind a tap on the empty dot.</li>
+        <li>The shop card is centred, drops its "pack · paid add-on" label, shortens its facts, and its bundle line reads "all three packs, $5.99 ›" without the saving.</li>
+        <li>Settings drops every explanation line (VoiceOver still reads them); switches are white, not cyan.</li>
+      </ul>
+      <span class="label">Result marks and Prism's colour</span>
+      <p>The dots are white and drop in one at a time, each landing with a small squash. Prism's level number is white, split at its edges into red and blue the way a prism splits white light, so it never reads as one channel.</p>
+    </div>
+  </div>
+
+  <div class="dir" id="dir-c">
+    <video src="film/c.mp4" autoplay muted loop playsinline aria-label="Direction C in motion"></video>
+    <div class="text">
+      <h3>C · Mist</h3>
+      <p>The light drifts on a 22-second loop, slower than the eye follows. Solving a tank blooms it brighter, then it settles. Reduce Motion: the light holds still at its settled brightness.</p>
+      <span class="label">What the player would see go or change</span>
+      <ul class="ledger">
+        <li>Everything in A's list, and:</li>
+        <li>All chrome text is white. The wordmark loses its colour sweep, level numbers lose their colours, and "at par", "clean" and "+2" lose amber, lime and magenta.</li>
+        <li>The dock's names and "new" words go; a small dot marks a new pack.</li>
+        <li>The "PRISM" tag over a Prism level goes.</li>
+      </ul>
+      <span class="label">Result marks and Prism's colour</span>
+      <p>White dots. Prism's level number is white; Prism's mist is red, green and blue lights meeting in white.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="rm">
+  <h2 id="rm">Reduce Motion</h2>
+  <p class="muted">What each direction draws for a player who has Reduce Motion on, at the moment the result card has arrived.</p>
+  <div class="pair">
+    <figure><img class="phone" src="img/a-result-rm.webp" alt="A's result card under Reduce Motion"><figcaption>A</figcaption></figure>
+    <figure><img class="phone" src="img/b-result-rm.webp" alt="B's result card under Reduce Motion"><figcaption>B</figcaption></figure>
+    <figure><img class="phone" src="img/c-result-rm.webp" alt="C's result card under Reduce Motion"><figcaption>C</figcaption></figure>
+    <figure><img class="phone" src="img/b-menu-rm.webp" alt="B's menu under Reduce Motion"><figcaption>B's menu, its glow still</figcaption></figure>
+    <figure><img class="phone" src="img/c-menu-rm.webp" alt="C's menu under Reduce Motion"><figcaption>C's menu, its mist still</figcaption></figure>
+  </div>
+</section>
+
+<section aria-labelledby="ax">
+  <h2 id="ax">Largest text</h2>
+  <div class="facts">
+    <figure style="max-width: 260px"><img class="phone" src="img/b-menu-ax.webp" alt="B's menu at the largest accessibility text size"><figcaption>B's menu at the third accessibility size: one line a row, nothing cut, nothing shrunk</figcaption></figure>
+    <div class="fact"><span class="label">Text never shrinks</span><p>No direction sets any text smaller than today's size for its role: 17 pt for body text and buttons, 15 for labels, 13 for small print. Where space runs short in play, the tank scales down, as it does today.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">What happens next</h2>
+  <div class="facts">
+    <div class="fact"><span class="label">On your pick</span><p>The picked direction is built in the app, screen by screen, and every changed screen comes back to you as screenshots and films on the phone before it merges.</p></div>
+    <div class="fact"><span class="label">Mixing</span><p>You can take one direction and borrow a single piece of another (for example B with C's bloom on a solve). Say which piece.</p></div>
+    <div class="fact"><span class="label">Waiting on this</span><p>The app's port of the chrome, then the App Store screenshots and preview film, which are retaken after this pass.</p></div>
+  </div>
+</section>
+</main>
+
+<script>
+const rows = [['menu', 'menu'], ['play', 'level 1'], ['result', 'result'], ['prism', 'Prism level'], ['card', 'shop card'], ['settings', 'settings']];
+const grid = document.getElementById('grid');
+for (const [s, name] of rows) {
+  grid.insertAdjacentHTML('beforeend', `<span class="rowname">${name}</span>` +
+    [['today', 'today'], ['a', 'A'], ['b', 'B'], ['c', 'C']].map(([d, n]) =>
+      `<img class="phone" loading="lazy" src="img/${d}-${s}.webp" alt="${n}: ${name}">`).join(''));
+}
+</script>
