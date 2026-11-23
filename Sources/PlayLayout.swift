@@ -76,12 +76,12 @@ struct PlayLayout: Equatable {
     /// insets round it, and the fold, the system's division region in the reader's own space (nil while the phone lies
     /// flat, or where the system has none). One proxy in one pass, so no offset or earlier layout moves the middle.
     static func of(size: CGSize, insets i: EdgeInsets, fold: CGRect? = nil, halo: Halo = Halo(), chrome: Chrome = Chrome(),
-                   type: DynamicTypeSize = .large, scale: CGFloat) -> PlayLayout {
+                   type: DynamicTypeSize = .large, scale: CGFloat, slope: Bool = false) -> PlayLayout {
         let window = CGSize(width: size.width + i.leading + i.trailing, height: size.height + i.top + i.bottom)
         let middle = window.width / 2 - i.leading - margin
         return of(content: CGSize(width: max(size.width - 2 * margin, 0), height: size.height), window: window,
                   fold: fold?.offsetBy(dx: -margin, dy: 0) ?? CGRect(x: middle, y: 0, width: 0, height: size.height),
-                  halo: halo, chrome: chrome, type: type, scale: scale)
+                  halo: halo, chrome: chrome, type: type, scale: scale, slope: slope)
     }
 
     /// `content` is the size inside the side margins; `fold` where the window divides, in the content's space: a band
@@ -90,10 +90,12 @@ struct PlayLayout: Equatable {
     /// chrome takes round it; `type` the play screen's type size, which the column keeps room for; `scale` the display's
     /// pixels per point.
     static func of(content: CGSize, window: CGSize, fold: CGRect? = nil, halo h: Halo = Halo(), chrome c: Chrome = Chrome(),
-                   type: DynamicTypeSize = .large, scale: CGFloat) -> PlayLayout {
+                   type: DynamicTypeSize = .large, scale: CGFloat, slope: Bool = false) -> PlayLayout {
         let cap = maxPixels / max(scale, 1)
         let whole = CGRect(origin: .zero, size: content)
-        let column = PlayLayout(kind: .column, side: min(min(content.width, content.height - reserve(type)) / rim, cap),
+        // The slope's chrome is `c`, measured for its level (`Chrome(slope:)`), and the column keeps its room.
+        let room = slope ? Self.reserve(slope: c) : Self.reserve(type)
+        let column = PlayLayout(kind: .column, side: min(min(content.width, content.height - room) / rim, cap),
                                 tankPane: whole, chromePane: whole)
         let f = fold ?? CGRect(x: content.width / 2, y: 0, width: 0, height: content.height)
         if f.width > f.height {
@@ -172,9 +174,12 @@ struct PlayLayout: Equatable {
     /// word never shrinks: where that room is less than its line, it stands under the title and the finished tank
     /// comes down by `drop` to clear it (Jack, 2026-11-11: "If necessary, the tank scales"). `over` is measured, as the
     /// note under the tank may run to more lines than the chrome budgets.
-    static func columnWords(over: CGFloat, side: CGFloat, type: DynamicTypeSize) -> (words: CGFloat, drop: CGFloat) {
+    /// On the slope the word is the place voice at display (docs/slope.md, 1.3), by the same rules.
+    static func columnWords(over: CGFloat, side: CGFloat, type: DynamicTypeSize, slope: Bool = false) -> (words: CGFloat, drop: CGFloat) {
         guard over < words else { return (words, 0) }
-        let room = max(over - side * (rim - 1) / 2, 0), line = TypeRole.stamp.line(at: min(type, typeCap)).height
+        let room = max(over - side * (rim - 1) / 2, 0)
+        let line = slope ? TypeRole.display.line(at: min(type, typeCap), .light, design: .serif).height
+            : TypeRole.stamp.line(at: min(type, typeCap)).height
         guard room < line else { return (over - (room - line) / 2, 0) }
         return (over, (line - room).rounded(.up))
     }
@@ -426,6 +431,37 @@ extension PlayLayout.Chrome {
         below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 4 + button : 0)
             + PlayStack.gap + button + 4
             + (PlayLayout.waitTakesARow(level, width: width, type: t) ? button + LevelView.controlRows : 0)
+    }
+}
+
+extension PlayLayout {
+    /// The slope's column's room above and below the tank: 290 pt as today's, and as much more as its chrome takes
+    /// than today's plain level's at the default type size.
+    static func reserve(slope chrome: Chrome) -> CGFloat {
+        let plain = Chrome()
+        return 290 + chrome.above + chrome.below - plain.above - plain.below
+    }
+}
+
+extension PlayLayout.Chrome {
+    /// What `level`'s chrome takes on the slope (docs/slope.md, 4) at `type`, capped at `typeCap`: the way back in the
+    /// ui voice, and the count under it where `stacked`; the title's name in the name voice at display, two lines where
+    /// it wraps in a pane `width` wide; two lines of the note in the place voice; the terrace's row of stones, its wait's
+    /// own row as today's, and Prism's swatches.
+    init(slope level: Level?, swatches: Bool = false, type: DynamicTypeSize = .large, width: CGFloat = .infinity, stacked: Bool = false) {
+        let t = min(type, PlayLayout.typeCap), back = TypeRole.body.line(at: t, design: .default)
+        var header = back.height + (stacked ? SlopePlay.stackGap + TypeRole.label.line(at: t).height : 0)
+        if let level, !level.ratchets.isEmpty {
+            let ticks = TypeRole.label.line(at: t), up = (FlipCounter.standard - ticks.height) / 2 + ticks.ascent
+            header = stacked ? back.height + SlopePlay.stackGap + max(ticks.height, FlipCounter.standard)
+                : max(back.ascent, up) + max(back.height - back.ascent, FlipCounter.standard - up)
+        }
+        func px(_ v: CGFloat) -> CGFloat { (v * 3).rounded(.up) / 3 }
+        above = 8 + px(header) + 18 + px(SlopePlay.titleHeight(level, type: t, width: width))
+        let row = max(SlopePebble.target, 24 + px(back.height))
+        below = 14 + px(SlopePlay.captionLines(type: t)) + (swatches ? 4 + row : 0)
+            + PlayStack.gap + row + 4
+            + (PlayLayout.waitTakesARow(level, width: width, type: t) ? row + LevelView.controlRows : 0)
     }
 }
 
