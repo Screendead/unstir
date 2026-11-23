@@ -250,7 +250,7 @@ enum SlopeMeasure {
         let font = font(size, at: type)
         let box = (text as NSString).boundingRect(with: CGSize(width: width, height: .greatestFiniteMagnitude),
                                                   options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
-        return max((box.height / font.lineHeight).rounded(.up), 1) * font.lineHeight
+        return max((box.height / font.lineHeight).rounded(), 1) * font.lineHeight
     }
 }
 

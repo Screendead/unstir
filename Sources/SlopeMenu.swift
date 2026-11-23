@@ -196,22 +196,35 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, clock: clock, near: !plan.large, onMove: { top in
-            scroll.top = top
-            let up = top < 1
-            if up != surfaced { surfaced = up }
-        }) { view in
+        SlopeDive(column: plan.column, aim: aim, held: still, clock: clock, near: !plan.large) { view in
             world(view, plan, cull: false)
+            sounding(view, plan) { top in
+                scroll.top = top
+                let up = top < 1
+                if up != surfaced { surfaced = up }
+            }
         }
+        .coordinateSpace(.named(Self.space))
         .simultaneousGesture(backSwipe(plan))
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
     }
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, clock: clock, near: false, onMove: { scroll.wide = $0 }) { view in
+        SlopeDive(column: plan.column, z: 0, held: still, clock: clock, near: false) { view in
             world(view, plan, cull: false)
+            sounding(view, plan) { scroll.wide = $0 }
         }
+        .coordinateSpace(.named(Self.space))
+    }
+
+    private static let space = "slope.menu"
+
+    /// The camera's depth as the finger scrolls a dive, read from where the surface's own line of the content has
+    /// got to. (`SlopeDive.onMove` hears only 0 on iOS 27.)
+    private func sounding(_ view: SlopeView, _ plan: SlopeMenuPlan, heard: @escaping (CGFloat) -> Void) -> some View {
+        Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: view.y(0)), anchor: .top)
+            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.space)).minY } action: { heard(-($0 + plan.top)) }
     }
 
     private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
@@ -475,7 +488,8 @@ struct SlopeMenuPlan {
             let today = line(.title) + SlopeMeasure.height(daily.ledge.name, .body, width: beside, at: type)
                 + (daily.ledge.facts.map { SlopeMeasure.height($0, .detail, width: beside, at: type) } ?? 0) + 4
             let archive = line(.body) + (large ? 2 : 1) * line(.detail)
-            column.stretches[0].height = max(column.stretches[0].height ?? 0, 1.5 * (today - line(.title) * 0.5 + 8), 3 * (archive + 8))
+            column.stretches[0].height = max(column.stretches[0].height ?? 0, 1.5 * (today - line(.title) * 0.5 + line(.body) * 0.5 + 8),
+                                              3 * (archive - line(.body) * 0.5 + 8))
         }
         hollows = model.hollows.map { ($0, SlopeMenuPlan.hollowAfter($0)) }
         for (t, tier) in model.tiers.enumerated() {
@@ -515,7 +529,8 @@ struct SlopeMenuPlan {
             if model.wayOn?.tier == tier.tier { need += line(.body) + 8 }
             column.stretches[t + 1].height = max(column.stretches[t + 1].height ?? 0, need)
         }
-        if model.modes { column.under = line(.title) / 2 + line(.detail) + (large ? line(.body) + 24 : 0) + 16 }
+        // Endless's word, its line and "new run" under its middle; the default sizes fit what the overview leaves.
+        if model.modes, large { column.under = line(.title) / 2 + 2 * line(.detail) + line(.body) + 24 }
         self.headers = headers
         self.column = column
         deep = SlopeLay(column, z: 1)
@@ -644,8 +659,9 @@ struct SlopeMenuModel {
                                                   comment: "VoiceOver: a tier on the slope's overview. The tier, its levels at par, of all")
                                 : tier.spoken)
         }
+        // The tier the player is in carries the way on; with every level of it solved, the first open tier with one left.
         let stored = Tier.stored()
-        wayOn = stored.frontier().map { (stored, $0) }
+        wayOn = ([stored] + Tier.allCases).lazy.compactMap { tier in tier.frontier().map { (tier, $0) } }.first
         let new = !Best.modesSeen
         if lead.modes {
             let day = Level.daily(today), run = Daily.run(today: today), lines = Menu.dailyLines(day, run: run)
@@ -948,7 +964,8 @@ private struct SlopeMenuWorld: View {
                 if model.lights > 0 { lights }
             }
             .slopePlace(CGPoint(x: x, y: y), anchor: UnitPoint(x: 0.5, y: 0))
-            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2)
+            // At the overview the word stands a little higher, so its line and "new run" clear the screen's foot.
+            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large ? 0 : 20 * (1 - lay.e)))
         }
         if model.sandbox, near > 0, shown(y, 400) {
             // Debug's sandbox, out of v1: a plain row under the brink.
