@@ -382,3 +382,150 @@ enum Shop {
         covered || !shelved ? nil : approved
     }
 }
+
+// MARK: - The slope's rules (docs/slope.md, 8)
+
+extension Shop {
+    /// The slope's way out of a hollow: up, to the menu or to Triptych I's hollow; beside the menu it closes, as
+    /// `back` does.
+    static func rise(to: String, beside: Bool) -> (text: String, spoken: String) {
+        let back = back(to: to, beside: beside)
+        return (beside && to == menu ? back.text : "\u{2191} \(to)", back.spoken)
+    }
+
+    /// A line under the pack's stone: its words, the colour that carries its meaning, if one does, and whether the
+    /// pending light leads it. `quiet` is an explanation, at the weaker ink.
+    struct Line: Equatable {
+        enum Signal { case lime, amber, magenta }
+        var words: String
+        var signal: Signal?
+        var light = false
+        var quiet = false
+    }
+
+    /// The ledge inside a hollow (8.3): the stone, its words, VoiceOver's, and what stands under it. No `stone` where
+    /// nothing can be bought here; `live` where a tap buys or asks again.
+    struct Ledge: Equatable {
+        var stone: StoneState?
+        var live = false
+        var label = ""
+        var spoken = ""
+        /// The App Store's price, written after "buy".
+        var price: String?
+        var under: [Line] = []
+    }
+
+    /// What the store's state puts on a hollow's ledge, for an offer not owned: every row of 8.3's table but the
+    /// owner's, whose stone plays (`plays`). `asked`: the offer's own request waits on Ask to Buy, not Triptych I's
+    /// alone. `failure`: why the product's last attempt failed.
+    static func ledge(_ offer: Offer, state: Purchase, ready: Bool, buying: Bool, asked: Bool, unshared: Bool, canPay: Bool,
+                      price: String?, pricing: Pricing, failure: Failure?) -> Ledge {
+        guard ready else {
+            let checking = String(localized: "checking purchases\u{2026}")
+            return Ledge(stone: .pending, label: checking, spoken: checking)
+        }
+        guard canPay else { return Ledge(under: [Line(words: Failure.refused.words ?? "")]) }
+        if state == .failed, failure == .storefront { return Ledge(under: [Line(words: Failure.storefront.words ?? "")]) }
+        let unreachable = price == nil && pricing == .unreachable
+        var ledge = Ledge(stone: price == nil ? .lit : .next, live: true, price: price)
+        if price == nil, let words = pricing.words { ledge.under.append(Line(words: words, quiet: true)) }
+        switch state {
+        case .failed:
+            ledge.label = String(localized: "try again", comment: "The buy pill, a purchase failed")
+            ledge.spoken = String(localized: "Try Again \(offer.name)", comment: "VoiceOver: the buy pill, a purchase failed. The pack")
+            ledge.under = [Line(words: String(localized: "the purchase didn't go through", comment: "A pack's card: its purchase failed"),
+                                signal: .magenta)] + (failure?.words.map { [Line(words: $0, quiet: true)] } ?? []) + (unreachable ? ledge.under : [])
+        case .revoked:
+            ledge.label = unshared ? String(localized: "buy", comment: "The buy pill") : String(localized: "buy again", comment: "The buy pill, refunded")
+            ledge.spoken = unshared ? String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
+                : String(localized: "Buy Again \(offer.name)", comment: "VoiceOver: the buy pill, refunded. The pack")
+            ledge.under.insert(Line(words: unshared
+                ? String(localized: "\(offer.name) is no longer shared with you \u{00B7} your progress is kept",
+                         comment: "A pack's card: a family's share ended. The pack")
+                : String(localized: "\(offer.name) isn't on this Apple ID any more \u{00B7} your progress is kept",
+                         comment: "A pack's card: refunded. The pack"), quiet: true), at: 0)
+        case .pending where asked:
+            ledge.stone = .lit
+            ledge.label = String(localized: "asked", comment: "The buy pill, an Ask to Buy sent: tapped, sends it again")
+            ledge.spoken = String(localized: "Ask again for \(offer.name)", comment: "VoiceOver: the buy pill, an Ask to Buy sent. The pack")
+            ledge.under = [Line(words: String(localized: "waiting for approval", comment: "A pack's card: its Ask to Buy sent"),
+                                signal: .amber, light: true),
+                           Line(words: failure?.words
+                                ?? String(localized: "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again.",
+                                          comment: "A pack's card: its Ask to Buy sent. Asked is the buy pill's word"))]
+        case .pending:
+            // Waiting on Triptych I's request alone: the pack's own stone still buys it alone.
+            ledge.label = String(localized: "buy", comment: "The buy pill")
+            ledge.spoken = String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
+            ledge.under.insert(contentsOf: [
+                Line(words: String(localized: "\(Offer.bundleName) is waiting for approval", comment: "A pack's card: the bundle's Ask to Buy sent"),
+                     signal: .amber, light: true),
+                Line(words: failure?.words
+                     ?? String(localized: "Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.",
+                               comment: "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"))], at: 0)
+        case .unowned, .owned:
+            ledge.label = String(localized: "buy", comment: "The buy pill")
+            ledge.spoken = String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
+        }
+        // The price is written after "buy" alone; every other label is its word, and VoiceOver's value still says it.
+        if state == .failed || state == .revoked && !unshared || state == .pending && asked || buying { ledge.price = nil }
+        if buying {
+            ledge.stone = .pending
+            ledge.live = false
+            ledge.label = String(localized: "buying\u{2026}", comment: "The buy pill, a purchase running")
+            ledge.spoken = String(localized: "Buying\u{2026} \(offer.name)", comment: "VoiceOver: the buy pill, a purchase running. The pack")
+        }
+        return ledge
+    }
+
+    /// The line under an owner's stone.
+    static func owned(_ offer: Offer) -> Line {
+        Line(words: offer.pack == nil
+             ? String(localized: "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open",
+                      comment: "The bundle's card, owned. Its packs, counted in words")
+             : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), signal: .lime)
+    }
+
+    /// An owner's stone: the level it plays, its words and VoiceOver's. The bundle, with no levels of its own, plays
+    /// on in the first of its packs with a level left. Nil once every level is at par.
+    static func plays(_ offer: Offer, _ levels: [Level], best: (String) -> Best? = Best.load)
+        -> (level: Level, label: String, spoken: String)? {
+        let pack = offer.pack == nil ? Pack.bundled.first { pickUp($0.levels, best: best) != nil } : nil
+        guard let level = pack.flatMap({ pickUp($0.levels, best: best) }) ?? (offer.pack == nil ? nil : pickUp(levels, best: best)) else { return nil }
+        let continues = continues(pack?.levels ?? levels, best: best), name = pack?.name ?? offer.name
+        let label = switch (continues, pack) {
+        case (true, let pack?): String(localized: "continue \(pack.name) \(level.label) \u{203A}",
+                                       comment: "The bundle's card, owned: plays on. The pack, then the level number")
+        case (true, nil): String(localized: "continue \(level.label) \u{203A}", comment: "An owned pack's card: plays on. The level number")
+        case (false, let pack?): String(localized: "play \(pack.name) \(level.label) \u{203A}",
+                                        comment: "The bundle's card, owned: plays. The pack, then the level number")
+        case (false, nil): String(localized: "play \(level.label) \u{203A}", comment: "An owned pack's card: plays. The level number")
+        }
+        return (level, label, continues
+            ? String(localized: "Continue \(name), level \(level.label)", comment: "VoiceOver: an owned card's play button. The pack, the level number")
+            : String(localized: "Play \(name), level \(level.label)", comment: "VoiceOver: an owned card's play button. The pack, the level number"))
+    }
+
+    /// A pack's levels at par, of all, as its floor and each chapter count them; Escapement, with no par, counts its
+    /// solves.
+    static func progress(_ levels: [Level], pack: Pack?, best: (String) -> Best? = Best.load) -> String {
+        let par = levels.filter { best($0.id)?.over == 0 }.count
+        return pack == .escapement
+            ? String(localized: "\(par)/\(levels.count) solved", comment: "Escapement's chapter. Levels solved, of all")
+            : String(localized: "\(par)/\(levels.count) at par", comment: "A pack's chapter. Levels at par, of all")
+    }
+
+    /// A pack's levels by chapter, in order; one nameless run where it has no chapters.
+    static func chapters(_ levels: [Level]) -> [(name: String?, levels: [Level])] {
+        levels.reduce(into: []) { runs, level in
+            if let last = runs.last, last.name == level.chapter { runs[runs.count - 1].levels.append(level) }
+            else { runs.append((level.chapter, [level])) }
+        }
+    }
+
+    /// Where a pack's own slope lands (8.4): an owner's next level, else the first free level without a best, else
+    /// its first ledge.
+    static func landing(_ levels: [Level], owned: Bool, best: (String) -> Best? = Best.load) -> Level? {
+        (owned ? pickUp(levels, best: best) : taste(levels, best: best).flatMap { $0.replay ? nil : $0.level }) ?? levels.first
+    }
+}
