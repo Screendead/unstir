@@ -1,0 +1,7 @@
+/* Copyright © 2026 Jack Lusher. All rights reserved. */
+/* Apple's own faces, loaded from this Mac for the mock-ups; on the phone they are the system's, shipped with iOS. */
+@font-face { font-family: "UMono"; src: url("file:///System/Library/Fonts/SFNSMono.ttf"); font-weight: 1 1000; }
+@font-face { font-family: "UPro"; src: url("file:///System/Library/Fonts/SFNS.ttf"); font-weight: 1 1000; font-stretch: 75% 150%; }
+@font-face { font-family: "URounded"; src: url("file:///System/Library/Fonts/SFNSRounded.ttf"); font-weight: 1 1000; }
+@font-face { font-family: "NY"; src: url("file:///System/Library/Fonts/NewYork.ttf"); font-weight: 1 1000; }
+@font-face { font-family: "NY"; src: url("file:///System/Library/Fonts/NewYorkItalic.ttf"); font-weight: 1 1000; font-style: italic; }
