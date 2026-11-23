@@ -34,3 +34,15 @@ shot slope-settings-editors "The editors' build's settings: \"open every tier\" 
 shot slope-consent "Consent on the slope: the overview at 0.35 of its light, its words, pebbles and hollows hidden; the question, its line, \"What does it send? ›\", and Yes and No alike on one bowed sill." \
   SLOPEF=consent CONSENT=ask
 shot slope-consent-sends "The same with the list of what it sends open, \"Hide the list ‹\" over it." SLOPEF=consent CONSENT=sends
+# The slope's world in the app (UNSTIR_SLOPE=1, RootView): the menu, a level opened from it, its result, the way back.
+thirteen=plughole:0000000000000
+shot slope-world-menu "The app in the slope's world on a cold launch: the overview, plughole's first 13 solved, the 14th the way on." \
+  SLOPE=1 SCREEN=menu BESTS=$thirteen CLOCK=3
+hold=8 shot slope-world-pick "A second and a half in, plughole 05 picked from the overview: the camera sinks to its ledge and the level opens on the slope's play screen." \
+  SLOPE=1 SCREEN=menu BESTS=$thirteen CLOCK=3 PICK=L5
+shot slope-world-level "Plughole 14 on the slope: the ground under the level, its header, title and note, the stones on its terrace." \
+  SLOPE=1 LEVEL=14 BESTS=$thirteen CLOCK=3
+shot slope-world-result "Plughole 05 solved through the real commit path on the slope: the result." SLOPE=1 SCREEN=result LEVEL=5 CLOCK=3
+hold=6 shot slope-world-return "Plughole 05 left solved a second in: the menu comes back in the dive on plughole 06." \
+  SLOPE=1 LEVEL=5 BESTS=$thirteen CLOCK=3 EXIT=solved
+shot slope-world-settings "The slope's menu with settings opened over it from the stone on the bank." SLOPE=1 SCREEN=menu SETTINGS=1 CLOCK=3

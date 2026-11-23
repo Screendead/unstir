@@ -693,6 +693,10 @@ struct RootView: View {
     /// away while it plays, and back as it leaves, as on a phone they wait under the level.
     @State private var parked: (card: Offer?, archive: Bool)?
     @Environment(\.harnessFold) private var harnessFold
+    /// The slope's world draws the screens (`SlopeFlag`), read once at launch.
+    private let slope: Bool
+    /// The settings' supporter mark switch, which the slope's settings move.
+    @State private var supporter = Settings.supporter
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     /// The harness's one save, so a plain launch's left on the simulator never reaches a shot.
@@ -706,6 +710,7 @@ struct RootView: View {
     init() {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
+        slope = SlopeFlag.on
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
@@ -775,6 +780,52 @@ struct RootView: View {
     /// A level plays beside the menu.
     private var beside: Bool { wide && level != nil }
 
+    /// The slope's menu (`SlopeMenu`), with what covers it: settings, the consent question, and until pieces D and E
+    /// land, today's pack card and archive over it.
+    private var slopeMenu: some View {
+        SlopeMenu(start: level == nil ? harness?.menuTier ?? look : nil, focus: focus, returning: revision > 0,
+                  settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
+                  held: harness?.lockTap, peeking: level != nil, revision: revision,
+                  run: Self.save("endless", harnessed: harnessed, harnessSave)) { next, _ in
+            show(next)
+        }
+        .overlay { slopeCovers }
+        .animation(.easeOut(duration: 0.25), value: settings)
+        .animation(.easeOut(duration: 0.25), value: asking)
+    }
+
+    /// The consent question is up: a build with analytics, its first menu.
+    private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
+
+    @ViewBuilder private var slopeCovers: some View {
+        if let offer = card {
+            PackCard(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
+                     scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
+                     arrived: offer.pack != nil && offer.pack == arrived,
+                     onBack: { withAnimation(.snappy(duration: 0.42)) { card = nil } },
+                     onPlay: { show($0) },
+                     onOffer: { next in withAnimation(.snappy(duration: 0.42)) { card = next } })
+                .id(offer)
+                .transition(.opacity)
+        } else if archive {
+            let days = Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
+            ArchiveView(days: days, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,
+                        onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
+                        onPlay: { show($0) })
+                .transition(.opacity)
+        }
+        if settings {
+            SlopeSettings(supporter: $supporter, back: { settings = false }, clock: harness?.clock)
+                .transition(.opacity)
+        }
+        if asking {
+            // Until the menu draws its ground at SlopeConsent.light, the dusk is laid over it.
+            Color.black.opacity(1 - SlopeConsent.light).ignoresSafeArea()
+                .overlay { SlopeConsent() }
+                .transition(.opacity)
+        }
+    }
+
     /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
     private var calm: Bool {
         level == nil && card == nil && !archive && !settings && !(Analytics.shared.asks && Analytics.shared.consent == .undecided)
@@ -795,7 +846,12 @@ struct RootView: View {
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
                 // level, whose ground it leaves uncovered.
-                if level == nil || peeking || beside {
+                if slope, level == nil || peeking {
+                    slopeMenu
+                        .allowsHitTesting(level == nil)
+                        .accessibilityHidden(level != nil)
+                        .transition(level == nil ? dip : .identity)
+                } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
@@ -853,7 +909,7 @@ struct RootView: View {
             wide = new
         }
         .background(Color.black)
-        .environment(\.slopeWorld, SlopeFlag.on)
+        .environment(\.slopeWorld, slope)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
         // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a
