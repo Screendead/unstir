@@ -27,9 +27,13 @@ let kernel = """
 
     kernel void lab(texture2d<float, access::write> out [[texture(0)]], device const float *g [[buffer(0)]],
                     constant float4 &view [[buffer(1)]], constant float4 &play [[buffer(2)]],
-                    constant float2 &size [[buffer(3)]], uint2 gid [[thread_position_in_grid]]) {
+                    constant float4 &lone [[buffer(3)]], constant float4 &more [[buffer(4)]],
+                    uint2 gid [[thread_position_in_grid]]) {
         if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
-        out.write(float4(slope((float2(gid) + 0.5) / view.x, half4(0.0h), size, view, play, g, 0)), gid);
+        float2 pos = (float2(gid) + 0.5) / view.x;
+        out.write(float4(more.w > 0.0 ? slopeHollow(pos, half4(0.0h), more.xy, view, float2(0.5 * more.x, 0.3 * more.y),
+                                                    float3(1.0, 0.16, 0.16), float3(0.16, 1.0, 0.3), float3(0.2, 0.4, 1.0))
+                                      : slope(pos, half4(0.0h), more.xy, view, play, lone, more.z, g, 0)), gid);
     }
     """
 let state = try device.makeComputePipelineState(function: device.makeLibrary(source: source + kernel, options: nil)
@@ -37,29 +41,30 @@ let state = try device.makeComputePipelineState(function: device.makeLibrary(sou
 
 let size = CGSize(width: number("w", 440), height: number("h", 956))
 let scale = number("scale", 2)
-let slope = Slope(type: number("type", 1))
-var camera = slope.overview(in: size)
-if let k = options["ledge"].flatMap(Int.init) { camera = slope.dive(to: k) }
-if let y = options["y"].flatMap(Double.init) { camera = SlopeCamera(y: y, zoom: 1) }
-if options["at"] == "top" { camera = slope.top(in: size) }
-if options["at"] == "bottom" { camera = slope.bottom(in: size) }
-if let z = options["zoom"].flatMap(Double.init) { camera.zoom = z }
-// between=0.4: that far from the overview to the camera asked for, the zoom by its logarithm.
-if let share = options["between"].flatMap(Double.init) {
-    let wide = slope.overview(in: size)
-    camera = SlopeCamera(y: wide.y + (camera.y - wide.y) * share, zoom: exp(log(wide.zoom) + (log(camera.zoom) - log(wide.zoom)) * share))
+// type=ax is the largest sizes' column: a taller pitch, the lips at the leading edge.
+let ax = options["type"] == "ax"
+var column = SlopeColumn.main(size: size, pitch: ax ? 196 : 110, lip: ax ? 62 : 132 - max(440 - size.width, 0) / 2, step: ax ? 1.5 : 6)
+if options["column"] == "pack" {
+    column = SlopeColumn(stretches: (0 ..< 5).map { _ in .init(rock: .pale, terraces: [6], header: 110) }, foot: .floor, surface: false, first: nil)
 }
-let frame = Slope.Frame(slope, camera: camera, size: size)
+let z = number("z", options["ledge"] != nil || options["at"] != nil ? 1 : 0)
+let lay = SlopeLay(column, z: z)
+var camera = SlopeLay.overview(height: size.height)
+camera.z = z
+if let n = options["ledge"].flatMap(Int.init) { camera = lay.camera(on: n, height: size.height) }
+if options["at"] == "top" { camera.top = lay.travel(height: size.height).lowerBound }
+if options["at"] == "bottom" { camera.top = lay.travel(height: size.height).upperBound }
 let pw = Int(size.width * scale), ph = Int(size.height * scale)
 
 let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: pw, height: ph, mipmapped: false)
 descriptor.usage = [.shaderWrite, .shaderRead]
 let texture = device.makeTexture(descriptor: descriptor)!
-let uniforms = frame.uniforms
+let uniforms = lay.uniforms(top: camera.top)
 let buffer = device.makeBuffer(bytes: uniforms, length: uniforms.count * 4, options: .storageModeShared)!
 var view = SIMD4<Float>(Float(scale), Float(number("t", 3)), Float(number("near", 1)), Float(number("motes", 1)))
-var play = SIMD4<Float>(Float(number("level", 0)), Float(number("glint", 0)), Float(number("clear", 0)), 0)
-var points = SIMD2<Float>(Float(size.width), Float(size.height))
+var play = SIMD4<Float>(Float(number("level", 0)), Float(number("glint", 0)), Float(number("clear", 0)), Float(number("light", 1)))
+var lone = SIMD4<Float>(1, 0.86, 0.6, Float(number("rock", 0)))
+var more = SIMD4<Float>(Float(size.width), Float(size.height), Float(number("paper", 0)), Float(number("hollow", 0)))
 
 /// GPU seconds for one pass, the least of `tries`.
 func pass(tries: Int) -> Double {
@@ -71,7 +76,8 @@ func pass(tries: Int) -> Double {
         enc.setBuffer(buffer, offset: 0, index: 0)
         enc.setBytes(&view, length: 16, index: 1)
         enc.setBytes(&play, length: 16, index: 2)
-        enc.setBytes(&points, length: 8, index: 3)
+        enc.setBytes(&lone, length: 16, index: 3)
+        enc.setBytes(&more, length: 16, index: 4)
         enc.dispatchThreads(MTLSize(width: pw, height: ph, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
         enc.endEncoding()
         cb.commit()
@@ -93,7 +99,7 @@ case "probe":
     func lin(_ v: UInt8) -> Double { let c = Double(v) / 255; return c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
     // zone=rock reads the rock's heart instead, where a hollow's name goes.
     let rock = options["zone"] == "rock"
-    let columns = rock ? 0 ..< Int((slope.lip - 70) * scale) : Int((slope.lip + 18) * scale) ..< pw
+    let columns = rock ? 0 ..< Int((column.lip - 60) * scale) : Int((column.lip + 8 * column.step + 18) * scale) ..< pw
     let band = Int(40 * scale)
     for row in stride(from: 0, to: ph, by: band) {
         var all: [Double] = []
@@ -105,8 +111,8 @@ case "probe":
         }
         all.sort()
         let worst = all[Int(Double(all.count - 1) * 0.999)]
-        let depth = frame.depth(at: CGFloat(row) / scale)
-        print(String(format: "y %4d  fathoms %6.1f  luminance %.4f  ink %.1f:1", row / Int(scale), depth / slope.pitch,
+        let depth = camera.top + CGFloat(row) / scale
+        print(String(format: "y %4d  fathoms %6.1f  luminance %.4f  ink %.1f:1", row / Int(scale), depth / column.pitch,
                      worst, (0.8632 + 0.05) / (worst + 0.05)))
     }
 case "render":
@@ -118,16 +124,15 @@ case "render":
     // Core Graphics' y runs up: flip to the screen's, in points.
     ctx.translateBy(x: 0, y: CGFloat(ph))
     ctx.scaleBy(x: scale, y: -scale)
-    if options["pebbles"] != "0" {
-        let lit = Int(number("lit", 40))
-        for k in 0 ..< Slope.count {
-            let seat = frame.point(frame.seat(k))
-            guard seat.y > -20, seat.y < size.height + 20 else { continue }
-            if k < Slope.shallows ? k != Slope.daily && k != Slope.archive : Slope.bare(k) { continue }
-            let on = k <= lit
-            let rx = frame.length(on ? 8.4 : 6.8, least: on ? 2.5 : 2.1), ry = rx * (on ? 0.71 : 0.65)
+    if options["pebbles"] != "0", number("hollow", 0) == 0 {
+        let lit = Int(number("lit", 16))
+        for n in 0 ..< lay.count where n != 1 || column.first == nil {
+            let seat = lay.seat(n), y = seat.y - camera.top
+            guard y > -20, y < size.height + 20 else { continue }
+            let on = n <= lit
+            let rx = lay.half(on ? .lit : .dull), ry = rx * 0.72
             ctx.setFillColor(on ? CGColor(red: 0.93, green: 0.88, blue: 0.78, alpha: 1) : CGColor(red: 0.3, green: 0.37, blue: 0.4, alpha: 1))
-            ctx.fillEllipse(in: CGRect(x: seat.x - rx, y: seat.y - 2 * ry + 0.12 * ry, width: 2 * rx, height: 2 * ry))
+            ctx.fillEllipse(in: CGRect(x: seat.x - rx, y: y - 2 * ry + 0.14 * ry, width: 2 * rx, height: 2 * ry))
         }
     }
     let out = CommandLine.arguments[2]
