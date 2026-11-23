@@ -89,19 +89,17 @@ CUT = {
     14: 'the menu\'s archive row already gives this count; the slope\'s archive (docs/slope.md 7) leaves it out',
     32: 'says what "music" is', 34: 'says what "sounds" is', 36: 'says what "haptics" is',
     41: 'says what "restore purchases" does', 42: 'says what a privacy policy is',
-    44: 'the switch shows it when turned; Prism\'s page keeps its own pointer to the switch',
-    46: 'the switch shows it when turned',
+    44: 'says what the switch does; Prism\'s page keeps its own line pointing at the switch, and that is where the letters matter',
+    46: 'says where the mark shows; the mark is by the title on the menu as soon as the switch is on',
     320: 'flavour under "Sandbox"',
-    323: 'a pitch for endless on its own row; Jack already ruled "deeper every tank" is left unsaid (2026-11-11), and the brim\'s rule is given on the first tank. On the slope it survives only as VoiceOver\'s hint',
-    342: 'VoiceOver hint repeating the button\'s label',
+    323: 'VoiceOver\'s hint on the endless row, a pitch for the mode; the sighted row says nothing here, and the first tank\'s note, which VoiceOver reads too, gives the brim\'s rule',
     310: 'flavour; the sandbox\'s undo button already shows no count',
     363: 'slogan; the bundle\'s facts name its packs and its saving',
-    365: 'audience advice; the three free levels show the buyer how hard the pack is',
+    365: 'audience advice; the three free levels show the buyer how hard the pack is. The pack proposals Jack picked from gave these lines ("Its card says \'after plughole\'"), and the approved pack page shows three fact lines: this leaves two',
     366: 'audience advice, as Lens\'s', 367: 'audience advice, as Lens\'s', 368: 'audience advice, as Lens\'s',
     370: 'the count ("25 panels") stays; "in four issues" is flavour and the level list shows its chapters',
     371: 'the count ("30 problems") stays; "in five chapters" is flavour', 372: 'the count ("30 specimens") stays; "in five trays" is flavour',
     474: '"Three clocks." is on the glass; the level shows "Unstir in %lld ticks." alone',
-    515: 'a worked case of the third tray\'s rule',
     582: 'teaches what clean is; learnt from the marks',
     583: 'teaches what clean is; the practice caption under the tank already says the first try counts',
     634: 'second line under "waiting for approval"; the button already reads "asked". It is already dropped when a failed ask shows its own line (approved 2026-11-02)',
@@ -132,12 +130,12 @@ CALL = {
     520: ('VoiceOver\'s sentence for the credit.', 'trim to "Made by screendead."'),
     325: ('The heading over the sandbox row. Jack put the sandbox at the end of the list "under \'anything goes\'" on 2026-11-01.',
           'cut: a heading over one row named "Sandbox"'),
-    471: ('Escapement chapter 2\'s line under the tank. Jack settled this wording on 2026-11-12, when the wait button came back.',
+    471: ('Escapement chapter 2\'s line under the tank. Jack settled this wording when the wait button came back (recorded 2026-11-13).',
           'trim to "Unstir in %lld ticks.": the second sentence is a hint'),
     718: ('The caption shown as Escapement\'s wait button is demonstrated. Jack\'s call of 2026-11-12 brought the wait button back on condition that the game makes clear a clock can tick with no knob turned.',
           'cut: problem 2\'s note ("Tap wait: the clock ticks, nothing turns.") and the demonstration itself make it clear; VoiceOver keeps its hint'),
 }
-NOTES_CALL = ('The strategy lines under the free tiers\' tanks. When Jack renamed every level on 2026-11-01 (plain nouns, one world per tier), the hints the old titles carried were moved into these notes, and on 2026-11-02 he passed the notes as built (no note for plughole 02).',
+NOTES_CALL = ('The strategy lines under the free tiers\' tanks. When Jack renamed every level on 2026-11-01 (plain nouns, one world per tier), the hints the old titles carried were moved into these notes, and on 2026-11-02 he ruled on one of them (plughole 02 has no note, as built).',
               'cut all 25: each is a tip a player finds by playing. The three notes that introduce a control (plughole 01, vortex 01, maelstrom 01) stay, trimmed as above, with the frost day\'s line and endless\'s first-tank rule')
 # Today's words the slope (docs/slope.md 11 and 12) already replaces or drops: index -> what stands there instead
 GONE = {
@@ -226,6 +224,7 @@ HAND_KEEP = [
     ('mail.subject', 'report a problem: the mail\'s subject. The app\'s version, then this', '%@: a problem'),
     ('mail.body', 'report a problem: the mail\'s first line, over the device\'s details', 'What happened:'),
     ('mail.to', 'report a problem, with no mail account: the share text\'s first line. The address', 'To: %@'),
+    ('shelf.open', 'VoiceOver: an action on the bundle\'s page that opens one of its packs. The pack', 'Open %@'),
     ('share.name', 'daily\'s share text: its first words. The daily\'s number', 'Unstir #%lld'),
 ]
 HAND_NAMES = [('name.app', 'the app', 'Unstir'), ('name.wordmark', 'menu: the wordmark', 'UNSTIR'), ('name.bundle', 'the bundle of the three packs', 'Triptych I'),
@@ -375,7 +374,5 @@ w('  "coralTwin", "neuronsTwin", "marblingTwin", "engineTurned", "triSwirl", "qu
 w('  They are kept as labels and listed for rewriting.')
 w('- v1 ships with analytics off, so the consent card and the analytics switch are not in v1\'s build; they are kept for the')
 w('  build that has them.')
-w('- "deeper every tank \u00B7 eight wrong stirs and it spills" is still the endless row\'s line on today\'s menu, after the')
-w('  call that left "deeper every tank" unsaid.')
 open(os.path.join(root, 'docs', 'copy-cut.md'), 'w').write('\n'.join(out) + '\n')
 print(f'inventoried {total}, kept {kept_total} (trimmed {len(TRIM)}), cut {len(CUT)}, call {len(CALL) + n_notes}, gone {len(GONE)}; keep.txt lines {len(lines)}')

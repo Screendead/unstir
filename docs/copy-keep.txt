@@ -103,12 +103,13 @@ menu.16 | VoiceOver: a shut tier's gate. The tier below, its levels solved, of a
 menu.17 | closed tier's gate: before the unsolved level numbers ("short: 21–27") | short:
 menu.18 | VoiceOver: a level not yet solved. Its tier, its number | %@ %@, unsolved
 menu.19 | VoiceOver: levels not yet solved. Their tier, the first number, the last | %@ %@ to %@, unsolved
-menu.20 | A swirl layout's knobs, then its swirl | %lld rods + swirl
-menu.21.one | VoiceOver: a layout's rods (one) | %lld rod
-menu.21.other | VoiceOver: a layout's rods (more than one) | %lld rods
-menu.22 | menu beside the tank (wide windows): the row being played | playing
-menu.23 | A row's rods, then its par | %@ · par %lld
-menu.24 | menu: daily, endless or a pack not yet opened | new
+menu.20 | VoiceOver: a level not yet solved. Its tier, its number | Opens %@ %@
+menu.21 | A swirl layout's knobs, then its swirl | %lld rods + swirl
+menu.22.one | VoiceOver: a layout's rods (one) | %lld rod
+menu.22.other | VoiceOver: a layout's rods (more than one) | %lld rods
+menu.23 | menu beside the tank (wide windows): the row being played | playing
+menu.24 | A row's rods, then its par | %@ · par %lld
+menu.25 | menu: daily, endless or a pack not yet opened | new
 menumodel.01 | The daily's row on a frost day, two knobs frozen: then the days in a row solved, from two | frost day · %lld days running
 menumodel.02 | The daily's row on a frost day, two knobs frozen | frost day
 menumodel.03 | The daily's row: the days in a row solved, from two | %lld days running
@@ -164,6 +165,7 @@ pack.05 | Escapement: under the tank. Its tick budget | Unstir in %lld ticks.
 rule.prism.1 | Prism's first tray's rule, under the tank | Each rod stirs only its knob's colours.
 rule.prism.2 | Prism's second tray's rule, under the tank | Red, green and blue pass through each other.
 rule.prism.3 | Prism's third tray's rule, under the tank | Inks that share a colour block each other.
+rule.prism.4 | Prism's fourth tray's rule, under the tank | Red passes cyan, and blocks yellow and magenta.
 rule.prism.5 | Prism's fifth tray's rule, under the tank | White stirs every colour.
 payoff.01 | The credit after the last free level. screendead is the maker's name, never translated | made by screendead · thank you for playing
 payoff.02 | VoiceOver: the credit after the last free level. screendead is the maker's name, never translated | Made by screendead. Thank you for playing.
@@ -337,6 +339,7 @@ slopesettings.01 | Settings: the way back to the menu | ↓ back into the water
 mail.subject | report a problem: the mail's subject. The app's version, then this | %@: a problem
 mail.body | report a problem: the mail's first line, over the device's details | What happened:
 mail.to | report a problem, with no mail account: the share text's first line. The address | To: %@
+shelf.open | VoiceOver: an action on the bundle's page that opens one of its packs. The pack | Open %@
 share.name | daily's share text: its first words. The daily's number | Unstir #%lld
 slope.pack.eyebrow | pack page: over its name, unowned | pack · paid add-on
 slope.pack.eyebrow.owned | pack page: over its name, owned | pack

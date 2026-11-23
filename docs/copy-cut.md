@@ -15,9 +15,9 @@ are written as the String Catalog writes them (`%lld` a number, `%@` words).
 
 | | Strings |
 |---|---|
-| Inventoried | 685 |
-| Kept | 608, of them 10 trimmed, and 237 names |
-| Cut | 29 |
+| Inventoried | 686 |
+| Kept | 611, of them 10 trimmed, and 237 names |
+| Cut | 27 |
 | Calls for Jack | 32 (7 lines and the 25 strategy notes, as one call) |
 | Gone with the slope already | 16 |
 
@@ -36,14 +36,13 @@ debug and harness text. A string used in several places counts once; a plural co
 | the tank's knocks and taps | Settings: what the haptics switch plays (Consent.swift) | says what "haptics" is |
 | packs bought on this Apple ID | Settings: what restore brings back (Consent.swift) | says what "restore purchases" does |
 | what the game keeps, and why | Settings: what the policy says (Consent.swift) | says what a privacy policy is |
-| R, G and B on Prism's knobs | Settings: what the colour letters switch shows (Consent.swift) | the switch shows it when turned; Prism's page keeps its own pointer to the switch |
-| ✦ by the title and in the daily's share line | Settings: where the supporter mark shows (Consent.swift) | the switch shows it when turned |
+| R, G and B on Prism's knobs | Settings: what the colour letters switch shows (Consent.swift) | says what the switch does; Prism's page keeps its own line pointing at the switch, and that is where the letters matter |
+| ✦ by the title and in the daily's share line | Settings: where the supporter mark shows (Consent.swift) | says where the mark shows; the mark is by the title on the menu as soon as the switch is on |
 | Stir anything. Undo is free here. | The sandbox's line under the tank (Levels.swift) | flavour; the sandbox's undo button already shows no count |
 | any picture, any rods · nothing counts | The sandbox's row, under its title (Menu.swift) | flavour under "Sandbox" |
-| deeper every tank · eight wrong stirs and it spills | VoiceOver: endless's row. Eight is the brim's room, in words (Menu.swift, SlopeMenu.swift) | a pitch for endless on its own row; Jack already ruled "deeper every tank" is left unsaid (2026-11-11), and the brim's rule is given on the first tank. On the slope it survives only as VoiceOver's hint |
-| Opens %@ %@ | VoiceOver: a level not yet solved. Its tier, its number (Menu.swift, SlopeGate.swift) | VoiceOver hint repeating the button's label |
+| deeper every tank · eight wrong stirs and it spills | VoiceOver: endless's row. Eight is the brim's room, in words (Menu.swift, SlopeMenu.swift) | VoiceOver's hint on the endless row, a pitch for the mode; the sighted row says nothing here, and the first tank's note, which VoiceOver reads too, gives the brim's rule |
 | three packs, for less | The bundle's pitch, on its card (Offer.swift) | slogan; the bundle's facts name its packs and its saving |
-| after plughole | Who Lens is for. The first tier, in lower case (Offer.swift) | audience advice; the three free levels show the buyer how hard the pack is |
+| after plughole | Who Lens is for. The first tier, in lower case (Offer.swift) | audience advice; the three free levels show the buyer how hard the pack is. The pack proposals Jack picked from gave these lines ("Its card says 'after plughole'"), and the approved pack page shows three fact lines: this leaves two |
 | hard · composed problems | Who Escapement is for (Offer.swift) | audience advice, as Lens's |
 | after plughole · reading by colour | Who Prism is for. The first tier, in lower case (Offer.swift) | audience advice, as Lens's |
 | after plughole, then harder | Who the bundle is for. The first tier, in lower case (Offer.swift) | audience advice, as Lens's |
@@ -51,7 +50,6 @@ debug and harness text. A string used in several places counts once; a plural co
 | %@ in five chapters | What Escapement holds. Its levels counted (Offer.swift) | the count ("30 problems") stays; "in five chapters" is flavour |
 | %@ in five trays | What Prism holds. Its levels counted (Offer.swift) | the count ("30 specimens") stays; "in five trays" is flavour |
 | Unstir in %lld ticks. Three clocks. | Escapement's note under the tank opening its fifth chapter: the tick budget, then the chapter's rule (Pack.swift) | "Three clocks." is on the glass; the level shows "Unstir in %lld ticks." alone |
-| Red passes cyan, and blocks yellow and magenta. | Prism's fourth tray's rule, under the tank (Pack.swift) | a worked case of the third tray's rule |
 | clean needs no undo or reset | result: under the facts when at par but not clean (ResultCard.swift, SlopeResult.swift) | teaches what clean is; learnt from the marks |
 | clean counts on the first try | result, a daily replayed: under the facts (ResultCard.swift, SlopeResult.swift) | teaches what clean is; the practice caption under the tank already says the first try counts |
 | Ask to Buy: the pack opens here once it's approved · tap asked to send it again. | A pack's card: its Ask to Buy sent. Asked is the buy pill's word (Shelf.swift) | second line under "waiting for approval"; the button already reads "asked". It is already dropped when a failed ask shows its own line (approved 2026-11-02) |
@@ -86,13 +84,13 @@ Each would be cut or trimmed by the rule, but its words rest on a decision of hi
 | Words | Where | His decision | Proposed |
 |---|---|---|---|
 | anything goes | menu: heading over the sandbox row (Menu.swift, SlopeMenu.swift) | The heading over the sandbox row. Jack put the sandbox at the end of the list "under 'anything goes'" on 2026-11-01. | cut: a heading over one row named "Sandbox" |
-| Unstir in %lld ticks. Sometimes the first move is to wait. | Escapement's note under the tank opening its second chapter: the tick budget, then the chapter's rule (Pack.swift) | Escapement chapter 2's line under the tank. Jack settled this wording on 2026-11-12, when the wait button came back. | trim to "Unstir in %lld ticks.": the second sentence is a hint |
+| Unstir in %lld ticks. Sometimes the first move is to wait. | Escapement's note under the tank opening its second chapter: the tick budget, then the chapter's rule (Pack.swift) | Escapement chapter 2's line under the tank. Jack settled this wording when the wait button came back (recorded 2026-11-13). | trim to "Unstir in %lld ticks.": the second sentence is a hint |
 | made by screendead · thank you for playing | The credit after the last free level. screendead is the maker's name, never translated (Payoff.swift) | The game's one credit, after the last free level. Jack set its words on 2026-11-11. | trim to "made by screendead": the thanks is the kind of line this pass removes |
 | Made by screendead. Thank you for playing. | VoiceOver: the credit after the last free level. screendead is the maker's name, never translated (Payoff.swift) | VoiceOver's sentence for the credit. | trim to "Made by screendead." |
 | wait: the clock ticks, nothing turns | Escapement's demonstration, as the wait control is pressed: a wait ticks the clock and turns no rod (TankView.swift) | The caption shown as Escapement's wait button is demonstrated. Jack's call of 2026-11-12 brought the wait button back on condition that the game makes clear a clock can tick with no knob turned. | cut: problem 2's note ("Tap wait: the clock ticks, nothing turns.") and the demonstration itself make it clear; VoiceOver keeps its hint |
 | sound, haptics, colour letters: in settings, at the surface | Plughole 01's pointer to the settings, on the slope (SlopePlay.swift) | Plughole 01 shows one quiet line under its note, once ever, pointing at settings. Jack asked for it on 2026-11-02 and ruled the same day that it stays as built; the slope rewords it because the gear is gone, and the slope's own open call 7 offers dropping it. | cut, with its VoiceOver sentence: "settings" is now written on the opening screen |
 | Sound, haptics and colour letters are in settings, at the surface of the menu. | VoiceOver: plughole 01's pointer to the settings, on the slope (SlopePlay.swift) | VoiceOver's sentence for the same line. | cut with it |
-| The 25 notes listed below | under the tank, one per level (Levels.swift) | The strategy lines under the free tiers' tanks. When Jack renamed every level on 2026-11-01 (plain nouns, one world per tier), the hints the old titles carried were moved into these notes, and on 2026-11-02 he passed the notes as built (no note for plughole 02). | cut all 25: each is a tip a player finds by playing. The three notes that introduce a control (plughole 01, vortex 01, maelstrom 01) stay, trimmed as above, with the frost day's line and endless's first-tank rule |
+| The 25 notes listed below | under the tank, one per level (Levels.swift) | The strategy lines under the free tiers' tanks. When Jack renamed every level on 2026-11-01 (plain nouns, one world per tier), the hints the old titles carried were moved into these notes, and on 2026-11-02 he ruled on one of them (plughole 02 has no note, as built). | cut all 25: each is a tip a player finds by playing. The three notes that introduce a control (plughole 01, vortex 01, maelstrom 01) stay, trimmed as above, with the frost day's line and endless's first-tank rule |
 
 The strategy notes in that call:
 
@@ -188,5 +186,3 @@ These stay, and are in `docs/copy-keep.txt`, but their words were themselves his
   They are kept as labels and listed for rewriting.
 - v1 ships with analytics off, so the consent card and the analytics switch are not in v1's build; they are kept for the
   build that has them.
-- "deeper every tank · eight wrong stirs and it spills" is still the endless row's line on today's menu, after the
-  call that left "deeper every tank" unsaid.
