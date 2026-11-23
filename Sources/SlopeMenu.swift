@@ -409,7 +409,6 @@ struct SlopeMenu: View {
     /// camera first sinks to its ledge (2.9), endless's off the last ledge into the dark.
     private func pick(_ level: Level, ledge: Int?, _ plan: SlopeMenuPlan, anew: Bool = false) {
         guard Menu.opens(level, playing: playing, anew: anew) else { return }
-        Sound.shared.play(.tap)
         // Where the pebble lies on the screen under a camera at `top`.
         func seat(_ top: CGFloat) -> CGPoint? {
             ledge.map { CGPoint(x: plan.deep.seat($0).x, y: plan.deep.seat($0).y - top) }
@@ -489,7 +488,7 @@ struct SlopeMenuPlan {
     }
 
     /// From a header's foot to its stretch's first ledge, and from a stretch's top at the overview to its words.
-    static let headerFoot: CGFloat = 36
+    static let headerFoot: CGFloat = 48
     static let bandLead: CGFloat = -8
 
     init(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, top: CGFloat) {
@@ -855,7 +854,7 @@ private struct SlopeMenuWorld: View {
                         }
                         .multilineTextAlignment(.leading)
                         .frame(width: plan.room, alignment: .leading)
-                        .hit(8, 0)
+                        .hit(12, 0)
                     }
                     .modifier(Speech((daily.ledge.label, daily.ledge.value, daily.ledge.hint)))
                     .opacity(wide).allowsHitTesting(wide >= 1)
@@ -863,7 +862,7 @@ private struct SlopeMenuWorld: View {
                 }
                 if near > 0 {
                     Text("today").font(.slope(.place, .title)).ink(.ink).accessibilityAddTraits(.isHeader).opacity(near).slopeUnderBars(bars)
-                        .slopePlace(CGPoint(x: plan.words(n).x, y: view.y(lay.tops[n]) - SlopeMenuPlan.headerFoot + 8), anchor: .bottomLeading)
+                        .slopePlace(CGPoint(x: plan.words(n).x, y: view.y(lay.tops[n]) - SlopeMenuPlan.headerFoot + 22), anchor: .bottomLeading)
                 }
                 SlopeLedgeRow(ledge: daily.ledge, view: view, n: n, near: near, bars: bars) { pick(daily.level, n) }
             }
@@ -909,7 +908,7 @@ private struct SlopeMenuWorld: View {
                             Text(way.level.label).font(.slope(.data, .body)).ink(.ink) // loc: verbatim a number
                             Text(verbatim: way.level.title + " \u{203A}").font(.slope(.name, .body)).ink(.ink)
                         }
-                        .hit(10, 12)
+                        .hit(12, 12)
                     }
                     .accessibilityLabel(Text("next, \(way.level.label), \(way.level.title)",
                                              comment: "VoiceOver: the slope's overview, the way on. The next level's number, then its name"))

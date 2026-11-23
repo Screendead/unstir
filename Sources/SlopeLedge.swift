@@ -97,11 +97,16 @@ struct SlopeLedgeRow: View {
             let ascent = frontier ? UIFont.systemFont(ofSize: leading, weight: .light).ascender
                 : SlopeMeasure.font(.body, at: typeSize).ascender
             Button {
-                ledge.closed ? refuse() : open()
+                if ledge.closed {
+                    refuse()
+                } else {
+                    Sound.shared.play(.tap)
+                    open()
+                }
             } label: {
                 words.frame(width: at.width, alignment: .leading).opacity(near).slopeUnderBars(bars)
                     .padding(.leading, at.x)
-                    .hit(10, 0)
+                    .hit(12, 0)
                     .overlay(alignment: Alignment(horizontal: .leading, vertical: .firstTextBaseline)) {
                         pebble
                             .alignmentGuide(.leading) { $0.width / 2 - seat.x }
@@ -207,7 +212,8 @@ extension View {
     }
 }
 
-/// A row's press reaches its pebble, which sinks as any stone does; the row's own action sounds.
+/// A row's press reaches its pebble, which sinks as any stone does. The row sounds itself: a tap as it opens, the
+/// seized knob as it refuses.
 private struct SlopeLedgePress: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.environment(\.buttonPressed, configuration.isPressed)
