@@ -41,6 +41,7 @@ struct ResultCard: View {
     /// The pack "more puzzles in the packs ›" opens, read as the card appears, which spends its one showing.
     @State private var packs: Pack?
     @Environment(\.page) private var page
+    @Environment(\.slopeWorld) private var slopeWorld
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve, which a daily's first on its day is over a best the archive saved
@@ -87,7 +88,7 @@ struct ResultCard: View {
     }
 
     var body: some View {
-        if SlopeResult.on {
+        if slopeWorld {
             SlopeResult(game: game, onNext: onNext, onLook: onLook, again: again, now: now, onOffer: onOffer)
         } else {
             card
@@ -314,9 +315,10 @@ struct LostCard: View {
     let again: () -> Void
     @AccessibilityFocusState private var focused: Bool
     @Environment(\.page) private var page
+    @Environment(\.slopeWorld) private var slopeWorld
 
     var body: some View {
-        if SlopeResult.on {
+        if slopeWorld {
             SlopeLost(game: game, notice: notice, undo: undo, again: again)
         } else {
             card

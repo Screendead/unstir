@@ -25,7 +25,7 @@ struct PayoffCurtain: View {
     let skip: () -> Void
     /// On the slope (docs/slope.md, 6): a tier's name in the place voice and a pack's in the name voice, each in its
     /// sweep and lower case, over "unstirred." in the place voice at display, as the result's stamp.
-    var slope = SlopeResult.on
+    @Environment(\.slopeWorld) private var slope
     @State private var lines: [Int: CGRect] = [:]
     @State private var height: CGFloat = 0
     @Environment(\.page) private var page
