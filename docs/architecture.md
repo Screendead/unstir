@@ -1129,6 +1129,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     it. It opens on `aim` (`SlopeAim`: a ledge and a share, the camera a scene at that ledge and share has, kept
     inside the travel), travels there when `aim` changes and tells `onMove` its depth. The scroll view's safe-area
     insets are given back with negative `safeAreaPadding`: with them a scroll target stops 62 pt short of the top.
+    Under the status bar a dive draws the ground again over its content, whole to the bar's foot and gone 30 pt
+    under it, so rows sink away there and none stands behind the clock.
     A cleared aim leaves the dive where the finger has it, and a new `stamp` goes back to a place already aimed at.
     `SlopeLayer` places children at points of one frame (`slopePlace`, `slopeLine`, `seated`, `rested`) and offers each
     the width from its point to 16 pt short of the side (one placed by its middle, the frame's width less both
