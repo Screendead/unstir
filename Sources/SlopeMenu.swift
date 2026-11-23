@@ -769,8 +769,9 @@ private struct SlopeMenuWorld: View {
     /// 1 at the overview, gone a fifth of the way in.
     private var wide: Double { lay.e <= 0 ? 1 : 1 - min(lay.e / 0.2, 1) }
     private var large: Bool { plan.large }
-    /// The status bar's room, which the dive's words fade under.
-    private var bars: CGFloat { plan.top + 8 }
+    /// The status bar's room, which the dive's words fade under; at the largest sizes, where the words stand under the
+    /// top control, its room too.
+    private var bars: CGFloat { plan.top + 8 + (large ? SlopeMeasure.line(.body, at: plan.type) + 16 : 0) }
 
     private func shown(_ y: CGFloat, _ reach: CGFloat = 120) -> Bool { !cull || y > -reach && y < view.size.height + reach }
 

@@ -197,10 +197,12 @@ struct SlopeLedgeRow: View {
 }
 
 extension View {
-    /// Words on a column that fade out as they rise to the status bar, `bars` tall, and are gone before they reach it.
+    /// Words on a column that fade out as their first line rises to the top bars, `bars` tall, and are gone before it
+    /// reaches them.
     func slopeUnderBars(_ bars: CGFloat) -> some View {
         visualEffect { words, place in
-            words.opacity(bars > 0 ? min(max((place.frame(in: .global).maxY - bars) / 28, 0), 1) : 1)
+            let frame = place.frame(in: .global)
+            return words.opacity(bars > 0 ? min(max((frame.minY + min(frame.height, 30) - bars) / 28, 0), 1) : 1)
         }
     }
 }
