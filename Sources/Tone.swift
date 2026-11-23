@@ -112,6 +112,10 @@ enum SlopeInk: CaseIterable {
 
     var colour: Color { Color.text.opacity(strength) }
 
+    /// The depth from which every ink reads.
+    @available(*, deprecated, message: "each ink has its own: ink.shallowest")
+    static let shallowest: CGFloat = 64
+
     /// The least depth under the surface, in points, at which words in this ink keep their floor: the surface's own
     /// light is brighter than any ink reads over, and the quieter inks need the water a little darker again. In the
     /// air over the surface every ink reads.

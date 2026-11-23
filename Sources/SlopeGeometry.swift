@@ -85,6 +85,13 @@ struct SlopeCamera: Equatable, Sendable {
     var z: CGFloat = 1
 }
 
+/// Where a camera holds the column: ledge `ledge`'s top at `share` of the screen's height. A ledge past the last is
+/// the foot, endless's word.
+struct SlopeAim: Equatable, Sendable {
+    var ledge: Int
+    var share: CGFloat = 0.49
+}
+
 /// A column laid out at one zoom: where each ledge is, where its pebble sits, and what the shader is given, all from
 /// the same numbers.
 struct SlopeLay: Sendable {
@@ -244,6 +251,15 @@ struct SlopeLay: Sendable {
     /// The camera that holds ledge `n`'s top `at` that share of a screen `height` tall.
     func camera(on n: Int, at share: CGFloat = 0.49, height: CGFloat) -> SlopeCamera {
         SlopeCamera(top: tops[min(max(n, 0), count - 1)] - share * height, z: z)
+    }
+
+    /// Ledge `n`'s top, as a depth; past the last ledge, the foot's word.
+    func depth(_ n: Int) -> CGFloat { n < count ? tops[max(n, 0)] : endless }
+
+    /// The camera's depth that holds `aim` on a screen `height` tall, kept inside the travel: where a dive rests on it.
+    func rest(_ aim: SlopeAim, height: CGFloat) -> CGFloat {
+        let travel = travel(height: height)
+        return min(max(depth(aim.ledge) - aim.share * height, travel.lowerBound), travel.upperBound)
     }
 
     /// The dive's travel on a screen `height` tall: from the surface at 0.188 of it, to the foot's word at its middle.

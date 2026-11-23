@@ -137,25 +137,31 @@ extension SlopeScene {
 /// The dive as a finger moves it: a column at full depth, scrolled natively from its surface to its foot. `content`
 /// is laid out once, in the scrolled content's own frame (`SlopeView.point` gives a place in the column its place
 /// there), and the ground is drawn for wherever the scroll has reached, in the same pass that moves the content, so
-/// the two never part. `start` is the ledge the dive opens on, held at the screen's middle.
+/// the two never part. It opens on `aim`, the same camera a `SlopeScene` at `z` 1 has for that ledge and share, kept
+/// inside the dive's travel (`SlopeLay.rest`), and when `aim` changes it travels there in `seconds`, or cuts under
+/// Reduce Motion; with no aim it opens at the surface. `onMove` hears the camera's depth as the scroll moves.
 struct SlopeDive<Content: View>: View {
     var column: SlopeColumn
-    var start: Int?
+    var aim: SlopeAim?
+    var seconds = 0.9
     var held = false
     var look = SlopeLook()
     var clock: Double?
     var near = true
+    var onMove: ((CGFloat) -> Void)?
     @ViewBuilder var content: (SlopeView) -> Content
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private static var space: String { "slope.dive" }
+    private static var mark: String { "slope.aim" }
 
     var body: some View {
         GeometryReader { geo in
             let size = geo.whole
             let lay = SlopeLay(column, z: 1), travel = lay.travel(height: size.height)
-            // The scroll view keeps its content clear of the status bar, so the content's top is that much lower in
-            // the column than the screen's is at rest.
-            let base = SlopeView(lay: lay, top: travel.lowerBound + geo.safeAreaInsets.top, size: size)
+            let base = SlopeView(lay: lay, top: travel.lowerBound, size: size)
+            let rest = aim.map { lay.rest($0, height: size.height) } ?? travel.lowerBound
             ScrollViewReader { reader in
                 ScrollView(.vertical, showsIndicators: false) {
                     SlopeLayer {
@@ -164,20 +170,72 @@ struct SlopeDive<Content: View>: View {
                             SlopeGround(view: SlopeView(lay: lay, top: base.top + offset, size: size), held: held, look: look,
                                         clock: clock, near: near)
                                 .offset(y: offset)
+                                .preference(key: SlopeDiveTop.self, value: base.top + offset)
                         }
-                        ForEach(0 ..< lay.count, id: \.self) { n in
-                            Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: base.y(lay.tops[n]))).id(n)
-                        }
+                        // The scroll's one target: the content's line that the aim puts at the screen's middle, which
+                        // lies inside the content at both ends of the travel, as the line at the screen's top does not.
+                        Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: base.y(rest) + size.height / 2))
+                            .id(Self.mark)
                         content(base)
                     }
-                    .frame(width: size.width, height: travel.upperBound + size.height - base.top - geo.safeAreaInsets.bottom)
+                    .frame(width: size.width, height: travel.upperBound - travel.lowerBound + size.height)
                 }
                 .coordinateSpace(.named(Self.space))
+                // A scroll view keeps its content clear of the status bar and the home bar, and its scroll targets
+                // stop short of both; the slope runs under them, so it gives that room back.
+                .safeAreaPadding(.top, -geo.safeAreaInsets.top)
+                .safeAreaPadding(.bottom, -geo.safeAreaInsets.bottom)
                 .ignoresSafeArea()
-                .onAppear { if let start { reader.scrollTo(start, anchor: .center) } }
+                .onPreferenceChange(SlopeDiveTop.self) { top in onMove?(top) }
+                .onAppear { if aim != nil { reader.scrollTo(Self.mark, anchor: .center) } }
+                .onChange(of: aim) {
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: seconds)) { reader.scrollTo(Self.mark, anchor: .center) }
+                }
             }
         }
     }
+}
+
+extension SlopeDive {
+    /// The dive opening with ledge `start` at the screen's middle.
+    @available(*, deprecated, message: "pass aim: SlopeAim(ledge:)")
+    init(column: SlopeColumn, start: Int?, held: Bool = false, look: SlopeLook = SlopeLook(), clock: Double? = nil, near: Bool = true,
+         @ViewBuilder content: @escaping (SlopeView) -> Content) {
+        self.init(column: column, aim: start.map { SlopeAim(ledge: $0, share: 0.5) }, held: held, look: look, clock: clock, near: near,
+                  content: content)
+    }
+}
+
+/// The inside of a hollow (docs/slope.md, 8.2; Slope.metal's `slopeHollow`): still dark water between two jambs of pale
+/// stone, a floor and a ledge, and the cover's light falling from `source`, a point of the view, in three soft beams
+/// of the pack's colours. A still: it has no clock.
+struct SlopeHollowGround: View {
+    var source: UnitPoint = UnitPoint(x: 0.5, y: 0.3)
+    var beams: (SIMD3<Float>, SIMD3<Float>, SIMD3<Float>)
+
+    @Environment(\.displayScale) private var scale
+
+    var body: some View {
+        GeometryReader { geo in
+            let size = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
+                              height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
+            Rectangle().fill(.black)
+                .colorEffect(ShaderLibrary.slopeHollow(
+                    .float2(size), .float4(scale, 0, 0, 0), .float2(source.x * size.width, source.y * size.height),
+                    .float3(beams.0.x, beams.0.y, beams.0.z), .float3(beams.1.x, beams.1.y, beams.1.z),
+                    .float3(beams.2.x, beams.2.y, beams.2.z)))
+                .frame(width: size.width, height: size.height)
+                .ignoresSafeArea()
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The depth at a dive's screen top, handed up from inside its scroll.
+private struct SlopeDiveTop: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 private extension GeometryProxy {
