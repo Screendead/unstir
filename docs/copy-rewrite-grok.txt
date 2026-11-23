@@ -1,0 +1,652 @@
+archive.01 | daily and archive: result word (solved at par, first try, no undo or reset) | clean
+archive.02 | result word: at par | par
+archive.03 | result word: started, never solved | tried
+archive.04 | result word: at par | at par
+archive.05 | VoiceOver: an archive day's best. Moves over par | %lld over par
+archive.06 | VoiceOver: a menu row with no best | not played
+archive.07 | menu, archive row; the archive's title | Archive
+archive.08 | menu, archive row for 2 s when tapped while locked | unlocked by purchasing any pack
+archive.09 | The menu's archive row. Past dailies (and 1 more) | %lld past dailies
+archive.10 | The menu's archive row. Past dailies, then how many are at par | %lld past dailies · %lld at par
+archive.11 | The menu's archive row, shut until a purchase. Past dailies | %lld past dailies · comes with any pack
+archive.12 | menu: header over the daily; archive: under today's number | today
+archive.13 | VoiceOver: the archive's grid, on today | Today. Its daily is on the menu.
+brim.01 | VoiceOver: endless's brim, the gauge round the tank's rim | brim
+brim.02 | VoiceOver: the brim's notches filled, of the notches it holds | %lld of %lld
+brim.03 | Stamped over the tank as an endless run spills | spilled.
+consent.01 | Analytics consent: its question | Help improve Unstir?
+consent.02 | Analytics consent: under its question | How you play. Never who you are.
+consent.03 | Analytics consent: the link that shows what is sent | What does it send? ›
+consent.04 | Analytics consent: the link that hides what is sent | Hide the list ‹
+consent.05 | Analytics consent: what is sent. Keep in step with the privacy policy | Yes means we see which puzzles you finish, how many moves and undos, which days you play, which packs you buy, and roughly your country. Never your name, Apple ID, or anything that identifies you. Change it any time in settings.
+consent.06 | Analytics consent: the answer that agrees | Yes
+consent.07 | Analytics consent: the answer that declines | No
+consent.08 | settings' title; menu: the settings stone | settings
+consent.09 | Settings: the analytics switch | analytics
+consent.10 | Settings: the analytics switch, on | on · how you play, never who you are
+consent.11 | Settings: the analytics switch, off | off · nothing is sent
+consent.12 | Settings: the music switch | music
+consent.13 | Settings: the sounds switch | sounds
+consent.14 | Settings: the haptics switch | haptics
+consent.15 | Settings: the row that mails the log | report a problem
+consent.16 | Settings: what a report sends | with the log: touches, moves, purchases and errors
+consent.17 | Settings: the row that opens the policy | privacy policy
+consent.18 | Settings and a pack's card: restore | restore purchases
+consent.19 | Settings: the switch for Prism's knob letters | colour letters
+consent.20 | Settings: the supporter mark's switch | supporter mark
+consent.21 | VoiceOver: the consent's list of what is sent, open | shown
+consent.22 | VoiceOver: the consent's list of what is sent, shut | hidden
+consent.23 | a switch's state | on
+consent.24 | a switch's state | off
+escapementviews.01 | Escapement: stamped over the tank when the clocks run out | out of ticks.
+tankview.01 | under the tank while a level's opening stir plays | tap to skip
+game.01 | Escapement: a pushed tick, no undo left | That tick can't come back. Reset.
+game.02 | Escapement: a pushed tick | That tick can't come back. Undo, or again.
+level.L1.note | plughole 01: one line under the tank | Turn a rod to look.
+level.L3.note | plughole 03: one line under the tank | The last rod you saw turn is on top.
+level.L4.note | plughole 04: one line under the tank | Where two rings cross, the later one runs unbroken.
+level.L5.note | plughole 05: one line under the tank | Where two discs overlap, the order they come off matters.
+level.L6.note | plughole 06: one line under the tank | One rod was stirred twice. Its newer stir comes off first.
+level.L8.note | plughole 08: one line under the tank | Turn a rod to look. A fresh hard ring means not that one.
+level.L9.note | plughole 09: one line under the tank | Rings that never meet come off in any order.
+level.L11.note | plughole 11: one line under the tank | Any whole ring can come off.
+level.L12.note | plughole 12: one line under the tank | A small stir is not an old one.
+level.L14.note | plughole 14: one line under the tank | The small rods count as much as the big ones.
+level.L15.note | plughole 15: one line under the tank | The small stir is on top.
+level.L16.note | plughole 16: one line under the tank | Turned, stirred past, turned back: all it leaves is a tail.
+level.L20.note | plughole 20: one line under the tank | Read where the rings cross, not their colours.
+level.L21.note | plughole 21: one line under the tank | One ring is whole. Find it.
+level.L24.note | plughole 24: one line under the tank | The hub's disc crosses every other.
+level.N1.note | whirlpool 01: one line under the tank | Same rules, twice the stirs, no replays.
+level.N4.note | whirlpool 04: one line under the tank | The newest ring is never broken.
+level.N11.note | whirlpool 11: one line under the tank | There is always a whole ring.
+level.V1.note | vortex 01: one line under the tank | Turn the glass's edge.
+level.V2.note | vortex 02: one line under the tank | A rod was stirred after the rim.
+level.V3.note | vortex 03: one line under the tank | The rim was stirred first.
+level.V12.note | vortex 12: one line under the tank | Read the edge before the middle.
+level.M1.note | maelstrom 01: one line under the tank | One knob has seized. Turn the tank.
+level.M2.note | maelstrom 02: one line under the tank | The tank turns the other way too.
+level.M3.note | maelstrom 03: one line under the tank | Turn the tank so the seized knob is out of the way.
+level.M8.note | maelstrom 08: one line under the tank | Plan two turns of the tank ahead.
+level.M10.note | maelstrom 10: one line under the tank | The nearer turn is not the shorter way.
+level.M18.note | maelstrom 18: one line under the tank | The right stop is past the obvious one.
+levels.09 | The daily's title. Its date, short | Daily · %@
+levels.10 | A frost day's daily: two knobs seized. One line under the tank | Frost day: two knobs are frozen. Turn the tank. Turns count as moves.
+levels.11 | The endless run's title | Endless
+levels.12 | Endless's first tank: the brim's rule. Eight is the brim's room, in words | A wrong stir fills the brim, even turned back. Eight and it spills.
+levels.13 | The sandbox's row, in a level number's place | box
+levels.14 | The sandbox's title | Sandbox
+levels.15 | The daily's card, past midnight | next daily is out
+levels.16.one | VoiceOver: the daily's card. Minutes to the next (one) | next daily in %lld minute
+levels.16.other | VoiceOver: the daily's card. Minutes to the next (more than one) | next daily in %lld minutes
+levels.17 | The daily's card. Minutes to the next, short | next daily in %lld min
+levels.18.one | VoiceOver: the daily's card. Hours to the next (one) | next daily in %lld hour
+levels.18.other | VoiceOver: the daily's card. Hours to the next (more than one) | next daily in %lld hours
+levels.19 | The daily's card. Hours to the next, short | next daily in %lld h
+menu.01 | back button to the archive ("↑ archive") | archive
+menu.02 | back button to the menu ("↑ levels"); heading of a pack's level list | levels
+menu.03 | VoiceOver: a shut tier. The tier, the tier below, then its levels solved, of all | %@, locked, opens with every %@ level solved, %lld of %lld
+menu.04 | VoiceOver: the settings button | Settings
+menu.05 | Endless's row, a run saved: its tank, then its brim | continue · tank %lld · brim %lld
+menu.06 | menu: heading over the sandbox row | anything goes
+menu.07 | VoiceOver: the menu's title, with the supporter mark | Unstir, supporter
+menu.08 | VoiceOver: endless's new run, armed | Tap again for a new run
+menu.09 | Endless's row: drops the saved run | new run
+menu.10 | Endless's row: armed, a second tap drops the saved run | new run? tap again
+menu.11 | VoiceOver: starts a new endless run | New run
+menu.12 | VoiceOver: endless's new run, armed | New run, tap again to confirm
+menu.13 | VoiceOver hint: endless's "new run" | Drops the saved run and starts another.
+menu.14 | A tier's header. Levels at par, of all | %lld/%lld at par
+menu.15 | a closed tier's state | locked
+menu.16 | VoiceOver: a shut tier's gate. The tier below, its levels solved, of all | Locked. Opens with every %@ level solved: %lld of %lld.
+menu.17 | closed tier's gate: before the unsolved level numbers ("short: 21–27") | short:
+menu.18 | VoiceOver: a level not yet solved. Its tier, its number | %@ %@, unsolved
+menu.19 | VoiceOver: levels not yet solved. Their tier, the first number, the last | %@ %@ to %@, unsolved
+menu.20 | VoiceOver: a level not yet solved. Its tier, its number | Opens %@ %@
+menu.21 | A swirl layout's knobs, then its swirl | %lld rods + swirl
+menu.22.one | VoiceOver: a layout's rods (one) | %lld rod
+menu.22.other | VoiceOver: a layout's rods (more than one) | %lld rods
+menu.23 | menu beside the tank (wide windows): the row being played | playing
+menu.24 | A row's rods, then its par | %@ · par %lld
+menu.25 | menu: daily, endless or a pack not yet opened | new
+menumodel.01 | The daily's row on a frost day, two knobs frozen: then the days in a row solved, from two | frost day · %lld days running
+menumodel.02 | The daily's row on a frost day, two knobs frozen | frost day
+menumodel.03 | The daily's row: the days in a row solved, from two | %lld days running
+menumodel.04 | VoiceOver: the daily's row. Its rods, its par, then a frost day or the days in a row solved | %lld rods · par %lld · %@
+menumodel.05 | A shut tier's row, tapped. The tier below | solve every %@ level to open
+menumodel.06 | A shut row, tapped. The level number before it | solve %@ to open
+offer.01 | number word, part of "The first three are free." and "all three packs" | two
+offer.02 | number word, part of "The first three are free." and "all three packs" | three
+offer.03 | number word, as above | four
+offer.04 | number word, as above | five
+offer.05 | number word, as above | six
+offer.06 | Lens's pitch, on its card | some rods zoom instead of turning
+offer.07 | Escapement's pitch, on its card | clocks tick after every move, on a budget of ticks
+offer.08 | Prism's pitch, on its card | each rod stirs only some colours
+offer.09 | What the bundle holds. Its packs, then their levels | %@ · %lld levels
+offer.10 | The dock's header once an Ask to Buy is approved | %@ is yours
+offer.11 | Prism's card, under its facts | letters for colour-blind play, in settings
+offer.12 | A pack's card: its free levels | levels 1–%lld free
+offer.13 | bundle's page: what is free | each pack's first 3 levels
+offer.14 | restore purchases, running; replaces the control's words | restoring…
+offer.15 | restore purchases, done; shown before "· restore purchases" | restored %@
+offer.16 | restore purchases, nothing found; shown before "· restore purchases" | nothing to restore on this Apple ID
+offer.17 | restore purchases, failed; shown before "· restore purchases" | couldn't reach the App Store
+offer.18 | A purchase failed, offline | No connection. Try again when you're online.
+offer.19 | A purchase failed: not sold here | Not sold in your country's App Store.
+offer.20 | Purchases are barred on this phone | In-app purchases are turned off on this iPhone.
+offer.21 | The buy pill, in the price's place while it loads | price loading
+offer.22 | The buy pill, in the price's place, no App Store | App Store unreachable
+offer.23 | A pack's state | owned
+offer.24 | pack: Ask to Buy sent | waiting for approval
+offer.25 | A pack's state | purchase failed
+offer.26 | A pack's state: a family's share ended | no longer shared with you
+offer.27 | A pack's state: refunded | no longer on this Apple ID
+offer.28 | Under a pack's cover: its free levels solved, of all | %lld/%lld free
+offer.29 | VoiceOver: a pack's cover. Its free levels solved, of all | %lld of %lld free levels solved
+offer.30 | back button to the menu ("↑ menu") | menu
+offer.31 | A pack's card beside the menu: closes it | close
+offer.32 | VoiceOver: a pack's card beside the menu, its close button | Close
+offer.33 | VoiceOver: a back button | Back
+offer.34 | pack page: second half of the line over buying ("The first three are free. 27 more in Prism.") | %lld more in %@.
+offer.35 | pack page, over buying, reached after the free levels. Number word, then "27 more in Prism." | You've played the free %@. %@
+offer.36 | pack page, over buying, reached by tapping a locked level. Number word, then "27 more in Prism." | The first %@ are free. %@
+pack.01 | list of pack names ("Lens, Escapement and Prism") | %@ and %@
+pack.02 | Lens's levels counted; part of "25 panels unstirred" and the pack page's facts | %lld panels
+pack.03 | Escapement's levels counted; part of other lines as Lens's | %lld problems
+pack.04 | Prism's levels counted; part of other lines as Lens's | %lld specimens
+rule.escapement.1 | Escapement's note under the tank opening its first chapter: the tick budget, then the chapter's rule | Unstir in %lld ticks. A clock ticks after every move. Each let-go is a move.
+rule.escapement.2 | Escapement's note under the tank opening its second chapter: the tick budget, then the chapter's rule | Unstir in %lld ticks. Sometimes the first move is to wait.
+rule.escapement.3 | Escapement's note under the tank opening its third chapter: the tick budget, then the chapter's rule | Unstir in %lld ticks. Two clocks tick in turn.
+rule.escapement.4 | Escapement's note under the tank opening its fourth chapter: the tick budget, then the chapter's rule | Unstir in %lld ticks. A wound-back clock ticks the other way.
+rule.escapement.wait | Escapement's note under the tank on problem 2, the first that needs a wait: the tick budget, then what the wait control does | Unstir in %lld ticks. Tap wait: the clock ticks, nothing turns.
+pack.05 | Escapement: under the tank. Its tick budget | Unstir in %lld ticks.
+rule.prism.1 | Prism's first tray's rule, under the tank | Each rod stirs only its knob's colours.
+rule.prism.2 | Prism's second tray's rule, under the tank | Red, green and blue pass through each other.
+rule.prism.3 | Prism's third tray's rule, under the tank | Inks that share a colour block each other.
+rule.prism.4 | Prism's fourth tray's rule, under the tank | Red passes cyan, and blocks yellow and magenta.
+rule.prism.5 | Prism's fifth tray's rule, under the tank | White stirs every colour.
+payoff.01 | The credit after the last free level. screendead is the maker's name, never translated | made by screendead · thank you for playing
+payoff.02 | VoiceOver: the credit after the last free level. screendead is the maker's name, never translated | Made by screendead. Thank you for playing.
+payoff.03 | The curtain after a pack's last level, under the pack's name: its levels counted | %@ unstirred
+payoff.04 | stamped over a solved tank; the curtain after a tier's last level | unstirred.
+payoff.05 | VoiceOver: the curtain after a pack's last level. The pack, then its levels counted | %@: %@ unstirred.
+payoff.06 | VoiceOver: the curtain after a tier's last level. The tier | %@, unstirred.
+payoffviews.01 | VoiceOver: the curtain call's hint, as activating it skips to the result card | Goes on to the result.
+playchrome.01 | The play screen's count. Moves, then par | moves %lld / par %lld
+playchrome.02 | The play screen's count, endless. Moves | moves %lld
+playchrome.03 | play: undo button in the sandbox | undo
+playchrome.04 | play: undo button with undos left | undo · %lld
+playchrome.05 | VoiceOver: the undo button | Undo
+playchrome.06 | VoiceOver: the undo button. Undos left | Undo, %lld left
+playchrome.07 | Over the undo button: the day's first refill | +%lld undos
+playlayout.01 | Escapement: the wait button | wait
+playlayout.02 | play: reset button | reset
+resultcard.01 | The card of a pack's last level. The pack, then its levels counted | %@ complete · %@
+resultcard.02 | The card of the last tier's last level | every tier unstirred
+resultcard.03 | VoiceOver: the card of a pack's last level. The pack, then its levels counted | %@ complete, %@.
+resultcard.04 | VoiceOver: the card of the last tier's last level | Every tier unstirred.
+resultcard.05 | result word: solved over par, or an Escapement problem solved | solved
+resultcard.06 | The card: this solve beat the best. The best before | new best · was %@
+resultcard.07 | The card: this solve didn't beat the best. The best | best · %@
+resultcard.08 | result, endless spilled: part of "tanks cleared 7 · new best" | tanks cleared %lld · 
+resultcard.09 | result, endless spilled: part of "tanks cleared 7 · new best" | new best
+resultcard.10 | Endless's card, spilled. Tanks cleared, then the best run's | tanks cleared %lld · best %lld
+resultcard.11 | Endless's card. The tank, then the brim's notches of its room | tank %lld · brim %lld / %lld
+resultcard.12 | result: moves and par | moves %lld · par %lld
+resultcard.13 | result: button to a pack | try %@ ›
+resultcard.14 | VoiceOver: result's button to a pack | Try %@
+resultcard.15 | result, last free level: button to the packs | more puzzles in the packs ›
+resultcard.16 | VoiceOver: result's button to the packs | More puzzles in the packs
+resultcard.17 | result: replay button | again ↺
+resultcard.18 | VoiceOver: result's replay button | Again
+resultcard.19 | result, daily: share button | share ↗
+resultcard.20 | VoiceOver: result's share button | Share result
+resultcard.21 | Endless's card, spilled: starts another run | new run ›
+resultcard.22 | The card's next, past a pack's free levels. The pack | more in %@ ›
+resultcard.23 | The card's next level or tank | next ›
+resultcard.24 | VoiceOver: endless's card, the next tank | Next tank
+resultcard.25 | VoiceOver: the card's next level | Next level
+resultcard.26.one | The card's way up, the next tier shut. Levels unsolved, then their tier (one) | %lld %@ level unsolved
+resultcard.26.other | The card's way up, the next tier shut. Levels unsolved, then their tier (more than one) | %lld %@ levels unsolved
+resultcard.27 | The card's way up to the next tier | up a notch
+resultcard.28 | VoiceOver: the card's way up. The next tier | Up a notch: %@
+resultcard.29 | VoiceOver: the card's way up, shut. The next tier, then how many levels are unsolved | %@, locked. %@, and solving every one opens it
+resultcard.30 | VoiceOver: the card's way up, shut. The tier below | Shows which %@ levels are unsolved
+resultcard.31 | Escapement, lost: the result's line | out of ticks on move %lld
+resultcard.32 | Escapement, lost: replay button | again ›
+resultcard.33 | VoiceOver: Escapement's lost replay button | Try again
+share.01 | daily's share text: part of a line joined by " · " | practice
+share.02.one | moves played: part of the share line and of VoiceOver's sentences (one) | %lld move
+share.02.other | moves played: part of the share line and of VoiceOver's sentences (more than one) | %lld moves
+share.03 | daily's share text: moves ("7 moves"), then par; part of a line joined by " · " | %@ (par %lld)
+share.04.one | daily's share text: part of a line joined by " · " (one) | %lld undo
+share.04.other | daily's share text: part of a line joined by " · " (more than one) | %lld undos
+share.05.one | daily's share text: part of a line joined by " · " (one) | %lld reset
+share.05.other | daily's share text: part of a line joined by " · " (more than one) | %lld resets
+shelf.01 | An owned pack's card: the key beside its progress | done
+shelf.02 | Escapement's progress. Levels solved, of all | %lld/%lld solved
+shelf.03 | The bundle's card: the key beside what it saves | save
+shelf.04 | pack page: under the facts while some of its levels are not yet in the build | More levels arrive in an update.
+shelf.05 | pack page: before the store's first read | checking purchases…
+shelf.06 | VoiceOver: a pack's row past its free levels, unowned | locked, needs the pack
+shelf.07 | VoiceOver: a pack's locked row. The pack | Shows where to buy %@
+shelf.08 | The bundle's card, owned. Its packs, counted in words | ✓ owned
+shelf.09 | A pack's card: the bundle's Ask to Buy sent | %@ is waiting for approval
+shelf.10 | A pack's card: its purchase failed | the purchase didn't go through
+shelf.11 | A pack's card: a family's share ended. The pack | %@ is no longer shared with you
+shelf.12 | A pack's card: refunded. The pack | %@ isn't on this Apple ID any more
+shelf.13 | The bundle's card, owned: plays on. The pack, then the level number | continue %@ %@ ›
+shelf.14 | An owned pack's card: plays on. The level number | continue %@ ›
+shelf.15 | The bundle's card, owned: plays. The pack, then the level number | play %@ %@ ›
+shelf.16 | An owned pack's card: plays. The level number | play %@ ›
+shelf.17 | VoiceOver: an owned card's play button. The pack, the level number | Continue %@, level %@
+shelf.18 | VoiceOver: an owned card's play button. The pack, the level number | Play %@, level %@
+shelf.19 | The buy pill, a purchase running | buying…
+shelf.20 | The buy pill, a purchase failed | try again
+shelf.21 | The buy pill | buy
+shelf.22 | The buy pill, refunded | buy again
+shelf.23 | The buy pill, an Ask to Buy sent: tapped, sends it again | asked
+shelf.24 | VoiceOver: the buy pill, a purchase running. The pack | Buying… %@
+shelf.25 | VoiceOver: the buy pill, a purchase failed. The pack | Try Again %@
+shelf.26 | VoiceOver: the buy pill. The pack | Buy %@
+shelf.27 | VoiceOver: the buy pill, refunded. The pack | Buy Again %@
+shelf.28 | VoiceOver: the buy pill, an Ask to Buy sent. The pack | Ask again for %@
+shelf.29 | pack page: replays the free levels. The last one's number | replay 01–%@ ›
+shelf.30 | A pack's card: plays its free levels. How many | try %lld free ›
+shelf.31 | VoiceOver: a pack's card. How many | Replay the %lld free levels
+shelf.32 | VoiceOver: a pack's card. How many | Try the first %lld levels free
+shelf.33 | pack page: first part of the bundle line ("or all three in Triptych I · $5.99 · save $2.98 ›") | or all %@ in %@ · 
+shelf.34 | pack page: last part of the bundle line | · save %@ ›
+shelf.35 | VoiceOver: pack page's bundle line | Buy %@, %@
+shelf.36 | VoiceOver: pack page's bundle line, its value. Price, then saving | %@, saves %@
+shelf.37 | pack page: under the bundle line, its purchase failed | %@'s purchase didn't go through
+shelf.38 | VoiceOver: a pack's cover. Its name | %@, pack
+spoken.01.one | VoiceOver: a swirl layout's knobs, then its swirl (one) | %lld rod and a swirl
+spoken.01.other | VoiceOver: a swirl layout's knobs, then its swirl (more than one) | %lld rods and a swirl
+spoken.02 | VoiceOver: the menu row of the tier's first level without a best | next
+spoken.03 | VoiceOver: the back button. A pack's name | Back to %@
+spoken.04 | VoiceOver: the back button of a daily opened from the archive | Back to the archive
+spoken.05 | VoiceOver: the back button, to the menu | Back to levels
+spoken.06 | VoiceOver: the menu's archive row | Daily archive
+spoken.07 | VoiceOver: the archive row's value. Days at par, of days | %lld of %lld at par
+spoken.08 | VoiceOver: the archive row, shut until a purchase | locked, comes with any pack
+spoken.09 | VoiceOver: a level's rods, then its par | %@, par %lld
+spoken.10 | VoiceOver: a menu row. Level number, then its title | Level %lld, %@.
+spoken.11 | VoiceOver: the menu's daily row | Today's daily
+spoken.12 | VoiceOver: a shut row. The level number that opens it | locked, solve level %@ first
+spoken.13 | VoiceOver: a shut mode. The tier, then the level number, that opens it | locked, solve %@ level %@ first
+spoken.14 | VoiceOver: a row of a shut tier. The tier below | locked, solve every %@ level first
+spoken.15.one | VoiceOver: the endless row, a run saved. Its best (one) | run in progress, best %lld tank
+spoken.15.other | VoiceOver: the endless row, a run saved. Its best (more than one) | run in progress, best %lld tanks
+spoken.16 | VoiceOver: the endless row, a run saved | run in progress
+spoken.17.one | VoiceOver: the endless row. The most tanks a run cleared (one) | best %lld tank
+spoken.17.other | VoiceOver: the endless row. The most tanks a run cleared (more than one) | best %lld tanks
+spoken.18 | VoiceOver: a row's best. Moves over par | solved, %lld over par
+spoken.19 | VoiceOver: the header. Moves, then par | %@, par %lld, at par
+spoken.20 | VoiceOver: the header. Moves, then par | %@, par %lld, over par
+spoken.21 | VoiceOver: Escapement's tank. Ticks left | %lld ticks left
+spoken.22 | VoiceOver: endless's tank. Moves, then the brim's notches of its room | %@, brim %lld of %lld
+spoken.23 | VoiceOver: Escapement's lost card | Out of ticks on move %lld.
+spoken.24.one | VoiceOver: endless's card, the run spilled (one) | Spilled. %lld tank cleared.
+spoken.24.other | VoiceOver: endless's card, the run spilled (more than one) | Spilled. %lld tanks cleared.
+spoken.25 | VoiceOver: endless's card, a tank cleared | Unstirred. %@. Brim %lld of %lld.
+spoken.26 | VoiceOver: Escapement's card | Unstirred. %@, %lld ticks. Clean.
+spoken.27 | VoiceOver: Escapement's card | Unstirred. %@, %lld ticks.
+spoken.28 | VoiceOver: the result card | Unstirred. %@, par %lld. Clean.
+spoken.29 | VoiceOver: the result card | Unstirred. %@, par %lld. %lld over par.
+spoken.30 | VoiceOver: the result card | Unstirred. %@, par %lld. At par.
+spoken.31 | VoiceOver: an opening stir, skippable | Skip the opening
+tankview.02 | Endless's title. Its name, then the tank | %@, tank %lld
+tankview.03 | VoiceOver: the tank. Its rods | Puzzle tank, %@
+tankview.04 | VoiceOver hint: the tank | Played by sight: drag a knob to turn its rod.
+tankview.05 | The caption of an archive day replayed | Practice: this day's best was set on its day.
+tankview.06 | The caption of a daily replayed | Practice: only the first try counts.
+tankview.07 | play: reset button armed, 2 s | reset? tap again
+tankview.08 | Said when a full stack refuses a stir | the tank is full: undo or reset
+tankview.09 | VoiceOver: the day's refill. Undos added, then the bank | %lld undos added, %lld in the bank
+tankview.10 | VoiceOver: the reset button | Reset
+tankview.11 | VoiceOver: the reset button, armed | Reset, tap again to confirm
+tankview.12 | VoiceOver: Escapement's wait control | Wait
+tankview.13 | VoiceOver: what Escapement's wait control does | The clocks tick and nothing turns.
+tankview.14 | VoiceOver: reset, armed | Tap again to reset
+tankview.15 | Said when undo is tapped with none left | undos refill +2 each day you play
+tankview.16 | Escapement's demonstration, as the wait control is pressed: a wait ticks the clock and turns no rod | wait: the clock ticks, nothing turns
+tankview.17 | The sandbox's picture control. The picture | picture: %@ ›
+tankview.18 | The sandbox's layout control. Its rods | rods: %lld ›
+tankview.19 | The sandbox's layout control. Its rods, then the layout | rods: %lld · %@ ›
+tankview.20 | The sandbox's layout control, short. Its rods | %lld rods ›
+tankview.21 | Escapement: label of the tick counter | ticks
+tankview.22 | Escapement's lost tank: twists left on the picture | %lld left
+tankview.23 | VoiceOver: Prism's red swatch | show red alone
+tankview.24 | VoiceOver: Prism's green swatch | show green alone
+tankview.25 | VoiceOver: Prism's blue swatch | show blue alone
+menumodel.07 | A shut tier's gate. The tier below | opens with every %@ level solved
+menumodel.08 | The slope's menu, under plughole's name: the packs in its rock, none owned | packs · paid add-ons · first 3 levels of each free
+menumodel.09 | The slope's menu, under plughole's name: the packs in its rock, one owned | packs · first 3 levels of each free
+menumodel.10 | The slope's menu, under plughole's name: the packs in its rock, all owned | packs
+menumodel.11 | Endless's row: the best run's tanks | best %lld
+menumodel.12 | Endless's row, a run saved: its tank, its brim, then the best run's tanks | continue · tank %lld · brim %lld · best %lld
+slopemenu.01 | The slope's menu, in the dive: rises to the whole column | ↑ surface
+slopemenu.02 | VoiceOver: the slope's menu, in the dive. Rises to the whole column | Surface
+slopemenu.03 | VoiceOver: a tier on the slope's overview. The tier, its levels at par, of all | %@, %lld of %lld at par
+slopemenu.04 | VoiceOver: the slope's overview, the way on. The next level's number, then its name | next, %@, %@
+slopemenu.05 | The slope's menu: endless, written as a place under the last ledge | endless
+slopeplay.01 | Plughole 01's pointer to the settings, on the slope | sound, haptics, colour letters: in settings, at the surface
+slopeplay.02 | VoiceOver: plughole 01's pointer to the settings, on the slope | Sound, haptics and colour letters are in settings, at the surface of the menu.
+slopesettings.01 | Settings: the way back to the menu | ↓ back into the water
+mail.subject | report a problem: the mail's subject. The app's version, then this | %@: a problem
+mail.body | report a problem: the mail's first line, over the device's details | What happened:
+mail.to | report a problem, with no mail account: the share text's first line. The address | To: %@
+shelf.open | VoiceOver: an action on the bundle's page that opens one of its packs. The pack | Open %@
+share.name | daily's share text: its first words. The daily's number | Unstir #%lld
+slope.pack.eyebrow | pack page: over its name, unowned | pack · paid add-on
+slope.pack.eyebrow.owned | pack page: over its name, owned | pack
+slope.bundle.eyebrow | bundle's page: over its name, unowned | bundle · paid add-on
+slope.bundle.eyebrow.owned | bundle's page: over its name, owned | bundle
+slope.pack.levels | pack page: after the count on its floor ("0/30 at par · levels ↓"); opens the pack's level list | · levels ↓
+slope.pack.floor.spoken | VoiceOver: pack page's way to its levels. Levels, then how many at par | Levels, %lld, %lld at par
+slope.back | every back button: the arrow, then "levels", "menu", "archive" or a pack's name | ↑ %@
+slope.close | wide windows: closes a page opened beside the menu | ✕ close
+achievement.firstDrop.goal | Game Center: how to earn "First Drop" | Unstir a Plughole level.
+achievement.downThePlughole.goal | Game Center: how to earn "Down the Plughole" | Solve every Plughole level.
+achievement.intoTheVortex.goal | Game Center: how to earn "Into the Vortex" | Solve every Whirlpool level.
+achievement.theMaelstrom.goal | Game Center: how to earn "The Maelstrom" | Solve every Vortex level.
+achievement.unstirred.goal | Game Center: how to earn "Unstirred" | Reach par on every level of every tier.
+achievement.noWake.goal | Game Center: how to earn "No Wake" | Solve a daily clean: at par on the first try, with no undo or reset.
+achievement.turnOfTheTide.goal | Game Center: how to earn "Turn of the Tide" | Turn the tank.
+achievement.theEdgeTurns.goal | Game Center: how to earn "The Edge Turns" | Stir the swirl.
+achievement.todaysTank.goal | Game Center: how to earn "Today's Tank" | Solve a daily on its first try.
+achievement.aWeekOfTanks.goal | Game Center: how to earn "A Week of Tanks" | Solve seven dailies on their first tries, on any days.
+achievement.brim.goal | Game Center: how to earn "Brim" | Clear five tanks in one endless run.
+achievement.overTheLip.goal | Game Center: how to earn "Over the Lip" | Spill the brim.
+achievement.inFocus.goal | Game Center: how to earn "In Focus" | Solve every Lens level.
+achievement.timeWellSpent.goal | Game Center: how to earn "Time Well Spent" | Solve every Escapement problem.
+achievement.whiteLight.goal | Game Center: how to earn "White Light" | Solve every Prism specimen.
+achievement.wholeShelf.goal | Game Center: how to earn "Whole Shelf" | Solve every level of Lens, Escapement and Prism.
+achievement.firstDrop.earned | Game Center: "First Drop", once earned | Unstirred a Plughole level.
+achievement.downThePlughole.earned | Game Center: "Down the Plughole", once earned | Solved every Plughole level.
+achievement.intoTheVortex.earned | Game Center: "Into the Vortex", once earned | Solved every Whirlpool level.
+achievement.theMaelstrom.earned | Game Center: "The Maelstrom", once earned | Solved every Vortex level.
+achievement.unstirred.earned | Game Center: "Unstirred", once earned | Every level of every tier at par.
+achievement.noWake.earned | Game Center: "No Wake", once earned | Solved a daily clean.
+achievement.turnOfTheTide.earned | Game Center: "Turn of the Tide", once earned | Turned the tank.
+achievement.theEdgeTurns.earned | Game Center: "The Edge Turns", once earned | Stirred the swirl.
+achievement.todaysTank.earned | Game Center: "Today's Tank", once earned | Solved a daily on its first try.
+achievement.aWeekOfTanks.earned | Game Center: "A Week of Tanks", once earned | Solved seven dailies.
+achievement.brim.earned | Game Center: "Brim", once earned | Cleared five tanks in one run.
+achievement.overTheLip.earned | Game Center: "Over the Lip", once earned | Spilled the brim.
+achievement.inFocus.earned | Game Center: "In Focus", once earned | Solved every Lens level.
+achievement.timeWellSpent.earned | Game Center: "Time Well Spent", once earned | Solved every Escapement problem.
+achievement.whiteLight.earned | Game Center: "White Light", once earned | Solved every Prism specimen.
+achievement.wholeShelf.earned | Game Center: "Whole Shelf", once earned | Solved every level of Lens, Escapement and Prism.
+picture.grid | sandbox: the picture control's value | grid
+picture.sunset | sandbox: the picture control's value | sunset
+picture.city | sandbox: the picture control's value | city
+picture.glass | sandbox: the picture control's value | glass
+picture.chainmail | sandbox: the picture control's value | chainmail
+picture.coral | sandbox: the picture control's value | coral
+picture.neurons | sandbox: the picture control's value | neurons
+picture.marbling | sandbox: the picture control's value | marbling
+picture.glassTwin | sandbox: the picture control's value | glassTwin
+picture.chainmailTwin | sandbox: the picture control's value | chainmailTwin
+picture.coralTwin | sandbox: the picture control's value | coralTwin
+picture.neuronsTwin | sandbox: the picture control's value | neuronsTwin
+picture.marblingTwin | sandbox: the picture control's value | marblingTwin
+picture.isobars | sandbox: the picture control's value | isobars
+picture.ephemeris | sandbox: the picture control's value | ephemeris
+picture.cords | sandbox: the picture control's value | cords
+picture.halftone | sandbox: the picture control's value | halftone
+picture.fern | sandbox: the picture control's value | fern
+picture.seeds | sandbox: the picture control's value | seeds
+picture.medusae | sandbox: the picture control's value | medusae
+picture.radiolaria | sandbox: the picture control's value | radiolaria
+picture.nautilus | sandbox: the picture control's value | nautilus
+picture.engineTurned | sandbox: the picture control's value | engineTurned
+layout.tri | sandbox: the rods control's value | tri
+layout.quad | sandbox: the rods control's value | quad
+layout.eye | sandbox: the rods control's value | eye
+layout.pent | sandbox: the rods control's value | pent
+layout.hex | sandbox: the rods control's value | hex
+layout.triSwirl | sandbox: the rods control's value | triSwirl
+layout.quadSwirl | sandbox: the rods control's value | quadSwirl
+layout.eyeSwirl | sandbox: the rods control's value | eyeSwirl
+layout.pentSwirl | sandbox: the rods control's value | pentSwirl
+layout.hexSwirl | sandbox: the rods control's value | hexSwirl
+name.app | the app | Unstir
+name.wordmark | menu: the wordmark | UNSTIR
+name.bundle | the bundle of the three packs | Triptych I
+name.pack.lens | pack | Lens
+name.pack.escapement | pack | Escapement
+name.pack.prism | pack | Prism
+name.tier.Plughole | tier | Plughole
+name.tier.Whirlpool | tier | Whirlpool
+name.tier.Vortex | tier | Vortex
+name.tier.Maelstrom | tier | Maelstrom
+name.tier.plughole | tier, as written on the menu | plughole
+name.tier.whirlpool | tier, as written on the menu | whirlpool
+name.tier.vortex | tier, as written on the menu | vortex
+name.tier.maelstrom | tier, as written on the menu | maelstrom
+name.chapter.lens.1 | Lens chapter, a film-making word: the first six panels | Close-up
+name.chapter.lens.2 | Lens chapter, a film-making word: panels 7 to 12 | Cut-in
+name.chapter.lens.3 | Lens chapter, a film-making word: panels 13 to 18 | Double-take
+name.chapter.lens.4 | Lens chapter, a film-making word: the last seven panels | Big Picture
+name.chapter.escapement.1 | Escapement chapter: one clock | The Clock
+name.chapter.escapement.2 | Escapement chapter: a chess player's word for a move as a unit of time | Tempo
+name.chapter.escapement.3 | Escapement chapter | Two Clocks
+name.chapter.escapement.4 | Escapement chapter: a clock that ticks the other way | Wound Back
+name.chapter.escapement.5 | Escapement chapter: a watchmaking word for a watch of many functions | Grand Complication
+name.chapter.prism.1 | Prism tray: red and cyan | Two Colours
+name.chapter.prism.2 | Prism tray: red, green and blue | Three Colours
+name.chapter.prism.3 | Prism tray: inks that block each other | Colour Order
+name.chapter.prism.4 | Prism tray: a printing word, primaries and inks together | Overprint
+name.chapter.prism.5 | Prism tray: every colour | Spectrum
+name.achievement.firstDrop | Game Center achievement | First Drop
+name.achievement.downThePlughole | Game Center achievement | Down the Plughole
+name.achievement.intoTheVortex | Game Center achievement | Into the Vortex
+name.achievement.theMaelstrom | Game Center achievement | The Maelstrom
+name.achievement.unstirred | Game Center achievement | Unstirred
+name.achievement.noWake | Game Center achievement | No Wake
+name.achievement.turnOfTheTide | Game Center achievement | Turn of the Tide
+name.achievement.theEdgeTurns | Game Center achievement | The Edge Turns
+name.achievement.todaysTank | Game Center achievement | Today's Tank
+name.achievement.aWeekOfTanks | Game Center achievement | A Week of Tanks
+name.achievement.brim | Game Center achievement | Brim
+name.achievement.overTheLip | Game Center achievement | Over the Lip
+name.achievement.inFocus | Game Center achievement | In Focus
+name.achievement.timeWellSpent | Game Center achievement | Time Well Spent
+name.achievement.whiteLight | Game Center achievement | White Light
+name.achievement.wholeShelf | Game Center achievement | Whole Shelf
+name.level.L1.title | plughole 01 | Drop
+name.level.L2.title | plughole 02 | Drip
+name.level.L3.title | plughole 03 | Trickle
+name.level.L4.title | plughole 04 | Ripple
+name.level.L5.title | plughole 05 | Bubble
+name.level.L6.title | plughole 06 | Fizz
+name.level.L7.title | plughole 07 | Sprinkle
+name.level.L8.title | plughole 08 | Mist
+name.level.L9.title | plughole 09 | Spray
+name.level.L10.title | plughole 10 | Splash
+name.level.L11.title | plughole 11 | Puddle
+name.level.L12.title | plughole 12 | Froth
+name.level.L13.title | plughole 13 | Suds
+name.level.L14.title | plughole 14 | Lather
+name.level.L15.title | plughole 15 | Steam
+name.level.L16.title | plughole 16 | Gurgle
+name.level.L17.title | plughole 17 | Rinse
+name.level.L18.title | plughole 18 | Drizzle
+name.level.L19.title | plughole 19 | Shower
+name.level.L20.title | plughole 20 | Downpour
+name.level.L21.title | plughole 21 | Overflow
+name.level.L22.title | plughole 22 | Bathwater
+name.level.L23.title | plughole 23 | Spin
+name.level.L24.title | plughole 24 | Whirl
+name.level.L25.title | plughole 25 | Spiral
+name.level.L26.title | plughole 26 | Last drop
+name.level.L27.title | plughole 27 | Drain
+name.level.N1.title | whirlpool 01 | Spring
+name.level.N2.title | whirlpool 02 | Headwaters
+name.level.N3.title | whirlpool 03 | Creek
+name.level.N4.title | whirlpool 04 | Brook
+name.level.N5.title | whirlpool 05 | Stream
+name.level.N6.title | whirlpool 06 | Shallows
+name.level.N7.title | whirlpool 07 | Stepping stone
+name.level.N8.title | whirlpool 08 | Riverbend
+name.level.N9.title | whirlpool 09 | Millpond
+name.level.N10.title | whirlpool 10 | Dam
+name.level.N11.title | whirlpool 11 | Floodgate
+name.level.N12.title | whirlpool 12 | Water wheel
+name.level.N13.title | whirlpool 13 | Rapids
+name.level.N14.title | whirlpool 14 | Cascade
+name.level.N15.title | whirlpool 15 | Waterfall
+name.level.N16.title | whirlpool 16 | Plunge pool
+name.level.N17.title | whirlpool 17 | Ravine
+name.level.N18.title | whirlpool 18 | Canyon
+name.level.N19.title | whirlpool 19 | Meander
+name.level.N20.title | whirlpool 20 | Sandbank
+name.level.N21.title | whirlpool 21 | Wetland
+name.level.N22.title | whirlpool 22 | Eddy
+name.level.N23.title | whirlpool 23 | Tributary
+name.level.N24.title | whirlpool 24 | Watershed
+name.level.N25.title | whirlpool 25 | Floodplain
+name.level.N26.title | whirlpool 26 | Salt marsh
+name.level.N27.title | whirlpool 27 | Estuary
+name.level.V1.title | vortex 01 | Calm
+name.level.V2.title | vortex 02 | Light air
+name.level.V3.title | vortex 03 | Breeze
+name.level.V4.title | vortex 04 | Gust
+name.level.V5.title | vortex 05 | Flurry
+name.level.V6.title | vortex 06 | Trade wind
+name.level.V7.title | vortex 07 | Headwind
+name.level.V8.title | vortex 08 | Tailwind
+name.level.V9.title | vortex 09 | Crosswind
+name.level.V10.title | vortex 10 | Slipstream
+name.level.V11.title | vortex 11 | Fresh breeze
+name.level.V12.title | vortex 12 | Westerly
+name.level.V13.title | vortex 13 | High wind
+name.level.V14.title | vortex 14 | Monsoon
+name.level.V15.title | vortex 15 | Jet stream
+name.level.V16.title | vortex 16 | Near gale
+name.level.V17.title | vortex 17 | Squall
+name.level.V18.title | vortex 18 | Gale
+name.level.V19.title | vortex 19 | Whirlwind
+name.level.V20.title | vortex 20 | Dust devil
+name.level.V21.title | vortex 21 | Storm's eye
+name.level.V22.title | vortex 22 | Waterspout
+name.level.V23.title | vortex 23 | Cyclone
+name.level.V24.title | vortex 24 | Typhoon
+name.level.V25.title | vortex 25 | Hurricane
+name.level.V26.title | vortex 26 | Funnel cloud
+name.level.V27.title | vortex 27 | Tornado
+name.level.M1.title | maelstrom 01 | Swell
+name.level.M2.title | maelstrom 02 | Crest
+name.level.M3.title | maelstrom 03 | Whitecap
+name.level.M4.title | maelstrom 04 | Surf
+name.level.M5.title | maelstrom 05 | Breaker
+name.level.M6.title | maelstrom 06 | Sandbar
+name.level.M7.title | maelstrom 07 | Undertow
+name.level.M8.title | maelstrom 08 | Riptide
+name.level.M9.title | maelstrom 09 | Low tide
+name.level.M10.title | maelstrom 10 | High tide
+name.level.M11.title | maelstrom 11 | Turning tide
+name.level.M12.title | maelstrom 12 | Spring tide
+name.level.M13.title | maelstrom 13 | Crosscurrent
+name.level.M14.title | maelstrom 14 | Open sea
+name.level.M15.title | maelstrom 15 | Tidal race
+name.level.M16.title | maelstrom 16 | Offshore
+name.level.M17.title | maelstrom 17 | Deep water
+name.level.M18.title | maelstrom 18 | Groundswell
+name.level.M19.title | maelstrom 19 | High seas
+name.level.M20.title | maelstrom 20 | Surge
+name.level.M21.title | maelstrom 21 | Rogue wave
+name.level.M22.title | maelstrom 22 | Tempest
+name.level.M23.title | maelstrom 23 | Fathom
+name.level.M24.title | maelstrom 24 | Seabed
+name.level.M25.title | maelstrom 25 | Shipwreck
+name.level.M26.title | maelstrom 26 | Trench
+name.level.M27.title | maelstrom 27 | Abyss
+name.level.lens-1.title | lens 01 | Keyhole
+name.level.lens-2.title | lens 02 | Peephole
+name.level.lens-3.title | lens 03 | Magnifying glass
+name.level.lens-4.title | lens 04 | Monocle
+name.level.lens-5.title | lens 05 | Goggles
+name.level.lens-6.title | lens 06 | Spyglass
+name.level.lens-7.title | lens 07 | Binoculars
+name.level.lens-8.title | lens 08 | Spectacles
+name.level.lens-9.title | lens 09 | Sunglasses
+name.level.lens-10.title | lens 10 | Pinhole
+name.level.lens-11.title | lens 11 | Bifocals
+name.level.lens-12.title | lens 12 | 3D glasses
+name.level.lens-13.title | lens 13 | Porthole
+name.level.lens-14.title | lens 14 | Periscope
+name.level.lens-15.title | lens 15 | Telescope
+name.level.lens-16.title | lens 16 | Eyepiece
+name.level.lens-17.title | lens 17 | Microscope
+name.level.lens-18.title | lens 18 | Night vision
+name.level.lens-19.title | lens 19 | Camera
+name.level.lens-20.title | lens 20 | Shutter
+name.level.lens-21.title | lens 21 | Viewfinder
+name.level.lens-22.title | lens 22 | Wide angle
+name.level.lens-23.title | lens 23 | Fisheye
+name.level.lens-24.title | lens 24 | Telephoto
+name.level.lens-25.title | lens 25 | Kaleidoscope
+name.level.escapement-1.title | escapement 01 | Mainspring
+name.level.escapement-2.title | escapement 02 | Pendulum
+name.level.escapement-3.title | escapement 03 | Clock face
+name.level.escapement-4.title | escapement 04 | Cogwheel
+name.level.escapement-5.title | escapement 05 | Winding key
+name.level.escapement-6.title | escapement 06 | Clockwork
+name.level.escapement-7.title | escapement 07 | Counterweight
+name.level.escapement-8.title | escapement 08 | Snooze
+name.level.escapement-9.title | escapement 09 | Hourglass
+name.level.escapement-10.title | escapement 10 | Egg timer
+name.level.escapement-11.title | escapement 11 | Stopwatch
+name.level.escapement-12.title | escapement 12 | Standstill
+name.level.escapement-13.title | escapement 13 | Twin dials
+name.level.escapement-14.title | escapement 14 | Hour hand
+name.level.escapement-15.title | escapement 15 | Minute hand
+name.level.escapement-16.title | escapement 16 | Metronome
+name.level.escapement-17.title | escapement 17 | Chime
+name.level.escapement-18.title | escapement 18 | Cuckoo clock
+name.level.escapement-19.title | escapement 19 | Rewind
+name.level.escapement-20.title | escapement 20 | Fall back
+name.level.escapement-21.title | escapement 21 | Mirror dial
+name.level.escapement-22.title | escapement 22 | Anticlockwise
+name.level.escapement-23.title | escapement 23 | Overwound
+name.level.escapement-24.title | escapement 24 | Reverse
+name.level.escapement-25.title | escapement 25 | Moon phase
+name.level.escapement-26.title | escapement 26 | Calendar
+name.level.escapement-27.title | escapement 27 | Time zones
+name.level.escapement-28.title | escapement 28 | Leap year
+name.level.escapement-29.title | escapement 29 | Eleventh hour
+name.level.escapement-30.title | escapement 30 | Midnight
+name.level.prism-1.title | prism 01 | Frond
+name.level.prism-2.title | prism 02 | Bracken
+name.level.prism-3.title | prism 03 | Fiddlehead
+name.level.prism-4.title | prism 04 | Maidenhair
+name.level.prism-5.title | prism 05 | Spore
+name.level.prism-6.title | prism 06 | Tree fern
+name.level.prism-7.title | prism 07 | Dandelion
+name.level.prism-8.title | prism 08 | Thistle
+name.level.prism-9.title | prism 09 | Sunflower
+name.level.prism-10.title | prism 10 | Poppy
+name.level.prism-11.title | prism 11 | Sycamore
+name.level.prism-12.title | prism 12 | Acorn
+name.level.prism-13.title | prism 13 | Jellyfish
+name.level.prism-14.title | prism 14 | Moon jelly
+name.level.prism-15.title | prism 15 | Sea nettle
+name.level.prism-16.title | prism 16 | Tentacles
+name.level.prism-17.title | prism 17 | Lion's mane
+name.level.prism-18.title | prism 18 | Compass jelly
+name.level.prism-19.title | prism 19 | Plankton
+name.level.prism-20.title | prism 20 | Lattice
+name.level.prism-21.title | prism 21 | Pollen
+name.level.prism-22.title | prism 22 | Sunburst
+name.level.prism-23.title | prism 23 | Sea urchin
+name.level.prism-24.title | prism 24 | Honeycomb
+name.level.prism-25.title | prism 25 | Ammonite
+name.level.prism-26.title | prism 26 | Oyster
+name.level.prism-27.title | prism 27 | Conch
+name.level.prism-28.title | prism 28 | Pearl
+name.level.prism-29.title | prism 29 | Scallop
+name.level.prism-30.title | prism 30 | Nautilus
