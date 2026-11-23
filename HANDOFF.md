@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-11-15. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-11-23. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -44,6 +44,11 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 ### The heat investigation (2026-11-12, live)
 
 Closed: moved word for word to `docs/history.md`.
+
+### Open work (2026-11-23)
+
+**The design pass gets its direction (to-do 72):** Jack's brief of 2026-11-23, below under to-do 72. A dedicated cloud
+session started that day owns it; its draft PR is the claim, and the lead leaves the item alone.
 
 ### Open work (2026-11-15)
 
@@ -977,6 +982,13 @@ Closed: moved word for word to `docs/history.md`.
     (`scripts/shots.sh`), critiqued and redrawn as a design system and mock-ups for Jack's call before any SwiftUI
     changes. Claude Design (now Artifact types in Claude: Design System and Design) is the review surface: Jack
     comments inline on the mock-ups, and Claude ports the agreed design to SwiftUI.
+    **Direction (Jack, 2026-11-23):** the chrome is too busy. Like most machine-made design it never lets anything
+    rest: no negative space. Jack wants it in theme with the tank: airy (or "fluid"), spacious, gently animated, UI that
+    looks and feels custom without being trashy. Fewer things on screen at once, room around what stays, motion that
+    breathes rather than decorates. The pass starts as options, not code: a few distinct directions shown on the
+    same screens as images and films, each with a Reduce Motion still, one recommended, to Jack as a call. C9's result
+    marks and Prism's level colour (P2), both left to this pass, are drawn in it. The glass stays as it is; text never
+    shrinks (the tank scales instead). Owned by a dedicated cloud session from 2026-11-23 (its draft PR is the claim).
 73. A full audit of every level name, tiers and packs alike (Jack, 2026-11-01). Many read as nonsense, as in-jokes
     too technical or niche for a mass market, or as unrelated to their level. They need not all be clever or
     descriptive: a naming system per tier or pack (or one for the game) is welcome. Jack gave philosophers
