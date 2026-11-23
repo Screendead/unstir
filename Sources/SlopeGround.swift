@@ -31,6 +31,8 @@ struct SlopeView {
     func lip(_ n: Int) -> CGPoint { point(lay.lip(n)) }
     /// The stone on the dry bank, settings'.
     var bank: CGPoint { SlopeLay.bank(SlopeCamera(top: top, z: lay.z)) }
+    /// The bank's top under that stone: where it rests (`rested(at:)`).
+    var bankSeat: CGPoint { CGPoint(x: bank.x, y: bank.y + 5) }
 }
 
 /// The slope's ground (Slope.metal) for one camera. It drifts on its own clock, at 30 Hz, and draws again only for
@@ -250,7 +252,7 @@ private extension GeometryProxy {
 }
 
 /// Lays views out at points of its own frame, as the slope's screens place everything: a child says where it goes
-/// with `slopePlace`, `slopeLine` or `seated`, and one that says nothing fills the frame. A placed child is offered
+/// with `slopePlace`, `slopeLine`, `seated` or `rested`, and one that says nothing fills the frame. A placed child is offered
 /// the width from its point to 16 pt short of the frame's side, so its words wrap there; one that would fill what
 /// it is offered (a spacer, a bare shape) needs its own frame. Each child keeps its own frame where it is drawn, so a
 /// scroll's targets, VoiceOver and taps find it there.
@@ -260,6 +262,8 @@ struct SlopeLayer: SwiftUI.Layout {
         var anchor = UnitPoint.center
         /// Words: their leading edge at the point, their first line's middle level with it.
         var line = false
+        /// A stone: its pebble's underside and middle at the point, its words wherever they fall.
+        var rest = false
     }
 
     /// What a placed view keeps clear of the frame's sides, and the least width it is ever offered.
@@ -278,6 +282,18 @@ struct SlopeLayer: SwiftUI.Layout {
         for subview in subviews {
             guard let place = subview[PlaceKey.self] else {
                 subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
+                continue
+            }
+            if place.rest {
+                // The words run from the pebble towards whichever side they are on, as far as that side's margin.
+                let loose = subview.dimensions(in: .unspecified), middle = loose[HorizontalAlignment.stoneMiddle]
+                let room = middle < loose.width / 2 ? bounds.width - Self.margin - place.point.x + middle
+                    : place.point.x - Self.margin + loose.width - middle
+                let proposal = ProposedViewSize(width: max(room, Self.least), height: nil)
+                let own = subview.dimensions(in: proposal)
+                subview.place(at: CGPoint(x: bounds.minX + place.point.x - own[HorizontalAlignment.stoneMiddle],
+                                          y: bounds.minY + place.point.y - own[VerticalAlignment.stoneSeat]),
+                              anchor: .topLeading, proposal: proposal)
                 continue
             }
             // Its room runs to `margin` short of the frame's edges on the sides it grows towards, so words wrap inside
@@ -305,6 +321,10 @@ extension View {
     /// In a `SlopeLayer`: words with their leading edge at `point` and their first line's middle level with it, as a
     /// row's words stand beside its pebble.
     func slopeLine(_ point: CGPoint) -> some View { SlopeLayer.value(self, .init(point: point, line: true)) }
+
+    /// In a `SlopeLayer`: a `Stone`, or anything holding one pebble, with that pebble resting at `point` of the ground
+    /// (a seat, a point of the lone terrace), its words beside it wrapping short of the screen's side.
+    func rested(at point: CGPoint) -> some View { SlopeLayer.value(self, .init(point: point, rest: true)) }
 
     /// In a `SlopeLayer`: a pebble set on its seat (`SlopeView.seat`), its underside a little into the sand.
     func seated(at seat: CGPoint) -> some View { slopePlace(seat, anchor: UnitPoint(x: 0.5, y: 0.93)) }

@@ -184,7 +184,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     float4 sp = slopeShape(ledge.w, g);
     if (k < 0.0) {
         // Over the first ledge the wall wanders up to the bank.
-        e0 = more.x + 5.0 * sin(depth * 0.045 + 1.0);
+        float s = saturate(depth / max(first.x, 1.0)), b = sin(3.14159265 * s);
+        e0 = more.x + (8.0 + 4.0 * sin(depth * 0.11 + 1.0)) * b * b + 14.0 * (1.0 - s) * (1.0 - s);
         lean = 0.0;
     } else {
         sc = slopeScale(ledge, sp, g);
@@ -195,11 +196,13 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     float mask = slopeStep(across);
     // Over a leaning ledge's top the edge runs nearly level, and its softness would reach out past the lip as a line.
     if (f < 0.0) mask *= 1.0 - smoothstep(ledge.y - 1.0, ledge.y + 1.0, x);
-    float below = 1.0;
+    float below = 1.0, dry = 0.0;
     if (g[6] > 0.0) {
         // The bank's shoulder under the water line, and its dry top over it: drawn by the screen, as the stone on it is.
-        mask = max(mask, slopeStep(84.0 * slopeBell((pos.y - surface) / 66.0) - x));
-        below = slopeStep(pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0)));
+        // Under the water it falls away from the water line as gently as it came down to it, then steepens to the wall.
+        mask = max(mask, smoothstep(-2.5, 2.5, 100.0 * exp(-pow(max(pos.y - surface, 0.0) / 46.0, 0.7)) - x));
+        dry = pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0));
+        below = slopeStep(dry);
     }
     float thick = sp.x * sc;
     // 1 on the wall under a lip, where its shadow falls, gone by the next ledge's top.
@@ -241,7 +244,9 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float rock = mix(ledge.w, slopeLedge(g, k + 1.0).w, smoothstep(0.55, 0.95, f / ledge.z));
         float3 rc = slopeSand(slopeRock(rock), slopeLit(rock), wc, tone, glint);
         rc = mix(rc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
-        rc = mix(rc, float3(0.50, 0.36, 0.24) * (0.75 + 0.5 * exp(min(d, 0.0) / 9.0)), 1.0 - under);
+        // Out of the water the bank stands dark against the dusk, the last light along its top.
+        rc = mix(rc, float3(0.19, 0.135, 0.115) * (0.8 + 0.5 * exp(min(d, 0.0) / 9.0))
+                 + float3(0.66, 0.42, 0.22) * exp(-max(dry - 0.7, 0.0) / 2.6) * 0.8, 1.0 - under);
         col = mix(col, rc, mask * below);
     }
     // A hollow's floor: sand across the foot.
