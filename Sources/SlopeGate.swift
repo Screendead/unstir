@@ -21,7 +21,9 @@ struct SlopeGate: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(tier.word).font(.slope(.place, .title)).ink(.ink4) // loc: verbatim localized by Tier.word
-                Text(Menu.reason(tier) ?? "").font(.slope(.ui, .detail)).ink(.ink2) // loc: verbatim localized by Menu.reason
+                if let reason = Menu.reason(tier) {
+                    Text(reason).font(.slope(.ui, .detail)).ink(.ink2) // loc: verbatim localized by Menu.reason
+                }
                 SlopeTally(solved: gate.solved, rock: rock, glow: below.rock.light).frame(width: min(width, SlopeTally.full))
                     .padding(.top, 14)
             }

@@ -60,6 +60,8 @@ struct SlopeLedgeRow: View {
     let n: Int
     /// How far the words have arrived, 0 to 1: they fade in as the depth opens.
     var near = 1.0
+    /// The top bars' height: the words fade out as they rise to the bars.
+    var bars: CGFloat = 0
     /// A closed row's line held up, for a still.
     var held = false
     /// A tap on an open row.
@@ -95,11 +97,16 @@ struct SlopeLedgeRow: View {
             let ascent = frontier ? UIFont.systemFont(ofSize: leading, weight: .light).ascender
                 : SlopeMeasure.font(.body, at: typeSize).ascender
             Button {
-                ledge.closed ? refuse() : open()
+                if ledge.closed {
+                    refuse()
+                } else {
+                    Sound.shared.play(.tap)
+                    open()
+                }
             } label: {
-                words.frame(width: at.width, alignment: .leading).opacity(near)
+                words.frame(width: at.width, alignment: .leading).opacity(near).slopeUnderBars(bars)
                     .padding(.leading, at.x)
-                    .hit(10, 0)
+                    .hit(12, 0)
                     .overlay(alignment: Alignment(horizontal: .leading, vertical: .firstTextBaseline)) {
                         pebble
                             .alignmentGuide(.leading) { $0.width / 2 - seat.x }
@@ -194,7 +201,19 @@ struct SlopeLedgeRow: View {
     }
 }
 
-/// A row's press reaches its pebble, which sinks as any stone does; the row's own action sounds.
+extension View {
+    /// Words on a column that fade out as their first line rises to the top bars, `bars` tall, and are gone before it
+    /// reaches them.
+    func slopeUnderBars(_ bars: CGFloat) -> some View {
+        visualEffect { words, place in
+            let frame = place.frame(in: .global)
+            return words.opacity(bars > 0 ? min(max((frame.minY + min(frame.height, 30) - bars) / 28, 0), 1) : 1)
+        }
+    }
+}
+
+/// A row's press reaches its pebble, which sinks as any stone does. The row sounds itself: a tap as it opens, the
+/// seized knob as it refuses.
 private struct SlopeLedgePress: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.environment(\.buttonPressed, configuration.isPressed)
@@ -250,7 +269,7 @@ enum SlopeMeasure {
         let font = font(size, at: type)
         let box = (text as NSString).boundingRect(with: CGSize(width: width, height: .greatestFiniteMagnitude),
                                                   options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
-        return max((box.height / font.lineHeight).rounded(.up), 1) * font.lineHeight
+        return max((box.height / font.lineHeight).rounded(), 1) * font.lineHeight
     }
 }
 

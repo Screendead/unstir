@@ -43,6 +43,10 @@ struct SlopeMenu: View {
     var revision = 0
     /// Endless's saved run, as the root last read it.
     var run: Resume?
+    /// The ground's light, 1 unless something dims the world: consent draws it at 0.35. It animates.
+    var light = 1.0
+    /// Only the ground: the words, pebbles and hollows hidden and dead, as under the consent question.
+    var bare = false
     /// A pack's hollow in plughole's wall (`SlopeHollow`, piece D): a view whose top centre goes at the spot's point.
     /// Until it lands, a plain dull pebble.
     var hollow: ((Offer, SlopeSpot) -> AnyView)?
@@ -73,8 +77,10 @@ struct SlopeMenu: View {
     /// Where the finger has left the camera, in the dive and on an overview that scrolls; nothing is drawn from it.
     @State private var scroll = SlopeScroll()
     @State private var surfaced = true
-    /// The back swipe following the finger.
+    /// The back swipe following the finger, how far across the screen it has pulled, and the finger on it.
     @State private var swiping = false
+    @State private var pull: CGFloat = 0
+    @GestureState private var dragging = false
 
     @State private var rest: Menu.Rest?
     @State private var shown = Tier.stored()
@@ -92,7 +98,7 @@ struct SlopeMenu: View {
 
     init(start: Tier? = nil, focus: Level? = nil, returning: Bool = false, settings: Binding<Bool>, card: Binding<Offer?>,
          archive: Binding<Bool> = .constant(false), day: Date? = nil, clock: Double? = nil, held: String? = nil, peeking: Bool = false,
-         playing: Level? = nil, revision: Int = 0, run: Resume? = nil, hollow: ((Offer, SlopeSpot) -> AnyView)? = nil,
+         playing: Level? = nil, revision: Int = 0, run: Resume? = nil, light: Double = 1, bare: Bool = false, hollow: ((Offer, SlopeSpot) -> AnyView)? = nil,
          archiveLedge: ((SlopeSpot) -> AnyView)? = nil, onPick: @escaping (Level, CGPoint?) -> Void) {
         self.start = start
         self.focus = focus
@@ -107,6 +113,8 @@ struct SlopeMenu: View {
         self.playing = playing
         self.revision = revision
         self.run = run
+        self.light = light
+        self.bare = bare
         self.hollow = hollow
         self.archiveLedge = archiveLedge
         self.onPick = onPick
@@ -168,9 +176,10 @@ struct SlopeMenu: View {
             } else {
                 scene(plan)
             }
-            chrome(plan, below: below)
+            chrome(plan, below: below && !bare)
         }
         .onAppear { settle(plan) }
+        .onChange(of: dragging) { if !dragging { released(plan) } }
         .onChange(of: start) { if let start { enter(start, plan) } }
     }
 
@@ -184,7 +193,7 @@ struct SlopeMenu: View {
     /// The overview, and every move of the camera.
     private func scene(_ plan: SlopeMenuPlan) -> some View {
         let at = share ?? plan.overview(holding: hold)
-        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, clock: clock, near: !plan.large) { view in
+        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
             world(view, plan, cull: true)
         }
         .allowsHitTesting(!moving)
@@ -196,27 +205,47 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, clock: clock, near: !plan.large, onMove: { top in
-            scroll.top = top
-            let up = top < 1
-            if up != surfaced { surfaced = up }
-        }) { view in
+        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
             world(view, plan, cull: false)
+            sounding(view, plan) { top in
+                scroll.top = top
+                let up = top < 1
+                if up != surfaced { surfaced = up }
+            }
         }
-        .simultaneousGesture(backSwipe(plan))
+        .coordinateSpace(.named(Self.space))
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
+        // The edge swipe has the screen's leading edge to itself: a drag over the whole dive would take the rows' taps.
+        .overlay(alignment: .leading) {
+            Color.clear.frame(width: Self.edge).contentShape(Rectangle()).gesture(backSwipe(plan)).ignoresSafeArea()
+                .accessibilityHidden(true)
+        }
     }
+
+    /// How far in from the leading edge the back swipe starts.
+    private static let edge: CGFloat = 20
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, clock: clock, near: false, onMove: { scroll.wide = $0 }) { view in
+        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false) { view in
             world(view, plan, cull: false)
+            sounding(view, plan) { scroll.wide = $0 }
         }
+        .coordinateSpace(.named(Self.space))
+    }
+
+    private static let space = "slope.menu"
+
+    /// The camera's depth as the finger scrolls a dive, read from where the surface's own line of the content has
+    /// got to. (`SlopeDive.onMove` hears only 0 on iOS 27.)
+    private func sounding(_ view: SlopeView, _ plan: SlopeMenuPlan, heard: @escaping (CGFloat) -> Void) -> some View {
+        Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: view.y(0)), anchor: .top)
+            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.space)).minY } action: { heard(-($0 + plan.top)) }
     }
 
     private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
         SlopeMenuWorld(view: view, plan: plan, model: model, cull: cull, held: held, supporter: Store.shared.bought && supporter,
-                       saved: saved, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
+                       saved: saved, yours: yours, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
                        openSettings: { settings = true },
                        enter: { enter($0, plan) },
                        pick: { level, ledge in pick(level, ledge: ledge, plan) },
@@ -225,6 +254,8 @@ struct SlopeMenu: View {
                            saved = nil
                            pick(.endless(Run(seed: .random(in: .min ... .max))), ledge: nil, plan, anew: true)
                        })
+            .opacity(bare ? 0 : 1).allowsHitTesting(!bare).accessibilityHidden(bare)
+            .animation(.easeOut(duration: 0.6), value: bare)
     }
 
     // MARK: Travel
@@ -336,32 +367,40 @@ struct SlopeMenu: View {
     /// width, or flicked, it rises; else it springs back. Under Reduce Motion nothing follows the finger.
     private func backSwipe(_ plan: SlopeMenuPlan) -> some Gesture {
         DragGesture(minimumDistance: 12)
+            .updating($dragging) { _, dragging, _ in dragging = true }
             .onChanged { drag in
-                guard !reduceMotion, drag.startLocation.x < 28 else { return }
+                pull = drag.translation.width / plan.size.width
+                guard !reduceMotion else { return }
                 if !swiping {
                     guard diving, !moving, drag.translation.width > abs(drag.translation.height) else { return }
                     swiping = true
                     lift(plan)
                 }
-                zoom = 1 - 0.4 * min(max(drag.translation.width / plan.size.width, 0), 1)
+                zoom = 1 - 0.4 * min(max(pull, 0), 1)
             }
             .onEnded { drag in
-                let far = drag.translation.width > 0.4 * plan.size.width || drag.predictedEndTranslation.width > 0.8 * plan.size.width
-                if reduceMotion {
-                    if drag.startLocation.x < 28, far, drag.translation.width > abs(drag.translation.height) { rise(plan) }
-                    return
-                }
-                guard swiping else { return }
-                swiping = false
-                if far {
-                    withAnimation(.easeOut(duration: 0.9)) { surface(plan) } completion: { moving = false }
-                } else {
-                    journeys += 1
-                    let journey = journeys
-                    travel = Travel(aim: SlopeAim(ledge: hold, share: share ?? 0.49), then: {})
-                    withAnimation(.spring(duration: 0.4)) { zoom = 1 } completion: { arrive(journey) }
-                }
+                if drag.predictedEndTranslation.width > 0.8 * plan.size.width { pull = 1 }
             }
+    }
+
+    /// The finger has left the edge swipe, lifted or taken by the system.
+    private func released(_ plan: SlopeMenuPlan) {
+        let far = pull > 0.4
+        pull = 0
+        if reduceMotion {
+            if far { rise(plan) }
+            return
+        }
+        guard swiping else { return }
+        swiping = false
+        if far {
+            withAnimation(.easeOut(duration: 0.9)) { surface(plan) } completion: { moving = false }
+        } else {
+            journeys += 1
+            let journey = journeys
+            travel = Travel(aim: SlopeAim(ledge: hold, share: share ?? 0.49), then: {})
+            withAnimation(.spring(duration: 0.4)) { zoom = 1 } completion: { arrive(journey) }
+        }
     }
 
     // MARK: Opening a level
@@ -370,7 +409,6 @@ struct SlopeMenu: View {
     /// camera first sinks to its ledge (2.9), endless's off the last ledge into the dark.
     private func pick(_ level: Level, ledge: Int?, _ plan: SlopeMenuPlan, anew: Bool = false) {
         guard Menu.opens(level, playing: playing, anew: anew) else { return }
-        Sound.shared.play(.tap)
         // Where the pebble lies on the screen under a camera at `top`.
         func seat(_ top: CGFloat) -> CGPoint? {
             ledge.map { CGPoint(x: plan.deep.seat($0).x, y: plan.deep.seat($0).y - top) }
@@ -450,7 +488,7 @@ struct SlopeMenuPlan {
     }
 
     /// From a header's foot to its stretch's first ledge, and from a stretch's top at the overview to its words.
-    static let headerFoot: CGFloat = 36
+    static let headerFoot: CGFloat = 48
     static let bandLead: CGFloat = -8
 
     init(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, top: CGFloat) {
@@ -475,7 +513,8 @@ struct SlopeMenuPlan {
             let today = line(.title) + SlopeMeasure.height(daily.ledge.name, .body, width: beside, at: type)
                 + (daily.ledge.facts.map { SlopeMeasure.height($0, .detail, width: beside, at: type) } ?? 0) + 4
             let archive = line(.body) + (large ? 2 : 1) * line(.detail)
-            column.stretches[0].height = max(column.stretches[0].height ?? 0, 1.5 * (today - line(.title) * 0.5 + 8), 3 * (archive + 8))
+            column.stretches[0].height = max(column.stretches[0].height ?? 0, 1.5 * (today - line(.title) * 0.5 + line(.body) * 0.5 + 8),
+                                              3 * (archive - line(.body) * 0.5 + 8))
         }
         hollows = model.hollows.map { ($0, SlopeMenuPlan.hollowAfter($0)) }
         for (t, tier) in model.tiers.enumerated() {
@@ -512,10 +551,11 @@ struct SlopeMenuPlan {
             column.stretches[t + 1].rows = rows
             // At the overview a stretch is as tall as its words need, where that is more than its share of the screen.
             var need = Self.bandLead + line(.title) + 3 + SlopeMeasure.height(tier.reason ?? tier.progress, .detail, width: beside, at: type) + 8
-            if model.wayOn?.tier == tier.tier { need += line(.body) + 8 }
+            if model.wayOn?.tier == tier.tier { need += line(.body) + 14 }
             column.stretches[t + 1].height = max(column.stretches[t + 1].height ?? 0, need)
         }
-        if model.modes { column.under = line(.title) / 2 + line(.detail) + (large ? line(.body) + 24 : 0) + 16 }
+        // Endless's word, its line and "new run" under its middle; the default sizes fit what the overview leaves.
+        if model.modes, large { column.under = line(.title) / 2 + 2 * line(.detail) + line(.body) + 24 }
         self.headers = headers
         self.column = column
         deep = SlopeLay(column, z: 1)
@@ -644,8 +684,9 @@ struct SlopeMenuModel {
                                                   comment: "VoiceOver: a tier on the slope's overview. The tier, its levels at par, of all")
                                 : tier.spoken)
         }
+        // The tier the player is in carries the way on; with every level of it solved, the first open tier with one left.
         let stored = Tier.stored()
-        wayOn = stored.frontier().map { (stored, $0) }
+        wayOn = ([stored] + Tier.allCases).lazy.compactMap { tier in tier.frontier().map { (tier, $0) } }.first
         let new = !Best.modesSeen
         if lead.modes {
             let day = Level.daily(today), run = Daily.run(today: today), lines = Menu.dailyLines(day, run: run)
@@ -708,6 +749,8 @@ private struct SlopeMenuWorld: View {
     let held: String?
     let supporter: Bool
     let saved: Resume?
+    /// "Lens is yours", standing under the wordmark while it is said (2.10).
+    let yours: Offer?
     @Binding var arm: NewRunArm
     let voiceOver: Bool
     let hollow: ((Offer, SlopeSpot) -> AnyView)?
@@ -721,10 +764,13 @@ private struct SlopeMenuWorld: View {
 
     private var lay: SlopeLay { view.lay }
     /// 1 in the dive, 0 until the depth is nearly open: the names fade in as the pitch passes 44 pt.
-    private var near: Double { min(max((lay.e - 0.8) / 0.2, 0), 1) }
+    private var near: Double { lay.e >= 1 ? 1 : min(max((lay.e - 0.8) / 0.2, 0), 1) }
     /// 1 at the overview, gone a fifth of the way in.
-    private var wide: Double { 1 - min(lay.e / 0.2, 1) }
+    private var wide: Double { lay.e <= 0 ? 1 : 1 - min(lay.e / 0.2, 1) }
     private var large: Bool { plan.large }
+    /// The status bar's room, which the dive's words fade under; at the largest sizes, where the words stand under the
+    /// top control, its room too.
+    private var bars: CGFloat { plan.top + 8 + (large ? SlopeMeasure.line(.body, at: plan.type) + 16 : 0) }
 
     private func shown(_ y: CGFloat, _ reach: CGFloat = 120) -> Bool { !cull || y > -reach && y < view.size.height + reach }
 
@@ -738,7 +784,7 @@ private struct SlopeMenuWorld: View {
                 ForEach(Array(tier.ledges.enumerated()), id: \.offset) { i, ledge in
                     let n = SlopeColumn.ledge(tier: t, level: i + 1)
                     if shown(view.y(lay.tops[n])) {
-                        SlopeLedgeRow(ledge: ledge, view: view, n: n, near: near, held: tier.levels[i].id == held) {
+                        SlopeLedgeRow(ledge: ledge, view: view, n: n, near: near, bars: bars, held: tier.levels[i].id == held) {
                             pick(tier.levels[i], n)
                         }
                     }
@@ -767,10 +813,18 @@ private struct SlopeMenuWorld: View {
             .accessibilityLabel(supporter ? Text("Unstir, supporter", comment: "VoiceOver: the menu's title, with the supporter mark") // loc: verbatim a key, or the name
                                 : Text(verbatim: "Unstir")).accessibilityAddTraits(.isHeader)
             .slopePlace(CGPoint(x: 32, y: bank.y - 30), anchor: .bottomLeading)
-            Stone(action: openSettings) {
-                Text("settings", comment: "The slope's menu: the stone on the bank, which opens settings").font(.slope(.ui, .detail))
+            // The stone's own line holds a message while one stands: "Lens is yours" (2.10).
+            HStack(spacing: 18) {
+                Stone(action: openSettings) {
+                    Text("settings", comment: "The slope's menu: the stone on the bank, which opens settings").font(.slope(.ui, .detail))
+                }
+                .accessibilityLabel("Settings")
+                if let yours, wide > 0 {
+                    Text(yours.yours).font(.slope(.place, .body)).foregroundStyle(yours.ink).opacity(wide) // loc: verbatim localized by Offer
+                        .accessibilityHidden(true).transition(.opacity)
+                }
             }
-            .accessibilityLabel("Settings")
+            .animation(.easeInOut(duration: 0.4), value: yours)
             .slopePlace(CGPoint(x: bank.x - 10, y: bank.y), anchor: UnitPoint(x: 0, y: 0.62))
         }
     }
@@ -800,17 +854,17 @@ private struct SlopeMenuWorld: View {
                         }
                         .multilineTextAlignment(.leading)
                         .frame(width: plan.room, alignment: .leading)
-                        .hit(8, 0)
+                        .hit(12, 0)
                     }
                     .modifier(Speech((daily.ledge.label, daily.ledge.value, daily.ledge.hint)))
                     .opacity(wide).allowsHitTesting(wide >= 1)
                     .slopeLine(CGPoint(x: plan.beside, y: seat.y - 8))
                 }
                 if near > 0 {
-                    Text("today").font(.slope(.place, .title)).ink(.ink).accessibilityAddTraits(.isHeader).opacity(near)
-                        .slopePlace(CGPoint(x: plan.words(n).x, y: view.y(lay.tops[n]) - SlopeMenuPlan.headerFoot + 8), anchor: .bottomLeading)
+                    Text("today").font(.slope(.place, .title)).ink(.ink).accessibilityAddTraits(.isHeader).opacity(near).slopeUnderBars(bars)
+                        .slopePlace(CGPoint(x: plan.words(n).x, y: view.y(lay.tops[n]) - SlopeMenuPlan.headerFoot + 22), anchor: .bottomLeading)
                 }
-                SlopeLedgeRow(ledge: daily.ledge, view: view, n: n, near: near) { pick(daily.level, n) }
+                SlopeLedgeRow(ledge: daily.ledge, view: view, n: n, near: near, bars: bars) { pick(daily.level, n) }
             }
             let a = SlopeColumn.archive, at = view.seat(a)
             if shown(at.y) {
@@ -840,8 +894,9 @@ private struct SlopeMenuWorld: View {
             .allowsHitTesting(wide >= 1)
             .slopePlace(CGPoint(x: 0, y: top - 10), anchor: .topLeading)
             VStack(alignment: .leading, spacing: 3) {
-                Text(tier.tier.word).font(.slope(.place, .title)).ink(tier.open ? .ink : .ink4) // loc: verbatim localized by Tier.word
-                Text(tier.reason ?? tier.progress).font(.slope(tier.open ? .data : .ui, .detail)).ink(.ink3) // loc: verbatim localized by Menu
+                // The band's own button says both to VoiceOver.
+                Text(tier.tier.word).font(.slope(.place, .title)).ink(tier.open ? .ink : .ink4).accessibilityHidden(true) // loc: verbatim localized by Tier.word
+                Text(tier.reason ?? tier.progress).font(.slope(tier.open ? .data : .ui, .detail)).ink(.ink3).accessibilityHidden(true) // loc: verbatim localized by Menu
                 if let way = model.wayOn, way.tier == tier.tier { Color.clear.frame(height: wayHeight) }
             }
             .multilineTextAlignment(.leading)
@@ -853,7 +908,7 @@ private struct SlopeMenuWorld: View {
                             Text(way.level.label).font(.slope(.data, .body)).ink(.ink) // loc: verbatim a number
                             Text(verbatim: way.level.title + " \u{203A}").font(.slope(.name, .body)).ink(.ink)
                         }
-                        .hit(10, 12)
+                        .hit(12, 12)
                     }
                     .accessibilityLabel(Text("next, \(way.level.label), \(way.level.title)",
                                              comment: "VoiceOver: the slope's overview, the way on. The next level's number, then its name"))
@@ -890,6 +945,7 @@ private struct SlopeMenuWorld: View {
                 }
             }
             .opacity(near)
+            .slopeUnderBars(bars)
             .slopePlace(CGPoint(x: at.x, y: foot), anchor: .bottomLeading)
         }
     }
@@ -948,7 +1004,8 @@ private struct SlopeMenuWorld: View {
                 if model.lights > 0 { lights }
             }
             .slopePlace(CGPoint(x: x, y: y), anchor: UnitPoint(x: 0.5, y: 0))
-            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2)
+            // At the overview the word stands a little higher, so its line and "new run" clear the screen's foot.
+            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large ? 0 : 20 * (1 - lay.e)))
         }
         if model.sandbox, near > 0, shown(y, 400) {
             // Debug's sandbox, out of v1: a plain row under the brink.
