@@ -250,7 +250,7 @@ struct Harness {
     let promo: Offer?
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
-    /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
+    /// Any UNSTIR_ variable but the phone's (UNSTIR_UNLOCK, UNSTIR_ANALYTICS, UNSTIR_TAPS, UNSTIR_SLOPE=1 or =0): analytics is then off unless UNSTIR_ANALYTICS=log
     /// logs it, and stores nothing either way.
     let harnessed: Bool
     let resume: Resume?
@@ -264,9 +264,12 @@ struct Harness {
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
         // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"].contains($0) }
+        // UNSTIR_SLOPE=1 or =0 is for the phone too, as UNSTIR_UNLOCK is; its other values are the slope's stages.
+        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + (SlopeFlag.phone(env) ? ["UNSTIR_SLOPE"] : [])
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !phone.contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
+        SlopeFlag.read(env, harnessed: harnessed)
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0,lens:000: a best for each of a tier's or a pack's levels from 01, one
         // character each: a digit is that many over par, c clean, - is none. For this launch only.
@@ -624,6 +627,32 @@ final class Bench: NSObject {
     }
 }
 
+/// Whether `RootView` draws the slope's world (docs/slope.md, `\.slopeWorld`) in place of today's screens, until it
+/// becomes the default. A launch with UNSTIR_SLOPE=1 (or =world) stores it and one with UNSTIR_SLOPE=0 clears it, so the phone's home screen keeps opening it;
+/// alongside any other UNSTIR_ variable, unset clears it too, as the developer unlock does. Debug builds only: no
+/// Release build reads the variable or the stored flag.
+enum SlopeFlag {
+    static let key = "slope.world"
+
+    static var on: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: key)
+        #else
+        false
+        #endif
+    }
+
+    /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
+    static func phone(_ env: [String: String]) -> Bool { ["1", "world", "0"].contains(env["UNSTIR_SLOPE"]) }
+
+    static func read(_ env: [String: String], harnessed: Bool) {
+        #if DEBUG
+        // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(["1", "world"].contains(env["UNSTIR_SLOPE"]), forKey: key) }
+        #endif
+    }
+}
+
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
@@ -664,6 +693,10 @@ struct RootView: View {
     /// away while it plays, and back as it leaves, as on a phone they wait under the level.
     @State private var parked: (card: Offer?, archive: Bool)?
     @Environment(\.harnessFold) private var harnessFold
+    /// The slope's world draws the screens (`SlopeFlag`), read once at launch.
+    private let slope: Bool
+    /// The settings' supporter mark switch, which the slope's settings move.
+    @State private var supporter = Settings.supporter
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     /// The harness's one save, so a plain launch's left on the simulator never reaches a shot.
@@ -677,6 +710,7 @@ struct RootView: View {
     init() {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
+        slope = SlopeFlag.on
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
@@ -734,7 +768,10 @@ struct RootView: View {
     /// UNSTIR_SLOPE's stage (`SlopeHarness`), which no Release build has.
     private var slopeStage: AnyView? {
         #if DEBUG
-        harness.flatMap { SlopeHarness(ProcessInfo.processInfo.environment, clock: $0.clock) }.map { AnyView($0) }
+        let env = ProcessInfo.processInfo.environment
+        guard harness != nil else { return nil }
+        if let f = SlopeFHarness(env) { return AnyView(f) }
+        return harness.flatMap { SlopeHarness(env, clock: $0.clock) }.map { AnyView($0) }
         #else
         nil
         #endif
@@ -742,6 +779,53 @@ struct RootView: View {
 
     /// A level plays beside the menu.
     private var beside: Bool { wide && level != nil }
+
+    /// The slope's menu (`SlopeMenu`), with what covers it: settings, the consent question, and until pieces D and E
+    /// land, today's pack card and archive over it.
+    private var slopeMenu: some View {
+        // A cold launch rests on the overview, so only a closed tier's "up a notch" names a tier.
+        SlopeMenu(start: level == nil ? look : nil, focus: focus, returning: revision > 0,
+                  settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
+                  held: harness?.lockTap, peeking: level != nil, revision: revision,
+                  run: Self.save("endless", harnessed: harnessed, harnessSave)) { next, _ in
+            show(next)
+        }
+        .overlay { slopeCovers }
+        .animation(.easeOut(duration: 0.25), value: settings)
+        .animation(.easeOut(duration: 0.25), value: asking)
+    }
+
+    /// The consent question is up: a build with analytics, its first menu.
+    private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
+
+    @ViewBuilder private var slopeCovers: some View {
+        if let offer = card {
+            PackCard(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
+                     scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
+                     arrived: offer.pack != nil && offer.pack == arrived,
+                     onBack: { withAnimation(.snappy(duration: 0.42)) { card = nil } },
+                     onPlay: { show($0) },
+                     onOffer: { next in withAnimation(.snappy(duration: 0.42)) { card = next } })
+                .id(offer)
+                .transition(.opacity)
+        } else if archive {
+            let days = Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
+            ArchiveView(days: days, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,
+                        onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
+                        onPlay: { show($0) })
+                .transition(.opacity)
+        }
+        if settings {
+            SlopeSettings(supporter: $supporter, back: { settings = false }, clock: harness?.clock)
+                .transition(.opacity)
+        }
+        if asking {
+            // Until the menu draws its ground at SlopeConsent.light, the dusk is laid over it.
+            Color.black.opacity(1 - SlopeConsent.light).ignoresSafeArea()
+                .overlay { SlopeConsent() }
+                .transition(.opacity)
+        }
+    }
 
     /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
     private var calm: Bool {
@@ -763,7 +847,12 @@ struct RootView: View {
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
                 // level, whose ground it leaves uncovered.
-                if level == nil || peeking || beside {
+                if slope, level == nil || peeking {
+                    slopeMenu
+                        .allowsHitTesting(level == nil)
+                        .accessibilityHidden(level != nil)
+                        .transition(level == nil ? dip : .identity)
+                } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
@@ -821,6 +910,7 @@ struct RootView: View {
             wide = new
         }
         .background(Color.black)
+        .environment(\.slopeWorld, slope)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
         // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a

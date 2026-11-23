@@ -25,6 +25,8 @@ struct Payoff: Equatable {
         let name: String
         let colours: [Color]
         let glow: Color
+        /// A tier's name in lower case, as the slope writes a place; nil for a pack's, a name.
+        var word: String? = nil
     }
 
     struct Cue: Equatable {
@@ -40,7 +42,7 @@ struct Payoff: Equatable {
             let offer = Offer.pack(pack)
             return [Part(name: pack.name, colours: offer.sweep, glow: offer.glow)]
         }
-        return (whole ? Tier.allCases : tier.map { [$0] } ?? []).map { Part(name: $0.name, colours: $0.colours, glow: $0.glow) }
+        return (whole ? Tier.allCases : tier.map { [$0] } ?? []).map { Part(name: $0.name, colours: $0.colours, glow: $0.glow, word: $0.word) }
     }
     /// What the log calls it.
     var label: String { whole ? "game" : tier?.rawValue ?? pack?.rawValue ?? "" }

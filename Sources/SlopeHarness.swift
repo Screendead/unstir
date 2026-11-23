@@ -117,12 +117,11 @@ struct SlopeHarness: View {
                            look: SlopeLook(level: 1, clear: look == "clear" ? 1 : 0, light: look == "dim" ? 0.35 : 1, paper: paper ? 1 : 0,
                                            rock: deep.rocks[focus]),
                            clock: clock, near: false) { _ in
-                    let half = SlopePebble.target / 2
                     SlopeLayer {
                         Stone(Text(verbatim: "undo · 10"), state: .dull, engraved: paper) { taps += 1 } // loc: verbatim a stand-in
-                            .slopePlace(CGPoint(x: 42, y: SlopeLay.terrace(52, height: size.height) - half + 8), anchor: .leading)
+                            .rested(at: CGPoint(x: 52, y: SlopeLay.terrace(52, height: size.height)))
                         Stone(Text(verbatim: "reset"), pale: look == "clear", engraved: paper, trailing: true) { taps += 1 } // loc: verbatim a stand-in
-                            .slopePlace(CGPoint(x: size.width - 42, y: SlopeLay.terrace(size.width - 52, height: size.height) - half + 8), anchor: .trailing)
+                            .rested(at: CGPoint(x: size.width - 52, y: SlopeLay.terrace(size.width - 52, height: size.height)))
                     }
                 }
             case .hollow:
@@ -143,7 +142,7 @@ struct SlopeHarness: View {
             case .stones:
                 SlopeScene(column: column, focus: 12, at: 0.5, z: 1, clock: clock, near: near) { _ in
                     SlopeLayer {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 24) {
                         Stone(Text(verbatim: "lit"), state: .lit) { taps += 1 } // loc: verbatim a stand-in
                         Stone(Text(verbatim: "next ›"), state: .next, glow: Tier.whirlpool.glow) { taps += 1 } // loc: verbatim a stand-in
                         Stone(Text(verbatim: "dull"), state: .dull, refused: taps) { taps += 1 } // loc: verbatim a stand-in
@@ -152,7 +151,7 @@ struct SlopeHarness: View {
                         Stone(Text(verbatim: "pale"), pale: true) { taps += 1 } // loc: verbatim a stand-in
                         Stone(Text(verbatim: "trailing"), trailing: true) { taps += 1 } // loc: verbatim a stand-in
                     }
-                    .slopePlace(CGPoint(x: column.lip + 70, y: size.height * 0.2), anchor: .topLeading)
+                    .slopePlace(CGPoint(x: column.lip + 70, y: size.height * 0.14), anchor: .topLeading)
                     }
                 }
             }
@@ -223,7 +222,7 @@ private struct SlopeStandIns: View {
             Text(verbatim: "UNSTIR").font(.slope(.name, .display)).tracking(9).ink(.ink) // loc: verbatim the wordmark
                 .slopePlace(CGPoint(x: 32, y: bank.y - 30), anchor: .bottomLeading)
             Stone(Text(verbatim: "settings").font(.slope(.ui, .detail))) { taps += 1 } // loc: verbatim a stand-in
-                .slopePlace(CGPoint(x: bank.x - 10, y: bank.y), anchor: UnitPoint(x: 0, y: 0.62))
+                .rested(at: view.bankSeat)
         }
         ForEach([SlopeColumn.today, SlopeColumn.archive], id: \.self) { n in
             let seat = view.seat(n), today = n == SlopeColumn.today
