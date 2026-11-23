@@ -777,7 +777,8 @@ function draw(c, t) {
 }
 
 window.DRAWS_AX = true;
-World.load(['play01', 'drain-solved', 'prism01', 'prism-clip', 'cover-first-stir', 'cover-lens', 'cover-escapement',
+// A page that builds on this one (eggs/) sets SHELF_HOLD and starts the world itself.
+if (!window.SHELF_HOLD) World.load(['play01', 'drain-solved', 'prism01', 'prism-clip', 'cover-first-stir', 'cover-lens', 'cover-escapement',
   'cover-prism', 'cover-triptych', 'status']).then(() => World.start({
   fonts: ['300 28px UPro', 'italic 300 28px NY', '400 13px UMono', '600 17px UPro', '200 40px UPro', '250 34px UPro',
     '350 17px UPro', '500 17px UPro'],

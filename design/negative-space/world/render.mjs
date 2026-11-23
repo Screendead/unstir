@@ -4,25 +4,32 @@
 //                                    world draws it, accessibility type (-ax)
 //   node render.mjs <world> film     its whole timeline at 2x and 30 fps, through ffmpeg
 // into build/negative-space/world/<world>/. Run it under busy-run.
+// A world with several timelines is named <world>:<variant> (eggs:skim): the page gets ?egg=<variant>, draws only
+// its default state, and its stills and film are named after the variant, so variants render side by side.
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const [world, mode = 'stills', only] = process.argv.slice(2);
+const [worldArg, mode = 'stills', only] = process.argv.slice(2);
+const [world, variant] = worldArg.split(':');
+const pick = variant ? `&egg=${variant}` : '';
+const tagged = variant ? `-${variant}` : '';
 const out = resolve(here, '../../../build/negative-space/world', world);
 mkdirSync(out, { recursive: true });
 const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const port = 9400 + Math.floor(Math.random() * 500);
-const profile = resolve(out, '.chrome');
+const profile = resolve(out, `.chrome${tagged}`);
 const proc = spawn(chrome, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
   '--allow-file-access-from-files', '--hide-scrollbars', '--force-color-profile=srgb', 'about:blank'], { stdio: 'ignore' });
+process.on('exit', () => proc.kill());   // a run that throws leaves no Chrome behind
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 let target;
 for (let k = 0; k < 60 && !target; k++) {
   try { target = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t => t.type === 'page'); }
-  catch { await sleep(200); }
+  catch {}
+  if (!target) await sleep(200);
 }
 const ws = new WebSocket(target.webSocketDebuggerUrl);
 await new Promise(r => ws.addEventListener('open', r));
@@ -47,7 +54,7 @@ await send('Runtime.enable');
 
 async function open(extra, scale) {
   await send('Emulation.setDeviceMetricsOverride', { width: 440, height: 956, deviceScaleFactor: 1, mobile: false });
-  await send('Page.navigate', { url: `file://${here}/${world}/index.html?scale=${scale}${extra}` });
+  await send('Page.navigate', { url: `file://${here}/${world}/index.html?scale=${scale}${extra}${pick}` });
   for (let k = 0; k < 200; k++) {
     if (await evaluate(`document.readyState === 'complete' && document.body && document.body.dataset.ready === '1'`)) return;
     await sleep(50);
@@ -66,7 +73,7 @@ async function setScale(scale) {
 }
 
 if (mode === 'stills') {
-  for (const [extra, tag] of [['', ''], ['&rm=1', '-rm'], ['&ax=1', '-ax']]) {
+  for (const [extra, tag] of variant ? [['', '']] : [['', ''], ['&rm=1', '-rm'], ['&ax=1', '-ax']]) {
     await open(extra, 3);
     await setScale(3);
     const shots = await evaluate('JSON.stringify(window.SHOTS)').then(JSON.parse);
@@ -82,7 +89,7 @@ if (mode === 'stills') {
   await open('', 2);
   await setScale(2);
   const duration = await evaluate('window.DURATION');
-  const frames = `${out}/frames`;
+  const frames = `${out}/frames${tagged}`;
   rmSync(frames, { recursive: true, force: true });
   mkdirSync(frames, { recursive: true });
   let n = 0;
@@ -91,9 +98,9 @@ if (mode === 'stills') {
     await shot(`${frames}/${String(n++).padStart(5, '0')}.jpg`, 'jpeg');
   }
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '30', '-i', `${frames}/%05d.jpg`,
-    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', `${out}/film.mp4`]);
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', `${out}/${variant || 'film'}.mp4`]);
   rmSync(frames, { recursive: true, force: true });
-  console.log(`${world}: film of ${n} frames`);
+  console.log(`${worldArg}: film of ${n} frames`);
 }
 if (logs.length) console.log('page errors:', logs.join(' | '));
 ws.close();
