@@ -265,11 +265,11 @@ struct Harness {
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
         // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
         // UNSTIR_SLOPE=1 or =0 is for the phone too, as UNSTIR_UNLOCK is; its other values are the slope's stages.
-        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + (SlopeWorld.phone(env) ? ["UNSTIR_SLOPE"] : [])
+        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + (SlopeFlag.phone(env) ? ["UNSTIR_SLOPE"] : [])
         let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !phone.contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
-        SlopeWorld.read(env, harnessed: harnessed)
+        SlopeFlag.read(env, harnessed: harnessed)
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0,lens:000: a best for each of a tier's or a pack's levels from 01, one
         // character each: a digit is that many over par, c clean, - is none. For this launch only.
@@ -627,11 +627,11 @@ final class Bench: NSObject {
     }
 }
 
-/// The slope's world (docs/slope.md) in place of today's screens, until it becomes the default. A launch with
-/// UNSTIR_SLOPE=1 stores it and one with UNSTIR_SLOPE=0 clears it, so the phone's home screen keeps opening it;
+/// Whether `RootView` draws the slope's world (docs/slope.md, `\.slopeWorld`) in place of today's screens, until it
+/// becomes the default. A launch with UNSTIR_SLOPE=1 (or =world) stores it and one with UNSTIR_SLOPE=0 clears it, so the phone's home screen keeps opening it;
 /// alongside any other UNSTIR_ variable, unset clears it too, as the developer unlock does. Debug builds only: no
 /// Release build reads the variable or the stored flag.
-enum SlopeWorld {
+enum SlopeFlag {
     static let key = "slope.world"
 
     static var on: Bool {
@@ -643,12 +643,12 @@ enum SlopeWorld {
     }
 
     /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
-    static func phone(_ env: [String: String]) -> Bool { env["UNSTIR_SLOPE"] == "1" || env["UNSTIR_SLOPE"] == "0" }
+    static func phone(_ env: [String: String]) -> Bool { ["1", "world", "0"].contains(env["UNSTIR_SLOPE"]) }
 
     static func read(_ env: [String: String], harnessed: Bool) {
         #if DEBUG
         // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
-        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(env["UNSTIR_SLOPE"] == "1", forKey: key) }
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(["1", "world"].contains(env["UNSTIR_SLOPE"]), forKey: key) }
         #endif
     }
 }
@@ -853,6 +853,7 @@ struct RootView: View {
             wide = new
         }
         .background(Color.black)
+        .environment(\.slopeWorld, SlopeFlag.on)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
         // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a

@@ -41,6 +41,7 @@
 		4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */ = {isa = PBXBuildFile; fileRef = D322AA44C06018F3A665792F /* Brim.metal */; };
 		4C451DE21520F95F45F2477D /* LensDetailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */; };
 		4D6FD82491E362F2301B13A3 /* Hand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B629DA84E96D6D76FFFBBFB6 /* Hand.swift */; };
+		4F7A4713149E5208E53AB74D /* SlopeConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */; };
 		500060DF38B729F0EB090EBA /* Brim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6499D4977A88A7764419D373 /* Brim.swift */; };
 		50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A3010678E45A15B0543C3 /* Consent.swift */; };
 		5149A9D99C1F252AF495DA01 /* GPUBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882752BC69C1C5819416967C /* GPUBench.swift */; };
@@ -108,6 +109,7 @@
 		D10CAA173CBE682652375AB2 /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCC0A4E08C966E2AD0FA13B /* Type.swift */; };
 		D18E0CA5A532D24864C99127 /* ResultMarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E201E2C589F6C145C60C830A /* ResultMarks.swift */; };
 		D19E907E79657C7B9EBEFD28 /* TapsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE8CF37570EED1B144E5201 /* TapsTests.swift */; };
+		D44A6BB83585EEC490C1A712 /* SlopeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADAD8BDF2BF9AD5510DC396 /* SlopeSettings.swift */; };
 		D473CFC7DC2B15D1D83C76F2 /* PlayChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC21C4B9D117BB98177D02E /* PlayChrome.swift */; };
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
 		D743967665795B21B03B6D88 /* AchievementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAAABE968196C7403939ADC9 /* AchievementTests.swift */; };
@@ -228,6 +230,7 @@
 		965EC2AB5B15FD9B3CA462DE /* Twist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Twist.swift; sourceTree = "<group>"; };
 		9671F664A49B27787D8573AD /* LensArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArt.swift; sourceTree = "<group>"; };
 		97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Power.swift; sourceTree = "<group>"; };
+		98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeConsent.swift; sourceTree = "<group>"; };
 		9AC7565D93EC5AC584CF0825 /* HandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandTests.swift; sourceTree = "<group>"; };
 		9B4B009E49499F923115A97B /* LensArtBigPicture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtBigPicture.swift; sourceTree = "<group>"; };
 		9C1D22B8050E976E3D264E88 /* ToneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTests.swift; sourceTree = "<group>"; };
@@ -267,6 +270,7 @@
 		E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveTests.swift; sourceTree = "<group>"; };
 		E92A6862096D73E5F52E0DC3 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		E9DE31F264F1D40389BD4802 /* Archive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Archive.swift; sourceTree = "<group>"; };
+		EADAD8BDF2BF9AD5510DC396 /* SlopeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeSettings.swift; sourceTree = "<group>"; };
 		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
 		F1CD3AE9E7D3D1186321F8E8 /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
@@ -431,9 +435,11 @@
 				DB7B4A291F2734F1B961F3FE /* Shelf.swift */,
 				2926E44D61C37EEF53C771BA /* Sky.metal */,
 				3B8449467A6C368062FC8096 /* Slope.metal */,
+				98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */,
 				6F759F3B5689BB554B5D6699 /* SlopeGeometry.swift */,
 				B8E865B896C1EAD2C9122B80 /* SlopeGround.swift */,
 				734228145564BCCF7996DDD5 /* SlopeHarness.swift */,
+				EADAD8BDF2BF9AD5510DC396 /* SlopeSettings.swift */,
 				D89654A86FE88E89D5339382 /* Sound.swift */,
 				4CE724B24586C771A00348BD /* Spoken.swift */,
 				5D1B40452790F8A476242FC3 /* StirMap.swift */,
@@ -632,9 +638,11 @@
 				90101FC5060304F2B0AA3F01 /* Shelf.swift in Sources */,
 				79D52A8EF45A795194455A50 /* Sky.metal in Sources */,
 				955132A99034C11E7E172767 /* Slope.metal in Sources */,
+				4F7A4713149E5208E53AB74D /* SlopeConsent.swift in Sources */,
 				4411640D2FD996948570E903 /* SlopeGeometry.swift in Sources */,
 				EB7078BFCB2A52B0B6CB8D7D /* SlopeGround.swift in Sources */,
 				D0F4FB199F957BC9E5CD2030 /* SlopeHarness.swift in Sources */,
+				D44A6BB83585EEC490C1A712 /* SlopeSettings.swift in Sources */,
 				87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */,
 				826769813DDDA6BD96FAE06E /* Spoken.swift in Sources */,
 				C43751B4CB5DE9A84EE3C2CB /* StirMap.swift in Sources */,
