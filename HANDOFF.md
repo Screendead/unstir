@@ -154,8 +154,9 @@ The merges, the store media's retake and Jack's five answers of 2026-11-15 are c
   in 1.5 s, it lands mid wind-in, its shader compiles then and the rest of the wind-in is not drawn (34 ms on the
   phone, before the first frame). `FILM_PHONE=1 scripts/film.sh` films the phone over its cable (Jack, 2026-11-23, who
   gave the Claude app the Mac's Camera permission for it): cut at 30 a second, vortex-02's takes repeat 0 to 2 frames
-  in motion (the simulator's 21 and 35) and Lens 25's wind-in none. The app holds its black 2.5 s first
-  (`UNSTIR_HOLD`), past iOS's launch animation and the home indicator. Open: sound from the phone (built, untried);
+  in motion (the simulator's 21 and 35) and Lens 25's wind-in 0 or 1 (the simulator's 7, 7 and 18 at a time). The
+  app holds its black 2.5 s first (`UNSTIR_HOLD`), past iOS's launch animation and the home indicator. Open: sound
+  from the phone (not built: its first take may sound aloud, so it waits for Jack's word);
   the store set (`store-media.sh` wants 1320 x 2868) and the reel from the phone; the app's own one-frame holds
   (recommended, not decided: cache `TypeRole.font`, then measure).
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
