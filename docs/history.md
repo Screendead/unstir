@@ -30,6 +30,41 @@ from paid packs: open, and back to him when a pack wants one. The swirl's two ca
 both stand: the rows are reworded, and the comment on the swirl's profile in Twist.swift now describes the one the
 game plays.
 
+- Promotional films' smoothness (from #291): the layer films were taken under #268's conditions (mains power, nothing
+  else rendering) and still looked loaded to Jack, so that is not quiet enough, or the take itself (simulator,
+  recordVideo, the sound recorder) costs frames. The Mac measures every promotional film (the preview and its takes,
+  the social clips silent and with sound, the editors' reel) and the layer films for dropped frames in motion, finds
+  the cause on one take filmed as is, completely quiet, and quiet with the sound recorder, and retakes whatever hitches
+  on a completely quiet Mac into a new folder (#293). From now on every film is taken only on a completely quiet Mac:
+  every other app, routine, simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power. The Mac's first three passes (2026-11-23) measured the finished films and flagged for retakes the preview, the editors' reel, editors-vortex-02 (both), clean-whirlpool-01 with sound and the three layer films, but took nothing, as the load never fell under 1 and the runs would not close Jack's apps. Jack (2026-11-23): "You should be able to do #293 now. Feel free to push off the work currently running on my mac; this is higher priority." So the Mac may now pause other routines, jobs and simulators and quit apps gracefully to get quiet, then restore them after the takes (asked on #293).
+- The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
+  every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
+  The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
+  `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
+  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280). Filmed again on the
+  Mac with it (#281, closed 2026-11-21): all four clean, no take lost sound, no digital silence inside the sound and
+  no sample jumps; 48 kHz, -15.7 to -16.0 LUFS, true peak -1.5 dBTP but plughole 05's -1.4. They are mono: the
+  recorder took one channel. The Mac's run fixed four things on the way (plughole 05's take
+  too short for a first launch's late strike, the second loudness pass trimming the wrong input, the app playing on
+  through the speakers after a take, ffmpeg's summary after loudnorm's measure). The clips wait in the Mac's tools
+  folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
+- The promotional films' smoothness, measured and retaken (#293, closed 2026-11-23, at `a527f91`): the Mac paused
+  every other routine and job but closed no apps (Jack was using the Mac and asked for the films anyway), so the takes
+  ran at the lowest load reached, 2 to 5, with Spotlight indexing at times; mains power, `pmset -g therm` clear. Its
+  measure (`hitch3.py` in the tools folder's `promo-smooth-20261123/`) counts a raw take's gap over 40 ms only where
+  the picture moves on both sides; recordVideo writes jittered frames near 120 Hz in motion, so a share of 16.7 ms
+  frames says nothing. Load caused the 160 to 650 ms stalls Jack saw: on the quieter Mac they are gone. Retaken clean
+  and kept in `promo-smooth-20261123/`: the three layer films (with every pause cut to 3 s, Jack's word in PR #297),
+  the 25 s preview, the editors' reel (one borderline held frame at 8.27 s, at a move's start), and the clean
+  whirlpool 01, plughole 05 and store whirlpool 03 clips, silent and with sound. Step 2's three takes of store
+  whirlpool 03 (simulator booted inside the take, quiet silent, quiet with sound) each had 4 to 8 gaps of 85 to 100 ms
+  at the edges of slow motion; the sound recorder costs nothing measurable. Two hitches remain that load does not
+  explain: editors-vortex-02 has paired 65 to 100 ms gaps every 1.5 to 2 s through every take, idle retake too, at
+  the same places and not following the moves, so likely the recorder or the simulator; and Lens 25's layer film
+  has one 205 ms stall 1.2 to 1.6 s after the strike in both its takes. No vortex-02 clip is to be used until that is
+  settled. The Mac records vortex-02 and Lens 25's opening with a second recorder (a screen capture of the Simulator
+  window) beside recordVideo and, if the app is dropping the frames, traces it to name what runs then (#301).
+
 ### The heat investigation (2026-11-12, live)
 
 Jack's by-hand session of 2026-11-12 (launched 17:02) first logged thermal fair 9:15 after launch and serious at

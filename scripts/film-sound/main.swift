@@ -37,6 +37,10 @@ func device(named name: String) -> AudioDeviceID? {
 
 let arguments = CommandLine.arguments
 guard arguments.count == 3 else { fail("usage: record <device name> <out.caf>") }
+// macOS hands a recorder it has refused silence, not an error, and counts any audio input as the microphone.
+guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else {
+    fail("this shell's app has no Microphone permission (System Settings, Privacy & Security), so it would record silence")
+}
 guard var id = device(named: arguments[1]) else { fail("no audio device named \(arguments[1])") }
 
 // The engine's input is the named device, not the Mac's default input, which the take leaves alone.

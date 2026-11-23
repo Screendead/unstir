@@ -140,40 +140,24 @@ The merges, the store media's retake and Jack's five answers of 2026-11-15 are c
   There is a quality issue with the videos. It seems they've been recorded on a system under load, so they're not as
   smooth as the actual game is. We need to be really sure that any promotional videos aren't like that, so double-check
   them, and then ensure the MacBook is completely quiet before recording any corrections." The layers ship as rendered.
-- Promotional films' smoothness (from #291): the layer films were taken under #268's conditions (mains power, nothing
-  else rendering) and still looked loaded to Jack, so that is not quiet enough, or the take itself (simulator,
-  recordVideo, the sound recorder) costs frames. The Mac measures every promotional film (the preview and its takes,
-  the social clips silent and with sound, the editors' reel) and the layer films for dropped frames in motion, finds
-  the cause on one take filmed as is, completely quiet, and quiet with the sound recorder, and retakes whatever hitches
-  on a completely quiet Mac into a new folder (#293). From now on every film is taken only on a completely quiet Mac:
-  every other app, routine, simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power. The Mac's first three passes (2026-11-23) measured the finished films and flagged for retakes the preview, the editors' reel, editors-vortex-02 (both), clean-whirlpool-01 with sound and the three layer films, but took nothing, as the load never fell under 1 and the runs would not close Jack's apps. Jack (2026-11-23): "You should be able to do #293 now. Feel free to push off the work currently running on my mac; this is higher priority." So the Mac may now pause other routines, jobs and simulators and quit apps gracefully to get quiet, then restore them after the takes (asked on #293).
-- The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
-  every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
-  The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
-  `aresample=async` filled with silence. `film.sh` now records BlackHole with its own CoreAudio recorder, which fails a
-  take whose sample clock skips, and the clips are cut at 48 kHz with two-pass loudnorm (#280). Filmed again on the
-  Mac with it (#281, closed 2026-11-21): all four clean, no take lost sound, no digital silence inside the sound and
-  no sample jumps; 48 kHz, -15.7 to -16.0 LUFS, true peak -1.5 dBTP but plughole 05's -1.4. They are mono: the
-  recorder took one channel. The Mac's run fixed four things on the way (plughole 05's take
-  too short for a first launch's late strike, the second loudness pass trimming the wrong input, the app playing on
-  through the speakers after a take, ffmpeg's summary after loudnorm's measure). The clips wait in the Mac's tools
-  folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
-- The promotional films' smoothness, measured and retaken (#293, closed 2026-11-23, at `a527f91`): the Mac paused
-  every other routine and job but closed no apps (Jack was using the Mac and asked for the films anyway), so the takes
-  ran at the lowest load reached, 2 to 5, with Spotlight indexing at times; mains power, `pmset -g therm` clear. Its
-  measure (`hitch3.py` in the tools folder's `promo-smooth-20261123/`) counts a raw take's gap over 40 ms only where
-  the picture moves on both sides; recordVideo writes jittered frames near 120 Hz in motion, so a share of 16.7 ms
-  frames says nothing. Load caused the 160 to 650 ms stalls Jack saw: on the quieter Mac they are gone. Retaken clean
-  and kept in `promo-smooth-20261123/`: the three layer films (with every pause cut to 3 s, Jack's word in PR #297),
-  the 25 s preview, the editors' reel (one borderline held frame at 8.27 s, at a move's start), and the clean
-  whirlpool 01, plughole 05 and store whirlpool 03 clips, silent and with sound. Step 2's three takes of store
-  whirlpool 03 (simulator booted inside the take, quiet silent, quiet with sound) each had 4 to 8 gaps of 85 to 100 ms
-  at the edges of slow motion; the sound recorder costs nothing measurable. Two hitches remain that load does not
-  explain: editors-vortex-02 has paired 65 to 100 ms gaps every 1.5 to 2 s through every take, idle retake too, at
-  the same places and not following the moves, so likely the recorder or the simulator; and Lens 25's layer film
-  has one 205 ms stall 1.2 to 1.6 s after the strike in both its takes. No vortex-02 clip is to be used until that is
-  settled. The Mac records vortex-02 and Lens 25's opening with a second recorder (a screen capture of the Simulator
-  window) beside recordVideo and, if the app is dropping the frames, traces it to name what runs then (#301).
+- Promotional films' smoothness, the plan (#291, #293, closed): in `docs/history.md` under "Open work (2026-11-15):
+  its closed parts". Standing: every film is taken only on a completely quiet Mac (every other app, routine,
+  simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power), and the Mac may pause other
+  routines, jobs and simulators and quit apps gracefully to get quiet, restoring them after (Jack, 2026-11-23).
+- The clips with sound (#268, #280, #281) and the films' smoothness, measured and retaken (#293): closed, in
+  `docs/history.md` under "Open work (2026-11-15): its closed parts". The four clips with sound wait in the Mac's
+  tools folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
+- The two hitches, settled (2026-11-23): vortex-02's paired gaps are recordVideo's H.264. On an idle Mac a Release
+  build's take still repeated 29 frames in 20 s at 30 a second, in pairs every two seconds; recorded as HEVC the same
+  take repeats 2, both at the strike's still. `film.sh` records HEVC now (`FILM_CODEC`), and `FILM_CONFIG=Release`
+  films the Release build (Jack, 2026-11-23: a promotional film is never a Debug build's), in which Lens 25's wind-in
+  holds 62 and 87 ms where Debug's stalled 205 ms and more. Both films retaken that way with sound, in the tools
+  folder (`promo-smooth-20261123/*-release-hevc-sound.mp4`). The sound recorder now refuses a shell whose app has no
+  Microphone permission, which macOS answers with silence: a session's own shell has none, the desktop app's
+  Terminal panel has. The phone showed neither hitch (13 Pro Max, tables in `promo-smooth-20261123/phone/RESULTS.md`);
+  filming from the phone was tried and dropped (PR #305, closed). Open: the store set, the reel and the other layer
+  films retaken as Release and HEVC; the app's own one-frame holds on the phone (recommended, not decided: cache
+  `TypeRole.font`, then measure).
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
   2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
