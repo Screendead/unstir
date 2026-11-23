@@ -3,6 +3,33 @@
 Closed sections moved word for word out of `HANDOFF.md`, which every session reads at its start. Each section keeps its own
 headings; `HANDOFF.md` says where each was. Jack's calls in them are indexed in `docs/decisions.md`.
 
+### Open work (2026-11-15): its closed parts
+
+**Merged 2026-11-15:** #231, the open tank: no level, pack or daily shows the brim, a silent cap of 96, four taps
+whenever the stored map draws. Its side effect went to Jack as a call and he merged it: the four-tap budget now learns
+only from drags on stacks too shallow for a map. #233: after #231 a drawn fingertip's turn (lessons, films, the store
+preview) sometimes left the glass still until the release, which Jack saw in the retaken films. `Hand` now tells each
+change again once the value is in (`Hand.tell`, `docs/architecture.md`); the brim's ring had hidden the race since
+#218. A real finger's drag sets the angle without an animation and was not seen to fail; not checked on a phone.
+
+**Store media retaken (2026-11-15), awaiting Jack's look:** on master with #233, in the tools folder outside the repo
+(`store-media-2026-11-15`): the ten screenshots plain and captioned, the 25 s preview, four social clips (silent), the
+four promoted-purchase images, the editors' reel (62 s), `heartbeat-maelstrom22-chainmail` on its new deal, and
+contact sheets. Not done: the clips with sound (`store-media.sh sound` switches the Mac's audio output, so it waits
+for Jack's word), and the pack layers' films. Lens's promoted-purchase image had been blank since at least
+2026-11-12: its 860 px panel bakes in about 40 s on the simulator and the shot held 30, now 60. Drags were checked
+frame by frame in whirlpool 03's take and two of the reel's segments, not in every take. `shots/index.txt`'s three
+stale lines were shot again and none changed, so that loose end is closed. `film.sh` fails inside the agent
+sandbox (its process substitution), and a build there can fail on an unmounted Metal toolchain until `xcrun metal
+--version` is run outside it once.
+
+**Jack's five answers (2026-11-15, rows in `docs/decisions.md`):** Maelstrom's twelve re-dealt levels stay as
+dealt. `AGE_RANGE` defaults to YES for phone builds once the first upload proves the App ID takes it, without asking
+him again. The promoted-purchase images keep their knobs, as #149 built them. No rule keeps the swirl or the orbits
+from paid packs: open, and back to him when a pack wants one. The swirl's two calls and Escapement's two loss rules
+both stand: the rows are reworded, and the comment on the swirl's profile in Twist.swift now describes the one the
+game plays.
+
 ### The heat investigation (2026-11-12, live)
 
 Jack's by-hand session of 2026-11-12 (launched 17:02) first logged thermal fair 9:15 after launch and serious at

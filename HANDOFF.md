@@ -47,30 +47,8 @@ Closed: moved word for word to `docs/history.md`.
 
 ### Open work (2026-11-15)
 
-**Merged 2026-11-15:** #231, the open tank: no level, pack or daily shows the brim, a silent cap of 96, four taps
-whenever the stored map draws. Its side effect went to Jack as a call and he merged it: the four-tap budget now learns
-only from drags on stacks too shallow for a map. #233: after #231 a drawn fingertip's turn (lessons, films, the store
-preview) sometimes left the glass still until the release, which Jack saw in the retaken films. `Hand` now tells each
-change again once the value is in (`Hand.tell`, `docs/architecture.md`); the brim's ring had hidden the race since
-#218. A real finger's drag sets the angle without an animation and was not seen to fail; not checked on a phone.
-
-**Store media retaken (2026-11-15), awaiting Jack's look:** on master with #233, in the tools folder outside the repo
-(`store-media-2026-11-15`): the ten screenshots plain and captioned, the 25 s preview, four social clips (silent), the
-four promoted-purchase images, the editors' reel (62 s), `heartbeat-maelstrom22-chainmail` on its new deal, and
-contact sheets. Not done: the clips with sound (`store-media.sh sound` switches the Mac's audio output, so it waits
-for Jack's word), and the pack layers' films. Lens's promoted-purchase image had been blank since at least
-2026-11-12: its 860 px panel bakes in about 40 s on the simulator and the shot held 30, now 60. Drags were checked
-frame by frame in whirlpool 03's take and two of the reel's segments, not in every take. `shots/index.txt`'s three
-stale lines were shot again and none changed, so that loose end is closed. `film.sh` fails inside the agent
-sandbox (its process substitution), and a build there can fail on an unmounted Metal toolchain until `xcrun metal
---version` is run outside it once.
-
-**Jack's five answers (2026-11-15, rows in `docs/decisions.md`):** Maelstrom's twelve re-dealt levels stay as
-dealt. `AGE_RANGE` defaults to YES for phone builds once the first upload proves the App ID takes it, without asking
-him again. The promoted-purchase images keep their knobs, as #149 built them. No rule keeps the swirl or the orbits
-from paid packs: open, and back to him when a pack wants one. The swirl's two calls and Escapement's two loss rules
-both stand: the rows are reworded, and the comment on the swirl's profile in Twist.swift now describes the one the
-game plays.
+The merges, the store media's retake and Jack's five answers of 2026-11-15 are closed: moved word for word to
+`docs/history.md`.
 
 **Open for Jack:**
 
@@ -150,6 +128,22 @@ game plays.
   too short for a first launch's late strike, the second loudness pass trimming the wrong input, the app playing on
   through the speakers after a take, ffmpeg's summary after loudnorm's measure). The clips wait in the Mac's tools
   folder (`store-media-sound-280/social/`) and on the Launchpad for Jack's listen before any post.
+- The promotional films' smoothness, measured and retaken (#293, closed 2026-11-23, at `a527f91`): the Mac paused
+  every other routine and job but closed no apps (Jack was using the Mac and asked for the films anyway), so the takes
+  ran at the lowest load reached, 2 to 5, with Spotlight indexing at times; mains power, `pmset -g therm` clear. Its
+  measure (`hitch3.py` in the tools folder's `promo-smooth-20261123/`) counts a raw take's gap over 40 ms only where
+  the picture moves on both sides; recordVideo writes jittered frames near 120 Hz in motion, so a share of 16.7 ms
+  frames says nothing. Load caused the 160 to 650 ms stalls Jack saw: on the quieter Mac they are gone. Retaken clean
+  and kept in `promo-smooth-20261123/`: the three layer films (with every pause cut to 3 s, Jack's word in PR #297),
+  the 25 s preview, the editors' reel (one borderline held frame at 8.27 s, at a move's start), and the clean
+  whirlpool 01, plughole 05 and store whirlpool 03 clips, silent and with sound. Step 2's three takes of store
+  whirlpool 03 (simulator booted inside the take, quiet silent, quiet with sound) each had 4 to 8 gaps of 85 to 100 ms
+  at the edges of slow motion; the sound recorder costs nothing measurable. Two hitches remain that load does not
+  explain: editors-vortex-02 has paired 65 to 100 ms gaps every 1.5 to 2 s through every take, idle retake too, at
+  the same places and not following the moves, so likely the recorder or the simulator; and Lens 25's layer film
+  has one 205 ms stall 1.2 to 1.6 s after the strike in both its takes. No vortex-02 clip is to be used until that is
+  settled. The Mac records vortex-02 and Lens 25's opening with a second recorder (a screen capture of the Simulator
+  window) beside recordVideo and, if the app is dropping the frames, traces it to name what runs then (#301).
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).
 - The search results art that survives App Store Connect's crop (#278: its preview shows the 3:2 file's top 67.7% in a
   2.22:1 card): #282's `store-header.py` centres the glass in that card at 860 px (990 before), whole too in a 2.22:1
