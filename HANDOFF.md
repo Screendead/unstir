@@ -127,6 +127,18 @@ game plays.
   striking and moving with the drawn finger; Lens's and Escapement's films stop on the solved screen before the card,
   as recordVideo writes no frame on a still screen. Films in the tools folder outside the repo
   (`layers-film-20261122`). Jack watches them and keeps, changes or drops the layers: asked on his Calls page (#291).
+  Answered (#291, 2026-11-23, row in `docs/decisions.md`): "**Jack's answer:** A · Keep all three
+
+  There is a quality issue with the videos. It seems they've been recorded on a system under load, so they're not as
+  smooth as the actual game is. We need to be really sure that any promotional videos aren't like that, so double-check
+  them, and then ensure the MacBook is completely quiet before recording any corrections." The layers ship as rendered.
+- Promotional films' smoothness (from #291): the layer films were taken under #268's conditions (mains power, nothing
+  else rendering) and still looked loaded to Jack, so that is not quiet enough, or the take itself (simulator,
+  recordVideo, the sound recorder) costs frames. The Mac measures every promotional film (the preview and its takes,
+  the social clips silent and with sound, the editors' reel) and the layer films for dropped frames in motion, finds
+  the cause on one take filmed as is, completely quiet, and quiet with the sound recorder, and retakes whatever hitches
+  on a completely quiet Mac into a new folder (#293). From now on every film is taken only on a completely quiet Mac:
+  every other app, routine, simulator and build stopped, load under 1, `pmset -g therm` clear, on mains power.
 - The clips with sound: filmed on the Mac (#268, closed 2026-11-21) on mains power with nothing else running, but
   every clip had 70 to 100 ms of digital silence every 1 to 1.5 s, at 96 kHz, and editors-vortex-02 at -19.2 LUFS.
   The gaps were lost sound: about 8192 samples at a time from ffmpeg's avfoundation input, whose stamps
