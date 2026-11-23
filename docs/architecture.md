@@ -579,12 +579,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `scramble.count`.
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
-  seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
+  seven, with **PlayChrome.swift**. TankView.swift keeps `LevelView` whole, its state and handlers, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
   `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's,
   its type Type.swift's and its buttons Buttons.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
-  `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
+  `LostStamp` and `StopLook`; PlayChrome.swift the chrome round the tank as views that take values and closures, which
+  `LevelView` builds from its state: `PlayHeader` (the way out, and the count it is handed: `MovesCount`, Escapement's
+  ticks or the sandbox's controls), `PlayTitle`, `PlayCaption`, whose slot holds the result or lost card `LevelView`
+  fills once the level finishes, and `PlayControls` (undo with its `RefillBadge`, and the wait and reset `LevelView`
+  hands in, as their arming and timers are its state). `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
   endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
   on a push, and otherwise reads `text2` under par, amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
   "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
@@ -1146,12 +1150,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
   cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
-  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule: the
+  too. `MenuLayout.of` (**MenuLayout.swift**) splits the menu wherever play splits, by play's own rule: the
   list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
   neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the
   card's way out reads "✕ close" (VoiceOver "Close"), as the menu is in sight, unless it goes back to the bundle's
-  card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
+  card (`Shop.back`; Jack's call d4-menuback = B, round 16). It holds
   one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
   card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
   turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
@@ -1201,7 +1205,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
   level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
   has read what the player owns, decided again once it has); the playing level's own row opens nothing and doesn't tap
-  (`MenuView.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
+  (`Menu.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
   and up a notch open in place without the switch (`RootView.proceed`), as on a phone, so a cleared tank sends no run's
   quit. The list follows the playing level (`MenuView.playing`: its tier, switched to without the switch's sound; its
   row centred, again once the list has glided to a new slot, as the phone folds; its hairline at full and
@@ -1209,7 +1213,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   on each return, reads its rows, run and dailies afresh on `RootView.revision`, bumped by every level opened, left or
   finished. A pack's card or the archive opens over the whole trailing half, its ground running on to the fold, as a
   phone's covers the menu (its way out "‹ menu", modal
-  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `MenuView.closes`, Jack's call
+  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `Menu.closes`, Jack's call
   s5b-back = B), the level playing on under it: from the dock, a result card's pointer, a gate or a promoted purchase.
   A level opened from a card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that
   level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a
@@ -1231,9 +1235,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `archived`, again is no practice, and it has no share line or next daily's time; but a day that kept a best on its
   day keeps it, the archive replaying it as practice (`Game.counts`), so the archive never moves `Daily.run`.
   `Resume.known` holds its days, so a try left there survives a launch.
-- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
+- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards, `PackCard`'s and
+  `PackDock`'s views; **Offer.swift** what they sell and the rules they follow apart from how they draw: `Offer`, the
+  `Store`, `Failure`, `Pricing` and `Purchase` extensions, `Marks`, and `Shop`, the card's and the dock's rules
+  (`back`, `menu`, `lands`, `pickUp`, `taste`, `arrival`, `continues`, `shown`, `saying`); **PackCovers.swift** the
+  covers and the card's clip (`PackTank`, `Wedge`, `LoopingTank`, `PackClip`). `Offer` is a pack or
   the bundle, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
-  for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
+  for, or under the developer unlock (`Shop.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
   draws it (`LevelPicture`: the halftone, black until its bake lands, its lenses' cores drawn finer once their detail bakes, as the glass's are (`unstirLens`), Escapement 2's engraved plate, the fern; the bundle a wedge of
@@ -1273,7 +1281,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tried). An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
-  once all are (`PackCard.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
+  once all are (`Shop.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and the bundle's cover once it saves nothing (the bundle owned, or the packs left cost no more than
   it), animating the shelf's change, its height kept whatever the covers' lines say; the bundle's card names each pack as a link to its
@@ -1282,7 +1290,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
-  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
+  entitlements is no landing (`Shop.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
   status, buy and Triptych's line, so an owner never sees a price on a pack they own, then reads as owned or not,
   without a chime or an announcement. Offline the read still ends, as the entitlements are kept on the device, and the
   card shows its state with "App Store unreachable" where the price goes, as before. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
@@ -1291,10 +1299,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes
   ("more in Lens ›"; Jack's call C1 = B, round 13), and every pack level's next is in the pack's colour, owned or not.
   The card that gate opens (`RootView.arrived`, that showing only) is scrolled to buying, under a line for a pack
-  never owned (`PackCard.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
+  never owned (`Shop.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
   else, for a player who skipped ahead, "The first three are free. 22 more in Lens." (Jack's call C1A = B, round 16); a
   refunded owner has only the revocation's line. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
-  one (`PackCard.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
+  one (`Shop.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
   its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (Type.swift's roles; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
@@ -1449,7 +1457,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   own, as `rawValue` is the stored one), and a translated name is cased for the locale (`localizedUppercase`). The
   version line is drawn verbatim and the editors' switch's words are do-not-translate keys (CAT7); a switch's name is
   a `LocalizedStringResource`, so its `settings:` log line keeps the English key.
-- **Menu.swift** holds `MenuView`. What it leads with follows plughole 23 (`MenuView.lead`, Jack's call C4,
+- **Menu.swift** holds `MenuView` and its views; **MenuModel.swift** what the menu shows and does apart from how it
+  draws, with nothing of SwiftUI's views in it: `Tier.step`, `frontier`, `short` and `landing`, `Level.focus(solved:)`,
+  `Menu` (`lead`, `dailyLines`, `opens`, `closes`, a closed row's line, `closedLine` and `reached`, and the gate's
+  ticks, `gate`), `Refusal` (a closed row's shake and its two seconds' line), `NewRunArm` (endless's "new run", armed as
+  reset is) and `CameFrom`; **SupporterMark.swift** the supporter mark. What it leads with follows plughole 23 (`Menu.lead`, Jack's call C4,
   round 13). The tank's rule, "Every stir in this tank has an exact inverse.", left the menu for the App Store page
   (Jack's call D1 = A, round 13), and the "next: 07 · Sprinkle ›" line that took its place went too (Jack,
   2026-11-11), so the first header, "today" or the tier's, stands 24 pt under the chips as drawn, with no gap kept
@@ -1462,7 +1474,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
-  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`MenuView.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`Menu.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
   leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip holds every tier as a chip, 36 pt tall in a 44 pt target: the picked one stroked in its tier's sweep over its glow at 0.12, an open one in `line`, a locked one in `rule` with a lock after its dimmed name; the picked face moves to its chip as it is picked (`matchedGeometryEffect`), ahead of the list. The strip

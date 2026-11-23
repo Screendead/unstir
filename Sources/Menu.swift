@@ -47,55 +47,12 @@ extension Tier {
         }
     }
 
-    /// The tier `n` rungs up the ladder, or down for negative `n`, if there is one.
-    func step(_ n: Int) -> Tier? {
-        let i = Self.allCases.firstIndex(of: self)! + n
-        return Self.allCases.indices.contains(i) ? Self.allCases[i] : nil
-    }
-
     /// For VoiceOver: the tier, and if it is locked, what opens it.
     var spoken: String {
         guard let below, !isOpen() else { return word }
         let solved = below.solved(), lit = solved.filter { $0 }.count
         return String(localized: "\(word), locked, opens with every \(below.word) level solved, \(lit) of \(solved.count)",
                       comment: "VoiceOver: a shut tier. The tier, the tier below, then its levels solved, of all")
-    }
-
-    /// The first level with no best, on an open tier: where the player is. Every level before it has a best, so it is
-    /// open.
-    func frontier(unlocked: Bool = Best.unlocked, _ best: (String) -> Best? = Best.load) -> Level? {
-        isOpen(unlocked: unlocked, best) ? levels.first { best($0.id) == nil } : nil
-    }
-
-    /// The levels not yet solved, as runs of neighbours by index. The first of each run is open: the level before it has
-    /// a best, or it is the first.
-    func short(_ best: (String) -> Best? = Best.load) -> [ClosedRange<Int>] {
-        solved(best).enumerated().reduce(into: []) { runs, level in
-            guard !level.element else { return }
-            if let last = runs.last, last.upperBound == level.offset - 1 {
-                runs[runs.count - 1] = last.lowerBound ... level.offset
-            } else {
-                runs.append(level.offset ... level.offset)
-            }
-        }
-    }
-
-    /// The row a launch centres on: the frontier, else the first level short of par. Nil, the top, once every level is
-    /// at par or while the tier is locked.
-    func landing(_ best: (String) -> Best? = Best.load) -> Level? {
-        frontier(best) ?? (isOpen(best) ? levels.first { (best($0.id)?.over ?? 0) > 0 } : nil)
-    }
-}
-
-extension Level {
-    /// The row the menu, or a pack's card, centres on once this level is left: after a solve the one after it, which
-    /// "next ›" opens, or itself as its list's last; a past daily itself, in the archive. Nil for today's daily, endless
-    /// and the sandbox, which sit outside the tier's rows.
-    func focus(solved: Bool) -> Level? {
-        if archived { return self }
-        let list = pack?.levels ?? tier.levels
-        guard let i = list.firstIndex(where: { $0.id == id }) else { return nil }
-        return list[solved ? min(i + 1, list.count - 1) : i]
     }
 }
 
@@ -237,11 +194,11 @@ struct MenuView: View {
     /// frame of a swipe.
     @State private var past: (days: [(date: Date, level: Level)], atPar: Int)
     /// `lead`, read again when a best or the editors' switch could change it rather than on every frame of a swipe.
-    @State private var leading: Lead
+    @State private var leading: Menu.Lead
     /// Endless's saved run, which its row continues (Jack's call C2, round 13).
     @State private var saved: Resume?
-    /// When a first tap armed the endless row's "new run", which then says "new run? tap again" for `ResetArm.window`.
-    @State private var newRunArmed: Date?
+    /// The endless row's "new run", which a first tap arms to say "new run? tap again" for `ResetArm.window`.
+    @State private var arm = NewRunArm()
     @AccessibilityFocusState private var newRunFocused: Bool
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
@@ -290,7 +247,7 @@ struct MenuView: View {
         _today = State(initialValue: now)
         _daily = State(initialValue: Self.daily(now))
         _past = State(initialValue: Self.past(now))
-        _leading = State(initialValue: Self.lead())
+        _leading = State(initialValue: Menu.lead())
         if let frozen {
             _spin = State(initialValue: frozen.spin)
             _fade = State(initialValue: frozen.fade)
@@ -298,33 +255,7 @@ struct MenuView: View {
         }
     }
 
-    /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
-    /// they open, and show, after the first hex level. `sandbox`: the build has it (`Level.playsSandbox`), its row at the
-    /// list's end.
-    typealias Lead = (modes: Bool, sandbox: Bool)
-    static func lead(unlocked: Bool = Best.unlocked, release: Bool = Build.release,
-                     best: (String) -> Best? = Best.load) -> Lead {
-        (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release))
-    }
-
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
-
-    /// The daily row's line under its title, a frost day's (the only daily that seizes knobs) and a run of days from
-    /// two, and the row's detail for VoiceOver, its shape and that line. Nil on a plain day before a run.
-    static func dailyLines(_ day: Level, run: Int) -> (under: String?, detail: String?) {
-        let frost = !day.seized.isEmpty, running = run >= 2
-        let under: String? = switch (frost, running) {
-        case (true, true): String(localized: "frost day \u{00B7} \(run) days running",
-                                  comment: "The daily's row on a frost day, two knobs frozen: then the days in a row solved, from two")
-        case (true, false): String(localized: "frost day", comment: "The daily's row on a frost day, two knobs frozen")
-        case (false, true): String(localized: "\(run) days running", comment: "The daily's row: the days in a row solved, from two")
-        case (false, false): nil
-        }
-        return (under, under.map {
-            String(localized: "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \($0)",
-                   comment: "VoiceOver: the daily's row. Its rods, its par, then a frost day or the days in a row solved")
-        })
-    }
 
     private static func past(_ day: Date) -> (days: [(date: Date, level: Level)], atPar: Int) {
         let days = Archive.days(today: day).map { ($0, Level.daily($0, archived: true)) }
@@ -348,7 +279,7 @@ struct MenuView: View {
         // it leaving.
         .onChange(of: card == nil && !archive && !settings && playing == nil) { Power.shared.touched() }
         // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
-        .onChange(of: settings) { if !settings { leading = Self.lead() } }
+        .onChange(of: settings) { if !settings { leading = Menu.lead() } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it. Beside play there
             // is no stir, and the square would show on Escapement's paper.
@@ -376,7 +307,7 @@ struct MenuView: View {
         .onChange(of: Sync.revision.count) {
             daily = Self.daily(today)
             past = Self.past(today)
-            leading = Self.lead()
+            leading = Menu.lead()
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
@@ -436,7 +367,7 @@ struct MenuView: View {
         guard layout.wide else { return }
         daily = Self.daily(today)
         past = Self.past(today)
-        leading = Self.lead()
+        leading = Menu.lead()
         saved = run
     }
 
@@ -559,7 +490,7 @@ struct MenuView: View {
     /// for, when the phone saves power, or once nobody touches it. A card or the archive beside the list leaves it in
     /// sight and live.
     @ViewBuilder private func dock(over: Bool) -> some View {
-        if !Offer.shelf().isEmpty && PackDock.shown() {
+        if !Offer.shelf().isEmpty && Shop.shown() {
             PackDock(open: { show($0, from: $1) }, held: clock,
                      paused: over || settings || peeking || playing != nil || Power.shared.saving || Power.shared.idle,
                      covered: over || settings)
@@ -580,7 +511,7 @@ struct MenuView: View {
 
     /// The modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
     /// the end under "anything goes" (Jack's call D2 = A, round 13), so the list leads with 01.
-    private func rows(_ lead: Lead) -> some View {
+    private func rows(_ lead: Menu.Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: String(localized: "any picture, any rods \u{00B7} nothing counts",
                                                                comment: "The sandbox's row, under its title"), enabled: true,
                                pick: pick, refuse: refuse)
@@ -590,7 +521,7 @@ struct MenuView: View {
                 // 24 under the chips as drawn, each 4 inside its target.
                 heading(Text("today")).padding(.top, 20)
                 // Marked until either is first opened.
-                let new = !Best.modesSeen, (day, run) = daily, lines = Self.dailyLines(day, run: run)
+                let new = !Best.modesSeen, (day, run) = daily, lines = Menu.dailyLines(day, run: run)
                 // One line each: what a mode is its own note says. A frost day and a run of days go under the title,
                 // leaving the result where every row has it.
                 LevelRow(level: day, detail: lines.detail, under: lines.under.map { Text($0) }, enabled: true, new: new, brief: true, // loc: verbatim localized by dailyLines
@@ -666,11 +597,11 @@ struct MenuView: View {
                      // level's row as a menu built anew centres it.
                      focus: cardFocus ?? (layout.wide && focus?.pack != nil && focus?.pack == card.pack ? focus : nil),
                      arrived: card.pack != nil && card.pack == arrived,
-                     backTo: returns?.name ?? PackCard.menu,
+                     backTo: returns?.name ?? Shop.menu,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = CameFrom(back: card, card: next)
-                     }, beside: beside, closes: Self.closes(playing: playing != nil, covered: covered))
+                     }, beside: beside, closes: Menu.closes(playing: playing != nil, covered: covered))
                 .background(alignment: .leading) { bleed }
                 .id(card)
                 .transition(reduceMotion ? .opacity
@@ -679,10 +610,6 @@ struct MenuView: View {
                 .zIndex(1)
         }
     }
-
-    /// A card over a playing level's result card, which covers the menu beside it, closes onto that card rather than
-    /// going to the menu (Jack's call s5b-back = B); over the menu beside play it goes to the menu.
-    nonisolated static func closes(playing: Bool, covered: Bool) -> Bool { playing && covered }
 
     /// The calendar, over the menu as a card is, or beside the list as a card is, from its row.
     @ViewBuilder private func archiveView(beside: Bool) -> some View {
@@ -1029,9 +956,7 @@ struct MenuView: View {
     private var newRun: some View {
         Button {
             guard !twisting else { return }
-            let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: true, held: voiceOver)
-            newRunArmed = tap.armedAt
-            guard tap.reset else {
+            guard arm.tap(held: voiceOver) else {
                 AccessibilityNotification.Announcement(String(localized: "Tap again for a new run",
                                                                 comment: "VoiceOver: endless's new run, armed")).post()
                 return Sound.shared.play(.tap)
@@ -1040,19 +965,19 @@ struct MenuView: View {
             saved = nil
             pick(.endless(Run(seed: .random(in: .min ... .max))), anew: true)
         } label: {
-            (newRunArmed == nil ? Text("new run", comment: "Endless's row: drops the saved run")
+            (!arm.armed ? Text("new run", comment: "Endless's row: drops the saved run")
                 : Text("new run? tap again", comment: "Endless's row: armed, a second tap drops the saved run")).font(.ui(.detail)).lineLimit(1).foregroundStyle(Color.text3).hit()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(newRunArmed == nil ? Text("New run", comment: "VoiceOver: starts a new endless run") // loc: verbatim each a key
+        .accessibilityLabel(!arm.armed ? Text("New run", comment: "VoiceOver: starts a new endless run") // loc: verbatim each a key
                             : Text("New run, tap again to confirm", comment: "VoiceOver: endless's new run, armed"))
         .accessibilityHint("Drops the saved run and starts another.")
         .accessibilityFocused($newRunFocused)
-        .onChange(of: newRunFocused) { if !newRunFocused && voiceOver { newRunArmed = nil } }
-        .task(id: newRunArmed) {
+        .onChange(of: newRunFocused) { if !newRunFocused && voiceOver { arm.disarm() } }
+        .task(id: arm) {
             // VoiceOver's announcement and its double tap take longer than the window.
-            guard newRunArmed != nil, !voiceOver, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
-            newRunArmed = nil
+            guard arm.armed, !voiceOver, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+            arm.disarm()
         }
     }
 
@@ -1061,15 +986,9 @@ struct MenuView: View {
     private func pick(_ level: Level) { pick(level, anew: false) }
 
     private func pick(_ level: Level, anew: Bool) {
-        guard !twisting, Self.opens(level, playing: playing, anew: anew) else { return }
+        guard !twisting, Menu.opens(level, playing: playing, anew: anew) else { return }
         Sound.shared.play(.tap)
         onPick(level)
-    }
-
-    /// Whether a row opens its level: always, but beside play the playing level's own row, as endless's row would deal
-    /// a new run over the one playing; `anew` is endless's new run.
-    nonisolated static func opens(_ level: Level, playing: Level?, anew: Bool = false) -> Bool {
-        anew || playing?.id != level.id
     }
 
     /// A locked row tapped sounds as a seized knob does, unless the touch ends a stir.
@@ -1144,11 +1063,8 @@ private struct TierList: View, Equatable {
             if !open, let below = tier.below { gate(below) }
             let levels = tier.levels, frontier = tier.frontier(), landing = report == nil ? nil : tier.landing()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
-                let reached = unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
-                let opens = !open ? tier.below.map {
-                    String(localized: "solve every \($0.word) level to open", comment: "A shut tier's row, tapped. The tier below")
-                } : reached ? nil : String(localized: "solve \(levels[i - 1].label) to open",
-                                           comment: "A shut row, tapped. The level number before it")
+                let reached = Menu.reached(i, of: levels, unlocked: unlocked)
+                let opens = Menu.closedLine(i, of: levels, below: tier.below, open: open, reached: reached)
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
                          flash: level.id == flash, held: level.id == held, needs: open && !reached ? levels[i - 1] : nil,
                          gate: open ? nil : tier.below, playing: level.id == playing, pick: pick, refuse: refuse)
@@ -1177,7 +1093,7 @@ private struct TierList: View, Equatable {
 
     /// What opens a locked tier: a tick per level of the tier below, lit once that level is solved.
     @ViewBuilder private func gate(_ below: Tier) -> some View {
-        let solved = below.solved(), lit = solved.filter { $0 }.count
+        let (solved, lit) = Menu.gate(below)
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "lock.fill").font(.ui(.detail, .semibold))
@@ -1265,8 +1181,7 @@ private struct LevelRow: View {
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
     @State private var lit = 0.0
-    @State private var said = false
-    @State private var taps = 0
+    @State private var refusal = Refusal()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     /// Room for a four-letter label ("past") at the label's size.
@@ -1282,7 +1197,7 @@ private struct LevelRow: View {
         // Started and no best yet: endless and the sandbox have none; a daily left on its first visit stays tried all day,
         // as practice saves no best.
         let tried = result == nil && level.run == nil && !level.sandbox && Best.started(level.id)
-        let saying = (said || held) && opens != nil
+        let saying = (refusal.said || held) && opens != nil
         return Button { enabled ? pick(level) : tapped() } label: {
             Group {
                 if brief, best != nil, !large {
@@ -1297,7 +1212,7 @@ private struct LevelRow: View {
             }
             .padding(.vertical, Self.pad)
             .contentShape(Rectangle())
-            .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
+            .keyframeAnimator(initialValue: 0.0, trigger: refusal.taps) { row, x in
                 row.offset(x: reduceMotion ? 0 : x)
             } keyframes: { _ in
                 LinearKeyframe(-5.0, duration: 0.06)
@@ -1374,12 +1289,10 @@ private struct LevelRow: View {
     /// A light shake, and what opens the row for two seconds.
     private func tapped() {
         guard refuse() else { return }
-        taps += 1
-        said = true
-        let tap = taps
+        let tap = refusal.tap()
         Task {
-            try? await Task.sleep(for: .seconds(2))
-            if taps == tap { said = false }
+            try? await Task.sleep(for: .seconds(Refusal.hold))
+            refusal.lapse(tap)
         }
     }
 }
@@ -1425,47 +1338,5 @@ private struct Flow: SwiftUI.Layout {
             }
         }
         return lines
-    }
-}
-
-/// The thank-you for a purchase (Jack's call M6, round 14): a four-pointed glint in hairline after the title, in the
-/// tier's sweep, the glyph the daily's share line carries. It never moves or asks for anything.
-struct SupporterMark: View {
-    let sweep: LinearGradient
-    let glow: Color
-
-    var body: some View {
-        Sparkle().stroke(sweep, lineWidth: 1).frame(width: 13, height: 13)
-            .shadow(color: glow.opacity(0.7), radius: 3)
-    }
-}
-
-/// Four points joined by curves bowed in to the centre.
-private struct Sparkle: Shape {
-    func path(in rect: CGRect) -> Path {
-        let c = CGPoint(x: rect.midX, y: rect.midY), r = min(rect.width, rect.height) / 2
-        let tips = [CGPoint(x: c.x, y: c.y - r), CGPoint(x: c.x + r, y: c.y), CGPoint(x: c.x, y: c.y + r),
-                    CGPoint(x: c.x - r, y: c.y)]
-        var p = Path()
-        p.move(to: tips[0])
-        for k in 1...4 { p.addQuadCurve(to: tips[k % 4], control: c) }
-        p.closeSubpath()
-        return p
-    }
-}
-
-/// A pack's card opened from another card's link, Triptych I's: back returns there while that pack's card is still the
-/// one up, never once the card has changed, closed or been put away under a level, then opened again.
-struct CameFrom: Equatable {
-    let back: Offer
-    let card: Offer
-
-    /// Kept across a change of card only while the card is still the one it opened.
-    func kept(as now: Offer?) -> CameFrom? { now == card ? self : nil }
-
-    /// Where back goes, while Triptych I still saves anything.
-    func returns(card now: Offer?, offersComplete: Bool) -> Offer? {
-        guard now == card, back != .complete || offersComplete else { return nil }
-        return back
     }
 }
