@@ -211,7 +211,7 @@ struct RefillBadge: View {
 enum SlopeWorld {
     static let launched: Bool = {
         #if DEBUG
-        ProcessInfo.processInfo.environment["UNSTIR_SLOPE"] == "world"
+        SlopeFlag.on
         #else
         false
         #endif

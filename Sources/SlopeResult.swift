@@ -23,7 +23,7 @@ struct SlopeResult: View {
     /// so the app runs as it does with the slope's screens. No Release build reads it.
     static let on: Bool = {
         #if DEBUG
-        ProcessInfo.processInfo.environment["UNSTIR_SLOPE"] == "world"
+        SlopeFlag.on
         #else
         false
         #endif
