@@ -21,7 +21,9 @@ p { margin: 0; max-width: 68ch; }
 .label { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .mono { font-family: var(--mono); }
 .muted { color: var(--muted); }
-section { display: flex; flex-direction: column; gap: 22px; }
+section { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+main > * { min-width: 0; }
+.wall { max-width: 100%; }
 header { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
 
 .call { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
