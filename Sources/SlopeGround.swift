@@ -5,7 +5,7 @@ import SwiftUI
 /// What a screen asks of the ground beyond the camera, each from 0 to 1 and each animatable: how far a level has
 /// taken the screen (the shelf draws aside and one terrace rises under the tank, `SlopeLay.terrace`), a solved tank's
 /// glint, Prism's clear water, the ground's light (consent and the wide result draw it at 0.35) and how far it is
-/// Escapement's page. The lone terrace is cut from `rock` and lit in `glow`.
+/// Escapement's page. The lone terrace is cut from `rock` and lit in `glow`, and `upper` stands a second over it.
 struct SlopeLook: Equatable {
     var level = 0.0
     var glint = 0.0
@@ -15,6 +15,10 @@ struct SlopeLook: Equatable {
     var rock = SlopeColumn.Rock.sand
     /// The terrace's and the glint's light; warm when nil.
     var glow: SIMD3<Float>?
+    /// A second terrace over the lone one, for a stone with a row of its own (wait, up a notch): the middle of its
+    /// top on the screen, where that stone rests, and its width. It comes and goes with `level`.
+    var upper: CGPoint?
+    var upperWidth: CGFloat = 170
 }
 
 /// A column laid out and seen from a camera on a screen: what a screen's own views read their places from.
@@ -31,11 +35,13 @@ struct SlopeView {
     func lip(_ n: Int) -> CGPoint { point(lay.lip(n)) }
     /// The stone on the dry bank, settings'.
     var bank: CGPoint { SlopeLay.bank(SlopeCamera(top: top, z: lay.z)) }
+    /// The bank's top under that stone: where it rests (`rested(at:)`).
+    var bankSeat: CGPoint { CGPoint(x: bank.x, y: bank.y + 5) }
 }
 
-/// The slope's ground (Slope.metal) for one camera. It drifts on its own clock, at half the screen's rate, and draws
-/// again only for that or a new camera: `held` stops the clock (a level is on screen, something covers the slope,
-/// `Power` saves or idles), and Reduce Motion never starts it, so then it is a still.
+/// The slope's ground (Slope.metal) for one camera. It drifts on its own clock, at 30 Hz, and draws again only for
+/// that or a new camera. `held` stops the clock (a level is on screen, or something covers the slope), as `Power`
+/// does while it saves or idles, and Reduce Motion never starts it: then the ground is a still.
 struct SlopeGround: View {
     let view: SlopeView
     var held = false
@@ -51,7 +57,7 @@ struct SlopeGround: View {
     @State private var epoch = Date.now
     @State private var stopped: Date?
 
-    private var still: Bool { held || reduceMotion || clock != nil || look.paper >= 1 }
+    private var still: Bool { held || reduceMotion || clock != nil || look.paper >= 1 || Power.shared.saving || Power.shared.idle }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { timeline in
@@ -64,6 +70,7 @@ struct SlopeGround: View {
                     .float4(look.level, look.glint, look.clear, look.light),
                     .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
                     .float(look.paper),
+                    .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
                     .floatArray(view.lay.uniforms(top: view.top))))
         }
         .onChange(of: still, initial: true) {
@@ -134,28 +141,37 @@ extension SlopeScene {
     }
 }
 
-/// The dive as a finger moves it: a column at full depth, scrolled natively from its surface to its foot. `content`
+/// The dive as a finger moves it: a column at full depth (or at any one zoom `z`), scrolled natively from its surface
+/// to its foot. `content`
 /// is laid out once, in the scrolled content's own frame (`SlopeView.point` gives a place in the column its place
 /// there), and the ground is drawn for wherever the scroll has reached, in the same pass that moves the content, so
-/// the two never part. `start` is the ledge the dive opens on, held at the screen's middle.
+/// the two never part. It opens on `aim`, the same camera a `SlopeScene` at `z` 1 has for that ledge and share, kept
+/// inside the dive's travel (`SlopeLay.rest`), and when `aim` changes it travels there in `seconds`, or cuts under
+/// Reduce Motion; with no aim it opens at the surface. `onMove` hears the camera's depth as the scroll moves.
 struct SlopeDive<Content: View>: View {
     var column: SlopeColumn
-    var start: Int?
+    var aim: SlopeAim?
+    /// 1, the dive; 0 scrolls the overview, for a column grown past the screen at the largest type sizes.
+    var z: CGFloat = 1
+    var seconds = 0.9
     var held = false
     var look = SlopeLook()
     var clock: Double?
     var near = true
+    var onMove: ((CGFloat) -> Void)?
     @ViewBuilder var content: (SlopeView) -> Content
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private static var space: String { "slope.dive" }
+    private static var mark: String { "slope.aim" }
 
     var body: some View {
         GeometryReader { geo in
             let size = geo.whole
-            let lay = SlopeLay(column, z: 1), travel = lay.travel(height: size.height)
-            // The scroll view keeps its content clear of the status bar, so the content's top is that much lower in
-            // the column than the screen's is at rest.
-            let base = SlopeView(lay: lay, top: travel.lowerBound + geo.safeAreaInsets.top, size: size)
+            let lay = SlopeLay(column, z: z), travel = lay.travel(height: size.height)
+            let base = SlopeView(lay: lay, top: travel.lowerBound, size: size)
+            let rest = aim.map { lay.rest($0, height: size.height) }
             ScrollViewReader { reader in
                 ScrollView(.vertical, showsIndicators: false) {
                     SlopeLayer {
@@ -164,20 +180,75 @@ struct SlopeDive<Content: View>: View {
                             SlopeGround(view: SlopeView(lay: lay, top: base.top + offset, size: size), held: held, look: look,
                                         clock: clock, near: near)
                                 .offset(y: offset)
+                                .preference(key: SlopeDiveTop.self, value: base.top + offset)
                         }
-                        ForEach(0 ..< lay.count, id: \.self) { n in
-                            Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: base.y(lay.tops[n]))).id(n)
-                        }
+                        // The scroll's one target: the content's line that the aim puts at the screen's middle, which
+                        // lies inside the content at both ends of the travel, as the line at the screen's top does not.
+                        Color.clear.frame(width: 1, height: 1)
+                            .slopePlace(CGPoint(x: 0, y: base.y(rest ?? travel.lowerBound) + size.height / 2))
+                            .id(Self.mark)
                         content(base)
                     }
-                    .frame(width: size.width, height: travel.upperBound + size.height - base.top - geo.safeAreaInsets.bottom)
+                    .frame(width: size.width, height: travel.upperBound - travel.lowerBound + size.height)
                 }
                 .coordinateSpace(.named(Self.space))
+                // A scroll view keeps its content clear of the status bar and the home bar, and its scroll targets
+                // stop short of both; the slope runs under them, so it gives that room back.
+                .safeAreaPadding(.top, -geo.safeAreaInsets.top)
+                .safeAreaPadding(.bottom, -geo.safeAreaInsets.bottom)
                 .ignoresSafeArea()
-                .onAppear { if let start { reader.scrollTo(start, anchor: .center) } }
+                .onPreferenceChange(SlopeDiveTop.self) { top in onMove?(top) }
+                .onAppear { if aim != nil { reader.scrollTo(Self.mark, anchor: .center) } }
+                .onChange(of: aim) {
+                    // An aim taken away leaves the dive where the finger has it.
+                    guard aim != nil else { return }
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: seconds)) { reader.scrollTo(Self.mark, anchor: .center) }
+                }
             }
         }
     }
+}
+
+extension SlopeDive {
+    /// The dive opening with ledge `start` at the screen's middle.
+    @available(*, deprecated, message: "pass aim: SlopeAim(ledge:)")
+    init(column: SlopeColumn, start: Int?, held: Bool = false, look: SlopeLook = SlopeLook(), clock: Double? = nil, near: Bool = true,
+         @ViewBuilder content: @escaping (SlopeView) -> Content) {
+        self.init(column: column, aim: start.map { SlopeAim(ledge: $0, share: 0.5) }, held: held, look: look, clock: clock, near: near,
+                  content: content)
+    }
+}
+
+/// The inside of a hollow (docs/slope.md, 8.2; Slope.metal's `slopeHollow`): still dark water between two jambs of pale
+/// stone, a floor and a ledge, and the cover's light falling from `source`, a point of the view, in three soft beams
+/// of the pack's colours. A still: it has no clock.
+struct SlopeHollowGround: View {
+    var source: UnitPoint = UnitPoint(x: 0.5, y: 0.3)
+    var beams: (SIMD3<Float>, SIMD3<Float>, SIMD3<Float>)
+
+    @Environment(\.displayScale) private var scale
+
+    var body: some View {
+        GeometryReader { geo in
+            let size = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
+                              height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
+            Rectangle().fill(.black)
+                .colorEffect(ShaderLibrary.slopeHollow(
+                    .float2(size), .float4(scale, 0, 0, 0), .float2(source.x * size.width, source.y * size.height),
+                    .float3(beams.0.x, beams.0.y, beams.0.z), .float3(beams.1.x, beams.1.y, beams.1.z),
+                    .float3(beams.2.x, beams.2.y, beams.2.z)))
+                .frame(width: size.width, height: size.height)
+                .ignoresSafeArea()
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The depth at a dive's screen top, handed up from inside its scroll.
+private struct SlopeDiveTop: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 private extension GeometryProxy {
@@ -189,15 +260,24 @@ private extension GeometryProxy {
 }
 
 /// Lays views out at points of its own frame, as the slope's screens place everything: a child says where it goes
-/// with `slopePlace`, `slopeLine` or `seated`, and one that says nothing fills the frame. Each child keeps its own
-/// frame where it is drawn, so a scroll's targets, VoiceOver and taps find it there.
+/// with `slopePlace`, `slopeLine`, `seated` or `rested`, and one that says nothing fills the frame. A placed child is offered
+/// the width from its point to 16 pt short of the frame's side (one placed by its middle, the frame's width less
+/// both margins, and it moves aside to stay inside them), so its words wrap there; one that would fill what
+/// it is offered (a spacer, a bare shape) needs its own frame. Each child keeps its own frame where it is drawn, so a
+/// scroll's targets, VoiceOver and taps find it there.
 struct SlopeLayer: SwiftUI.Layout {
     struct Place: Equatable {
         var point: CGPoint
         var anchor = UnitPoint.center
         /// Words: their leading edge at the point, their first line's middle level with it.
         var line = false
+        /// A stone: its pebble's underside and middle at the point, its words wherever they fall.
+        var rest = false
     }
+
+    /// What a placed view keeps clear of the frame's sides, and the least width it is ever offered.
+    static let margin: CGFloat = 16
+    static let least: CGFloat = 60
 
     private struct PlaceKey: LayoutValueKey {
         static let defaultValue: Place? = nil
@@ -213,10 +293,33 @@ struct SlopeLayer: SwiftUI.Layout {
                 subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
                 continue
             }
-            let own = subview.dimensions(in: .unspecified)
-            let x = place.point.x - (place.line ? 0 : own.width * place.anchor.x)
+            if place.rest {
+                // The words run from the pebble towards whichever side they are on, as far as that side's margin.
+                let loose = subview.dimensions(in: .unspecified), middle = loose[HorizontalAlignment.stoneMiddle]
+                let room = middle < loose.width / 2 ? bounds.width - Self.margin - place.point.x + middle
+                    : place.point.x - Self.margin + loose.width - middle
+                let proposal = ProposedViewSize(width: max(room, Self.least), height: nil)
+                let own = subview.dimensions(in: proposal)
+                subview.place(at: CGPoint(x: bounds.minX + place.point.x - own[HorizontalAlignment.stoneMiddle],
+                                          y: bounds.minY + place.point.y - own[VerticalAlignment.stoneSeat]),
+                              anchor: .topLeading, proposal: proposal)
+                continue
+            }
+            // Its room runs to `margin` short of the frame's edges on the sides it grows towards, so words wrap inside
+            // the screen and are never cut off.
+            let ax = place.line ? 0 : place.anchor.x
+            let before = place.point.x - Self.margin, after = bounds.width - Self.margin - place.point.x
+            // Words that lead from their point have the room after it, ones that trail the room before it; anything
+            // else may be as wide as the frame less its margins, and gives way sideways to stay inside them.
+            let room = ax == 0 ? after : ax == 1 ? before : bounds.width - 2 * Self.margin
+            let proposal = ProposedViewSize(width: max(room, Self.least), height: nil)
+            let own = subview.dimensions(in: proposal)
+            var x = place.point.x - own.width * ax
+            if ax > 0, ax < 1, own.width > Self.least {
+                x = max(Self.margin, min(x, bounds.width - Self.margin - own.width))
+            }
             let y = place.point.y - (place.line ? own[.firstTextBaseline] * 0.62 : own.height * place.anchor.y)
-            subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), anchor: .topLeading, proposal: .unspecified)
+            subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), anchor: .topLeading, proposal: proposal)
         }
     }
 
@@ -233,19 +336,29 @@ extension View {
     /// row's words stand beside its pebble.
     func slopeLine(_ point: CGPoint) -> some View { SlopeLayer.value(self, .init(point: point, line: true)) }
 
+    /// In a `SlopeLayer`: a `Stone`, or anything holding one pebble, with that pebble resting at `point` of the ground
+    /// (a seat, a point of the lone terrace), its words beside it wrapping short of the screen's side.
+    func rested(at point: CGPoint) -> some View { SlopeLayer.value(self, .init(point: point, rest: true)) }
+
     /// In a `SlopeLayer`: a pebble set on its seat (`SlopeView.seat`), its underside a little into the sand.
     func seated(at seat: CGPoint) -> some View { slopePlace(seat, anchor: UnitPoint(x: 0.5, y: 0.93)) }
 }
 
 extension SlopeColumn {
     /// The main column on a screen of `size` at a Dynamic Type size (1.6): the pitch grows to hold a ledge's row, and
-    /// from accessibility1 up the slope keeps to the leading edge and steps less. On a narrower phone the lips move in
-    /// by half the width lost. `header` is the room a tier's header takes in the dive.
+    /// from accessibility1 up the slope keeps to the leading edge and steps less, at the overview too, where a screen
+    /// then gives each stretch the `height` its words need. On a narrower phone the lips move in by half the width
+    /// lost. `header` is the room a tier's header takes in the dive.
     static func main(size: CGSize, type: DynamicTypeSize, header: CGFloat? = nil) -> SlopeColumn {
         let large = type.isAccessibilitySize
         let row = TypeRole.body.line(at: type).height * (large ? 2 : 1) + TypeRole.detail.line(at: type).height
-        return main(size: size, pitch: max(110, row + 60), lip: large ? 62 : 132 - max(440 - size.width, 0) / 2,
-                    step: large ? 1.5 : 6, header: header)
+        var column = main(size: size, pitch: max(110, row + 60), lip: large ? 62 : 132 - max(440 - size.width, 0) / 2,
+                          step: large ? 1.5 : 6, header: header)
+        if large {
+            column.wall = 14
+            column.spread = 8
+        }
+        return column
     }
 
     /// The main column's ledge for `level`, a tier's own.
