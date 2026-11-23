@@ -57,6 +57,15 @@ settle (Prism's number stays white: a red and blue edge read as off-register cha
 once; its glows are still images, so no GPU cost in play, where C's moving light competes with the glass). Pitch page
 https://claude.ai/artifact/4GRkKarS6skJBqCkmWSyu4; the call is issue #302 (`needs-jack`). Waiting on Jack's pick; no
 SwiftUI changed. Each direction's removals, which Jack's pick approves as a set, are listed on the page.
+Jack's answer (2026-11-23): none looked different enough; keep Still Water, add three radical directions: a complete
+redesign of everything outside the tank, an experience rather than an app, custom-rendered (one Metal pass), no boxes,
+lists or straight lines, efficient on battery; then (same day) strictly 2D or 2.5D, and no stirring anywhere in the UI.
+He liked the Descent's idea and said Ink needed work for its stirring. Built on the same branch under
+`design/negative-space/world/` (a shader-and-type harness, `render.mjs`): the Descent (a side view down a water
+column, tiers as deeper water, levels as lanterns), Ink (ink blooming and dissolving in still water, a typographic
+page) and the Basin (a pool seen from above, levels as droplets on a current). Recommended: the Descent, keeping
+level numbers rather than its depth labels. Second pitch page https://claude.ai/artifact/AogjiJuH1w1hzJFZGaiGkm; the
+call is issue #303, which replaces #302 (closed). Waiting on Jack's pick.
 
 ### Open work (2026-11-15)
 
