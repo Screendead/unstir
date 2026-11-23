@@ -96,6 +96,10 @@ struct Harness {
     /// UNSTIR_CLEAN=1: a level drawn as its glass and picture alone, every control, count, line and fingertip hidden
     /// and the status bar too, for App Store art that may show no interface.
     let clean: Bool
+    /// UNSTIR_HOLD=s: black for s seconds before the first screen. iOS grows a launching app out of the home screen,
+    /// whose wallpaper still shows at its corners as the first frames draw: a film of the phone (scripts/film.sh,
+    /// FILM_PHONE) starts once that is over and the home indicator has gone, and the level opens after it.
+    let hold: Double?
     /// UNSTIR_ENDING=s: First Stir's last scene opens solved with the night forwards held s seconds in, or running from
     /// the start at -1, for films. Needs UNSTIR_SCREEN=clean.
     let ending: Double?
@@ -462,6 +466,7 @@ struct Harness {
         pace = env["UNSTIR_PACE"].flatMap(Double.init) ?? 0.3
         bare = env["UNSTIR_BARE"] == "1"
         clean = harnessed && env["UNSTIR_CLEAN"] == "1"
+        hold = env["UNSTIR_HOLD"].flatMap(Double.init)
         ending = env["UNSTIR_ENDING"].flatMap(Double.init)
         func line(_ line: String) -> [Twist] {
             line.split(separator: ",").compactMap { move in
@@ -627,6 +632,8 @@ final class Bench: NSObject {
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
+    /// UNSTIR_HOLD's black is still up.
+    @State private var held: Bool
     /// The pack card over the menu: a level past its pack's taste opens it in the level's place.
     @State private var card: Offer?
     /// The pack whose card a level past its taste opened in the level's place, while that card is up.
@@ -716,6 +723,7 @@ struct RootView: View {
                                        stores: !h.harnessed))
         // A plain launch's level has no harness, so it stores what it plays.
         _harness = State(initialValue: welcoming ? nil : h)
+        _held = State(initialValue: h.hold != nil)
         _settings = State(initialValue: welcome == nil && menu && h.settings)
         _archive = State(initialValue: welcome == nil && (h.archive || h.level.archived && !menu))
         mute = h.mute
@@ -744,7 +752,16 @@ struct RootView: View {
         let dip = AnyTransition.asymmetric(insertion: .opacity.animation(.easeOut(duration: 0.15).delay(0.12)),
                                            removal: .opacity.animation(.easeIn(duration: 0.12)))
         ZStack {
-            if let n = harness?.icon {
+            if held {
+                // As a clean level hides them, so neither is still leaving as its picture strikes.
+                Color.black.ignoresSafeArea()
+                    .statusBarHidden(harness?.clean ?? false)
+                    .persistentSystemOverlays(harness?.clean ?? false ? .hidden : .automatic)
+                    .task {
+                        try? await Task.sleep(for: .seconds(harness?.hold ?? 0))
+                        held = false
+                    }
+            } else if let n = harness?.icon {
                 IconView(n: n)
             } else if let offer = harness?.promo {
                 PromoArt(offer: offer)
