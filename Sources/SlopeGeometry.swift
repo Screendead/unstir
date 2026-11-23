@@ -47,6 +47,13 @@ struct SlopeColumn: Equatable, Sendable {
     /// `still` ledges' depth all the way down, a pack's.
     var first: Int? = 0
     var still: CGFloat = 16
+    /// At the overview: where the wall stands, give or take 8 pt a terrace, and how far apart a terrace's pebbles lie.
+    /// The largest type sizes draw both in, so the words beside them start at 96.
+    var wall: CGFloat = 40
+    var spread: CGFloat = 11.4
+    /// How far the foot's words reach under their middle (`SlopeLay.endless`), where that is more than the overview
+    /// leaves under them: its travel then runs on to show them whole.
+    var under: CGFloat = 0
 
     /// A ledge's shape by rock: its lip's thickness, how far the rock cuts back under it, how blunt its nose is and
     /// the ripples down its face.
@@ -131,14 +138,14 @@ struct SlopeLay: Sendable {
             depth += stretch.header * e
             var row = 0
             for (t, seats) in stretch.terraces.enumerated() {
-                let wall = 40 + 8 * sin(0.9 * CGFloat(terrace) + 1)
+                let wall = column.wall + 8 * sin(0.9 * CGFloat(terrace) + 1)
                 var used: CGFloat = 0
                 starts.append(tops.count)
                 for i in 0 ..< seats {
                     walls.append(wall)
                     let n = tops.count
                     // A short terrace's seats lie at its nose at the overview, so every terrace is as long.
-                    let far = wall + 2 + 11.4 * CGFloat(i + SlopeColumn.full - seats)
+                    let far = wall + 2 + column.spread * CGFloat(i + SlopeColumn.full - seats)
                     let near = column.lip - 23 + column.step * CGFloat(i) + 4 * sin(2.4 * CGFloat(n) + 1)
                     let x = far + (near - far) * e
                     let own = row < stretch.rows.count ? max(stretch.rows[row], column.pitch) : column.pitch
@@ -262,10 +269,13 @@ struct SlopeLay: Sendable {
         return min(max(depth(aim.ledge) - aim.share * height, travel.lowerBound), travel.upperBound)
     }
 
-    /// The dive's travel on a screen `height` tall: from the surface at 0.188 of it, to the foot's word at its middle.
+    /// The column's travel at this zoom on a screen `height` tall: from the surface at 0.188 of it, to the foot's word
+    /// at its middle in the dive.
     func travel(height: CGFloat) -> ClosedRange<CGFloat> {
         let from = column.surface ? -0.188 * height : tops[0] - 0.3 * height
-        return from ... max(from, endless - 0.5 * height)
+        // At the overview the foot's word stands near the screen's foot, and a column that fits the screen has no travel.
+        let foot = endless + max(0.05 * height, column.under + 16) - height
+        return from ... max(from, foot + (endless - 0.5 * height - foot) * e)
     }
 
     /// The depth of the open water under the brink where endless's word stands.
