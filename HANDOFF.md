@@ -50,10 +50,10 @@ Closed: moved word for word to `docs/history.md`.
 **The design pass gets its direction (to-do 72):** Jack's brief of 2026-11-23, below under to-do 72. A dedicated cloud
 session started that day owns it; its draft PR is the claim, and the lead leaves the item alone.
 Built 2026-11-23 on `design/negative-space` (draft PR #298): three directions drawn by `design/negative-space/` over
-glass cut from master's shots, six screens each (menu, plughole 01, plughole 27's result, Prism 01, Prism's card,
+glass cut from master's shots, seven screens each (the menu mid-way and all done, plughole 01, plughole 27's result, Prism 01, Prism's card,
 settings), with films, Reduce Motion stills and B at the third accessibility size. A subtracts within today's look; B
 ("still water") puts one thing in focus, SF Pro titles over mono numbers, colour as a glow behind the focus, a slow
-settle; C ("mist") whitens the chrome and moves colour into a drifting blurred light. Recommended: B (fewest things at
+settle (Prism's number stays white: a red and blue edge read as off-register channels); C ("mist") whitens the chrome and moves colour into a drifting blurred light. Recommended: B (fewest things at
 once; its glows are still images, so no GPU cost in play, where C's moving light competes with the glass). Pitch page
 https://claude.ai/artifact/4GRkKarS6skJBqCkmWSyu4; the call is issue #302 (`needs-jack`). Waiting on Jack's pick; no
 SwiftUI changed. Each direction's removals, which Jack's pick approves as a set, are listed on the page.
