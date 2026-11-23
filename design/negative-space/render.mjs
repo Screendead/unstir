@@ -14,7 +14,7 @@ const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const port = 9333;
 const [mode = 'stills', ...dirs] = process.argv.slice(2);
 const DIRS = dirs.length ? dirs : ['a', 'b', 'c'];
-const SCREENS = ['menu', 'play', 'result', 'prism', 'card', 'settings'];
+const SCREENS = ['landing', 'menu', 'play', 'result', 'prism', 'card', 'settings'];
 
 const profile = resolve(out, '.chrome');
 const proc = spawn(chrome, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,

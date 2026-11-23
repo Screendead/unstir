@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 out=build/negative-space/before
 mkdir -p "$out"
-cases=(menu-after-01 menu-all-done level01 prism-dealt result-clean result-fullest card-prism settings)
+cases=(menu-landing menu-after-01 menu-all-done level01 prism-dealt result-clean result-fullest card-prism settings)
 for c in "${cases[@]}"; do
   scripts/shots.sh "$c" >/dev/null
   cp shots/"$c"*.png "$out"/

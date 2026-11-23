@@ -56,8 +56,9 @@ ul.ledger li::marker { color: var(--muted); }
   .call { grid-template-columns: 1fr; }
   .dir { grid-template-columns: 1fr; }
 }
-@media (prefers-reduced-motion: reduce) { video { display: none !important; } .rmnote { display: block !important; } }
-.rmnote { display: none; }
+.films { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.films video { width: 100%; aspect-ratio: 880 / 1912; border-radius: 22px; border: 1px solid var(--line); background: #000; display: block; }
+@media (max-width: 760px) { .films { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
 a { color: var(--fg); }
 :focus-visible { outline: 2px solid var(--pick); outline-offset: 2px; }
 </style>
@@ -85,19 +86,24 @@ a { color: var(--fg); }
     <div class="opt">
       <span class="label">C</span><h3>Mist</h3>
       <p>All the chrome turns white, with no outlines or lines. The colour moves out of the words into a large, blurred light that drifts slowly at the top of each screen and blooms once when a tank is solved.</p>
-      <dl><dt>build</dt><dd>about 3 days</dd><dt>risk</dt><dd>medium-high; the haze can look muddy, and it costs the phone's graphics chip while the glass plays</dd></dl>
+      <dl><dt>build</dt><dd>about 3 days</dd><dt>risk</dt><dd>medium-high; the haze can look muddy, and a moving blur behind the tank would compete with the glass for the phone's graphics chip (not yet measured)</dd></dl>
     </div>
+  </div>
+  <div class="films">
+    <figure><video src="film/a.mp4" poster="img/a-menu.webp" controls muted loop playsinline aria-label="Direction A in motion"></video><figcaption>A in motion</figcaption></figure>
+    <figure><video src="film/b.mp4" poster="img/b-menu.webp" controls muted loop playsinline aria-label="Direction B in motion"></video><figcaption>B in motion</figcaption></figure>
+    <figure><video src="film/c.mp4" poster="img/c-menu.webp" controls muted loop playsinline aria-label="Direction C in motion"></video><figcaption>C in motion</figcaption></figure>
   </div>
   <div class="why">
     <h3>Why B</h3>
-    <p>B is the only one that shows fewer things at once instead of restyling the same things. The menu leads with one action, the result card drops from four lines of text to two, and the play screen is the tank, its title and two words. Its motion is one slow settle everywhere, which reads as liquid rather than decoration. It keeps the neon identity where it counts: the wordmark, the covers, the glass, and a glow of the tier's colours behind the focus. Its glows are fixed images, so they cost the graphics chip nothing during play, unlike C's moving mist. A is safe but leaves the screens about as full as today.</p>
+    <p>B is the only one that shows fewer things at once instead of restyling the same things. The menu leads with one action (the daily, or the next level to play), the result card drops from four lines of text to two, and the play screen is the tank, its title and two words. Its motion is one slow settle everywhere, which reads as liquid rather than decoration. It keeps the neon identity where it counts: the wordmark, the covers, the glass, and a glow of the tier's colours behind the focus. It draws no glow on the play screen, so nothing competes with the glass for the graphics chip, where C's mist would move behind the tank. A is safe but leaves the screens about as full as today.</p>
     <p class="muted">If you do nothing, the chrome ships as it is today. The App Store screenshots and preview film are next in line after this pass, so they would be retaken on today's look.</p>
   </div>
 </section>
 
 <section aria-labelledby="side">
   <h2 id="side">Side by side</h2>
-  <p class="muted">The same moment on each screen: the menu with every first-tier level at par, the first level as dealt, the last first-tier level solved, a Prism level, Prism's shop card, and settings.</p>
+  <p class="muted">The same moment on each screen: the menu with the first 13 levels solved and 14 next (today's dock was still fading in when it was shot), the menu with every first-tier level at par, the first level as dealt, the last first-tier level solved, a Prism level, Prism's shop card, and settings.</p>
   <div class="wall"><div class="grid" id="grid">
     <span></span><span class="head">today</span><span class="head">A · subtract</span><span class="head b">B · still water</span><span class="head">C · mist</span>
   </div></div>
@@ -106,10 +112,9 @@ a { color: var(--fg); }
 <section aria-labelledby="motion">
   <h2 id="motion">How each one moves</h2>
   <p class="muted">Each film plays the menu arriving, a solved tank's result arriving, then a shop card arriving. Today, things fade in quickly; the tier list still turns as a stir in all three.</p>
-  <p class="rmnote muted">Your device asks for reduced motion, so the films are hidden; the stills under each direction show what Reduce Motion draws.</p>
 
   <div class="dir" id="dir-a">
-    <video src="film/a.mp4" autoplay muted loop playsinline aria-label="Direction A in motion"></video>
+    <video src="film/a.mp4" poster="img/a-menu.webp" controls muted loop playsinline aria-label="Direction A in motion"></video>
     <div class="text">
       <h3>A · Subtract</h3>
       <p>Motion stays as today: quick fades. Reduce Motion: as today.</p>
@@ -118,9 +123,9 @@ a { color: var(--fg); }
         <li>The tier buttons, "again", "up a notch", undo, reset, buy and "try 3 free" lose their outlined capsules and become words.</li>
         <li>Every level row drops its second line ("3 rods · par 1"). The daily keeps its own.</li>
         <li>The "today" heading, the divider lines and the dock's heading ("packs · paid add-ons", "first 3 levels of each free") go.</li>
-        <li>The archive's line shortens to "with any pack".</li>
+        <li>The archive's line shortens to "with any pack" and loses its lock.</li>
         <li>The shop card's "for / free / holds" labels and "after plughole · reading by colour" go.</li>
-        <li>Settings drops the explanation under every switch but colour letters.</li>
+        <li>Settings drops the explanation line under every item but colour letters, including restore purchases, report a problem and privacy policy.</li>
       </ul>
       <span class="label">Result marks and Prism's colour</span>
       <p>The three dots as today, a little larger. Prism's level number stays white, as today.</p>
@@ -128,7 +133,7 @@ a { color: var(--fg); }
   </div>
 
   <div class="dir" id="dir-b">
-    <video src="film/b.mp4" autoplay muted loop playsinline aria-label="Direction B in motion"></video>
+    <video src="film/b.mp4" poster="img/b-menu.webp" controls muted loop playsinline aria-label="Direction B in motion"></video>
     <div class="text">
       <h3>B · Still water</h3>
       <p>Everything arrives on one slow curve, rising a few points out of a slight blur and stopping softly, over about a second. The glow behind the focus swells and shrinks over nine seconds. Reduce Motion: things fade in, the dots appear filled, the glow holds still.</p>
@@ -141,17 +146,17 @@ a { color: var(--fg); }
         <li>The tier names lose their locks and dots; a locked tier still says why when opened.</li>
         <li>The dock's names and "new" words go; a small dot marks a new pack.</li>
         <li>In play the title is centred over the tank, larger. The "PRISM" tag over a Prism level goes.</li>
-        <li>The result: "unstirred." moves under the tank; "moves 9 · par 9" goes when the verdict is "at par"; "clean needs no undo or reset" waits behind a tap on the empty dot.</li>
-        <li>The shop card is centred, drops its "pack · paid add-on" label, shortens its facts, and its bundle line reads "all three packs, $5.99 ›" without the saving.</li>
+        <li>The result: "unstirred." moves under the tank; "moves 9 · par 9" goes when the verdict is "at par"; "clean needs no undo or reset" waits behind a tap on the empty dot; "up a notch" names the next tier in white instead of its colour sweep.</li>
+        <li>The shop card is centred and drops its "pack · paid add-on" label; its level list moves below the first screen, a scroll away. Every line it keeps reads word for word as today.</li>
         <li>Settings drops every explanation line (VoiceOver still reads them); switches are white, not cyan.</li>
       </ul>
       <span class="label">Result marks and Prism's colour</span>
-      <p>The dots are white and drop in one at a time, each landing with a small squash. Prism's level number is white, split at its edges into red and blue the way a prism splits white light, so it never reads as one channel.</p>
+      <p>The dots are white and drop in one at a time, each landing with a small squash. Prism's level number stays white with a soft white glow. A red and blue edge was tried and dropped: it looks like Prism's own off-register channels.</p>
     </div>
   </div>
 
   <div class="dir" id="dir-c">
-    <video src="film/c.mp4" autoplay muted loop playsinline aria-label="Direction C in motion"></video>
+    <video src="film/c.mp4" poster="img/c-menu.webp" controls muted loop playsinline aria-label="Direction C in motion"></video>
     <div class="text">
       <h3>C · Mist</h3>
       <p>The light drifts on a 22-second loop, slower than the eye follows. Solving a tank blooms it brighter, then it settles. Reduce Motion: the light holds still at its settled brightness.</p>
@@ -161,6 +166,7 @@ a { color: var(--fg); }
         <li>All chrome text is white. The wordmark loses its colour sweep, level numbers lose their colours, and "at par", "clean" and "+2" lose amber, lime and magenta.</li>
         <li>The dock's names and "new" words go; a small dot marks a new pack.</li>
         <li>The "PRISM" tag over a Prism level goes.</li>
+        <li>The shop card drops its "pack · paid add-on" label.</li>
       </ul>
       <span class="label">Result marks and Prism's colour</span>
       <p>White dots. Prism's level number is white; Prism's mist is red, green and blue lights meeting in white.</p>
@@ -183,7 +189,7 @@ a { color: var(--fg); }
 <section aria-labelledby="ax">
   <h2 id="ax">Largest text</h2>
   <div class="facts">
-    <figure style="max-width: 260px"><img class="phone" src="img/b-menu-ax.webp" alt="B's menu at the largest accessibility text size"><figcaption>B's menu at the third accessibility size: one line a row, nothing cut, nothing shrunk</figcaption></figure>
+    <figure style="max-width: 260px"><img class="phone" src="img/b-menu-ax.webp" alt="B's menu at the largest accessibility text size"><figcaption>B's menu at the third accessibility size: lines wrap, nothing is cut or shrunk, and the level list continues below on scroll</figcaption></figure>
     <div class="fact"><span class="label">Text never shrinks</span><p>No direction sets any text smaller than today's size for its role: 17 pt for body text and buttons, 15 for labels, 13 for small print. Where space runs short in play, the tank scales down, as it does today.</p></div>
   </div>
 </section>
@@ -199,7 +205,10 @@ a { color: var(--fg); }
 </main>
 
 <script>
-const rows = [['menu', 'menu'], ['play', 'level 1'], ['result', 'result'], ['prism', 'Prism level'], ['card', 'shop card'], ['settings', 'settings']];
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  for (const v of document.querySelectorAll('video')) { v.autoplay = true; v.play().catch(() => {}); }
+}
+const rows = [['landing', 'menu, mid-way'], ['menu', 'menu, all done'], ['play', 'level 1'], ['result', 'result'], ['prism', 'Prism level'], ['card', 'shop card'], ['settings', 'settings']];
 const grid = document.getElementById('grid');
 for (const [s, name] of rows) {
   grid.insertAdjacentHTML('beforeend', `<span class="rowname">${name}</span>` +

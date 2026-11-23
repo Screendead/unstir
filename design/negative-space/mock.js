@@ -108,6 +108,43 @@ screens.menu = () => {
   add(p, dock);
 };
 
+// ---------- The menu mid-way, as menu-landing: plughole 01 to 13 solved, the list centred on 14, the next to play. ----------
+const NAMES = ['Drop', 'Drip', 'Trickle', 'Ripple', 'Bubble', 'Fizz', 'Sprinkle', 'Mist', 'Spray', 'Splash', 'Puddle',
+  'Froth', 'Suds', 'Lather', 'Steam', 'Gurgle', 'Rinse', 'Drizzle', 'Shower'];
+const NEXT = 14;
+screens.landing = () => {
+  const p = phone;
+  if (D === 'B') add(p, light('pool landing-pool', SWEEP.plughole));
+  if (D === 'C') add(p, light('mist', SWEEP.plughole));
+  add(p, add(h('div', 'menu-head', '', 0), h('div', 'wordmark', 'UNSTIR'), h('div', 'gearbtn', gear)));
+  const strip = h('div', 'strip', '', 1);
+  ['plughole', 'whirlpool', 'vortex', 'maelstrom'].forEach((t, k) => {
+    strip.appendChild(h('span', 'tier' + (k === 0 ? ' on' : '') + (k > 0 ? ' locked' : ''), t + (k > 0 && D === 'A' ? lock : '')));
+    if (D === 'A' && k < 3) strip.appendChild(h('span', 'sep', '·'));
+  });
+  add(p, strip);
+  const list = h('div', 'list landing', '', 2);
+  for (let n = 10; n <= 19; n++) {
+    const title = NAMES[n - 1], nn = String(n).padStart(2, '0');
+    const r = h('div', 'row lvl' + (n === NEXT ? ' next' : '') + (n < NEXT ? ' solved' : '') + (n > NEXT ? ' ahead' : ''));
+    r.style.setProperty('--hue', hue('plughole', n));
+    const detail = LANDING_DETAIL;
+    if (n === NEXT && D === 'B') {
+      r.innerHTML = `<span class="num">${nn}</span><span class="title">${title}<small>${detail}</small></span><span class="go">play ›</span>`;
+    } else {
+      r.innerHTML = `<span class="num">${nn}</span><span class="title">${title}${n === NEXT ? `<small>${detail}</small>` : ''}</span>` +
+        (n < NEXT ? dots(2) : n > NEXT ? lock : '');
+    }
+    list.appendChild(r);
+  }
+  add(p, list);
+  const dock = h('div', 'dock', '', 3);
+  dock.innerHTML = `<div class="covers">${DOCK.map(c =>
+    `<div class="cover${NEW.includes(c) ? ' new' : ''}">${img('cover-' + c + '.png')}${D === 'A' ? `<span>${DOCKNAME[c]}</span>${NEW.includes(c) ? '<em>new</em>' : ''}` : ''}</div>`).join('')}</div>`;
+  add(p, dock);
+};
+const LANDING_DETAIL = '4 rods · par 4';
+
 // ---------- Play: plughole 01 as dealt, the opening stir's caption under it. ----------
 screens.play = () => playScreen({
   tier: 'plughole', n: 1, title: 'Drop', count: 'moves 0 / par 1', glass: 'play01.png',
@@ -165,7 +202,8 @@ function resultScreen(o) {
   if (D === 'A') {
     add(card,
       h('div', 'marks', dots(o.marks, 'big'), 1),
-      h('div', 'stats', `<b class="par">${o.verdict}</b> · ${o.stats}`, 2),
+      h('div', 'verdict par', o.verdict, 2),
+      h('div', 'stats', o.stats, 2),
       h('div', 'best', `${o.best}<br>${o.hint}`, 2));
   } else if (D === 'B') {
     add(card,
@@ -174,8 +212,9 @@ function resultScreen(o) {
   } else {
     add(card,
       h('div', 'marks', dots(o.marks, 'big'), 1),
-      h('div', 'stats', `${o.verdict} · ${o.stats}`, 2),
-      h('div', 'verdict', `${o.best}<br>${o.hint}`, 2));
+      h('div', 'verdict', o.verdict, 2),
+      h('div', 'stats', o.stats, 2),
+      h('div', 'best', `${o.best}<br>${o.hint}`, 2));
   }
   add(p, card);
   const acts = h('div', 'actions', '', 4);
@@ -196,13 +235,11 @@ screens.card = () => {
   add(p, h('div', 'pitch', 'each rod stirs only some colours', 1));
   add(p, h('div', 'clip', img('prism-clip.png'), 1));
   const facts = h('div', 'facts', '', 2);
-  if (D === 'A') facts.innerHTML = `30 specimens in five trays<br>levels 1–3 free<br><span class="dim">letters for colour-blind play, in settings</span>`;
-  else if (D === 'B') facts.innerHTML = `30 specimens · the first three free<br><span class="dim">colour-blind letters in settings</span>`;
-  else facts.innerHTML = `30 specimens in five trays<br>levels 1–3 free, no purchase<br><span class="dim">letters for colour-blind play, in settings</span>`;
+  facts.innerHTML = `30 specimens in five trays<br>levels 1–3 free, no purchase<br><span class="dim">letters for colour-blind play, in settings</span>`;
   add(p, facts);
   const buy = h('div', 'buyrow', `<span class="buy">buy&ensp;$2.99</span><span class="try">try 3 free ›</span>`, 3);
   add(p, buy);
-  add(p, h('div', 'bundle', D === 'B' ? 'all three packs, $5.99 ›' : 'or all three in Triptych I · $5.99 · save $2.98 ›', 3));
+  add(p, h('div', 'bundle', 'or all three in Triptych I · $5.99 · save $2.98 ›', 3));
   add(p, h('div', 'restore', 'restore purchases', 4));
   const ch = h('div', 'chapter', '', 4);
   ch.innerHTML = `<div class="tierhead"><span class="name">two colours</span><span class="prog">0 of 6</span></div>

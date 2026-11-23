@@ -373,10 +373,8 @@ body.C.rm .bloom { animation: none; opacity: .5; }
 .A .clip, .B .clip, .C .clip { left: calc(50% - 149.5px); transform: none; }
 .B .packname { left: 0; right: 0; margin: 0 auto; width: fit-content; }
 .A .bundle, .C .bundle { font-size: 13px; }
-/* Prism's level colour in B: white, split at its edges as a prism splits white light, so no one channel is named. */
-.B .prismtitle .num { color: #fff; background: none; -webkit-background-clip: initial;
-  text-shadow: -1.5px 0 rgba(255, 60, 60, .75), 1.5px 0 rgba(60, 120, 255, .8), 0 0 6px rgba(120, 255, 140, .35); }
-.B.s-prism .leveltitle .title { text-shadow: -1px 0 rgba(255, 60, 60, .45), 1px 0 rgba(60, 120, 255, .5); }
+/* Prism's level colour in B: white with a white glow. A coloured edge would read as Prism's off-register channels. */
+.B .prismtitle .num { color: #fff; background: none; -webkit-background-clip: initial; text-shadow: 0 0 6px rgba(255, 255, 255, .6); }
 
 /* Accessibility type (AX3: body 17 -> 40, footnote 13 -> 30, about 2.35x): the menu becomes one scrolling column and
    keeps one line a row; nothing is cut or shrunk. */
@@ -389,3 +387,19 @@ body.C.rm .bloom { animation: none; opacity: .5; }
 .ax .axcol .pair { flex-direction: column; gap: 6px; }
 .ax .axcol .list .lvl:nth-child(n+5) { display: none; }
 .ax .axcol .tierhead { flex-wrap: wrap; gap: 0 12px; }
+
+/* Sizes held to today's roles: a button 17, the result's verdict 17 (headline), the title line's number 17. */
+.playhead .back, .cardback { font-size: 17px !important; }
+.A .card .verdict { font-size: 17px; font-weight: 600; color: var(--amber); margin-bottom: 6px; }
+.C .card .verdict { font-size: 17px; font-weight: 600; color: #fff; margin: 0 0 6px; }
+.A .card .best, .C .card .best { font-size: 13px; color: var(--t62); margin-top: 8px; line-height: 1.5; }
+.B .leveltitle .num { font-size: 17px !important; }
+.B .facts { font-size: 15px; }
+.B .bundle { top: 806px; }
+.A .list.landing, .C .list.landing { top: 196px; }
+.list.landing .lvl .lock { margin-left: auto; color: var(--t62); }
+.B .list.landing { top: 214px; }
+.B .landing-pool { left: -40px; top: 450px; width: 440px; height: 150px; opacity: .45; }
+.B .list.landing .lvl.next .num { padding-top: 34px; }
+.list.landing .lvl.ahead .lock { color: var(--t62); margin-left: auto; }
+.A .strip .tier { white-space: nowrap; }

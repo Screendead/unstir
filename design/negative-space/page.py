@@ -12,7 +12,7 @@ page = root / 'page'
 shutil.rmtree(page, ignore_errors=True)
 (page / 'img').mkdir(parents=True)
 (page / 'film').mkdir()
-BEFORE = {'menu': 'menu-all-done', 'play': 'level01', 'result': 'result-fullest', 'prism': 'prism-dealt',
+BEFORE = {'landing': 'menu-landing', 'menu': 'menu-all-done', 'play': 'level01', 'result': 'result-fullest', 'prism': 'prism-dealt',
           'card': 'card-prism', 'settings': 'settings'}
 
 

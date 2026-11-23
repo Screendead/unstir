@@ -7,7 +7,7 @@ from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parents[2] / 'build/negative-space'
-BEFORE = {'menu': 'menu-all-done', 'play': 'level01', 'result': 'result-fullest', 'prism': 'prism-dealt',
+BEFORE = {'landing': 'menu-landing', 'menu': 'menu-all-done', 'play': 'level01', 'result': 'result-fullest', 'prism': 'prism-dealt',
           'card': 'card-prism', 'settings': 'settings'}
 screen = sys.argv[1]
 scale = float(sys.argv[2]) if len(sys.argv) > 2 else 0.3
