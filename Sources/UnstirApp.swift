@@ -705,6 +705,7 @@ struct RootView: View {
     private let welcoming: Bool
     @Environment(\.scenePhase) private var phase
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let mute: Bool
 
     init() {
@@ -795,6 +796,19 @@ struct RootView: View {
         .animation(.easeOut(duration: 0.25), value: asking)
     }
 
+    /// The time a level takes to come in over the slope, or to leave it, while the slope draws aside or back in.
+    static let slopeTravel = 0.6
+
+    /// The slope drawn 280 pt aside to the leading edge as a level opens over it, and back as it leaves (2.9).
+    private var slopeAside: AnyTransition {
+        reduceMotion ? .opacity : .offset(x: -280).combined(with: .opacity)
+    }
+
+    /// A level fades in over the slope as the slope draws aside, and out as it comes back, with no dip to black. Growing
+    /// it out of its pebble (2.9) needs the play screen to leave its ground to the root, or the level's whole screen
+    /// grows as a lit rectangle.
+    private var slopeGrow: AnyTransition { .opacity }
+
     /// The consent question is up: a build with analytics, its first menu.
     private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
 
@@ -851,7 +865,7 @@ struct RootView: View {
                     slopeMenu
                         .allowsHitTesting(level == nil)
                         .accessibilityHidden(level != nil)
-                        .transition(level == nil ? dip : .identity)
+                        .transition(slopeAside)
                 } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
@@ -894,7 +908,7 @@ struct RootView: View {
                                   if covers { covering = level.id } else if covering == level.id { covering = nil }
                               })
                         .id(level)
-                        .transition(dip)
+                        .transition(slope ? slopeGrow : dip)
                         // Heard before the menu beside it.
                         .accessibilitySortPriority(beside ? 1 : 0)
                 }
@@ -1172,7 +1186,7 @@ struct RootView: View {
         }
         covering = nil
         // Together, so a menu a back swipe uncovered stays up as the level goes.
-        withAnimation(.easeInOut(duration: 0.25)) {
+        withAnimation(.easeInOut(duration: slope && !reduceMotion ? Self.slopeTravel : 0.25)) {
             level = gate == nil && opens ? next : nil
             peeking = false
         }
