@@ -59,7 +59,11 @@ def covers(name, band, names):
 
 
 im = Image.open(src / 'menu-all-done.png').convert('RGB')
-im.crop((0, 0, im.width, 162)).resize((440, 54), Image.LANCZOS).save(out / 'status.png')
+bar = im.crop((0, 0, im.width, 162)).resize((440, 54), Image.LANCZOS)
+# The status bar over any ground: its black made clear, each pixel's light kept as alpha over its own colour.
+alpha = bar.convert('L').point(lambda v: min(255, v * 2))
+bar.putalpha(alpha)
+bar.save(out / 'status.png')
 disc('level01', (0, 560, 1320, 1700), 'play01.png')
 disc('result-fullest', (0, 560, 1320, 1640), 'drain-solved.png')
 disc('prism-dealt', (0, 560, 1320, 1700), 'prism01.png')
