@@ -5,7 +5,10 @@
 # and switchaudio-osx), each take's sound recorded from it into shots/film/layer-*.mp4.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-output=$(SwitchAudioSource -c -t output)
-trap 'SwitchAudioSource -t output -s "$output" >/dev/null' EXIT
-SwitchAudioSource -t output -s "BlackHole 2ch" >/dev/null
+# The phone's films (FILM_PHONE) carry the phone's own sound over its cable, and leave the Mac's output alone.
+if [[ -z "${FILM_PHONE:-}" ]]; then
+  output=$(SwitchAudioSource -c -t output)
+  trap 'SwitchAudioSource -t output -s "$output" >/dev/null' EXIT
+  SwitchAudioSource -t output -s "BlackHole 2ch" >/dev/null
+fi
 FILM_SOUND=1 scripts/film.sh "${1:-layer-}"

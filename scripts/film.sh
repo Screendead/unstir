@@ -7,8 +7,8 @@
 # phone's pace, 1284 x 2778 on a 13 Pro Max. simctl's recordVideo holds frames the simulator drew (two or three at a
 # time every few seconds, 2026-11-23); the phone's takes hold none at the 30 frames a second the finished films are
 # cut at. A Release build takes no UNSTIR_OWNED or UNSTIR_STORE: a pack's level opens by the developer unlock, which
-# the last take leaves as it set it, and a case with store states is the simulator's, as are Reduce Motion's films and
-# FILM_SOUND's. The phone keeps its own progress, so a film that shows bests shows the phone's.
+# the last take leaves as it set it, and a case with store states is the simulator's, as are Reduce Motion's films.
+# The phone keeps its own progress, so a film that shows bests shows the phone's.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
@@ -17,7 +17,6 @@ phone=${FILM_PHONE:-}
 if [[ -n "$phone" ]]; then
   source scripts/harness.sh
   : "${UNSTIR_DEVICE:?set UNSTIR_DEVICE to a UDID from xcrun devicectl list devices}"
-  [[ -z "${FILM_SOUND:-}" ]] || { echo "the phone's films are silent so far: FILM_SOUND films the simulator" >&2; exit 1; }
   ANALYTICS_PLAYTEST=YES scripts/build-ios.sh Release
   if [[ ! -x build/film-phone/record ]] || [[ scripts/film-phone/main.swift -nt build/film-phone/record ]]; then
     mkdir -p build/film-phone
@@ -83,11 +82,12 @@ finish() {  # name strip-filter sound
   echo "filmed $name"
 }
 # FILM_PHONE's take. The recorder writes nothing until the app is launched and its black fills the screen, so the
-# phone's home screen is never in the file.
+# phone's home screen is never in the file, and with FILM_SOUND records the phone's own sound with its frames, on one
+# clock, so nothing is placed afterwards and the Mac's output is left alone.
 # iOS's launch is still growing the app out of the home screen when a level's first frames draw, and shows the home
 # indicator over a clean level's first two seconds, so the app holds its black first (UNSTIR_HOLD).
 film_phone() {  # name seconds strip-filter KEY=VALUE...
-  local name=$1 secs=$2 strip=$3 mp4="shots/film/$1.mp4" mov="shots/film/$1.mov" pairs=('"UNSTIR_HOLD":"2.5"') kv unlock=
+  local name=$1 secs=$2 strip=$3 mp4="shots/film/$1.mp4" mov="shots/film/$1.mov" pairs=('"UNSTIR_HOLD":"2.5"') flags=(--from-black) kv unlock=
   shift 3
   for kv in "$@"; do
     case ${kv%%=*} in
@@ -97,11 +97,12 @@ film_phone() {  # name seconds strip-filter KEY=VALUE...
     esac
   done
   [[ -n "$unlock" ]] && pairs+=('"UNSTIR_UNLOCK":"1"')
+  [[ -n "${FILM_SOUND:-}" ]] && { pairs+=('"UNSTIR_SOUND":"1"'); flags+=(--sound); }
   local began log rec v1 took
   # A sleeping screen sends no frames: a muted launch wakes it, and fails on a locked phone.
   harness_launch "" "\"UNSTIR_SCREEN\":\"menu\"${unlock:+,\"UNSTIR_UNLOCK\":\"1\"}" || { echo "$name: the app didn't launch: is the phone unlocked?" >&2; exit 1; }
   began=$(mktemp) log=$(mktemp)
-  build/film-phone/record --from-black "$mov" > "$began" 2> "$log" &
+  build/film-phone/record "${flags[@]}" "$mov" > "$began" 2> "$log" &
   rec=$!
   for _ in $(seq 200); do
     grep -q watching "$log" && break
@@ -113,13 +114,21 @@ film_phone() {  # name seconds strip-filter KEY=VALUE...
   kill -USR1 "$rec"
   sleep "$(awk -v s="$secs" 'BEGIN { print s + 2.5 }')"
   v1=$(python3 -c 'import time; print(time.clock_gettime(time.CLOCK_UPTIME_RAW))')
+  if [[ -n "${FILM_SOUND:-}" ]]; then
+    # Left running, the app would sound from the phone's speaker once the recording lets its output go: the file is
+    # closed, then a muted launch takes its place, while the recording still holds the phone.
+    kill -USR2 "$rec"
+    sleep 0.3
+    harness_launch "" "\"UNSTIR_SCREEN\":\"menu\"${unlock:+,\"UNSTIR_UNLOCK\":\"1\"}" || true
+    sleep 1
+  fi
   kill -INT "$rec"
   wait "$rec" || { cat "$log" >&2; echo "$name: film it again" >&2; exit 1; }
-  sed -n 's/^record: /  /p' "$log" | tail -1
+  sed -n 's/^record: /  /p' "$log" | grep -v watching
   took=$(awk -v a="$(cat "$began")" -v b="$v1" 'BEGIN { printf "%.3f", b - a }')
   ffmpeg -loglevel error -y -i "$mov" -map 0 -c copy -movflags +faststart -metadata comment="take $took s" "$mp4"
   trash "$mov" "$began" "$log"
-  finish "$name" "$strip" ""
+  finish "$name" "$strip" "${FILM_SOUND:-}"
 }
 # recordVideo sometimes gives two frames the same pts. ffmpeg's decoder then guesses the rest of the take's times from
 # its dts, which step back about a second there (0.99 s in two takes), and fps= drops that much as having gone back:

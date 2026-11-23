@@ -1,16 +1,18 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
-// Usage: build/film-phone/record [--from-black] <out.mov> [device name]   (scripts/film.sh builds it)
+// Usage: build/film-phone/record [--sound] [--from-black] <out.mov> [device name]   (scripts/film.sh builds it)
 // Records the screen of an iPhone plugged into the Mac, as QuickTime's movie recording does, until SIGINT: every frame
 // the phone sends, at the time the Mac's capture stamps on it, as H.264. The phone sends 60 frames a second and,
 // while its picture moves, leaves one out now and then (one in 14 to 19 on a 13 Pro Max, 2026-11-23): a 33 ms step
 // that a film cut at 30 frames a second does not show.
+// --sound records the phone's sound with its frames, on the one clock: the recording takes the phone's output for as
+// long as it runs, so SIGUSR2 ends the file while the phone is still held, and the caller quiets the app before SIGINT.
 // --from-black keeps the phone's home screen, which is the owner's own, out of the file: nothing is written until
 // SIGUSR1, sent once the app is launched, and then not before a frame is black, as the app's launch is.
 // Says "watching" on stderr once frames arrive. On SIGINT prints when its first written frame was captured, in seconds
 // of CLOCK_UPTIME_RAW, the clock scripts/film.sh times a take on, and a line of the take's frame times on stderr.
 // Exits 1 if the Mac dropped a frame the phone sent: the take would hitch where the phone did not.
-// The process that runs it needs the Mac's Camera permission, which a phone's screen falls under; the phone must be
-// unlocked, awake and have trusted this Mac.
+// The process that runs it needs the Mac's Camera permission, which a phone's screen falls under, and Microphone with
+// --sound; the phone must be unlocked, awake and have trusted this Mac.
 import AVFoundation
 import CoreMediaIO
 import Darwin
@@ -22,22 +24,33 @@ func fail(_ message: String) -> Never {
 }
 
 var arguments = Array(CommandLine.arguments.dropFirst())
-let fromBlack = arguments.first == "--from-black"
-if fromBlack { arguments.removeFirst() }
-guard (1...2).contains(arguments.count) else { fail("usage: record [--from-black] <out.mov> [device name]") }
+var sound = false, fromBlack = false
+while let flag = arguments.first, flag.hasPrefix("--") {
+    switch flag {
+    case "--sound": sound = true
+    case "--from-black": fromBlack = true
+    default: fail("unknown option \(flag)")
+    }
+    arguments.removeFirst()
+}
+guard (1...2).contains(arguments.count) else { fail("usage: record [--sound] [--from-black] <out.mov> [device name]") }
 let out = URL(fileURLWithPath: arguments[0])
 let wanted = arguments.count == 2 ? arguments[1] : nil
 
-switch AVCaptureDevice.authorizationStatus(for: .video) {
-case .authorized: break
-case .notDetermined:
-    let asked = DispatchSemaphore(value: 0)
-    var granted = false
-    AVCaptureDevice.requestAccess(for: .video) { granted = $0; asked.signal() }
-    asked.wait()
-    if !granted { fail("the Camera permission was refused") }
-default: fail("the app running this has no Camera permission (System Settings, Privacy & Security, Camera)")
+func allowed(_ media: AVMediaType, _ name: String) {
+    switch AVCaptureDevice.authorizationStatus(for: media) {
+    case .authorized: return
+    case .notDetermined:
+        let asked = DispatchSemaphore(value: 0)
+        var granted = false
+        AVCaptureDevice.requestAccess(for: media) { granted = $0; asked.signal() }
+        asked.wait()
+        if !granted { fail("the \(name) permission was refused") }
+    default: fail("the app running this has no \(name) permission (System Settings, Privacy & Security, \(name))")
+    }
 }
+allowed(.video, "Camera")
+if sound { allowed(.audio, "Microphone") }
 
 // A plugged-in iPhone's screen is a capture device only for a process that asks for screen capture devices.
 var allow: UInt32 = 1
@@ -62,12 +75,18 @@ guard let device = found else {
 }
 
 /// Everything here runs on the capture's one queue.
-final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
     /// Frames the encoder may fall behind by before the take fails: it catches up between them, and a frame is never
     /// dropped to keep time.
     static let room = 180
     let writer: AVAssetWriter
+    let audio: AVAssetWriterInput?
     var video: AVAssetWriterInput?
+    /// Seconds of sound written, and sound the encoder had no room for.
+    var heard = 0.0
+    var unheard = 0
+    /// SIGUSR2: the file takes nothing more.
+    var closed = false
     var waiting: [CMSampleBuffer] = []
     var times: [Double] = []
     var size = CMVideoDimensions(width: 0, height: 0)
@@ -78,9 +97,19 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     var armed = false
     private var writes: Bool
 
-    init(_ url: URL, fromBlack: Bool) throws {
+    init(_ url: URL, sound: Bool, fromBlack: Bool) throws {
         writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         writes = !fromBlack
+        if sound {
+            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+                AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 48000, AVNumberOfChannelsKey: 2, AVEncoderBitRateKey: 256_000,
+            ])
+            input.expectsMediaDataInRealTime = true
+            writer.add(input)
+            audio = input
+        } else {
+            audio = nil
+        }
     }
 
     /// Whether a frame is the app's black: its mean luma, from a grid of its pixels, and its four corners' too, as the
@@ -138,7 +167,16 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput buffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard problem == nil else { return }
+        guard problem == nil, !closed else { return }
+        guard output is AVCaptureVideoDataOutput else {
+            guard video != nil, let audio else { return }
+            if audio.isReadyForMoreMediaData, audio.append(buffer) {
+                heard += CMSampleBufferGetDuration(buffer).seconds
+            } else {
+                unheard += 1
+            }
+            return
+        }
         if !seen {
             seen = true
             say("watching")
@@ -170,12 +208,12 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 
     func captureOutput(_ output: AVCaptureOutput, didDrop buffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        if writes { late += 1 }
+        if output is AVCaptureVideoDataOutput, writes, !closed { late += 1 }
     }
 }
 
 let recorder: Recorder
-do { recorder = try Recorder(out, fromBlack: fromBlack) } catch { fail("can't write \(out.path): \(error)") }
+do { recorder = try Recorder(out, sound: sound, fromBlack: fromBlack) } catch { fail("can't write \(out.path): \(error)") }
 try? FileManager.default.removeItem(at: out)
 
 let session = AVCaptureSession()
@@ -192,12 +230,23 @@ frames.alwaysDiscardsLateVideoFrames = false
 frames.setSampleBufferDelegate(recorder, queue: queue)
 guard session.canAddOutput(frames) else { fail("\(device.localizedName) gives no video") }
 session.addOutput(frames)
+if sound {
+    let samples = AVCaptureAudioDataOutput()
+    samples.setSampleBufferDelegate(recorder, queue: queue)
+    guard session.canAddOutput(samples) else { fail("\(device.localizedName) gives no sound") }
+    session.addOutput(samples)
+}
 session.startRunning()
 
 signal(SIGUSR1, SIG_IGN)
 let arm = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
 arm.setEventHandler { queue.async { recorder.armed = true } }
 arm.resume()
+
+signal(SIGUSR2, SIG_IGN)
+let close = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
+close.setEventHandler { queue.async { recorder.closed = true } }
+close.resume()
 
 signal(SIGINT, SIG_IGN)
 let stop = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
@@ -210,6 +259,7 @@ stop.setEventHandler {
                            : "\(device.localizedName) sent no frames: is it unlocked?")
     }
     video.markAsFinished()
+    recorder.audio?.markAsFinished()
     let done = DispatchSemaphore(value: 0)
     recorder.writer.finishWriting { done.signal() }
     done.wait()
@@ -219,7 +269,10 @@ stop.setEventHandler {
     say(String(format: "%@, %d x %d, %d frames in %.3f s, median step %.2f ms, %d steps over 25 ms, %d over 42 ms (longest %.1f ms)",
                device.localizedName, recorder.size.width, recorder.size.height, recorder.times.count, last - first, median * 1000,
                steps.filter { $0 > 0.025 }.count, steps.filter { $0 > 0.042 }.count, (steps.last ?? 0) * 1000))
+    if sound { say(String(format: "%.3f s of sound", recorder.heard)) }
     if recorder.late > 0 { fail("the Mac dropped \(recorder.late) frames the phone sent") }
+    if recorder.unheard > 0 { fail("the Mac dropped \(recorder.unheard) buffers of the phone's sound") }
+    if sound, recorder.heard < (last - first) - 0.5 { fail("the phone sent \(recorder.heard) s of sound for \(last - first) s of frames") }
     print(String(format: "%.6f", first))
     exit(0)
 }
