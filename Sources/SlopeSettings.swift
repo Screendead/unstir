@@ -133,7 +133,7 @@ struct SlopeSettings: View {
                             .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(Sounding())
-                    .accessibilityLabel(Self.back)
+                    .accessibilityLabel(Self.back) // loc: verbatim localized above
                     .opacity(arrived ? 1 : 0)
                     .slopePlace(CGPoint(x: size.width / 2, y: foot + 40), anchor: .top)
                 }
@@ -189,9 +189,9 @@ struct SlopeSettings: View {
             } label: { words }
             .buttonStyle(Sounding())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(row.name)
-            .accessibilityValue(row.on ? Self.on : Self.off)
-            .accessibilityHint(row.detail)
+            .accessibilityLabel(row.name) // loc: verbatim localized by ConsentWords
+            .accessibilityValue(row.on ? Self.on : Self.off) // loc: verbatim localized above
+            .accessibilityHint(row.detail) // loc: verbatim localized by ConsentWords
             .accessibilityAddTraits(.isToggle)
         case .restore:
             Button { Task { await store.restoreAndAnnounce() } } label: { words }
