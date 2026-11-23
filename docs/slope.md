@@ -57,6 +57,11 @@ approved overview drew it; close up they stand 110 pt apart, each its own overhu
 the approved dive drew it. Between the two, every pebble travels continuously from one place to the other and
 nothing is swapped or crossfaded.
 
+This changes the approved dive in one way a player can see: there the lips wandered in and out a few points with
+no pattern; here they step outward 6 pt a ledge in nines (the first lip at 132, the ninth at 180), with a deeper
+undercut under every ninth, where the next terrace starts back at 132. Nine ledges and a deep undercut are what the
+overview shows as one terrace.
+
 The ledge function, the only source of positions for the shader, the pebbles, the type and the hit targets
 (`SlopeGeometry`), takes a zoom `z` from 0 (the **overview**) to 1 (the **dive**):
 
@@ -67,7 +72,7 @@ The ledge function, the only source of positions for the shader, the pebbles, th
   the dive. A terrace with fewer seats keeps a full terrace's height at the overview, its gap taking up the missing
   seats' pitch, so the shallows' three ledges stand 40 pt apart there, the first 82 pt under the surface.
 - Seat `i` (0 to 8) of terrace `T` (counted down the column) has its pebble at
-  `x = mix(wall(T) + 2 + 11.4 * i, 109 + 9.5 * i + wobble, e)`, with `wall(T) = 40 + 8 * sin(0.9 * T + 1)` and
+  `x = mix(wall(T) + 2 + 11.4 * i, 109 + 6 * i + wobble, e)`, with `wall(T) = 40 + 8 * sin(0.9 * T + 1)` and
   `wobble = 4 * sin(2.4 * n + 1)` for the column's `n`th ledge, and its lip `mix(6, 23, e)` further out.
 - A pebble's half-width is `mix(3.9, 8.4, e)` (lit), `mix(3.3, 6.8, e)` (dull), `mix(4.6, 12.5, e)` (next), its
   half-height 0.72 of that (1.4).
@@ -96,7 +101,19 @@ family, keeping their text styles):
 | ui | SF Pro, regular (medium where a control is the way on, semibold for "buy") | controls, row titles, details, explanations |
 | data | SF Mono, regular | numbers and counts: a level's number, "4 rods · par 4", "moves 9 · par 9", "13/27 at par", "best 9", "on"/"off", the version |
 
-Sizes: display 34, title 28, body 17, label 15, detail 13. Nothing that means something is under 13. The menu, a
+| Size | Points | Text style | Today's roles it takes over |
+|---|---|---|---|
+| display | 34 | largeTitle | `display` |
+| title | 28 | title1 | `title` (20 today) and `displaySmall` on the result; a new size on the menu, as the mock-up drew the tiers' names |
+| body | 17 | body | `body`, `headline` (ui medium) and `button` (ui medium) |
+| label | 15 | subheadline | `label`; `chip` goes with the chips |
+| detail | 13 | footnote | `detail`, and `eyebrow`, which rises from 12 |
+
+"unstirred." is the place voice at display, in place of today's stamp (22, semibold mono), as the approved result
+drew it; it still follows the type up to the play screen's cap, stands by today's rules (`PlayLayout.words`,
+`columnWords`), and where it is too tall for its room the finished tank gives way, never the word. The curtain
+call keeps `displaySmall` (22) for the names it sets smaller today. The game's own fixed text (`Font.game`) is
+untouched. Nothing that means something is under 13. The menu, a
 hollow, the archive, settings and consent follow every Dynamic Type size; the play screen stops at xxxLarge
 (`PlayLayout.typeCap`, unchanged: the mock-up's `play-ax` still was drawn past the cap and is not the design).
 
@@ -155,9 +172,18 @@ and breathe.
   near silhouette is not drawn, and a row's words start at 96 and wrap inside the screen. A row then stacks: number
   and name on the first line, the marks on their own line under the name, the facts under them.
 - On a narrower phone the dive's lips move in by half the width lost (first lip at 100 on a 375 pt screen).
-- The overview's heights are shares of `H` (2.1). Where a stretch's words are taller than its share, that stretch
-  takes the height of its words plus 24, its terraces spread to fill it, and the overview scrolls; this happens only
-  at the larger type sizes and on the shortest phone.
+- A row's words have at least 226 pt on the reference phone and 194 on a 375 pt one, from 18 pt past the ninth lip
+  to 16 pt short of the trailing edge. By character counts, not yet by rendering, every tier's and pack's name fits
+  that on one line in the row's ordinary size, and the longest ("Grand Complication", "Magnifying glass", "Stepping
+  stone") do not at the frontier's larger size. A name that doesn't fit wraps to a second line; the facts break only
+  before "· par"; the marks then go under the name. Nothing is cut short or shrunk.
+- The overview's heights are shares of `H` (2.1), given out in two steps: each part first takes what its own words
+  need plus 8, then what is left of `H` is shared out in proportion to the shares. A stretch's terraces spread to
+  fill its height. Where the needs alone pass `H`, the overview scrolls. On a phone narrower than the reference
+  the words start 32 pt further in (x = 148), as the slope's strip narrows by that much. By line counts, not yet by
+  rendering, at the default size the reference phone has over 200 pt to spare and the shortest phone (375 x 667)
+  about 10, with the tiers' reasons wrapping to two lines there, so the builder renders that phone first; at the
+  accessibility sizes the overview scrolls on every phone.
 
 ### 1.7 The battery
 
@@ -199,14 +225,22 @@ Top to bottom, as the mock-up's `menu-today`:
 - **The way on**: the tier the player is in (`Tier.stored()`) carries one more line under its progress, the frontier's
   number and name and a chevron, "14 Lather ›" (number in data, name in name voice, body, `ink`). Tapping it opens that
   level from here (2.9). No other tier shows one.
-- **The packs' line**: once the hollows show (8.1), plughole's block ends with the caption (2.2's words; ui, detail,
-  `ink3`), and the hollows themselves are drawn in the rock beside plughole's terraces if Jack takes call 1's
-  alternative. Tapping the caption dives to the first hollow marked new, else the first unowned, else the first.
+- **The packs' line and hollows** (only if Jack takes call 1's alternative; as approved the overview shows
+  neither): once the hollows show (2.8), plughole's block ends with one line, "packs · first 3 levels of each free"
+  (ui, detail, `ink3`; "packs" alone once every pack is owned), and each offer's hollow is drawn small in the rock on
+  the leading side of plughole's terraces: 16 pt across, centred at x = 18, the first 24 pt under the top of
+  plughole's band and the rest 24 pt apart, in the shelf's order, each lit in its pack's glow, no name written. A
+  hollow marked new (8.1) breathes. The line and the strip of hollows are one control: it dives to the first hollow
+  marked new, else the first unowned, else the first.
 - **The drop-off** (from 0.90 `H`): the rock ends (2.6). "endless" (place, title) centred in open water, its line
   under it. Not written until endless opens.
 
 Tappable: the settings stone; the daily; the archive; each tier's whole band, the full width of its stretch (dives
-to its landing, 2.7; a closed tier's to its gate); the way on; the packs' line; endless. Nothing else.
+to its landing, 2.7; a closed tier's to its gate); the way on; the packs' control; endless. Nothing else.
+
+As the zoom opens, a hollow travels from its overview place to its place in the dive (8.1) and grows from 16 to
+58 pt with `e`, its name and line fading in past `e = 0.8`. Without call 1's alternative the hollows are not drawn
+under `e = 0.5` and fade in from there to 0.8.
 
 At the accessibility sizes the words keep their size, start at x = 96, wrap, and each stretch grows to hold its
 words (1.6); the overview then scrolls, opening at its top.
@@ -440,7 +474,7 @@ Under the tank, centred, in the place voice at body: the level's note, at `ink` 
 - First Stir's time under the tank.
 
 Plughole 01's first open hangs one more line under the note, once ever, at `ink3` in the ui voice: "sound, haptics,
-colour letters: in settings, at the surface" (11: the gear it named is gone). The ghost fingers, arcs and rings are
+colour letters: in settings, at the surface" (call 7: the gear it named is gone). The ghost fingers, arcs and rings are
 drawn on the glass and are untouched.
 
 ### 4.5 The controls
@@ -560,7 +594,8 @@ shallows' water and sandstone.
 
 - The way back, "↑ menu"; beside it in a wide window, "✕ close". The title "Archive" (name voice, display).
 - A stretch per month, headed by the month's name (place, title). A terrace per week of the player's calendar, seven
-  seats across it, 52 pt apart, the terraces 72 pt apart. A day's seat: its number (data, label) over its pebble,
+  seats across it, 52 pt apart or a sixth of `W - 63` where that is less (so the row keeps 31 pt each side on
+  every phone), the terraces 72 pt apart. A day's seat: its number (data, label) over its pebble,
   and under the pebble its result in today's words (data, detail, `ink2`): "clean", "par", "+2", "tried"; nothing
   for a day not played.
 - Pebbles: lit for a day with a best, dull and undimmed for one tried or not played. Today's own seat is bare with
@@ -628,12 +663,14 @@ Top down, centred, each line arriving in turn (1.5):
 9. **The status and the stones**, on a ledge that juts from the leading jamb (8.3).
 10. Triptych's line, a quiet control (ui, detail, `ink2`), by today's rule: "or all three in Triptych I · $5.99 ·
     save $2.98 ›", broken only before "· save".
-11. **The floor's tally** (8.4) and its count (data, detail, `ink3`): "0/30 at par"; an owner's "done 4/25 at par".
+11. **The floor's tally** (8.4) and its count's line: "0/30 at par · levels ↓"; an owner's "done 4/25 at par ·
+    levels ↓".
 12. "restore purchases" (a quiet control; ui, detail, `ink2`), only while something sold is unowned; its outcome
     under it.
 
-At the default size all of this stands on one screen of the reference phone. Where it doesn't (smaller phones,
-larger type, the arrival line, a failure's line) the inside scrolls, the way back staying pinned at the top (Jack's
+On the reference phone at the default size an unowned pack with its price known stands on one screen exactly as
+the mock-up laid it out, its last line ending 38 pt above the foot. Anything more (a status line under the stone,
+the arrival line, a smaller phone, larger type) makes it taller than the screen, and the inside then scrolls, the way back staying pinned at the top (Jack's
 call), and buy stays on the first screen of the shortest phone. A hollow opened by a level past the taste opens
 scrolled to the arrival line.
 
@@ -676,8 +713,9 @@ each with its price; the slope behind is hidden; a change of state is announced.
 
 The floor's tally is the mock-up's row of small pebbles, grouped by chapter (six to a tray for Prism): lit for a
 level with a best, pale or `next`-bright for an open one without, dull for one closed past the taste. It is a count,
-too small to pick from: the whole floor, tally and count together, is **one control**. Its label under the count
-reads "levels ↓" (ui, detail, `ink2`).
+too small to pick from: the whole floor, tally and count together, is **one control**, and the count's own line
+says so, ending with it: "0/30 at par · levels ↓" (the count in data at `ink3`, "levels ↓" in ui at `ink2`), so the
+inside is no taller than the mock-up drew it.
 
 A tap on it, or a scroll past the foot of the inside, **sinks through the floor into the pack's own column**: the
 same slope and the same dive as a tier's, in the pack's pale rock and still water, lit in the pack's colour. This is
@@ -807,7 +845,7 @@ Everything not listed keeps its words exactly.
 | "PACKS · PAID ADD-ONS" and "first 3 levels of each free" | one line under plughole's name: "packs · paid add-ons · first 3 levels of each free" (2.2's three states) | approved: the caption moves there |
 | none | "↑ surface" | new: the way from the dive to the overview |
 | none | "14 Lather ›" on the overview | new: the way on (call 2) |
-| none | "levels ↓" | new: the way from a hollow's inside to its levels |
+| none | "· levels ↓" after a hollow's count | new: the way from a hollow's inside to its levels |
 | none | "↑ Prism" (a pack's name) | new: the way back from a pack's levels |
 | none | "↓ back into the water" | new: settings' way back (the mock-up's) |
 | "PACK", "BUNDLE", "PACK · PAID ADD-ON", "BUNDLE · PAID ADD-ON" | "pack", "bundle", "pack · paid add-on", "bundle · paid add-on" | lower case, as the approved hollow |
@@ -827,10 +865,10 @@ On the slope, as approved, the packs are lit hollows in plughole's rock and the 
 shows none of them: a player sees a pack only by diving into plughole and passing it, or from a result's pointer
 ("more in Lens ›", "try Escapement ›", "more puzzles in the packs ›"). A player working through whirlpool, vortex or
 maelstrom never passes one. This is the approved design, and it is the biggest sales risk in it.
-Alternative: draw the same hollows, small and lit, in plughole's rock on the opening screen too, with the caption
-"packs · paid add-ons · first 3 levels of each free" under plughole's name there; a tap on either dives to them.
-They are the same hollows seen from further off, so it costs about half a day and adds one line of small text and
-four small lights to the opening screen.
+Alternative: draw the same hollows, small and lit, in plughole's rock on the opening screen too, with one line,
+"packs · first 3 levels of each free", under plughole's name there; a tap on either dives to them. They are the
+same hollows seen from further off, so it costs about half a day and adds one line of small text and four small
+lights to the opening screen.
 Recommended: the alternative. If he does nothing, the approved version is built and the hollows can be added later
 without redrawing anything.
 
@@ -863,8 +901,8 @@ on screen. On the slope the daily and archive are at the surface and endless at 
 are on the opening screen, and none is beside the levels in the dive. From deep in a tier they are two taps away
 ("↑ surface", then the daily) where they are one today. This was listed for another version of the Descent, not for
 the Shelf.
-Recommended: accept it; it is what makes the column a place. It matters less if call 2's proposal is taken, since
-every launch then opens with all three in sight.
+Recommended: accept it; it is what makes the column a place, and all three are on the whole-column screen, which
+is one tap from anywhere in the dive. If he does nothing it is built this way.
 
 **5. Switching tier takes two taps.**
 Today a tier is one tap on its chip, or a sideways swipe, from any tier. On the slope it is "↑ surface" and then a
@@ -882,7 +920,25 @@ name and result under its chapter's name, built from the same parts as a tier. I
 it adds one tap for an owner replaying a particular level (three taps from the menu, against two today).
 Recommended: build it. Without it a paid pack's levels can't be picked, which no owner should meet.
 
-**7. Small losses to confirm together.**
+**7. The first level's line about settings.**
+On plughole 01's first open, once ever, a quiet line under the note reads "sound, haptics, colour letters: ⚙ on the
+menu". He ruled twice that the line stays as built (2026-11-02). The gear it points at is gone, as approved:
+settings is now a stone on the bank at the water's surface, labelled "settings". The line has to change to stay
+true. Proposed: "sound, haptics, colour letters: in settings, at the surface". Alternative: drop the line, since
+"settings" is now written on the opening screen where the gear was only a symbol.
+Recommended: the proposed wording.
+
+**8. The dive's ledges step out in nines.**
+The approved picture of the dive shows ledges whose lips wander in and out by a few points with no pattern, and the
+approved whole-column picture shows nine pebbles along each long ledge. Those were two different slopes. To make
+them one, each long ledge of the whole-column view is now nine ledges of the dive: close up, the lips step outward
+a little with each level and after every ninth the rock cuts back deeply before the next nine. The dive therefore
+has a rhythm the approved still didn't, three runs of nine to a tier. Nothing is lost; the look differs slightly.
+Alternative: keep the dive exactly as drawn and redraw the whole-column view with 27 small steps to a tier, which
+loses its long ledges and reads as a dotted line down the rock.
+Recommended: the nines. It is the first thing the menu's builder renders, to show him before more is built on it.
+
+**9. Small losses to confirm together.**
 - The lock symbol goes everywhere, not only on level rows: on closed tiers, the locked archive, a pack's closed
   levels and a closed "up a notch". Each is a dull pebble with dimmer words, and each still says what opens it when
   tapped.
@@ -893,7 +949,9 @@ Recommended: build it. Without it a paid pack's levels can't be picked, which no
 - "PACK", "BUNDLE", "UP A NOTCH" and the tier's name on it lose their capitals.
 - On the result the three buttons become stones on the ledge under the tank, so "again" and the way on stand at
   opposite corners rather than stacked full-width.
-Recommended: accept all five; each follows from a change he approved.
+- "unstirred." is larger and in the italic serif (34 pt against 22), as the approved result drew it; where a short
+  screen can't hold it, the finished tank gives way a little more than today.
+Recommended: accept all six; each follows from a change he approved.
 
 Kept as today though the mock-up drew otherwise, so nothing to decide: the play screen's text still stops growing
 at the largest ordinary size (the mock-up's large-text play still went past it and shrank the glass in play);
@@ -907,22 +965,29 @@ its names stand and only the mapping changes.
 
 **The foundation's files** (its owner only): `Slope.metal`, `SlopeGround.swift` (the Metal view, the clock and its
 pauses, 1.7), `SlopeGeometry.swift` (columns, stretches, the ledge function and the camera, 1.2; pure, so every
-piece asks it where things are), `Stone.swift` (1.4), `Tone.swift`, `Type.swift` (1.3), `Buttons.swift`. Every piece
+piece asks it where things are), `Stone.swift` (1.4), `Tone.swift`, `Type.swift` (1.3), `Buttons.swift`, and
+`ToneTests.swift`, which pins the tones and buttons and gains the inks' floors on water. Every piece
 needs from it, beyond the main column: a column built from any list of stretches (packs, settings, the archive), the
 paper look (8.6), the hollow's inside, the ground's light as a uniform (consent, the wide result), and one terrace
 alone (play).
 
 **The slope lands beside the old screens, not over them.** A build setting and a harness flag (`UNSTIR_SLOPE`)
-choose the world; until the last piece is in, the default is today's app and `master` stays shippable. Each piece
-adds new files and leaves the old view's file alone, so no piece edits another's file, and each screen is shown to
-Jack from the flag before it merges. The last change flips the default and deletes the old views.
+choose the world; until the last piece is in, the default is today's app and `master` stays shippable. A piece
+builds its screens in new files of its own. Where it must touch an old file it owns (the table below), it may only
+add: a branch on the flag that hands over to its new view, or logic both worlds share, pulled out where the old
+view still calls it. With the flag off, the app's behaviour, layout and tests are exactly today's. So no piece edits
+another's file, and each screen is shown to Jack from the flag before it merges. The last change flips the default
+and deletes the old views.
 
-**First, two extractions** (one owner each, before the pieces start; no change in behaviour, the existing tests
-passing untouched):
+**First, two extractions** (one owner each, before the pieces start; no change in behaviour). Tests name some of
+what moves (`MenuView.lead`, `dailyLines`, `opens` and `closes` in `UnstirTests.swift`, `PlayLayoutTests.swift` and
+`PackTests.swift`; `PackCard.back`, `arrival`, `taste` and `PackDock.shown`, `saying` in `PackTests.swift` and
+`UnstirTests.swift`): each extraction renames those calls in the tests and changes nothing else in them, and these
+are the last edits to those three test files by anyone but their owners below.
 
 - **Menu logic out of `Menu.swift`** into a new `MenuModel.swift`, with nothing of SwiftUI's views in it:
   `Tier.step`, `frontier`, `short`, `landing` and `Level.focus(solved:)` (already extensions, moved as they are);
-  `MenuView.lead` and `dailyLines` as free functions on a `Menu` namespace; what a closed row says
+  `MenuView.lead`, `dailyLines`, `opens` and `closes` as static functions on a `Menu` namespace; what a closed row says
   ("solve 14 to open", the tier's form) and the gate's lit count, today computed inside `TierList` and `LevelRow`;
   the 2 s refusal and the endless row's arming as a small state type beside `ResetArm`'s; `CameFrom`. `SupporterMark`
   and `Sparkle` move to `SupporterMark.swift`. `Menu.swift` is left holding only today's views, which the slope
@@ -930,18 +995,20 @@ passing untouched):
 - **The play screen's chrome out of `TankView.swift`** into a new `PlayChrome.swift`: `LevelView`'s `header`,
   `titleRow`, `caption` and `controls` become views that take values and closures, `LevelView` keeping the state,
   and the result's and lost card's place becomes a slot `LevelView` fills. `MenuLayout` moves from
-  `PlayLayout.swift` to `MenuLayout.swift`. `Shelf.swift` is cut in three with no other change: `Offer.swift`
-  (`Offer`, the `Store`, `Failure`, `Pricing` and `Purchase` extensions, `Marks`: the words and rules), `PackCovers.swift`
-  (`PackTank`, `Wedge`, `LoopingTank`, `PackClip`), leaving `PackCard` and `PackDock` in `Shelf.swift`.
+  `PlayLayout.swift` to `MenuLayout.swift`. `Shelf.swift` is cut in three: `Offer.swift` (`Offer`, the `Store`,
+  `Failure`, `Pricing` and `Purchase` extensions, `Marks`, and on a `Shop` namespace the rules the card and dock
+  hold as statics today: `PackCard.back`, `arrival`, `taste`, `pickUp`, `focus`, `continues`, `lands` and
+  `PackDock.shown`, `saying`), `PackCovers.swift` (`PackTank`, `Wedge`, `LoopingTank`, `PackClip`), leaving
+  `PackCard`'s and `PackDock`'s views in `Shelf.swift`.
 
 **Then six pieces in parallel**, one owner each:
 
 | Piece | Builds (sections) | Its new files | Old files it alone may edit | Reads only |
 |---|---|---|---|---|
-| A. The menu | the overview, the dive, a ledge's row, the gate, the daily's and endless's places, landing and focus, travel between tiers, messages (2, 3) | `SlopeMenu.swift`, `SlopeLedge.swift`, `SlopeGate.swift` | none | `MenuModel.swift`, `SupporterMark.swift`, `ResultMarks.swift` |
+| A. The menu | the overview, the dive, a ledge's row, the gate, the daily's and endless's places, landing and focus, travel between tiers, messages (2, 3) | `SlopeMenu.swift`, `SlopeLedge.swift`, `SlopeGate.swift` | `MenuModel.swift` | `SupporterMark.swift`, `ResultMarks.swift` |
 | B. Play | the ground under a level, header, title, captions, the terrace and its stones, the terrace's seats for C (4) | `SlopePlay.swift` | `PlayChrome.swift`, `PlayLayout.swift`, `TankView.swift`, `PlayLayoutTests.swift` | `Lessons.swift`, `Page.swift` |
 | C. The result | the result's lines and stones, every variant, the lost screen, the curtain call's chrome (5, 6) | `SlopeResult.swift` | `ResultCard.swift`, `ResultMarks.swift`, `Payoff.swift`, `PayoffViews.swift`, `ResultMarksTests.swift`, `PayoffTests.swift` | `PlayChrome.swift` |
-| D. Packs | the hollow on the slope, its inside, every store state, the pack's own slope, the bundle, the paper inside (8) | `SlopeHollow.swift`, `SlopePack.swift` | `PackCovers.swift`, `Clip.swift`, `ClipTests.swift` | `Offer.swift`, `Pack.swift`, `Store.swift`, `SlopeLedge.swift` once A has it |
+| D. Packs | the hollow on the slope, its inside, every store state, the pack's own slope, the bundle, the paper inside (8) | `SlopeHollow.swift`, `SlopePack.swift` | `Offer.swift`, `PackCovers.swift`, `Clip.swift`, `PackTests.swift`, `ClipTests.swift` | `Pack.swift`, `Store.swift`, `SlopeLedge.swift` once A has it |
 | E. The archive | the archive's ledge and its calendar (2.5, 7) | `SlopeArchive.swift` | `Archive.swift`, `ArchiveTests.swift` | |
 | F. Settings and consent | 9 | `SlopeSettings.swift`, `SlopeConsent.swift` | `Consent.swift` | |
 
@@ -958,7 +1025,7 @@ How they meet without sharing a file:
 **One integrator**, working alongside from the start, alone edits everything shared: `UnstirApp.swift` (`RootView`:
 which world, opening a level from a ledge, 2.9, the back swipe's handover, 2.11; the `Harness`'s flags),
 `MenuLayout.swift` and the wide windows (10, last), `Spoken.swift`, `Localizable.xcstrings`, `scripts/shots.sh`,
-`shots/index.txt`, `docs/architecture.md`, `HANDOFF.md`, `UnstirTests.swift` and `ToneTests.swift`. A piece writes
+`shots/index.txt`, `docs/architecture.md`, `HANDOFF.md` and `UnstirTests.swift`. A piece writes
 its strings in its own code with `String(localized:)`, lists its shot cases and its architecture entry in its pull
 request's text, and the integrator enters them, so those files have one writer. The integrator makes the final
 change: the default flips, `Menu.swift`, `Shelf.swift`'s card and dock, `ResultCard`'s old views, `SettingsSheet`,
