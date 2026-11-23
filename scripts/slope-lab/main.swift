@@ -6,7 +6,7 @@ import ImageIO
 import Metal
 import UniformTypeIdentifiers
 
-// Draws the slope's ground on the Mac's GPU from Sources/Slope.metal and Sources/Slope.swift, with a stand-in pebble
+// Draws the slope's ground on the Mac's GPU from Sources/Slope.metal and Sources/SlopeGeometry.swift, with a stand-in pebble
 // on every ledge's seat, or times the pass. Arguments are key=value words (scripts/slope-lab.sh lists them).
 
 var options: [String: String] = [:]
@@ -41,9 +41,13 @@ let state = try device.makeComputePipelineState(function: device.makeLibrary(sou
 
 let size = CGSize(width: number("w", 440), height: number("h", 956))
 let scale = number("scale", 2)
-// type=ax is the largest sizes' column: a taller pitch, the lips at the leading edge.
+// type=ax is the largest sizes' column: a taller pitch, the lips at the leading edge, at the overview too.
 let ax = options["type"] == "ax"
 var column = SlopeColumn.main(size: size, pitch: ax ? 196 : 110, lip: ax ? 62 : 132 - max(440 - size.width, 0) / 2, step: ax ? 1.5 : 6)
+if ax {
+    column.wall = 14
+    column.spread = 8
+}
 if options["column"] == "pack" {
     column = SlopeColumn(stretches: (0 ..< 5).map { _ in .init(rock: .pale, terraces: [6], header: 110) }, foot: .floor, surface: false, first: nil)
 }
