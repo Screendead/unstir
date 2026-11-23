@@ -1151,6 +1151,35 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     `zoom`, `descent`, `play`, `hollow`, `pack`, `stones` (scripts/shots/slope.sh, and `film.sh slope-`).
     `scripts/slope-lab.sh render|bench|probe` draws, times and measures the ground on the Mac's GPU, and
     `scripts/slope-lab/peek.sh` shoots one harness case on a booted simulator.
+- **The slope's world in the app** (docs/slope.md, 13): `RootView` draws it in place of today's screens while
+  `SlopeFlag.on`, and sets `\.slopeWorld` from it for the play screen and the result. A Debug launch with
+  `UNSTIR_SLOPE=1` (or `=world`) stores the flag and one with `=0` clears it, so a phone's home screen keeps opening it
+  (`UNSTIR_SLOPE=1 scripts/run-ios.sh Debug`); any other harnessed launch and the test host clear it, and no Release
+  build reads either. Its other values are `SlopeHarness`'s stages. In the world: `SlopeMenu` stands in for `MenuView`,
+  a ledge opening its level through `show`; a level comes in over the slope as the slope draws 280 pt aside, and leaves
+  the same way, without today's dip to black (its growth out of the pebble, 2.9, waits on the play screen leaving its
+  ground to the root); `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the
+  menu drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; and, until the hollow's and the archive's
+  pieces land, today's `PackCard` and `ArchiveView` lie over it. A cold launch rests on the overview: only a closed
+  tier's way up, or `UNSTIR_TIER`, opens the menu on a tier. `Spoken.back` says "Back to the menu" for the slope's
+  daily, endless and sandbox, as their "↑ menu" does.
+  - `SlopeMenu.swift`, `SlopeLedge.swift` and `SlopeGate.swift` are the menu (2, 3): the overview and every move of the
+    camera are a `SlopeScene`, the resting dive a `SlopeDive` on the same camera; `SlopeMenuPlan` sizes each room
+    from measured type, and `SlopeMenuModel`, the rows' words and states, is read afresh on a revision, a sync, the
+    store and a new day, never per frame. A ledge's row is `SlopeLedge` (number, name, marks or a word, facts,
+    state); a closed tier's gate is `SlopeGate`. It hands `onPick` the pebble's point on the screen, and takes the
+    hollow (`hollow`) and the archive's ledge (`archiveLedge`) as views, a dull pebble standing in until they land.
+  - `SlopePlay.swift` is the play screen's ground (`SlopePlayGround`: the slope drawn aside, the water at the level's
+    depth, one terrace), header, title, caption and the stones on its terrace, drawn by `LevelView` while
+    `slopeWorld`; the slope's chrome's measure and reserve live in `PlayLayout`. `TerraceSeats` (PlayChrome.swift) is
+    how the view in the card's slot hands its stones to the terrace: leading, middle, trailing, a second terrace and a
+    line under them.
+  - `SlopeResult.swift` is the result on the slope (5): lines on the water under the solved tank and stones on the
+    terrace by `TerraceSeats`, every finish and the lost screen in one layout; `ResultCard` hands over to it while the
+    slope is on.
+  - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
+    column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
+    overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
