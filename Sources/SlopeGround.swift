@@ -33,9 +33,9 @@ struct SlopeView {
     var bank: CGPoint { SlopeLay.bank(SlopeCamera(top: top, z: lay.z)) }
 }
 
-/// The slope's ground (Slope.metal) for one camera. It drifts on its own clock, at half the screen's rate, and draws
-/// again only for that or a new camera: `held` stops the clock (a level is on screen, something covers the slope,
-/// `Power` saves or idles), and Reduce Motion never starts it, so then it is a still.
+/// The slope's ground (Slope.metal) for one camera. It drifts on its own clock, at 30 Hz, and draws again only for
+/// that or a new camera. `held` stops the clock (a level is on screen, or something covers the slope), as `Power`
+/// does while it saves or idles, and Reduce Motion never starts it: then the ground is a still.
 struct SlopeGround: View {
     let view: SlopeView
     var held = false
@@ -51,7 +51,7 @@ struct SlopeGround: View {
     @State private var epoch = Date.now
     @State private var stopped: Date?
 
-    private var still: Bool { held || reduceMotion || clock != nil || look.paper >= 1 }
+    private var still: Bool { held || reduceMotion || clock != nil || look.paper >= 1 || Power.shared.saving || Power.shared.idle }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { timeline in
@@ -189,8 +189,10 @@ private extension GeometryProxy {
 }
 
 /// Lays views out at points of its own frame, as the slope's screens place everything: a child says where it goes
-/// with `slopePlace`, `slopeLine` or `seated`, and one that says nothing fills the frame. Each child keeps its own
-/// frame where it is drawn, so a scroll's targets, VoiceOver and taps find it there.
+/// with `slopePlace`, `slopeLine` or `seated`, and one that says nothing fills the frame. A placed child is offered
+/// the width from its point to 16 pt short of the frame's side, so its words wrap there; one that would fill what
+/// it is offered (a spacer, a bare shape) needs its own frame. Each child keeps its own frame where it is drawn, so a
+/// scroll's targets, VoiceOver and taps find it there.
 struct SlopeLayer: SwiftUI.Layout {
     struct Place: Equatable {
         var point: CGPoint
@@ -198,6 +200,10 @@ struct SlopeLayer: SwiftUI.Layout {
         /// Words: their leading edge at the point, their first line's middle level with it.
         var line = false
     }
+
+    /// What a placed view keeps clear of the frame's sides, and the least width it is ever offered.
+    static let margin: CGFloat = 16
+    static let least: CGFloat = 60
 
     private struct PlaceKey: LayoutValueKey {
         static let defaultValue: Place? = nil
@@ -213,10 +219,16 @@ struct SlopeLayer: SwiftUI.Layout {
                 subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
                 continue
             }
-            let own = subview.dimensions(in: .unspecified)
-            let x = place.point.x - (place.line ? 0 : own.width * place.anchor.x)
+            // Its room runs to `margin` short of the frame's edges on the sides it grows towards, so words wrap inside
+            // the screen and are never cut off.
+            let ax = place.line ? 0 : place.anchor.x
+            let before = place.point.x - Self.margin, after = bounds.width - Self.margin - place.point.x
+            let room = max(min(ax > 0 ? before / ax : .infinity, ax < 1 ? after / (1 - ax) : .infinity), Self.least)
+            let proposal = ProposedViewSize(width: room, height: nil)
+            let own = subview.dimensions(in: proposal)
+            let x = place.point.x - own.width * ax
             let y = place.point.y - (place.line ? own[.firstTextBaseline] * 0.62 : own.height * place.anchor.y)
-            subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), anchor: .topLeading, proposal: .unspecified)
+            subview.place(at: CGPoint(x: bounds.minX + x, y: bounds.minY + y), anchor: .topLeading, proposal: proposal)
         }
     }
 
