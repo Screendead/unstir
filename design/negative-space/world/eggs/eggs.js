@@ -50,19 +50,19 @@ void eSky(inout vec3 col, vec2 p, float sY0) {
 }
 vec3 eWater(vec2 p, float d) { // the moon on the water: a bright stretch of the surface, broken glints under it
   float a = exp(-abs(d) / 1.6) * g2((p.x - 322.) / 44.) * .45;
-  a += g2((p.x - 322.) / (13. + d * .22)) * exp(-d / 60.) * smoothstep(.3, .75, nz(vec2(p.x * .16, d * .5 - tm * .0022))) * .2;
+  a += g2((p.x - 322.) / (13. + d * .22)) * exp(-d / 60.) * (.8 + .2 * sin(p.x * .4 + tm * .003)) * .1;
   return vec3(1., .96, .86) * a * eNight;
 }
 float eRip1(float x, float x0, float a, float amp) { // a skip's ring, seen from the side: two bumps running apart
   if (a <= 0.) return 0.;
   float f = abs(x - x0) - 30. * a;
-  return amp * exp(-a * 1.2) * cos(f * .3) * exp(-f * f / (26. + 260. * a));
+  return amp * exp(-a * 1.1) * cos(f * .3) * exp(-f * f / (40. + 320. * a));
 }
 float eRip(float x) {
   float s = 0.;
   for (int i = 0; i < 4; i++) {
-    s += eRip1(x, eRipX[i], eRipA[i], 3.2 * pow(.86, float(i)));
-    s += eRip1(x, eRipX2[i], eRipA2[i], 3.2 * pow(.86, float(i + 4)));
+    s += eRip1(x, eRipX[i], eRipA[i], 4.8 * pow(.88, float(i)));
+    s += eRip1(x, eRipX2[i], eRipA2[i], 4.8 * pow(.88, float(i + 4)));
   }
   return s;
 }
@@ -72,7 +72,7 @@ sh = patch(sh, 'float sY = sY0 + 3.2 * sin(p.x * .024 + tm * .0011) + 1.8 * sin(
   `float sY = sY0 + (1. - eCalm) * (3.2 * sin(p.x * .024 + tm * .0011) + 1.8 * sin(p.x * .063 - tm * .0016 + 1.3))
     + (p.x - 220.) * eTilt;`);
 // a ring moves the water line, not the light above and below it
-sh = patch(sh, 'float d = p.y - sY;', 'float d = p.y - sY; d -= eRip(p.x) * exp(-abs(d) / 7.);');
+sh = patch(sh, 'float d = p.y - sY;', 'float d = p.y - sY; d -= eRip(p.x) * exp(-abs(d) / 9.);');
 sh = patch(sh, 'col += vec3(.5, .3, .12) * exp(-length((p - vec2(60., sY0)) * vec2(.006, .02))) * .22;',
   `col += vec3(.5, .3, .12) * exp(-length((p - vec2(60., sY0)) * vec2(.006, .02))) * .22;
     eSky(col, p, sY0);`);
