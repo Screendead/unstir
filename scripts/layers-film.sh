@@ -8,4 +8,6 @@ cd "$(dirname "$0")/.."
 output=$(SwitchAudioSource -c -t output)
 trap 'SwitchAudioSource -t output -s "$output" >/dev/null' EXIT
 SwitchAudioSource -t output -s "BlackHole 2ch" >/dev/null
+# A promotional film is the Release build's, never Debug's (Jack, 2026-11-23).
+export FILM_CONFIG=${FILM_CONFIG:-Release}
 FILM_SOUND=1 scripts/film.sh "${1:-layer-}"

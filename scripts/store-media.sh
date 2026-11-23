@@ -18,6 +18,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 what=${1:-all} cut=${2:-}
 out=${STORE_OUT:-shots/store}
+# A promotional film is the Release build's, never Debug's (Jack, 2026-11-23).
+export FILM_CONFIG=${FILM_CONFIG:-Release}
 export FILM_FULL=1
 work=$(mktemp -d)
 trap 'trash "$work" 2>/dev/null || true' EXIT

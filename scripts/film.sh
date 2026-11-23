@@ -13,7 +13,13 @@ xcrun simctl bootstatus "$udid" -b >/dev/null
 # FILM_CONFIG=Release films the build players get, at its speed. It takes no UNSTIR_OWNED or UNSTIR_STORE: a pack's
 # level opens by the developer unlock of a playtest build, and a case with store states is not filmed.
 config=${FILM_CONFIG:-Debug}
-if [[ "$config" == Release ]]; then ANALYTICS_PLAYTEST=YES scripts/build-ios.sh Release sim; else scripts/build-ios.sh Debug sim; fi
+unlock=(SIMCTL_CHILD_UNSTIR_OWNED=lens)  # what opens a pack's level in a launch outside film()
+if [[ "$config" == Release ]]; then
+  unlock=(SIMCTL_CHILD_UNSTIR_UNLOCK=1)
+  ANALYTICS_PLAYTEST=YES scripts/build-ios.sh Release sim
+else
+  scripts/build-ios.sh Debug sim
+fi
 if [[ -n "${FILM_SOUND:-}" ]] && { [[ ! -x build/film-sound/record ]] || [[ scripts/film-sound/main.swift -nt build/film-sound/record ]]; }; then
   mkdir -p build/film-sound
   swiftc -O -o build/film-sound/record scripts/film-sound/main.swift
@@ -40,7 +46,8 @@ film() {  # name seconds strip-filter KEY=VALUE...
   shift 3
   wants "$name" || return 0
   for kv in "$@"; do
-    if [[ "$config" == Release && "$kv" == OWNED=* ]]; then kv=UNLOCK=1; fi
+    if [[ "$config" == Release && "$kv" == OWNED=* ]]; then continue; fi
+    if [[ "$config" == Release && "$kv" == PACK=* ]]; then vars+=("${unlock[@]}"); fi
     if [[ "$config" == Release && "$kv" == STORE=* ]]; then echo "$name: a Release build takes no store states: not filmed" >&2; return 0; fi
     vars+=("SIMCTL_CHILD_UNSTIR_$kv")
   done
@@ -274,7 +281,7 @@ warm() {  # level
   local caches stamp=shots/film/.warmed
   caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
   touch "$stamp"
-  SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL=$1 \
+  env SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$1" "${unlock[@]}" \
     xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   for _ in $(seq 120); do [[ -n "$(find "$caches" -name 'halftone-*' -newer "$stamp" 2>/dev/null)" ]] && break; sleep 1; done
   sleep 2
@@ -347,7 +354,7 @@ layer() {  # name pack level ratchet
   local secs line
   read -r secs line < <(python3 scripts/layers.py moves sound-src/layers-in-play.tsv "$2" "$4" 0.5)
   if [[ "$2" == lens ]]; then
-    SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens SIMCTL_CHILD_UNSTIR_UNLOCK=1 \
+    env SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" "${unlock[@]}" \
       xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
     local caches
     caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"

@@ -17,6 +17,8 @@ segments=(
   editors-prism-01:9.8
 )
 
+# A promotional film is the Release build's, never Debug's (Jack, 2026-11-23).
+export FILM_CONFIG=${FILM_CONFIG:-Release}
 [[ "${1:-}" == --join ]] || scripts/film.sh editors-
 
 inputs=() chains="" labels=""

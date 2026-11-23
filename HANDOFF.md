@@ -150,12 +150,14 @@ The merges, the store media's retake and Jack's five answers of 2026-11-15 are c
 - The two hitches, settled (2026-11-23): vortex-02's paired gaps are recordVideo's H.264. On an idle Mac a Release
   build's take still repeated 29 frames in 20 s at 30 a second, in pairs every two seconds; recorded as HEVC the same
   take repeats 2, both at the strike's still. `film.sh` records HEVC now (`FILM_CODEC`), and `FILM_CONFIG=Release`
-  films the Release build (Jack, 2026-11-23: a promotional film is never a Debug build's), in which Lens 25's wind-in
+  films the Release build, the promotional scripts' default (Jack, 2026-11-23: a promotional film is never a Debug
+  build's), in which Lens 25's wind-in
   holds 62 and 87 ms where Debug's stalled 205 ms and more. Both films retaken that way with sound, in the tools
   folder (`promo-smooth-20261123/*-release-hevc-sound.mp4`). The sound recorder now refuses a shell whose app has no
   Microphone permission, which macOS answers with silence: a session's own shell has none, the desktop app's
   Terminal panel has. The phone showed neither hitch (13 Pro Max, tables in `promo-smooth-20261123/phone/RESULTS.md`);
-  filming from the phone was tried and dropped (PR #305, closed). Open: the store set, the reel and the other layer
+  filming from the phone was tried and dropped (PR #305, closed). A drawn fingertip's turn now clicks as a
+  finger's does (it animated the angle past `Detent`, so no film had the rod's tick). Open: the store set, the reel and the other layer
   films retaken as Release and HEVC; the app's own one-frame holds on the phone (recommended, not decided: cache
   `TypeRole.font`, then measure).
 - A phone bench of Prism's and Lens's maps (memory, timings). iOS 17 is untested for the map (no runtime here).

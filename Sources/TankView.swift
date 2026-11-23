@@ -1666,6 +1666,16 @@ struct LevelView: View {
         }
     }
 
+    /// How far through its time `curve` first reaches `value` of its travel, both 0 to 1.
+    static func time(_ curve: UnitCurve, reaches value: Double) -> Double {
+        var low = 0.0, high = 1.0
+        for _ in 0..<24 {
+            let mid = (low + high) / 2
+            if curve.value(at: mid) < value { low = mid } else { high = mid }
+        }
+        return high
+    }
+
     /// One move by a drawn fingertip, through the calls a finger makes: it lands where `grab` gives it the move's rod or
     /// the rim, holds a beat, rides the turn round and lifts; on a ratchet it taps. False once `going` fails.
     private func fingertip(_ m: Twist, while going: @escaping () -> Bool) async -> Bool {
@@ -1703,7 +1713,19 @@ struct LevelView: View {
             liveRod = m.rod; counted = m.rod
             withAnimation(turnPace > 0.1 ? .linear(duration: d) : .easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
         }
-        guard await pause(d + 0.25) else { return false }
+        // A finger's turn clicks at each half step it crosses (`Detent`). The drawn one's angle is animated, never
+        // followed, so the harness's line sounds its clicks off the same curve; the demonstration's stays silent.
+        var gone = 0.0
+        if fingered {
+            let curve: UnitCurve = rim || turnPace <= 0.1 ? .easeInOut : .linear, n = abs(m.steps)
+            for i in 0..<n {
+                let at = Self.time(curve, reaches: (Double(i) + 0.5) / Double(n)) * d
+                guard await pause(at - gone) else { return false }
+                gone = at
+                if rim { tankTicks += 1 } else { ticks += 1 }
+            }
+        }
+        guard await pause(d + 0.25 - gone) else { return false }
         withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
         if rim { releaseTank() } else { release(m.rod) }
         return true
