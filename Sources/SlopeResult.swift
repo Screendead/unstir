@@ -18,23 +18,18 @@ struct SlopeResult: View {
     @State private var placed = CGRect.zero
     @AccessibilityFocusState private var focused: Bool
     @Environment(\.page) private var page
+    @Environment(\.dynamicTypeSize) private var type
 
-    /// The slope world is on: until the integrator's own switch lands, UNSTIR_SLOPE=world, which names no harness stage,
-    /// so the app runs as it does with the slope's screens. No Release build reads it.
-    static let on: Bool = {
-        #if DEBUG
-        ProcessInfo.processInfo.environment["UNSTIR_SLOPE"] == "world"
-        #else
-        false
-        #endif
-    }()
+    /// The terrace's row: the window's width less the play column's margins, as the result stands centred in it
+    /// while its own width is only its lines'.
+    private var terrace: CGFloat { max(2 * placed.midX - 2 * PlayLayout.margin, 0) }
 
     /// The lines arrive as the old card did, 0.3 s after it is placed; the stones half a second after them.
     static let lines = 0.3, stones = 0.8
 
     var body: some View {
         let way = ResultCard.Way(game)
-        VStack(spacing: 22) {
+        VStack(spacing: 12) {
             VStack(spacing: 12) {
                 summary(way)
                     .accessibilityElement(children: .ignore)
@@ -43,12 +38,13 @@ struct SlopeResult: View {
                 pointer
             }
             .modifier(SlopeArrival(after: Self.lines))
-            SlopeResultStones(game: game, way: way, onNext: onNext, onLook: onLook, again: again, now: now)
-                .modifier(SlopeArrival(after: Self.stones))
         }
         .padding(.horizontal, 4)
+        .terraceSeats(SlopeResultStones(game: game, way: way, onNext: onNext, onLook: onLook, again: again, now: now,
+                                        page: page, width: terrace, type: type).seats)
         .background(alignment: .top) {
-            SlopeLightSettling(top: placed.minY, width: placed.width)
+            // Past a solved tank only: a spill settles no light.
+            if game.solved { SlopeLightSettling(top: placed.minY, width: terrace) }
         }
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { placed = $0 }
         .onAppear {
@@ -108,10 +104,8 @@ struct SlopeResult: View {
                     }
                 }
                 .font(.slope(.data, .label))
-                if !game.clean && (!par || game.over == 0) {
-                    (game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? Text("clean needs no undo or reset")
-                        : Text("clean counts on the first try"))
-                        .font(.slope(.ui, .detail)).foregroundStyle(page.slope(.ink3))
+                if let takes = SlopeExplains.cleanTakes(game) {
+                    Text(takes).font(.slope(.ui, .detail)).foregroundStyle(page.slope(.ink3)) // loc: verbatim localized by SlopeExplains
                 }
             }
             if let b = game.bests, let line = ResultCard.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
@@ -146,20 +140,21 @@ struct SlopeResult: View {
     }
 }
 
-/// The result's stones on the terrace (5.2): again leading; the way on trailing, with next in the middle where up a
-/// notch takes the trailing seat, and share in the middle or, alone, trailing; under them the daily's next. Where the
-/// seats can't each hold their words on one line, up a notch takes a terrace of its own above the rest.
-///
-/// It stands in for the play screen's terrace until that piece's seats land: then `leading`, `middle`, `trailing` and
-/// `upper` fill them as they are.
-struct SlopeResultStones: View {
+/// The result's stones on the terrace (5.2), handed to the play screen's seats (`TerraceSeats`): again leading; the
+/// way on trailing, with next in the middle where up a notch takes the trailing seat, and share in the middle or,
+/// alone, trailing; under them the daily's next. Where the seats can't each hold their words on one line, up a notch
+/// takes the second terrace and next goes back to the trailing seat.
+@MainActor struct SlopeResultStones {
     let game: Game
     let way: ResultCard.Way
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
     let again: () -> Void
     let now: Date?
-    @Environment(\.page) private var page
+    let page: Page
+    /// The terrace's width and the play screen's type, for whether one row holds every seat's words.
+    let width: CGFloat
+    let type: DynamicTypeSize
 
     /// The stones after again, in seat order: share, next, up a notch; the last takes the trailing seat.
     private enum Kind { case share(String), next(Level), up(Tier) }
@@ -172,71 +167,88 @@ struct SlopeResultStones: View {
         return ways
     }
 
-    var body: some View {
-        VStack(spacing: 10) {
-            ViewThatFits(in: .horizontal) {
-                row(ways)
-                // Up a notch on a terrace of its own, the rest under it.
-                if let last = ways.last, case .up = last {
-                    VStack(spacing: 10) {
-                        HStack { Spacer(minLength: 0); stone(last, trailing: true) }
-                        row(Array(ways.dropLast()))
-                    }
-                }
-            }
-            if let day = Share.day(of: game.level.id), !game.level.archived {
-                TimelineView(.everyMinute) { t in
-                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.slope(.data, .detail)).foregroundStyle(page.slope(.ink3)) // loc: verbatim localized by Daily
-                        .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true)) // loc: verbatim localized by Daily
-                }
-            }
+    var seats: TerraceSeats {
+        var ways = ways
+        var upper: AnyView?
+        if let up = way.up, !holds() {
+            ways.removeLast()
+            upper = seat(SlopeUpANotch(from: game.level.tier, to: up, onNext: onNext, onLook: onLook, onTerrace: false))
         }
+        let trailing = ways.last.map { stone($0, trailing: true) }
+        let middle = ways.count > 1 ? stone(ways[ways.count - 2], trailing: false) : nil
+        return TerraceSeats(leading: game.offersAgain ? seat(againStone) : nil, middle: middle, trailing: trailing,
+                            upper: upper, under: nextDaily.map(seat))
     }
 
-    /// Again leading, the last trailing and one before it in the middle.
-    private func row(_ ways: [Kind]) -> some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            if game.offersAgain { againStone }
-            Spacer(minLength: 16)
-            if ways.count > 1 {
-                stone(ways[ways.count - 2], trailing: false)
-                Spacer(minLength: 16)
-            }
-            if let last = ways.last { stone(last, trailing: true) }
+    private func seat(_ view: some View) -> AnyView {
+        AnyView(view.fixedSize().modifier(SlopeArrival(after: SlopeResult.stones)).environment(\.page, page))
+    }
+
+    /// Whether one row holds again, next and up a notch, each on one line: the middle stone centred, each end's
+    /// clear of it by the controls' gap.
+    private func holds() -> Bool {
+        guard let up = way.up, width > 0 else { return true }
+        let trait = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(type))
+        func wide(_ words: String, _ style: UIFont.TextStyle, _ weight: UIFont.Weight, pebble: CGFloat = 20) -> CGFloat {
+            let size = UIFont.preferredFont(forTextStyle: style, compatibleWith: trait).pointSize
+            let font = UIFont.systemFont(ofSize: size, weight: weight)
+            let grain = min(UIFontMetrics(forTextStyle: .body).scaledValue(for: 1, compatibleWith: trait), 1.4)
+            return max(pebble * grain + 12 + ceil((words as NSString).size(withAttributes: [.font: font]).width), SlopePebble.target)
         }
+        let trailing = wide("\(up.word) \u{203A}", .title1, .light, pebble: 25)
+        let leading = game.offersAgain ? wide(String(localized: "again \u{21BA}"), .body, .regular) : 0
+        guard way.next != nil else { return leading + PlayLayout.controlGap + trailing <= width }
+        let middle = wide(way.label(game), .body, way.nextLeads ? .medium : .regular) / 2
+        return max(leading, trailing) + PlayLayout.controlGap + middle <= width / 2
     }
 
     private var pale: Bool { game.level.pack == .prism }
 
+    /// Again sounds as today's did, a reset.
     private var againStone: some View {
-        Stone(Text("again \u{21BA}"), pale: pale, engraved: page.paper, action: again)
-            .fixedSize()
+        PlayStone(label: Text("again \u{21BA}"), pale: pale, engraved: page.paper, effect: .reset, action: again)
             .accessibilityLabel("Again")
     }
 
-    @ViewBuilder private func stone(_ kind: Kind, trailing: Bool) -> some View {
+    private func stone(_ kind: Kind, trailing: Bool) -> AnyView {
         switch kind {
         case .share(let share):
             let leads = !way.nextLeads && !way.upLeads
-            Stone(Text("share \u{2197}"), state: leads ? .next : .lit, pale: pale, engraved: page.paper, trailing: trailing,
-                  glow: leads ? .amber : nil, ink: leads ? page.signal(.amber) : nil) {
+            return seat(Stone(Text("share \u{2197}"), state: leads ? .next : .lit, pale: pale, engraved: page.paper, trailing: trailing,
+                              glow: leads ? .amber : nil, ink: leads ? page.signal(.amber) : nil) {
                 ShareSheet.present([share])
             }
-            .fixedSize()
-            .accessibilityLabel("Share result")
+            .accessibilityLabel("Share result"))
         case .next(let next):
             let glow = game.level.pack.map { Offer.pack($0).glow } ?? game.level.tier.glow
-            Stone(Text(verbatim: way.label(game)), state: way.nextLeads ? .next : .lit, pale: pale, engraved: page.paper, // loc: verbatim localized by Way
-                  trailing: trailing, glow: way.nextLeads ? glow : nil, ink: way.nextLeads ? page.signal(way.accent) : nil) {
+            return seat(Stone(Text(verbatim: way.label(game)), state: way.nextLeads ? .next : .lit, pale: pale, engraved: page.paper, // loc: verbatim localized by Way
+                              trailing: trailing, glow: way.nextLeads ? glow : nil, ink: way.nextLeads ? page.signal(way.accent) : nil) {
                 onNext(next)
             }
-            .fixedSize()
             .accessibilityLabel(game.spilled ? Text("New run", comment: "VoiceOver: starts a new endless run") // loc: verbatim each a key
                                 : game.level.run != nil ? Text("Next tank", comment: "VoiceOver: endless's card, the next tank")
-                                : Text("Next level", comment: "VoiceOver: the card's next level"))
+                                : Text("Next level", comment: "VoiceOver: the card's next level")))
         case .up(let to):
-            SlopeUpANotch(from: game.level.tier, to: to, onNext: onNext, onLook: onLook)
-                .fixedSize()
+            return seat(SlopeUpANotch(from: game.level.tier, to: to, onNext: onNext, onLook: onLook, onTerrace: true))
+        }
+    }
+
+    /// The daily's next, under the stones; none for an archive day or any other level.
+    private var nextDaily: (some View)? {
+        guard let day = Share.day(of: game.level.id), !game.level.archived else { return nil as NextDaily? }
+        return NextDaily(day: day, now: now)
+    }
+
+    private struct NextDaily: View {
+        let day: Int
+        let now: Date?
+        @Environment(\.page) private var page
+
+        var body: some View {
+            TimelineView(.everyMinute) { t in
+                Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.slope(.data, .detail)).foregroundStyle(page.slope(.ink3)) // loc: verbatim localized by Daily
+                    .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true)) // loc: verbatim localized by Daily
+            }
         }
     }
 }
@@ -249,28 +261,44 @@ private struct SlopeUpANotch: View {
     let to: Tier
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
+    /// On the terrace's row, where the ground rises beside the pebble; else on the second terrace over it.
+    let onTerrace: Bool
+
+    /// The stone's own scale (`Stone`'s grain), for where its pebble stands beside the words.
+    @ScaledMetric(relativeTo: .body) private var grain = 1.0
+    /// The unsolved line's height, which a closed name stands over.
+    @ScaledMetric(relativeTo: .footnote) private var detailLine = 18.0
+    /// The words' height, which the room under them matches.
+    @State private var words: CGFloat = 0
 
     var body: some View {
-        let open = to.isOpen(), short = from.solved().filter { !$0 }.count
-        let shortLine = String(localized: "\(short) \(from.word) levels unsolved",
-                               comment: "The card's way up, the next tier shut. Levels unsolved, then their tier")
-        VStack(alignment: .trailing, spacing: 0) {
-            Stone(state: open ? .next : .dull, trailing: true, glow: to.glow, ink: open ? to.ink : nil) {
-                open ? onNext(to.levels[0]) : onLook(to)
-            } label: {
-                VStack(alignment: .trailing, spacing: -2) {
-                    if open {
-                        Text("up a notch", comment: "The card's way up to the next tier")
-                            .font(.slope(.place, .label)).foregroundStyle(SlopeInk.ink2.colour)
-                    }
-                    Text(verbatim: open ? "\(to.word) \u{203A}" : to.word).font(.slope(.name, .title)) // loc: verbatim localized by Tier.word
+        let open = to.isOpen()
+        let shortLine = SlopeExplains.unsolved(from)
+        let g = min(grain, 1.4)
+        Stone(state: open ? .next : .dull, trailing: true, glow: to.glow, ink: open ? to.ink : nil) {
+            open ? onNext(to.levels[0]) : onLook(to)
+        } label: {
+            VStack(alignment: .trailing, spacing: -2) {
+                if open {
+                    Text("up a notch", comment: "The card's way up to the next tier")
+                        .font(.slope(.place, .label)).foregroundStyle(SlopeInk.ink2.colour)
                 }
+                Text(verbatim: open ? "\(to.word) \u{203A}" : to.word).font(.slope(.name, .title)) // loc: verbatim localized by Tier.word
+                // Closed, room under the name for the unsolved line, which the stone's dull words can't carry at its ink.
+                if !open { Color.clear.frame(height: detailLine) }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { words = $0 }
+            // As much room again under them, and a little more, so the stone's middle, which the terrace sets its
+            // pebble by, is just under the words: two lines over a terrace that rises beside the pebble would
+            // otherwise reach the lit sand.
+            .padding(.bottom, onTerrace ? words + 4 : 0)
+        }
+        .overlay(alignment: .topTrailing) {
             if !open {
-                // Under the stone's words, at a strength the dull stone's own words can't carry.
                 Text(shortLine).font(.slope(.ui, .detail)).foregroundStyle(SlopeInk.ink2.colour) // loc: verbatim localized here
-                    .padding(.trailing, 4)
-                    .onTapGesture { onLook(to) }
+                    .fixedSize()
+                    .offset(x: -(17 * g + 12), y: words - detailLine)
+                    .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
         }
@@ -281,6 +309,23 @@ private struct SlopeUpANotch: View {
         .accessibilityHint(open ? Text(verbatim: "") // loc: verbatim each a key
                            : Text("Shows which \(from.name) levels are unsolved", comment: "VoiceOver: the card's way up, shut. The tier below"))
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// The result's explanatory lines, each written in one place so it can be cut whole: what clean takes, and what a
+/// closed up a notch lacks.
+@MainActor enum SlopeExplains {
+    /// Only where the solve is neither clean nor over par.
+    static func cleanTakes(_ game: Game) -> String? {
+        let par = game.level.ratchets.isEmpty
+        guard game.level.run == nil, !game.clean, !par || game.over == 0 else { return nil }
+        return game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? String(localized: "clean needs no undo or reset")
+            : String(localized: "clean counts on the first try")
+    }
+
+    static func unsolved(_ from: Tier) -> String {
+        String(localized: "\(from.solved().filter { !$0 }.count) \(from.word) levels unsolved",
+               comment: "The card's way up, the next tier shut. Levels unsolved, then their tier")
     }
 }
 
@@ -295,30 +340,34 @@ struct SlopeLost: View {
     @Environment(\.page) private var page
 
     var body: some View {
-        VStack(spacing: 22) {
-            Text("out of ticks on move \(game.moves)").font(.slope(.ui, .body, .medium)).foregroundStyle(page.slope(.ink))
-                .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused) // loc: verbatim localized by Game
-                .modifier(SlopeArrival(after: SlopeResult.lines))
-            VStack(spacing: 10) {
-                HStack(alignment: .bottom, spacing: 16) {
-                    Stone(Text("undo \u{00B7} \(game.bank)"), state: game.bank == 0 ? .dull : .lit, engraved: page.paper, action: undo)
-                        .fixedSize()
-                        .accessibilityLabel("Undo, \(game.bank) left")
-                    Spacer(minLength: 0)
-                    Stone(Text("again \u{203A}"), engraved: page.paper, trailing: true, action: again)
-                        .fixedSize()
-                        .accessibilityLabel("Try again")
-                }
-                if let notice {
-                    Text(notice).font(.slope(.place, .body)).foregroundStyle(page.slope(.ink)) // loc: verbatim localized by TankView
-                        .multilineTextAlignment(.center)
-                        .transition(.opacity)
-                }
-            }
-            .modifier(SlopeArrival(after: SlopeResult.stones))
-        }
-        .padding(.horizontal, 4)
-        .onAppear { focused = true }
+        Text("out of ticks on move \(game.moves)").font(.slope(.ui, .body, .medium)).foregroundStyle(page.slope(.ink))
+            .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused) // loc: verbatim localized by Game
+            .modifier(SlopeArrival(after: SlopeResult.lines))
+            .padding(.horizontal, 4)
+            .terraceSeats(TerraceSeats(leading: seat(undoStone), trailing: seat(againStone), under: notice.map { seat(noticeLine($0)) }))
+            .onAppear { focused = true }
+    }
+
+    private func seat(_ view: some View) -> AnyView {
+        AnyView(view.fixedSize().modifier(SlopeArrival(after: SlopeResult.stones)).environment(\.page, page))
+    }
+
+    /// Undo sounds as today's did; an empty bank only says when it refills, so it only taps.
+    private var undoStone: some View {
+        PlayStone(label: Text("undo \u{00B7} \(game.bank)"), state: game.bank == 0 ? .dull : .lit, engraved: page.paper,
+                  effect: game.bank == 0 ? .tap : .undo, action: undo)
+            .accessibilityLabel("Undo, \(game.bank) left")
+    }
+
+    private var againStone: some View {
+        PlayStone(label: Text("again \u{203A}"), engraved: page.paper, trailing: true, effect: .reset, action: again)
+            .accessibilityLabel("Try again")
+    }
+
+    /// An empty bank's word on when it refills, under the stones.
+    private func noticeLine(_ words: String) -> some View {
+        Text(words).font(.slope(.place, .body)).foregroundStyle(page.slope(.ink)).multilineTextAlignment(.center) // loc: verbatim localized by TankView
+            .transition(.opacity)
     }
 }
 
@@ -344,7 +393,8 @@ struct SlopeArrival: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .animation(.easeOut(duration: 0.6).delay(after)) { $0.opacity(arrived ? 1 : 0) }
+            // Under Reduce Motion everything is in place at once.
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.6).delay(after)) { $0.opacity(arrived ? 1 : 0) }
             // The rise settles, the fade doesn't: `1 - exp(-6x) cos(5x)` is a spring of about this bounce.
             .animation(reduceMotion ? nil : .spring(duration: 1.1, bounce: 0.18).delay(after)) {
                 $0.offset(y: arrived || reduceMotion ? 0 : rise)
