@@ -350,7 +350,7 @@ struct SettingsSheet: View {
 }
 
 /// "report a problem": a mail to the support address, its log attached and the device line in the body.
-private struct MailSheet: UIViewControllerRepresentable {
+struct MailSheet: UIViewControllerRepresentable {
     let to: String
 
     static var subject: String { "\(SettingsSheet.version): a problem" }
@@ -386,7 +386,7 @@ private struct MailSheet: UIViewControllerRepresentable {
 }
 
 /// The privacy policy, read in the app.
-private struct SafariSheet: UIViewControllerRepresentable {
+struct SafariSheet: UIViewControllerRepresentable {
     let url: URL
 
     func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }
