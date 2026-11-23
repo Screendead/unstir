@@ -490,7 +490,7 @@ struct MenuView: View {
     /// for, when the phone saves power, or once nobody touches it. A card or the archive beside the list leaves it in
     /// sight and live.
     @ViewBuilder private func dock(over: Bool) -> some View {
-        if !Offer.shelf().isEmpty && PackDock.shown() {
+        if !Offer.shelf().isEmpty && Shop.shown() {
             PackDock(open: { show($0, from: $1) }, held: clock,
                      paused: over || settings || peeking || playing != nil || Power.shared.saving || Power.shared.idle,
                      covered: over || settings)
@@ -597,7 +597,7 @@ struct MenuView: View {
                      // level's row as a menu built anew centres it.
                      focus: cardFocus ?? (layout.wide && focus?.pack != nil && focus?.pack == card.pack ? focus : nil),
                      arrived: card.pack != nil && card.pack == arrived,
-                     backTo: returns?.name ?? PackCard.menu,
+                     backTo: returns?.name ?? Shop.menu,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = CameFrom(back: card, card: next)

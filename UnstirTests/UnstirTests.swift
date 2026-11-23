@@ -1712,12 +1712,12 @@ final class UnstirTests: XCTestCase {
     /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
     @MainActor func testTheDockWaitsForLevelNine() {
         let none: (Pack) -> Purchase = { _ in .unowned }
-        XCTAssertFalse(PackDock.shown(best: Self.solved(8), unlocked: false, state: none))
-        XCTAssertTrue(PackDock.shown(best: Self.solved(9), unlocked: false, state: none))
-        XCTAssertTrue(PackDock.shown(best: Self.solved(0), unlocked: true, state: none))
+        XCTAssertFalse(Shop.shown(best: Self.solved(8), unlocked: false, state: none))
+        XCTAssertTrue(Shop.shown(best: Self.solved(9), unlocked: false, state: none))
+        XCTAssertTrue(Shop.shown(best: Self.solved(0), unlocked: true, state: none))
         let pack = Pack.sold()[0]
         for (state, shown) in [(Purchase.owned, true), (.pending, true), (.revoked, true), (.failed, false), (.unowned, false)] {
-            XCTAssertEqual(PackDock.shown(best: Self.solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
+            XCTAssertEqual(Shop.shown(best: Self.solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
                            "\(state)")
         }
     }

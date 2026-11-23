@@ -1155,7 +1155,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
   neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the
   card's way out reads "✕ close" (VoiceOver "Close"), as the menu is in sight, unless it goes back to the bundle's
-  card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
+  card (`Shop.back`; Jack's call d4-menuback = B, round 16). It holds
   one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
   card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
   turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
@@ -1235,9 +1235,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `archived`, again is no practice, and it has no share line or next daily's time; but a day that kept a best on its
   day keeps it, the archive replaying it as practice (`Game.counts`), so the archive never moves `Daily.run`.
   `Resume.known` holds its days, so a try left there survives a launch.
-- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
+- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards, `PackCard`'s and
+  `PackDock`'s views; **Offer.swift** what they sell and the rules they follow apart from how they draw: `Offer`, the
+  `Store`, `Failure`, `Pricing` and `Purchase` extensions, `Marks`, and `Shop`, the card's and the dock's rules
+  (`back`, `menu`, `lands`, `pickUp`, `taste`, `arrival`, `continues`, `shown`, `saying`); **PackCovers.swift** the
+  covers and the card's clip (`PackTank`, `Wedge`, `LoopingTank`, `PackClip`). `Offer` is a pack or
   the bundle, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
-  for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
+  for, or under the developer unlock (`Shop.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
   draws it (`LevelPicture`: the halftone, black until its bake lands, its lenses' cores drawn finer once their detail bakes, as the glass's are (`unstirLens`), Escapement 2's engraved plate, the fern; the bundle a wedge of
@@ -1277,7 +1281,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tried). An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
-  once all are (`PackCard.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
+  once all are (`Shop.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and the bundle's cover once it saves nothing (the bundle owned, or the packs left cost no more than
   it), animating the shelf's change, its height kept whatever the covers' lines say; the bundle's card names each pack as a link to its
@@ -1286,7 +1290,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
-  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
+  entitlements is no landing (`Shop.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
   status, buy and Triptych's line, so an owner never sees a price on a pack they own, then reads as owned or not,
   without a chime or an announcement. Offline the read still ends, as the entitlements are kept on the device, and the
   card shows its state with "App Store unreachable" where the price goes, as before. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
@@ -1295,10 +1299,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes
   ("more in Lens ›"; Jack's call C1 = B, round 13), and every pack level's next is in the pack's colour, owned or not.
   The card that gate opens (`RootView.arrived`, that showing only) is scrolled to buying, under a line for a pack
-  never owned (`PackCard.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
+  never owned (`Shop.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
   else, for a player who skipped ahead, "The first three are free. 22 more in Lens." (Jack's call C1A = B, round 16); a
   refunded owner has only the revocation's line. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
-  one (`PackCard.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
+  one (`Shop.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
   its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (Type.swift's roles; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
