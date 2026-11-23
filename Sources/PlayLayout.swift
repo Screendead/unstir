@@ -79,6 +79,9 @@ struct PlayLayout: Equatable {
                    type: DynamicTypeSize = .large, scale: CGFloat, slope: Bool = false) -> PlayLayout {
         let window = CGSize(width: size.width + i.leading + i.trailing, height: size.height + i.top + i.bottom)
         let middle = window.width / 2 - i.leading - margin
+        var chrome = chrome
+        // The slope's stones stand on its terrace, which rises from the screen's foot, not the safe area's.
+        if slope { chrome.below += SlopePlay.lift(inset: i.bottom) }
         return of(content: CGSize(width: max(size.width - 2 * margin, 0), height: size.height), window: window,
                   fold: fold?.offsetBy(dx: -margin, dy: 0) ?? CGRect(x: middle, y: 0, width: 0, height: size.height),
                   halo: halo, chrome: chrome, type: type, scale: scale, slope: slope)
