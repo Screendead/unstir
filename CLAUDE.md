@@ -152,7 +152,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg);
   a pattern ending in `$` films only the case of that name, as `rim-swirl` alone would also film `rim-swirl-push`.
-  Both take the first "Pro Max" simulator, or `UNSTIR_SIM`'s. A film over 9.5 MB is shrunk
+  Both take the first "Pro Max" simulator, or `UNSTIR_SIM`'s. `FILM_PHONE=1` films the phone `UNSTIR_DEVICE` names
+  over its cable instead (`scripts/film-phone/main.swift`): a Release build's own frames, a take repeating two at
+  most at the 30 a second the finished films are cut at, where recordVideo's repeat twenty and more (2026-11-23).
+  It runs only from a shell whose app holds the Mac's Camera permission: the desktop app's Terminal panel, never a
+  session's own shell. No store states or Reduce Motion there. A film over 9.5 MB is shrunk
   to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
   BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
   video's clock by when each recorder started; its recorder (`scripts/film-sound/main.swift`, built by `swiftc`) fails

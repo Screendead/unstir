@@ -106,7 +106,9 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AV
         }
     }
 
-    /// A frame's mean luma, from a grid of its pixels: black is 16 in the video range the phone's frames come in.
+    /// Whether a frame is the app's black: its mean luma, from a grid of its pixels, and its four corners' too, as the
+    /// launch grows the app's black out of the home screen as a rounded card, and the wallpaper shows at its corners
+    /// until it fills the screen. Black is 16 in the video range the phone's frames come in.
     private func dark(_ buffer: CMSampleBuffer) -> Bool {
         guard let pixels = CMSampleBufferGetImageBuffer(buffer) else { return false }
         CVPixelBufferLockBaseAddress(pixels, .readOnly)
@@ -118,7 +120,7 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AV
         let row = planar ? CVPixelBufferGetBytesPerRowOfPlane(pixels, 0) : CVPixelBufferGetBytesPerRow(pixels)
         // A packed frame is BGRA: its green stands for its luma.
         let (step, offset) = planar ? (1, 0) : (4, 1)
-        var sum = 0, n = 0
+        var sum = 0, n = 0, corners = 0, m = 0
         for y in stride(from: 0, to: height, by: 16) {
             let line = base.advanced(by: y * row).assumingMemoryBound(to: UInt8.self)
             for x in stride(from: 0, to: width, by: 16) {
@@ -126,7 +128,14 @@ final class Recorder: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AV
                 n += 1
             }
         }
-        return n > 0 && sum < 28 * n
+        for y in Array(stride(from: 2, to: 26, by: 4)) + Array(stride(from: height - 26, to: height - 2, by: 4)) {
+            let line = base.advanced(by: y * row).assumingMemoryBound(to: UInt8.self)
+            for x in Array(stride(from: 2, to: 26, by: 4)) + Array(stride(from: width - 26, to: width - 2, by: 4)) {
+                corners += Int(line[x * step + offset])
+                m += 1
+            }
+        }
+        return n > 0 && sum < 28 * n && corners < 22 * m
     }
 
     private func drain() {

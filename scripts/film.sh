@@ -81,10 +81,12 @@ finish() {  # name strip-filter sound
   fi
   echo "filmed $name"
 }
-# FILM_PHONE's take. The recorder writes nothing until the app is launched and its black is up, so the phone's home
-# screen is never in the file, and records the phone's own sound in step with its frames (FILM_SOUND).
+# FILM_PHONE's take. The recorder writes nothing until the app is launched and its black fills the screen, so the
+# phone's home screen is never in the file, and records the phone's own sound in step with its frames (FILM_SOUND).
+# iOS's launch is still growing the app out of the home screen when a level's first frames draw, and shows the home
+# indicator over a clean level's first two seconds, so the app holds its black first (UNSTIR_HOLD).
 film_phone() {  # name seconds strip-filter KEY=VALUE...
-  local name=$1 secs=$2 strip=$3 mp4="shots/film/$1.mp4" mov="shots/film/$1.mov" pairs=() flags=(--from-black) kv unlock=
+  local name=$1 secs=$2 strip=$3 mp4="shots/film/$1.mp4" mov="shots/film/$1.mov" pairs=('"UNSTIR_HOLD":"2.5"') flags=(--from-black) kv unlock=
   shift 3
   for kv in "$@"; do
     case ${kv%%=*} in
@@ -96,6 +98,8 @@ film_phone() {  # name seconds strip-filter KEY=VALUE...
   [[ -n "$unlock" ]] && pairs+=('"UNSTIR_UNLOCK":"1"')
   [[ -n "${FILM_SOUND:-}" ]] && { pairs+=('"UNSTIR_SOUND":"1"'); flags+=(--sound); }
   local began log rec v1 took
+  # A sleeping screen sends no frames: a muted launch wakes it, and fails on a locked phone.
+  harness_launch "" "\"UNSTIR_SCREEN\":\"menu\"${unlock:+,\"UNSTIR_UNLOCK\":\"1\"}" || { echo "$name: the app didn't launch: is the phone unlocked?" >&2; exit 1; }
   began=$(mktemp) log=$(mktemp)
   build/film-phone/record "${flags[@]}" "$mov" > "$began" 2> "$log" &
   rec=$!
@@ -105,9 +109,9 @@ film_phone() {  # name seconds strip-filter KEY=VALUE...
     sleep 0.1
   done
   grep -q watching "$log" || { kill -INT "$rec" 2>/dev/null; wait "$rec" || true; cat "$log" >&2; exit 1; }
-  harness_launch "" "$(IFS=,; echo "${pairs[*]}")" || { kill -INT "$rec"; wait "$rec" || true; echo "$name: the app didn't launch: is the phone unlocked?" >&2; exit 1; }
+  harness_launch "" "$(IFS=,; echo "${pairs[*]}")" || { kill -INT "$rec"; wait "$rec" || true; exit 1; }
   kill -USR1 "$rec"
-  sleep "$secs"
+  sleep "$(awk -v s="$secs" 'BEGIN { print s + 2.5 }')"
   v1=$(python3 -c 'import time; print(time.clock_gettime(time.CLOCK_UPTIME_RAW))')
   # Left running, the app would sound from the phone's speaker once the recording lets its output go.
   [[ -n "${FILM_SOUND:-}" ]] && harness_launch "" "\"UNSTIR_SCREEN\":\"menu\"${unlock:+,\"UNSTIR_UNLOCK\":\"1\"}"
