@@ -143,7 +143,7 @@ struct SlopeHarness: View {
             case .stones:
                 SlopeScene(column: column, focus: 12, at: 0.5, z: 1, clock: clock, near: near) { _ in
                     SlopeLayer {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 24) {
                         Stone(Text(verbatim: "lit"), state: .lit) { taps += 1 } // loc: verbatim a stand-in
                         Stone(Text(verbatim: "next ›"), state: .next, glow: Tier.whirlpool.glow) { taps += 1 } // loc: verbatim a stand-in
                         Stone(Text(verbatim: "dull"), state: .dull, refused: taps) { taps += 1 } // loc: verbatim a stand-in
@@ -152,7 +152,7 @@ struct SlopeHarness: View {
                         Stone(Text(verbatim: "pale"), pale: true) { taps += 1 } // loc: verbatim a stand-in
                         Stone(Text(verbatim: "trailing"), trailing: true) { taps += 1 } // loc: verbatim a stand-in
                     }
-                    .slopePlace(CGPoint(x: column.lip + 70, y: size.height * 0.2), anchor: .topLeading)
+                    .slopePlace(CGPoint(x: column.lip + 70, y: size.height * 0.14), anchor: .topLeading)
                     }
                 }
             }
