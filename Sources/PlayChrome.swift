@@ -204,3 +204,73 @@ struct RefillBadge: View {
         .accessibilityHidden(true)
     }
 }
+
+/// The slope's world (docs/slope.md) in place of today's screens. Set by `RootView`; a Debug launch with
+/// UNSTIR_SLOPE=world starts in it, so the screens built on it can be seen before the default flips. No Release build
+/// reads the variable.
+enum SlopeWorld {
+    static let launched: Bool = {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["UNSTIR_SLOPE"] == "world"
+        #else
+        false
+        #endif
+    }()
+}
+
+extension EnvironmentValues {
+    /// The play screen, the result and every other screen draw the slope's world (`SlopeWorld`).
+    @Entry var slopeWorld = SlopeWorld.launched
+}
+
+/// What stands on the play screen's terrace (docs/slope.md, 4.5 and 5.2): a stone at each of its three seats, a second
+/// terrace over it where one row can't hold its words, and a line under its stones. Play fills it with undo, wait and
+/// reset; once a level has finished, the view in `LevelView`'s card slot fills it with the result's stones by
+/// `terraceSeats(_:)`, and the play screen sets them on the terrace in its controls' place. A seat left nil is empty.
+struct TerraceSeats {
+    var leading: AnyView?
+    var middle: AnyView?
+    var trailing: AnyView?
+    /// The second terrace's stone, centred over the first: Escapement's wait where the row can't hold three, or up a
+    /// notch where three seats can't each hold their words on one line. The finished tank gives way for it.
+    var upper: AnyView?
+    /// Under the stones, in the safe area's foot: the daily's "next daily in 7 h".
+    var under: AnyView?
+
+    init(leading: AnyView? = nil, middle: AnyView? = nil, trailing: AnyView? = nil, upper: AnyView? = nil, under: AnyView? = nil) {
+        self.leading = leading
+        self.middle = middle
+        self.trailing = trailing
+        self.upper = upper
+        self.under = under
+    }
+
+    /// The seats a card hands up, and where the terrace's row stands, met at the play screen's stack.
+    struct Key: PreferenceKey {
+        struct Value {
+            var seats: TerraceSeats?
+            var row: Anchor<CGRect>?
+        }
+
+        static var defaultValue: Value { Value() }
+        static func reduce(value: inout Value, nextValue: () -> Value) {
+            let next = nextValue()
+            value.seats = next.seats ?? value.seats
+            value.row = next.row ?? value.row
+        }
+    }
+
+    /// Whether the card's seats take a second terrace: the play screen keeps the finished tank clear of it.
+    struct Upper: PreferenceKey {
+        static let defaultValue = false
+        static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+    }
+}
+
+extension View {
+    /// Hands `seats` to the play screen's terrace, from the view in `LevelView`'s card slot.
+    func terraceSeats(_ seats: TerraceSeats) -> some View {
+        transformPreference(TerraceSeats.Key.self) { $0.seats = seats }
+            .preference(key: TerraceSeats.Upper.self, value: seats.upper != nil)
+    }
+}
