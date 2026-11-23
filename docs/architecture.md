@@ -579,12 +579,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `scramble.count`.
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
-  seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
+  seven, with **PlayChrome.swift**. TankView.swift keeps `LevelView` whole, its state and handlers, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
   `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's,
   its type Type.swift's and its buttons Buttons.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
-  `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
+  `LostStamp` and `StopLook`; PlayChrome.swift the chrome round the tank as views that take values and closures, which
+  `LevelView` builds from its state: `PlayHeader` (the way out, and the count it is handed: `MovesCount`, Escapement's
+  ticks or the sandbox's controls), `PlayTitle`, `PlayCaption`, whose slot holds the result or lost card `LevelView`
+  fills once the level finishes, and `PlayControls` (undo with its `RefillBadge`, and the wait and reset `LevelView`
+  hands in, as their arming and timers are its state). `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
   endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
   on a push, and otherwise reads `text2` under par, amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
   "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
@@ -1146,7 +1150,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
   cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
-  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule: the
+  too. `MenuLayout.of` (**MenuLayout.swift**) splits the menu wherever play splits, by play's own rule: the
   list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
   neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the

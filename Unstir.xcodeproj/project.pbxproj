@@ -87,6 +87,7 @@
 		BC05383BA7A21E4E0D8246FA /* Rods.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA12B7B59978B3DF2619B7B0 /* Rods.swift */; };
 		BD8503AA80BACF958F3E6355 /* ArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
+		C38662FB2920967725E557E0 /* MenuLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE6112988D84C733D2E3979 /* MenuLayout.swift */; };
 		C3C4473B9FBF9AF8C1B2082D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E92A6862096D73E5F52E0DC3 /* Localizable.xcstrings */; };
 		C3E3E666E927EB704CFA941D /* EscapementArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1236B8C3FCA3EA697DF254 /* EscapementArt.swift */; };
 		C43751B4CB5DE9A84EE3C2CB /* StirMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1B40452790F8A476242FC3 /* StirMap.swift */; };
@@ -101,6 +102,7 @@
 		D10CAA173CBE682652375AB2 /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCC0A4E08C966E2AD0FA13B /* Type.swift */; };
 		D18E0CA5A532D24864C99127 /* ResultMarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E201E2C589F6C145C60C830A /* ResultMarks.swift */; };
 		D19E907E79657C7B9EBEFD28 /* TapsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE8CF37570EED1B144E5201 /* TapsTests.swift */; };
+		D473CFC7DC2B15D1D83C76F2 /* PlayChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC21C4B9D117BB98177D02E /* PlayChrome.swift */; };
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
 		D743967665795B21B03B6D88 /* AchievementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAAABE968196C7403939ADC9 /* AchievementTests.swift */; };
 		D7B47E903167691787C1EB50 /* Marbling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0D958FCA92212546745A433D /* Marbling.metal */; };
@@ -196,7 +198,9 @@
 		7460F8510A57CE405402E04F /* PlayLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayoutTests.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
 		799D669DC17401F34FBEB5D2 /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
+		7AE6112988D84C733D2E3979 /* MenuLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuLayout.swift; sourceTree = "<group>"; };
 		7DE72E9F1CCE362B73E2FA79 /* Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solver.swift; sourceTree = "<group>"; };
+		7EC21C4B9D117BB98177D02E /* PlayChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayChrome.swift; sourceTree = "<group>"; };
 		7FD78B993A35245B095AA159 /* EscapementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementTests.swift; sourceTree = "<group>"; };
 		80EE66DF325957EFE55650C3 /* PayoffViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoffViews.swift; sourceTree = "<group>"; };
 		8235408DE6DD3E0A6017F00E /* TapLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapLawTests.swift; sourceTree = "<group>"; };
@@ -388,6 +392,7 @@
 				536CF149EF97D4429DC2751F /* Loom.metal */,
 				0D958FCA92212546745A433D /* Marbling.metal */,
 				12E8193F7A9FB37B678695D2 /* Menu.swift */,
+				7AE6112988D84C733D2E3979 /* MenuLayout.swift */,
 				69949920C5700A3E061FCC8A /* MenuModel.swift */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				18BFB7C893FE494190410F59 /* OracleBench.swift */,
@@ -396,6 +401,7 @@
 				580758B9300EF9A94D07C121 /* Payoff.swift */,
 				80EE66DF325957EFE55650C3 /* PayoffViews.swift */,
 				7147B0B195AAB46DE31D870D /* Pictures.swift */,
+				7EC21C4B9D117BB98177D02E /* PlayChrome.swift */,
 				F935F37F140F0E82EFAD71CA /* PlayLayout.swift */,
 				97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */,
 				39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */,
@@ -581,6 +587,7 @@
 				3F40391B2B57058C26788864 /* Loom.metal in Sources */,
 				D7B47E903167691787C1EB50 /* Marbling.metal in Sources */,
 				52972B0C126203096364F0AF /* Menu.swift in Sources */,
+				C38662FB2920967725E557E0 /* MenuLayout.swift in Sources */,
 				E0F1BF6E95D31DC3772A0ADF /* MenuModel.swift in Sources */,
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */,
@@ -589,6 +596,7 @@
 				AE4D088FB75371D72F05FEF9 /* Payoff.swift in Sources */,
 				357A4E83B9062002FD1BDA54 /* PayoffViews.swift in Sources */,
 				F40291CB604E0F77378217A9 /* Pictures.swift in Sources */,
+				D473CFC7DC2B15D1D83C76F2 /* PlayChrome.swift in Sources */,
 				F143AF69AD4B8E639FFD959B /* PlayLayout.swift in Sources */,
 				A4810ECE2020837953FD00AF /* Power.swift in Sources */,
 				05395D2553EA2900A671C0C3 /* ResultCard.swift in Sources */,
