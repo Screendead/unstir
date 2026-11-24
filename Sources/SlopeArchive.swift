@@ -97,6 +97,8 @@ struct SlopeArchive: View {
     /// In a wide window, where "✕ close" stands beside the way back.
     var beside = false
     var clock: Double?
+    /// Each day's result by its id; the harness's stand-in for stored bests.
+    var mark: (String) -> Archive.Mark = { Archive.Mark($0) }
     let onBack: () -> Void
     var onClose: (() -> Void)?
     let onPlay: (Level) -> Void
@@ -106,11 +108,12 @@ struct SlopeArchive: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     init(days: [(date: Date, level: Level)], today: Date = .now, focus: String? = nil, beside: Bool = false, clock: Double? = nil,
-         onBack: @escaping () -> Void, onClose: (() -> Void)? = nil, onPlay: @escaping (Level) -> Void) {
+         mark: @escaping (String) -> Archive.Mark = { Archive.Mark($0) }, onBack: @escaping () -> Void, onClose: (() -> Void)? = nil, onPlay: @escaping (Level) -> Void) {
         self.days = days
         self.focus = focus
         self.beside = beside
         self.clock = clock
+        self.mark = mark
         self.onBack = onBack
         self.onClose = onClose
         self.onPlay = onPlay
@@ -132,19 +135,20 @@ struct SlopeArchive: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 0) {
                             head
-                            if typeSize.isAccessibilitySize {
+                            if listed(geo.size.width) {
                                 dive
                             } else {
                                 ForEach(months, id: \.self) { month(month: $0, width: geo.size.width) }
                             }
                         }
                         .padding(.bottom, 40)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: .infinity, minHeight: geo.size.height, alignment: .topLeading)
                     }
-                    .defaultScrollAnchor(typeSize.isAccessibilitySize ? .top : .bottom)
                     .onAppear {
-                        guard let focus, days.contains(where: { $0.level.id == focus }) else { return }
-                        DispatchQueue.main.async { reader.scrollTo(focus, anchor: .center) }
+                        // The day just left at the middle; else the calendar's newest week at the foot, the dive's newest day at the top.
+                        let known = focus.flatMap { f in days.contains { $0.level.id == f } ? f : nil }
+                        guard let id = known ?? (listed(geo.size.width) ? nil : "today") else { return }
+                        DispatchQueue.main.async { reader.scrollTo(id, anchor: known != nil ? .center : .bottom) }
                     }
                 }
             }
@@ -234,6 +238,12 @@ struct SlopeArchive: View {
         }
     }
 
+    /// A ledge a day, newest first, where a seat can't hold its widest word ("clean", in mono) whole: the
+    /// accessibility sizes, and xxxLarge.
+    private func listed(_ width: CGFloat) -> Bool {
+        typeSize.isAccessibilitySize || 5 * 0.62 * TypeRole.detail.points(at: typeSize) > pitch(width) - 4
+    }
+
     /// Seats 52 pt apart, or a sixth of what leaves 31 pt each side.
     private func pitch(_ width: CGFloat) -> CGFloat { min(52, (width - 63) / 6) }
 
@@ -243,7 +253,9 @@ struct SlopeArchive: View {
         // The number, a pebble's room, the ledge's thickness, the result; at least 72.
         let top = number + 18, height = max(72, top + 14 + result + 8)
         return ZStack(alignment: .topLeading) {
-            WeekLedge(top: top, from: first - pitch * 0.62, to: first + 6.62 * pitch, seed: seed)
+            let held = week.indices.filter { k in week[k].map { $0 == today || index(of: $0) != nil } ?? false }
+            WeekLedge(top: top, from: first + (CGFloat(held.first ?? 0) - 0.62) * pitch,
+                      to: first + (CGFloat(held.last ?? 6) + 0.62) * pitch, seed: seed)
             ForEach(0 ..< 7, id: \.self) { k in
                 if let date = week[k] {
                     seat(date, top: top, number: number)
@@ -258,7 +270,7 @@ struct SlopeArchive: View {
     @ViewBuilder private func seat(_ date: Date, top: CGFloat, number: CGFloat) -> some View {
         let day = calendar.component(.day, from: date)
         if let i = index(of: date) {
-            let level = days[i].level, mark = Archive.Mark(level.id), next = level.id == focus
+            let level = days[i].level, mark = mark(level.id), next = level.id == focus
             Button { onPlay(level) } label: {
                 VStack(spacing: 0) {
                     Text(day, format: .number).font(.slope(.data, .label)).ink(mark == .unplayed ? .ink2 : .ink)
@@ -285,6 +297,7 @@ struct SlopeArchive: View {
                     .font(.slope(.place, .detail)).ink(.ink3).fixedSize()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .id("today")
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Today. Its daily is on the menu.", comment: "VoiceOver: the archive's grid, on today"))
         }
@@ -295,7 +308,7 @@ struct SlopeArchive: View {
     private var dive: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(days.indices.reversed(), id: \.self) { i in
-                let (date, level) = days[i], mark = Archive.Mark(level.id), next = level.id == focus
+                let (date, level) = days[i], mark = mark(level.id), next = level.id == focus
                 Button { onPlay(level) } label: {
                     ZStack(alignment: .topLeading) {
                         WeekLedge(top: 30, from: -20, to: 62, seed: i)
@@ -325,8 +338,9 @@ struct SlopeArchive: View {
     }
 }
 
-/// A week's ledge of sandstone: a bowed top lit from above, its rounded nose at each end, the rock cutting back
-/// under it. Drawn here, as the ground's ledges step out from the wall a pitch apart and can't seat seven across.
+/// A week's ledge of sandstone under its own days: a crowned top lit from above, a rounded nose at each end and the
+/// rock cutting back under it, as the slope's ledges are. Drawn here, as the ground's ledges step out from the wall a
+/// pitch apart and can't seat seven across.
 private struct WeekLedge: View {
     /// The top's depth, and its ends.
     let top: CGFloat
@@ -336,35 +350,49 @@ private struct WeekLedge: View {
 
     var body: some View {
         Canvas { context, _ in
-            let phase = CGFloat(seed) * 1.3
-            func crest(_ x: CGFloat) -> CGFloat { top + 3.6 * sin(x * 0.019 + phase) + 0.012 * (x - from) }
-            let span = to - from
-            var rock = Path()
-            rock.move(to: CGPoint(x: from, y: crest(from) + 4))
-            for i in 0 ... 40 {
-                let x = from + span * CGFloat(i) / 40
-                rock.addLine(to: CGPoint(x: x, y: crest(x)))
+            let phase = CGFloat(seed) * 1.3, span = max(to - from, 1)
+            // Crowned by at least 3 pt over any run, with a slow wander of its own.
+            func crest(_ x: CGFloat) -> CGFloat {
+                let t = (x - from) / span
+                return top - min(6, 1.5 + span * 0.012) * sin(.pi * t) + 1.6 * sin(x * 0.03 + phase)
             }
-            // The nose, then the underside cutting back in a long curve.
-            rock.addQuadCurve(to: CGPoint(x: to - 10, y: crest(to) + 13), control: CGPoint(x: to + 7, y: crest(to) + 5))
-            rock.addCurve(to: CGPoint(x: from + 8, y: crest(from) + 12),
-                          control1: CGPoint(x: to - span * 0.35, y: crest(to) + 6),
-                          control2: CGPoint(x: from + span * 0.3, y: crest(from) + 20))
-            rock.addQuadCurve(to: CGPoint(x: from, y: crest(from) + 4), control: CGPoint(x: from - 6, y: crest(from) + 9))
-            rock.closeSubpath()
+            let thick: CGFloat = 9, under = min(15, span * 0.1)
+            func path(_ steps: Int = 48) -> Path {
+                var rock = Path()
+                rock.move(to: CGPoint(x: from, y: crest(from) + 3))
+                for i in 0 ... steps {
+                    let x = from + span * CGFloat(i) / CGFloat(steps)
+                    rock.addLine(to: CGPoint(x: x, y: crest(x)))
+                }
+                // The trailing nose, rounded, then the underside cutting back in a long curve to the leading nose.
+                rock.addCurve(to: CGPoint(x: to - 6, y: crest(to) + thick),
+                              control1: CGPoint(x: to + 5, y: crest(to) + 1), control2: CGPoint(x: to + 3, y: crest(to) + thick))
+                rock.addCurve(to: CGPoint(x: from + 6, y: crest(from) + thick),
+                              control1: CGPoint(x: to - span * 0.3, y: crest(to) + thick + under),
+                              control2: CGPoint(x: from + span * 0.3, y: crest(from) + thick + under))
+                rock.addCurve(to: CGPoint(x: from, y: crest(from) + 3),
+                              control1: CGPoint(x: from - 3, y: crest(from) + thick), control2: CGPoint(x: from - 5, y: crest(from) + 1))
+                rock.closeSubpath()
+                return rock
+            }
+            let rock = path()
+            // Its shadow in the water under it.
+            var shade = context
+            shade.addFilter(.blur(radius: 8))
+            shade.fill(rock.offsetBy(dx: 4, dy: 9), with: .color(.black.opacity(0.28)))
             context.fill(rock, with: .linearGradient(
-                Gradient(stops: [.init(color: Color(0xD8C29A), location: 0), .init(color: Color(0x9C8466), location: 0.25),
-                                 .init(color: Color(0x2F4A4E), location: 1)]),
-                startPoint: CGPoint(x: 0, y: top - 4), endPoint: CGPoint(x: 0, y: top + 18)))
-            // The light along the top, fading off at each end.
+                Gradient(stops: [.init(color: Color(0xF0DDB4), location: 0), .init(color: Color(0xC9AD82), location: 0.2),
+                                 .init(color: Color(0x7E6850), location: 0.45), .init(color: Color(0x2C4448), location: 1)]),
+                startPoint: CGPoint(x: 0, y: top - 6), endPoint: CGPoint(x: 0, y: top + thick + under)))
+            // Sun along the crown, fading off toward each nose.
             var lip = Path()
             for i in 0 ... 40 {
-                let x = from + 6 + (span - 12) * CGFloat(i) / 40, p = CGPoint(x: x, y: crest(x) + 0.6)
+                let x = from + 4 + (span - 8) * CGFloat(i) / 40, p = CGPoint(x: x, y: crest(x) + 0.7)
                 if i == 0 { lip.move(to: p) } else { lip.addLine(to: p) }
             }
             context.stroke(lip, with: .linearGradient(
-                Gradient(colors: [Color(0xFFF2D8).opacity(0), Color(0xFFF2D8).opacity(0.55), Color(0xFFF2D8).opacity(0)]),
-                startPoint: CGPoint(x: from, y: 0), endPoint: CGPoint(x: to, y: 0)), lineWidth: 1.2)
+                Gradient(colors: [Color(0xFFF4DC).opacity(0), Color(0xFFF4DC).opacity(0.7), Color(0xFFF4DC).opacity(0)]),
+                startPoint: CGPoint(x: from, y: 0), endPoint: CGPoint(x: to, y: 0)), lineWidth: 1.4)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -399,7 +427,11 @@ struct SlopeArchiveHarness: View {
             }
         } else {
             let days = Archive.days().map { (date: $0, level: Level.daily($0, archived: true)) }
-            SlopeArchive(days: days, focus: focus, clock: clock, onBack: {}, onPlay: { _ in })
+            // Stand-in results, so every word shows: a week of each, newest last.
+            let words: [Archive.Mark] = [.clean, .par, .over(2), .tried, .unplayed, .par, .clean, .over(1)]
+            SlopeArchive(days: days, focus: focus, clock: clock, mark: { id in
+                words[(days.firstIndex { $0.level.id == id } ?? 0) % words.count]
+            }, onBack: {}, onPlay: { _ in })
         }
     }
 }
