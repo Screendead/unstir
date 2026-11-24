@@ -219,8 +219,32 @@ enum SlopeWorld {
 }
 
 extension EnvironmentValues {
+    /// The root draws the slope's ground under a level, so a level can grow from its pebble and shrink back to it
+    /// (docs/slope.md, 2.9, 2.11): `LevelView` then draws its tank and chrome on a clear background, leaves the back
+    /// swipe's movement to the root, and publishes what the ground shows (`SlopePlayStage`).
+    @Entry var slopeGroundOwned = false
     /// The play screen, the result and every other screen draw the slope's world (`SlopeWorld`).
     @Entry var slopeWorld = SlopeWorld.launched
+}
+
+/// What a level on the slope shows of the ground under it, published by `LevelView` (`SlopePlayStage.Key`) where the
+/// root draws that ground (`slopeGroundOwned`): `SlopeBackdrop(stage:)` draws it exactly as the level would.
+struct SlopePlayStage: Equatable {
+    var level: Level
+    /// Solved and its result up: the terrace glints as the light settles.
+    var lit: Bool
+    /// The curtain call is playing: the terrace has sunk out of the screen's foot.
+    var sinking: Bool
+    /// How far the back swipe has gone, 0 to 1; set with an animation when the swipe lets go, on to 1 as it leaves
+    /// (then `onExit`) or back to 0.
+    var swipe: Double
+    /// The glass and its rim in the window (`.global`), for a pebble to grow into and shrink back to.
+    var tank: CGRect
+
+    struct Key: PreferenceKey {
+        static let defaultValue: SlopePlayStage? = nil
+        static func reduce(value: inout SlopePlayStage?, nextValue: () -> SlopePlayStage?) { value = nextValue() ?? value }
+    }
 }
 
 /// What stands on the play screen's terrace (docs/slope.md, 4.5 and 5.2): a stone at each of its three seats, a second

@@ -266,7 +266,10 @@ struct LevelView: View {
     /// The slope's world (docs/slope.md, 4): its ground, chrome and terrace in place of today's.
     @Environment(\.slopeWorld) private var slope
     /// The slope's terrace catching the light once the level is solved.
-    @State private var glint = 0.0
+    /// The root draws the slope's ground under this level itself (`slopeGroundOwned`), and this level only publishes
+    /// what it shows (`SlopePlayStage`); its tank's frame in the window, for that.
+    @Environment(\.slopeGroundOwned) private var groundOwned
+    @State private var tankFrame = CGRect.zero
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -542,12 +545,14 @@ struct LevelView: View {
             .persistentSystemOverlays(clean ? .hidden : .automatic)
             // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
             .overlay(alignment: .leading) {
-                if swiped > 0 {
+                if swiped > 0 && !rootDraws {
                     Rectangle().fill(Color.text.opacity(0.2)).frame(width: 0.5).ignoresSafeArea().allowsHitTesting(false)
                 }
             }
-            .offset(x: swiped * width)
-            .background { if swiped > 0 { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
+            // A root that draws the ground moves the level itself under the swipe (`SlopePlayStage.swipe`).
+            .offset(x: rootDraws ? 0 : swiped * width)
+            .background { if swiped > 0 && !rootDraws { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
+            .preference(key: SlopePlayStage.Key.self, value: rootDraws ? slopeStage : nil)
             .overlay(alignment: .leading) {
                 if swipeFinger {
                     page.finger(diameter: 40).offset(x: swiped * width - 12).allowsHitTesting(false)
@@ -931,6 +936,14 @@ struct LevelView: View {
         }
     }
 
+    /// The root draws this level's ground and moves it under the back swipe.
+    private var rootDraws: Bool { slope && groundOwned }
+
+    /// What the slope's ground shows under this level, and where the level stands, for whoever draws it.
+    private var slopeStage: SlopePlayStage {
+        SlopePlayStage(level: game.level, lit: showResult && game.solved, sinking: paying != nil, swipe: swiped, tank: tankFrame)
+    }
+
     /// Today's black or paper; the slope's ground is drawn behind it.
     private var ground: Color { slope ? .clear : page.ground }
 
@@ -982,6 +995,7 @@ struct LevelView: View {
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .modifier(PlayPart.stage(read: 3))
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { if groundOwned { tankFrame = $0 } }
                 caption(layout)
                     // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
                     // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
@@ -1035,20 +1049,7 @@ struct LevelView: View {
         // land anywhere; the slope's ground takes none, so a clear layer over it takes them, safe areas and all.
         .background { if slope { Color.clear.contentShape(.rect).ignoresSafeArea() } }
         .background {
-            if slope {
-                // The curtain call clears the stage: the terrace sinks out of the foot over 0.6 s, and rises again for
-                // the result (docs/slope.md, 6).
-                SlopePlayGround(level: game.level, glint: glint, sink: paying != nil ? SlopePlayGround.sunk : 0).equatable()
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: paying != nil)
-            }
-        }
-        // The terrace under a solved tank catches the light as it settles (docs/slope.md, 1.5); not under Reduce Motion.
-        .onChange(of: showResult && game.solved, initial: true) { _, lit in
-            guard slope, !reduceMotion else { return }
-            guard lit else { return withAnimation(.easeIn(duration: 0.4)) { glint = 0 } }
-            // Brightest as the motes come down past it, then settling to a warm rest with them.
-            withAnimation(.easeOut(duration: 1.4)) { glint = 1 }
-            withAnimation(.easeInOut(duration: 2).delay(1.4)) { glint = 0.55 }
+            if slope && !groundOwned { SlopeBackdrop(stage: slopeStage) }
         }
         .environment(\.page, page)
         .accessibilityAction(.escape) { leave() }
