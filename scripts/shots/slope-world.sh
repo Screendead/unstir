@@ -49,11 +49,11 @@ shot slope-world-result "Plughole 05 solved two over par through the real commit
 shot slope-world-clean "Plughole 06 solved clean." SLOPE=1 SCREEN=clean LEVEL=6 CLOCK=3
 shot slope-world-lost "Escapement 02 run out of ticks: the lost screen on the slope." SLOPE=1 PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1 CLOCK=3
 # The archive (piece E): its ledge and calendar alone (UNSTIR_SLOPEARCHIVE), and opened from the menu.
-recent=daily-$(date -v-3d +%Y%m%d)
-shot slope-archive "The archive's calendar on its own stretch of the shallows: a month to a stretch, a week to a terrace of seven seats, three days ago focused." \
-  SLOPEARCHIVE=calendar CLOCK=3 SLOPEAT=$recent
-shot slope-archive-ax3 "The same at accessibility3: a ledge a day, newest first." SLOPEARCHIVE=calendar CLOCK=3 SLOPEAT=$recent TYPESIZE=accessibility3
-shot slope-archive-ledge "The archive's ledge on open water: shut, open with 12 at par, and before the store has read." SLOPEARCHIVE=ledge
+shot slope-archive "The archive's calendar on its own stretch of the shallows: a month to a stretch, a week to a ledge of seven seats, each day's result under its pebble, opened on the newest week." \
+  SLOPEARCHIVE=calendar CLOCK=3
+shot slope-archive-xxxl "The same at xxxLarge: a list, a ledge a day, newest first." SLOPEARCHIVE=calendar CLOCK=3 TYPESIZE=xxxLarge
+shot slope-archive-ax3 "The same at accessibility3." SLOPEARCHIVE=calendar CLOCK=3 TYPESIZE=accessibility3
+shot slope-archive-ledge "The archive's ledge on open water: shut, open with 12 at par, and before the store has read." SLOPEARCHIVE=ledge CLOCK=3
 shot slope-world-archive "The archive opened over the menu, Lens owned, the last six dailies solved at par." \
   SLOPE=1 SCREEN=menu BESTS=$par27 DAILIES=6 OWNED=lens ARCHIVE=1 CLOCK=3
 hold=6 shot slope-world-archive-day "A past daily opened from the archive: its way back \"↑ archive\"." \

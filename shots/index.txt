@@ -1044,7 +1044,3 @@ slope-world-back-swipe.png  Plughole 12 held 40% into the back swipe over the sl
 slope-world-prism.png  Prism 01 on the slope: its clear water and pale stones, colour letters on.
 slope-world-lens.png  Lens 01 on the slope.
 slope-world-escapement.png  Escapement 02 after 2:+4 on the slope's paper: undo, wait and reset on the terrace.
-slope-world-escapement-ax5.png  The same at accessibility5: the wait on a second terrace.
-slope-world-result.png  Plughole 05 solved two over par through the real commit path: the result's lines on the water and its stones on the terrace.
-slope-world-clean.png  Plughole 06 solved clean.
-slope-world-lost.png  Escapement 02 run out of ticks: the lost screen on the slope.
