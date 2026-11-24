@@ -351,9 +351,8 @@ struct PackCard: View {
         case .unowned: EmptyView()
         case .owned:
             line(offer.pack == nil
-                 ? String(localized: "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open",
-                          comment: "The bundle's card, owned. Its packs, counted in words")
-                 : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), .lime)
+                 ? String(localized: "\u{2713} owned", comment: "A pack's card, owned")
+                 : String(localized: "\u{2713} owned", comment: "A pack's card, owned"), .lime)
         case .pending:
             // A pack can wait on Triptych I's request alone, which only Triptych I's card asks again.
             let asked = store.asked(offer)
@@ -379,9 +378,9 @@ struct PackCard: View {
             .accessibilityElement(children: .combine)
         case .revoked:
             // A refund or a family's share ended: said plainly, never as an alarm.
-            line(unshared ? String(localized: "\(offer.name) is no longer shared with you \u{00B7} your progress is kept",
+            line(unshared ? String(localized: "\(offer.name) is no longer shared with you",
                                    comment: "A pack's card: a family's share ended. The pack")
-                 : String(localized: "\(offer.name) isn't on this Apple ID any more \u{00B7} your progress is kept",
+                 : String(localized: "\(offer.name) isn't on this Apple ID any more",
                           comment: "A pack's card: refunded. The pack"), Color.text2, glow: false)
         }
     }

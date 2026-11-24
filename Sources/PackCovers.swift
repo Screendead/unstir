@@ -154,7 +154,7 @@ struct PackClip: View {
             .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(offer.pitch.map { pitch in // loc: verbatim each a key
-                Text("\(offer.name): \(pitch). A level played.", comment: "VoiceOver: a pack's clip. Its name, then its pitch")
+                Text("\(offer.name): \(pitch).", comment: "VoiceOver: a pack's clip. Its name, then its pitch")
             } ?? Text(verbatim: offer.name))
             .accessibilityAddTraits(.isImage)
     }

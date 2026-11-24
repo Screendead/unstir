@@ -145,7 +145,7 @@ enum Offer: Hashable, Sendable {
 
     var free: String {
         switch self {
-        case .pack(let p): String(localized: "levels 1\u{2013}\(p.taste) free, no purchase", comment: "A pack's card: its free levels")
+        case .pack(let p): String(localized: "levels 1\u{2013}\(p.taste) free", comment: "A pack's card: its free levels")
         case .complete: String(localized: "each pack's first 3 levels", comment: "The bundle's card: what is free")
         }
     }
@@ -431,9 +431,9 @@ extension Shop {
             ledge.spoken = unshared ? String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
                 : String(localized: "Buy Again \(offer.name)", comment: "VoiceOver: the buy pill, refunded. The pack")
             ledge.under.insert(Line(words: unshared
-                ? String(localized: "\(offer.name) is no longer shared with you \u{00B7} your progress is kept",
+                ? String(localized: "\(offer.name) is no longer shared with you",
                          comment: "A pack's card: a family's share ended. The pack")
-                : String(localized: "\(offer.name) isn't on this Apple ID any more \u{00B7} your progress is kept",
+                : String(localized: "\(offer.name) isn't on this Apple ID any more",
                          comment: "A pack's card: refunded. The pack"), quiet: true), at: 0)
         case .pending where asked:
             ledge.stone = .lit
@@ -466,9 +466,8 @@ extension Shop {
     /// The line under an owner's stone.
     static func owned(_ offer: Offer) -> Line {
         Line(words: offer.pack == nil
-             ? String(localized: "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open",
-                      comment: "The bundle's card, owned. Its packs, counted in words")
-             : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), signal: .lime)
+             ? String(localized: "\u{2713} owned", comment: "A pack's card, owned")
+             : String(localized: "\u{2713} owned", comment: "A pack's card, owned"), signal: .lime)
     }
 
     /// An owner's stone: the level it plays, its words and VoiceOver's. The bundle, with no levels of its own, plays

@@ -2281,7 +2281,7 @@ final class UnstirTests: XCTestCase {
             if level.picture == .coralTwin { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
             if level.picture == .neuronsTwin { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
         }
-        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank. Turns count as moves.")
+        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank.")
         XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["M1", "M2", "M3", "M8", "M10", "M18"])
     }
 
