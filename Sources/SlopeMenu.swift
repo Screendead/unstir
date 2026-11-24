@@ -519,7 +519,7 @@ struct SlopeMenuPlan {
                 + (daily.ledge.facts.map { SlopeMeasure.height($0, .detail, width: beside, at: type) } ?? 0) + 4
             let archive = line(.body) + (large ? 2 : 1) * line(.detail)
             column.stretches[0].height = max(column.stretches[0].height ?? 0, 1.5 * (today - line(.title) * 0.5 + line(.body) * 0.5 + 8),
-                                              3 * (archive - line(.body) * 0.5 + 8))
+                                              3 * (archive - line(.body) * 0.5 + (large ? 18 : 8)))
         }
         hollows = model.hollows.map { ($0, SlopeMenuPlan.hollowAfter($0)) }
         var needs: [CGFloat] = []
@@ -556,7 +556,7 @@ struct SlopeMenuPlan {
             }
             column.stretches[t + 1].rows = rows
             // At the overview a stretch is as tall as its words need, where that is more than its share of the screen.
-            var need = Self.bandLead + line(.title) + 3 + SlopeMeasure.height(tier.reason ?? tier.progress, .detail, width: beside, at: type) + 8
+            var need = Self.bandLead + line(.title) + 3 + SlopeMeasure.height(tier.reason ?? tier.progress, .detail, width: beside, at: type) + (large ? 18 : 8)
             if model.wayOn?.tier == tier.tier { need += line(.body) + 14 }
             if t == 0, let packs = model.packs {
                 need += SlopeMeasure.height(packs, .detail, width: beside, at: type) + 10
