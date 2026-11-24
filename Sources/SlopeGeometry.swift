@@ -220,7 +220,7 @@ struct SlopeLay: Sendable {
     /// the nose in the dive and, at the overview, undoes the `lift`.
     func crown(_ n: Int, at x: CGFloat) -> CGFloat {
         10 * scale(n) * (1 - cbrt(min(max((tips[n] - x) / max(tips[n] - backs[n], 1), 0), 1)))
-            + max(SlopeLay.lift(x) - SlopeLay.lift(backs[n]), 0) * (1 - e)
+            + (SlopeLay.lift(x) - SlopeLay.lift(backs[n])) * (1 - e)
     }
 
     /// Where a pebble rests on ledge `n`: the point of the ledge's top under the pebble's middle.
