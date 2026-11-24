@@ -116,7 +116,7 @@ struct SlopeGround: View {
                     .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
                     .float(look.paper),
                     .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
-                    .floatArray(view.lay.uniforms(top: view.top))]
+                    .floatArray(view.lay.uniforms(top: view.top, height: view.size.height))]
                 // The menu's ground is its own function, so no other pays for an egg it never shows.
                 let shader = eggs.map {
                     Shader(function: ShaderLibrary.default.slopeMenu, arguments: common + [.floatArray(

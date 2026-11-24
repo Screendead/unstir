@@ -67,7 +67,7 @@ let pw = Int(size.width * scale), ph = Int(size.height * scale)
 let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: pw, height: ph, mipmapped: false)
 descriptor.usage = [.shaderWrite, .shaderRead]
 let texture = device.makeTexture(descriptor: descriptor)!
-let uniforms = lay.uniforms(top: camera.top)
+let uniforms = lay.uniforms(top: camera.top, height: size.height)
 let buffer = device.makeBuffer(bytes: uniforms, length: uniforms.count * 4, options: .storageModeShared)!
 var view = SIMD4<Float>(Float(scale), Float(number("t", 3)), Float(number("near", 1)), Float(number("motes", 1)))
 var play = SIMD4<Float>(Float(number("level", 0)), Float(number("glint", 0)), Float(number("clear", 0)), Float(number("light", 1)))
