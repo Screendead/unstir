@@ -929,7 +929,6 @@ struct RootView: View {
                         .opacity(level == nil ? 1 : swipe)
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
                         .transition(slopeAside)
-                }
                 } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
