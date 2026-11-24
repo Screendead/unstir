@@ -107,6 +107,115 @@ static float3 slopeSand(float3 rock, float3 lit, float3 water, float tone, float
     return mix(mix(rock * 0.5, water * 2.4, 0.42), rock * 1.36 + lit * 0.05, smoothstep(0.4, 1.3, tone)) + lit * glint;
 }
 
+// What the menu's ground may show beyond the slope (SlopeEggs, docs/architecture.md): each term is skipped while its
+// number is 0, so a ground with none costs what it did.
+struct SlopeEgg {
+    // How far the night stands over the surface, the mirrored sky under the foot, still water, and a meteor night.
+    float night, deep, calm, meteors;
+    // The moon's terminator across its disc (1 new, -1 full) and its lit side (1 the trailing, -1 the leading).
+    float2 moon;
+    // The depth the mirrored sky starts at, and how far its lights have come out.
+    float2 mirror;
+    // A skimmed stone: seconds since it left the hand, where it first touched, its first hop (signed), its touches.
+    float4 skim;
+    // Gold in each tier's rock.
+    float4 seam;
+    // A spur of rock under the last ledge, for the unnumbered pebble: how far it reaches in from the leading edge, and
+    // its top's depth.
+    float2 nook;
+};
+
+// Points of light on a jittered grid at q, two sizes of cell: the night's stars. `pulse` is how far each one's light
+// swells and falls on its own slow beat; `soft` gives each a little halo; `out` is how many have come out.
+static float slopeStars(float2 q, float tm, float pulse, float soft, float out) {
+    float s = 0.0;
+    for (int j = 0; j < 2; j++) {
+        float fj = float(j), cell = 27.0 + 19.0 * fj;
+        float2 c = q / cell + fj * 13.7;
+        float2 id = floor(c), f = fract(c) - 0.5;
+        float2 jo = float2(slopeHash(id + 1.3), slopeHash(id + 5.9)) - 0.5;
+        float r = length((f - jo * 0.8) * cell);
+        float mag = 0.22 + 0.78 * pow(slopeHash(id + 2.2), 3.0);
+        float beat = 1.0 - pulse * (0.5 + 0.5 * sin(tm * 1.6 * (0.5 + slopeHash(id)) + 6.28 * slopeHash(id + 4.0)));
+        float lit = step(0.3, slopeHash(id + 9.1)) * smoothstep(0.0, 0.12, out - 0.88 * slopeHash(id + 7.7));
+        // A halo ends inside its own cell, or the next cell would cut it square.
+        float edge = (0.5 - max(abs(f.x), abs(f.y))) * cell;
+        s += (smoothstep(1.0, 0.0, r / (0.62 + 0.8 * mag)) + soft * exp(-r / (1.1 + 1.5 * mag)) * 0.45 * smoothstep(0.0, 5.0, edge))
+            * mag * beat * lit;
+    }
+    return s;
+}
+
+// The night over the surface, h points above it: stars, a little cloud of them, and the moon at its phase. `night` is
+// how far the pull has brought it out.
+static float3 slopeNight(float3 col, float2 pos, float h, float width, float tm, SlopeEgg egg) {
+    float up = smoothstep(40.0, 190.0, h) * egg.night;
+    col += float3(0.86, 0.9, 1.0) * slopeStars(float2(pos.x, h), tm, 0.3, 0.0, 1.0) * up;
+    col += float3(0.05, 0.054, 0.085) * smoothstep(0.3, 0.9, slopeNoise(float2(pos.x * 0.005 - h * 0.004, (-h - pos.x * 0.7) * 0.011))) * up;
+    float2 mv = float2(pos.x - 0.73 * width, 250.0 - h) / 15.0;
+    float r = length(mv);
+    if (r < 12.0) {
+        float limb = sqrt(max(1.0 - mv.y * mv.y, 0.0));
+        float lit = smoothstep(-0.07, 0.07, mv.x * egg.moon.y - egg.moon.x * limb);
+        float3 face = float3(1.0, 0.965, 0.87) * (0.8 + 0.2 * slopeNoise(mv * 2.1 + 3.0)) * (1.0 - 0.16 * r * r);
+        col = mix(col, mix(float3(0.05, 0.052, 0.075), face, lit), smoothstep(1.0, 0.92, r) * egg.night);
+        col += float3(0.62, 0.64, 0.78) * exp(-max(r - 1.0, 0.0) * 0.5) * 0.10 * egg.night * (0.25 + 0.375 * (1.0 - egg.moon.x));
+    }
+    if (egg.meteors > 0.0) {
+        // A meteor night: one in most spells of 2.3 s, each a short streak falling away from the shower's radiant, high
+        // off the leading side, its head bright and its tail thinning.
+        float spell = floor(tm / 2.3), s = (tm - 2.3 * spell) / 0.62;
+        float a = slopeHash(float2(spell, 3.1)), b = slopeHash(float2(spell, 7.7));
+        if (s < 1.0 && a < 0.72) {
+            float2 from = float2(width * (0.2 + 0.75 * b), 130.0 + 300.0 * a);
+            float2 way = normalize(from - float2(-0.1 * width, 520.0));
+            float2 head = from + way * (150.0 + 90.0 * b) * s, v = float2(pos.x, h) - head;
+            float along = -dot(v, way), off = length(v + way * clamp(along, 0.0, 70.0)), tail = 70.0 * sin(3.14159265 * s);
+            float streak = exp(-off * off / 0.7) * (1.0 - smoothstep(0.0, max(tail, 1.0), along)) * step(-1.5, along);
+            col += float3(0.95, 0.97, 1.0) * streak * sin(3.14159265 * s) * (0.5 + 0.5 * a) * up * egg.meteors;
+        }
+    }
+    return col;
+}
+
+// The seam: gold in the rock of a tier at par, u ledges down it (0 to 27). A thread that wanders down the wall, swells,
+// pinches out and comes back, with a few flecks beside it; x and depth are the rock's own, so it keeps its place in
+// the rock from the overview to the dive. `run` is how many ledges a point of depth is, `open` the zoom eased.
+static float3 slopeSeam(float x, float depth, float u, float tier, float run, float open, float tm) {
+    // From far off it wanders slowly, no two bends alike; close to, smaller bends open out of it.
+    float reach = mix(6.0, 24.0, open), q = 1.7 * u + 1.3 + tier, small = 0.4 * open;
+    float2 p = float2(0.3 * u + 9.1 * tier, 4.2);
+    float slow = 2.0 * slopeNoise(p) - 1.0, turn = (2.0 * slopeNoise(p + float2(0.015, 0.0)) - 1.0 - slow) / 0.05;
+    float mid = mix(37.0, 46.0, open) + reach * ((1.0 - small) * 1.4 * slow + small * sin(q))
+        + open * (2.2 * sin(depth * 0.043) + 1.1 * sin(depth * 0.117 + 2.0));
+    float lean = reach * ((1.0 - small) * 1.4 * turn + small * 1.7 * cos(q)) * run
+        + open * (0.095 * cos(depth * 0.043) + 0.129 * cos(depth * 0.117 + 2.0));
+    float off = abs(x - mid) / sqrt(1.0 + lean * lean);
+    // It runs out near either end of the tier, and pinches here and there between.
+    float there = smoothstep(0.0, 1.5, u) * smoothstep(27.0, 25.0, u) * smoothstep(0.3, 0.5, slopeNoise(float2(u * 0.9 + tier * 7.3, 2.5)));
+    float wide = mix(0.5, 1.0, open) * (0.45 + 1.1 * slopeNoise(float2(u * 2.3 + tier * 3.1, 8.5)));
+    float core = (1.0 - smoothstep(wide * 0.5, wide + 0.6, off)) * there;
+    float2 cell = float2(x, depth) / mix(3.0, 6.0, open), id = floor(cell);
+    float fleck = step(0.86, slopeHash(id + tier)) * (1.0 - smoothstep(0.06, 0.2, length(fract(cell) - 0.5)))
+        * exp(-off / mix(3.0, 9.0, open)) * there * (0.6 + 0.4 * sin(tm * 0.9 + 6.28 * slopeHash(id + 3.7)));
+    return float3(1.0, 0.80, 0.36) * (core * (0.75 + 0.25 * sin(u * 5.0 + tm * 0.4)) + fleck * 0.8)
+        + float3(0.9, 0.5, 0.12) * exp(-off / mix(1.6, 3.2, open)) * 0.22 * there;
+}
+
+// A skimmed stone's rings on the water line at x, seen from the side: each touch sends two bumps running apart. The
+// touches' times and places are SlopeSkim's (its `first`, `beat` and `fall`): each hop is a fifth shorter than the last.
+static float slopeRings(float x, float4 skim) {
+    float s = 0.0, run = 0.0, amp = 3.4;
+    for (int i = 0; i < 9; i++) {
+        if (float(i) >= skim.w) break;
+        float a = skim.x - 0.36 - 0.44 * run, f = abs(x - skim.y - skim.z * run) - 30.0 * a;
+        if (a > 0.0) s += amp * exp(-a * 1.1) * cos(f * 0.14) * exp(-f * f / (170.0 + 700.0 * a));
+        run += pow(0.8, float(i));
+        amp *= 0.9;
+    }
+    return s;
+}
+
 // view: pixels to a point, the ground's clock in seconds, how much of the near silhouette shows, and of the motes.
 // play: how far a level has taken the screen (the shelf draws aside and one terrace rises under the tank), a solved
 // tank's glint, Prism's clear water, and the ground's light (1 its own; consent draws it at 0.35).
@@ -115,7 +224,7 @@ static float3 slopeSand(float3 rock, float3 lit, float3 water, float tone, float
 // upper: a second terrace over the lone one, a short lip of the same rock for a stone with a row of its own: the
 // middle of its top on the screen, half its width, and how far it is there.
 static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, float4 upper,
-                          device const float *g) {
+                          device const float *g, SlopeEgg egg) {
     float top = g[0], open = g[1], count = g[3], foot = g[4];
     float tm = view.y;
     float x = pos.x + 280.0 * play.x;
@@ -149,22 +258,34 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     float3 wc = slopeWater(m);
     if (g[5] == 1.0) wc = mix(wc, float3(0.008, 0.006, 0.014), smoothstep(-0.5, 2.0, past));
     float surface = -top;
-    float d = g[6] > 0.0 ? pos.y - (surface + 3.2 * sin(pos.x * 0.024 + tm * 1.1) + 1.8 * sin(pos.x * 0.063 - tm * 1.6 + 1.3)) : 1000.0;
+    // Still water lies flat, and light reaches further down it.
+    float calm = egg.calm;
+    float d = g[6] > 0.0 ? pos.y - (surface + (1.0 - calm) * (3.2 * sin(pos.x * 0.024 + tm * 1.1) + 1.8 * sin(pos.x * 0.063 - tm * 1.6 + 1.3))) : 1000.0;
+    // A ring moves the water line, not the light over and under it.
+    if (egg.skim.w > 0.0) d -= slopeRings(pos.x, egg.skim) * exp(-abs(d) / 9.0);
     float under = step(0.0, d);
-    float sun = exp(-max(m + 2.8, 0.0) / 26.0) * 0.75 + 0.25;
+    float sun = exp(-max(m + 2.8, 0.0) / (26.0 + 90.0 * calm)) * 0.75 + 0.25;
     float3 col;
     if (d < 0.0) {
         // The air: dusk, warm along the water.
         col = mix(float3(0.03, 0.028, 0.05), float3(0.60, 0.37, 0.21), exp(d / 62.0) * 0.8);
         col += float3(0.5, 0.3, 0.12) * exp(-length((pos - float2(60.0, surface)) * float2(0.006, 0.02))) * 0.22;
+        if (egg.night > 0.0) col = slopeNight(col, pos, surface - pos.y, size.x, tm, egg);
     } else {
         col = wc;
         float sx = pos.x + d * 0.32 + tm * 4.0;
         float rays = slopeNoise(float2(sx * 0.016, 1.7)) * slopeNoise(float2(sx * 0.041 + 9.0, tm * 0.12));
-        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / 8.0) * 0.08;
+        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / (8.0 + 44.0 * calm)) * 0.08 * (1.0 - 0.3 * calm);
         col += float3(0.55, 0.50, 0.30) * exp(-d / 46.0) * 0.16;
         col += float3(0.45, 0.30, 0.10) * exp(-length((pos - float2(40.0, surface)) * float2(0.004, 0.0046))) * 0.16;
-        col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * 0.5;
+        col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * (0.5 + 0.3 * calm);
+        if (egg.night > 0.0) {
+            // The moon on the water: a bright stretch of the surface under it, and broken glints going down.
+            float mx = pos.x - 0.73 * size.x;
+            float a = exp(-d / 1.6) * slopeBell(mx / 44.0) * 0.45
+                + slopeBell(mx / (13.0 + d * 0.22)) * exp(-d / 60.0) * (0.8 + 0.2 * sin(pos.x * 0.4 + tm * 3.0)) * 0.1;
+            col += float3(1.0, 0.96, 0.86) * a * egg.night * 0.5 * (1.0 - egg.moon.x);
+        }
     }
 
     // Two far ridges, each moving slower than the shelf, and both ending at the drop-off. Haze takes them towards the
@@ -179,6 +300,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float3 rc = wc * (0.80 - 0.22 * fj);
         // Light from above catches the ridge's shoulder where there is light to catch.
         rc += wc * 0.5 * sun * sun * exp(-max(pos.x - e, 0.0) / (10.0 + 8.0 * fj)) * (0.5 + 0.5 * sin(yy * 0.061 + fj + 1.6)) * (0.6 - 0.25 * fj);
+        // In still water the far ridges come out of the haze.
+        rc += wc * calm * (0.5 - 0.2 * fj) * exp(-max(pos.x - e, 0.0) / (26.0 + 30.0 * fj));
         col = mix(col, rc, smoothstep(-soft, soft, pos.x - e) * under * smoothstep(0.0, 40.0, d));
     }
 
@@ -250,6 +373,14 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float rock = mix(ledge.w, slopeLedge(g, k + 1.0).w, smoothstep(0.55, 0.95, f / ledge.z));
         float3 rc = slopeSand(slopeRock(rock), slopeLit(rock), wc, tone, glint);
         rc = mix(rc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
+        if (egg.seam.x + egg.seam.y + egg.seam.z + egg.seam.w > 0.0 && k >= g[7] && m < 109.0) {
+            // A tier is three terraces of nine, and the water's depth counts its ledges evenly.
+            float tier = floor((m - 1.0) / 27.0);
+            if (egg.seam[int(tier)] > 0.0) {
+                float run = (k > count - 1.5 ? 1.0 : slopeMore(g, k + 1.0).y - more.y) / ledge.z;
+                rc += slopeSeam(x, depth, m - 1.0 - 27.0 * tier, tier, run, open, tm) * (0.5 + 0.5 * sun);
+            }
+        }
         // Out of the water the bank stands dark against the dusk, the last light along its top.
         rc = mix(rc, float3(0.19, 0.135, 0.115) * (0.8 + 0.5 * exp(min(d, 0.0) / 9.0))
                  + float3(0.66, 0.42, 0.22) * exp(-max(dry - 0.7, 0.0) / 2.6) * 0.8, 1.0 - under);
@@ -262,6 +393,17 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float tone = mix(1.25, 0.5, smoothstep(0.0, 70.0, dd)) * (0.82 + 0.3 * sun);
         float3 fc = slopeSand(rock, lit, wc, tone, (exp(-max(dd, 0.0) / 2.6) * 0.4 + exp(-max(dd, 0.0) / 14.0) * 0.12) * sun);
         col = mix(col, mix(fc, wc * 1.25, 0.2), slopeStep(dd));
+    }
+
+    if (egg.nook.x > 0.0 && fine > 0.0) {
+        // Under the last ledge, where the rock has curved back off the screen, a spur of it comes in again: a bowed top,
+        // a round nose, its underside cut back to the edge (SlopeEggs.nook seats a pebble on it).
+        float u = saturate(x / egg.nook.x), over = depth - egg.nook.y - 3.0 * u * u;
+        float thick = 22.0 * sqrt(max(1.0 - u * u * u * u, 0.0)) + 16.0 * (1.0 - u);
+        float inside = min(min(over, thick - over), (egg.nook.x - x) * 0.6);
+        float tone = mix(1.3, 0.5, smoothstep(0.0, 18.0, over)) * (0.82 + 0.3 * sun) * (0.96 + 0.08 * slopeNoise(float2(x, depth) * 0.11));
+        float3 sc3 = slopeSand(slopeRock(end.w), slopeLit(end.w), wc, tone, (exp(-max(over, 0.0) / 2.6) * 0.5 + exp(-max(over, 0.0) / 9.0) * 0.16) * sun);
+        col = mix(col, mix(sc3, wc * 1.25, 0.2) * 0.8, slopeStep(inside) * fine);
     }
 
     // A near silhouette, out of focus, moving faster than the shelf.
@@ -312,7 +454,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float2 jo = float2(slopeHash(id), slopeHash(id + 7.1)) - 0.5;
         float r = length((fr - jo * 0.7) * cell);
         float b = smoothstep(0.7 + fk * 0.5, 0.0, r) * step(0.55, slopeHash(id + 3.3));
-        col += float3(0.95, 0.9, 0.75) * b * (0.08 + fk * 0.06) * view.w * under * falling;
+        col += float3(0.95, 0.9, 0.75) * b * (0.08 + fk * 0.06) * view.w * under * falling * (1.0 - 0.7 * calm);
     }
     if (falling < 1.0) {
         float2 q = float2(pos.x - tm * 3.0, pos.y + top * open * 0.8 + 6.0 * sin(pos.x * 0.011 + tm * 0.2)) / 150.0;
@@ -320,6 +462,13 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float2 jo = float2(slopeHash(id + 1.7), slopeHash(id + 9.3)) - 0.5;
         float r = length((fr - jo * 0.6) * 150.0);
         col += float3(0.7, 0.72, 0.8) * smoothstep(2.4, 0.0, r) * step(0.5, slopeHash(id + 5.1)) * 0.2 * view.w * (1.0 - falling);
+    }
+
+    if (egg.deep > 0.0) {
+        // Under the last water the sky's own stars stand upside down, cold, coming out one by one.
+        float fall = top + pos.y - egg.mirror.x;
+        col += (float3(0.7, 0.92, 0.98) * slopeStars(float2(pos.x, fall + 400.0), tm, 0.7, 1.0, egg.mirror.y)
+                + float3(0.0, 0.016, 0.026) * smoothstep(0.0, 300.0, fall + 120.0)) * smoothstep(-150.0, 30.0, fall) * egg.deep;
     }
 
     // Prism's level: clear water, white light.
@@ -350,14 +499,28 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     return col;
 }
 
-[[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
-                             float4 upper, device const float *g, int count) {
-    float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g);
-    // The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel,
-    // keeps them from banding and never crawls.
+// The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel, keeps
+// them from banding and never crawls.
+static half4 slopeDithered(float3 col, float2 pos, float4 view) {
     float2 pixel = floor(pos * view.x);
     float n = slopeHash(pixel) + slopeHash(pixel + 61.7) - 1.0;
     return half4(half3(saturate(col + n / 255.0)), 1.0h);
+}
+
+// Every ground but the menu's: with no eggs, the compiler drops their terms, and it costs what it did before them.
+[[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
+                             float4 upper, device const float *g, int count) {
+    SlopeEgg none = {};
+    return slopeDithered(slopeGround(pos, size, view, play, lone, paper, upper, g, none), pos, view);
+}
+
+// The menu's ground. eggs: SlopeEggs.uniforms, a SlopeEgg's numbers in its own order.
+[[ stitchable ]] half4 slopeMenu(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
+                                 float4 upper, device const float *g, int count, device const float *eggs, int eggCount) {
+    SlopeEgg egg = { eggs[0], eggs[1], eggs[2], eggs[3], float2(eggs[4], eggs[5]), float2(eggs[6], eggs[7]),
+                     float4(eggs[8], eggs[9], eggs[10], eggs[11]), float4(eggs[12], eggs[13], eggs[14], eggs[15]),
+                     float2(eggs[16], eggs[17]) };
+    return slopeDithered(slopeGround(pos, size, view, play, lone, paper, upper, g, egg), pos, view);
 }
 
 // The inside of a hollow (8.2): still dark water between two jambs of pale stone, a floor near the foot, a ledge that

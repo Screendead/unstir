@@ -8,7 +8,9 @@
 # of the dive's travel; z=<0 to 1> is the zoom. w, h (440 x 956 points), scale (2), type=ax (the largest sizes'
 # column), column=pack (a pack's own), t (seconds, 3), near, motes (1), level, glint, clear (0), light (1), rock (the
 # lone terrace's), upper=1 (a second terrace over it), paper (0 to 1) and hollow=1 (the inside of a hollow) are the shader's; lit=<n> lights the pebbles
-# down to ledge n and pebbles=0 draws none; zone=rock probes the rock's heart.
+# down to ledge n and pebbles=0 draws none; zone=rock probes the rock's heart. The menu's eggs: lift=<pt> pulls the
+# camera past the surface (or, negative, the foot), night, deep, reveal, calm, meteors (0 to 1), moon (1 new to -1 full),
+# side, skim=<age,x,hop,count>, seam=<tiers at par, e.g. 0,2> and nook=1 (the spur under the last ledge); menu=1 draws the menu's ground with none of them showing.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/slope-lab

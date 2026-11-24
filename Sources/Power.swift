@@ -12,6 +12,14 @@ final class Power {
     private(set) var saving = Power.saving(lowPower: ProcessInfo.processInfo.isLowPowerModeEnabled,
                                            thermal: ProcessInfo.processInfo.thermalState)
     private(set) var idle = false
+    /// Still water (`Calm`): how far the slope's menu has gone still, and whether that is changing now.
+    private(set) var calm = Calm()
+    private(set) var turning = false
+    @ObservationIgnored private var turned: Task<Void, Never>?
+    #if DEBUG
+    /// UNSTIR_EGG=still: idle this soon, for its shot and film.
+    @ObservationIgnored var idleSooner: Duration?
+    #endif
     @ObservationIgnored private var waking: Task<Void, Never>?
     @ObservationIgnored private var watching = false
     @ObservationIgnored private var thermal = ProcessInfo.processInfo.thermalState
@@ -65,11 +73,29 @@ final class Power {
 
     /// A finger came down: the idle clock starts again.
     func touched() {
-        if idle { idle = false }
+        if idle {
+            idle = false
+            turn(to: 0)
+        }
         waking?.cancel()
         waking = Task { [weak self] in
-            guard (try? await Task.sleep(for: Self.idleAfter)) != nil else { return }
+            var wait = Self.idleAfter
+            #if DEBUG
+            wait = self?.idleSooner ?? wait
+            #endif
+            guard (try? await Task.sleep(for: wait)) != nil else { return }
             self?.idle = true
+            self?.turn(to: 1)
+        }
+    }
+
+    private func turn(to level: Double) {
+        calm = calm.turned(to: level, at: .now)
+        turning = true
+        turned?.cancel()
+        turned = Task { [weak self] in
+            guard let self, (try? await Task.sleep(for: .seconds(calm.span))) != nil else { return }
+            turning = false
         }
     }
 
@@ -79,6 +105,34 @@ final class Power {
         else { return }
         watching = true
         window.addGestureRecognizer(TouchWatch())
+    }
+}
+
+/// Still water: left alone for `Power.idleAfter`, the slope's menu goes still and clear over `settle` seconds, its
+/// clock slowing to a stop, and a touch brings it back over `wake`. One turn of that, from a level to 0 or 1, and the
+/// clock's seconds lost to the stillness before it, so a ground reads both for any moment with no state of its own.
+struct Calm {
+    static let settle = 4.4, wake = 0.85
+    var at = Date.distantPast
+    var from = 0.0, to = 0.0
+    var lost = 0.0
+
+    var span: Double { to > from ? Self.settle : Self.wake }
+
+    private static func ease(_ x: Double) -> Double { x * x * (3 - 2 * x) }
+
+    func level(_ date: Date) -> Double {
+        from + (to - from) * Self.ease(min(max(date.timeIntervalSince(at) / span, 0), 1))
+    }
+
+    /// The seconds a clock that runs at `1 - level` has lost by `date`.
+    func lost(_ date: Date) -> Double {
+        let u = max(date.timeIntervalSince(at), 0), x = min(u / span, 1)
+        return lost + from * u + (to - from) * (span * (x * x * x - x * x * x * x / 2) + max(u - span, 0))
+    }
+
+    func turned(to level: Double, at date: Date) -> Calm {
+        Calm(at: date, from: self.level(date), to: level, lost: lost(date))
     }
 }
 

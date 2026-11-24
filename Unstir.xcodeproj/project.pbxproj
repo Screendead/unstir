@@ -30,6 +30,7 @@
 		30C53B2E5E74BD66185048B9 /* EscapementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440714978B35CD68A9F562DA /* EscapementViews.swift */; };
 		346EECEE0574652612E6DB3B /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799D669DC17401F34FBEB5D2 /* Page.swift */; };
 		357A4E83B9062002FD1BDA54 /* PayoffViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80EE66DF325957EFE55650C3 /* PayoffViews.swift */; };
+		375857065A573691A7DF10DF /* SlopeEggs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F4B9776FE203CA19661F4 /* SlopeEggs.swift */; };
 		3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F14A8BD3536DD66979D13A /* Clip.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
 		3DEE134C24C7718D40F962C3 /* Lessons.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE2B06B8CFB2F3BB5B6CF7F /* Lessons.swift */; };
@@ -193,6 +194,7 @@
 		43FF2E81528BF804B347B9DA /* SlopePlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopePlay.swift; sourceTree = "<group>"; };
 		440714978B35CD68A9F562DA /* EscapementViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementViews.swift; sourceTree = "<group>"; };
 		492677BE451A3DA88096CDF8 /* DragProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragProbe.swift; sourceTree = "<group>"; };
+		497F4B9776FE203CA19661F4 /* SlopeEggs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeEggs.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
 		4CE724B24586C771A00348BD /* Spoken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spoken.swift; sourceTree = "<group>"; };
 		5150380D8EDFC2492B87D722 /* SlopeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeGate.swift; sourceTree = "<group>"; };
@@ -455,6 +457,7 @@
 				3B8449467A6C368062FC8096 /* Slope.metal */,
 				07A1C5C26D18523688CAD34B /* SlopeArchive.swift */,
 				98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */,
+				497F4B9776FE203CA19661F4 /* SlopeEggs.swift */,
 				5150380D8EDFC2492B87D722 /* SlopeGate.swift */,
 				6F759F3B5689BB554B5D6699 /* SlopeGeometry.swift */,
 				B8E865B896C1EAD2C9122B80 /* SlopeGround.swift */,
@@ -667,6 +670,7 @@
 				955132A99034C11E7E172767 /* Slope.metal in Sources */,
 				B336E06BB44B1A7B9009AEEB /* SlopeArchive.swift in Sources */,
 				4F7A4713149E5208E53AB74D /* SlopeConsent.swift in Sources */,
+				375857065A573691A7DF10DF /* SlopeEggs.swift in Sources */,
 				85C7438178DA53A1FE97D036 /* SlopeGate.swift in Sources */,
 				4411640D2FD996948570E903 /* SlopeGeometry.swift in Sources */,
 				EB7078BFCB2A52B0B6CB8D7D /* SlopeGround.swift in Sources */,

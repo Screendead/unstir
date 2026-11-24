@@ -1202,6 +1202,46 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
     column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
     overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.
+  - `SlopeEggs.swift` is the menu's eggs (Jack's call on issue 306: found, never told, rewarding nothing): a
+    `SlopeEggs` only `SlopeMenu` hands its ground, which Slope.metal reads as a `SlopeEgg`, every term skipped at 0, so
+    any other ground draws and costs what it did. `UNSTIR_EGG` (Debug) shows each without its finger
+    (scripts/shots/slope-eggs.sh, `film.sh slope-egg-`), and `scripts/slope-lab.sh` takes each as a number; `scripts/slope-lab/strip.sh` and `reel.sh` lay a simulator's
+    screenshots, or a recording's frames, side by side.
+    - Still water: where any other ground's clock stops at once on `Power.idle`, the menu's slows to a stop over
+      `Calm.settle` (4.4 s) as the surface flattens, the light reaches down, the ridges come out of the haze and the
+      motes thin, and a touch brings it back over `Calm.wake`. `Power.calm` holds the turn and what the clock has
+      lost to it, so the ground and the dive's veil read both for any moment and the ground draws only while
+      `Power.turning`. The way on's glow breathes out and holds (`\.slopeStill`). Reduce Motion and `Power.saving`
+      have none of it. Its light is kept under the shallows' own brightest, so the inks keep their floors.
+    - The night above: the ground reads how far its camera stands over the travel's top (`SlopeEggs.night(lift:)`, in by
+      150 pt) and draws stars fixed to the sky, and the moon 250 pt over the surface at its phase for the menu's day
+      (`SlopeEggs.elongation`, Meeus' six-term phase angle, checked against the eclipses of 2024-04-08, 2025-03-14 and
+      2026-08-12; lit on the left where the region is southern), with its light on the water. The dive's own bounce
+      pulls it there; the overview, which doesn't scroll, takes a drag of its own (`tug`, giving as a scroll's end
+      does, as a high-priority gesture so the bands under it keep their taps and lose their drags; none under
+      Reduce Motion, where nothing follows the finger). The ground reads a pull only at the camera's two rests, as on
+      its way between them it may pass either end of the travel.
+    - Skimming stone: a drag along the water line let go at 500 points a second or more throws a `SlopeSkim`: one
+      to nine touches by its speed and a little luck, as far as the water runs, each hop a fifth shorter and sooner.
+      The shader's `slopeRings` and `SlopeSkimLayer` read the same times and places; the layer is drawn inside the
+      ground on the ground's clock, so the stone meets the water line where it is drawn, sway and all, at the
+      display's rate while it flies. Each touch is a light haptic; the count stands two seconds where it sank.
+      Reduce Motion and `Power.saving` throw none. The drag is read in the screen's space, as the water line is.
+    - The unnumbered pebble: `SlopeEggs.nook` is a spur of rock 1.3 pitches under the main column's last ledge, drawn
+      by the shader in the dive and seating `SlopeUnnumbered`, a dull `Stone` whose words, "made by screendead", show
+      four seconds after a tap; VoiceOver has it as a button of that name.
+    - The seam: `SlopeMenuModel.TierRows.seam` (every level at par, read with the model, never per frame) lights
+      `slopeSeam` in that tier's rock: a thread that wanders by the water's depth in ledges, so it keeps its place in
+      the rock from the overview to the dive, pinching out and coming back, with flecks beside it.
+    - The sky at the bottom: past the foot of the travel by `SlopeEggs.held` (the dive's bounce, or the overview's
+      drag), the ground counts the hold on its own timeline, as a held finger sends no scroll events, and the
+      stars come out one by one over `dawning` seconds, the sky's own field upside down; at once under Reduce Motion.
+    - Meteor nights: `SlopeEggs.shower` is the three nights, noon to noon, round 12 August and 13 December; the night
+      above then draws one meteor in most spells of 2.3 s, falling away from a radiant high off the leading side.
+    - Cost, on the Mac's GPU at the reference phone's 1320 x 2868 (`slope-lab.sh bench`): every other ground calls
+      `slope`, whose eggs are a constant nothing the compiler drops, and costs what it did (0.869 ms at the overview);
+      the menu's `slopeMenu` costs 0.909 ms with no egg showing, 1.01 under the night, 1.02 with a stone skimming, 0.94
+      with every seam (1.09 in the dive, of 0.99), 1.24 over the mirrored sky and 1.09 beside the nook.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

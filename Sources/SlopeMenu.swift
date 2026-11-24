@@ -83,6 +83,13 @@ struct SlopeMenu: View {
     @State private var swiping = false
     @State private var pull: CGFloat = 0
     @GestureState private var dragging = false
+    /// The overview pulled past its place by a finger, and let go to settle back: down, the night stands over the
+    /// surface (`SlopeEggs`). `drawn` is the same pull made for the finger, the harness's.
+    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.7, bounce: 0.3))) private var tug: CGFloat = 0
+    @State private var drawn: CGFloat = 0
+    /// A stone skimming along the water line, and how many times it has touched, for the hand to feel.
+    @State private var skim: SlopeSkim?
+    @State private var skips = 0
 
     @State private var rest: Menu.Rest?
     @State private var shown = Tier.stored()
@@ -128,7 +135,14 @@ struct SlopeMenu: View {
     }
 
     private var covered: Bool { card != nil || archive || settings }
-    private var still: Bool { covered || peeking || playing != nil || Power.shared.saving || Power.shared.idle }
+    /// Idle is the ground's own to answer: its water goes still (`SlopeEggs`).
+    private var still: Bool { covered || peeking || playing != nil || Power.shared.saving }
+    private var eggs: SlopeEggs {
+        var eggs = SlopeEggs(today)
+        eggs.skim = skim
+        eggs.seams = model.tiers.map(\.seam)
+        return eggs
+    }
 
     var body: some View {
         watched
@@ -180,7 +194,40 @@ struct SlopeMenu: View {
             }
             chrome(plan, below: below && !bare)
         }
-        .onAppear { settle(plan) }
+        .environment(\.slopeStill, Power.shared.idle && !reduceMotion && !still)
+        .haptic(.impact(weight: .light, intensity: 0.6), trigger: skips) { _, now in now > 0 }
+        .onAppear {
+            settle(plan)
+            #if DEBUG
+            SlopeEggHarness.start()
+            if SlopeEggHarness.wanted == .skim {
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    var stone = SlopeSkim(from: 150, over: 9, speed: SlopeEggHarness.speed, width: plan.size.width, luck: 0)
+                    stone?.held = SlopeEggHarness.held
+                    if stone?.held != nil, !reduceMotion { skim = stone } else { throwStone(stone) }
+                }
+            }
+            if SlopeEggHarness.wanted == .seam {
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    enter(.plughole, plan)
+                }
+            }
+            if SlopeEggHarness.wanted == .pebble {
+                go(to: SlopeAim(ledge: plan.deep.count - 1, share: 0.3), plan)
+            }
+            if SlopeEggHarness.wanted == .night || SlopeEggHarness.wanted == .deep {
+                let pull: CGFloat = SlopeEggHarness.wanted == .deep ? -215 : 215
+                if SlopeEggHarness.posed { drawn = pull } else { Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    withAnimation(.easeInOut(duration: 1.6)) { drawn = pull }
+                    try? await Task.sleep(for: .seconds(6.6))
+                    withAnimation(.spring(duration: 0.7, bounce: 0.3)) { drawn = 0 }
+                } }
+            }
+            #endif
+        }
         .onChange(of: dragging) { if !dragging { released(plan) } }
         .onChange(of: start) { if let start { enter(start, plan) } }
     }
@@ -194,11 +241,34 @@ struct SlopeMenu: View {
 
     /// The overview, and every move of the camera.
     private func scene(_ plan: SlopeMenuPlan) -> some View {
-        let at = share ?? plan.overview(holding: hold)
-        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
+        // The pull gives as a scroll's end does.
+        let h = plan.size.height, pulled = tug * h * 0.55 / (h + 0.55 * abs(tug)) + drawn
+        let at = (share ?? plan.overview(holding: hold)) + (zoom == 0 && !moving ? pulled / h : 0)
+        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
+                          eggs: eggs) { view in
             world(view, plan, cull: true)
+            // Pulled up past its foot, the overview's words sink away under the status bar as the dive's do.
+            let over = view.top - view.lay.travel(height: view.size.height).upperBound
+            if over > 0, view.lay.e <= 0, plan.top > 0 {
+                let veil = plan.top + 30
+                SlopeGround(view: view, held: still, look: SlopeLook(light: light), clock: clock ?? 0, near: !plan.large, band: veil, eggs: eggs)
+                    .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: plan.top / veil),
+                                                 .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+                    .opacity(min(over / 24, 1))
+                    .frame(maxHeight: .infinity, alignment: .top)
+            }
         }
+        // Open water and air take a drag too, not only the words.
+        .contentShape(Rectangle())
         .allowsHitTesting(!moving)
+        // A drag takes the screen from the words under it; a tap is still theirs. Under Reduce Motion nothing follows
+        // the finger here, and the dive's own bounce is the one way past either end.
+        .highPriorityGesture(DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .updating($tug) { drag, tug, _ in
+                // A drag along the water line is a stone's, and pulls nothing.
+                if !flicks(drag, water: 0.188 * h) { tug = drag.translation.height }
+            }
+            .onEnded { flick($0, water: 0.188 * h, plan) }, including: zoom == 0 && !moving && !reduceMotion ? .all : .subviews)
         .overlay {
             // A tap during the travel skips to its end.
             if travel != nil { Color.clear.contentShape(Rectangle()).onTapGesture { arrive(journeys) }.ignoresSafeArea() }
@@ -207,7 +277,7 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, onMove: { top in
+        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, eggs: eggs, onMove: { top in
             scroll.top = top
             let up = top < 1
             if up != surfaced { surfaced = up }
@@ -215,6 +285,7 @@ struct SlopeMenu: View {
             world(view, plan, cull: false)
         }
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
+        .simultaneousGesture(DragGesture(minimumDistance: 12, coordinateSpace: .global).onEnded { flick($0, water: -scroll.top, plan) })
         // The edge swipe has the screen's leading edge to itself: a drag over the whole dive would take the rows' taps.
         .overlay(alignment: .leading) {
             Color.clear.frame(width: Self.edge).contentShape(Rectangle()).gesture(backSwipe(plan)).ignoresSafeArea()
@@ -227,7 +298,7 @@ struct SlopeMenu: View {
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false,
+        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false, eggs: eggs,
                   onMove: { scroll.wide = $0 }) { view in
             world(view, plan, cull: false)
         }
@@ -251,6 +322,37 @@ struct SlopeMenu: View {
                        })
             .opacity(bare ? 0 : 1).allowsHitTesting(!bare).accessibilityHidden(bare)
             .animation(.easeOut(duration: 0.6), value: bare)
+    }
+
+    // MARK: The skimming stone
+
+    /// The drag began by the water line, at `water` on the screen, and runs along it. The drag is read in the screen's
+    /// space, as the water line is: a view's own starts under the status bar.
+    private func flicks(_ drag: DragGesture.Value, water: CGFloat) -> Bool {
+        abs(drag.startLocation.y - water) < 40 && abs(drag.translation.width) > 2 * abs(drag.translation.height)
+    }
+
+    /// A drag let go: along the water line and fast enough, it throws a stone (`SlopeSkim`). Reduce Motion and a
+    /// saving `Power` throw none.
+    private func flick(_ drag: DragGesture.Value, water: CGFloat, _ plan: SlopeMenuPlan) {
+        guard flicks(drag, water: water), water > plan.top + 30 else { return }
+        throwStone(SlopeSkim(from: drag.location.x, over: min(max(water - drag.location.y, 4), 30), speed: drag.velocity.width,
+                             width: plan.size.width))
+    }
+
+    private func throwStone(_ stone: SlopeSkim?) {
+        guard let stone, skim == nil, !reduceMotion, !Power.shared.saving else { return }
+        Log.write("slope skim \(stone.touches)")
+        skim = stone
+        skips = 0
+        Task {
+            for i in 0 ..< stone.touches {
+                try? await Task.sleep(for: .seconds(stone.time(i) - (i > 0 ? stone.time(i - 1) : 0)))
+                skips = i + 1
+            }
+            try? await Task.sleep(for: .seconds(SlopeSkim.lingers))
+            skim = nil
+        }
     }
 
     // MARK: Travel
@@ -673,6 +775,8 @@ struct SlopeMenuModel {
         let ledges: [SlopeLedge]
         /// "13/27 at par".
         let progress: String
+        /// Every level at par: its rock holds a seam of gold (`SlopeEggs`).
+        let seam: Bool
         /// "opens with every whirlpool level solved"; nil for an open tier.
         let reason: String?
         let spoken: String
@@ -713,7 +817,7 @@ struct SlopeMenuModel {
             }
             let par = tier.atPar()
             return TierRows(tier: tier, open: open, levels: levels, ledges: ledges, progress: Menu.progress(tier),
-                            reason: open ? nil : Menu.reason(tier),
+                            seam: !par.isEmpty && par.allSatisfy { $0 }, reason: open ? nil : Menu.reason(tier),
                             spoken: open ? String(localized: "\(tier.word), \(par.filter { $0 }.count) of \(par.count) at par",
                                                   comment: "VoiceOver: a tier on the slope's overview. The tier, its levels at par, of all")
                                 : tier.spoken)
@@ -850,6 +954,14 @@ private struct SlopeMenuWorld: View {
             }
             hollows
             foot
+            unnumbered
+        }
+    }
+
+    /// The unnumbered pebble on its spur under the last ledge, the dive's alone (`SlopeEggs.nook`).
+    @ViewBuilder private var unnumbered: some View {
+        if near > 0, let nook = SlopeEggs.nook(lay), shown(view.point(nook.seat).y) {
+            SlopeUnnumbered().opacity(near).rested(at: view.point(nook.seat))
         }
     }
 
@@ -1113,6 +1225,9 @@ private struct SlopeMenuWorld: View {
     /// How far endless's words rise at the overview so their last line ends 8 pt over the bottom safe area.
     private func lift(from y: CGFloat, continues: Bool) -> CGFloat {
         func line(_ s: SlopeSize) -> CGFloat { SlopeMeasure.line(s, at: plan.type) }
+        // Measured where the camera rests: pulled past an end of its travel, the words go with the water.
+        let travel = lay.travel(height: view.size.height)
+        let y = y + view.top - min(max(view.top, travel.lowerBound), travel.upperBound)
         let words = line(.title) / 2 + (model.endlessLine != nil ? 4 + line(.detail) : 0) + (continues ? 10 + line(.body) : 0)
         return max(y + words - (view.size.height - plan.bottom - 8), 0)
     }

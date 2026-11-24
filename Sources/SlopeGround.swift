@@ -41,7 +41,8 @@ struct SlopeView {
 
 /// The slope's ground (Slope.metal) for one camera. It drifts on its own clock, at 30 Hz, and draws again only for
 /// that or a new camera. `held` stops the clock (a level is on screen, or something covers the slope), as `Power`
-/// does while it saves or idles, and Reduce Motion never starts it: then the ground is a still.
+/// does while it saves or idles, and Reduce Motion never starts it: then the ground is a still. With `eggs`, the
+/// menu's, an idle clock slows to its stop as the water goes still (`Calm`), and the ground draws until it has.
 struct SlopeGround: View {
     let view: SlopeView
     var held = false
@@ -52,36 +53,86 @@ struct SlopeGround: View {
     var near = true
     /// Draws only this much of the screen's top, as the same ground would there.
     var band: CGFloat?
+    var eggs: SlopeEggs?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var scale
-    /// When the clock read 0, and when it last stopped.
+    /// When the clock read 0; and when it last stopped, with what still water had cost it by then.
     @State private var epoch = Date.now
-    @State private var stopped: Date?
+    @State private var stopped: (at: Date, lost: Double)?
+    /// What still water had cost every clock before this one began.
+    @State private var before = Power.shared.calm.lost(.now)
+    /// Since when the camera has been held past the column's foot.
+    @State private var sunk: Date?
 
-    private var still: Bool { held || reduceMotion || clock != nil || look.paper >= 1 || Power.shared.saving || Power.shared.idle }
+    /// Nothing may move: the ground is a still whatever is asked of it.
+    private var fixed: Bool { held || reduceMotion || look.paper >= 1 || Power.shared.saving }
+    /// The water is going still, or coming back.
+    private var turning: Bool { eggs != nil && !fixed && Power.shared.turning }
+    /// A stone is skimming over it.
+    private var skimming: Bool { eggs?.skim != nil && !fixed }
+    /// How far past the foot of its travel the camera is: the menu's alone, where the foot is the drop-off.
+    private var past: CGFloat {
+        eggs != nil && rests && view.lay.column.foot == .dropOff ? view.top - view.lay.travel(height: view.size.height).upperBound : 0
+    }
+    /// The camera is at one of its two zooms: on its way between them it may pass either end of the travel, and that
+    /// is no pull.
+    private var rests: Bool { view.lay.e <= 0 || view.lay.e >= 1 }
+    /// The mirrored sky's lights are coming out.
+    private var dawning: Bool { past > SlopeEggs.held && !fixed }
+    private var still: Bool { fixed || !turning && !skimming && !dawning && (clock != nil || Power.shared.idle) }
+
+    /// How far the surface line stands off its place at x: Slope.metal's sway.
+    private static func sway(_ x: CGFloat, _ t: Double, calm: Double) -> CGFloat {
+        (1 - calm) * (3.2 * sin(x * 0.024 + t * 1.1) + 1.8 * sin(x * 0.063 - t * 1.6 + 1.3))
+    }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { timeline in
-            let t = clock ?? (reduceMotion ? 0 : (stopped ?? timeline.date).timeIntervalSince(epoch))
+        // A skimmed stone moves at the display's rate; the drift alone needs 30 Hz.
+        TimelineView(.animation(minimumInterval: skimming ? nil : 1.0 / 30, paused: still)) { timeline in
+            let power = Power.shared
+            let lost = eggs == nil ? 0 : (stopped?.lost ?? power.calm.lost(timeline.date)) - before
+            let t = clock ?? (reduceMotion ? 0 : (stopped?.at ?? timeline.date).timeIntervalSince(epoch) - lost)
+            let calm = eggs == nil || fixed ? 0 : power.turning ? power.calm.level(timeline.date) : power.calm.to
+            // The night stands over a surface pulled down past its place.
+            let lift = eggs != nil && rests && view.lay.column.surface ? view.lay.travel(height: view.size.height).lowerBound - view.top : 0
+            // The mirrored sky's lights come out while the camera is held past the foot; where nothing may move, all at once.
+            let waited = min(max((sunk.map { timeline.date.timeIntervalSince($0) } ?? 0) / SlopeEggs.dawning, 0), 1)
+            let out = fixed ? 1 : waited * waited * (3 - 2 * waited)
+            let mirror = view.top - past + view.size.height
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
-            Rectangle().fill(.black)
-                .colorEffect(ShaderLibrary.slope(
+            ZStack {
+                let common: [Shader.Argument] = [
                     .float2(view.size),
                     .float4(scale, t, near ? view.lay.e * (1 - look.level) : 0, 1),
                     .float4(look.level, look.glint, look.clear, look.light),
                     .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
                     .float(look.paper),
                     .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
-                    .floatArray(view.lay.uniforms(top: view.top))))
+                    .floatArray(view.lay.uniforms(top: view.top))]
+                // The menu's ground is its own function, so no other pays for an egg it never shows.
+                let shader = eggs.map {
+                    Shader(function: ShaderLibrary.default.slopeMenu, arguments: common + [.floatArray(
+                        $0.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), deep: SlopeEggs.deep(sunk: past), out: out,
+                                    mirror: mirror, lay: view.lay, at: timeline.date))])
+                } ?? Shader(function: ShaderLibrary.default.slope, arguments: common)
+                Rectangle().fill(.black).colorEffect(shader)
+                // The veil's band draws the water again, not what is on it.
+                if let skim = eggs?.skim, skimming, band == nil {
+                    SlopeSkimLayer(skim: skim, date: timeline.date) { -view.top + Self.sway($0, t, calm: calm) }
+                        .frame(width: view.size.width, height: view.size.height)
+                }
+            }
         }
+        .onChange(of: past > SlopeEggs.held) { sunk = past > SlopeEggs.held ? .now : nil }
         .onChange(of: still, initial: true) {
+            let now = Date.now, lost = eggs == nil ? 0 : Power.shared.calm.lost(now)
             if still {
-                stopped = .now
-            } else if let at = stopped {
+                stopped = (now, lost)
+            } else if let stopped {
                 // The clock takes up where it stopped, so nothing jumps.
-                epoch += Date.now.timeIntervalSince(at)
-                stopped = nil
+                epoch += now.timeIntervalSince(stopped.at) - (lost - stopped.lost)
+                self.stopped = nil
             }
         }
         .frame(width: view.size.width, height: band ?? view.size.height)
@@ -102,6 +153,7 @@ struct SlopeScene<Content: View>: View, Animatable {
     var look = SlopeLook()
     var clock: Double?
     var near = true
+    var eggs: SlopeEggs?
     @ViewBuilder var content: (SlopeView) -> Content
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>,
@@ -127,7 +179,7 @@ struct SlopeScene<Content: View>: View, Animatable {
             let lay = SlopeLay(column, z: z)
             let view = SlopeView(lay: lay, top: lay.camera(on: focus, at: at, height: size.height).top, size: size)
             SlopeLayer {
-                SlopeGround(view: view, held: held, look: look, clock: clock, near: near)
+                SlopeGround(view: view, held: held, look: look, clock: clock, near: near, eggs: eggs)
                 content(view)
             }
             .frame(width: size.width, height: size.height)
@@ -160,6 +212,7 @@ struct SlopeDive<Content: View>: View {
     var look = SlopeLook()
     var clock: Double?
     var near = true
+    var eggs: SlopeEggs?
     var onMove: ((CGFloat) -> Void)?
     @ViewBuilder var content: (SlopeView) -> Content
 
@@ -180,7 +233,7 @@ struct SlopeDive<Content: View>: View {
                         GeometryReader { inner in
                             let offset = -inner.frame(in: .named(Self.space)).minY
                             SlopeGround(view: SlopeView(lay: lay, top: base.top + offset, size: size), held: held, look: look,
-                                        clock: clock, near: near)
+                                        clock: clock, near: near, eggs: eggs)
                                 .offset(y: offset)
                                 .preference(key: SlopeDiveTop.self, value: Optional(base.top + offset))
                         }
@@ -205,8 +258,8 @@ struct SlopeDive<Content: View>: View {
                 .overlayPreferenceValue(SlopeDiveTop.self, alignment: .top) { top in
                     let veil = geo.safeAreaInsets.top + 30
                     if let top, geo.safeAreaInsets.top > 0 {
-                        SlopeGround(view: SlopeView(lay: lay, top: top, size: size), held: true, look: look, clock: clock ?? 0,
-                                    near: near, band: veil)
+                        SlopeGround(view: SlopeView(lay: lay, top: top, size: size), held: eggs == nil || held, look: look,
+                                    clock: clock ?? 0, near: near, band: veil, eggs: eggs)
                             .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: geo.safeAreaInsets.top / veil),
                                                          .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
                             .ignoresSafeArea()

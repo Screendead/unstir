@@ -28,12 +28,13 @@ let kernel = """
     kernel void lab(texture2d<float, access::write> out [[texture(0)]], device const float *g [[buffer(0)]],
                     constant float4 &view [[buffer(1)]], constant float4 &play [[buffer(2)]],
                     constant float4 &lone [[buffer(3)]], constant float4 &more [[buffer(4)]],
-                    constant float4 &upper [[buffer(5)]],
+                    constant float4 &upper [[buffer(5)]], device const float *eggs [[buffer(6)]],
                     uint2 gid [[thread_position_in_grid]]) {
         if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
         float2 pos = (float2(gid) + 0.5) / view.x;
         out.write(float4(more.w > 0.0 ? slopeHollow(pos, half4(0.0h), more.xy, view, float2(0.5 * more.x, 0.3 * more.y),
                                                     float3(1.0, 0.16, 0.16), float3(0.16, 1.0, 0.3), float3(0.2, 0.4, 1.0))
+                                      : eggs[18] > 0.0 ? slopeMenu(pos, half4(0.0h), more.xy, view, play, lone, more.z, upper, g, 0, eggs, 20)
                                       : slope(pos, half4(0.0h), more.xy, view, play, lone, more.z, upper, g, 0)), gid);
     }
     """
@@ -59,6 +60,8 @@ camera.z = z
 if let n = options["ledge"].flatMap(Int.init) { camera = lay.camera(on: n, height: size.height) }
 if options["at"] == "top" { camera.top = lay.travel(height: size.height).lowerBound }
 if options["at"] == "bottom" { camera.top = lay.travel(height: size.height).upperBound }
+// lift=<pt> pulls the camera up past its place, as a finger pulls the menu down; a negative one pulls it past the foot.
+camera.top -= number("lift", 0)
 let pw = Int(size.width * scale), ph = Int(size.height * scale)
 
 let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: pw, height: ph, mipmapped: false)
@@ -72,6 +75,19 @@ var lone = SIMD4<Float>(1, 0.86, 0.6, Float(number("rock", 0)))
 // upper=1 stands a second terrace over the lone one, at the screen's middle.
 var upper = SIMD4<Float>(Float(size.width / 2), Float(size.height - 118), 85, Float(number("upper", 0)))
 var more = SIMD4<Float>(Float(size.width), Float(size.height), Float(number("paper", 0)), Float(number("hollow", 0)))
+// The menu's eggs (Slope.metal's SlopeEgg, in its order): night, deep, calm, meteors, moon (the terminator) and side,
+// reveal (the mirrored sky's lights), skim=age,x,hop,count and seam=<tiers, e.g. 0,2>.
+let skim = (options["skim"] ?? "0,0,0,0").split(separator: ",").compactMap { Float($0) }
+let seams = (options["seam"] ?? "").split(separator: ",").compactMap { Int($0) }
+var eggs: [Float] = [Float(number("night", 0)), Float(number("deep", 0)), Float(number("calm", 0)), Float(number("meteors", 0)),
+                     Float(number("moon", 0)), Float(number("side", 1)),
+                     Float(lay.travel(height: size.height).upperBound + size.height), Float(number("reveal", 1))]
+    + skim + (0 ..< 4).map { seams.contains($0) ? 1 : 0 }
+// nook=1 stands the spur under the last ledge.
+eggs += number("nook", 0) > 0 ? [64, Float(lay.tops[lay.count - 1] + 1.3 * column.pitch)] : [0, 0]
+// menu=1 draws the menu's ground, with its eggs; any egg asked for does too. Otherwise it is every other screen's.
+eggs += [options.keys.contains { ["menu", "night", "deep", "calm", "meteors", "skim", "seam", "nook"].contains($0) } ? 1 : 0, 0]
+let eggBuffer = device.makeBuffer(bytes: eggs, length: eggs.count * 4, options: .storageModeShared)!
 
 /// GPU seconds for one pass, the least of `tries`.
 func pass(tries: Int) -> Double {
@@ -86,6 +102,7 @@ func pass(tries: Int) -> Double {
         enc.setBytes(&lone, length: 16, index: 3)
         enc.setBytes(&more, length: 16, index: 4)
         enc.setBytes(&upper, length: 16, index: 5)
+        enc.setBuffer(eggBuffer, offset: 0, index: 6)
         enc.dispatchThreads(MTLSize(width: pw, height: ph, depth: 1), threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
         enc.endEncoding()
         cb.commit()
