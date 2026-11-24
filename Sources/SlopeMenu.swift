@@ -1111,8 +1111,9 @@ private struct SlopeMenuWorld: View, Equatable {
                 }
             }
             hollows
-            covers
             foot
+            // Over the foot, so endless's target never takes a tap meant for a cover's name.
+            covers
             unnumbered
         }
     }

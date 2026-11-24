@@ -22,7 +22,14 @@ enum SlopePacksAt: String {
         #endif
     }()
 
-    static let shows = ProcessInfo.processInfo.environment["UNSTIR_PACKSHOW"] == "1"
+    /// UNSTIR_PACKSHOW=1, the harness's: a scrolling overview opens on the covers.
+    static let shows: Bool = {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["UNSTIR_PACKSHOW"] == "1"
+        #else
+        false
+        #endif
+    }()
 }
 
 /// The covers' places at the overview for one screen, type size and shelf, measured from the band's own anchor: the

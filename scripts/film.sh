@@ -393,8 +393,15 @@ film slope-egg-pebble 12 "fps=2,scale=165:-1,tile=12x2:padding=4" "${eggs[@]}" E
 film slope-egg-seam 11 "fps=2,scale=165:-1,tile=11x2:padding=4" "${eggs[@]}" EGG=seam
 film slope-egg-deep 15 "fps=2,scale=165:-1,tile=10x3:padding=4" "${eggs[@]}" EGG=deep
 film slope-egg-meteors 16 "fps=4,scale=165:-1,tile=16x4:padding=4" "${eggs[@]}" EGG=night DAILY=20260812
-# The packs' covers on the overview (SlopePacksAt): one tap, two seconds in, from the opening screen into Prism.
+# The packs' covers on the overview (SlopePacksAt): one tap, two seconds in, from the opening screen into Prism. From
+# a warm start: a launch first bakes the covers, which a fresh install draws dark for its first second.
+covers=(SLOPE=1 SCREEN=menu BESTS=plughole:000000000000000000000000000,endless:9 DAILIES=4 STORE=lens:unowned)
+warm=
 for at in a b c; do
-  film "slope-packsat-$at" 9 "fps=4,scale=165:-1,tile=12x3:padding=4" SLOPE=1 SCREEN=menu \
-    BESTS=plughole:000000000000000000000000000,endless:9 DAILIES=4 STORE=lens:unowned PACKSAT=$at PACKSTAP=prism
+  if wants "slope-packsat-$at" && [[ -z $warm ]]; then
+    env "${covers[@]/#/SIMCTL_CHILD_UNSTIR_}" SIMCTL_CHILD_UNSTIR_PACKSAT=$at xcrun simctl launch "$udid" "$bundle" >/dev/null
+    sleep 8
+    warm=1
+  fi
+  film "slope-packsat-$at" 9 "fps=4,scale=165:-1,tile=12x3:padding=4" "${covers[@]}" PACKSAT=$at PACKSTAP=prism
 done
