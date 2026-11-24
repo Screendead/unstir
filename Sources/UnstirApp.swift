@@ -954,12 +954,14 @@ struct RootView: View {
                 // pebble. Kept in place, all but unseen, while the menu is up, so its first frame is drawn before a level
                 // opens over it: a ground made as the level opens shows black for its first few frames.
                 if slope {
-                    SlopeBackdrop(stage: stage ?? SlopePlayStage(level: focus ?? Level.plughole[0], lit: false, sinking: false,
-                                                                 swipe: 0, tank: .zero))
+                    // The level that has gone keeps its ground while the menu comes back over it.
+                    SlopeBackdrop(stage: stage ?? playStage ?? SlopePlayStage(level: focus ?? Level.plughole[0], lit: false,
+                                                                              sinking: false, swipe: 0, tank: .zero))
                         .ignoresSafeArea()
                         .opacity(level == nil ? 0.001 : 1 - swipe)
-                        // Whole at once as a level opens, under the slope drawing aside; it follows only the swipe.
-                        .animation(nil, value: level)
+                        // Whole at once as a level opens, under the slope drawing aside. As it leaves it stays until the
+                        // menu's own ground has drawn its first frames, a third of a second, then goes under the menu.
+                        .animation(level == nil && !reduceMotion ? .easeIn(duration: Self.slopeTravel).delay(0.35) : nil, value: level)
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
                         .allowsHitTesting(false)
                         .accessibilityHidden(true)
