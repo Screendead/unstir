@@ -380,3 +380,7 @@ if wants calm-payoff-game || wants calm-payoff-tier; then
   calm false
   trap - EXIT
 fi
+# The slope's foundation (SlopeHarness): the dive scrolled from the surface to endless as a finger would, and the
+# overview's depth opening onto plughole 14, the scrolling dive taking over where it lands, and closing again.
+film slope-descent 19 "fps=2,scale=165:-1,tile=10x4:padding=4" SLOPE=descent SLOPESECONDS=16
+film slope-zoom 20 "fps=4,scale=165:-1,tile=10x8:padding=4" SLOPE=zoom SLOPEAT=L14

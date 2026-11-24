@@ -59,6 +59,9 @@ static float slopeScale(float4 ledge, float4 shape, device const float *g) {
     return min(0.75 * min(ledge.z, g[2]) / shape.x, 1.0);
 }
 
+// How far the overview lifts the rock at x (SlopeLay.lift).
+static float slopeLift(float x) { return 22.0 * x / sqrt(x * x + 40000.0); }
+
 // The rock's edge in x, f under ledge k's top: out to the lip round its nose, back under it by the undercut and away
 // to where the next ledge begins. Where that is a long way back, under a terrace's last ledge, the underside thins
 // towards the nose as an eave does. Under the column's last ledge the foot decides: the wall goes on, or at the
@@ -109,13 +112,17 @@ static float3 slopeSand(float3 rock, float3 lit, float3 water, float tone, float
 // tank's glint, Prism's clear water, and the ground's light (1 its own; consent draws it at 0.35).
 // lone: the lone terrace's light, and its rock.
 // paper: how far the ground is Escapement's page, an engraving in ink on bone.
-static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, device const float *g) {
+// upper: a second terrace over the lone one, a short lip of the same rock for a stone with a row of its own: the
+// middle of its top on the screen, half its width, and how far it is there.
+static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, float4 upper,
+                          device const float *g) {
     float top = g[0], open = g[1], count = g[3], foot = g[4];
     float tm = view.y;
     float x = pos.x + 280.0 * play.x;
-    // At the overview no ledge's top is straight: the whole shelf bows a few points (SlopeLay.bow).
+    // At the overview no ledge's top is straight: the whole shelf bows a few points, and lifts towards its lips
+    // (SlopeLay.bow).
     float plain = top + pos.y;
-    float depth = plain - (3.4 * sin(x * 0.021 + plain * 0.033) + 0.03 * (x - 60.0)) * (1.0 - open);
+    float depth = plain - (3.4 * sin(x * 0.021 + plain * 0.033) - slopeLift(x)) * (1.0 - open);
     // Grain and banding are the dive's: they would shimmer as the depth opens.
     float fine = smoothstep(0.7, 1.0, open);
 
@@ -128,14 +135,17 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     }
     float k = lo;
     float4 ledge = slopeLedge(g, k);
-    float f = depth - ledge.x;
+    float2 more = slopeMore(g, k);
+    // Each ledge leans down from its back by what the overview lifts it, so its top lies level on the screen
+    // (SlopeLay.crown).
+    float level = depth - ledge.x;
+    float f = level - (k < 0.0 ? 0.0 : (slopeLift(x) - slopeLift(more.x)) * (1.0 - open));
     float4 first = slopeLedge(g, 0.0), end = slopeLedge(g, count - 1.0);
     // Past the foot, in the last ledge's drops.
     float past = (depth - foot) / end.z;
 
-    float2 more = slopeMore(g, k);
     float m = g[7] < 0.0 ? g[8] : k < 0.0 ? more.y - 0.8 * (first.x - depth) / first.x
-        : more.y + (k > count - 1.5 ? 1.0 : slopeMore(g, k + 1.0).y - more.y) * f / ledge.z;
+        : more.y + (k > count - 1.5 ? 1.0 : slopeMore(g, k + 1.0).y - more.y) * level / ledge.z;
     float3 wc = slopeWater(m);
     if (g[5] == 1.0) wc = mix(wc, float3(0.008, 0.006, 0.014), smoothstep(-0.5, 2.0, past));
     float surface = -top;
@@ -177,7 +187,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     float4 sp = slopeShape(ledge.w, g);
     if (k < 0.0) {
         // Over the first ledge the wall wanders up to the bank.
-        e0 = more.x + 5.0 * sin(depth * 0.045 + 1.0);
+        float s = saturate(depth / max(first.x, 1.0)), b = sin(3.14159265 * s);
+        e0 = more.x + (8.0 + 4.0 * sin(depth * 0.11 + 1.0)) * b * b + 14.0 * (1.0 - s) * (1.0 - s);
         lean = 0.0;
     } else {
         sc = slopeScale(ledge, sp, g);
@@ -186,16 +197,20 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     }
     float din = e0 - x, across = din / sqrt(1.0 + lean * lean);
     float mask = slopeStep(across);
-    float below = 1.0;
+    // Over a leaning ledge's top the edge runs nearly level, and its softness would reach out past the lip as a line.
+    if (f < 0.0) mask *= 1.0 - smoothstep(ledge.y - 1.0, ledge.y + 1.0, x);
+    float below = 1.0, dry = 0.0;
     if (g[6] > 0.0) {
         // The bank's shoulder under the water line, and its dry top over it: drawn by the screen, as the stone on it is.
-        mask = max(mask, slopeStep(84.0 * slopeBell((pos.y - surface) / 66.0) - x));
-        below = slopeStep(pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0)));
+        // Under the water it falls away from the water line as gently as it came down to it, then steepens to the wall.
+        mask = max(mask, smoothstep(-2.5, 2.5, 100.0 * exp(-pow(max(pos.y - surface, 0.0) / 90.0, 0.9)) - x));
+        dry = pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0));
+        below = slopeStep(dry);
     }
     float thick = sp.x * sc;
-    // 1 on the wall under a lip, where its shadow falls.
-    float shade = exp(-max(din, 0.0) / (14.0 * sc + 1.0)) * smoothstep(thick * 0.45, thick, f) * (1.0 - smoothstep(thick, thick + 36.0 * sc + 2.0, f))
-        * step(0.0, k);
+    // 1 on the wall under a lip, where its shadow falls, gone by the next ledge's top.
+    float shade = exp(-max(din, 0.0) / (14.0 * sc + 1.0)) * smoothstep(thick * 0.45, thick, f)
+        * (1.0 - smoothstep(thick, min(thick + 36.0 * sc + 2.0, ledge.z), f)) * step(0.0, k);
     if (mask * below > 0.001 && paper < 1.0) {
         float tip = ledge.y, back = more.x;
         float tone = f < thick * 1.15 ? mix(1.32, 0.56, smoothstep(0.0, thick * 1.15, f))
@@ -224,15 +239,20 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
             tone = mix(tone, mix(1.3, 0.5, pow(saturate(drop / 34.0), 0.7)), far);
             glint = mix(glint, exp(-drop / 2.4) * 0.6 + exp(-drop / 9.0) * 0.16, far);
         }
+        // Over the first ledge the overview shows the back wall rising to the bank, lit along its edge.
+        if (k < 0.0) tone = mix(tone, 0.62 + 0.22 * exp(-max(max(e0, 100.0 * exp(-pow(max(pos.y - surface, 0.0) / 90.0, 0.9))) - x, 0.0) / 9.0),
+                                1.0 - open);
         tone *= 0.82 + 0.3 * sun;
-        // Darker towards the heart of the rock.
-        tone *= mix(0.64, 1.0, smoothstep(-20.0, 120.0, x));
+        // Darker towards the heart of the rock in the dive; the overview's rock is one lit mass.
+        tone *= mix(mix(0.64, 1.0, smoothstep(-20.0, 120.0, x)), 1.0, 1.0 - open);
         glint *= (0.7 + 0.6 * slopeNoise(float2(x * 0.06 + tm * 0.3, k * 3.1 + tm * 0.2))) * sun;
         // The rock turns from one stretch's to the next down the wall under the stretch's last ledge, never on a line.
         float rock = mix(ledge.w, slopeLedge(g, k + 1.0).w, smoothstep(0.55, 0.95, f / ledge.z));
         float3 rc = slopeSand(slopeRock(rock), slopeLit(rock), wc, tone, glint);
         rc = mix(rc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
-        rc = mix(rc, float3(0.50, 0.36, 0.24) * (0.75 + 0.5 * exp(min(d, 0.0) / 9.0)), 1.0 - under);
+        // Out of the water the bank stands dark against the dusk, the last light along its top.
+        rc = mix(rc, float3(0.19, 0.135, 0.115) * (0.8 + 0.5 * exp(min(d, 0.0) / 9.0))
+                 + float3(0.66, 0.42, 0.22) * exp(-max(dry - 0.7, 0.0) / 2.6) * 0.8, 1.0 - under);
         col = mix(col, rc, mask * below);
     }
     // A hollow's floor: sand across the foot.
@@ -260,6 +280,25 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
                               (exp(-max(terrace, 0.0) / 2.6) * 0.5 + exp(-max(terrace, 0.0) / 14.0) * 0.16) * (0.5 + 0.5 * sun + 0.5 * play.y));
         tc = mix(tc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
         col = mix(col, tc, slopeStep(terrace));
+    }
+    // The second terrace: its top bows up a few points, its ends are rounded noses and its underside is cut back.
+    float lipIn = 0.0, lipEdge = 0.0, lipLow = 0.0;
+    if (upper.w > 0.0 && play.x > 0.0) {
+        float u = (pos.x - upper.x) / max(upper.z, 1.0), a = min(abs(u), 1.0);
+        float over = pos.y - (upper.y + 4.0 * u * u), deep = 17.0 * sqrt(1.0 - a * a * a * a) - 4.0 * u * u;
+        float sides = (upper.z - abs(pos.x - upper.x)) * 0.5;
+        float inside = min(min(over, deep - over), sides);
+        lipIn = slopeStep(inside) * upper.w * play.x;
+        lipLow = deep - over;
+        lipEdge = (1.0 - smoothstep(0.5, 1.3, abs(inside))) * upper.w * play.x;
+        if (paper < 1.0) {
+            float tone = mix(1.3, 0.5, smoothstep(0.0, 16.0, over)) * (0.82 + 0.3 * sun) * (0.96 + 0.08 * slopeNoise(pos * 0.11));
+            float3 lit = mix(slopeLit(lone.w), lone.rgb, 0.6);
+            float3 lc = slopeSand(slopeRock(lone.w), lit, wc, tone,
+                                  (exp(-max(over, 0.0) / 2.6) * 0.5 + exp(-max(over, 0.0) / 9.0) * 0.14) * (0.5 + 0.5 * sun + 0.5 * play.y));
+            lc = mix(lc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
+            col = mix(col, lc, lipIn);
+        }
     }
     // A solved tank catches the light.
     col += lone.rgb * play.y * slopeBell((pos.x - 0.57 * size.x + (pos.y - 0.47 * size.y) * 0.3) / 170.0) * exp(-pos.y / 900.0) * 0.085;
@@ -302,14 +341,18 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
             hatch = max(hatch, smoothstep(2.0, 5.0, terrace) * (1.0 - smoothstep(5.0, 22.0, terrace))
                         * (1.0 - smoothstep(0.2, 0.5, abs(fract((pos.x + pos.y) / 5.0) - 0.5) * 2.0 + terrace / 30.0)));
         }
+        // The second terrace is drawn over the page: its outline, and a little hatching along its underside.
+        line = max(line * (1.0 - lipIn), lipEdge);
+        hatch = max(hatch * (1.0 - lipIn), lipIn * (1.0 - smoothstep(0.2, 0.5, abs(fract((pos.x + pos.y) / 5.0) - 0.5) * 2.0
+                                                                       + lipLow / 9.0)));
         col = mix(col, mix(bone, ink, max(line, hatch * 0.8) * 0.9), paper);
     }
     return col;
 }
 
 [[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
-                             device const float *g, int count) {
-    float3 col = slopeGround(pos, size, view, play, lone, paper, g);
+                             float4 upper, device const float *g, int count) {
+    float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g);
     // The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel,
     // keeps them from banding and never crawls.
     float2 pixel = floor(pos * view.x);

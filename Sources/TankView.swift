@@ -263,6 +263,13 @@ struct LevelView: View {
     @Environment(\.cardPlaced) private var cardPlaced
     /// The type size round the level, which its own text sees capped at `PlayLayout.typeCap`.
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// The slope's world (docs/slope.md, 4): its ground, chrome and terrace in place of today's.
+    @Environment(\.slopeWorld) private var slope
+    /// The slope's terrace catching the light once the level is solved.
+    /// The root draws the slope's ground under this level itself (`slopeGroundOwned`), and this level only publishes
+    /// what it shows (`SlopePlayStage`); its tank's frame in the window, for that.
+    @Environment(\.slopeGroundOwned) private var groundOwned
+    @State private var tankFrame = CGRect.zero
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -276,6 +283,12 @@ struct LevelView: View {
     @State private var notices = 0
     /// An undo tapped while a let-go settles, taken once it has.
     @State private var undoQueued = false
+    /// The slope's undo refused with nothing to undo, each tap; and whether the result's stones take a second terrace.
+    @State private var undoRefusals = 0
+    @State private var upperSeat = false
+    @State private var underSeat = false
+    /// The result's terrace as drawn, its tallest stone's words, second terrace and line over the stones all in.
+    @State private var resultTerrace: CGFloat = 0
     @State private var snap = CGSize.zero
     @Environment(\.displayScale) private var scale
     @Environment(\.scenePhase) private var phase
@@ -532,12 +545,14 @@ struct LevelView: View {
             .persistentSystemOverlays(clean ? .hidden : .automatic)
             // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
             .overlay(alignment: .leading) {
-                if swiped > 0 {
+                if swiped > 0 && !rootDraws {
                     Rectangle().fill(Color.text.opacity(0.2)).frame(width: 0.5).ignoresSafeArea().allowsHitTesting(false)
                 }
             }
-            .offset(x: swiped * width)
-            .background { if swiped > 0 { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
+            // A root that draws the ground moves the level itself under the swipe (`SlopePlayStage.swipe`).
+            .offset(x: rootDraws ? 0 : swiped * width)
+            .background { if swiped > 0 && !rootDraws { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
+            .preference(key: SlopePlayStage.Key.self, value: rootDraws ? slopeStage : nil)
             .overlay(alignment: .leading) {
                 if swipeFinger {
                     page.finger(diameter: 40).offset(x: swiped * width - 12).allowsHitTesting(false)
@@ -626,8 +641,17 @@ struct LevelView: View {
     }
 
     /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
-    private var header: some View {
-        PlayHeader(back: game.level.back, backSpoken: Spoken.back(game.level), hidden: staged, leave: leave) {
+    @ViewBuilder private var header: some View {
+        if slope {
+            SlopePlayHeader(back: game.level.slopeBack, backSpoken: Spoken.back(game.level), stacked: SlopePlay.stacked(typeSize),
+                            hidden: staged, leave: leave) { count }
+        } else {
+            PlayHeader(back: game.level.back, backSpoken: Spoken.back(game.level), hidden: staged, leave: leave) { count }
+        }
+    }
+
+    /// The header's count: moves against par, Escapement's ticks or the sandbox's controls.
+    @ViewBuilder private var count: some View {
             if game.level.sandbox {
                 // Each says what it steps through where there is room for it.
                 ViewThatFits(in: .horizontal) {
@@ -641,10 +665,25 @@ struct LevelView: View {
                 MovesCount(moves: game.moves, par: game.level.run == nil ? game.par : nil, pushes: game.pushes,
                            tone: countTone, hidden: showResult || ending, spoken: game.movesSpoken)
             }
+    }
+
+    @ViewBuilder private var titleRow: some View {
+        if slope {
+            SlopePlayTitle(label: game.level.label, title: shownTitle, pack: game.level.pack?.name, prism: game.level.pack == .prism,
+                           quiet: showResult && !game.lost, hidden: staged)
+        } else {
+            todayTitle
         }
     }
 
-    private var titleRow: some View {
+    /// Endless's tank beside its name, where it can't read as the brim's count.
+    private var shownTitle: String {
+        game.level.run.map {
+            String(localized: "\(game.level.title), tank \($0.tank + 1)", comment: "Endless's title. Its name, then the tank")
+        } ?? game.level.title
+    }
+
+    private var todayTitle: some View {
         PlayTitle(label: game.level.label,
                   // Endless's tank beside its name, where it can't read as the brim's count.
                   title: game.level.run.map {
@@ -698,7 +737,12 @@ struct LevelView: View {
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean, let words {
-                    unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
+                    if slope && !tabletop {
+                        // It rises to its place as it fades in (`SlopeStamp`).
+                        SlopeStamp().offset(y: -words)
+                    } else {
+                        unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
+                    }
                 }
             }
     }
@@ -709,7 +753,7 @@ struct LevelView: View {
     }
 
     /// The caption, which the result and lost cards hang from (`PlayCaption`), the card in its slot.
-    private func caption(_ layout: PlayLayout) -> some View {
+    @ViewBuilder private func caption(_ layout: PlayLayout) -> some View {
         let toSkip = String(localized: "tap to skip", comment: "The caption over an opening's stir")
         let practice = game.level.archived
             ? String(localized: "Practice: this day's best was set on its day.", comment: "The caption of an archive day replayed")
@@ -717,13 +761,22 @@ struct LevelView: View {
         let opening = game.level.replay
             ? String(localized: "watch the stir \u{00B7} tap to skip", comment: "The caption over a replay's opening stir") : toSkip
         let away = showResult || ending || shown != nil
-        return PlayCaption(text: notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening),
-                           font: page.caption, opacity: captionOpacity,
-                           minHeight: Self.captionLines(paper: page.paper, type: playType),
-                           pointing: pointing && !beside, pointerOpacity: away ? 0 : page.tone(.text3).alpha,
-                           pointerHidden: away, settled: shown == nil, type: playType, quiet: showResult || ending,
-                           skips: demoing || shown != nil, skip: { skip() }, hidden: staged) {
-            if showResult { card(layout) }
+        let text = notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening)
+        if slope {
+            SlopeCaption(text: text, lit: notice != nil || game.deadTick || noteLit || shown != nil || demoing,
+                         opacity: showResult || ending ? 0 : 1, minHeight: SlopePlay.captionLines(type: playType),
+                         pointing: pointing && !beside, pointerShown: !away, settled: shown == nil, type: playType,
+                         quiet: showResult || ending, skips: demoing || shown != nil, skip: { skip() }, hidden: staged) {
+                if showResult { card(layout) }
+            }
+        } else {
+            PlayCaption(text: text, font: page.caption, opacity: captionOpacity,
+                        minHeight: Self.captionLines(paper: page.paper, type: playType),
+                        pointing: pointing && !beside, pointerOpacity: away ? 0 : page.tone(.text3).alpha,
+                        pointerHidden: away, settled: shown == nil, type: playType, quiet: showResult || ending,
+                        skips: demoing || shown != nil, skip: { skip() }, hidden: staged) {
+                if showResult { card(layout) }
+            }
         }
     }
 
@@ -736,7 +789,9 @@ struct LevelView: View {
     private func card(_ layout: PlayLayout) -> some View {
         let over = layout.kind == .split ? layout.menuPane : nil
         return VStack(spacing: 0) {
-            if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
+            if over != nil && game.solved && !clean {
+                if slope { SlopeStamp().padding(.bottom, 26) } else { unstirred().padding(.bottom, 26) }
+            }
             if game.lost {
                 LostCard(game: game, notice: notice, undo: undo, again: reset)
             } else {
@@ -773,7 +828,9 @@ struct LevelView: View {
 
     @ViewBuilder private var swatches: some View {
         if swatched {
-            ChannelSwatches(isolated: $isolated)
+            Group {
+                if slope { SlopeSwatches(isolated: $isolated) } else { ChannelSwatches(isolated: $isolated) }
+            }
                 .opacity(showResult || ending || shown != nil ? 0 : 1)
                 .allowsHitTesting(!showResult && shown == nil)
                 .modifier(Unseen(staged))
@@ -786,20 +843,29 @@ struct LevelView: View {
     /// Undo and reset, and on Escapement the wait (`PlayControls`). Where the row can't hold undo beside an armed reset
     /// on a line each, undo steps aside too until the reset is made or lapses, so no label wraps and the row keeps its
     /// height.
-    private func controls(_ layout: PlayLayout) -> some View {
+    private func controls(_ layout: PlayLayout, ground: SlopeTerrace.Ground) -> some View {
         let clocks = !game.level.ratchets.isEmpty, width = layout.chromePane.width
         let waitRow = PlayLayout.waitTakesARow(game.level, width: width, type: playType)
         let undoLabel = game.level.sandbox ? String(localized: "undo") : String(localized: "undo \u{00B7} \(game.bank)")
         let alone = armedAt != nil
             && !PlayLayout.rowHolds([undoLabel, String(localized: "reset? tap again")], width: width, type: playType)
-        return PlayControls(waitRow: waitRow, inlineWait: clocks && !waitRow && armedAt == nil, alone: alone,
-                            sandbox: game.level.sandbox, bank: game.bank, spent: spent, nothingToUndo: game.history.isEmpty,
-                            badge: RefillBadge(badge: badge, first: game.firstRefill, colour: page.signal(.lime),
-                                               frozen: frozenClock, type: playType),
-                            undo: { if settling { undoQueued = true } else { undo() } }) {
-            waitControl
-        } reset: {
-            resetControl
+        return Group {
+            if slope {
+                SlopeTerrace(seats: playSeats(waitRow: waitRow, inlineWait: clocks && !waitRow && armedAt == nil, alone: alone),
+                             ground: ground, rock: terraceRock)
+                    // Where the result's seats stand once the level has finished (`TerraceSeats`).
+                    .anchorPreference(key: TerraceSeats.Key.self, value: .bounds) { .init(row: $0) }
+            } else {
+                PlayControls(waitRow: waitRow, inlineWait: clocks && !waitRow && armedAt == nil, alone: alone,
+                             sandbox: game.level.sandbox, bank: game.bank, spent: spent, nothingToUndo: game.history.isEmpty,
+                             badge: RefillBadge(badge: badge, first: game.firstRefill, colour: page.signal(.lime),
+                                                frozen: frozenClock, type: playType),
+                             undo: { if settling { undoQueued = true } else { undo() } }) {
+                    waitControl
+                } reset: {
+                    resetControl
+                }
+            }
         }
         .task(id: waits) {
             guard waits > 0 else { return }
@@ -815,6 +881,8 @@ struct LevelView: View {
         .accessibilityHidden(game.level.run != nil || showResult || ending)
         .padding(.bottom, 4)
         .modifier(Unseen(staged))
+        // On the slope the stones fade as the curtain call clears the stage, and come back for the result.
+        .animation(slope && !reduceMotion ? .easeInOut(duration: 0.6) : nil, value: staged)
     }
 
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
@@ -823,8 +891,10 @@ struct LevelView: View {
         func layout(width: CGFloat) -> PlayLayout {
             PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold),
                           halo: PlayLayout.Halo(game.level),
-                          chrome: PlayLayout.Chrome(game.level, swatches: swatched, type: playType, width: width),
-                          type: playType, scale: scale)
+                          chrome: slope ? PlayLayout.Chrome(slope: game.level, swatches: swatched, type: playType, width: width,
+                                                            stacked: SlopePlay.stacked(typeSize))
+                              : PlayLayout.Chrome(game.level, swatches: swatched, type: playType, width: width),
+                          type: playType, scale: scale, slope: slope)
         }
         // The chrome's pane doesn't turn on the chrome's height, so its width says whether the wait takes a row.
         return layout(width: layout(width: .infinity).chromePane.width)
@@ -846,18 +916,69 @@ struct LevelView: View {
     /// tank is never other than the layout's; in the split and the tabletop, whose cards have their own places; and
     /// until the card and the caption's place are measured.
     /// `drop` is what "unstirred." needs of the tank's top, where it stands.
-    private func finished(_ layout: PlayLayout, foot: CGFloat, drop: CGFloat) -> PlayLayout.Finished? {
+    private func finished(_ layout: PlayLayout, foot: CGFloat, drop: CGFloat, inset: CGFloat) -> PlayLayout.Finished? {
         guard showResult, !clean, layout.kind == .column, let captionTop, cardReach > 0 else { return nil }
-        return PlayLayout.finished(card: cardReach, room: foot - captionTop, stage: layout.side * PlayLayout.rim,
+        let terrace = slope ? terraceRoom + SlopePlay.lift(inset: inset) : 0
+        return PlayLayout.finished(card: cardReach, room: foot - captionTop - terrace, stage: layout.side * PlayLayout.rim,
                                    drop: game.solved ? drop : 0)
+    }
+
+    /// The rock the play terrace is cut from, which a second terrace takes too.
+    private var terraceRock: SlopeColumn.Rock {
+        if game.level.pack == .prism { return .pale }
+        if game.level.run != nil { return .basalt }
+        guard game.level.pack == nil, !game.level.sandbox, !game.level.id.hasPrefix("daily-") else { return .sand }
+        return switch game.level.tier {
+        case .plughole: .sand
+        case .whirlpool: .mauve
+        case .vortex: .slate
+        case .maelstrom: .basalt
+        }
+    }
+
+    /// The root draws this level's ground and moves it under the back swipe.
+    private var rootDraws: Bool { slope && groundOwned }
+
+    /// What the slope's ground shows under this level, and where the level stands, for whoever draws it.
+    private var slopeStage: SlopePlayStage {
+        SlopePlayStage(level: game.level, lit: showResult && game.solved, sinking: paying != nil, swipe: swiped, tank: tankFrame)
+    }
+
+    /// Today's black or paper; the slope's ground is drawn behind it.
+    private var ground: Color { slope ? .clear : page.ground }
+
+    /// What the slope's terrace keeps of the column under a card: its row of stones, and the second terrace where the
+    /// result's stones take one. The card's lines hang over the rest.
+    private var terraceRoom: CGFloat {
+        let row = max(SlopePebble.target, 24 + TypeRole.body.line(at: playType, design: .default).height)
+        // Over the seat line as drawn, and under it what a plain row keeps: its words' lower half less the pebble's drop.
+        let measured = resultTerrace > 0 ? resultTerrace + SlopePebble.target / 2 - PlayStone.rest : row + (upperSeat ? row + Self.controlRows : 0)
+            + (underSeat ? TypeRole.detail.line(at: playType).height + Self.controlRows : 0)
+        return PlayStack.gap + max(measured, row) + 4
+    }
+
+    /// The result's stones on the terrace, where the play controls stood (`TerraceSeats`).
+    @ViewBuilder private func resultSeats(_ value: TerraceSeats.Key.Value, ground: SlopeTerrace.Ground) -> some View {
+        if slope, showResult, let seats = value.seats, let row = value.row {
+            GeometryReader { geo in
+                let r = geo[row]
+                SlopeTerrace(seats: seats, ground: ground, rock: terraceRock) { resultTerrace = $0 }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: r.width, height: r.height, alignment: .bottom)
+                    .position(x: r.midX, y: r.midY)
+            }
+            .transition(reveal)
+        }
     }
 
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
+            let ground = SlopeTerrace.Ground(height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom,
+                                             top: geo.safeAreaInsets.top, space: Self.column)
             let words: (words: CGFloat?, drop: CGFloat) = layout.kind == .column
-                ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType) : (layout.words, 0)
-            let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop)
+                ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType, slope: slope) : (layout.words, 0)
+            let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop, inset: geo.safeAreaInsets.bottom)
             let curtain = fit == nil ? curtained(layout, foot: foot) : nil
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
@@ -873,6 +994,8 @@ struct LevelView: View {
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
+                    // Inside the part's tag, which the split's layout reads off the stack's own child.
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { if groundOwned { tankFrame = $0 } }
                     .modifier(PlayPart.stage(read: 3))
                 caption(layout)
                     // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
@@ -884,7 +1007,7 @@ struct LevelView: View {
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls(layout).modifier(PlayPart.chrome(read: 0))
+                controls(layout, ground: ground).modifier(PlayPart.chrome(read: 0))
                 if besideMenu && layout.kind == .split {
                     Color.clear.accessibilityHidden(true)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
@@ -894,6 +1017,9 @@ struct LevelView: View {
             // VoiceOver reads the parts in the column's order, header to controls, whatever the pose puts where: by
             // place alone the tabletop's tank, below the fold, would come last.
             .accessibilityElement(children: .contain)
+            .overlayPreferenceValue(TerraceSeats.Key.self) { resultSeats($0, ground: ground) }
+            .onPreferenceChange(TerraceSeats.Upper.self) { upper in MainActor.assumeIsolated { upperSeat = upper } }
+            .onPreferenceChange(TerraceSeats.Under.self) { under in MainActor.assumeIsolated { underSeat = under } }
             // Not from a first measure, which can be empty, nor under Reduce Motion.
             .animation(pose.map { $0.side > 0 } == true && !reduceMotion ? .smooth(duration: 0.45) : nil, value: layout)
             .onChange(of: layout, initial: true) { was, now in
@@ -919,7 +1045,13 @@ struct LevelView: View {
         }
         .foregroundStyle(page.ink)
         .tint(page.ink)
-        .background(page.ground)
+        .background(ground)
+        // Today's black takes every touch the parts leave, so the edge's back swipe and a tap that skips the opening
+        // land anywhere; the slope's ground takes none, so a clear layer over it takes them, safe areas and all.
+        .background { if slope { Color.clear.contentShape(.rect).ignoresSafeArea() } }
+        .background {
+            if slope && !groundOwned { SlopeBackdrop(stage: slopeStage) }
+        }
         .environment(\.page, page)
         .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
@@ -1159,10 +1291,62 @@ struct LevelView: View {
     /// Out of `body`, whose one long expression an older compiler gives up on.
     private var resetControl: some View {
         // The tap that arms only taps; the one that resets sounds as a reset.
-        UnstirButton(.secondary, effect: armedAt != nil || game.history.isEmpty ? .reset : .tap, armed: armedAt != nil,
-                     action: tapReset) {
+        arming(UnstirButton(.secondary, effect: armedAt != nil || game.history.isEmpty ? .reset : .tap, armed: armedAt != nil,
+                            action: tapReset) {
             if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
+        })
+    }
+
+    /// The slope's terrace in play (docs/slope.md, 4.5): undo leading, reset trailing, Escapement's wait between them or
+    /// on a terrace of its own over them; undo steps aside while an armed reset needs the row (`alone`).
+    private func playSeats(waitRow: Bool, inlineWait: Bool, alone: Bool) -> TerraceSeats {
+        let wait = AnyView(slopeWait)
+        return TerraceSeats(leading: alone ? nil : AnyView(slopeUndo), middle: inlineWait ? wait : nil,
+                            trailing: AnyView(arming(PlayStone(label: armedAt == nil ? Text("reset") : Text("reset? tap again"),
+                                                               state: armedAt == nil ? .lit : .armed, pale: prismStones,
+                                                               engraved: page.paper, trailing: true,
+                                                               effect: armedAt != nil || game.history.isEmpty ? .reset : .tap,
+                                                               action: tapReset))),
+                            upper: waitRow ? wait : nil)
+    }
+
+    /// Prism's own controls are pale stones.
+    private var prismStones: Bool { game.level.pack == .prism }
+
+    /// Undo on the slope: lit with something to undo; dull with nothing, when a tap is refused; dull but live with the
+    /// bank spent, when a tap says when it refills. The day's refill rises over its count.
+    private var slopeUndo: some View {
+        let nothing = game.history.isEmpty
+        return PlayStone(label: game.level.sandbox ? Text("undo") : Text("undo \u{00B7} \(game.bank)"),
+                         state: nothing || spent ? .dull : .lit, pale: prismStones, engraved: page.paper,
+                         effect: nothing ? nil : spent ? .tap : .undo, refused: undoRefusals) {
+            if nothing { undoRefusals += 1 } else if settling { undoQueued = true } else { undo() }
         }
+        .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
+                            : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
+        .overlay(alignment: .topTrailing) {
+            SlopeRefill(badge: badge, first: game.firstRefill, colour: page.signal(.lime), frozen: frozenClock)
+        }
+    }
+
+    /// Escapement's wait on the slope: an engraved stone, sunk for a beat after each wait.
+    private var slopeWait: some View {
+        let lit = waitHeld || waitLit
+        let live = game.canWait && !demoing && shown == nil && !holding
+        return PlayStone(label: Text("wait", comment: "Escapement's play control: a move that only ticks the clocks"),
+                         state: live || lit ? .lit : .dull, engraved: page.paper, lit: lit) {
+            if let k = waitRod { waitMove(on: k) }
+        }
+        .accessibilityLabel(String(localized: "Wait", comment: "VoiceOver: Escapement's wait control"))
+        .accessibilityHint(String(localized: "The clocks tick and nothing turns.",
+                                  comment: "VoiceOver: what Escapement's wait control does"))
+        .disabled(!game.canWait)
+    }
+
+    /// Reset's arming: a first tap with moves played arms it for `ResetArm.window` (under VoiceOver until focus leaves
+    /// it), and any move, undo or finish disarms it, so a second tap always resets what the first was shown.
+    private func arming(_ control: some View) -> some View {
+        control
             // Its row never holds less than its one line: an armed reset has the row where undo can't share it.
             .fixedSize()
             .accessibilityLabel(armedAt == nil ? Text("Reset", comment: "VoiceOver: the reset button") // loc: verbatim each a key
@@ -1390,7 +1574,10 @@ struct LevelView: View {
     }
 
     /// Endless has no par to warn of.
-    private var countTone: Color { game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text2 }
+    private var countTone: Color {
+        if slope { return game.level.run == nil ? SlopePlay.parTone(moves: game.moves, par: game.par) : SlopeInk.ink2.colour }
+        return game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text2
+    }
 
     /// The header's count: amber at par, so the next move is over it, and magenta past it (Jack's call C11, round 13).
     nonisolated static func parTone(moves: Int, par: Int) -> Color {
@@ -1709,7 +1896,7 @@ struct LevelView: View {
 
     private func sandboxControls(named: Bool) -> some View {
         let picture = String(localized: game.level.picture.display)
-        return HStack(spacing: 8) {
+        return HStack(spacing: slope ? 18 : 8) {
             sandboxControl(named ? String(localized: "picture: \(picture) \u{203A}", comment: "The sandbox's picture control. The picture")
                            : "\(picture) \u{203A}", game.nextPicture)
             // A turn in hand, or snapping to commit, names a rod of the current layout.
@@ -1734,11 +1921,19 @@ struct LevelView: View {
     }
 
     /// Narrower than a secondary's 20 pt sides, so both fit the header beside the way out.
-    private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14)) // loc: verbatim localized by the caller
+    @ViewBuilder private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
+        if slope {
+            // Quiet words on the water, as every control without a stone on the slope (docs/slope.md, 1.4).
+            Button(action: action) {
+                Text(label).font(.slope(.data, .label)).ink(.ink2).hit() // loc: verbatim localized by the caller
+            }
+            .buttonStyle(Sounding())
+        } else {
+            Button(action: action) {
+                Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14)) // loc: verbatim localized by the caller
+            }
+            .buttonStyle(Sounding(presses: true))
         }
-        .buttonStyle(Sounding(presses: true))
     }
 
     /// The knob shows only the player's own turning, so it can neither give away nor misstate the scramble.

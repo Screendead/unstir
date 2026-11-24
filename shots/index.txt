@@ -954,18 +954,97 @@ ach-brim.png  Achievement Brim: endless with 5 of the brim's 8 notches.
 ach-over-the-lip.png  Achievement Over the Lip: endless's brim pouring over the rim, 1.1 s into the spill.
 slope-overview.png  The slope's overview: the whole main column, the surface under the wordmark, the shallows' three ledges, each tier's three terraces of nine pebbles in its own rock, the drop-off; plughole's first 13 lit, the 14th the way on.
 slope-dive-top.png  The dive at the top of its travel: the bank and its stone, the surface, the shallows' ledges, plughole's header.
-slope-dive-plughole-14.png  The dive at plughole 14: a pebble seated on each ledge's lip, its number, name and facts beside it, the lips stepping out in nines, hollows in the wall.
+slope-dive-plughole-14.png  The dive at plughole 14: a pebble seated on each ledge, clear of the wall, its number, name and facts beside it, the lips stepping out in nines, hollows in the wall.
 slope-dive-whirlpool.png  The dive at whirlpool 05, plughole done: mauve scallops in purple water.
 slope-dive-vortex.png  The dive at vortex 12: slate plates in blue water.
 slope-dive-maelstrom.png  The dive at maelstrom 20: basalt pillows in red-black water.
 slope-drop-off.png  The dive's foot: under maelstrom's last ledge the rock curves back off the screen, the ridges end and the water goes to near black; endless in the open water.
 slope-dive-ax3.png  The dive at plughole 14 at accessibility3: the slope at the leading edge, a taller pitch, no near silhouette, the words full size and whole.
-slope-overview-ax3.png  The overview at accessibility3.
+slope-overview-ax3.png  The overview at accessibility3: the slope drawn in to the leading edge, each stretch grown to its words, which start at 96 full size; it scrolls on to endless.
 slope-dive-428.png  The dive at plughole 14 on the reference phone's 428 x 926 points: the lips 6 pt further in.
 slope-play.png  The ground as a level holds it at plughole 14: the shelf drawn aside, one terrace under the tank's place, two stones on it.
 slope-play-prism.png  The same in Prism's clear water and white light, its stone pale.
-slope-play-paper.png  The same on Escapement's paper: the terrace an engraving in ink on bone, the stones engraved.
+slope-play-paper.png  The same on Escapement's paper: the terrace an engraving in ink on bone, the stones engraved, wait on a second terrace over the first.
 slope-play-dim.png  The same at 0.35 of the ground's light, as consent draws it.
 slope-hollow.png  The inside of a hollow: still dark water between two jambs of pale stone, a floor, a ledge, the cover's light in three beams.
 slope-pack.png  A pack's own column: five trays of six in pale rock and still water, scrolled.
 slope-stones.png  Every state of the stone on open water: lit, the way on, dull, armed, pending, pale, and one with its words leading.
+slope-stones-ax3.png  The same at accessibility3: the words full size, the stones a little larger.
+slope-settings.png  Settings on the slope: the surface high, "settings" in the air, a ledge per row of the settings' sandstone column, each switch a stone lit when on, the links with ↗, the version, "↓ back into the water".
+slope-settings-ax.png  The same at accessibility3: every row's words whole, the column scrolling.
+slope-settings-editors.png  The editors' build's settings: "open every tier" among the switches, "editors" after the version.
+slope-consent.png  Consent on the slope: the overview at 0.35 of its light, its words, pebbles and hollows hidden; the question, its line, "What does it send? ›", and Yes and No alike on one bowed sill.
+slope-consent-sends.png  The same with the list of what it sends open, "Hide the list ‹" over it.
+slope-hollows.png  The dive with the packs' hollows in plughole's wall: SLOPEAT=L14 STORE=lens:unowned BESTS=plughole:0000000000000.
+slope-hollows-states.png  The dive with the packs' hollows in plughole's wall: SLOPEAT=L9 OWNED=lens STORE=escapement:pending BESTS=plughole:000000000000000000000000000,prism:00.
+slope-hollows-new.png  The dive with the packs' hollows in plughole's wall: SLOPEAT=L18 STORE=lens:unowned BESTS=plughole:000000000000000000000000000,prism:00.
+slope-hollows-ax3.png  The dive with the packs' hollows in plughole's wall: SLOPEAT=L11 STORE=lens:unowned BESTS=plughole:000000000000000000000000000 TYPESIZE=accessibility3.
+slope-inside-prism.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned.
+slope-inside-lens.png  A pack's hollow opened: its inside: CARD=lens STORE=lens:unowned.
+slope-inside-escapement.png  A pack's hollow opened: its inside: CARD=escapement STORE=lens:unowned.
+slope-inside-complete.png  A pack's hollow opened: its inside: CARD=complete STORE=lens:unowned BESTS=lens:00c,prism:0.
+slope-inside-unread.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned,unread.
+slope-inside-loading.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned PRICES=0.
+slope-inside-unreachable.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned PRICES=unreachable.
+slope-inside-pending.png  A pack's hollow opened: its inside: CARD=prism STORE=prism:pending.
+slope-inside-pending-offline.png  A pack's hollow opened: its inside: CARD=prism STORE=prism:pending FAILED=offline.
+slope-inside-pending-escapement.png  A pack's hollow opened: its inside: CARD=escapement STORE=escapement:pending.
+slope-inside-failed.png  A pack's hollow opened: its inside: CARD=prism STORE=prism:failed FAILED=offline.
+slope-inside-storefront.png  A pack's hollow opened: its inside: CARD=prism STORE=prism:failed FAILED=storefront.
+slope-inside-nopay.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned PAYMENTS=0.
+slope-inside-revoked.png  A pack's hollow opened: its inside: CARD=lens STORE=lens:revoked.
+slope-inside-unshared.png  A pack's hollow opened: its inside: CARD=lens STORE=lens:unshared.
+slope-inside-owned.png  A pack's hollow opened: its inside: CARD=prism OWNED=prism BESTS=prism:0c01.
+slope-inside-owned-lens.png  A pack's hollow opened: its inside: CARD=lens OWNED=lens BESTS=lens:0c0010c.
+slope-inside-owned-escapement.png  A pack's hollow opened: its inside: CARD=escapement OWNED=escapement BESTS=escapement:0002.
+slope-inside-complete-owned.png  A pack's hollow opened: its inside: CARD=complete OWNED=complete BESTS=lens:0000.
+slope-inside-bundle-waiting.png  A pack's hollow opened: its inside: CARD=lens STORE=complete:pending.
+slope-inside-bundle-failed.png  A pack's hollow opened: its inside: CARD=lens STORE=complete:failed FAILED=offline.
+slope-inside-arrived.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned ARRIVED=1 BESTS=prism:000.
+slope-inside-restored-none.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned RESTORED=none.
+slope-inside-ax3.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned TYPESIZE=accessibility3.
+slope-inside-ax3-buy.png  A pack's hollow opened: its inside: CARD=prism STORE=prism:pending TYPESIZE=accessibility3 ARRIVED=1 BESTS=prism:000.
+slope-inside-xxxl.png  A pack's hollow opened: its inside: CARD=escapement STORE=lens:unowned TYPESIZE=xxxLarge.
+slope-pack-prism.png  A pack's own slope under its floor: CARD=prism STORE=lens:unowned CARDSCROLL=1 BESTS=prism:0c.
+slope-pack-escapement.png  A pack's own slope under its floor: CARD=escapement STORE=lens:unowned SLOPEFOCUS=escapement-3 BESTS=escapement:02 TRIED=escapement-3.
+slope-pack-lens-owned.png  A pack's own slope under its floor: CARD=lens OWNED=lens SLOPEFOCUS=lens-20 BESTS=lens:0c0010c00000102000.
+slope-pack-prism-ax3.png  A pack's own slope under its floor: CARD=prism STORE=lens:unowned CARDSCROLL=1 BESTS=prism:0c TYPESIZE=accessibility3.
+slope-hollows-ax5.png  The dive with the packs' hollows in plughole's wall: SLOPEAT=L11 OWNED=lens STORE=escapement:pending BESTS=plughole:000000000000000000000000000,prism:00 TYPESIZE=accessibility5.
+slope-hollows-ax5-lens.png  The dive with the packs' hollows in plughole's wall: SLOPEAT=L6 OWNED=lens STORE=escapement:pending BESTS=plughole:000000000000000000000000000,prism:00 TYPESIZE=accessibility5.
+slope-inside-375.png  A pack's hollow opened: its inside: CARD=prism STORE=lens:unowned FRAME=375x667.
+slope-inside-375-escapement.png  A pack's hollow opened: its inside: CARD=escapement STORE=escapement:pending FRAME=375x667.
+slope-pack-375.png  A pack's own slope under its floor: CARD=lens STORE=lens:unowned CARDSCROLL=1 FRAME=375x667.
+slope-world-fresh.png  A fresh install's menu on the slope: the overview, nothing solved, plughole 01 the way on.
+slope-world-menu.png  The overview with plughole done: its 27 lit, the daily (four days running) at the surface and endless at the foot with its best of 9.
+slope-world-menu-ax3.png  The same at accessibility3: the overview scrolling, its words whole.
+slope-world-dive.png  The dive on whirlpool, opened from UNSTIR_TIER, plughole done.
+slope-world-dive-ax3.png  The same at accessibility3.
+slope-world-gate.png  Vortex's gate: whirlpool's pebbles as a tally on the sill, the runs still short.
+slope-world-lock-tap.png  A closed row tapped in the dive: its pebble rocks and the row says what opens it.
+slope-world-run.png  Endless's saved run at the foot: tank 5, the brim at 3.
+slope-world-yours.png  Lens approved by Ask to Buy and landed: "Lens is yours" under the wordmark.
+slope-world-pick.png  A second and a half in, plughole 05 picked: the level comes in over the slope as the slope draws aside.
+slope-world-return.png  Plughole 05 left solved a second in: the menu comes back in the dive on plughole 06.
+slope-world-settings.png  Settings opened over the menu from the stone on the bank.
+slope-world-consent.png  The consent question over the menu's own ground at 0.35 of its light, its words hidden.
+slope-world-hollows.png  The dive on plughole with the packs' hollows in its wall, each cover still, its name and price.
+slope-world-pack.png  Lens's hollow opened over the menu: its inside, the cover, the store's state on its ledge.
+slope-world-pack-slope.png  The same on Lens's own slope under the floor, a ledge per level.
+slope-world-first-launch.png  A fresh install's first launch: plughole 01 on the slope, its note and the line to settings.
+slope-world-level.png  Plughole 14: the ground under the level, its header, title and note, the stones on its terrace.
+slope-world-level-xxxl.png  The same at xxxLarge.
+slope-world-level-ax5.png  The same at accessibility5, the play screen's type stopping at xxxLarge.
+slope-world-reset-armed.png  Plughole 12, two moves played, reset tapped once: the stone armed, "reset? tap again".
+slope-world-undo-refill.png  Plughole 12 on a new day with 6 undos banked.
+slope-world-daily.png  Today's daily on the slope, its way back "↑ menu".
+slope-world-endless.png  Endless, first tank, in the open water under the brink.
+slope-world-sandbox.png  The sandbox on the slope.
+slope-world-lesson.png  Plughole 12 with knob 1 seized: the lesson on the slope.
+slope-world-back-swipe.png  Plughole 12 held 40% into the back swipe over the slope's menu.
+slope-world-prism.png  Prism 01 on the slope: its clear water and pale stones, colour letters on.
+slope-world-lens.png  Lens 01 on the slope.
+slope-world-escapement.png  Escapement 02 after 2:+4 on the slope's paper: undo, wait and reset on the terrace.
+slope-world-escapement-ax5.png  The same at accessibility5: the wait on a second terrace.
+slope-world-result.png  Plughole 05 solved two over par through the real commit path: the result's lines on the water and its stones on the terrace.
+slope-world-clean.png  Plughole 06 solved clean.
+slope-world-lost.png  Escapement 02 run out of ticks: the lost screen on the slope.

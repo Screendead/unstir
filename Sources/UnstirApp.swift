@@ -250,7 +250,7 @@ struct Harness {
     let promo: Offer?
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
-    /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
+    /// Any UNSTIR_ variable but the phone's (UNSTIR_UNLOCK, UNSTIR_ANALYTICS, UNSTIR_TAPS, UNSTIR_SLOPE=1 or =0): analytics is then off unless UNSTIR_ANALYTICS=log
     /// logs it, and stores nothing either way.
     let harnessed: Bool
     let resume: Resume?
@@ -264,9 +264,12 @@ struct Harness {
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
         // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"].contains($0) }
+        // UNSTIR_SLOPE=1 or =0 is for the phone too, as UNSTIR_UNLOCK is; its other values are the slope's stages.
+        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + (SlopeFlag.phone(env) ? ["UNSTIR_SLOPE"] : [])
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !phone.contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
+        SlopeFlag.read(env, harnessed: harnessed)
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0,lens:000: a best for each of a tier's or a pack's levels from 01, one
         // character each: a digit is that many over par, c clean, - is none. For this launch only.
@@ -624,6 +627,32 @@ final class Bench: NSObject {
     }
 }
 
+/// Whether `RootView` draws the slope's world (docs/slope.md, `\.slopeWorld`) in place of today's screens, until it
+/// becomes the default. A launch with UNSTIR_SLOPE=1 (or =world) stores it and one with UNSTIR_SLOPE=0 clears it, so the phone's home screen keeps opening it;
+/// alongside any other UNSTIR_ variable, unset clears it too, as the developer unlock does. Debug builds only: no
+/// Release build reads the variable or the stored flag.
+enum SlopeFlag {
+    static let key = "slope.world"
+
+    static var on: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: key)
+        #else
+        false
+        #endif
+    }
+
+    /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
+    static func phone(_ env: [String: String]) -> Bool { ["1", "world", "0"].contains(env["UNSTIR_SLOPE"]) }
+
+    static func read(_ env: [String: String], harnessed: Bool) {
+        #if DEBUG
+        // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(["1", "world"].contains(env["UNSTIR_SLOPE"]), forKey: key) }
+        #endif
+    }
+}
+
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
@@ -664,6 +693,26 @@ struct RootView: View {
     /// away while it plays, and back as it leaves, as on a phone they wait under the level.
     @State private var parked: (card: Offer?, archive: Bool)?
     @Environment(\.harnessFold) private var harnessFold
+    /// The slope's world draws the screens (`SlopeFlag`), read once at launch.
+    private let slope: Bool
+    /// UNSTIR_TIER is set, so the slope's first menu opens on that tier rather than the overview.
+    private let namesTier = ProcessInfo.processInfo.environment["UNSTIR_TIER"] != nil
+    /// The pebble the open level grew out of, on the screen, the root's frame there, and what the level shows of its ground.
+    @State private var pebble: (id: String, point: CGPoint)?
+    @State private var frame = CGRect.zero
+    @State private var playStage: SlopePlayStage?
+    /// How far the last back swipe had taken its level as it left, so the leaving view carries on from there into its
+    /// pebble rather than starting again from full size.
+    @State private var swipeLeft = 0.0
+    /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
+    @State private var hollowFrom: CGPoint?
+    /// Triptych I's inside a pack's was opened from, whose way back returns there.
+    @State private var packCameFrom: CameFrom?
+    /// Bumped by each edge swipe over a pack's inside, which rises from its slope or leaves (`SlopePack.swiped`).
+    @State private var packSwiped = 0
+    @Environment(\.dynamicTypeSize) private var systemType
+    /// The settings' supporter mark switch, which the slope's settings move.
+    @State private var supporter = Settings.supporter
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     /// The harness's one save, so a plain launch's left on the simulator never reaches a shot.
@@ -672,11 +721,13 @@ struct RootView: View {
     private let welcoming: Bool
     @Environment(\.scenePhase) private var phase
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let mute: Bool
 
     init() {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
+        slope = SlopeFlag.on
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
@@ -734,7 +785,11 @@ struct RootView: View {
     /// UNSTIR_SLOPE's stage (`SlopeHarness`), which no Release build has.
     private var slopeStage: AnyView? {
         #if DEBUG
-        harness.flatMap { SlopeHarness(ProcessInfo.processInfo.environment, clock: $0.clock) }.map { AnyView($0) }
+        let env = ProcessInfo.processInfo.environment
+        guard harness != nil else { return nil }
+        if let f = SlopeFHarness(env) { return AnyView(f) }
+        if let d = harness.flatMap({ SlopePackHarness(env, clock: $0.clock) }) { return AnyView(d) }
+        return harness.flatMap { SlopeHarness(env, clock: $0.clock) }.map { AnyView($0) }
         #else
         nil
         #endif
@@ -742,6 +797,118 @@ struct RootView: View {
 
     /// A level plays beside the menu.
     private var beside: Bool { wide && level != nil }
+
+    /// The slope's menu (`SlopeMenu`), with what covers it: a pack's hollow opened (`SlopePack`), settings, the consent
+    /// question, and until piece E lands, today's archive over it.
+    private var slopeMenu: some View {
+        // A cold launch rests on the overview, so only a closed tier's "up a notch", or the harness's UNSTIR_TIER, names a tier.
+        SlopeMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
+                  settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
+                  held: harness?.lockTap, peeking: peeking, revision: revision,
+                  run: Self.save("endless", harnessed: harnessed, harnessSave),
+                  light: asking ? SlopeConsent.light : 1, bare: asking,
+                  hollow: { offer, spot in
+                      AnyView(SlopeHollow(offer, on: spot, type: typeSize ?? systemType) { middle in
+                          hollowFrom = middle
+                          packCameFrom = nil
+                          card = offer
+                      })
+                  }) { next, point in
+            pebble = point.map { (next.id, $0) }
+            show(next)
+        }
+        .overlay { slopeCovers }
+        .animation(.easeOut(duration: 0.25), value: settings)
+        .animation(.easeInOut(duration: 0.6), value: asking)
+    }
+
+    /// The time a level takes to come in over the slope, or to leave it, while the slope draws aside or back in.
+    static let slopeTravel = 0.9
+
+    /// The menu's slope crossfades into the level's, which `SlopeBackdrop` draws drawn aside (2.9), and back as it leaves.
+    /// An offset is not animated here: the menu's Metal ground jumps to it, ahead of the words.
+    private var slopeAside: AnyTransition { .opacity }
+
+    /// The level grows out of its pebble into the tank's place and shrinks back into it as it leaves (2.9): the play
+    /// screen leaves its ground to the root (`slopeGroundOwned`), so only the tank and its chrome grow. Without a pebble
+    /// (endless from the foot, the harness), or under Reduce Motion, it fades.
+    private var slopeGrow: AnyTransition {
+        guard !reduceMotion, let anchor = pebbleAnchor else { return .opacity }
+        // Lit from its first frames, so the growth is seen from the pebble's size; going, it stays lit until it is
+        // nearly the pebble, fading with the travel's own ease.
+        let scale = AnyTransition.scale(scale: Self.pebbleScale, anchor: anchor)
+        return .asymmetric(insertion: scale.combined(with: .opacity.animation(.easeOut(duration: 0.15))),
+                           removal: scale.combined(with: .opacity.animation(.easeIn(duration: Self.slopeTravel))))
+    }
+
+    /// Where a level's own pebble lies when the menu comes back on it (the dive holds its row at 0.49 of the height, the
+    /// pebble on its ledge's outer half), for a level not opened from one.
+    static let ledgeAnchor = UnitPoint(x: 0.31, y: 0.47)
+
+    /// A pebble's width over a tank's.
+    static let pebbleScale = 0.06
+
+    /// Where the open level's pebble lies, as a point of the root's frame; nil when it wasn't opened from one.
+    private var pebbleAnchor: UnitPoint? {
+        guard let pebble, level == nil || pebble.id == level?.id, frame.width > 0, frame.height > 0 else { return nil }
+        // The menu measures from the screen's top (its dive cancels the safe area); the root sits inside it.
+        return UnitPoint(x: (pebble.point.x - frame.minX) / frame.width, y: (pebble.point.y - frame.minY) / frame.height)
+    }
+
+    /// How far the back swipe has taken the level toward its ledge, 0 to 1 (2.11).
+    private var swipe: Double { reduceMotion ? 0 : level == nil ? swipeLeft : stage?.swipe ?? 0 }
+
+    /// What the open level shows of its ground; one a level that has gone published is ignored.
+    private var stage: SlopePlayStage? { playStage.flatMap { $0.level == level ? $0 : nil } }
+
+    /// The edge swipe back over a screen that draws its own way out, judged as the level's is (`BackSwipe`): `done`
+    /// once it is let go past the threshold.
+    private func edgeSwipe(_ done: @escaping () -> Void) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .global).onEnded { v in
+            guard BackSwipe.decide(start: v.startLocation, translation: v.translation) == .swipe,
+                  BackSwipe.commits(dx: v.translation.width, predicted: v.predictedEndTranslation.width,
+                                    width: UIScreen.main.bounds.width) else { return }
+            done()
+        }
+    }
+
+    /// The consent question is up: a build with analytics, its first menu.
+    private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
+
+    @ViewBuilder private var slopeCovers: some View {
+        if let offer = card {
+            // It brings itself in from the hollow and draws itself in again before its way back.
+            let returns = packCameFrom?.returns(card: offer, offersComplete: Store.shared.offersComplete)
+            SlopePack(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
+                      scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
+                      arrived: offer.pack != nil && offer.pack == arrived, backTo: returns?.name ?? Shop.menu, from: hollowFrom,
+                      onBack: {
+                          hollowFrom = nil
+                          packCameFrom = nil
+                          card = returns
+                      },
+                      onPlay: { show($0) },
+                      onOffer: { next in
+                          hollowFrom = nil
+                          packCameFrom = CameFrom(back: offer, card: next)
+                          card = next
+                      },
+                      swiped: packSwiped)
+                .id(offer)
+                .simultaneousGesture(edgeSwipe { packSwiped += 1 })
+        } else if archive {
+            let days = Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
+            ArchiveView(days: days, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,
+                        onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
+                        onPlay: { show($0) })
+                .transition(.opacity)
+        }
+        if settings {
+            SlopeSettings(supporter: $supporter, back: { settings = false }, clock: harness?.clock)
+                .transition(.opacity)
+        }
+        if asking { SlopeConsent().transition(.opacity) }
+    }
 
     /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
     private var calm: Bool {
@@ -760,10 +927,34 @@ struct RootView: View {
             } else if let slope = slopeStage {
                 slope
             } else {
+                // The open level's ground, whole under the slope and the level, so only the tank and chrome grow from the
+                // pebble. Kept in place, all but unseen, while the menu is up, so its first frame is drawn before a level
+                // opens over it: a ground made as the level opens shows black for its first few frames.
+                if slope {
+                    SlopeBackdrop(stage: stage ?? SlopePlayStage(level: focus ?? Level.plughole[0], lit: false, sinking: false,
+                                                                 swipe: 0, tank: .zero))
+                        .ignoresSafeArea()
+                        .opacity(level == nil ? 0.001 : 1 - swipe)
+                        // Whole at once as a level opens, under the slope drawing aside; it follows only the swipe.
+                        .animation(nil, value: level)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                        .zIndex(-1)
+                }
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
                 // level, whose ground it leaves uncovered.
-                if level == nil || peeking || beside {
+                if slope, level == nil || peeking {
+                    slopeMenu
+                        .allowsHitTesting(level == nil)
+                        .accessibilityHidden(level != nil)
+                        // Under a back swipe the slope draws back in as the level shrinks toward its ledge.
+                        // Only while it peeks: as a level opens, the menu leaves through its own transition.
+                        .offset(x: level != nil && peeking ? -280 * (1 - swipe) : 0)
+                        .opacity(level != nil && peeking ? swipe : 1)
+                        .transition(slopeAside)
+                } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
@@ -805,13 +996,25 @@ struct RootView: View {
                                   if covers { covering = level.id } else if covering == level.id { covering = nil }
                               })
                         .id(level)
-                        .transition(dip)
+                        .environment(\.slopeGroundOwned, slope)
+                        .onPreferenceChange(SlopePlayStage.Key.self) { stage in
+                            playStage = stage
+                            if let stage, stage.level == level { swipeLeft = stage.swipe }
+                        }
+                        .scaleEffect(1 - (1 - Self.pebbleScale) * swipe, anchor: pebbleAnchor ?? Self.ledgeAnchor)
+                        .opacity(1 - 0.8 * swipe)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
+                        .transition(slope ? slopeGrow : dip)
+                        // Over the menu as it shrinks back into its pebble: a view leaving a ZStack keeps its place only
+                        // with an explicit zIndex.
+                        .zIndex(slope ? 1 : 0)
                         // Heard before the menu beside it.
                         .accessibilitySortPriority(beside ? 1 : 0)
                 }
             }
         }
         .coordinateSpace(.named(Self.space))
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
         .onGeometryChange(for: Bool.self) {
             MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: harnessFold)).splits
         } action: { new in
@@ -821,6 +1024,7 @@ struct RootView: View {
             wide = new
         }
         .background(Color.black)
+        .environment(\.slopeWorld, slope)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
         // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a
@@ -1081,8 +1285,9 @@ struct RootView: View {
                                                stores: !harnessed) : nil
         }
         covering = nil
+        if next != nil { swipeLeft = 0 }
         // Together, so a menu a back swipe uncovered stays up as the level goes.
-        withAnimation(.easeInOut(duration: 0.25)) {
+        withAnimation(.easeInOut(duration: slope && !reduceMotion ? Self.slopeTravel : 0.25)) {
             level = gate == nil && opens ? next : nil
             peeking = false
         }

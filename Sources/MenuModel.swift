@@ -157,3 +157,65 @@ struct CameFrom: Equatable {
         return back
     }
 }
+
+/// What the slope's menu writes beside a ledge and a tier, and where it rests (docs/slope.md, 2): the words the list
+/// writes today, kept under their keys.
+extension Menu {
+    /// A ledge's facts: its rods, a swirl named apart, then its par.
+    static func facts(_ level: Level) -> String {
+        let rods = level.layout.base.map { String(localized: "\($0.rods.count) rods + swirl", comment: "A swirl layout's knobs, then its swirl") }
+            ?? String(localized: "\(level.layout.rods.count) rods", comment: "VoiceOver: a layout's rods")
+        return String(localized: "\(rods) \u{00B7} par \(level.par)", comment: "A row's rods, then its par")
+    }
+
+    /// A tier's progress under its name: its levels at par, of all.
+    static func progress(_ tier: Tier, _ best: (String) -> Best? = Best.load) -> String {
+        let par = tier.atPar(best)
+        return String(localized: "\(par.filter { $0 }.count)/\(par.count) at par", comment: "A tier's header. Levels at par, of all")
+    }
+
+    /// What opens a closed tier, under its name; nil for plughole.
+    static func reason(_ tier: Tier) -> String? {
+        tier.below.map { String(localized: "opens with every \($0.word) level solved", comment: "A shut tier's gate. The tier below") }
+    }
+
+    /// The packs' line under plughole's name, at the overview and in the dive (Jack's call, 2026-11-23): "packs" alone
+    /// once every pack is owned. It breaks only after "packs ·".
+    static func packsCaption(owned: Int, of all: Int) -> String {
+        owned < all ? String(localized: "packs \u{00B7} first\u{00A0}3\u{00A0}levels of\u{00A0}each\u{00A0}free",
+                             comment: "The slope's menu, under plughole's name: the packs in its rock. The spaces that don't break keep the line's second half whole")
+            : String(localized: "packs", comment: "The slope's menu, under plughole's name: the packs in its rock, all owned")
+    }
+
+    /// Endless's line under its word: the saved run's, else the best run's tanks, else nothing.
+    static func endlessLine(_ saved: Resume?, tanks: Int) -> String? {
+        guard let run = saved?.run else {
+            return tanks > 0 ? String(localized: "best \(tanks)", comment: "Endless's row: the best run's tanks") : nil
+        }
+        let tank = run.tank + 1, brim = saved?.brim ?? run.brim
+        return tanks > 0
+            ? String(localized: "continue \u{00B7} tank \(tank) \u{00B7} brim \(brim) \u{00B7} best \(tanks)",
+                     comment: "Endless's row, a run saved: its tank, its brim, then the best run's tanks")
+            : String(localized: "continue \u{00B7} tank \(tank) \u{00B7} brim \(brim)",
+                     comment: "Endless's row, a run saved: its tank, then its brim")
+    }
+
+    /// Where the slope's menu rests as it comes up (2.7).
+    enum Rest: Equatable {
+        /// The whole column.
+        case overview
+        /// The dive on a level's ledge: the row just left, or after a solve the one after it.
+        case ledge(Level)
+        /// The dive on a tier's landing, or a closed tier's gate.
+        case tier(Tier)
+    }
+
+    /// A cold launch rests on the overview; back from a tier's level, the dive on `focus`; back from the daily or
+    /// endless, which have no focus, the overview. `start` is a tier asked for by name: a closed "up a notch", the
+    /// harness's. `returning`: a level has been open since launch.
+    nonisolated static func rest(start: Tier?, focus: Level?, returning: Bool) -> Rest {
+        if let start { return .tier(start) }
+        guard returning, let focus, focus.pack == nil, focus.tier.levels.contains(where: { $0.id == focus.id }) else { return .overview }
+        return .ledge(focus)
+    }
+}

@@ -204,3 +204,104 @@ struct RefillBadge: View {
         .accessibilityHidden(true)
     }
 }
+
+/// The slope's world (docs/slope.md) in place of today's screens. Set by `RootView`; a Debug launch with
+/// UNSTIR_SLOPE=world starts in it, so the screens built on it can be seen before the default flips. No Release build
+/// reads the variable.
+enum SlopeWorld {
+    static let launched: Bool = {
+        #if DEBUG
+        SlopeFlag.on
+        #else
+        false
+        #endif
+    }()
+}
+
+extension EnvironmentValues {
+    /// The root draws the slope's ground under a level, so a level can grow from its pebble and shrink back to it
+    /// (docs/slope.md, 2.9, 2.11): `LevelView` then draws its tank and chrome on a clear background, leaves the back
+    /// swipe's movement to the root, and publishes what the ground shows (`SlopePlayStage`).
+    @Entry var slopeGroundOwned = false
+    /// The play screen, the result and every other screen draw the slope's world (`SlopeWorld`).
+    @Entry var slopeWorld = SlopeWorld.launched
+}
+
+/// What a level on the slope shows of the ground under it, published by `LevelView` (`SlopePlayStage.Key`) where the
+/// root draws that ground (`slopeGroundOwned`): `SlopeBackdrop(stage:)` draws it exactly as the level would.
+struct SlopePlayStage: Equatable {
+    var level: Level
+    /// Solved and its result up: the terrace glints as the light settles.
+    var lit: Bool
+    /// The curtain call is playing: the terrace has sunk out of the screen's foot.
+    var sinking: Bool
+    /// How far the back swipe has gone, 0 to 1; set with an animation when the swipe lets go, on to 1 as it leaves
+    /// (then `onExit`) or back to 0.
+    var swipe: Double
+    /// The glass and its rim in the window (`.global`), for a pebble to grow into and shrink back to.
+    var tank: CGRect
+
+    struct Key: PreferenceKey {
+        static let defaultValue: SlopePlayStage? = nil
+        static func reduce(value: inout SlopePlayStage?, nextValue: () -> SlopePlayStage?) { value = nextValue() ?? value }
+    }
+}
+
+/// What stands on the play screen's terrace (docs/slope.md, 4.5 and 5.2): a stone at each of its three seats, a second
+/// terrace over it where one row can't hold its words, and a line under its stones. Play fills it with undo, wait and
+/// reset; once a level has finished, the view in `LevelView`'s card slot fills it with the result's stones by
+/// `terraceSeats(_:)`, and the play screen sets them on the terrace in its controls' place. A seat left nil is empty.
+struct TerraceSeats {
+    var leading: AnyView?
+    var middle: AnyView?
+    var trailing: AnyView?
+    /// The second terrace's stone, centred over the first: Escapement's wait where the row can't hold three, or up a
+    /// notch where three seats can't each hold their words on one line. The finished tank gives way for it.
+    var upper: AnyView?
+    /// A line over the stones, on the water above the terrace: the daily's "next daily in 7 h".
+    var under: AnyView?
+
+    init(leading: AnyView? = nil, middle: AnyView? = nil, trailing: AnyView? = nil, upper: AnyView? = nil, under: AnyView? = nil) {
+        self.leading = leading
+        self.middle = middle
+        self.trailing = trailing
+        self.upper = upper
+        self.under = under
+    }
+
+    /// The seats a card hands up, and where the terrace's row stands, met at the play screen's stack.
+    struct Key: PreferenceKey {
+        struct Value {
+            var seats: TerraceSeats?
+            var row: Anchor<CGRect>?
+        }
+
+        static var defaultValue: Value { Value() }
+        static func reduce(value: inout Value, nextValue: () -> Value) {
+            let next = nextValue()
+            value.seats = next.seats ?? value.seats
+            value.row = next.row ?? value.row
+        }
+    }
+
+    /// Whether the card's seats take a second terrace: the play screen keeps the finished tank clear of it.
+    /// Whether the card's seats have a line over the stones, which the finished tank keeps clear of too.
+    struct Under: PreferenceKey {
+        static let defaultValue = false
+        static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+    }
+
+    struct Upper: PreferenceKey {
+        static let defaultValue = false
+        static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+    }
+}
+
+extension View {
+    /// Hands `seats` to the play screen's terrace, from the view in `LevelView`'s card slot.
+    func terraceSeats(_ seats: TerraceSeats) -> some View {
+        transformPreference(TerraceSeats.Key.self) { $0.seats = seats }
+            .preference(key: TerraceSeats.Upper.self, value: seats.upper != nil)
+            .preference(key: TerraceSeats.Under.self, value: seats.under != nil)
+    }
+}

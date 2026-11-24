@@ -762,4 +762,30 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Store().access(Harness(["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "3"]).level), .taste)
         Best.unlocked = false
     }
+
+    /// The hollow's ledge (docs/slope.md, 8.3): a stone that buys only where a purchase can be made, and none before the
+    /// launch knows what is owned, with purchases off or where the pack isn't sold.
+    func testTheLedgesStoneBuysOnlyWhereAPurchaseCanBeMade() {
+        func ledge(_ state: Purchase, ready: Bool = true, buying: Bool = false, asked: Bool = false, canPay: Bool = true,
+                   price: String? = "$2.99", pricing: Pricing = .fetched, failure: Failure? = nil) -> Shop.Ledge {
+            Shop.ledge(.pack(.lens), state: state, ready: ready, buying: buying, asked: asked, unshared: false, canPay: canPay,
+                       price: price, pricing: pricing, failure: failure)
+        }
+        XCTAssertEqual(ledge(.unowned, ready: false).stone, .pending)
+        XCTAssertFalse(ledge(.unowned, ready: false).live)
+        XCTAssertNil(ledge(.unowned, ready: false).price)
+        XCTAssertEqual([ledge(.unowned).stone, ledge(.unowned).live ? .next : nil], [.next, .next])
+        XCTAssertEqual(ledge(.unowned).price, "$2.99")
+        XCTAssertNil(ledge(.unowned, canPay: false).stone)
+        XCTAssertNil(ledge(.failed, failure: .storefront).stone)
+        XCTAssertTrue(ledge(.failed, failure: .offline).live)
+        XCTAssertFalse(ledge(.unowned, buying: true).live)
+        // An asked stone stays live: a declined Ask to Buy sends no transaction, so a tap asks again.
+        XCTAssertTrue(ledge(.pending, asked: true).live)
+        // Waiting on Triptych I's request alone, the pack is still bought alone.
+        XCTAssertTrue(ledge(.pending).live)
+        XCTAssertEqual(ledge(.pending).under.first?.signal, .amber)
+        // The App Store out of reach, buy still tries.
+        XCTAssertTrue(ledge(.unowned, price: nil, pricing: .unreachable).live)
+    }
 }

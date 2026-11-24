@@ -74,6 +74,14 @@ https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); t
 Jack picked the Shelf (#304): build it for real, and pitch easter egg ideas (e.g. something seen or done on an
 overscroll). In code the world is called the slope (`Slope*`), as `Shelf.swift` and "the shelf" already mean the pack
 dock and shop. The build lands on its own branch and PR, screen by screen, each shown to Jack before it merges.
+Jack accepted every recommendation of the slope's design (#306, 2026-11-23): the easter eggs come after the screens
+(the night above, the sky at the bottom, the skimming stone, still water, the seam, the unnumbered pebble, meteor
+nights); packs show as hollows on the overview; a launch lands on the overview with the next level under its tier;
+pack covers hold still; tiers change by scrolling or rising to the surface, no hidden swipe; a pack's levels sit on its
+own small slope; the daily, archive and endless move to the surface and the foot; level 1's note points to settings at
+the surface; and the six small changes (lock symbols become words; the ↗ and the archive's tags go; the supporter mark
+on the overview and share line only; PACK, BUNDLE and UP A NOTCH lose their capitals; the result's buttons become
+stones; "unstirred." at 34 pt italic). The call on the game's words is #308; no copy cut is applied until it is routed.
 
 ### Open work (2026-11-15)
 

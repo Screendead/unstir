@@ -179,6 +179,15 @@ enum SlopeSize {
     }
 }
 
+extension SlopeSize {
+    /// A line's height at `type`, as `Text` lays the size's text style out: what a column's pitch, header and
+    /// stretch heights are sized from.
+    func line(at type: DynamicTypeSize) -> CGFloat {
+        UIFont.preferredFont(forTextStyle: style.ui, compatibleWith:
+            UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(type))).lineHeight
+    }
+}
+
 extension Font {
     /// Text in one of the slope's voices at one of its sizes; `weight` where a voice takes another (a control that
     /// is the way on is medium, "buy" semibold).

@@ -1098,6 +1098,99 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   0.40 reads 2.4:1 there. TierUp is a primary 56 pt tall (`ButtonFace.tall`) in its tier's sweep with its glow's fill
   and breathing glow; closed, it is unfilled and still. `ToneTests` reads each primary's label over its own fill
   (Escapement's plate vermilion is 4.3:1, Jack's to settle) and the strokes at 3:1.
+- **SlopeGeometry.swift**, **Slope.metal**, **SlopeGround.swift**, **Stone.swift** and **SlopeHarness.swift** are the
+  slope's foundation (docs/slope.md, 1 and 13): the world every screen outside the tank is drawn in, built beside the
+  old screens and reached only from the harness until the pieces land.
+  - `SlopeColumn` is a column as data: stretches (a rock, the seats in each terrace, the room over it for a header,
+    rows taller than the pitch, its height at the overview), a foot (wall, drop-off, floor), whether air stands over
+    it, and the measures a type size changes (`pitch`, `lip`, `step`, and at the overview `wall`, `spread`, `under`).
+    `SlopeColumn.main(size:type:header:)` is the main column (the shallows' three ledges, four tiers of three terraces
+    of nine, the drop-off; `ledge(tier:level:)`, `ledge(of:)`); any other list of stretches is a pack's, settings' or
+    the archive's. `SlopeLay(column, z:)` lays one out at a zoom, 0 the overview to 1 the dive: every ledge's top,
+    lip, pebble, drop, rock and back, each stretch's header, the foot and `endless`. Zoom opens depth and magnifies
+    nothing. `seat(n)` is where a pebble rests, `lip(n)` its ledge's nose, `between(n)` a hollow's depth, `half(_:)` a
+    pebble's size, `depth(n)`, `rest(_:height:)` and `travel(height:)` the camera's places. It has no views, so
+    `scripts/slope-lab.sh` compiles it alone.
+  - A ledge's top runs back `SlopeColumn.shelf` (48 pt) from its lip, so the largest pebble rests clear of the wall
+    and the wall still holds a hollow at x = 56. At the overview the whole shelf bows (`bow`) and lifts towards its
+    lips by what nine ledges step down (`lift`), and each ledge leans back down by as much (`crown`), so every top
+    lies level on the screen, back to the leading edge, and nine ledges 1.3 pt apart read as one long one. `seat`
+    follows both. The overview lights the rock as one mass with no darker heart, and over the first ledge its back
+    wall widens up to the bank.
+  - Slope.metal draws the ground in one pass from `SlopeLay.uniforms(top:)`, 36 floats and six a ledge, so the rock is
+    built from the numbers the pebbles are seated by (`testAPebblesSeatIsOnTheDrawnRock`): water by depth, the
+    surface, two far ridges that are never lighter than the water, the shelf, the near silhouette, three layers of
+    motes, then the looks (`SlopeLook`): `level` draws the shelf aside and raises one terrace alone under a tank
+    (`SlopeLay.terrace` is its top, `rock` and `glow` its stone and light), `upper` a second, a short lip over it), `glint`, `clear` (Prism's water), `light`
+    (consent's 0.35) and `paper` (Escapement's page: the same edges as an engraving in ink on bone). It ends in a
+    triangular dither of one part in 255 fixed to the pixel. `slopeHollow` is a hollow's inside (`SlopeHollowGround`).
+    A change to a ledge's shape changes `slopeEdge`, `slopeScale` and the lean in `slopeGround` together with
+    `SlopeLay.scale`, `crown`, `bow` and `lift`.
+  - `SlopeGround` is that pass as a view for one `SlopeView` (a lay, the depth at the screen's top, the size). Its
+    clock runs at 30 Hz and stops while `held`, under Reduce Motion (at 0), while `Power` saves or idles and on the
+    page; stopped, it draws again only for a new camera. `SlopeScene` holds a column by a ledge and a share of the
+    screen's height at a zoom, all three animatable, and lays `content` out from the same `SlopeView` each frame: the
+    overview and the zoom. `SlopeDive` is the same column in a native scroll view (at `z` 1, or 0 for an overview grown
+    past the screen): `content` is laid out once and the ground redrawn for the scroll's offset in the pass that moves
+    it. It opens on `aim` (`SlopeAim`: a ledge and a share, the camera a scene at that ledge and share has, kept
+    inside the travel), travels there when `aim` changes and tells `onMove` its depth. The scroll view's safe-area
+    insets are given back with negative `safeAreaPadding`: with them a scroll target stops 62 pt short of the top.
+    Under the status bar a dive draws the ground again over its content, whole to the bar's foot and gone 30 pt
+    under it, so rows sink away there and none stands behind the clock.
+    A cleared aim leaves the dive where the finger has it, and a new `stamp` goes back to a place already aimed at.
+    `SlopeLayer` places children at points of one frame (`slopePlace`, `slopeLine`, `seated`, `rested`) and offers each
+    the width from its point to 16 pt short of the side (one placed by its middle, the frame's width less both
+    margins, moving aside to stay inside them), so words wrap and are never cut. `rested(at:)` sets a stone by its
+    pebble's underside (the alignments `stoneSeat` and `stoneMiddle`, which `SlopePebble` carries) on a seat, the
+    lone terrace or the bank (`SlopeView.bankSeat`).
+  - `SlopePebble` is the stone as a mark (lit, next, dull, pale, engraved; `dimmed` for a closed level's) and `Stone`
+    the one control: a pebble with words beside it in a `Button`, its state (`StoneState`: lit, next, dull, armed,
+    pending) the caller's to say, 44 pt either way at the least (`testEveryStoneIsFortyFourEitherWay`), sinking 2 pt
+    and drawing in to 0.97 while pressed, rocking when `refused` changes, sounding `effect` through `Sounding`; `sunk`
+    stands its pebble under its words' middle, for the terrace.
+  - The inks are Tone.swift's `SlopeInk`, one colour at four strengths; each reads at its floor from its own
+    `shallowest` depth down (`testTheSlopesInksReadOnItsWater`, on the shader's own output at the overview and in the
+    dive). The voices and sizes are Type.swift's `Font.slope(_:_:)`, `SlopeVoice` and `SlopeSize`.
+  - `SlopeHarness` (Debug only, `UNSTIR_SLOPE`) shows all of it with stand-in pebbles and words: `overview`, `dive`,
+    `zoom`, `descent`, `play`, `hollow`, `pack`, `stones` (scripts/shots/slope.sh, and `film.sh slope-`).
+    `scripts/slope-lab.sh render|bench|probe` draws, times and measures the ground on the Mac's GPU, and
+    `scripts/slope-lab/peek.sh` shoots one harness case on a booted simulator.
+- **The slope's world in the app** (docs/slope.md, 13): `RootView` draws it in place of today's screens while
+  `SlopeFlag.on`, and sets `\.slopeWorld` from it for the play screen and the result. A Debug launch with
+  `UNSTIR_SLOPE=1` (or `=world`) stores the flag and one with `=0` clears it, so a phone's home screen keeps opening it
+  (`UNSTIR_SLOPE=1 scripts/run-ios.sh Debug`); any other harnessed launch and the test host clear it, and no Release
+  build reads either. Its other values are `SlopeHarness`'s stages. In the world: `SlopeMenu` stands in for `MenuView`,
+  a ledge opening its level through `show`; a level comes in over the slope as the slope draws 280 pt aside, and leaves
+  the same way, without today's dip to black (its growth out of the pebble, 2.9, waits on the play screen leaving its
+  ground to the root); `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the
+  menu drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; and, until the archive's
+  piece lands, today's `ArchiveView` lies over it. A pack's hollow opens `SlopePack` in the old card's place, from the
+  hollow's point; it draws itself in and out, and an edge swipe over it bumps `swiped` (it rises from the pack's slope or
+  leaves); a pack opened from Triptych I's inside goes back there (`CameFrom`). A cold launch rests on the overview: only a closed
+  tier's way up, or `UNSTIR_TIER`, opens the menu on a tier. `Spoken.back` says "Back to the menu" for the slope's
+  daily, endless and sandbox, as their "↑ menu" does.
+  - `SlopeMenu.swift`, `SlopeLedge.swift` and `SlopeGate.swift` are the menu (2, 3): the overview and every move of the
+    camera are a `SlopeScene`, the resting dive a `SlopeDive` on the same camera; `SlopeMenuPlan` sizes each room
+    from measured type, and `SlopeMenuModel`, the rows' words and states, is read afresh on a revision, a sync, the
+    store and a new day, never per frame. A ledge's row is `SlopeLedge` (number, name, marks or a word, facts,
+    state); a closed tier's gate is `SlopeGate`. It hands `onPick` the pebble's point on the screen, and takes the
+    hollow (`hollow`) and the archive's ledge (`archiveLedge`) as views, a dull pebble standing in until they land.
+  - `SlopePlay.swift` is the play screen's ground (`SlopePlayGround`: the slope drawn aside, the water at the level's
+    depth, one terrace), header, title, caption and the stones on its terrace, drawn by `LevelView` while
+    `slopeWorld`; the slope's chrome's measure and reserve live in `PlayLayout`. `TerraceSeats` (PlayChrome.swift) is
+    how the view in the card's slot hands its stones to the terrace: leading, middle, trailing, a second terrace and a
+    line under them.
+  - `SlopeResult.swift` is the result on the slope (5): lines on the water under the solved tank and stones on the
+    terrace by `TerraceSeats`, every finish and the lost screen in one layout; `ResultCard` hands over to it while the
+    slope is on.
+  - `SlopeHollow.swift` and `SlopePack.swift` are the packs (8): a hollow in plughole's wall (`SlopeHollow`, its cover
+    held still); its inside (`SlopePack`: `HollowGround` with its own `SlopePack.metal`, `HollowInside`, `HollowFloor`)
+    where a pack is shown, tried, bought and restored; and under its floor the pack's own slope (`PackSlope`,
+    `SlopeColumn.pack`) on the menu's ledge rows. Offer.swift holds the slope's rules beside the shop's: `Shop.ledge`
+    is 8.3's table of the ledge's stone by the store's state as one function.
+  - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
+    column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
+    overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
