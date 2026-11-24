@@ -701,6 +701,9 @@ struct RootView: View {
     @State private var pebble: (id: String, point: CGPoint)?
     @State private var frame = CGRect.zero
     @State private var playStage: SlopePlayStage?
+    /// How far the last back swipe had taken its level as it left, so the leaving view carries on from there into its
+    /// pebble rather than starting again from full size.
+    @State private var swipeLeft = 0.0
     /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
     @State private var hollowFrom: CGPoint?
     /// Triptych I's inside a pack's was opened from, whose way back returns there.
@@ -831,9 +834,16 @@ struct RootView: View {
     /// (endless from the foot, the harness), or under Reduce Motion, it fades.
     private var slopeGrow: AnyTransition {
         guard !reduceMotion, let anchor = pebbleAnchor else { return .opacity }
-        // Lit from its first frames, so the growth is seen from the pebble's size.
-        return .scale(scale: Self.pebbleScale, anchor: anchor).combined(with: .opacity.animation(.easeOut(duration: 0.15)))
+        // Lit from its first frames, so the growth is seen from the pebble's size; going, it stays lit until it is
+        // nearly the pebble, fading with the travel's own ease.
+        let scale = AnyTransition.scale(scale: Self.pebbleScale, anchor: anchor)
+        return .asymmetric(insertion: scale.combined(with: .opacity.animation(.easeOut(duration: 0.15))),
+                           removal: scale.combined(with: .opacity.animation(.easeIn(duration: Self.slopeTravel))))
     }
+
+    /// Where a level's own pebble lies when the menu comes back on it (the dive holds its row at 0.49 of the height, the
+    /// pebble on its ledge's outer half), for a level not opened from one.
+    static let ledgeAnchor = UnitPoint(x: 0.31, y: 0.47)
 
     /// A pebble's width over a tank's.
     static let pebbleScale = 0.06
@@ -846,7 +856,7 @@ struct RootView: View {
     }
 
     /// How far the back swipe has taken the level toward its ledge, 0 to 1 (2.11).
-    private var swipe: Double { reduceMotion ? 0 : stage?.swipe ?? 0 }
+    private var swipe: Double { reduceMotion ? 0 : level == nil ? swipeLeft : stage?.swipe ?? 0 }
 
     /// What the open level shows of its ground; one a level that has gone published is ignored.
     private var stage: SlopePlayStage? { playStage.flatMap { $0.level == level ? $0 : nil } }
@@ -987,11 +997,17 @@ struct RootView: View {
                               })
                         .id(level)
                         .environment(\.slopeGroundOwned, slope)
-                        .onPreferenceChange(SlopePlayStage.Key.self) { playStage = $0 }
-                        .scaleEffect(1 - (1 - Self.pebbleScale) * swipe, anchor: pebbleAnchor ?? UnitPoint(x: 0.2, y: 0.49))
+                        .onPreferenceChange(SlopePlayStage.Key.self) { stage in
+                            playStage = stage
+                            if let stage, stage.level == level { swipeLeft = stage.swipe }
+                        }
+                        .scaleEffect(1 - (1 - Self.pebbleScale) * swipe, anchor: pebbleAnchor ?? Self.ledgeAnchor)
                         .opacity(1 - 0.8 * swipe)
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
                         .transition(slope ? slopeGrow : dip)
+                        // Over the menu as it shrinks back into its pebble: a view leaving a ZStack keeps its place only
+                        // with an explicit zIndex.
+                        .zIndex(slope ? 1 : 0)
                         // Heard before the menu beside it.
                         .accessibilitySortPriority(beside ? 1 : 0)
                 }
@@ -1269,6 +1285,7 @@ struct RootView: View {
                                                stores: !harnessed) : nil
         }
         covering = nil
+        if next != nil { swipeLeft = 0 }
         // Together, so a menu a back swipe uncovered stays up as the level goes.
         withAnimation(.easeInOut(duration: slope && !reduceMotion ? Self.slopeTravel : 0.25)) {
             level = gate == nil && opens ? next : nil
