@@ -13,6 +13,11 @@ enum Picture: String, CaseIterable {
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
     /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
+    /// The slope's candidates (`SlopeArt`), a tier each from plughole down, drawn live: the rock cut and polished,
+    /// light on the water, and the dusk sky. No level shows one unless the harness asks.
+    case strata, agate, lamellae, columns
+    case ripples, glitter, rings, caustics
+    case trails, constellations, armillary, aurora
     /// Lens's halftone panels (`Halftone.panel`), a level its own, baked a pixel at a time.
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
@@ -24,6 +29,8 @@ enum Picture: String, CaseIterable {
         switch self {
         case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
              .marblingTwin, .isobars, .ephemeris, .cords: true
+        case .strata, .agate, .lamellae, .columns, .ripples, .glitter, .rings, .caustics,
+             .trails, .constellations, .armillary, .aurora: true
         case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: false
         }
     }
@@ -41,6 +48,8 @@ enum Picture: String, CaseIterable {
         case .marbling: .marblingTwin
         case .grid, .sunset, .city, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin, .isobars,
              .ephemeris, .cords, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: self
+        case .strata, .agate, .lamellae, .columns, .ripples, .glitter, .rings, .caustics,
+             .trails, .constellations, .armillary, .aurora: self
         }
     }
 
@@ -57,6 +66,8 @@ enum Picture: String, CaseIterable {
         // Every planet goes round a whole number of times in it.
         case .ephemeris: 30
         case .glass, .marbling, .isobars, .cords: 10
+        case .strata, .agate, .lamellae, .columns, .ripples, .glitter, .rings, .caustics,
+             .trails, .constellations, .armillary, .aurora: 20
         // Baked, so nothing uses it.
         case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: 10
         }
@@ -82,12 +93,21 @@ enum Picture: String, CaseIterable {
         case .isobars: 2
         case .cords: 3
         case .ephemeris: 6
+        // The candidates', by the picture lab's bench against the glass's four, on the Mac alone.
+        case .strata, .agate: 2
+        case .ripples: 3
+        case .glitter, .trails, .armillary, .aurora: 4
+        case .lamellae, .columns, .caustics, .rings: 5
+        case .constellations: 6
         }
     }
 
+    /// The salt of a slope candidate's noise tables; nil for every other picture.
+    var slopeTable: UInt64? { SlopeArt.pictures.firstIndex(of: self).map { 0x534C_4F50 + UInt64($0) } }
+
     /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins or the packs'.
     var next: Picture {
-        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil && !$0.paper }
+        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil && !$0.paper && $0.slopeTable == nil }
         return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
@@ -105,6 +125,9 @@ enum Picture: String, CaseIterable {
         case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
         case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
         case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
+        case .strata, .agate, .lamellae, .columns, .ripples, .glitter, .rings, .caustics,
+             .trails, .constellations, .armillary, .aurora:
+            Self.gradients(seed: seed, salt: slopeTable ?? 0, count: 2)
         case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: nil
         // A sibling is never a twin.
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: nil
@@ -371,7 +394,8 @@ enum Picture: String, CaseIterable {
 
         // Drawn by their shaders or `Halftone`, never here.
         case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
-             .marblingTwin, .isobars, .ephemeris, .cords, .halftone:
+             .marblingTwin, .isobars, .ephemeris, .cords, .halftone, .strata, .agate, .lamellae, .columns, .ripples,
+             .glitter, .rings, .caustics, .trails, .constellations, .armillary, .aurora:
             break
         }
     }
@@ -398,6 +422,18 @@ extension Picture {
         case .isobars: LocalizedStringResource("picture.isobars", defaultValue: "isobars", comment: "A picture's name on the sandbox's control")
         case .ephemeris: LocalizedStringResource("picture.ephemeris", defaultValue: "ephemeris", comment: "A picture's name on the sandbox's control")
         case .cords: LocalizedStringResource("picture.cords", defaultValue: "cords", comment: "A picture's name on the sandbox's control")
+        case .strata: LocalizedStringResource("picture.strata", defaultValue: "strata", comment: "A picture's name on the sandbox's control")
+        case .agate: LocalizedStringResource("picture.agate", defaultValue: "agate", comment: "A picture's name on the sandbox's control")
+        case .lamellae: LocalizedStringResource("picture.lamellae", defaultValue: "lamellae", comment: "A picture's name on the sandbox's control")
+        case .columns: LocalizedStringResource("picture.columns", defaultValue: "columns", comment: "A picture's name on the sandbox's control")
+        case .ripples: LocalizedStringResource("picture.ripples", defaultValue: "ripples", comment: "A picture's name on the sandbox's control")
+        case .glitter: LocalizedStringResource("picture.glitter", defaultValue: "glitter", comment: "A picture's name on the sandbox's control")
+        case .rings: LocalizedStringResource("picture.rings", defaultValue: "rings", comment: "A picture's name on the sandbox's control")
+        case .caustics: LocalizedStringResource("picture.caustics", defaultValue: "caustics", comment: "A picture's name on the sandbox's control")
+        case .trails: LocalizedStringResource("picture.trails", defaultValue: "trails", comment: "A picture's name on the sandbox's control")
+        case .constellations: LocalizedStringResource("picture.constellations", defaultValue: "constellations", comment: "A picture's name on the sandbox's control")
+        case .armillary: LocalizedStringResource("picture.armillary", defaultValue: "armillary", comment: "A picture's name on the sandbox's control")
+        case .aurora: LocalizedStringResource("picture.aurora", defaultValue: "aurora", comment: "A picture's name on the sandbox's control")
         case .halftone: LocalizedStringResource("picture.halftone", defaultValue: "halftone", comment: "A picture's name on the sandbox's control")
         case .fern: LocalizedStringResource("picture.fern", defaultValue: "fern", comment: "A picture's name on the sandbox's control")
         case .seeds: LocalizedStringResource("picture.seeds", defaultValue: "seeds", comment: "A picture's name on the sandbox's control")
@@ -438,6 +474,25 @@ func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Do
         g.blendMode = .plusLighter
         g.drawLayer { draw(&$0) }
     }
+}
+
+/// A candidate set of tank pictures for the slope, one for each tier from plughole down. Today's pictures stay every
+/// level's own: only a Debug harness launch (UNSTIR_ART=a, b or c) shows a set, on a tier's level.
+enum SlopeArt: String, CaseIterable {
+    /// The rock cut and polished; light on the water; the dusk sky.
+    case a, b, c
+
+    var tiers: [Picture] {
+        switch self {
+        case .a: [.strata, .agate, .lamellae, .columns]
+        case .b: [.ripples, .glitter, .rings, .caustics]
+        case .c: [.trails, .constellations, .armillary, .aurora]
+        }
+    }
+
+    static let pictures = allCases.flatMap(\.tiers)
+
+    func picture(_ tier: Tier) -> Picture { tiers[Tier.allCases.firstIndex(of: tier) ?? 0] }
 }
 
 /// Chroma is reduced until the colour fits sRGB, so hue and lightness hold.

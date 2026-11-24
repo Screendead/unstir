@@ -393,3 +393,9 @@ film slope-egg-pebble 12 "fps=2,scale=165:-1,tile=12x2:padding=4" "${eggs[@]}" E
 film slope-egg-seam 11 "fps=2,scale=165:-1,tile=11x2:padding=4" "${eggs[@]}" EGG=seam
 film slope-egg-deep 15 "fps=2,scale=165:-1,tile=10x3:padding=4" "${eggs[@]}" EGG=deep
 film slope-egg-meteors 16 "fps=4,scale=165:-1,tile=16x4:padding=4" "${eggs[@]}" EGG=night DAILY=20260812
+# The slope's candidate tank pictures (UNSTIR_ART): each set wound in and unwound at par by a drawn fingertip, on
+# plughole 14 and whirlpool 03.
+for art in a b c; do
+  film slope-art-$art-plughole 18 "$whole" SLOPE=1 ART=$art LEVEL=14 OPEN=1 FINGER=1 REST=0.2 MOVES=3:+7,1:+6,2:-5,0:+3
+  film slope-art-$art-whirlpool 24 "$whole" SLOPE=1 ART=$art TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6
+done

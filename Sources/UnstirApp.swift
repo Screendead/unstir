@@ -402,6 +402,12 @@ struct Harness {
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
         if let picture { level.picture = picture }
+        #if DEBUG
+        // UNSTIR_ART=a, b or c: a tier's level on that candidate set's picture for its tier (`SlopeArt`), dealt as ever.
+        if let art = env["UNSTIR_ART"].flatMap(SlopeArt.init(rawValue:)), Tier.allCases.flatMap(\.levels).contains(where: { $0.id == level.id }) {
+            level.picture = art.picture(level.tier)
+        }
+        #endif
         if env["UNSTIR_STACK"] != nil {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
         }

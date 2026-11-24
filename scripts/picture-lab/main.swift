@@ -6,16 +6,25 @@ import Metal
 import UniformTypeIdentifiers
 
 /// The pictures the lab knows: the shader file, the stitchable's name and its floats for a seed and time.
-let pictures: [String: (file: String, data: (Int, Double) -> [Float])] = [
+var pictures: [String: (file: String, data: (Int, Double) -> [Float])] = [
     "glass": ("Glass", { Picture.cells(seed: $0, t: $1) }),
     "isobars": ("Flow", { s, _ in Picture.gradients(seed: s, salt: 0x464C_4F57, count: 2) }),
     "ephemeris": ("Sky", { Picture.ephemeris(seed: $0, t: $1, period: 30) }),
     "cords": ("Loom", { s, _ in Picture.gradients(seed: s, salt: 0x4C4F_4F4D, count: 2) }),
 ]
+/// The slope's candidates, a file a set, in `SlopeArt.pictures`' order, which salts their tables.
+let slope = [("Mineral", ["strata", "agate", "lamellae", "columns"]), ("Water", ["ripples", "glitter", "rings", "caustics"]),
+             ("Dusk", ["trails", "constellations", "armillary", "aurora"])]
+for (set, (file, names)) in slope.enumerated() {
+    for (k, name) in names.enumerated() {
+        pictures[name] = (file, { s, _ in Picture.gradients(seed: s, salt: 0x534C_4F50 + UInt64(4 * set + k), count: 2) })
+    }
+}
 
 let usage = """
     usage: scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]
            scripts/picture-lab.sh bench <picture>...
+           scripts/picture-lab.sh read <layout> <picture>...
     pictures: \(pictures.keys.sorted().joined(separator: ", "))
     """
 

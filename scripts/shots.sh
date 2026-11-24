@@ -63,6 +63,6 @@ limit=$(sed -nE 's/^ *static let maxStack = ([0-9]+)$/\1/p' Sources/Twist.swift)
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 # Each area's shots, in the index's order. Sourced, not run, as a later area reads values an earlier one set
 # (par27 from the menu, nine from the shelf).
-for area in menu play tiers vortex lens icon-promo first-stir shelf settings escapement prism store duo calm type marks achievements slope slope-packs slope-world slope-eggs; do
+for area in menu play tiers vortex lens icon-promo first-stir shelf settings escapement prism store duo calm type marks achievements slope slope-packs slope-world slope-eggs slope-art; do
   source "scripts/shots/$area.sh"
 done

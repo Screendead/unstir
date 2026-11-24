@@ -471,6 +471,21 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
   regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself (`ShaderKit`) and checks its
   search against a brute force, the twin at the beat's peak; no other picture's shader has a test of its own.
+- **Mineral.metal**, **Water.metal** and **Dusk.metal** draw the slope's candidate tank pictures (`SlopeArt`, sets a, b
+  and c), which no level shows: only a Debug harness launch with `UNSTIR_ART=a`, `b` or `c` puts a tier's level on its
+  set's picture for that tier, after it is dealt, so no draw, scramble or id changes and endless and the daily never
+  see one. A file a set, a stitchable a tier from plughole down, each in its tier's water, rock and glow from
+  Slope.metal, pale lines on a dark ground as the turn's overlays need: the rock cut and polished (`strata`, `agate`,
+  `lamellae`, `columns`), light on the water (`ripples`, `glitter`, `rings`, `caustics`) and the dusk sky (`trails`,
+  `constellations`, `armillary`, `aurora`). Plughole's three show which way is up inside a core, as its baked pictures
+  do. Each reads two tables of `Picture.gradients` salted by its place in `SlopeArt.pictures` (the picture lab's
+  `slope` table keeps the same order), cuts cells by an integer hash salted from the tables, and repeats every 20 s.
+  Their `fillEntries` are the lab's bench against the glass's four, on the Mac alone. `scripts/picture-lab.sh read
+  <layout> <picture>...` measures how a turn shows: each rod turned alone by a step, the share of its shear ring's
+  and its core's pixels whose light moves by more than 0.12, the worst rod's; today's live pictures the lab draws
+  read 0.17 to 0.49 on hex, and every candidate reads 0.21 or more. `scripts/shots.sh slope-art-` shoots a level of
+  each tier on each set and on today's picture, dealt and unstirred, and `scripts/film.sh slope-art-` films each set
+  wound in and unwound on plughole 14 and whirlpool 03.
 - **Brim.swift** and **Brim.metal** draw endless's brim as a measuring jug on the tank's own bezel, ported from the
   mockup Jack approved (2026-09-28) with its constants in its own units (`Brim.unit` to the glass's radius): ticks
   engraved on the steel, a brim pin at twelve, and a liquid in the picture's own colours climbing both sides from six
