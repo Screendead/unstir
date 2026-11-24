@@ -805,7 +805,7 @@ default build, which has none). No card and no scrim: the overview is up, its wo
 the ground is drawn at 0.35 of its light, the dusk deepened. Centred in the open water from 0.34 `H`:
 
 - "Help improve Unstir?" (name voice, title);
-- "Let the game tell us how you play. Never who you are." (ui, body, `ink2`), wrapping;
+- "How you play. Never who you are." (ui, body, `ink2`), wrapping (Jack's wording, #308);
 - "What does it send? ›", a quiet control (ui, label), which opens the full list under it (today's text; ui,
   detail, `ink2`) and then reads "Hide the list ‹";
 - on one bowed sill, side by side and alike in every way, two lit stones of one size, each with its word under it:

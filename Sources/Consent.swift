@@ -10,7 +10,7 @@ import SwiftUI
 enum ConsentWords {
     static var title: String { String(localized: "Help improve Unstir?", comment: "Analytics consent: its question") }
     static var body: String {
-        String(localized: "Let the game tell us how you play. Never who you are.", comment: "Analytics consent: under its question")
+        String(localized: "How you play. Never who you are.", comment: "Analytics consent: under its question")
     }
     static var sendsLink: String {
         String(localized: "What does it send? \u{203A}", comment: "Analytics consent: the link that shows what is sent")
@@ -20,10 +20,9 @@ enum ConsentWords {
     }
     static var sends: String {
         String(localized: """
-            If you say yes, the game tells us how you play: which puzzles you finish, how many moves and \
-            undos they take, which days you play, which packs you buy, and roughly which country you're in. It never \
-            sends your name, your Apple ID, or anything that tells us who you are. You can change your mind any time in \
-            settings.
+            Yes means we see which puzzles you finish, how many moves and undos, which days you play, which packs you \
+            buy, and roughly your country. Never your name, Apple ID, or anything that identifies you. Change it any time \
+            in settings.
             """, comment: "Analytics consent: what is sent. Keep in step with the privacy policy")
     }
     static var yes: String { String(localized: "Yes", comment: "Analytics consent: the answer that agrees") }
