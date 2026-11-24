@@ -202,7 +202,7 @@ struct SlopeMenu: View {
         .onAppear {
             settle(plan)
             #if DEBUG
-            if SlopeFlag.touring { tour(plan) }
+            if let motion = SlopeFlag.touring { tour(motion, plan) }
             SlopeEggHarness.start()
             if SlopeEggHarness.wanted == .skim {
                 Task {
@@ -570,12 +570,14 @@ struct SlopeMenu: View {
 
 #if DEBUG
 extension SlopeMenu {
-    /// UNSTIR_SLOPE=tour: the menu moved as a finger moves it, each motion marked in the log, for a trace on the
-    /// phone. The pull and the edge swipe step their state with no animation, as a drag's events do; the dive
-    /// scrolls to one aim after another. It ends idle, the water gone still.
-    fileprivate func tour(_ plan: SlopeMenuPlan) {
+    /// UNSTIR_SLOPE=tour: the menu moved as a finger moves it, for a trace on the phone: the overview pulled, the
+    /// zoom, the dive scrolled, the edge swipe, the rise, the overview at rest and then idle until the water is still.
+    /// `only` names one of them (tour:scroll), reached the short way, so each can be traced from a cool phone. The
+    /// pull and the edge swipe step their state with no animation, as a drag's events do; the dive scrolls to one aim
+    /// after another. Each motion is marked in the log with how many times the ground has been drawn.
+    fileprivate func tour(_ only: String, _ plan: SlopeMenuPlan) {
         func mark(_ motion: String) {
-            Log.write("tour \(motion)")
+            Log.write("tour \(motion), ground drawn \(SlopeGround.draws)")
             Power.shared.touched()
         }
         func rest(_ seconds: Double) async { try? await Task.sleep(for: .seconds(seconds)) }
@@ -587,39 +589,52 @@ extension SlopeMenu {
             }
             set(1)
         }
+        func wants(_ motion: String) -> Bool { only.isEmpty || only == motion }
         Task {
-            await rest(3)
-            mark("pull")
-            await step(3) { drawn = 200 * sin(2 * .pi * $0) }
-            await rest(1)
-            mark("zoom")
-            enter(.plughole, plan)
             await rest(2.5)
-            mark("scroll")
-            let last = plan.deep.count - 1
-            for n in Array(stride(from: 8, to: 32, by: 4)) + Array(stride(from: 44, to: last, by: 12)) + [last, 60, 20] {
-                go(to: SlopeAim(ledge: n, share: 0.49), plan)
-                await rest(0.9)
+            if wants("pull") {
+                mark("pull")
+                await step(3) { drawn = 200 * sin(2 * .pi * $0) }
+                await rest(1)
             }
-            await rest(1)
-            mark("swipe")
-            swiping = true
-            lift(plan)
-            await step(1.5) { zoom = 1 - 0.4 * sin(.pi * $0) }
-            pull = 0.1
-            released(plan)
-            await rest(1.5)
-            mark("rise")
-            rise(plan)
-            await rest(2.5)
-            mark("rest")
-            await rest(3)
-            Log.write("tour still")
-            Power.shared.idleSooner = .seconds(1)
-            Power.shared.touched()
-            await rest(10)
-            Log.write("tour ends")
-            Power.shared.idleSooner = nil
+            if !wants("rest") || only.isEmpty, only != "pull" {
+                mark("zoom")
+                enter(.plughole, plan)
+                await rest(2.5)
+            }
+            if wants("scroll") {
+                mark("scroll")
+                let last = plan.deep.count - 1
+                for n in [8, 12, 16, 20, 24, 28, 44, 60, 76, 92, last, 60, 20] {
+                    go(to: SlopeAim(ledge: n, share: 0.49), plan)
+                    await rest(0.9)
+                }
+                await rest(1)
+            }
+            if wants("swipe") {
+                mark("swipe")
+                swiping = true
+                lift(plan)
+                await step(1.5) { zoom = 1 - 0.4 * sin(.pi * $0) }
+                pull = 0.1
+                released(plan)
+                await rest(1.5)
+            }
+            if wants("rise") {
+                mark("rise")
+                rise(plan)
+                await rest(2.5)
+            }
+            if wants("rest") {
+                mark("rest")
+                await rest(4)
+                mark("still")
+                Power.shared.idleSooner = .seconds(1)
+                Power.shared.touched()
+                await rest(10)
+                Power.shared.idleSooner = nil
+            }
+            Log.write("tour ends, ground drawn \(SlopeGround.draws)")
         }
     }
 }

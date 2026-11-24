@@ -89,6 +89,11 @@ struct SlopeGround: View {
     private var dawning: Bool { past > SlopeEggs.held && !fixed }
     private var still: Bool { fixed || !turning && !skimming && !dawning && (clock != nil || Power.shared.idle) }
 
+    #if DEBUG
+    /// How many times a whole ground has been worked out for drawing, for `SlopeMenu.tour`'s log.
+    static var draws = 0
+    #endif
+
     /// How far the surface line stands off its place at x: Slope.metal's sway.
     private static func sway(_ x: CGFloat, _ t: Double, calm: Double) -> CGFloat {
         (1 - calm) * (3.2 * sin(x * 0.024 + t * 1.1) + 1.8 * sin(x * 0.063 - t * 1.6 + 1.3))
@@ -108,6 +113,9 @@ struct SlopeGround: View {
             let out = fixed ? 1 : waited * waited * (3 - 2 * waited)
             let mirror = view.top - past + view.size.height
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
+            #if DEBUG
+            let _ = band == nil ? Self.draws += 1 : ()
+            #endif
             ZStack {
                 let common: [Shader.Argument] = [
                     .float2(view.size),
