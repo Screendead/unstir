@@ -9,6 +9,12 @@ struct SlopeConsent: View {
     /// The ground's light while it asks.
     static let light = 0.35
 
+    /// The line breaks after its first sentence, so no word is left alone on the second.
+    static func balanced(_ line: String) -> String {
+        guard let stop = line.range(of: ". ") else { return line }
+        return line.replacingCharacters(in: stop, with: ".\n")
+    }
+
     @State private var sends = Analytics.shared.opensSends
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -18,7 +24,7 @@ struct SlopeConsent: View {
                 VStack(spacing: 14) {
                     Text(ConsentWords.title).font(.slope(.name, .title)).ink(.ink) // loc: verbatim localized by ConsentWords
                         .accessibilityAddTraits(.isHeader)
-                    Text(ConsentWords.body).font(.slope(.ui, .body)).ink(.ink2) // loc: verbatim localized by ConsentWords
+                    Text(Self.balanced(ConsentWords.body)).font(.slope(.ui, .body)).ink(.ink2) // loc: verbatim localized by ConsentWords
                         .fixedSize(horizontal: false, vertical: true)
                     Button {
                         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) { sends.toggle() }
