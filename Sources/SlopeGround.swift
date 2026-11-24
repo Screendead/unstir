@@ -60,6 +60,8 @@ struct SlopeGround: View {
     /// When the clock read 0; and when it last stopped, with what still water had cost it by then.
     @State private var epoch = Date.now
     @State private var stopped: (at: Date, lost: Double)?
+    /// Since when the camera has been held past the column's foot.
+    @State private var sunk: Date?
 
     /// Nothing may move: the ground is a still whatever is asked of it.
     private var fixed: Bool { held || reduceMotion || look.paper >= 1 || Power.shared.saving }
@@ -67,7 +69,13 @@ struct SlopeGround: View {
     private var turning: Bool { eggs != nil && !fixed && Power.shared.turning }
     /// A stone is skimming over it.
     private var skimming: Bool { eggs?.skim != nil && !fixed }
-    private var still: Bool { fixed || !turning && !skimming && (clock != nil || Power.shared.idle) }
+    /// How far past the foot of its travel the camera is: the menu's alone, where the foot is the drop-off.
+    private var past: CGFloat {
+        eggs != nil && view.lay.column.foot == .dropOff ? view.top - view.lay.travel(height: view.size.height).upperBound : 0
+    }
+    /// The mirrored sky's lights are coming out.
+    private var dawning: Bool { past > SlopeEggs.held && !fixed }
+    private var still: Bool { fixed || !turning && !skimming && !dawning && (clock != nil || Power.shared.idle) }
 
     /// How far the surface line stands off its place at x: Slope.metal's sway.
     private static func sway(_ x: CGFloat, _ t: Double, calm: Double) -> CGFloat {
@@ -83,6 +91,10 @@ struct SlopeGround: View {
             let calm = eggs == nil || fixed ? 0 : power.turning ? power.calm.level(timeline.date) : power.calm.to
             // The night stands over a surface pulled down past its place.
             let lift = eggs != nil && view.lay.column.surface ? view.lay.travel(height: view.size.height).lowerBound - view.top : 0
+            // The mirrored sky's lights come out while the camera is held past the foot; where nothing may move, all at once.
+            let waited = min(max((sunk.map { timeline.date.timeIntervalSince($0) } ?? 0) / SlopeEggs.dawning, 0), 1)
+            let out = fixed ? 1 : waited * waited * (3 - 2 * waited)
+            let mirror = view.top - past + view.size.height
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
             ZStack {
                 Rectangle().fill(.black)
@@ -94,8 +106,8 @@ struct SlopeGround: View {
                         .float(look.paper),
                         .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
                         .floatArray(view.lay.uniforms(top: view.top)),
-                        .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), lay: view.lay,
-                                                   at: timeline.date) ?? SlopeEggs.none)))
+                        .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), deep: SlopeEggs.deep(sunk: past), out: out,
+                                                   mirror: mirror, lay: view.lay, at: timeline.date) ?? SlopeEggs.none)))
                 // The veil's band draws the water again, not what is on it.
                 if let skim = eggs?.skim, skimming, band == nil {
                     SlopeSkimLayer(skim: skim, date: timeline.date) { -view.top + Self.sway($0, t, calm: calm) }
@@ -103,6 +115,7 @@ struct SlopeGround: View {
                 }
             }
         }
+        .onChange(of: past > SlopeEggs.held) { sunk = past > SlopeEggs.held ? .now : nil }
         .onChange(of: still, initial: true) {
             let now = Date.now, lost = eggs == nil ? 0 : Power.shared.calm.lost(now)
             if still {

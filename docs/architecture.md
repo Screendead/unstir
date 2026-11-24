@@ -1230,6 +1230,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     - The seam: `SlopeMenuModel.TierRows.seam` (every level at par, read with the model, never per frame) lights
       `slopeSeam` in that tier's rock: a thread that wanders by the water's depth in ledges, so it keeps its place in
       the rock from the overview to the dive, pinching out and coming back, with flecks beside it.
+    - The sky at the bottom: past the foot of the travel by `SlopeEggs.held` (the dive's bounce, or the overview's
+      drag), the ground counts the hold on its own timeline, as a held finger sends no scroll events, and the
+      stars come out one by one over `dawning` seconds, the sky's own field upside down; at once under Reduce Motion.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

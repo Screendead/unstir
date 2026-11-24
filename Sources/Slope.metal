@@ -138,7 +138,10 @@ static float slopeStars(float2 q, float tm, float pulse, float soft, float out) 
         float mag = 0.22 + 0.78 * pow(slopeHash(id + 2.2), 3.0);
         float beat = 1.0 - pulse * (0.5 + 0.5 * sin(tm * 1.6 * (0.5 + slopeHash(id)) + 6.28 * slopeHash(id + 4.0)));
         float lit = step(0.3, slopeHash(id + 9.1)) * smoothstep(0.0, 0.12, out - 0.88 * slopeHash(id + 7.7));
-        s += (smoothstep(1.0, 0.0, r / (0.62 + 0.8 * mag)) + soft * exp(-r / (1.6 + 2.4 * mag)) * 0.5) * mag * beat * lit;
+        // A halo ends inside its own cell, or the next cell would cut it square.
+        float edge = (0.5 - max(abs(f.x), abs(f.y))) * cell;
+        s += (smoothstep(1.0, 0.0, r / (0.62 + 0.8 * mag)) + soft * exp(-r / (1.1 + 1.5 * mag)) * 0.45 * smoothstep(0.0, 5.0, edge))
+            * mag * beat * lit;
     }
     return s;
 }
@@ -445,6 +448,13 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float2 jo = float2(slopeHash(id + 1.7), slopeHash(id + 9.3)) - 0.5;
         float r = length((fr - jo * 0.6) * 150.0);
         col += float3(0.7, 0.72, 0.8) * smoothstep(2.4, 0.0, r) * step(0.5, slopeHash(id + 5.1)) * 0.2 * view.w * (1.0 - falling);
+    }
+
+    if (egg.deep > 0.0) {
+        // Under the last water the sky's own stars stand upside down, cold, coming out one by one.
+        float fall = top + pos.y - egg.mirror.x;
+        col += (float3(0.7, 0.92, 0.98) * slopeStars(float2(pos.x, fall + 400.0), tm, 0.7, 1.0, egg.mirror.y)
+                + float3(0.0, 0.016, 0.026) * smoothstep(0.0, 300.0, fall + 120.0)) * smoothstep(-150.0, 30.0, fall) * egg.deep;
     }
 
     // Prism's level: clear water, white light.

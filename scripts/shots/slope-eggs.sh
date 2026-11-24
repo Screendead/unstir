@@ -14,3 +14,5 @@ hold=8 shot slope-egg-pebble "The unnumbered pebble: the dive's foot, a dull sto
   $eggs EGG=pebble CLOCK=3
 hold=6 shot slope-egg-seam "The seam: plughole all at par, a thread of gold wandering down its rock at the overview." $eggs CLOCK=3
 hold=6 shot slope-egg-seam-dive "The same in the dive: the thread in the wall behind plughole's ledges, flecks of gold beside it." $eggs TIER=plughole CLOCK=3
+hold=9 shot slope-egg-deep "The sky at the bottom: the overview pulled up past endless and held, the sky's stars upside down in the black under the best run's lights." \
+  $eggs EGG=deep

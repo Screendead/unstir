@@ -14,6 +14,7 @@ import SwiftUI
 /// - The unnumbered pebble: under the main column's last ledge a spur of rock comes back in from the screen's edge
 ///   (`nook`), and a dull stone on it says the one line of credits (`SlopeUnnumbered`).
 /// - The seam: a tier with every level at par has gold in its rock (`seams`).
+/// - The sky at the bottom: pulled up past the foot and held, the sky's stars come out upside down in the black.
 struct SlopeEggs: Equatable {
     var skim: SlopeSkim?
     /// Each tier's rock holds its seam.
@@ -35,6 +36,16 @@ struct SlopeEggs: Equatable {
         let reach: CGFloat = 64, top = lay.tops[lay.count - 1] + 1.3 * lay.pitch, x: CGFloat = 38
         return (reach, top, CGPoint(x: x, y: top + 3 * (x / reach) * (x / reach)))
     }
+
+    /// How far the mirrored sky has come in under a camera `sunk` points past the travel's foot, and from where a
+    /// hold counts.
+    static let held: CGFloat = 30
+    static func deep(sunk: CGFloat) -> Double {
+        let x = min(max((sunk - held) / 110, 0), 1)
+        return x * x * (3 - 2 * x)
+    }
+    /// The seconds its lights take to come out.
+    static let dawning = 3.2
 
     /// Where the waxing moon is lit on the left.
     private static let southern: Set<String> = ["AU", "NZ", "ZA", "AR", "CL", "UY", "PY", "BO", "PE", "BR", "NA", "BW", "ZW", "MZ",
@@ -58,9 +69,9 @@ struct SlopeEggs: Equatable {
     }
 
     /// Slope.metal's `SlopeEgg`, in its order.
-    func uniforms(calm: Double, night: Double, lay: SlopeLay, at date: Date) -> [Float] {
+    func uniforms(calm: Double, night: Double, deep: Double, out: Double, mirror: CGFloat, lay: SlopeLay, at date: Date) -> [Float] {
         let age = skim?.age(date) ?? 0, nook = Self.nook(lay)
-        return [Float(night), 0, Float(calm), 0, moon.x, moon.y, 0, 0,
+        return [Float(night), Float(deep), Float(calm), 0, moon.x, moon.y, Float(mirror), Float(out),
                 Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0)]
             + (0 ..< 4).map { $0 < seams.count && seams[$0] ? 1 : 0 } + [Float(nook?.reach ?? 0), Float(nook?.top ?? 0), 0, 0]
     }
@@ -227,8 +238,9 @@ extension EnvironmentValues {
 ///   and UNSTIR_EGGAT holds it that many seconds into its throw, for a still.
 /// - `pebble`: the dive goes to its foot, and a second and a half on the unnumbered pebble is tapped; its line stays.
 /// - `seam`: a second and a half in, the camera sinks into plughole.
+/// - `deep`: a second in, the overview is pulled up past its foot and held six seconds.
 enum SlopeEggHarness: String {
-    case still, night, skim, pebble, seam
+    case still, night, skim, pebble, seam, deep
 
     static let speed = ProcessInfo.processInfo.environment["UNSTIR_EGGSPEED"].flatMap(Double.init) ?? 1900
     static let held = ProcessInfo.processInfo.environment["UNSTIR_EGGAT"].flatMap(Double.init)

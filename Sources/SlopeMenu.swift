@@ -217,10 +217,10 @@ struct SlopeMenu: View {
             if SlopeEggHarness.wanted == .pebble {
                 go(to: SlopeAim(ledge: plan.deep.count - 1, share: 0.3), plan)
             }
-            if SlopeEggHarness.wanted == .night {
+            if SlopeEggHarness.wanted == .night || SlopeEggHarness.wanted == .deep {
                 Task {
                     try? await Task.sleep(for: .seconds(1))
-                    withAnimation(.easeInOut(duration: 1.6)) { drawn = 215 }
+                    withAnimation(.easeInOut(duration: 1.6)) { drawn = SlopeEggHarness.wanted == .deep ? -215 : 215 }
                     try? await Task.sleep(for: .seconds(6.6))
                     withAnimation(.spring(duration: 0.7, bounce: 0.3)) { drawn = 0 }
                 }
@@ -246,6 +246,16 @@ struct SlopeMenu: View {
         return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
                           eggs: eggs) { view in
             world(view, plan, cull: true)
+            // Pulled up past its foot, the overview's words sink away under the status bar as the dive's do.
+            let over = view.top - view.lay.travel(height: view.size.height).upperBound
+            if over > 0, view.lay.e <= 0, plan.top > 0 {
+                let veil = plan.top + 30
+                SlopeGround(view: view, held: still, look: SlopeLook(light: light), clock: clock ?? 0, near: !plan.large, band: veil, eggs: eggs)
+                    .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: plan.top / veil),
+                                                 .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+                    .opacity(min(over / 24, 1))
+                    .frame(maxHeight: .infinity, alignment: .top)
+            }
         }
         .allowsHitTesting(!moving)
         // A drag takes the screen from the words under it; a tap is still theirs.
