@@ -75,8 +75,8 @@ struct SlopeSettings: View {
         }
         rows.append(Row(name: ConsentWords.restore, state: nil, detail: store.restoreNote ?? ConsentWords.restoreDetail, kind: .restore))
         // Today's sheet offers it with or without a support address, sharing the log where there is none.
-        rows.append(Row(name: ConsentWords.report + " \u{2197}", state: nil, detail: ConsentWords.reportDetail, kind: .report))
-        rows.append(Row(name: ConsentWords.policy + " \u{2197}", state: nil, detail: ConsentWords.policyDetail, kind: .policy))
+        rows.append(Row(name: ConsentWords.report, state: nil, detail: ConsentWords.reportDetail, kind: .report))
+        rows.append(Row(name: ConsentWords.policy, state: nil, detail: ConsentWords.policyDetail, kind: .policy))
         return rows
     }
 
@@ -199,14 +199,14 @@ struct SlopeSettings: View {
                 .disabled(store.restoring)
         case .report:
             if SettingsSheet.support != nil, MFMailComposeViewController.canSendMail() {
-                Button { mailing = true } label: { words }.buttonStyle(Sounding())
+                Button { mailing = true } label: { words }.buttonStyle(Sounding()).accessibilityAddTraits(.isLink)
             } else if let to = SettingsSheet.support {
                 ShareButton(items: { ["To: \(to)\n\n\(MailSheet.body)", SubjectItem(Log.url, subject: MailSheet.subject)] }) { words }
             } else {
                 ShareButton(items: { [Log.url] }) { words }
             }
         case .policy:
-            Button { reading = true } label: { words }.buttonStyle(Sounding())
+            Button { reading = true } label: { words }.buttonStyle(Sounding()).accessibilityAddTraits(.isLink)
         }
     }
 }
