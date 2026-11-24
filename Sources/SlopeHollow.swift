@@ -6,86 +6,49 @@ import SwiftUI
 /// lit within, held still at its stirred frame, its light spilling on the rock and caught on the opening's lower lip.
 /// Under it its name, with a glyph for owned or waiting, and the cover's line: "new", or the free levels solved.
 ///
-/// The view's own frame is the opening's, `side` across, so the menu sets its middle where the geometry says
-/// (`SlopeHollow.place`); the words hang under it and are part of its target. At the accessibility sizes (`beside`)
+/// The view's own frame is the opening's, `side` across, which the menu sets by its top centre (`init(_:on:type:open:)`);
+/// the words hang under it and are part of its target. At the accessibility sizes (`beside`)
 /// the hollow takes a row of its own in the column, the rock bulging out to hold it, and the words stand beside it at
 /// the words' x, full size and wrapping.
 struct SlopeHollow: View {
     let offer: Offer
-    /// The opening's width: 58 in the dive, less while the depth is closing (`SlopeHollow.side`).
+    /// The opening's width: 58 in the dive, less while the depth is closing.
     var side: CGFloat = SlopeHollow.full
-    /// How much of the name and line shows; they fade in as the depth finishes opening (`SlopeHollow.words`).
+    /// How much of the name and line shows; they fade in as the depth finishes opening.
     var words = 1.0
     /// The accessibility sizes' row: the words beside the opening, wrapping in this width; nil sets them under it.
     var beside: CGFloat?
-    let open: () -> Void
+    /// A tap, with the opening's middle on the screen, which its cover rises out of (`SlopePack.from`).
+    let open: (CGPoint) -> Void
     var store = Store.shared
+    @State private var middle = CGPoint.zero
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let full: CGFloat = 58
-    /// The opening's middle, from the screen's leading edge: in the wall, and at the accessibility sizes, where the
-    /// slope keeps to the edge, in the bulge.
-    static let x: CGFloat = 56, largeX: CGFloat = 48
+    /// The opening's middle at the accessibility sizes, from the screen's leading edge, where the menu sets it.
+    static let largeX: CGFloat = 48
     /// Where the words start beside it at the accessibility sizes, as a ledge's row's.
     static let wordsX: CGFloat = 96
-
-    /// The hollows the slope shows, in the shelf's order: Triptych I's only while it saves anything, as the dock.
-    @MainActor static func shelf(_ store: Store = .shared) -> [Offer] {
-        Offer.shelf().filter { $0 != .complete || store.offersComplete }
-    }
-
-    /// Whether the slope shows hollows at all, and the packs' caption with them: the dock's rule.
-    @MainActor static var shown: Bool { Shop.shown() }
-
-    /// The plughole level whose ledge the hollow lies under, between it and the next.
-    static func after(_ offer: Offer) -> Int {
-        switch offer {
-        case .pack(.firstStir): 2
-        case .pack(.lens): 6
-        case .pack(.escapement): 11
-        case .pack(.prism): 16
-        case .complete: 21
-        }
-    }
-
-    /// The main column's ledge it lies under.
-    static func ledge(_ offer: Offer) -> Int { SlopeColumn.ledge(tier: 0, level: after(offer)) }
-
-    /// The room a hollow's own row takes at the accessibility sizes, which the menu adds to its ledge's row
-    /// (`SlopeColumn.Stretch.rows`) so the gap under that ledge opens by it: the opening and its light, or its name
-    /// over two lines and its line, whichever is taller.
-    static func room(at type: DynamicTypeSize) -> CGFloat {
-        guard type.isAccessibilitySize else { return 0 }
-        return max(full + 44, TypeRole.detail.line(at: type).height * 3 + 28)
-    }
-
-    /// The opening's middle in `view`: beside the water's room between its ledge and the next, or at the accessibility
-    /// sizes in the row opened under its ledge's own.
-    static func place(_ offer: Offer, in view: SlopeView, type: DynamicTypeSize) -> CGPoint {
-        let n = ledge(offer), lay = view.lay
-        guard type.isAccessibilitySize else { return CGPoint(x: x, y: view.y(lay.between(n))) }
-        return CGPoint(x: largeX, y: view.y(lay.tops[n] + lay.drops[n] - room(at: type) / 2 - 8))
-    }
-
-    /// The opening's width as the depth opens: 16 at the overview, 58 in the dive.
-    static func side(_ lay: SlopeLay) -> CGFloat { 16 + (full - 16) * lay.e }
-    /// How much of a hollow shows as the depth opens: none under half way, whole from 0.8.
-    static func shows(_ lay: SlopeLay) -> Double { min(max((lay.e - 0.5) / 0.3, 0), 1) }
-    /// Its name and line fade in past 0.8.
-    static func words(_ lay: SlopeLay) -> Double { min(max((lay.e - 0.8) / 0.2, 0), 1) }
 
     var body: some View {
         let state = store.state(offer), ready = store.ready
         // Unowned until the launch's first read has finished, so a pack's free levels wait for it.
         let line = offer.pack.flatMap { Marks.line($0, owned: state == .owned || !ready, fits: $0.fits(), played: $0.tastePlayed()) }
-        Button(action: open) {
+        Button { open(middle) } label: {
             mouth
                 .frame(width: side, height: side)
+                .onGeometryChange(for: CGPoint.self) { geo in
+                    let frame = geo.frame(in: .global)
+                    return CGPoint(x: frame.midX, y: frame.midY)
+                } action: { middle = $0 }
                 .overlay(alignment: beside == nil ? .top : .leading) {
                     caption(state: ready ? state : .unowned, line: line)
                         .opacity(words)
                         .alignmentGuide(.top) { _ in -side - 10 * side / Self.full }
                         .alignmentGuide(.leading) { _ in beside == nil ? 0 : Self.largeX - Self.wordsX - side / 2 }
+                        // Beside the opening the words stand level with its middle, or, taller than it, from its top
+                        // down, inside the row the menu opens for it.
+                        .alignmentGuide(VerticalAlignment.center) { $0.height > side ? side / 2 : $0[VerticalAlignment.center] }
                 }
                 .contentShape(Rectangle())
         }
@@ -160,40 +123,8 @@ struct SlopeHollow: View {
 extension SlopeHollow {
     /// The hollow the menu sets on a spot of its column, the opening's top centre at the spot's point: as big as the
     /// depth has opened it, its words arriving with the dive's.
-    @MainActor init(_ offer: Offer, on spot: SlopeSpot, type: DynamicTypeSize, store: Store = .shared, open: @escaping () -> Void) {
+    @MainActor init(_ offer: Offer, on spot: SlopeSpot, type: DynamicTypeSize, store: Store = .shared, open: @escaping (CGPoint) -> Void) {
         self.init(offer: offer, side: spot.side, words: spot.near,
                   beside: type.isAccessibilitySize ? max(spot.view.size.width - Self.wordsX - 16, 60) : nil, open: open, store: store)
-    }
-}
-
-/// Every hollow on a view of the main column as the harness shows them, each where it lies, growing from 16 to 58 points as the depth opens and
-/// its words fading in last; unseen until the dock's rule shows them (`SlopeHollow.shown`) and the store's first read
-/// and price fetch have settled, then fading in once. The menu places each `SlopeHollow`
-/// itself (`init(_:on:type:open:)`).
-struct SlopeHollows: View {
-    let view: SlopeView
-    /// The offer, and its opening's middle in the view, for its cover to rise from.
-    let open: (Offer, CGPoint) -> Void
-    var store = Store.shared
-
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        let lay = view.lay, shows = SlopeHollow.shows(lay), shelf = SlopeHollow.shelf(store)
-        SlopeLayer {
-            if SlopeHollow.shown, shows > 0 {
-                ForEach(shelf, id: \.self) { offer in
-                    let at = SlopeHollow.place(offer, in: view, type: typeSize)
-                    SlopeHollow(offer: offer, side: SlopeHollow.side(lay), words: SlopeHollow.words(lay),
-                                beside: typeSize.isAccessibilitySize ? max(view.size.width - SlopeHollow.wordsX - 16, 60) : nil,
-                                open: { open(offer, at) }, store: store)
-                        .slopePlace(at)
-                        .transition(.opacity)
-                }
-            }
-        }
-        .opacity(shows)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: shelf)
     }
 }
