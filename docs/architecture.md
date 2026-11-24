@@ -1114,7 +1114,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - A ledge's top runs back `SlopeColumn.shelf` (48 pt) from its lip, so the largest pebble rests clear of the wall
     and the wall still holds a hollow at x = 56. At the overview the whole shelf bows (`bow`) and lifts towards its
     lips by what nine ledges step down (`lift`), and each ledge leans back down by as much (`crown`), so every top
-    lies level on the screen and nine ledges 1.3 pt apart read as one long one. `seat` follows both.
+    lies level on the screen, back to the leading edge, and nine ledges 1.3 pt apart read as one long one. `seat`
+    follows both. The overview lights the rock as one mass with no darker heart, and over the first ledge its back
+    wall widens up to the bank.
   - Slope.metal draws the ground in one pass from `SlopeLay.uniforms(top:)`, 36 floats and six a ledge, so the rock is
     built from the numbers the pebbles are seated by (`testAPebblesSeatIsOnTheDrawnRock`): water by depth, the
     surface, two far ridges that are never lighter than the water, the shelf, the near silhouette, three layers of

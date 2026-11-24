@@ -139,7 +139,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     // Each ledge leans down from its back by what the overview lifts it, so its top lies level on the screen
     // (SlopeLay.crown).
     float level = depth - ledge.x;
-    float f = level - (k < 0.0 ? 0.0 : max(slopeLift(x) - slopeLift(more.x), 0.0) * (1.0 - open));
+    float f = level - (k < 0.0 ? 0.0 : (slopeLift(x) - slopeLift(more.x)) * (1.0 - open));
     float4 first = slopeLedge(g, 0.0), end = slopeLedge(g, count - 1.0);
     // Past the foot, in the last ledge's drops.
     float past = (depth - foot) / end.z;
@@ -203,7 +203,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     if (g[6] > 0.0) {
         // The bank's shoulder under the water line, and its dry top over it: drawn by the screen, as the stone on it is.
         // Under the water it falls away from the water line as gently as it came down to it, then steepens to the wall.
-        mask = max(mask, smoothstep(-2.5, 2.5, 100.0 * exp(-pow(max(pos.y - surface, 0.0) / 46.0, 0.7)) - x));
+        mask = max(mask, smoothstep(-2.5, 2.5, 100.0 * exp(-pow(max(pos.y - surface, 0.0) / 90.0, 0.9)) - x));
         dry = pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0));
         below = slopeStep(dry);
     }
@@ -239,9 +239,12 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
             tone = mix(tone, mix(1.3, 0.5, pow(saturate(drop / 34.0), 0.7)), far);
             glint = mix(glint, exp(-drop / 2.4) * 0.6 + exp(-drop / 9.0) * 0.16, far);
         }
+        // Over the first ledge the overview shows the back wall rising to the bank, lit along its edge.
+        if (k < 0.0) tone = mix(tone, 0.62 + 0.22 * exp(-max(max(e0, 100.0 * exp(-pow(max(pos.y - surface, 0.0) / 90.0, 0.9))) - x, 0.0) / 9.0),
+                                1.0 - open);
         tone *= 0.82 + 0.3 * sun;
-        // Darker towards the heart of the rock.
-        tone *= mix(0.64, 1.0, smoothstep(-20.0, 120.0, x));
+        // Darker towards the heart of the rock in the dive; the overview's rock is one lit mass.
+        tone *= mix(mix(0.64, 1.0, smoothstep(-20.0, 120.0, x)), 1.0, 1.0 - open);
         glint *= (0.7 + 0.6 * slopeNoise(float2(x * 0.06 + tm * 0.3, k * 3.1 + tm * 0.2))) * sun;
         // The rock turns from one stretch's to the next down the wall under the stretch's last ledge, never on a line.
         float rock = mix(ledge.w, slopeLedge(g, k + 1.0).w, smoothstep(0.55, 0.95, f / ledge.z));
