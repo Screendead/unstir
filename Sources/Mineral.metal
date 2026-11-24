@@ -52,7 +52,8 @@ static float4 grains(float2 q, uint s) {
 }
 
 // Sandstone, in linear light at p: beds lying level across the glass, each a set of fine laminae, cross-bedded: they
-// dip one way or the other within their bed. The beds thicken and redden downward, so a turned core shows its turn.
+// dip one way or the other within their bed. Each bed is graded, bright under its top and fading down it, and the
+// beds thicken and redden downward, so a core turned half round shows it.
 // A slow light passes down the beds.
 static float3 sandstone(float2 p, float px, device const float2 *g, float t) {
     const float tau = 6.2831853;
@@ -76,22 +77,24 @@ static float3 sandstone(float2 p, float px, device const float2 *g, float t) {
     float room = 1.0 / gl, hw = min(0.0016, 0.22 * room);
     float line = saturate((hw - dl) / px + 0.5) * smoothstep(0.0, 0.012, dbed);
     float parting = saturate((0.0034 - dbed) / px + 0.5);
-    float3 c = ink * (0.75 * line + 0.07 * exp(-dl * dl / 3.0e-5)) * lift;
+    float graded = 1.0 - f;
+    float3 c = ink * (0.75 * line + 0.07 * exp(-dl * dl / 3.0e-5)) * lift * (0.35 + 0.85 * graded);
     c += mix(ink, float3(1.0, 0.96, 0.86), 0.5) * (parting + 0.14 * exp(-dbed * dbed / 8.0e-5)) * lift;
     // The rock between: a grain of sand in every bed, bed by bed a little lighter or darker.
     float2 bed = hash(int2(int(k), 11), salt(g));
-    c += mix(float3(0.50, 0.33, 0.20), float3(0.42, 0.13, 0.10), v) * (0.05 + 0.17 * bed.x * bed.x) * (0.8 + 0.5 * fine.x);
+    c += mix(float3(0.50, 0.33, 0.20), float3(0.42, 0.13, 0.10), v) * (0.05 + 0.17 * bed.x * bed.x) * (0.8 + 0.5 * fine.x) * (0.3 + 1.6 * graded * graded);
     return c;
 }
 
 // Agate, in linear light at p: the bands a cavity lays down wall inward, the contours of two octaves of noise on a
-// slope, so they run one way across the glass and close on themselves only here and there, in rhythm: a packet of fine pale lines, then a quiet band of colour, each band its own. Light crosses the bands.
+// slope steeper than the noise, so they run one way across the glass and never close into an eye, which a stir
+// would look like, in rhythm: a packet of fine pale lines, then a quiet band of colour, each band its own. Light crosses the bands.
 static float3 bands(float2 p, float px, device const float2 *g, float t) {
-    const float step = 0.016, tau = 6.2831853;
+    const float step = 0.03, tau = 6.2831853;
     float3 a = noised(1.05 * p + float2(5.2, 1.4), g), b = noised(2.9 * p + float2(0.6, 3.3), g + 64);
-    const float2 lie = float2(0.33, 0.57);
-    float v = dot(p, lie) + a.x + 0.3 * b.x;
-    float2 grad = lie + 1.05 * a.yz + 0.3 * 2.9 * b.yz;
+    const float2 lie = float2(0.55, 0.95);
+    float v = dot(p, lie) + 0.5 * a.x + 0.15 * b.x;
+    float2 grad = lie + 0.5 * 1.05 * a.yz + 0.15 * 2.9 * b.yz;
     float s = v / step, n = floor(s + 0.5), gl = max(length(grad), 1e-4);
     float d = abs(s - n) * step / gl, room = step / gl;
     // Six lines to a packet: the first heavy, three fine, two left out for the quiet band.
@@ -111,7 +114,8 @@ static float3 bands(float2 p, float px, device const float2 *g, float t) {
 }
 
 // A thin section of slate between crossed polarisers, in linear light at p: grains, each ruled with twin lamellae
-// its own way. The polarisers turn half a turn a period: each grain's two sets of lamellae light and go out in turn.
+// its own way. The polarisers turn a quarter turn a period: each grain's two sets of lamellae brighten and dim in
+// turn, once.
 static float3 section(float2 p, float px, device const float2 *g, float t) {
     const float pitch = 0.2, tau = 6.2831853;
     uint s = salt(g);
@@ -124,15 +128,15 @@ static float3 section(float2 p, float px, device const float2 *g, float t) {
     float along = dot(p, float2(cos(angle), sin(angle))) / spacing;
     float n = floor(along + 0.5), d = abs(along - n) * spacing;
     bool odd = n - 2.0 * floor(0.5 * n) > 0.5;
-    // Extinction: a twin goes dark four times a turn of the stage, its neighbour an eighth of a turn later.
-    float phase = 2.0 * (angle + (odd ? 0.6 : 0.0)) - tau * t / 20.0;
+    // Extinction: a twin dims four times a turn of the stage, its neighbour a little later.
+    float phase = 2.0 * (angle + (odd ? 0.6 : 0.0)) - 0.5 * tau * t / 20.0;
     float lit = sin(phase) * sin(phase);
     const float3 tints[4] = { float3(0.55, 0.76, 1.0), float3(0.80, 0.86, 0.95), float3(0.40, 0.58, 1.0), float3(1.0, 0.88, 0.66) };
     float3 tint = tints[int(4.0 * r2.x)];
     float edge = grain.y * pitch;
     float hw = odd ? 0.0022 : 0.0012;
     float line = saturate((hw - d) / px + 0.5) * smoothstep(0.0005, 0.004, edge);
-    float3 c = tint * line * (0.10 + 0.90 * lit) * 0.9;
+    float3 c = tint * line * (0.25 + 0.75 * lit) * 0.9;
     c += tint * float3(0.12, 0.185, 0.36) * (0.04 + 0.13 * lit) * smoothstep(0.0, 0.004, edge);
     return c;
 }

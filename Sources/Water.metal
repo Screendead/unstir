@@ -152,7 +152,7 @@ static float3 web(float2 p, float px, device const float2 *g, float t) {
     float3 a = noised(3.1 * p + float2(3.9, 0.8), g), b = noised(3.1 * p + float2(7.3, 4.6), g + 64);
     float3 fa = noised(5.9 * p + float2(1.1, 6.6), g + 64), fb = noised(5.9 * p + float2(5.2, 0.4), g);
     a.yz *= 3.1; b.yz *= 3.1; fa.yz *= 5.9; fb.yz *= 5.9;
-    float breath = 0.035 * sin(tau * t / 20.0), other = 0.035 * cos(tau * t / 20.0);
+    float breath = 0.01 * sin(tau * t / 20.0), other = 0.01 * cos(tau * t / 20.0);
     float2 ha = strand(a, 0.42, breath), hb = strand(b, 0.42, other);
     float2 la = strand(fa, 0.46, 0.4 * other), lb = strand(fb, 0.46, 0.4 * breath);
     float wave = 0.5 + 0.5 * cos(tau * (0.9 * p.y + 0.5 * p.x + 1.2 * swell.x - t / 10.0)), beat = 0.45 + 0.55 * wave * wave;
