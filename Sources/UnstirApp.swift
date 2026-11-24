@@ -699,6 +699,10 @@ struct RootView: View {
     private let namesTier = ProcessInfo.processInfo.environment["UNSTIR_TIER"] != nil
     /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
     @State private var hollowFrom: CGPoint?
+    /// Triptych I's inside a pack's was opened from, whose way back returns there.
+    @State private var packCameFrom: CameFrom?
+    /// Bumped by each edge swipe over a pack's inside, which rises from its slope or leaves (`SlopePack.swiped`).
+    @State private var packSwiped = 0
     @Environment(\.dynamicTypeSize) private var systemType
     /// The settings' supporter mark switch, which the slope's settings move.
     @State private var supporter = Settings.supporter
@@ -797,8 +801,9 @@ struct RootView: View {
                   run: Self.save("endless", harnessed: harnessed, harnessSave),
                   light: asking ? SlopeConsent.light : 1, bare: asking,
                   hollow: { offer, spot in
-                      AnyView(SlopeHollow(offer, on: spot, type: typeSize ?? systemType) {
-                          hollowFrom = spot.point
+                      AnyView(SlopeHollow(offer, on: spot, type: typeSize ?? systemType) { middle in
+                          hollowFrom = middle
+                          packCameFrom = nil
                           card = offer
                       })
                   }) { next, _ in
@@ -822,25 +827,41 @@ struct RootView: View {
     /// grows as a lit rectangle.
     private var slopeGrow: AnyTransition { .opacity }
 
+    /// The edge swipe back over a screen that draws its own way out, judged as the level's is (`BackSwipe`): `done`
+    /// once it is let go past the threshold.
+    private func edgeSwipe(_ done: @escaping () -> Void) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .global).onEnded { v in
+            guard BackSwipe.decide(start: v.startLocation, translation: v.translation) == .swipe,
+                  BackSwipe.commits(dx: v.translation.width, predicted: v.predictedEndTranslation.width,
+                                    width: UIScreen.main.bounds.width) else { return }
+            done()
+        }
+    }
+
     /// The consent question is up: a build with analytics, its first menu.
     private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
 
     @ViewBuilder private var slopeCovers: some View {
         if let offer = card {
             // It brings itself in from the hollow and draws itself in again before its way back.
+            let returns = packCameFrom?.returns(card: offer, offersComplete: Store.shared.offersComplete)
             SlopePack(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
                       scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
-                      arrived: offer.pack != nil && offer.pack == arrived, from: hollowFrom,
+                      arrived: offer.pack != nil && offer.pack == arrived, backTo: returns?.name ?? Shop.menu, from: hollowFrom,
                       onBack: {
-                          card = nil
                           hollowFrom = nil
+                          packCameFrom = nil
+                          card = returns
                       },
                       onPlay: { show($0) },
                       onOffer: { next in
                           hollowFrom = nil
+                          packCameFrom = CameFrom(back: offer, card: next)
                           card = next
-                      })
+                      },
+                      swiped: packSwiped)
                 .id(offer)
+                .simultaneousGesture(edgeSwipe { packSwiped += 1 })
         } else if archive {
             let days = Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
             ArchiveView(days: days, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,

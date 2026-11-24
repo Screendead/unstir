@@ -1162,7 +1162,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the same way, without today's dip to black (its growth out of the pebble, 2.9, waits on the play screen leaving its
   ground to the root); `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the
   menu drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; and, until the hollow's and the archive's
-  pieces land, today's `PackCard` and `ArchiveView` lie over it. A cold launch rests on the overview: only a closed
+  piece lands, today's `ArchiveView` lies over it. A pack's hollow opens `SlopePack` in the old card's place, from the
+  hollow's point; it draws itself in and out, and an edge swipe over it bumps `swiped` (it rises from the pack's slope or
+  leaves); a pack opened from Triptych I's inside goes back there (`CameFrom`). A cold launch rests on the overview: only a closed
   tier's way up, or `UNSTIR_TIER`, opens the menu on a tier. `Spoken.back` says "Back to the menu" for the slope's
   daily, endless and sandbox, as their "↑ menu" does.
   - `SlopeMenu.swift`, `SlopeLedge.swift` and `SlopeGate.swift` are the menu (2, 3): the overview and every move of the
@@ -1179,6 +1181,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopeResult.swift` is the result on the slope (5): lines on the water under the solved tank and stones on the
     terrace by `TerraceSeats`, every finish and the lost screen in one layout; `ResultCard` hands over to it while the
     slope is on.
+  - `SlopeHollow.swift` and `SlopePack.swift` are the packs (8): a hollow in plughole's wall (`SlopeHollow`, its cover
+    held still); its inside (`SlopePack`: `HollowGround` with its own `SlopePack.metal`, `HollowInside`, `HollowFloor`)
+    where a pack is shown, tried, bought and restored; and under its floor the pack's own slope (`PackSlope`,
+    `SlopeColumn.pack`) on the menu's ledge rows. Offer.swift holds the slope's rules beside the shop's: `Shop.ledge`
+    is 8.3's table of the ledge's stone by the store's state as one function.
   - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
     column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
     overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.
