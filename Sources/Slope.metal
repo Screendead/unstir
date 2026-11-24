@@ -161,6 +161,20 @@ static float3 slopeNight(float3 col, float2 pos, float h, float width, float tm,
         col = mix(col, mix(float3(0.05, 0.052, 0.075), face, lit), smoothstep(1.0, 0.92, r) * egg.night);
         col += float3(0.62, 0.64, 0.78) * exp(-max(r - 1.0, 0.0) * 0.5) * 0.10 * egg.night * (0.25 + 0.375 * (1.0 - egg.moon.x));
     }
+    if (egg.meteors > 0.0) {
+        // A meteor night: one in most spells of 2.3 s, each a short streak falling away from the shower's radiant, high
+        // off the leading side, its head bright and its tail thinning.
+        float spell = floor(tm / 2.3), s = (tm - 2.3 * spell) / 0.62;
+        float a = slopeHash(float2(spell, 3.1)), b = slopeHash(float2(spell, 7.7));
+        if (s < 1.0 && a < 0.72) {
+            float2 from = float2(width * (0.2 + 0.75 * b), 130.0 + 300.0 * a);
+            float2 way = normalize(from - float2(-0.1 * width, 520.0));
+            float2 head = from + way * (150.0 + 90.0 * b) * s, v = float2(pos.x, h) - head;
+            float along = -dot(v, way), off = length(v + way * clamp(along, 0.0, 70.0)), tail = 70.0 * sin(3.14159265 * s);
+            float streak = exp(-off * off / 0.7) * (1.0 - smoothstep(0.0, max(tail, 1.0), along)) * step(-1.5, along);
+            col += float3(0.95, 0.97, 1.0) * streak * sin(3.14159265 * s) * (0.5 + 0.5 * a) * up * egg.meteors;
+        }
+    }
     return col;
 }
 

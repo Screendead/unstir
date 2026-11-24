@@ -15,10 +15,12 @@ import SwiftUI
 ///   (`nook`), and a dull stone on it says the one line of credits (`SlopeUnnumbered`).
 /// - The seam: a tier with every level at par has gold in its rock (`seams`).
 /// - The sky at the bottom: pulled up past the foot and held, the sky's stars come out upside down in the black.
+/// - Meteor nights: on the three nights round the Perseids' and the Geminids' peaks, a few meteors cross the night.
 struct SlopeEggs: Equatable {
     var skim: SlopeSkim?
     /// Each tier's rock holds its seam.
     var seams: [Bool] = []
+    var meteors = false
     /// The moon: its terminator's place across the disc, 1 new to -1 full, and its lit side, 1 the trailing.
     var moon = SIMD2<Float>(1, 1)
 
@@ -27,6 +29,14 @@ struct SlopeEggs: Equatable {
         let south = region.map { Self.southern.contains($0.identifier) } ?? false
         let sun = Self.elongation(date)
         moon = SIMD2(Float(cos(sun)), (sun < .pi) != south ? 1 : -1)
+        meteors = Self.shower(date)
+    }
+
+    /// A night counts from noon to noon: the three round each shower's peak, the Perseids' on 12 August and the
+    /// Geminids' on 13 December.
+    static func shower(_ date: Date, calendar: Calendar = .current) -> Bool {
+        let night = calendar.dateComponents([.month, .day], from: date.addingTimeInterval(-12 * 3600))
+        return night.month == 8 && (11 ... 13).contains(night.day ?? 0) || night.month == 12 && (12 ... 14).contains(night.day ?? 0)
     }
 
     /// The spur under the main column's last ledge: how far it reaches in from the leading edge, its top's depth, and
@@ -71,7 +81,7 @@ struct SlopeEggs: Equatable {
     /// Slope.metal's `SlopeEgg`, in its order.
     func uniforms(calm: Double, night: Double, deep: Double, out: Double, mirror: CGFloat, lay: SlopeLay, at date: Date) -> [Float] {
         let age = skim?.age(date) ?? 0, nook = Self.nook(lay)
-        return [Float(night), Float(deep), Float(calm), 0, moon.x, moon.y, Float(mirror), Float(out),
+        return [Float(night), Float(deep), Float(calm), meteors ? 1 : 0, moon.x, moon.y, Float(mirror), Float(out),
                 Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0)]
             + (0 ..< 4).map { $0 < seams.count && seams[$0] ? 1 : 0 } + [Float(nook?.reach ?? 0), Float(nook?.top ?? 0), 0, 0]
     }
