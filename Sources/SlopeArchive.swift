@@ -66,6 +66,15 @@ struct ArchiveLedge: View {
         .modifier(Speech(Spoken.archiveRow(open: open == true, days: days, atPar: atPar)))
     }
 
+    /// Set on the menu's slope: the pebble's centre on the archive's seat, the words starting at `words`.
+    static func seated(_ spot: SlopeSpot, words: CGFloat, open: Bool?, days: Int, atPar: Int, pick: @escaping () -> Void,
+                       refuse: @escaping () -> Bool) -> some View {
+        let side = spot.side / 0.81
+        return ArchiveLedge(open: open, days: days, atPar: atPar, pebble: side, gap: words - spot.point.x, pick: pick, refuse: refuse)
+            .frame(width: spot.view.size.width - 16 - (spot.point.x - side / 2))
+            .slopePlace(CGPoint(x: spot.point.x - side / 2, y: spot.point.y - side * 0.36), anchor: .leading)
+    }
+
     private func tapped() {
         guard refuse() else { return }
         refused += 1
