@@ -1108,3 +1108,7 @@ slope-art-maelstrom-b-deep.png  maelstrom 27 on candidate set b, as dealt.
 slope-art-maelstrom-c.png  maelstrom 5 on the slope, candidate set c, as dealt.
 slope-art-maelstrom-c-rest.png  The same with nothing stirred.
 slope-art-maelstrom-c-deep.png  maelstrom 27 on candidate set c, as dealt.
+slope-art-chrome-plughole.png  Plughole 14 on set a, the bezel and knobs in the slope's stone and cream.
+slope-art-chrome-vortex.png  Vortex 5 the same, its swirl's arc as ever.
+slope-art-chrome-maelstrom.png  Maelstrom 5 the same, its seized knobs and the tank's knurled rim as ever.
+slope-art-chrome-drag.png  Plughole 12 the same, a knob in hand.

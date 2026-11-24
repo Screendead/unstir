@@ -493,6 +493,17 @@ enum SlopeArt: String, CaseIterable {
     static let pictures = allCases.flatMap(\.tiers)
 
     func picture(_ tier: Tier) -> Picture { tiers[Tier.allCases.firstIndex(of: tier) ?? 0] }
+
+    /// UNSTIR_ART=a+chrome, Debug only: the tank's bezel and knobs in the slope's stone and lit-pebble cream in place of
+    /// steel and cyan, a candidate as the pictures are. The cues keep their colours: a seized knob's red, the tank's
+    /// amber, the swirl's arc, Prism's tints.
+    static let chrome: Bool = {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["UNSTIR_ART"]?.hasSuffix("+chrome") == true
+        #else
+        false
+        #endif
+    }()
 }
 
 /// Chroma is reduced until the colour fits sRGB, so hue and lightness hold.

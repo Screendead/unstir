@@ -484,7 +484,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   rests on; each tier's deepest deal (9, 28, 24 and 26 entries) with its candidate's fill stays within `Tank.fourTaps`. `scripts/picture-lab.sh read
   <layout> <picture>...` measures how a turn shows: each rod turned alone by a step, the share of its shear ring's
   and its core's pixels whose light moves by more than 0.12, the worst rod's; today's live pictures the lab draws
-  read 0.17 to 0.49 on hex, and every candidate reads 0.21 or more. `scripts/shots.sh slope-art-` shoots a level of
+  read 0.17 to 0.49 on hex, and every candidate reads 0.21 or more. `UNSTIR_ART=a+chrome` (`SlopeArt.chrome`, Debug
+  only) also draws the bezel and knobs in the slope's stone and cream, a candidate too: the cues keep their colours. `scripts/shots.sh slope-art-` shoots a level of
   each tier on each set and on today's picture, dealt and unstirred (`scripts/slope-art-sheet.py` lays them out a sheet a tier), and each
   set on its tier's level 27, and `scripts/film.sh slope-art-` films each set
   wound in and unwound on plughole 14 and whirlpool 03.

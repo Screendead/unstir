@@ -17,16 +17,20 @@ struct RodView: View {
     var frost: Bool?
     @Environment(\.channelLetters) private var letters
     @Environment(\.displayScale) private var scale
-    private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
+    private static let knob = (SlopeArt.chrome ? [(0, 0xFFF8E6), (0.25, 0xB9A88E), (0.6, 0x4A4035), (1, 0x1D1813)]
+                                               : [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)])
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
-    private static let dull = [(0, 0x6E737C), (0.25, 0x3C414A), (0.6, 0x1E2127), (1, 0x101216)]
+    private static let dull = (SlopeArt.chrome ? [(0, 0x7A736A), (0.25, 0x443E37), (0.6, 0x221E1A), (1, 0x12100D)]
+                                               : [(0, 0x6E737C), (0.25, 0x3C414A), (0.6, 0x1E2127), (1, 0x101216)])
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
+    /// A working knob's ticks and pointer, where Prism gives it no tint.
+    private static let mark = SlopeArt.chrome ? Color(0xFFE2A6) : Color.neonCyan
 
     var body: some View {
         // Whole device pixels out from a pixel-snapped centre, so at rest the upright and level ticks land crisp.
         let rim = px(size / 2), width = px(2 / 3)
         let frozen = frost == true, jammed = seized && frost == nil
-        let lit = frozen ? FrostLook.ice : jammed ? Color(0x5A606C) : tint ?? .neonCyan
+        let lit = frozen ? FrostLook.ice : jammed ? Color(SlopeArt.chrome ? 0x655E55 : 0x5A606C) : tint ?? Self.mark
         ZStack {
             Circle().fill(RadialGradient(stops: jammed ? Self.dull : Self.knob, center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0,
                                          endRadius: size * 0.95))
@@ -49,7 +53,8 @@ struct RodView: View {
             }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             // On pale ice the pointer goes near black, so the cap's angle still reads.
-            let pointer = frozen ? Color(0x08141E) : lit
+            // On a pale pebble too, where no tint or seizing colours it.
+            let pointer = frozen ? Color(0x08141E) : SlopeArt.chrome && tint == nil && !jammed ? Color(0x2B1D12) : lit
             Capsule().fill(pointer.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
             Capsule().fill(pointer).frame(width: 2, height: size * 0.3).offset(y: -size * 0.3)
             if frost != nil {

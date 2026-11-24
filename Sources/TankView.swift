@@ -16,8 +16,9 @@ extension CaseIterable where Self: Equatable, AllCases == [Self] {
 struct Bezel: View {
     let r: CGFloat
     @Environment(\.displayScale) private var scale
-    private static let chrome = AngularGradient(stops: [(0, 0x2A2E37), (0.139, 0x8C94A6), (0.333, 0x282C34), (0.486, 0x5A6272),
-                                                        (0.653, 0x16181E), (0.833, 0xAEB6C6), (1, 0x2A2E37)]
+    private static let chrome = AngularGradient(stops: (SlopeArt.chrome
+        ? [(0, 0x2E2822), (0.139, 0xA39077), (0.333, 0x2A241E), (0.486, 0x6B5D4C), (0.653, 0x18140F), (0.833, 0xC4B296), (1, 0x2E2822)]
+        : [(0, 0x2A2E37), (0.139, 0x8C94A6), (0.333, 0x282C34), (0.486, 0x5A6272), (0.653, 0x16181E), (0.833, 0xAEB6C6), (1, 0x2A2E37)])
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }, center: .center)
 
     var body: some View {

@@ -403,8 +403,9 @@ struct Harness {
         }
         if let picture { level.picture = picture }
         #if DEBUG
-        // UNSTIR_ART=a, b or c: a tier's level on that candidate set's picture for its tier (`SlopeArt`), dealt as ever.
-        if let art = env["UNSTIR_ART"].flatMap(SlopeArt.init(rawValue:)), Tier.allCases.flatMap(\.levels).contains(where: { $0.id == level.id }) {
+        // UNSTIR_ART=a, b or c: a tier's level on that candidate set's picture for its tier (`SlopeArt`), dealt as ever;
+        // +chrome after it draws the tank's bezel and knobs in the slope's colours (`SlopeArt.chrome`).
+        if let art = env["UNSTIR_ART"].flatMap({ SlopeArt(rawValue: String($0.prefix { $0 != "+" })) }), Tier.allCases.flatMap(\.levels).contains(where: { $0.id == level.id }) {
             level.picture = art.picture(level.tier)
         }
         #endif
