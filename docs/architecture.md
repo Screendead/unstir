@@ -1160,13 +1160,18 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `UNSTIR_SLOPE=1` (or `=world`) stores the flag and one with `=0` clears it, so a phone's home screen keeps opening it
   (`UNSTIR_SLOPE=1 scripts/run-ios.sh Debug`); any other harnessed launch and the test host clear it, and no Release
   build reads either. Its other values are `SlopeHarness`'s stages. In the world: `SlopeMenu` stands in for `MenuView`,
-  a ledge opening its level through `show`; a level comes in over the slope as the slope draws 280 pt aside, and leaves
-  the same way, without today's dip to black (its growth out of the pebble, 2.9, waits on the play screen leaving its
-  ground to the root); `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the
-  menu drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; and, until the archive's
-  piece lands, today's `ArchiveView` lies over it. A pack's hollow opens `SlopePack` in the old card's place, from the
-  hollow's point; it draws itself in and out, and an edge swipe over it bumps `swiped` (it rises from the pack's slope or
-  leaves); a pack opened from Triptych I's inside goes back there (`CameFrom`). A cold launch rests on the overview: only a closed
+  a ledge opening its level through `show`. A level grows out of the pebble A hands over (2.9): the play screen leaves
+  its ground to the root (`slopeGroundOwned`), which keeps `SlopeBackdrop` mounted, all but unseen, under the menu (a
+  ground made as the level opens draws black for its first frames) and fills it from the level's `SlopePlayStage`;
+  the tank and chrome scale up from the pebble while the menu crossfades into that ground (an animated offset leaves
+  the menu's Metal ground ahead of its words, so the spec's 280 pt slide is not drawn). Under the back swipe (2.11)
+  the level shrinks toward its ledge with the stage's `swipe` and the menu comes back in; a committed swipe carries
+  on into the pebble, the leaving level keeping its swipe's scale. Views leaving the ZStack keep their order only by
+  explicit zIndex. `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the menu
+  drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; the archive's calendar is `SlopeArchive`. A
+  pack's hollow opens `SlopePack` in the old card's place, from the hollow's point; it draws itself in and out, and an
+  edge swipe over it bumps `swiped` (it rises from the pack's slope or leaves); a pack opened from Triptych I's inside
+  goes back there (`CameFrom`). A cold launch rests on the overview: only a closed
   tier's way up, or `UNSTIR_TIER`, opens the menu on a tier. `Spoken.back` says "Back to the menu" for the slope's
   daily, endless and sandbox, as their "↑ menu" does.
   - `SlopeMenu.swift`, `SlopeLedge.swift` and `SlopeGate.swift` are the menu (2, 3): the overview and every move of the
@@ -1188,6 +1193,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     where a pack is shown, tried, bought and restored; and under its floor the pack's own slope (`PackSlope`,
     `SlopeColumn.pack`) on the menu's ledge rows. Offer.swift holds the slope's rules beside the shop's: `Shop.ledge`
     is 8.3's table of the ledge's stone by the store's state as one function.
+  - `SlopeArchive.swift` is the archive (2.5, 7): `ArchiveLedge`, its row on the menu's archive ledge
+    (`ArchiveLedge.seated` on A's spot, in place of A's stand-in row), refusing with a rock until a pack is bought; and
+    `SlopeArchive`, the calendar on its own stretch of the shallows, a month to a stretch and a week to a terrace of
+    seven seats (a ledge a day at the accessibility sizes), opened over the menu in the old `ArchiveView`'s place. The
+    root tallies the ledge's days and those at par once per revision, never per frame. A day opened from it says
+    "↑ archive" and returns there.
   - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
     column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
     overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.

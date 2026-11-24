@@ -704,6 +704,8 @@ struct RootView: View {
     /// How far the last back swipe had taken its level as it left, so the leaving view carries on from there into its
     /// pebble rather than starting again from full size.
     @State private var swipeLeft = 0.0
+    /// The archive's ledge's count of past dailies and of those at par.
+    @State private var archiveTally = (days: 0, atPar: 0)
     /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
     @State private var hollowFrom: CGPoint?
     /// Triptych I's inside a pack's was opened from, whose way back returns there.
@@ -789,6 +791,7 @@ struct RootView: View {
         guard harness != nil else { return nil }
         if let f = SlopeFHarness(env) { return AnyView(f) }
         if let d = harness.flatMap({ SlopePackHarness(env, clock: $0.clock) }) { return AnyView(d) }
+        if let e = harness.flatMap({ SlopeArchiveHarness(env, clock: $0.clock) }) { return AnyView(e) }
         return harness.flatMap { SlopeHarness(env, clock: $0.clock) }.map { AnyView($0) }
         #else
         nil
@@ -799,7 +802,7 @@ struct RootView: View {
     private var beside: Bool { wide && level != nil }
 
     /// The slope's menu (`SlopeMenu`), with what covers it: a pack's hollow opened (`SlopePack`), settings, the consent
-    /// question, and until piece E lands, today's archive over it.
+    /// question, and the archive's calendar (`SlopeArchive`).
     private var slopeMenu: some View {
         // A cold launch rests on the overview, so only a closed tier's "up a notch", or the harness's UNSTIR_TIER, names a tier.
         SlopeMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
@@ -813,11 +816,27 @@ struct RootView: View {
                           packCameFrom = nil
                           card = offer
                       })
+                  },
+                  archiveLedge: { spot in
+                      let type = typeSize ?? systemType
+                      let words: CGFloat = type.isAccessibilitySize ? 96 : 180 - max(440 - spot.view.size.width, 0) / 2
+                      return AnyView(ArchiveLedge.seated(spot, words: words, open: Store.shared.ready ? Archive.open : nil,
+                                                         days: archiveTally.days, atPar: archiveTally.atPar,
+                                                         pick: {
+                                                             Log.write("archive shown")
+                                                             withAnimation(.snappy(duration: 0.42)) { archive = true }
+                                                         },
+                                                         refuse: { !Archive.open }))
                   }) { next, point in
             pebble = point.map { (next.id, $0) }
             show(next)
         }
         .overlay { slopeCovers }
+        // Read when a level opens, leaves or finishes, never per frame of the camera.
+        .onChange(of: revision, initial: true) {
+            let past = archiveDays
+            archiveTally = (past.count, past.filter { Best.load($0.level.id)?.over == 0 }.count)
+        }
         .animation(.easeOut(duration: 0.25), value: settings)
         .animation(.easeInOut(duration: 0.6), value: asking)
     }
@@ -872,6 +891,11 @@ struct RootView: View {
         }
     }
 
+    /// Every past daily the archive holds, on the harness's day or today.
+    private var archiveDays: [(date: Date, level: Level)] {
+        Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
+    }
+
     /// The consent question is up: a build with analytics, its first menu.
     private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
 
@@ -897,10 +921,9 @@ struct RootView: View {
                 .id(offer)
                 .simultaneousGesture(edgeSwipe { packSwiped += 1 })
         } else if archive {
-            let days = Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
-            ArchiveView(days: days, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,
-                        onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
-                        onPlay: { show($0) })
+            SlopeArchive(days: archiveDays, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,
+                         clock: harness?.clock, onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
+                         onPlay: { show($0) })
                 .transition(.opacity)
         }
         if settings {
