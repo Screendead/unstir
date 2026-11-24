@@ -1161,7 +1161,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a ledge opening its level through `show`; a level comes in over the slope as the slope draws 280 pt aside, and leaves
   the same way, without today's dip to black (its growth out of the pebble, 2.9, waits on the play screen leaving its
   ground to the root); `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the
-  menu drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; and, until the hollow's and the archive's
+  menu drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; and, until the archive's
   piece lands, today's `ArchiveView` lies over it. A pack's hollow opens `SlopePack` in the old card's place, from the
   hollow's point; it draws itself in and out, and an edge swipe over it bumps `swiped` (it rises from the pack's slope or
   leaves); a pack opened from Triptych I's inside goes back there (`CameFrom`). A cold launch rests on the overview: only a closed
