@@ -697,6 +697,9 @@ struct RootView: View {
     private let slope: Bool
     /// UNSTIR_TIER is set, so the slope's first menu opens on that tier rather than the overview.
     private let namesTier = ProcessInfo.processInfo.environment["UNSTIR_TIER"] != nil
+    /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
+    @State private var hollowFrom: CGPoint?
+    @Environment(\.dynamicTypeSize) private var systemType
     /// The settings' supporter mark switch, which the slope's settings move.
     @State private var supporter = Settings.supporter
     /// Kept apart from `harness`, which a first move to another screen drops.
@@ -774,6 +777,7 @@ struct RootView: View {
         let env = ProcessInfo.processInfo.environment
         guard harness != nil else { return nil }
         if let f = SlopeFHarness(env) { return AnyView(f) }
+        if let d = harness.flatMap({ SlopePackHarness(env, clock: $0.clock) }) { return AnyView(d) }
         return harness.flatMap { SlopeHarness(env, clock: $0.clock) }.map { AnyView($0) }
         #else
         nil
@@ -783,15 +787,21 @@ struct RootView: View {
     /// A level plays beside the menu.
     private var beside: Bool { wide && level != nil }
 
-    /// The slope's menu (`SlopeMenu`), with what covers it: settings, the consent question, and until pieces D and E
-    /// land, today's pack card and archive over it.
+    /// The slope's menu (`SlopeMenu`), with what covers it: a pack's hollow opened (`SlopePack`), settings, the consent
+    /// question, and until piece E lands, today's archive over it.
     private var slopeMenu: some View {
         // A cold launch rests on the overview, so only a closed tier's "up a notch", or the harness's UNSTIR_TIER, names a tier.
         SlopeMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
                   settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
                   held: harness?.lockTap, peeking: level != nil, revision: revision,
                   run: Self.save("endless", harnessed: harnessed, harnessSave),
-                  light: asking ? SlopeConsent.light : 1, bare: asking) { next, _ in
+                  light: asking ? SlopeConsent.light : 1, bare: asking,
+                  hollow: { offer, spot in
+                      AnyView(SlopeHollow(offer, on: spot, type: typeSize ?? systemType) {
+                          hollowFrom = spot.point
+                          card = offer
+                      })
+                  }) { next, _ in
             show(next)
         }
         .overlay { slopeCovers }
@@ -817,14 +827,20 @@ struct RootView: View {
 
     @ViewBuilder private var slopeCovers: some View {
         if let offer = card {
-            PackCard(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
-                     scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
-                     arrived: offer.pack != nil && offer.pack == arrived,
-                     onBack: { withAnimation(.snappy(duration: 0.42)) { card = nil } },
-                     onPlay: { show($0) },
-                     onOffer: { next in withAnimation(.snappy(duration: 0.42)) { card = next } })
+            // It brings itself in from the hollow and draws itself in again before its way back.
+            SlopePack(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
+                      scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
+                      arrived: offer.pack != nil && offer.pack == arrived, from: hollowFrom,
+                      onBack: {
+                          card = nil
+                          hollowFrom = nil
+                      },
+                      onPlay: { show($0) },
+                      onOffer: { next in
+                          hollowFrom = nil
+                          card = next
+                      })
                 .id(offer)
-                .transition(.opacity)
         } else if archive {
             let days = Archive.days(today: harness?.day ?? .now).map { ($0, Level.daily($0, archived: true)) }
             ArchiveView(days: days, today: harness?.day ?? .now, focus: focus?.archived == true ? focus?.id : nil,
