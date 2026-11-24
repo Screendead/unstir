@@ -73,6 +73,8 @@ struct SlopeGround: View {
             let lost = eggs == nil ? 0 : stopped?.lost ?? power.calm.lost(timeline.date)
             let t = clock ?? (reduceMotion ? 0 : (stopped?.at ?? timeline.date).timeIntervalSince(epoch) - lost)
             let calm = eggs == nil || fixed ? 0 : power.turning ? power.calm.level(timeline.date) : power.calm.to
+            // The night stands over a surface pulled down past its place.
+            let lift = eggs != nil && view.lay.column.surface ? view.lay.travel(height: view.size.height).lowerBound - view.top : 0
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
             Rectangle().fill(.black)
                 .colorEffect(ShaderLibrary.slope(
@@ -83,7 +85,7 @@ struct SlopeGround: View {
                     .float(look.paper),
                     .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
                     .floatArray(view.lay.uniforms(top: view.top)),
-                    .floatArray(eggs?.uniforms(calm: calm) ?? SlopeEggs.none)))
+                    .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift)) ?? SlopeEggs.none)))
         }
         .onChange(of: still, initial: true) {
             let now = Date.now, lost = eggs == nil ? 0 : Power.shared.calm.lost(now)

@@ -1212,6 +1212,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
       lost to it, so the ground and the dive's veil read both for any moment and the ground draws only while
       `Power.turning`. The way on's glow breathes out and holds (`\.slopeStill`). Reduce Motion and `Power.saving`
       have none of it. Its light is kept under the shallows' own brightest, so the inks keep their floors.
+    - The night above: the ground reads how far its camera stands over the travel's top (`SlopeEggs.night(lift:)`, in by
+      150 pt) and draws stars fixed to the sky, and the moon 250 pt over the surface at its phase for the menu's day
+      (`SlopeEggs.elongation`, Meeus' six-term phase angle, checked against the eclipses of 2024-04-08, 2025-03-14 and
+      2026-08-12; lit on the left where the region is southern), with its light on the water. The dive's own bounce
+      pulls it there; the overview, which doesn't scroll, takes a drag of its own (`tug`, giving as a scroll's end
+      does, as a high-priority gesture so the bands under it keep their taps and lose their drags).
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

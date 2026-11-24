@@ -83,6 +83,10 @@ struct SlopeMenu: View {
     @State private var swiping = false
     @State private var pull: CGFloat = 0
     @GestureState private var dragging = false
+    /// The overview pulled past its place by a finger, and let go to settle back: down, the night stands over the
+    /// surface (`SlopeEggs`). `drawn` is the same pull made for the finger, the harness's.
+    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.7, bounce: 0.3))) private var tug: CGFloat = 0
+    @State private var drawn: CGFloat = 0
 
     @State private var rest: Menu.Rest?
     @State private var shown = Tier.stored()
@@ -130,7 +134,7 @@ struct SlopeMenu: View {
     private var covered: Bool { card != nil || archive || settings }
     /// Idle is the ground's own to answer: its water goes still (`SlopeEggs`).
     private var still: Bool { covered || peeking || playing != nil || Power.shared.saving }
-    private var eggs: SlopeEggs { SlopeEggs() }
+    private var eggs: SlopeEggs { SlopeEggs(today) }
 
     var body: some View {
         watched
@@ -187,6 +191,14 @@ struct SlopeMenu: View {
             settle(plan)
             #if DEBUG
             SlopeEggHarness.start()
+            if SlopeEggHarness.wanted == .night {
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    withAnimation(.easeInOut(duration: 1.6)) { drawn = 215 }
+                    try? await Task.sleep(for: .seconds(6.6))
+                    withAnimation(.spring(duration: 0.7, bounce: 0.3)) { drawn = 0 }
+                }
+            }
             #endif
         }
         .onChange(of: dragging) { if !dragging { released(plan) } }
@@ -202,12 +214,17 @@ struct SlopeMenu: View {
 
     /// The overview, and every move of the camera.
     private func scene(_ plan: SlopeMenuPlan) -> some View {
-        let at = share ?? plan.overview(holding: hold)
+        // The pull gives as a scroll's end does.
+        let h = plan.size.height, pulled = tug * h * 0.55 / (h + 0.55 * abs(tug)) + drawn
+        let at = (share ?? plan.overview(holding: hold)) + (zoom == 0 && !moving ? pulled / h : 0)
         return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
                           eggs: eggs) { view in
             world(view, plan, cull: true)
         }
         .allowsHitTesting(!moving)
+        // A drag takes the screen from the words under it; a tap is still theirs.
+        .highPriorityGesture(DragGesture(minimumDistance: 12).updating($tug) { drag, tug, _ in tug = drag.translation.height },
+                             including: zoom == 0 && !moving ? .all : .subviews)
         .overlay {
             // A tap during the travel skips to its end.
             if travel != nil { Color.clear.contentShape(Rectangle()).onTapGesture { arrive(journeys) }.ignoresSafeArea() }
@@ -1124,6 +1141,9 @@ private struct SlopeMenuWorld: View {
     /// How far endless's words rise at the overview so their last line ends 8 pt over the bottom safe area.
     private func lift(from y: CGFloat, continues: Bool) -> CGFloat {
         func line(_ s: SlopeSize) -> CGFloat { SlopeMeasure.line(s, at: plan.type) }
+        // Measured where the camera rests: pulled past an end of its travel, the words go with the water.
+        let travel = lay.travel(height: view.size.height)
+        let y = y + view.top - min(max(view.top, travel.lowerBound), travel.upperBound)
         let words = line(.title) / 2 + (model.endlessLine != nil ? 4 + line(.detail) : 0) + (continues ? 10 + line(.body) : 0)
         return max(y + words - (view.size.height - plan.bottom - 8), 0)
     }
