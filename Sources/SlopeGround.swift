@@ -50,6 +50,8 @@ struct SlopeGround: View {
     var clock: Double?
     /// The near silhouette, the dive's alone; the largest type sizes and a level in play leave it out.
     var near = true
+    /// Draws only this much of the screen's top, as the same ground would there.
+    var band: CGFloat?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var scale
@@ -82,7 +84,7 @@ struct SlopeGround: View {
                 stopped = nil
             }
         }
-        .frame(width: view.size.width, height: view.size.height)
+        .frame(width: view.size.width, height: band ?? view.size.height)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -180,7 +182,7 @@ struct SlopeDive<Content: View>: View {
                             SlopeGround(view: SlopeView(lay: lay, top: base.top + offset, size: size), held: held, look: look,
                                         clock: clock, near: near)
                                 .offset(y: offset)
-                                .preference(key: SlopeDiveTop.self, value: base.top + offset)
+                                .preference(key: SlopeDiveTop.self, value: Optional(base.top + offset))
                         }
                         // The scroll's one target: the content's line that the aim puts at the screen's middle, which
                         // lies inside the content at both ends of the travel, as the line at the screen's top does not.
@@ -197,7 +199,20 @@ struct SlopeDive<Content: View>: View {
                 .safeAreaPadding(.top, -geo.safeAreaInsets.top)
                 .safeAreaPadding(.bottom, -geo.safeAreaInsets.bottom)
                 .ignoresSafeArea()
-                .onPreferenceChange(SlopeDiveTop.self) { top in onMove?(top) }
+                // Under the status bar the words and pebbles sink away into the water: the ground alone is drawn again
+                // over them there, whole down to the bar's foot and gone 30 pt under it, so the water still runs
+                // to the edge and no row is cut off or stands behind the clock.
+                .overlayPreferenceValue(SlopeDiveTop.self, alignment: .top) { top in
+                    let veil = geo.safeAreaInsets.top + 30
+                    if let top, geo.safeAreaInsets.top > 0 {
+                        SlopeGround(view: SlopeView(lay: lay, top: top, size: size), held: true, look: look, clock: clock ?? 0,
+                                    near: near, band: veil)
+                            .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: geo.safeAreaInsets.top / veil),
+                                                         .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+                            .ignoresSafeArea()
+                    }
+                }
+                .onPreferenceChange(SlopeDiveTop.self) { top in if let top { onMove?(top) } }
                 .onAppear { if aim != nil { reader.scrollTo(Self.mark, anchor: .center) } }
                 .onChange(of: aim) {
                     // An aim taken away leaves the dive where the finger has it.
@@ -247,8 +262,9 @@ struct SlopeHollowGround: View {
 
 /// The depth at a dive's screen top, handed up from inside its scroll.
 private struct SlopeDiveTop: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+    static let defaultValue: CGFloat? = nil
+    // Only the ground says where it is; its siblings' silence must not take that away.
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) { value = nextValue() ?? value }
 }
 
 private extension GeometryProxy {
