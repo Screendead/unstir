@@ -1117,20 +1117,26 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     lies level on the screen, back to the leading edge, and nine ledges 1.3 pt apart read as one long one. `seat`
     follows both. The overview lights the rock as one mass with no darker heart, and over the first ledge its back
     wall widens up to the bank.
-  - Slope.metal draws the ground in one pass from `SlopeLay.uniforms(top:)`, 36 floats and six a ledge, so the rock is
+  - Slope.metal draws the ground in one pass from `SlopeLay.uniforms(top:height:)`, 36 floats and six a ledge (two of
+    the 36 the ledges a screen that tall can show, among which a pixel's own is looked for), so the rock is
     built from the numbers the pebbles are seated by (`testAPebblesSeatIsOnTheDrawnRock`): water by depth, the
     surface, two far ridges that are never lighter than the water, the shelf, the near silhouette, three layers of
     motes, then the looks (`SlopeLook`): `level` draws the shelf aside and raises one terrace alone under a tank
     (`SlopeLay.terrace` is its top, `rock` and `glow` its stone and light), `upper` a second, a short lip over it), `glint`, `clear` (Prism's water), `light`
     (consent's 0.35) and `paper` (Escapement's page: the same edges as an engraving in ink on bone). It ends in a
-    triangular dither of one part in 255 fixed to the pixel. `slopeHollow` is a hollow's inside (`SlopeHollowGround`).
+    triangular dither of one part in 255 fixed to the pixel. A pass costs the phone 6 to 9 ms at 1284 x 2778, the
+    menu's whole GPU budget, so each term is skipped where a pixel cannot show it (the water behind solid rock, a ridge
+    or the near silhouette left of where it ever comes, a mote outside its cell's middle, the spur away from its
+    depth): a new term needs the same. `slopeHollow` is a hollow's inside (`SlopeHollowGround`).
     A change to a ledge's shape changes `slopeEdge`, `slopeScale` and the lean in `slopeGround` together with
     `SlopeLay.scale`, `crown`, `bow` and `lift`.
   - `SlopeGround` is that pass as a view for one `SlopeView` (a lay, the depth at the screen's top, the size). Its
     clock runs at 30 Hz and stops while `held`, under Reduce Motion (at 0), while `Power` saves or idles and on the
     page; stopped, it draws again only for a new camera. `SlopeScene` holds a column by a ledge and a share of the
     screen's height at a zoom, all three animatable, and lays `content` out from the same `SlopeView` each frame: the
-    overview and the zoom. `SlopeDive` is the same column in a native scroll view (at `z` 1, or 0 for an overview grown
+    overview and the zoom. Its `pull` moves the camera off that place for a finger and is handed on as `SlopeView.pull`:
+    a pull moves a column whole, so a screen lays its content out from `unpulled` and offsets it, laying nothing out
+    again. `SlopeDive` is the same column in a native scroll view (at `z` 1, or 0 for an overview grown
     past the screen): `content` is laid out once and the ground redrawn for the scroll's offset in the pass that moves
     it. It opens on `aim` (`SlopeAim`: a ledge and a share, the camera a scene at that ledge and share has, kept
     inside the travel), travels there when `aim` changes and tells `onMove` its depth. The scroll view's safe-area
@@ -1182,7 +1188,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopeMenu.swift`, `SlopeLedge.swift` and `SlopeGate.swift` are the menu (2, 3): the overview and every move of the
     camera are a `SlopeScene`, the resting dive a `SlopeDive` on the same camera; `SlopeMenuPlan` sizes each room
     from measured type, and `SlopeMenuModel`, the rows' words and states, is read afresh on a revision, a sync, the
-    store and a new day, never per frame. A ledge's row is `SlopeLedge` (number, name, marks or a word, facts,
+    store and a new day, never per frame. The plan is kept between reads (`SlopePlans`), and `SlopeMenuWorld`, all the
+    menu sets on the column, is `Equatable` and drawn again only for a new camera, a model read again (`loads`) or a
+    change in a value it is handed, so a drag's touches cost the ground alone: a value added to it joins its `==`. A
+    dive builds the rows about its camera (`SlopeMenuPlan.rows(about:)`) and the next few as the camera nears the
+    last built (`built`); VoiceOver has them all. A ledge's row is `SlopeLedge` (number, name, marks or a word, facts,
     state); a closed tier's gate is `SlopeGate`. It hands `onPick` the pebble's point on the screen, and takes the
     hollow (`hollow`) and the archive's ledge (`archiveLedge`) as views, a dull pebble standing in until they land.
   - `SlopePlay.swift` is the play screen's ground (`SlopePlayGround`: the slope drawn aside, the water at the level's
