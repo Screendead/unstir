@@ -11,6 +11,10 @@ struct SlopeSpot {
     let point: CGPoint
     let side: CGFloat
     let near: Double
+    /// A cover the overview shows at full size (`SlopePackBand`): what holds it, and the room its words have beside it
+    /// where they don't stand under it.
+    var dress = SlopeHollow.Dress.hollow
+    var beside: CGFloat?
 }
 
 /// The slope's menu (docs/slope.md, 2 and 3): the main column at its two rests, the overview with the whole column on
@@ -587,6 +591,8 @@ struct SlopeMenuPlan {
     let headers: [CGFloat]
     /// The offers whose hollows show, and the level of plughole each lies under.
     let hollows: [(offer: Offer, after: Int)]
+    /// The covers at full size on the overview, where a place for them is picked (`SlopePacksAt`).
+    let band: SlopePackBand?
 
     var large: Bool { type.isAccessibilitySize }
     /// Where the overview's words start, and their room.
@@ -629,6 +635,14 @@ struct SlopeMenuPlan {
                                               3 * (archive - line(.body) * 0.5 + (large ? 18 : 8)))
         }
         hollows = model.hollows.map { ($0, SlopeMenuPlan.hollowAfter($0)) }
+        let band = SlopePackBand(at: .chosen, offers: model.hollows, words: model.hollowWords, caption: model.packs, size: size, type: type)
+        self.band = band
+        // What the band takes of the tiers' share of the screen.
+        var taken: CGFloat = 0
+        if let band, band.at == .surface {
+            taken = band.sinks(lead: column.lead, title: line(.title))
+            column.lead += taken
+        }
         var needs: [CGFloat] = []
         for (t, tier) in model.tiers.enumerated() {
             let first = SlopeColumn.ledge(tier: t, level: 1), room = words(first, seat: 0).width
@@ -665,7 +679,7 @@ struct SlopeMenuPlan {
             // At the overview a stretch is as tall as its words need, where that is more than its share of the screen.
             var need = Self.bandLead + line(.title) + 3 + SlopeMeasure.height(tier.reason ?? tier.progress, .detail, width: beside, at: type) + (large ? 18 : 8)
             if model.wayOn?.tier == tier.tier { need += line(.body) + 14 }
-            if t == 0, let packs = model.packs {
+            if t == 0, band == nil, let packs = model.packs {
                 need += SlopeMeasure.height(packs, .detail, width: beside, at: type) + 10
                     + (model.packNames.map { SlopeMeasure.height($0, .detail, width: beside, at: type) + 2 } ?? 0)
             }
@@ -673,7 +687,7 @@ struct SlopeMenuPlan {
         }
         // Each tier first takes what its words need; what is left of the tiers' share of the screen is shared out
         // evenly (1.6). Where the needs alone pass it, each has its need and the overview scrolls.
-        let share = column.stretches.dropFirst().reduce(0) { $0 + ($1.height ?? 0) }
+        let share = column.stretches.dropFirst().reduce(0) { $0 + ($1.height ?? 0) } - taken
         let spare = max(share - needs.reduce(0, +), 0) / CGFloat(max(needs.count, 1))
         for (t, need) in needs.enumerated() { column.stretches[t + 1].height = need + spare }
         // Endless's word, its line and "new run" under its middle; the default sizes fit what the overview leaves.
@@ -796,6 +810,8 @@ struct SlopeMenuModel {
     let spokenEndless: (label: String, value: String, hint: String)
     /// The shelf's offers once the hollows show, the packs' line under plughole's name and, at the overview, their names.
     let hollows: [Offer]
+    /// What each hollow writes: its name, whether its state's glyph follows, and its line.
+    let hollowWords: [SlopePackBand.Words]
     let packs: String?
     let packNames: String?
     /// The offer the packs' line dives to: the first marked new, else the first unowned, else the first.
@@ -849,6 +865,11 @@ struct SlopeMenuModel {
         let store = Store.shared
         let shelf = Shop.shown() ? Offer.hollows().filter { $0 != .complete || store.offersComplete } : []
         hollows = shelf
+        hollowWords = shelf.map { offer in
+            let owned = store.state(offer) == .owned || !store.ready
+            return (offer.name, store.ready && store.state(offer).mark != nil,
+                    offer.pack.flatMap { Marks.line($0, owned: owned, fits: $0.fits(), played: $0.tastePlayed())?.words })
+        }
         let sold = Pack.hollowed()
         packs = shelf.isEmpty ? nil : Menu.packsCaption(owned: sold.filter { store.state($0) == .owned }.count, of: sold.count)
         // A name keeps to one line: the names break only between them.
@@ -951,8 +972,21 @@ private struct SlopeMenuWorld: View {
                 }
             }
             hollows
+            covers
             foot
             unnumbered
+        }
+    }
+
+    /// The packs' covers at full size on the overview (`SlopePackBand`), gone a fifth of the way into a dive.
+    @ViewBuilder private var covers: some View {
+        if let band = plan.band, let hollow, wide > 0 {
+            let y: CGFloat = switch band.at {
+            case .surface: view.y(0)
+            }
+            SlopePackRow(band: band, view: view, yours: yours, hollow: hollow)
+                .opacity(wide).allowsHitTesting(wide >= 1)
+                .slopePlace(CGPoint(x: 0, y: y), anchor: .topLeading)
         }
     }
 
@@ -987,7 +1021,7 @@ private struct SlopeMenuWorld: View {
                     Text("settings", comment: "The slope's menu: the stone on the bank, which opens settings").font(.slope(.ui, .detail))
                 }
                 .accessibilityLabel("Settings")
-                if let yours, wide > 0 {
+                if let yours, wide > 0, plan.band?.at != .surface {
                     Text(yours.yours).font(.slope(.place, .body)).foregroundStyle(yours.ink).opacity(wide) // loc: verbatim localized by Offer
                         .accessibilityHidden(true).transition(.opacity)
                 }
@@ -1093,7 +1127,7 @@ private struct SlopeMenuWorld: View {
                                              comment: "VoiceOver: the slope's overview, the way on. The next level's number, then its name"))
                     .allowsHitTesting(wide >= 1)
                 }
-                if t == 0, let packs = model.packs, let lead = model.packLead {
+                if t == 0, plan.band == nil, let packs = model.packs, let lead = model.packLead {
                     // The packs' line and their names: with the small hollows in the rock, the way to them.
                     Button { visit(lead) } label: {
                         VStack(alignment: .leading, spacing: 2) {
@@ -1156,7 +1190,8 @@ private struct SlopeMenuWorld: View {
                 : view.y(lay.between(above)) - side / 2
             let far = view.y(lay.tops[first]) + 24 + 24 * CGFloat(i) - 8
             let x = 18 + ((large ? 48 : 56) - 18) * e, y = far + (deep - far) * e
-            if shown(y) {
+            // With the covers at full size on the overview, the wall's own hollows come in with the dive (2.1).
+            if shown(y), plan.band == nil || e > 0.5 {
                 let spot = SlopeSpot(view: view, ledge: above, point: CGPoint(x: x, y: y), side: side, near: near)
                 Group {
                     if let hollow {
@@ -1168,6 +1203,7 @@ private struct SlopeMenuWorld: View {
                 }
                 // The pinned way back wins: a hollow fades whole as it rises to it.
                 .slopeUnderBars(near > 0 ? plan.top + 52 : 0, lead: 0)
+                .opacity(plan.band == nil ? 1 : min((e - 0.5) / 0.3, 1))
                 // At the overview a tap on one dives to it, and the packs' line speaks for them all; in the dive the
                 // hollow's own view takes its taps.
                 .overlay {

@@ -18,11 +18,15 @@ struct SlopeHollow: View {
     var words = 1.0
     /// The accessibility sizes' row: the words beside the opening, wrapping in this width; nil sets them under it.
     var beside: CGFloat?
+    /// What holds the cover: the rock's opening, or at the overview a glass float on the surface (`SlopePacksAt`).
+    var dress = Dress.hollow
     /// A tap, with the opening's middle on the screen, which its cover rises out of (`SlopePack.from`).
     let open: (CGPoint) -> Void
     var store = Store.shared
     @State private var middle = CGPoint.zero
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    enum Dress { case hollow, float }
 
     static let full: CGFloat = 58
     /// The opening's middle at the accessibility sizes, from the screen's leading edge, where the menu sets it.
@@ -53,6 +57,14 @@ struct SlopeHollow: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(Sounding(presses: true))
+        #if DEBUG
+        // UNSTIR_PACKSTAP=lens taps that offer's cover two seconds in, for a film of the one tap.
+        .task {
+            guard ProcessInfo.processInfo.environment["UNSTIR_PACKSTAP"] == offer.key,
+                  (try? await Task.sleep(for: .seconds(2))) != nil else { return }
+            open(middle)
+        }
+        #endif
         // Unseen until the launch's read of what is owned and its price fetch have settled, then fading in once, so
         // neither its glyph nor Triptych I's hollow changes in sight (the dock's rule).
         .opacity(store.shelved ? 1 : 0)
@@ -72,6 +84,9 @@ struct SlopeHollow: View {
     private var mouth: some View {
         let k = side / Self.full, light = offer == .pack(.prism) ? Color(0xE2ECFF) : offer.glow
         return ZStack {
+            if dress == .float {
+                float(light)
+            } else {
             if beside != nil {
                 // Sandstone in shade, as the slope's own wall, swelling from the leading edge round the opening.
                 Ellipse()
@@ -95,10 +110,35 @@ struct SlopeHollow: View {
                 .stroke(LinearGradient(colors: [light.opacity(0), light.opacity(0.55)], startPoint: UnitPoint(x: 0.5, y: 0.7), endPoint: .bottom),
                         style: StrokeStyle(lineWidth: 1.6 * k, lineCap: .round))
                 .frame(width: side + 10.8 * k, height: side + 10.8 * k)
+            }
         }
         .frame(width: side, height: side)
         .accessibilityHidden(true)
     }
+
+    /// A glass float riding the water line, which crosses it `Self.draught` of the way down: the cover in its glass,
+    /// its light on the water round it, and the water's own colour over the part under the line.
+    private func float(_ light: Color) -> some View {
+        let k = side / Self.full, water = Color(red: 0.07, green: 0.30, blue: 0.29)
+        return ZStack {
+            Ellipse().fill(RadialGradient(colors: [light.opacity(0.30), light.opacity(0)], center: .center, startRadius: 0, endRadius: side * 0.9))
+                .frame(width: side * 1.8, height: side * 0.5)
+                .offset(y: side * (Self.draught - 0.5))
+            PackTank(offer: offer, side: Self.full).scaleEffect(k)
+            Circle().fill(LinearGradient(stops: [.init(color: water.opacity(0), location: Self.draught - 0.04),
+                                                 .init(color: water.opacity(0.42), location: Self.draught + 0.02),
+                                                 .init(color: water.opacity(0.62), location: 1)], startPoint: .top, endPoint: .bottom))
+                .frame(width: side, height: side)
+            // The sky's last light on the glass.
+            Circle().trim(from: 0.58, to: 0.92)
+                .stroke(LinearGradient(colors: [Color(red: 1, green: 0.78, blue: 0.52).opacity(0), Color(red: 1, green: 0.78, blue: 0.52).opacity(0.7)],
+                                       startPoint: .bottom, endPoint: .top), style: StrokeStyle(lineWidth: 1.2 * k, lineCap: .round))
+                .frame(width: side - 1.5 * k, height: side - 1.5 * k)
+        }
+    }
+
+    /// How far down a float the water line crosses it.
+    static let draught: CGFloat = 0.6
 
     /// The name, with the state's glyph after it, over the cover's line.
     private func caption(state: Purchase, line: (words: String, spoken: String, new: Bool)?) -> some View {
@@ -136,6 +176,7 @@ extension SlopeHollow {
     /// depth has opened it, its words arriving with the dive's.
     @MainActor init(_ offer: Offer, on spot: SlopeSpot, type: DynamicTypeSize, store: Store = .shared, open: @escaping (CGPoint) -> Void) {
         self.init(offer: offer, side: spot.side, words: spot.near,
-                  beside: type.isAccessibilitySize ? max(spot.view.size.width - Self.wordsX - 16, 60) : nil, open: open, store: store)
+                  beside: spot.beside ?? (type.isAccessibilitySize && spot.dress == .hollow ? max(spot.view.size.width - Self.wordsX - 16, 60) : nil),
+                  dress: spot.dress, open: open, store: store)
     }
 }

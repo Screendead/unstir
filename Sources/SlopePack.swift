@@ -65,6 +65,8 @@ struct SlopePack: View {
     var backTo = Shop.menu
     /// The hollow's opening on the screen, which the cover rises out of; nil arrives in place.
     var from: CGPoint?
+    /// How wide the cover is there.
+    var fromSide = SlopeHollow.full
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     /// Triptych I's inside opens a pack's from its name.
@@ -94,7 +96,7 @@ struct SlopePack: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     init(offer: Offer, clock: Double? = nil, levels: [Level], scrolled: Bool = false, focus: Level? = nil, arrived: Bool = false,
-         backTo: String = Shop.menu, from: CGPoint? = nil, onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void,
+         backTo: String = Shop.menu, from: CGPoint? = nil, fromSide: CGFloat = SlopeHollow.full, onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void,
          onOffer: @escaping (Offer) -> Void = { _ in }, beside: Bool = false, closes: Bool = false, swiped: Int = 0,
          store: Store = .shared, demo: Bool = false) {
         self.swiped = swiped
@@ -107,6 +109,7 @@ struct SlopePack: View {
         self.arrived = arrived
         self.backTo = backTo
         self.from = from
+        self.fromSide = fromSide
         self.onBack = onBack
         self.onPlay = onPlay
         self.onOffer = onOffer
@@ -135,7 +138,7 @@ struct SlopePack: View {
                             .combined(with: .opacity))
                 } else {
                     HollowInside(offer: offer, clock: clock, levels: levels, arrived: arrived, sent: sent,
-                                 back: Shop.rise(to: backTo, beside: beside || closes), from: from, size: size, insets: insets,
+                                 back: Shop.rise(to: backTo, beside: beside || closes), from: from, fromSide: fromSide, size: size, insets: insets,
                                  entered: entered || held, settles: !leaving, buying: buying, pulses: pulses,
                                  onBack: leave, onPlay: onPlay, onOffer: onOffer, onBuy: buy, onDive: dive, store: store)
                         .transition(reduceMotion ? .opacity : .asymmetric(insertion: .move(edge: .top), removal: .move(edge: .top))
@@ -328,6 +331,7 @@ private struct HollowInside: View {
     let sent: Bool
     let back: (text: String, spoken: String)
     let from: CGPoint?
+    let fromSide: CGFloat
     let size: CGSize
     let insets: EdgeInsets
     let entered: Bool
@@ -437,7 +441,7 @@ private struct HollowInside: View {
             PackClip(offer: offer, side: side, held: clock)
                 .modifier(Rise(p: entered ? 1 : 0,
                                from: from.map { CGSize(width: $0.x - size.width / 2, height: $0.y - top - side / 2) } ?? .zero,
-                               scale: from == nil || reduceMotion ? 1 : SlopeHollow.full / side, settles: settles))
+                               scale: from == nil || reduceMotion ? 1 : fromSide / side, settles: settles))
                 .animation(reduceMotion || clock != nil ? nil : settles ? .linear(duration: 1.3) : .easeIn(duration: 0.45), value: entered)
                 .padding(.top, top)
             VStack(spacing: 0) {

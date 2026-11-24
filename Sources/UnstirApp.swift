@@ -708,6 +708,8 @@ struct RootView: View {
     @State private var archiveTally = (days: 0, atPar: 0)
     /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
     @State private var hollowFrom: CGPoint?
+    /// How wide the cover is there: a float on the overview's water is smaller than a hollow.
+    @State private var hollowSide = SlopeHollow.full
     /// Triptych I's inside a pack's was opened from, whose way back returns there.
     @State private var packCameFrom: CameFrom?
     /// Bumped by each edge swipe over a pack's inside, which rises from its slope or leaves (`SlopePack.swiped`).
@@ -813,6 +815,7 @@ struct RootView: View {
                   hollow: { offer, spot in
                       AnyView(SlopeHollow(offer, on: spot, type: typeSize ?? systemType) { middle in
                           hollowFrom = middle
+                          hollowSide = spot.side
                           packCameFrom = nil
                           card = offer
                       })
@@ -906,7 +909,7 @@ struct RootView: View {
             let returns = packCameFrom?.returns(card: offer, offersComplete: Store.shared.offersComplete)
             SlopePack(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),
                       scrolled: harness?.cardScroll ?? false, focus: focus?.pack != nil && focus?.pack == offer.pack ? focus : nil,
-                      arrived: offer.pack != nil && offer.pack == arrived, backTo: returns?.name ?? Shop.menu, from: hollowFrom,
+                      arrived: offer.pack != nil && offer.pack == arrived, backTo: returns?.name ?? Shop.menu, from: hollowFrom, fromSide: hollowSide,
                       onBack: {
                           hollowFrom = nil
                           packCameFrom = nil

@@ -30,6 +30,8 @@ struct SlopeColumn: Equatable, Sendable {
         var rows: [CGFloat] = []
         /// Its height at the overview; nil is 40 pt a terrace.
         var height: CGFloat?
+        /// Open room over it at the overview alone, where the packs' covers stand (`SlopePackBand`).
+        var above: CGFloat = 0
     }
 
     var stretches: [Stretch]
@@ -54,6 +56,8 @@ struct SlopeColumn: Equatable, Sendable {
     /// How far the foot's words reach under their middle (`SlopeLay.endless`), where that is more than the overview
     /// leaves under them: its travel then runs on to show them whole.
     var under: CGFloat = 0
+    /// Open room between the brink and the foot's words at the overview alone, where the packs' covers stand.
+    var sunk: CGFloat = 0
 
     /// A ledge's shape by rock: its lip's thickness, how far the rock cuts back under it, how blunt its nose is and
     /// the ripples down its face.
@@ -136,6 +140,7 @@ struct SlopeLay: Sendable {
         var depth = column.lead + (0.8 * column.pitch - column.lead) * e, terrace = 0
         for (s, stretch) in column.stretches.enumerated() {
             let wide = (stretch.height ?? 40 * CGFloat(stretch.terraces.count)) / CGFloat(stretch.terraces.count)
+            depth += stretch.above * (1 - e)
             headers.append(depth)
             depth += stretch.header * e
             var row = 0
@@ -281,7 +286,7 @@ struct SlopeLay: Sendable {
     }
 
     /// The depth of the open water under the brink where endless's word stands.
-    var endless: CGFloat { foot + 1.6 * column.pitch * e + 46 * (1 - e) }
+    var endless: CGFloat { foot + 1.6 * column.pitch * e + (46 + column.sunk) * (1 - e) }
 
     /// The dry bank's stone, settings': a screen point for a camera, as the bank is drawn by the screen.
     static func bank(_ camera: SlopeCamera) -> CGPoint { CGPoint(x: 40, y: -camera.top - bank(40) - 5) }
