@@ -95,6 +95,9 @@ struct SlopeMenu: View {
     @State private var shown = Tier.stored()
     @State private var today: Date
     @State private var model: SlopeMenuModel
+    /// How many times the model has been read again: what was made from it holds until the next.
+    @State private var loads = 0
+    @State private var plans = SlopePlans()
     @State private var saved: Resume?
     @State private var arm = NewRunArm()
     @State private var supporter = Settings.supporter
@@ -180,7 +183,7 @@ struct SlopeMenu: View {
     private func screen(_ geo: GeometryProxy) -> some View {
         let size = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
                           height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
-        let plan = SlopeMenuPlan(size: size, type: typeSize, model: model, top: geo.safeAreaInsets.top, bottom: geo.safeAreaInsets.bottom)
+        let plan = plans.plan(size: size, type: typeSize, model: model, loads: loads, top: geo.safeAreaInsets.top, bottom: geo.safeAreaInsets.bottom)
         // As it comes up in the dive, the menu is there from its first frame, under the level's leaving.
         let opening = rest.flatMap { plan.aim($0) }
         let below = (diving && !surfaced) || (opening != nil && !diving)
@@ -234,6 +237,7 @@ struct SlopeMenu: View {
     }
 
     private func reload() {
+        loads += 1
         saved = run
         model = SlopeMenuModel(today: today, saved: run, playing: playing)
     }
@@ -244,10 +248,11 @@ struct SlopeMenu: View {
     private func scene(_ plan: SlopeMenuPlan) -> some View {
         // The pull gives as a scroll's end does.
         let h = plan.size.height, pulled = tug * h * 0.55 / (h + 0.55 * abs(tug)) + drawn
-        let at = (share ?? plan.overview(holding: hold)) + (zoom == 0 && !moving ? pulled / h : 0)
-        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
+        return SlopeScene(column: plan.column, focus: hold, at: share ?? plan.overview(holding: hold), z: zoom,
+                          pull: zoom == 0 && !moving ? pulled : 0, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
                           eggs: eggs) { view in
-            world(view, plan, cull: true)
+            // A pull moves the column whole: its rows are laid out where the camera rests, and none again as it moves.
+            world(view.unpulled, plan, cull: true).offset(y: view.pull)
             // Pulled up past its foot, the overview's words sink away under the status bar as the dive's do.
             let over = view.top - view.lay.travel(height: view.size.height).upperBound
             if over > 0, view.lay.e <= 0, plan.top > 0 {
@@ -306,8 +311,8 @@ struct SlopeMenu: View {
     }
 
     private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
-        SlopeMenuWorld(view: view, plan: plan, model: model, cull: cull, held: held, supporter: Store.shared.bought && supporter,
-                       saved: saved, yours: yours, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
+        SlopeMenuWorld(view: view, plan: plan, model: model, loads: loads, cull: cull, held: held, supporter: Store.shared.bought && supporter,
+                       saved: saved, yours: yours, arm: $arm, armed: arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
                        openSettings: { settings = true },
                        enter: { enter($0, plan) },
                        visit: { offer in go(to: plan.hollow(offer), plan) },
@@ -321,6 +326,7 @@ struct SlopeMenu: View {
                            saved = nil
                            pick(.endless(Run(seed: .random(in: .min ... .max))), ledge: nil, plan, anew: true)
                        })
+            .equatable()
             .opacity(bare ? 0 : 1).allowsHitTesting(!bare).accessibilityHidden(bare)
             .animation(.easeOut(duration: 0.6), value: bare)
     }
@@ -618,6 +624,24 @@ extension SlopeMenu {
     }
 }
 #endif
+
+/// The plan last made, kept while what it was made from holds: a drag reads the menu again at every touch, and a plan
+/// measures every row's words.
+@MainActor private final class SlopePlans {
+    private struct Key: Equatable {
+        let size: CGSize, type: DynamicTypeSize, loads: Int, top: CGFloat, bottom: CGFloat
+    }
+
+    private var made: (key: Key, plan: SlopeMenuPlan)?
+
+    func plan(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, loads: Int, top: CGFloat, bottom: CGFloat) -> SlopeMenuPlan {
+        let key = Key(size: size, type: type, loads: loads, top: top, bottom: bottom)
+        if let made, made.key == key { return made.plan }
+        let plan = SlopeMenuPlan(size: size, type: type, model: model, top: top, bottom: bottom)
+        made = (key, plan)
+        return plan
+    }
+}
 
 /// Where the finger has left the dive's camera: read as the dive rises or a level opens from it, never drawn from.
 @MainActor private final class SlopeScroll {
@@ -956,10 +980,14 @@ struct SlopeMenuModel {
 
 /// Everything the menu sets on the main column, drawn from one view of it: the overview's words while the depth is
 /// closed, the dive's once it has opened, and the pebbles all the way between.
-private struct SlopeMenuWorld: View {
+///
+/// It is drawn again only for a new camera, a model read again (`loads`) or a change in what it is handed by value:
+/// its closures and the plan change with those and never on their own.
+private struct SlopeMenuWorld: View, Equatable {
     let view: SlopeView
     let plan: SlopeMenuPlan
     let model: SlopeMenuModel
+    let loads: Int
     /// Leaves out what is off the screen: the scene lays everything out again each frame, the dive once.
     let cull: Bool
     let held: String?
@@ -968,6 +996,8 @@ private struct SlopeMenuWorld: View {
     /// "Lens is yours", standing under the wordmark while it is said (2.10).
     let yours: Offer?
     @Binding var arm: NewRunArm
+    /// `arm` as it stood when this was made, for `==`: a binding reads the same now from the old view and the new.
+    let armed: NewRunArm
     let voiceOver: Bool
     let hollow: ((Offer, SlopeSpot) -> AnyView)?
     let archiveLedge: ((SlopeSpot) -> AnyView)?
@@ -980,6 +1010,13 @@ private struct SlopeMenuWorld: View {
     let newRun: () -> Void
 
     @AccessibilityFocusState private var newRunFocused: Bool
+
+    nonisolated static func == (a: Self, b: Self) -> Bool {
+        a.view.top == b.view.top && a.view.lay.z == b.view.lay.z && a.view.size == b.view.size && a.loads == b.loads
+            && a.plan.type == b.plan.type && a.plan.top == b.plan.top && a.plan.bottom == b.plan.bottom && a.cull == b.cull
+            && a.held == b.held && a.supporter == b.supporter && a.saved == b.saved && a.yours == b.yours && a.armed == b.armed
+            && a.voiceOver == b.voiceOver
+    }
 
     private var lay: SlopeLay { view.lay }
     /// 1 in the dive, 0 until the depth is nearly open: the names fade in as the pitch passes 44 pt.

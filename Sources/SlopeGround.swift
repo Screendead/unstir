@@ -26,6 +26,13 @@ struct SlopeView {
     let lay: SlopeLay
     let top: CGFloat
     let size: CGSize
+    /// How far a finger has pulled the camera off its place, already in `top`: everything on the column stands this
+    /// much lower on the screen than `unpulled` has it.
+    var pull: CGFloat = 0
+
+    /// The camera where it rests: a pull moves the whole column as one, so a screen lays it out from here once and
+    /// moves it by `pull`.
+    var unpulled: SlopeView { SlopeView(lay: lay, top: top + pull, size: size) }
 
     /// A point of the column (x, depth) on the screen.
     func point(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: p.y - top) }
@@ -143,12 +150,14 @@ struct SlopeGround: View {
 
 /// A column seen from a camera that may travel and open: the ground, and over it whatever `content` sets on it from
 /// the same frame, so a pebble stays on its ledge all the way from the overview to the dive. The camera holds ledge
-/// `focus`'s top at `at`, a share of the screen's height, at zoom `z`; those two and the look animate.
+/// `focus`'s top at `at`, a share of the screen's height, at zoom `z`, moved down the screen by `pull`; those three
+/// and the look animate.
 struct SlopeScene<Content: View>: View, Animatable {
     var column: SlopeColumn
     var focus: Int
     var at: CGFloat
     var z: CGFloat
+    var pull: CGFloat = 0
     var held = false
     var look = SlopeLook()
     var clock: Double?
@@ -156,15 +165,16 @@ struct SlopeScene<Content: View>: View, Animatable {
     var eggs: SlopeEggs?
     @ViewBuilder var content: (SlopeView) -> Content
 
-    nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>,
+    nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, AnimatablePair<CGFloat, CGFloat>>,
         AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, AnimatablePair<Double, Double>>>> {
         get {
-            AnimatablePair(AnimatablePair(at, z), AnimatablePair(AnimatablePair(look.level, look.glint),
-                                                                  AnimatablePair(look.clear, AnimatablePair(look.light, look.paper))))
+            AnimatablePair(AnimatablePair(at, AnimatablePair(z, pull)), AnimatablePair(AnimatablePair(look.level, look.glint),
+                                                                                       AnimatablePair(look.clear, AnimatablePair(look.light, look.paper))))
         }
         set {
             at = newValue.first.first
-            z = newValue.first.second
+            z = newValue.first.second.first
+            pull = newValue.first.second.second
             look.level = newValue.second.first.first
             look.glint = newValue.second.first.second
             look.clear = newValue.second.second.first
@@ -177,7 +187,7 @@ struct SlopeScene<Content: View>: View, Animatable {
         GeometryReader { geo in
             let size = geo.whole
             let lay = SlopeLay(column, z: z)
-            let view = SlopeView(lay: lay, top: lay.camera(on: focus, at: at, height: size.height).top, size: size)
+            let view = SlopeView(lay: lay, top: lay.camera(on: focus, at: at, height: size.height).top - pull, size: size, pull: pull)
             SlopeLayer {
                 SlopeGround(view: view, held: held, look: look, clock: clock, near: near, eggs: eggs)
                 content(view)
