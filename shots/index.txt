@@ -1054,3 +1054,8 @@ slope-archive-ax3.png  The same at accessibility3.
 slope-archive-ledge.png  The archive's ledge on open water: shut, open with 12 at par, and before the store has read.
 slope-world-archive.png  The archive opened over the menu, Lens owned, the last six dailies solved at par.
 slope-world-archive-day.png  A past daily opened from the archive: its way back "↑ archive".
+slope-egg-still.png  Still water: the menu left alone (two seconds here, twenty in play), its surface flat, its light reaching down and the far ridges out of the haze.
+slope-egg-night.png  The night above: the overview pulled down past the surface, stars over the dusk and the moon at its phase for the day, full on 24 November 2026.
+slope-egg-night-crescent.png  The same four days after the new moon of 9 November: a waxing crescent, lit on the right as the north sees it.
+slope-egg-skim.png  Skimming stone: a stone flicked along the water line in its fourth hop, a ring where each touch was.
+slope-egg-skim-count.png  The same gone under after five touches, its count over the water where it sank.

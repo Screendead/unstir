@@ -87,6 +87,9 @@ struct SlopeMenu: View {
     /// surface (`SlopeEggs`). `drawn` is the same pull made for the finger, the harness's.
     @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.7, bounce: 0.3))) private var tug: CGFloat = 0
     @State private var drawn: CGFloat = 0
+    /// A stone skimming along the water line, and how many times it has touched, for the hand to feel.
+    @State private var skim: SlopeSkim?
+    @State private var skips = 0
 
     @State private var rest: Menu.Rest?
     @State private var shown = Tier.stored()
@@ -134,7 +137,11 @@ struct SlopeMenu: View {
     private var covered: Bool { card != nil || archive || settings }
     /// Idle is the ground's own to answer: its water goes still (`SlopeEggs`).
     private var still: Bool { covered || peeking || playing != nil || Power.shared.saving }
-    private var eggs: SlopeEggs { SlopeEggs(today) }
+    private var eggs: SlopeEggs {
+        var eggs = SlopeEggs(today)
+        eggs.skim = skim
+        return eggs
+    }
 
     var body: some View {
         watched
@@ -187,10 +194,19 @@ struct SlopeMenu: View {
             chrome(plan, below: below && !bare)
         }
         .environment(\.slopeStill, Power.shared.idle && !reduceMotion && !still)
+        .haptic(.impact(weight: .light, intensity: 0.6), trigger: skips) { _, now in now > 0 }
         .onAppear {
             settle(plan)
             #if DEBUG
             SlopeEggHarness.start()
+            if SlopeEggHarness.wanted == .skim {
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    var stone = SlopeSkim(from: 150, over: 9, speed: SlopeEggHarness.speed, width: plan.size.width, luck: 0)
+                    stone?.held = SlopeEggHarness.held
+                    if stone?.held != nil { skim = stone } else { throwStone(stone) }
+                }
+            }
             if SlopeEggHarness.wanted == .night {
                 Task {
                     try? await Task.sleep(for: .seconds(1))
@@ -223,8 +239,12 @@ struct SlopeMenu: View {
         }
         .allowsHitTesting(!moving)
         // A drag takes the screen from the words under it; a tap is still theirs.
-        .highPriorityGesture(DragGesture(minimumDistance: 12).updating($tug) { drag, tug, _ in tug = drag.translation.height },
-                             including: zoom == 0 && !moving ? .all : .subviews)
+        .highPriorityGesture(DragGesture(minimumDistance: 12)
+            .updating($tug) { drag, tug, _ in
+                // A drag along the water line is a stone's, and pulls nothing.
+                if !flicks(drag, water: at * h - plan.overview(holding: hold) * h + 0.188 * h) { tug = drag.translation.height }
+            }
+            .onEnded { flick($0, water: 0.188 * h, plan) }, including: zoom == 0 && !moving ? .all : .subviews)
         .overlay {
             // A tap during the travel skips to its end.
             if travel != nil { Color.clear.contentShape(Rectangle()).onTapGesture { arrive(journeys) }.ignoresSafeArea() }
@@ -241,6 +261,7 @@ struct SlopeMenu: View {
             world(view, plan, cull: false)
         }
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
+        .simultaneousGesture(DragGesture(minimumDistance: 12).onEnded { flick($0, water: -scroll.top, plan) })
         // The edge swipe has the screen's leading edge to itself: a drag over the whole dive would take the rows' taps.
         .overlay(alignment: .leading) {
             Color.clear.frame(width: Self.edge).contentShape(Rectangle()).gesture(backSwipe(plan)).ignoresSafeArea()
@@ -277,6 +298,36 @@ struct SlopeMenu: View {
                        })
             .opacity(bare ? 0 : 1).allowsHitTesting(!bare).accessibilityHidden(bare)
             .animation(.easeOut(duration: 0.6), value: bare)
+    }
+
+    // MARK: The skimming stone
+
+    /// The drag began by the water line, at `water` on the screen, and runs along it.
+    private func flicks(_ drag: DragGesture.Value, water: CGFloat) -> Bool {
+        abs(drag.startLocation.y - water) < 40 && abs(drag.translation.width) > 2 * abs(drag.translation.height)
+    }
+
+    /// A drag let go: along the water line and fast enough, it throws a stone (`SlopeSkim`). Reduce Motion and a
+    /// saving `Power` throw none.
+    private func flick(_ drag: DragGesture.Value, water: CGFloat, _ plan: SlopeMenuPlan) {
+        guard flicks(drag, water: water), water > plan.top + 30, skim == nil, !reduceMotion, !Power.shared.saving else { return }
+        throwStone(SlopeSkim(from: drag.location.x, over: min(max(water - drag.location.y, 4), 30), speed: drag.velocity.width,
+                             width: plan.size.width))
+    }
+
+    private func throwStone(_ stone: SlopeSkim?) {
+        guard let stone else { return }
+        Log.write("slope skim \(stone.touches)")
+        skim = stone
+        skips = 0
+        Task {
+            for i in 0 ..< stone.touches {
+                try? await Task.sleep(for: .seconds(stone.time(i) - (i > 0 ? stone.time(i - 1) : 0)))
+                skips = i + 1
+            }
+            try? await Task.sleep(for: .seconds(SlopeSkim.lingers))
+            skim = nil
+        }
     }
 
     // MARK: Travel

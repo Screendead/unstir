@@ -1218,6 +1218,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
       2026-08-12; lit on the left where the region is southern), with its light on the water. The dive's own bounce
       pulls it there; the overview, which doesn't scroll, takes a drag of its own (`tug`, giving as a scroll's end
       does, as a high-priority gesture so the bands under it keep their taps and lose their drags).
+    - Skimming stone: a drag along the water line let go at 500 points a second or more throws a `SlopeSkim`: one
+      to nine touches by its speed and a little luck, as far as the water runs, each hop a fifth shorter and sooner.
+      The shader's `slopeRings` and `SlopeSkimLayer` read the same times and places; the layer is drawn inside the
+      ground on the ground's clock, so the stone meets the water line where it is drawn, sway and all, at the
+      display's rate while it flies. Each touch is a light haptic; the count stands two seconds where it sank.
+      Reduce Motion and `Power.saving` throw none.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

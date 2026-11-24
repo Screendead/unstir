@@ -158,6 +158,20 @@ static float3 slopeNight(float3 col, float2 pos, float h, float width, float tm,
     return col;
 }
 
+// A skimmed stone's rings on the water line at x, seen from the side: each touch sends two bumps running apart. The
+// touches' times and places are SlopeSkim's (its `first`, `beat` and `fall`): each hop is a fifth shorter than the last.
+static float slopeRings(float x, float4 skim) {
+    float s = 0.0, run = 0.0, amp = 3.4;
+    for (int i = 0; i < 9; i++) {
+        if (float(i) >= skim.w) break;
+        float a = skim.x - 0.36 - 0.44 * run, f = abs(x - skim.y - skim.z * run) - 30.0 * a;
+        if (a > 0.0) s += amp * exp(-a * 1.1) * cos(f * 0.14) * exp(-f * f / (170.0 + 700.0 * a));
+        run += pow(0.8, float(i));
+        amp *= 0.9;
+    }
+    return s;
+}
+
 // view: pixels to a point, the ground's clock in seconds, how much of the near silhouette shows, and of the motes.
 // play: how far a level has taken the screen (the shelf draws aside and one terrace rises under the tank), a solved
 // tank's glint, Prism's clear water, and the ground's light (1 its own; consent draws it at 0.35).
@@ -203,6 +217,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     // Still water lies flat, and light reaches further down it.
     float calm = egg.calm;
     float d = g[6] > 0.0 ? pos.y - (surface + (1.0 - calm) * (3.2 * sin(pos.x * 0.024 + tm * 1.1) + 1.8 * sin(pos.x * 0.063 - tm * 1.6 + 1.3))) : 1000.0;
+    // A ring moves the water line, not the light over and under it.
+    if (egg.skim.w > 0.0) d -= slopeRings(pos.x, egg.skim) * exp(-abs(d) / 9.0);
     float under = step(0.0, d);
     float sun = exp(-max(m + 2.8, 0.0) / (26.0 + 90.0 * calm)) * 0.75 + 0.25;
     float3 col;

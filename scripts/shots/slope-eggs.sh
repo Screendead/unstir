@@ -8,3 +8,5 @@ hold=6 shot slope-egg-night "The night above: the overview pulled down past the 
   $eggs EGG=night DAILY=20261124
 hold=6 shot slope-egg-night-crescent "The same four days after the new moon of 9 November: a waxing crescent, lit on the right as the north sees it." \
   $eggs EGG=night DAILY=20261113
+hold=6 shot slope-egg-skim "Skimming stone: a stone flicked along the water line in its fourth hop, a ring where each touch was." $eggs EGG=skim EGGAT=1.52 CLOCK=3
+hold=6 shot slope-egg-skim-count "The same gone under after five touches, its count over the water where it sank." $eggs EGG=skim EGGAT=3.2 CLOCK=3

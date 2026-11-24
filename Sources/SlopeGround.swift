@@ -65,10 +65,18 @@ struct SlopeGround: View {
     private var fixed: Bool { held || reduceMotion || look.paper >= 1 || Power.shared.saving }
     /// The water is going still, or coming back.
     private var turning: Bool { eggs != nil && !fixed && Power.shared.turning }
-    private var still: Bool { fixed || !turning && (clock != nil || Power.shared.idle) }
+    /// A stone is skimming over it.
+    private var skimming: Bool { eggs?.skim != nil && !fixed }
+    private var still: Bool { fixed || !turning && !skimming && (clock != nil || Power.shared.idle) }
+
+    /// How far the surface line stands off its place at x: Slope.metal's sway.
+    private static func sway(_ x: CGFloat, _ t: Double, calm: Double) -> CGFloat {
+        (1 - calm) * (3.2 * sin(x * 0.024 + t * 1.1) + 1.8 * sin(x * 0.063 - t * 1.6 + 1.3))
+    }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: still)) { timeline in
+        // A skimmed stone moves at the display's rate; the drift alone needs 30 Hz.
+        TimelineView(.animation(minimumInterval: skimming ? nil : 1.0 / 30, paused: still)) { timeline in
             let power = Power.shared
             let lost = eggs == nil ? 0 : stopped?.lost ?? power.calm.lost(timeline.date)
             let t = clock ?? (reduceMotion ? 0 : (stopped?.at ?? timeline.date).timeIntervalSince(epoch) - lost)
@@ -76,16 +84,23 @@ struct SlopeGround: View {
             // The night stands over a surface pulled down past its place.
             let lift = eggs != nil && view.lay.column.surface ? view.lay.travel(height: view.size.height).lowerBound - view.top : 0
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
-            Rectangle().fill(.black)
-                .colorEffect(ShaderLibrary.slope(
-                    .float2(view.size),
-                    .float4(scale, t, near ? view.lay.e * (1 - look.level) : 0, 1),
-                    .float4(look.level, look.glint, look.clear, look.light),
-                    .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
-                    .float(look.paper),
-                    .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
-                    .floatArray(view.lay.uniforms(top: view.top)),
-                    .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift)) ?? SlopeEggs.none)))
+            ZStack {
+                Rectangle().fill(.black)
+                    .colorEffect(ShaderLibrary.slope(
+                        .float2(view.size),
+                        .float4(scale, t, near ? view.lay.e * (1 - look.level) : 0, 1),
+                        .float4(look.level, look.glint, look.clear, look.light),
+                        .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
+                        .float(look.paper),
+                        .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
+                        .floatArray(view.lay.uniforms(top: view.top)),
+                        .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), at: timeline.date) ?? SlopeEggs.none)))
+                // The veil's band draws the water again, not what is on it.
+                if let skim = eggs?.skim, skimming, band == nil {
+                    SlopeSkimLayer(skim: skim, date: timeline.date) { -view.top + Self.sway($0, t, calm: calm) }
+                        .frame(width: view.size.width, height: view.size.height)
+                }
+            }
         }
         .onChange(of: still, initial: true) {
             let now = Date.now, lost = eggs == nil ? 0 : Power.shared.calm.lost(now)
