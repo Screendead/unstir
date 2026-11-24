@@ -22,6 +22,11 @@ hold=8 shot slope-world-pick "A second and a half in, plughole 05 picked: the le
 hold=6 shot slope-world-return "Plughole 05 left solved a second in: the menu comes back in the dive on plughole 06." SLOPE=1 LEVEL=5 BESTS=$thirteen CLOCK=3 EXIT=solved
 shot slope-world-settings "Settings opened over the menu from the stone on the bank." SLOPE=1 SCREEN=menu SETTINGS=1 CLOCK=3
 shot slope-world-consent "The consent question over the menu's own ground at 0.35 of its light, its words hidden." SLOPE=1 SCREEN=menu CONSENT=ask CLOCK=3
+# Packs (piece D).
+shot slope-world-hollows "The dive on plughole with the packs' hollows in its wall, each cover still, its name and price." \
+  SLOPE=1 SCREEN=menu TIER=plughole BESTS=$thirteen CLOCK=3
+hold=6 shot slope-world-pack "Lens's hollow opened over the menu: its inside, the cover, the store's state on its ledge." SLOPE=1 SCREEN=menu CARD=lens CLOCK=3
+hold=6 shot slope-world-pack-slope "The same on Lens's own slope under the floor, a ledge per level." SLOPE=1 SCREEN=menu CARD=lens CARDSCROLL=1 CLOCK=3
 # Play (piece B).
 hold=8 shot slope-world-first-launch "A fresh install's first launch: plughole 01 on the slope, its note and the line to settings." SLOPE=1 FRESH=1 OPEN=1 CLOCK=3
 hold=6 shot slope-world-level "Plughole 14: the ground under the level, its header, title and note, the stones on its terrace." SLOPE=1 LEVEL=14 BESTS=$thirteen CLOCK=3
