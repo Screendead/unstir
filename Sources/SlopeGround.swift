@@ -94,7 +94,8 @@ struct SlopeGround: View {
                         .float(look.paper),
                         .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
                         .floatArray(view.lay.uniforms(top: view.top)),
-                        .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), at: timeline.date) ?? SlopeEggs.none)))
+                        .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), lay: view.lay,
+                                                   at: timeline.date) ?? SlopeEggs.none)))
                 // The veil's band draws the water again, not what is on it.
                 if let skim = eggs?.skim, skimming, band == nil {
                     SlopeSkimLayer(skim: skim, date: timeline.date) { -view.top + Self.sway($0, t, calm: calm) }

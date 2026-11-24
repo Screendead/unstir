@@ -34,7 +34,7 @@ let kernel = """
         float2 pos = (float2(gid) + 0.5) / view.x;
         out.write(float4(more.w > 0.0 ? slopeHollow(pos, half4(0.0h), more.xy, view, float2(0.5 * more.x, 0.3 * more.y),
                                                     float3(1.0, 0.16, 0.16), float3(0.16, 1.0, 0.3), float3(0.2, 0.4, 1.0))
-                                      : slope(pos, half4(0.0h), more.xy, view, play, lone, more.z, upper, g, 0, eggs, 16)), gid);
+                                      : slope(pos, half4(0.0h), more.xy, view, play, lone, more.z, upper, g, 0, eggs, 20)), gid);
     }
     """
 let state = try device.makeComputePipelineState(function: device.makeLibrary(source: source + kernel, options: nil)
@@ -82,6 +82,8 @@ var eggs: [Float] = [Float(number("night", 0)), Float(number("deep", 0)), Float(
                      Float(number("moon", 0)), Float(number("side", 1)),
                      Float(lay.travel(height: size.height).upperBound + size.height), Float(number("reveal", 1))]
     + skim + (0 ..< 4).map { seams.contains($0) ? 1 : 0 }
+// nook=1 stands the spur under the last ledge.
+eggs += number("nook", 0) > 0 ? [64, Float(lay.tops[lay.count - 1] + 1.3 * column.pitch), 0, 0] : [0, 0, 0, 0]
 let eggBuffer = device.makeBuffer(bytes: eggs, length: eggs.count * 4, options: .storageModeShared)!
 
 /// GPU seconds for one pass, the least of `tries`.

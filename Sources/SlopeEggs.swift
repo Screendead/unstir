@@ -11,6 +11,8 @@ import SwiftUI
 /// - The night above: pulled down past the surface, the sky over it holds stars and the moon at `moon`.
 /// - Skimming stone: flicked along the water line, a flat stone skips, each touch a ring, and its touches are counted
 ///   where it goes under (`SlopeSkim`).
+/// - The unnumbered pebble: under the main column's last ledge a spur of rock comes back in from the screen's edge
+///   (`nook`), and a dull stone on it says the one line of credits (`SlopeUnnumbered`).
 struct SlopeEggs: Equatable {
     var skim: SlopeSkim?
     /// The moon: its terminator's place across the disc, 1 new to -1 full, and its lit side, 1 the trailing.
@@ -21,6 +23,14 @@ struct SlopeEggs: Equatable {
         let south = region.map { Self.southern.contains($0.identifier) } ?? false
         let sun = Self.elongation(date)
         moon = SIMD2(Float(cos(sun)), (sun < .pi) != south ? 1 : -1)
+    }
+
+    /// The spur under the main column's last ledge: how far it reaches in from the leading edge, its top's depth, and
+    /// where a pebble rests on it. Slope.metal draws it from the first two.
+    static func nook(_ lay: SlopeLay) -> (reach: CGFloat, top: CGFloat, seat: CGPoint)? {
+        guard lay.column.foot == .dropOff, lay.count > 0 else { return nil }
+        let reach: CGFloat = 64, top = lay.tops[lay.count - 1] + 1.3 * lay.pitch, x: CGFloat = 38
+        return (reach, top, CGPoint(x: x, y: top + 3 * (x / reach) * (x / reach)))
     }
 
     /// Where the waxing moon is lit on the left.
@@ -45,13 +55,14 @@ struct SlopeEggs: Equatable {
     }
 
     /// Slope.metal's `SlopeEgg`, in its order.
-    func uniforms(calm: Double, night: Double, at date: Date) -> [Float] {
-        let age = skim?.age(date) ?? 0
+    func uniforms(calm: Double, night: Double, lay: SlopeLay, at date: Date) -> [Float] {
+        let age = skim?.age(date) ?? 0, nook = Self.nook(lay)
         return [Float(night), 0, Float(calm), 0, moon.x, moon.y, 0, 0,
-                Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0), 0, 0, 0, 0]
+                Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0), 0, 0, 0, 0,
+                Float(nook?.reach ?? 0), Float(nook?.top ?? 0), 0, 0]
     }
 
-    static let none = [Float](repeating: 0, count: 16)
+    static let none = [Float](repeating: 0, count: 20)
 }
 
 /// A flat stone skimmed along the water: thrown from `from` (the screen's x, and how far over the water line), it
@@ -168,6 +179,37 @@ struct SlopeSkimLayer: View {
     }
 }
 
+/// The unnumbered pebble: a dull stone that says who made the game, for four seconds, when it is tapped. VoiceOver
+/// reads it as a button named by its line.
+struct SlopeUnnumbered: View {
+    @State private var said = false
+
+    var body: some View {
+        let line = String(localized: "made by screendead",
+                          comment: "The slope's menu: the one line of credits, said by a hidden pebble. screendead is the maker's name, never translated")
+        Stone(state: .dull, action: { said = true }) {
+            Text(line).font(.slope(.place, .body)).opacity(said ? 1 : 0) // loc: verbatim localized above
+        }
+        .accessibilityLabel(line) // loc: verbatim localized above
+        .animation(.easeInOut(duration: 0.6), value: said)
+        .task(id: said) {
+            guard said, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
+            #if DEBUG
+            if SlopeEggHarness.wanted == .pebble { return }
+            #endif
+            said = false
+        }
+        #if DEBUG
+        .task {
+            // The harness's tap, whose line stays for its shot.
+            guard SlopeEggHarness.wanted == .pebble,
+                  (try? await Task.sleep(for: .seconds(SlopeEggHarness.posed ? 0 : 1.5))) != nil else { return }
+            said = true
+        }
+        #endif
+    }
+}
+
 extension EnvironmentValues {
     /// The menu's water has gone still (`Calm`): what breathes on it holds.
     @Entry var slopeStill = false
@@ -180,11 +222,14 @@ extension EnvironmentValues {
 /// - `night`: a second in, the overview is pulled down past the surface, held five seconds and let go.
 /// - `skim`: a second in, a stone is skimmed from beside the bank; UNSTIR_EGGSPEED is the flick's (1900 points a second),
 ///   and UNSTIR_EGGAT holds it that many seconds into its throw, for a still.
+/// - `pebble`: the dive goes to its foot, and a second and a half on the unnumbered pebble is tapped; its line stays.
 enum SlopeEggHarness: String {
-    case still, night, skim
+    case still, night, skim, pebble
 
     static let speed = ProcessInfo.processInfo.environment["UNSTIR_EGGSPEED"].flatMap(Double.init) ?? 1900
     static let held = ProcessInfo.processInfo.environment["UNSTIR_EGGAT"].flatMap(Double.init)
+    /// UNSTIR_CLOCK holds the ground's clock for a still: the egg is then shown at its end from the first frame.
+    static let posed = ProcessInfo.processInfo.environment["UNSTIR_CLOCK"] != nil
 
     static let wanted = ProcessInfo.processInfo.environment["UNSTIR_EGG"].flatMap(SlopeEggHarness.init(rawValue:))
 

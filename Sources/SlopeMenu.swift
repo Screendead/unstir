@@ -207,6 +207,9 @@ struct SlopeMenu: View {
                     if stone?.held != nil { skim = stone } else { throwStone(stone) }
                 }
             }
+            if SlopeEggHarness.wanted == .pebble {
+                go(to: SlopeAim(ledge: plan.deep.count - 1, share: 0.3), plan)
+            }
             if SlopeEggHarness.wanted == .night {
                 Task {
                     try? await Task.sleep(for: .seconds(1))
@@ -929,6 +932,14 @@ private struct SlopeMenuWorld: View {
             }
             hollows
             foot
+            unnumbered
+        }
+    }
+
+    /// The unnumbered pebble on its spur under the last ledge, the dive's alone (`SlopeEggs.nook`).
+    @ViewBuilder private var unnumbered: some View {
+        if near > 0, let nook = SlopeEggs.nook(lay), shown(view.point(nook.seat).y) {
+            SlopeUnnumbered().opacity(near).rested(at: view.point(nook.seat))
         }
     }
 

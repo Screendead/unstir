@@ -1224,6 +1224,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
       ground on the ground's clock, so the stone meets the water line where it is drawn, sway and all, at the
       display's rate while it flies. Each touch is a light haptic; the count stands two seconds where it sank.
       Reduce Motion and `Power.saving` throw none.
+    - The unnumbered pebble: `SlopeEggs.nook` is a spur of rock 1.3 pitches under the main column's last ledge, drawn
+      by the shader in the dive and seating `SlopeUnnumbered`, a dull `Stone` whose words, "made by screendead", show
+      four seconds after a tap; VoiceOver has it as a button of that name.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

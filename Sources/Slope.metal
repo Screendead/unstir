@@ -120,6 +120,9 @@ struct SlopeEgg {
     float4 skim;
     // Gold in each tier's rock.
     float4 seam;
+    // A spur of rock under the last ledge, for the unnumbered pebble: how far it reaches in from the leading edge, and
+    // its top's depth.
+    float2 nook;
 };
 
 // Points of light on a jittered grid at q, two sizes of cell: the night's stars. `pulse` is how far each one's light
@@ -343,6 +346,17 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         col = mix(col, mix(fc, wc * 1.25, 0.2), slopeStep(dd));
     }
 
+    if (egg.nook.x > 0.0 && fine > 0.0) {
+        // Under the last ledge, where the rock has curved back off the screen, a spur of it comes in again: a bowed top,
+        // a round nose, its underside cut back to the edge (SlopeEggs.nook seats a pebble on it).
+        float u = saturate(x / egg.nook.x), over = depth - egg.nook.y - 3.0 * u * u;
+        float thick = 22.0 * sqrt(max(1.0 - u * u * u * u, 0.0)) + 16.0 * (1.0 - u);
+        float inside = min(min(over, thick - over), (egg.nook.x - x) * 0.6);
+        float tone = mix(1.3, 0.5, smoothstep(0.0, 18.0, over)) * (0.82 + 0.3 * sun) * (0.96 + 0.08 * slopeNoise(float2(x, depth) * 0.11));
+        float3 sc3 = slopeSand(slopeRock(end.w), slopeLit(end.w), wc, tone, (exp(-max(over, 0.0) / 2.6) * 0.5 + exp(-max(over, 0.0) / 9.0) * 0.16) * sun);
+        col = mix(col, mix(sc3, wc * 1.25, 0.2) * 0.8, slopeStep(inside) * fine);
+    }
+
     // A near silhouette, out of focus, moving faster than the shelf.
     if (view.z > 0.0) {
         float yy = pos.y + top * 1.55;
@@ -433,7 +447,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
 [[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
                              float4 upper, device const float *g, int count, device const float *eggs, int eggCount) {
     SlopeEgg egg = { eggs[0], eggs[1], eggs[2], eggs[3], float2(eggs[4], eggs[5]), float2(eggs[6], eggs[7]),
-                     float4(eggs[8], eggs[9], eggs[10], eggs[11]), float4(eggs[12], eggs[13], eggs[14], eggs[15]) };
+                     float4(eggs[8], eggs[9], eggs[10], eggs[11]), float4(eggs[12], eggs[13], eggs[14], eggs[15]),
+                     float2(eggs[16], eggs[17]) };
     float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g, egg);
     // The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel,
     // keeps them from banding and never crawls.

@@ -389,3 +389,4 @@ eggs=(SLOPE=1 SCREEN=menu BESTS=plughole:000000000000000000000000000,endless:9 D
 film slope-egg-still 11 "fps=2,scale=165:-1,tile=11x2:padding=4" "${eggs[@]}" EGG=still
 film slope-egg-night 10 "fps=2,scale=165:-1,tile=10x2:padding=4" "${eggs[@]}" EGG=night DAILY=20261113
 film slope-egg-skim 9 "fps=4,scale=165:-1,tile=12x3:padding=4" "${eggs[@]}" EGG=skim
+film slope-egg-pebble 9 "fps=2,scale=165:-1,tile=9x2:padding=4" "${eggs[@]}" EGG=pebble

@@ -10,3 +10,5 @@ hold=6 shot slope-egg-night-crescent "The same four days after the new moon of 9
   $eggs EGG=night DAILY=20261113
 hold=6 shot slope-egg-skim "Skimming stone: a stone flicked along the water line in its fourth hop, a ring where each touch was." $eggs EGG=skim EGGAT=1.52 CLOCK=3
 hold=6 shot slope-egg-skim-count "The same gone under after five touches, its count over the water where it sank." $eggs EGG=skim EGGAT=3.2 CLOCK=3
+hold=8 shot slope-egg-pebble "The unnumbered pebble: the dive's foot, a dull stone on a spur of rock under maelstrom's last ledge, tapped, and its one line of credits beside it." \
+  $eggs EGG=pebble CLOCK=3
