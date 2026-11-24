@@ -427,7 +427,7 @@ private struct HollowInside: View {
             .buttonStyle(Sounding())
             .accessibilityLabel(back.spoken) // loc: verbatim localized by Shop
             .padding(.leading, 28)
-            .padding(.top, insets.top + (size.height > 800 ? 16 : 6))
+            .padding(.top, insets.top + 8)
         }
     }
 
@@ -903,7 +903,7 @@ private struct PackSlope: View {
                 .buttonStyle(Sounding())
                 .accessibilityLabel(Text("Back", comment: "VoiceOver: a pack's card, its back button"))
                 .padding(.leading, 28)
-                .padding(.top, insets.top + (size.height > 800 ? 16 : 6))
+                .padding(.top, insets.top + 8)
                 .accessibilitySortPriority(1)
             }
             // A purchase landing lights the closed ledges one after another, 60 ms apart.
