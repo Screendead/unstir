@@ -93,6 +93,7 @@
 		AE9A1261C5C6915EACA3371B /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2F5EACFB0A4F616F37323F /* Tone.swift */; };
 		AF51F461DA88EDCD49AF2B68 /* LensArtCutIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700FE27C8061161204ADB23A /* LensArtCutIn.swift */; };
 		B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A9DE240F63330597A189 /* LensTests.swift */; };
+		B336E06BB44B1A7B9009AEEB /* SlopeArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A1C5C26D18523688CAD34B /* SlopeArchive.swift */; };
 		B53F675881F4530F0753B7CC /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708EF54666A7750097BCDFEC /* Game.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
 		BC05383BA7A21E4E0D8246FA /* Rods.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA12B7B59978B3DF2619B7B0 /* Rods.swift */; };
@@ -158,6 +159,7 @@
 /* Begin PBXFileReference section */
 		02DCBCEAE9EA5C16D6101548 /* Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Share.swift; sourceTree = "<group>"; };
 		059E21DBCF779B91F994E8E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		07A1C5C26D18523688CAD34B /* SlopeArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeArchive.swift; sourceTree = "<group>"; };
 		09BBC7A2B31B982E25F0D60C /* SoundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundTests.swift; sourceTree = "<group>"; };
 		0B80E0606D266BF05C66786E /* FirstStir.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStir.swift; sourceTree = "<group>"; };
 		0D958FCA92212546745A433D /* Marbling.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Marbling.metal; sourceTree = "<group>"; };
@@ -451,6 +453,7 @@
 				DB7B4A291F2734F1B961F3FE /* Shelf.swift */,
 				2926E44D61C37EEF53C771BA /* Sky.metal */,
 				3B8449467A6C368062FC8096 /* Slope.metal */,
+				07A1C5C26D18523688CAD34B /* SlopeArchive.swift */,
 				98EEFEB140C2681D0C7553C9 /* SlopeConsent.swift */,
 				5150380D8EDFC2492B87D722 /* SlopeGate.swift */,
 				6F759F3B5689BB554B5D6699 /* SlopeGeometry.swift */,
@@ -662,6 +665,7 @@
 				90101FC5060304F2B0AA3F01 /* Shelf.swift in Sources */,
 				79D52A8EF45A795194455A50 /* Sky.metal in Sources */,
 				955132A99034C11E7E172767 /* Slope.metal in Sources */,
+				B336E06BB44B1A7B9009AEEB /* SlopeArchive.swift in Sources */,
 				4F7A4713149E5208E53AB74D /* SlopeConsent.swift in Sources */,
 				85C7438178DA53A1FE97D036 /* SlopeGate.swift in Sources */,
 				4411640D2FD996948570E903 /* SlopeGeometry.swift in Sources */,
