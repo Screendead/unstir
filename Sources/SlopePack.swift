@@ -73,6 +73,9 @@ struct SlopePack: View {
     var beside = false
     /// Its way out closes it rather than going to the menu, which isn't under it.
     var closes = false
+    /// Bumped by the edge swipe (2.11): it does what the way back on screen does, rising from the pack's slope to
+    /// the inside, or leaving the inside.
+    var swiped = 0
     var store = Store.shared
     /// The harness's: sinks to the pack's slope by itself, then rises from a closed ledge, for a film.
     var demo = false
@@ -92,8 +95,9 @@ struct SlopePack: View {
 
     init(offer: Offer, clock: Double? = nil, levels: [Level], scrolled: Bool = false, focus: Level? = nil, arrived: Bool = false,
          backTo: String = Shop.menu, from: CGPoint? = nil, onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void,
-         onOffer: @escaping (Offer) -> Void = { _ in }, beside: Bool = false, closes: Bool = false, store: Store = .shared,
-         demo: Bool = false) {
+         onOffer: @escaping (Offer) -> Void = { _ in }, beside: Bool = false, closes: Bool = false, swiped: Int = 0,
+         store: Store = .shared, demo: Bool = false) {
+        self.swiped = swiped
         self.demo = demo
         self.offer = offer
         self.clock = clock
@@ -185,6 +189,7 @@ struct SlopePack: View {
             }
         }
         .haptic(.success, trigger: landings)
+        .onChange(of: swiped) { diving ? rise(buying: false) : leave() }
         .task {
             guard demo else { return }
             try? await Task.sleep(for: .seconds(3.5))
@@ -837,11 +842,29 @@ private struct PackSlope: View {
     let onClosed: () -> Void
     let store: Store
 
-    /// While a purchase lands: how many ledges have opened so far, one after another; nil is as the store has them.
-    @State private var lit: Int?
+    /// How many ledges the slope shows open: all the store opens, but while a purchase lands one more every 60 ms.
+    @State private var lit: Int
+    /// Where the dive opened, kept as it was: a purchase landing moves the way on, not the camera.
+    @State private var aim: SlopeAim?
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.page) private var page
+
+    init(offer: Offer, levels: [Level], start: Level?, clock: Double?, insets: EdgeInsets, onRise: @escaping () -> Void,
+         onPlay: @escaping (Level) -> Void, onClosed: @escaping () -> Void, store: Store) {
+        self.offer = offer
+        self.levels = levels
+        self.start = start
+        self.clock = clock
+        self.insets = insets
+        self.onRise = onRise
+        self.onPlay = onPlay
+        self.onClosed = onClosed
+        self.store = store
+        let open = levels.prefix { store.access($0) != .needsCard }.count
+        _lit = State(initialValue: open == levels.count ? .max : open)
+        _aim = State(initialValue: start.flatMap { s in levels.firstIndex { $0.id == s.id } }.map { SlopeAim(ledge: $0) })
+    }
 
     private var large: Bool { typeSize.isAccessibilitySize }
     private var noPar: Bool { offer.pack == .escapement }
@@ -850,19 +873,18 @@ private struct PackSlope: View {
         GeometryReader { geo in
             let size = geo.whole
             let column = SlopeColumn.pack(levels, size: size, type: typeSize)
-            let landing = start.flatMap { s in levels.firstIndex { $0.id == s.id } }
             let owned = offer.pack.map { store.state($0) == .owned } ?? false
             // The way on: an owner's next level, or the first free one without a best.
             let next = Shop.landing(levels, owned: owned).flatMap { n in Best.load(n.id) == nil ? n.id : nil }
             let bars = insets.top + SlopeMeasure.line(.body, at: typeSize) + 34
-            SlopeDive(column: column, aim: landing.map { SlopeAim(ledge: $0) }, look: SlopeLook(paper: page.paper ? 1 : 0, rock: .pale),
+            SlopeDive(column: column, aim: aim, look: SlopeLook(paper: page.paper ? 1 : 0, rock: .pale),
                       clock: clock, near: false) { view in
                 SlopeLayer {
                     ForEach(Array(Shop.chapters(levels).enumerated()), id: \.offset) { s, chapter in
                         heading(chapter, stretch: s, view: view).slopeUnderBars(bars)
                     }
                     ForEach(Array(levels.enumerated()), id: \.element.id) { n, level in
-                        let open = store.access(level) != .needsCard && n < (lit ?? .max)
+                        let open = store.access(level) != .needsCard && n < lit
                         SlopeLedgeRow(ledge: ledge(level, open: open, next: level.id == next), view: view, n: n, bars: bars,
                                       open: { onPlay(level) }, refused: onClosed)
                     }
@@ -886,14 +908,13 @@ private struct PackSlope: View {
             }
             // A purchase landing lights the closed ledges one after another, 60 ms apart.
             .onChange(of: owned) {
-                guard owned, !reduceMotion, let taste = offer.pack?.taste, levels.count > taste else { return }
-                lit = taste
+                guard owned, !reduceMotion, lit < levels.count else { return lit = .max }
                 Task {
-                    for n in taste ..< levels.count {
+                    for n in lit ..< levels.count {
                         try? await Task.sleep(for: .milliseconds(60))
                         lit = n + 1
                     }
-                    lit = nil
+                    lit = .max
                 }
             }
         }
@@ -1024,10 +1045,20 @@ struct SlopePackHarness: View {
                         .frame(maxWidth: max(size.width - x - 16, 60), alignment: .leading)
                         .slopeLine(CGPoint(x: x, y: seat.y - 5))
                     }
-                    SlopeHollows(view: view) { offer, at in
-                        // The dive's content scrolls; the harness's cover rises from the screen's middle height.
-                        from = CGPoint(x: at.x, y: size.height * 0.45)
-                        opened = offer
+                    if Shop.shown() {
+                        // As the menu places them (`SlopeMenu`'s hollows).
+                        let large = typeSize.isAccessibilitySize, lay = view.lay
+                        ForEach(Offer.shelf().filter { $0 != .complete || Store.shared.offersComplete }, id: \.self) { offer in
+                            let above = SlopeColumn.ledge(tier: 0, level: SlopeMenuPlan.hollowAfter(offer))
+                            let y = large ? view.y(lay.tops[above] + lay.drops[above] - SlopeMenuPlan.hollowRow(typeSize) - 6)
+                                : view.y(lay.between(above)) - SlopeHollow.full / 2
+                            let spot = SlopeSpot(view: view, ledge: above, point: CGPoint(x: large ? 48 : 56, y: y), side: SlopeHollow.full, near: 1)
+                            SlopeHollow(offer, on: spot, type: typeSize) { middle in
+                                from = middle
+                                opened = offer
+                            }
+                            .slopePlace(spot.point, anchor: .top)
+                        }
                     }
                 }
             }
@@ -1037,10 +1068,10 @@ struct SlopePackHarness: View {
     /// The main column with each hollow's own row opened under its ledge at the accessibility sizes, as the menu lays it.
     static func column(size: CGSize, type: DynamicTypeSize) -> SlopeColumn {
         var column = SlopeColumn.main(size: size, type: type, header: TypeRole.body.line(at: type).height * 3.4)
-        let room = SlopeHollow.room(at: type)
-        if room > 0 {
-            var rows = [CGFloat](repeating: column.pitch, count: 27)
-            for offer in SlopeHollow.shelf() { rows[SlopeHollow.after(offer) - 1] = column.pitch + room }
+        if type.isAccessibilitySize {
+            let row = SlopeMeasure.line(.body, at: type) + SlopeMeasure.line(.detail, at: type) + 8
+            var rows = [CGFloat](repeating: 0, count: 27)
+            for offer in Offer.shelf() { rows[SlopeMenuPlan.hollowAfter(offer) - 1] = row + SlopeMenuPlan.hollowRow(type) + 60 }
             column.stretches[1].rows = rows
         }
         return column
