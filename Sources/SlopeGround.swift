@@ -71,8 +71,11 @@ struct SlopeGround: View {
     private var skimming: Bool { eggs?.skim != nil && !fixed }
     /// How far past the foot of its travel the camera is: the menu's alone, where the foot is the drop-off.
     private var past: CGFloat {
-        eggs != nil && view.lay.column.foot == .dropOff ? view.top - view.lay.travel(height: view.size.height).upperBound : 0
+        eggs != nil && rests && view.lay.column.foot == .dropOff ? view.top - view.lay.travel(height: view.size.height).upperBound : 0
     }
+    /// The camera is at one of its two zooms: on its way between them it may pass either end of the travel, and that
+    /// is no pull.
+    private var rests: Bool { view.lay.e <= 0 || view.lay.e >= 1 }
     /// The mirrored sky's lights are coming out.
     private var dawning: Bool { past > SlopeEggs.held && !fixed }
     private var still: Bool { fixed || !turning && !skimming && !dawning && (clock != nil || Power.shared.idle) }
@@ -90,7 +93,7 @@ struct SlopeGround: View {
             let t = clock ?? (reduceMotion ? 0 : (stopped?.at ?? timeline.date).timeIntervalSince(epoch) - lost)
             let calm = eggs == nil || fixed ? 0 : power.turning ? power.calm.level(timeline.date) : power.calm.to
             // The night stands over a surface pulled down past its place.
-            let lift = eggs != nil && view.lay.column.surface ? view.lay.travel(height: view.size.height).lowerBound - view.top : 0
+            let lift = eggs != nil && rests && view.lay.column.surface ? view.lay.travel(height: view.size.height).lowerBound - view.top : 0
             // The mirrored sky's lights come out while the camera is held past the foot; where nothing may move, all at once.
             let waited = min(max((sunk.map { timeline.date.timeIntervalSince($0) } ?? 0) / SlopeEggs.dawning, 0), 1)
             let out = fixed ? 1 : waited * waited * (3 - 2 * waited)

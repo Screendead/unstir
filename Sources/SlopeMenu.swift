@@ -218,12 +218,13 @@ struct SlopeMenu: View {
                 go(to: SlopeAim(ledge: plan.deep.count - 1, share: 0.3), plan)
             }
             if SlopeEggHarness.wanted == .night || SlopeEggHarness.wanted == .deep {
-                Task {
+                let pull: CGFloat = SlopeEggHarness.wanted == .deep ? -215 : 215
+                if SlopeEggHarness.posed { drawn = pull } else { Task {
                     try? await Task.sleep(for: .seconds(1))
-                    withAnimation(.easeInOut(duration: 1.6)) { drawn = SlopeEggHarness.wanted == .deep ? -215 : 215 }
+                    withAnimation(.easeInOut(duration: 1.6)) { drawn = pull }
                     try? await Task.sleep(for: .seconds(6.6))
                     withAnimation(.spring(duration: 0.7, bounce: 0.3)) { drawn = 0 }
-                }
+                } }
             }
             #endif
         }
