@@ -697,6 +697,10 @@ struct RootView: View {
     private let slope: Bool
     /// UNSTIR_TIER is set, so the slope's first menu opens on that tier rather than the overview.
     private let namesTier = ProcessInfo.processInfo.environment["UNSTIR_TIER"] != nil
+    /// The pebble the open level grew out of, on the screen, the root's frame there, and what the level shows of its ground.
+    @State private var pebble: (id: String, point: CGPoint)?
+    @State private var frame = CGRect.zero
+    @State private var playStage: SlopePlayStage?
     /// The hollow a pack was opened from, on the screen, for its cover to rise out of.
     @State private var hollowFrom: CGPoint?
     /// Triptych I's inside a pack's was opened from, whose way back returns there.
@@ -806,7 +810,8 @@ struct RootView: View {
                           packCameFrom = nil
                           card = offer
                       })
-                  }) { next, _ in
+                  }) { next, point in
+            pebble = point.map { (next.id, $0) }
             show(next)
         }
         .overlay { slopeCovers }
@@ -815,17 +820,33 @@ struct RootView: View {
     }
 
     /// The time a level takes to come in over the slope, or to leave it, while the slope draws aside or back in.
-    static let slopeTravel = 0.6
+    static let slopeTravel = 0.9
 
     /// The slope drawn 280 pt aside to the leading edge as a level opens over it, and back as it leaves (2.9).
     private var slopeAside: AnyTransition {
         reduceMotion ? .opacity : .offset(x: -280).combined(with: .opacity)
     }
 
-    /// A level fades in over the slope as the slope draws aside, and out as it comes back, with no dip to black. Growing
-    /// it out of its pebble (2.9) needs the play screen to leave its ground to the root, or the level's whole screen
-    /// grows as a lit rectangle.
-    private var slopeGrow: AnyTransition { .opacity }
+    /// The level grows out of its pebble into the tank's place and shrinks back into it as it leaves (2.9): the play
+    /// screen leaves its ground to the root (`slopeGroundOwned`), so only the tank and its chrome grow. Without a pebble
+    /// (endless from the foot, the harness), or under Reduce Motion, it fades.
+    private var slopeGrow: AnyTransition {
+        guard !reduceMotion, let anchor = pebbleAnchor else { return .opacity }
+        return .scale(scale: Self.pebbleScale, anchor: anchor).combined(with: .opacity)
+    }
+
+    /// A pebble's width over a tank's.
+    static let pebbleScale = 0.06
+
+    /// Where the open level's pebble lies, as a point of the root's frame; nil when it wasn't opened from one.
+    private var pebbleAnchor: UnitPoint? {
+        guard let pebble, pebble.id == level?.id, frame.width > 0, frame.height > 0 else { return nil }
+        // The menu measures from the screen's top (its dive cancels the safe area); the root sits inside it.
+        return UnitPoint(x: (pebble.point.x - frame.minX) / frame.width, y: (pebble.point.y - frame.minY) / frame.height)
+    }
+
+    /// How far the back swipe has taken the level toward its ledge, 0 to 1 (2.11).
+    private var swipe: Double { reduceMotion ? 0 : playStage?.swipe ?? 0 }
 
     /// The edge swipe back over a screen that draws its own way out, judged as the level's is (`BackSwipe`): `done`
     /// once it is let go past the threshold.
@@ -900,7 +921,18 @@ struct RootView: View {
                     slopeMenu
                         .allowsHitTesting(level == nil)
                         .accessibilityHidden(level != nil)
+                        // Under a back swipe the slope draws back in as the level shrinks toward its ledge.
+                        .offset(x: level == nil ? 0 : -280 * (1 - swipe))
+                        .opacity(level == nil ? 1 : swipe)
                         .transition(slopeAside)
+                }
+                // The open level's ground, drawn whole behind it, so the tank and chrome alone grow from the pebble.
+                if slope, level != nil, let stage = playStage {
+                    SlopeBackdrop(stage: stage)
+                        .ignoresSafeArea()
+                        .opacity(1 - swipe)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
                 } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
@@ -943,6 +975,11 @@ struct RootView: View {
                                   if covers { covering = level.id } else if covering == level.id { covering = nil }
                               })
                         .id(level)
+                        .environment(\.slopeGroundOwned, slope)
+                        .onPreferenceChange(SlopePlayStage.Key.self) { playStage = $0 }
+                        .scaleEffect(1 - (1 - Self.pebbleScale) * swipe, anchor: pebbleAnchor ?? UnitPoint(x: 0.2, y: 0.49))
+                        .opacity(1 - 0.8 * swipe)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
                         .transition(slope ? slopeGrow : dip)
                         // Heard before the menu beside it.
                         .accessibilitySortPriority(beside ? 1 : 0)
@@ -950,6 +987,7 @@ struct RootView: View {
             }
         }
         .coordinateSpace(.named(Self.space))
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
         .onGeometryChange(for: Bool.self) {
             MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: harnessFold)).splits
         } action: { new in
