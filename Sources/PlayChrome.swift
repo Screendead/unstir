@@ -234,7 +234,7 @@ struct TerraceSeats {
     /// The second terrace's stone, centred over the first: Escapement's wait where the row can't hold three, or up a
     /// notch where three seats can't each hold their words on one line. The finished tank gives way for it.
     var upper: AnyView?
-    /// Under the stones, in the safe area's foot: the daily's "next daily in 7 h".
+    /// A line over the stones, on the water above the terrace: the daily's "next daily in 7 h".
     var under: AnyView?
 
     init(leading: AnyView? = nil, middle: AnyView? = nil, trailing: AnyView? = nil, upper: AnyView? = nil, under: AnyView? = nil) {
@@ -261,6 +261,12 @@ struct TerraceSeats {
     }
 
     /// Whether the card's seats take a second terrace: the play screen keeps the finished tank clear of it.
+    /// Whether the card's seats have a line over the stones, which the finished tank keeps clear of too.
+    struct Under: PreferenceKey {
+        static let defaultValue = false
+        static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+    }
+
     struct Upper: PreferenceKey {
         static let defaultValue = false
         static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
@@ -272,5 +278,6 @@ extension View {
     func terraceSeats(_ seats: TerraceSeats) -> some View {
         transformPreference(TerraceSeats.Key.self) { $0.seats = seats }
             .preference(key: TerraceSeats.Upper.self, value: seats.upper != nil)
+            .preference(key: TerraceSeats.Under.self, value: seats.under != nil)
     }
 }

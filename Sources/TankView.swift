@@ -283,6 +283,9 @@ struct LevelView: View {
     /// The slope's undo refused with nothing to undo, each tap; and whether the result's stones take a second terrace.
     @State private var undoRefusals = 0
     @State private var upperSeat = false
+    @State private var underSeat = false
+    /// The result's terrace as drawn, its tallest stone's words, second terrace and line over the stones all in.
+    @State private var resultTerrace: CGFloat = 0
     @State private var snap = CGSize.zero
     @Environment(\.displayScale) private var scale
     @Environment(\.scenePhase) private var phase
@@ -662,7 +665,7 @@ struct LevelView: View {
     @ViewBuilder private var titleRow: some View {
         if slope {
             SlopePlayTitle(label: game.level.label, title: shownTitle, pack: game.level.pack?.name, prism: game.level.pack == .prism,
-                           hidden: staged)
+                           quiet: showResult && !game.lost, hidden: staged)
         } else {
             todayTitle
         }
@@ -729,14 +732,19 @@ struct LevelView: View {
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean, let words {
-                    unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
+                    if slope && !tabletop {
+                        // It rises to its place as it fades in (`SlopeStamp`).
+                        SlopeStamp().offset(y: -words)
+                    } else {
+                        unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
+                    }
                 }
             }
     }
 
     /// Fixed in the tabletop, whose upright half budgets `PlayLayout.wordsHeight` for it.
     private func unstirred(fixed: Bool = false) -> some View {
-        Text("unstirred.").font(fixed ? .game(22, .semibold) : slope ? .slope(.place, .display) : .ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+        Text("unstirred.").font(fixed ? .game(22, .semibold) : .ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
     }
 
     /// The caption, which the result and lost cards hang from (`PlayCaption`), the card in its slot.
@@ -776,7 +784,9 @@ struct LevelView: View {
     private func card(_ layout: PlayLayout) -> some View {
         let over = layout.kind == .split ? layout.menuPane : nil
         return VStack(spacing: 0) {
-            if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
+            if over != nil && game.solved && !clean {
+                if slope { SlopeStamp().padding(.bottom, 26) } else { unstirred().padding(.bottom, 26) }
+            }
             if game.lost {
                 LostCard(game: game, notice: notice, undo: undo, again: reset)
             } else {
@@ -866,6 +876,8 @@ struct LevelView: View {
         .accessibilityHidden(game.level.run != nil || showResult || ending)
         .padding(.bottom, 4)
         .modifier(Unseen(staged))
+        // On the slope the stones fade as the curtain call clears the stage, and come back for the result.
+        .animation(slope && !reduceMotion ? .easeInOut(duration: 0.6) : nil, value: staged)
     }
 
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
@@ -926,7 +938,10 @@ struct LevelView: View {
     /// result's stones take one. The card's lines hang over the rest.
     private var terraceRoom: CGFloat {
         let row = max(SlopePebble.target, 24 + TypeRole.body.line(at: playType, design: .default).height)
-        return PlayStack.gap + row + 4 + (upperSeat ? row + Self.controlRows : 0)
+        // Over the seat line as drawn, and under it what a plain row keeps: its words' lower half less the pebble's drop.
+        let measured = resultTerrace > 0 ? resultTerrace + SlopePebble.target / 2 - PlayStone.rest : row + (upperSeat ? row + Self.controlRows : 0)
+            + (underSeat ? TypeRole.detail.line(at: playType).height + Self.controlRows : 0)
+        return PlayStack.gap + max(measured, row) + 4
     }
 
     /// The result's stones on the terrace, where the play controls stood (`TerraceSeats`).
@@ -934,7 +949,8 @@ struct LevelView: View {
         if slope, showResult, let seats = value.seats, let row = value.row {
             GeometryReader { geo in
                 let r = geo[row]
-                SlopeTerrace(seats: seats, ground: ground, rock: terraceRock)
+                SlopeTerrace(seats: seats, ground: ground, rock: terraceRock) { resultTerrace = $0 }
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(width: r.width, height: r.height, alignment: .bottom)
                     .position(x: r.midX, y: r.midY)
             }
@@ -988,6 +1004,7 @@ struct LevelView: View {
             .accessibilityElement(children: .contain)
             .overlayPreferenceValue(TerraceSeats.Key.self) { resultSeats($0, ground: ground) }
             .onPreferenceChange(TerraceSeats.Upper.self) { upper in MainActor.assumeIsolated { upperSeat = upper } }
+            .onPreferenceChange(TerraceSeats.Under.self) { under in MainActor.assumeIsolated { underSeat = under } }
             // Not from a first measure, which can be empty, nor under Reduce Motion.
             .animation(pose.map { $0.side > 0 } == true && !reduceMotion ? .smooth(duration: 0.45) : nil, value: layout)
             .onChange(of: layout, initial: true) { was, now in
@@ -1017,11 +1034,21 @@ struct LevelView: View {
         // Today's black takes every touch the parts leave, so the edge's back swipe and a tap that skips the opening
         // land anywhere; the slope's ground takes none, so a clear layer over it takes them, safe areas and all.
         .background { if slope { Color.clear.contentShape(.rect).ignoresSafeArea() } }
-        .background { if slope { SlopePlayGround(level: game.level, glint: glint).equatable() } }
+        .background {
+            if slope {
+                // The curtain call clears the stage: the terrace sinks out of the foot over 0.6 s, and rises again for
+                // the result (docs/slope.md, 6).
+                SlopePlayGround(level: game.level, glint: glint, sink: paying != nil ? SlopePlayGround.sunk : 0).equatable()
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: paying != nil)
+            }
+        }
         // The terrace under a solved tank catches the light as it settles (docs/slope.md, 1.5); not under Reduce Motion.
         .onChange(of: showResult && game.solved, initial: true) { _, lit in
             guard slope, !reduceMotion else { return }
-            withAnimation(lit ? .easeOut(duration: 3.4) : .easeIn(duration: 0.4)) { glint = lit ? 1 : 0 }
+            guard lit else { return withAnimation(.easeIn(duration: 0.4)) { glint = 0 } }
+            // Brightest as the motes come down past it, then settling to a warm rest with them.
+            withAnimation(.easeOut(duration: 1.4)) { glint = 1 }
+            withAnimation(.easeInOut(duration: 2).delay(1.4)) { glint = 0.55 }
         }
         .environment(\.page, page)
         .accessibilityAction(.escape) { leave() }
