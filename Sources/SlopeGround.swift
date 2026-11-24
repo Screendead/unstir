@@ -29,10 +29,13 @@ struct SlopeView {
     /// How far a finger has pulled the camera off its place, already in `top`: everything on the column stands this
     /// much lower on the screen than `unpulled` has it.
     var pull: CGFloat = 0
+    /// `top` before the pull, kept as it was worked out: adding the pull back to `top` gives it only to a rounding,
+    /// which would read as a new camera at every frame of a pull.
+    var rest: CGFloat?
 
     /// The camera where it rests: a pull moves the whole column as one, so a screen lays it out from here once and
     /// moves it by `pull`.
-    var unpulled: SlopeView { SlopeView(lay: lay, top: top + pull, size: size) }
+    var unpulled: SlopeView { SlopeView(lay: lay, top: rest ?? top + pull, size: size) }
 
     /// A point of the column (x, depth) on the screen.
     func point(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: p.y - top) }
@@ -195,7 +198,8 @@ struct SlopeScene<Content: View>: View, Animatable {
         GeometryReader { geo in
             let size = geo.whole
             let lay = SlopeLay(column, z: z)
-            let view = SlopeView(lay: lay, top: lay.camera(on: focus, at: at, height: size.height).top - pull, size: size, pull: pull)
+            let rest = lay.camera(on: focus, at: at, height: size.height).top
+            let view = SlopeView(lay: lay, top: rest - pull, size: size, pull: pull, rest: rest)
             SlopeLayer {
                 SlopeGround(view: view, held: held, look: look, clock: clock, near: near, eggs: eggs)
                 content(view)
