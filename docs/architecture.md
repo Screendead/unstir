@@ -1188,6 +1188,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopeResult.swift` is the result on the slope (5): lines on the water under the solved tank and stones on the
     terrace by `TerraceSeats`, every finish and the lost screen in one layout; `ResultCard` hands over to it while the
     slope is on.
+  - `SlopePacksAt.swift` (Debug only; Jack's pick pending, 2026-11-24) shows the packs' covers at full size on the
+    overview, each one tap from its inside: `UNSTIR_PACKSAT=a` as glass floats on the water line beside the bank, `b`
+    as lit caves in a spur of the far ridge between the shallows and plughole, `c` as lights in the dark under
+    maelstrom. `SlopePackBand` lays them out for the plan, which takes the band's height from the tiers' spare
+    (`SlopeColumn.lead`, `Stretch.above`, `sunk`: overview-only room, nothing in the dive): a row with each name under
+    its cover, else the covers over one line of names, else, and at the accessibility sizes, stacked. Unset, and in
+    Release, the overview keeps the small hollows and the packs' line. `UNSTIR_PACKSTAP=prism` taps a cover two
+    seconds in; `UNSTIR_PACKSHOW=1` opens a scrolling overview on the band. The slope reads its own shelf
+    (`Offer.hollows`, `Pack.hollowed`), which leaves First Stir out in Debug too.
   - `SlopeHollow.swift` and `SlopePack.swift` are the packs (8): a hollow in plughole's wall (`SlopeHollow`, its cover
     held still); its inside (`SlopePack`: `HollowGround` with its own `SlopePack.metal`, `HollowInside`, `HollowFloor`)
     where a pack is shown, tried, bought and restored; and under its floor the pack's own slope (`PackSlope`,

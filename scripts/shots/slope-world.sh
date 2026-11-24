@@ -58,3 +58,20 @@ hold=6 shot slope-world-archive "The archive opened over the menu, Lens owned, t
   SLOPE=1 SCREEN=menu BESTS=$par27 DAILIES=6 OWNED=lens ARCHIVE=1 CLOCK=3
 hold=6 shot slope-world-archive-day "A past daily opened from the archive: its way back \"↑ archive\"." \
   SLOPE=1 MODE=archive DAY=3 OWNED=lens CLOCK=3
+# The packs' covers at full size on the overview (SlopePacksAt, UNSTIR_PACKSAT, Debug only), each place built for
+# Jack to pick from: on the reference phone's points with plughole done, on the fullest overview a player can have
+# (the way on, a pack owned, one waiting, a taste begun, an endless run saved), and at accessibility3 with the
+# covers in sight (UNSTIR_PACKSHOW).
+ref="FRAME=428x926 INSETS=47,0,34,0"
+packsat() {  # letter, what it is
+  hold=10 shot "slope-packsat-$1" "The overview with the packs' covers as $2, on the reference phone's 428 x 926 points, plughole done." \
+    SLOPE=1 SCREEN=menu BESTS=$par27,endless:9 DAILIES=4 STORE=lens:unowned CLOCK=3 PACKSAT=$1 $ref
+  hold=8 shot "slope-packsat-$1-full" "The same on the fullest overview: plughole 25 the way on, Lens owned, Escapement waiting, Prism's taste begun, an endless run saved." \
+    SLOPE=1 BESTS=plughole:000000000000000000000000,endless:9,prism:00 DAILIES=4 OWNED=lens STORE=escapement:pending \
+    MODE=endless RESUME= RESUMETANK=5 BRIM=3 SCREEN=menu CLOCK=3 PACKSAT=$1 $ref
+  hold=8 shot "slope-packsat-$1-ax3" "The same at accessibility3, the covers stacked with their names beside them." \
+    SLOPE=1 SCREEN=menu BESTS=$par27,endless:9 DAILIES=4 STORE=lens:unowned CLOCK=3 PACKSAT=$1 PACKSHOW=1 TYPESIZE=accessibility3
+}
+packsat a "glass floats on the water line beside the bank"
+packsat b "lit caves in a spur of the far ridge between the shallows and plughole"
+packsat c "lights hanging in the dark under maelstrom, over endless"
