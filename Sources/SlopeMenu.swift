@@ -916,17 +916,16 @@ struct SlopeMenuModel {
         packLead = shelf.first { offer in offer.pack.map { Marks.line($0, owned: store.state($0) == .owned || !store.ready, fits: $0.fits(), played: $0.tastePlayed())?.new == true } ?? false }
             ?? shelf.first { $0.pack.map { store.state($0) != .owned } ?? true } ?? shelf.first
         if lead.modes {
-            let days = Archive.days(today: today).map { Level.daily($0, archived: true) }
-            let atPar = days.filter { Best.load($0.id)?.over == 0 }.count
+            let (days, atPar) = Archive.tally(today: today)
             // Unsaid until the store has read what the player owns, so an owner never meets it closed.
             let known = store.ready, open = known && Archive.open
-            let spoken = Spoken.archiveRow(open: open, days: days.count, atPar: atPar)
+            let spoken = Spoken.archiveRow(open: open, days: days, atPar: atPar)
             archiveOpen = open
             archive = SlopeLedge(name: String(localized: "Archive"), state: open ? .solved : .closed,
-                                 facts: !known ? String(localized: "\(days.count) past dailies", comment: "The menu's archive row. Past dailies")
-                                     : open ? String(localized: "\(days.count) past dailies \u{00B7} \(atPar) at par",
+                                 facts: !known ? String(localized: "\(days) past dailies", comment: "The menu's archive row. Past dailies")
+                                     : open ? String(localized: "\(days) past dailies \u{00B7} \(atPar) at par",
                                                      comment: "The menu's archive row, open. Past dailies, then those at par")
-                                     : String(localized: "\(days.count) past dailies \u{00B7} comes with any pack",
+                                     : String(localized: "\(days) past dailies \u{00B7} comes with any pack",
                                               comment: "The menu's archive row, shut. Past dailies"),
                                  opens: known && !open ? String(localized: "unlocked by purchasing any pack") : nil, reason: true,
                                  label: spoken.label, value: spoken.value, hint: spoken.hint)

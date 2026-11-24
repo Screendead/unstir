@@ -839,8 +839,7 @@ struct RootView: View {
         .overlay { slopeCovers }
         // Read when a level opens, leaves or finishes, never per frame of the camera.
         .onChange(of: revision, initial: true) {
-            let past = archiveDays
-            archiveTally = (past.count, past.filter { Best.load($0.level.id)?.over == 0 }.count)
+            archiveTally = Archive.tally(today: harness?.day ?? .now)
         }
         .animation(.easeOut(duration: 0.25), value: settings)
         .animation(.easeInOut(duration: 0.6), value: asking)
