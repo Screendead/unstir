@@ -82,6 +82,42 @@ struct SlopePlayGround: View, Equatable, Animatable {
     }
 }
 
+/// The ground under a level as `LevelView` draws it, or as the root draws it for a level that leaves it the ground
+/// (`SlopePlayStage`): the terrace's glint as the light settles and its sink under the curtain call, timed here.
+struct SlopeBackdrop: View {
+    let stage: SlopePlayStage
+    @State private var glint = 0.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        // The curtain call clears the stage: the terrace sinks out of the foot over 0.6 s, and rises again for the
+        // result (docs/slope.md, 6).
+        SlopePlayGround(level: stage.level, glint: glint, sink: stage.sinking ? SlopePlayGround.sunk : 0).equatable()
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: stage.sinking)
+            // The terrace under a solved tank catches the light as it settles (1.5); not under Reduce Motion.
+            .onChange(of: stage.lit, initial: true) { _, lit in
+                guard !reduceMotion else { return }
+                guard lit else { return withAnimation(.easeIn(duration: 0.4)) { glint = 0 } }
+                // Brightest as the motes come down past it, then settling to a warm rest with them.
+                withAnimation(.easeOut(duration: 1.4)) { glint = 1 }
+                withAnimation(.easeInOut(duration: 2).delay(1.4)) { glint = 0.55 }
+            }
+    }
+}
+
+extension SlopePlayGround {
+    /// Where a level's ground stands on a screen of `size` at `type`: the column, the ledge its water is drawn at and
+    /// the share of the screen's height that ledge's top stands at, its look (rock, light, Prism's clear water,
+    /// Escapement's paper; `glint` 0), and the terrace's top at screen x (`SlopeLay.terrace`).
+    static func stage(_ level: Level, size: CGSize, type: DynamicTypeSize)
+        -> (column: SlopeColumn, ledge: Int, at: CGFloat, look: SlopeLook, terrace: (CGFloat) -> CGFloat) {
+        let column = SlopeColumn.main(size: size, type: type)
+        let lay = SlopeLay(column, z: 1)
+        let (ledge, at) = place(level, lay, height: size.height)
+        return (column, ledge, at, look(level, rock: lay.rocks[ledge], glint: 0), { SlopeLay.terrace($0, height: size.height) })
+    }
+}
+
 extension Level {
     /// The slope's way back (4.2): "↑ levels" for a tier's and a pack's level, "↑ archive" for an archive day, "↑ menu"
     /// for the daily, endless and the sandbox.
