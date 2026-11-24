@@ -161,6 +161,30 @@ static float3 slopeNight(float3 col, float2 pos, float h, float width, float tm,
     return col;
 }
 
+// The seam: gold in the rock of a tier at par, u ledges down it (0 to 27). A thread that wanders down the wall, swells,
+// pinches out and comes back, with a few flecks beside it; x and depth are the rock's own, so it keeps its place in
+// the rock from the overview to the dive. `run` is how many ledges a point of depth is, `open` the zoom eased.
+static float3 slopeSeam(float x, float depth, float u, float tier, float run, float open, float tm) {
+    // From far off it wanders slowly, no two bends alike; close to, smaller bends open out of it.
+    float reach = mix(6.0, 24.0, open), q = 1.7 * u + 1.3 + tier, small = 0.4 * open;
+    float2 p = float2(0.3 * u + 9.1 * tier, 4.2);
+    float slow = 2.0 * slopeNoise(p) - 1.0, turn = (2.0 * slopeNoise(p + float2(0.015, 0.0)) - 1.0 - slow) / 0.05;
+    float mid = mix(37.0, 46.0, open) + reach * ((1.0 - small) * 1.4 * slow + small * sin(q))
+        + open * (2.2 * sin(depth * 0.043) + 1.1 * sin(depth * 0.117 + 2.0));
+    float lean = reach * ((1.0 - small) * 1.4 * turn + small * 1.7 * cos(q)) * run
+        + open * (0.095 * cos(depth * 0.043) + 0.129 * cos(depth * 0.117 + 2.0));
+    float off = abs(x - mid) / sqrt(1.0 + lean * lean);
+    // It runs out near either end of the tier, and pinches here and there between.
+    float there = smoothstep(0.0, 1.5, u) * smoothstep(27.0, 25.0, u) * smoothstep(0.3, 0.5, slopeNoise(float2(u * 0.9 + tier * 7.3, 2.5)));
+    float wide = mix(0.5, 1.0, open) * (0.45 + 1.1 * slopeNoise(float2(u * 2.3 + tier * 3.1, 8.5)));
+    float core = (1.0 - smoothstep(wide * 0.5, wide + 0.6, off)) * there;
+    float2 cell = float2(x, depth) / mix(3.0, 6.0, open), id = floor(cell);
+    float fleck = step(0.86, slopeHash(id + tier)) * (1.0 - smoothstep(0.06, 0.2, length(fract(cell) - 0.5)))
+        * exp(-off / mix(3.0, 9.0, open)) * there * (0.6 + 0.4 * sin(tm * 0.9 + 6.28 * slopeHash(id + 3.7)));
+    return float3(1.0, 0.80, 0.36) * (core * (0.75 + 0.25 * sin(u * 5.0 + tm * 0.4)) + fleck * 0.8)
+        + float3(0.9, 0.5, 0.12) * exp(-off / mix(1.6, 3.2, open)) * 0.22 * there;
+}
+
 // A skimmed stone's rings on the water line at x, seen from the side: each touch sends two bumps running apart. The
 // touches' times and places are SlopeSkim's (its `first`, `beat` and `fall`): each hop is a fifth shorter than the last.
 static float slopeRings(float x, float4 skim) {
@@ -332,6 +356,14 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float rock = mix(ledge.w, slopeLedge(g, k + 1.0).w, smoothstep(0.55, 0.95, f / ledge.z));
         float3 rc = slopeSand(slopeRock(rock), slopeLit(rock), wc, tone, glint);
         rc = mix(rc, wc * 1.25, 0.2) * mix(1.0, 0.8, smoothstep(-2.8, 30.0, m));
+        if (egg.seam.x + egg.seam.y + egg.seam.z + egg.seam.w > 0.0 && k >= g[7] && m < 109.0) {
+            // A tier is three terraces of nine, and the water's depth counts its ledges evenly.
+            float tier = floor((m - 1.0) / 27.0);
+            if (egg.seam[int(tier)] > 0.0) {
+                float run = (k > count - 1.5 ? 1.0 : slopeMore(g, k + 1.0).y - more.y) / ledge.z;
+                rc += slopeSeam(x, depth, m - 1.0 - 27.0 * tier, tier, run, open, tm) * (0.5 + 0.5 * sun);
+            }
+        }
         // Out of the water the bank stands dark against the dusk, the last light along its top.
         rc = mix(rc, float3(0.19, 0.135, 0.115) * (0.8 + 0.5 * exp(min(d, 0.0) / 9.0))
                  + float3(0.66, 0.42, 0.22) * exp(-max(dry - 0.7, 0.0) / 2.6) * 0.8, 1.0 - under);

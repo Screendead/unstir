@@ -13,8 +13,11 @@ import SwiftUI
 ///   where it goes under (`SlopeSkim`).
 /// - The unnumbered pebble: under the main column's last ledge a spur of rock comes back in from the screen's edge
 ///   (`nook`), and a dull stone on it says the one line of credits (`SlopeUnnumbered`).
+/// - The seam: a tier with every level at par has gold in its rock (`seams`).
 struct SlopeEggs: Equatable {
     var skim: SlopeSkim?
+    /// Each tier's rock holds its seam.
+    var seams: [Bool] = []
     /// The moon: its terminator's place across the disc, 1 new to -1 full, and its lit side, 1 the trailing.
     var moon = SIMD2<Float>(1, 1)
 
@@ -58,8 +61,8 @@ struct SlopeEggs: Equatable {
     func uniforms(calm: Double, night: Double, lay: SlopeLay, at date: Date) -> [Float] {
         let age = skim?.age(date) ?? 0, nook = Self.nook(lay)
         return [Float(night), 0, Float(calm), 0, moon.x, moon.y, 0, 0,
-                Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0), 0, 0, 0, 0,
-                Float(nook?.reach ?? 0), Float(nook?.top ?? 0), 0, 0]
+                Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0)]
+            + (0 ..< 4).map { $0 < seams.count && seams[$0] ? 1 : 0 } + [Float(nook?.reach ?? 0), Float(nook?.top ?? 0), 0, 0]
     }
 
     static let none = [Float](repeating: 0, count: 20)
@@ -223,8 +226,9 @@ extension EnvironmentValues {
 /// - `skim`: a second in, a stone is skimmed from beside the bank; UNSTIR_EGGSPEED is the flick's (1900 points a second),
 ///   and UNSTIR_EGGAT holds it that many seconds into its throw, for a still.
 /// - `pebble`: the dive goes to its foot, and a second and a half on the unnumbered pebble is tapped; its line stays.
+/// - `seam`: a second and a half in, the camera sinks into plughole.
 enum SlopeEggHarness: String {
-    case still, night, skim, pebble
+    case still, night, skim, pebble, seam
 
     static let speed = ProcessInfo.processInfo.environment["UNSTIR_EGGSPEED"].flatMap(Double.init) ?? 1900
     static let held = ProcessInfo.processInfo.environment["UNSTIR_EGGAT"].flatMap(Double.init)

@@ -12,3 +12,5 @@ hold=6 shot slope-egg-skim "Skimming stone: a stone flicked along the water line
 hold=6 shot slope-egg-skim-count "The same gone under after five touches, its count over the water where it sank." $eggs EGG=skim EGGAT=3.2 CLOCK=3
 hold=8 shot slope-egg-pebble "The unnumbered pebble: the dive's foot, a dull stone on a spur of rock under maelstrom's last ledge, tapped, and its one line of credits beside it." \
   $eggs EGG=pebble CLOCK=3
+hold=6 shot slope-egg-seam "The seam: plughole all at par, a thread of gold wandering down its rock at the overview." $eggs CLOCK=3
+hold=6 shot slope-egg-seam-dive "The same in the dive: the thread in the wall behind plughole's ledges, flecks of gold beside it." $eggs TIER=plughole CLOCK=3

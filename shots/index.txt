@@ -1060,3 +1060,5 @@ slope-egg-night-crescent.png  The same four days after the new moon of 9 Novembe
 slope-egg-skim.png  Skimming stone: a stone flicked along the water line in its fourth hop, a ring where each touch was.
 slope-egg-skim-count.png  The same gone under after five touches, its count over the water where it sank.
 slope-egg-pebble.png  The unnumbered pebble: the dive's foot, a dull stone on a spur of rock under maelstrom's last ledge, tapped, and its one line of credits beside it.
+slope-egg-seam.png  The seam: plughole all at par, a thread of gold wandering down its rock at the overview.
+slope-egg-seam-dive.png  The same in the dive: the thread in the wall behind plughole's ledges, flecks of gold beside it.

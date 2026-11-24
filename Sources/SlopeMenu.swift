@@ -140,6 +140,7 @@ struct SlopeMenu: View {
     private var eggs: SlopeEggs {
         var eggs = SlopeEggs(today)
         eggs.skim = skim
+        eggs.seams = model.tiers.map(\.seam)
         return eggs
     }
 
@@ -205,6 +206,12 @@ struct SlopeMenu: View {
                     var stone = SlopeSkim(from: 150, over: 9, speed: SlopeEggHarness.speed, width: plan.size.width, luck: 0)
                     stone?.held = SlopeEggHarness.held
                     if stone?.held != nil { skim = stone } else { throwStone(stone) }
+                }
+            }
+            if SlopeEggHarness.wanted == .seam {
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    enter(.plughole, plan)
                 }
             }
             if SlopeEggHarness.wanted == .pebble {
@@ -753,6 +760,8 @@ struct SlopeMenuModel {
         let ledges: [SlopeLedge]
         /// "13/27 at par".
         let progress: String
+        /// Every level at par: its rock holds a seam of gold (`SlopeEggs`).
+        let seam: Bool
         /// "opens with every whirlpool level solved"; nil for an open tier.
         let reason: String?
         let spoken: String
@@ -793,7 +802,7 @@ struct SlopeMenuModel {
             }
             let par = tier.atPar()
             return TierRows(tier: tier, open: open, levels: levels, ledges: ledges, progress: Menu.progress(tier),
-                            reason: open ? nil : Menu.reason(tier),
+                            seam: !par.isEmpty && par.allSatisfy { $0 }, reason: open ? nil : Menu.reason(tier),
                             spoken: open ? String(localized: "\(tier.word), \(par.filter { $0 }.count) of \(par.count) at par",
                                                   comment: "VoiceOver: a tier on the slope's overview. The tier, its levels at par, of all")
                                 : tier.spoken)

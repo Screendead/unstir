@@ -1227,6 +1227,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
     - The unnumbered pebble: `SlopeEggs.nook` is a spur of rock 1.3 pitches under the main column's last ledge, drawn
       by the shader in the dive and seating `SlopeUnnumbered`, a dull `Stone` whose words, "made by screendead", show
       four seconds after a tap; VoiceOver has it as a button of that name.
+    - The seam: `SlopeMenuModel.TierRows.seam` (every level at par, read with the model, never per frame) lights
+      `slopeSeam` in that tier's rock: a thread that wanders by the water's depth in ledges, so it keeps its place in
+      the rock from the overview to the dive, pinching out and coming back, with flecks beside it.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
