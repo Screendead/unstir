@@ -98,6 +98,9 @@ struct SlopeMenu: View {
     /// How many times the model has been read again: what was made from it holds until the next.
     @State private var loads = 0
     @State private var plans = SlopePlans()
+    /// The ledges whose rows the dive has built so far: those about the camera as it opens, then on ahead of it as it
+    /// travels. Building every row as the dive opens held its first frame a fifth of a second.
+    @State private var built: ClosedRange<Int>?
     @State private var saved: Resume?
     @State private var arm = NewRunArm()
     @State private var supporter = Settings.supporter
@@ -283,12 +286,16 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, eggs: eggs, onMove: { top in
+        let travel = plan.deep.travel(height: plan.size.height)
+        // VoiceOver steps from row to row, so it has them all.
+        let rows = voiceOver ? nil : built ?? plan.rows(about: aim.map { plan.deep.rest($0, height: plan.size.height) } ?? travel.lowerBound)
+        return SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, eggs: eggs, onMove: { top in
             scroll.top = top
             let up = top < 1
             if up != surfaced { surfaced = up }
+            if let rows, let more = plan.rows(about: top, past: rows) { built = more }
         }) { view in
-            world(view, plan, cull: false)
+            world(view, plan, cull: false, rows: rows)
         }
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
         .simultaneousGesture(DragGesture(minimumDistance: 12, coordinateSpace: .global).onEnded { flick($0, water: -scroll.top, plan) })
@@ -310,8 +317,8 @@ struct SlopeMenu: View {
         }
     }
 
-    private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
-        SlopeMenuWorld(view: view, plan: plan, model: model, loads: loads, cull: cull, held: held, supporter: Store.shared.bought && supporter,
+    private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool, rows: ClosedRange<Int>? = nil) -> some View {
+        SlopeMenuWorld(view: view, plan: plan, model: model, loads: loads, cull: cull, rows: rows, held: held, supporter: Store.shared.bought && supporter,
                        saved: saved, yours: yours, arm: $arm, armed: arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
                        openSettings: { settings = true },
                        enter: { enter($0, plan) },
@@ -470,6 +477,7 @@ struct SlopeMenu: View {
         zoom = 1
         moving = true
         diving = false
+        built = nil
     }
 
     private func surface(_ plan: SlopeMenuPlan) {
@@ -802,6 +810,29 @@ struct SlopeMenuPlan {
         return (x, max(size.width - x - 16, 80))
     }
 
+    /// The ledges whose tops lie from `before` over a camera at `top` to `after` under its screen's foot.
+    private func ledges(about top: CGFloat, before: CGFloat, after: CGFloat) -> ClosedRange<Int> {
+        let from = deep.tops.firstIndex { $0 >= top - before } ?? deep.count - 1
+        let to = deep.tops.lastIndex { $0 <= top + size.height + after } ?? 0
+        return min(from, to) ... max(from, to)
+    }
+
+    /// The rows a dive builds as it opens with its camera at `top`: the screen's, 0.6 of a screen either way, and
+    /// three ledges more.
+    func rows(about top: CGFloat) -> ClosedRange<Int> {
+        let reach = 0.6 * size.height + 3 * column.pitch
+        return ledges(about: top, before: reach, after: reach)
+    }
+
+    /// `built` with the rows a camera at `top` has come within 0.6 of a screen of, a few at a time so no frame builds
+    /// many; nil while it holds them already.
+    func rows(about top: CGFloat, past built: ClosedRange<Int>) -> ClosedRange<Int>? {
+        let near = ledges(about: top, before: 0.6 * size.height, after: 0.6 * size.height)
+        guard near.lowerBound < built.lowerBound || near.upperBound > built.upperBound else { return nil }
+        let want = rows(about: top)
+        return min(built.lowerBound, want.lowerBound) ... max(built.upperBound, want.upperBound)
+    }
+
     /// The share of the screen's height at which the overview, at its top, holds ledge `n`.
     func overview(holding n: Int) -> CGFloat {
         (wide.tops[n] + 0.188 * size.height) / size.height
@@ -1005,6 +1036,8 @@ private struct SlopeMenuWorld: View, Equatable {
     let loads: Int
     /// Leaves out what is off the screen: the scene lays everything out again each frame, the dive once.
     let cull: Bool
+    /// The ledges whose rows are built, in a dive that builds them as its camera nears; nil builds every one.
+    var rows: ClosedRange<Int>?
     let held: String?
     let supporter: Bool
     let saved: Resume?
@@ -1028,7 +1061,7 @@ private struct SlopeMenuWorld: View, Equatable {
 
     nonisolated static func == (a: Self, b: Self) -> Bool {
         a.view.top == b.view.top && a.view.lay.z == b.view.lay.z && a.view.size == b.view.size && a.loads == b.loads
-            && a.plan.type == b.plan.type && a.plan.top == b.plan.top && a.plan.bottom == b.plan.bottom && a.cull == b.cull
+            && a.plan.type == b.plan.type && a.plan.top == b.plan.top && a.plan.bottom == b.plan.bottom && a.cull == b.cull && a.rows == b.rows
             && a.held == b.held && a.supporter == b.supporter && a.saved == b.saved && a.yours == b.yours && a.armed == b.armed
             && a.voiceOver == b.voiceOver
     }
@@ -1054,7 +1087,7 @@ private struct SlopeMenuWorld: View, Equatable {
                 header(t, tier)
                 ForEach(Array(tier.ledges.enumerated()), id: \.offset) { i, ledge in
                     let n = SlopeColumn.ledge(tier: t, level: i + 1)
-                    if shown(view.y(lay.tops[n])) {
+                    if shown(view.y(lay.tops[n])), rows?.contains(n) ?? true {
                         SlopeLedgeRow(ledge: ledge, view: view, n: n, near: near, bars: bars, held: tier.levels[i].id == held) {
                             pick(tier.levels[i], n)
                         }
