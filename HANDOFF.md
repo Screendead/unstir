@@ -47,30 +47,8 @@ Closed: moved word for word to `docs/history.md`.
 
 ### Open work (2026-11-23)
 
-**The design pass gets its direction (to-do 72):** Jack's brief of 2026-11-23, below under to-do 72. A dedicated cloud
-session started that day owns it; its draft PR is the claim, and the lead leaves the item alone.
-Built 2026-11-23 on `design/negative-space` (draft PR #298): three directions drawn by `design/negative-space/` over
-glass cut from master's shots, seven screens each (the menu mid-way and all done, plughole 01, plughole 27's result, Prism 01, Prism's card,
-settings), with films, Reduce Motion stills and B at the third accessibility size. A subtracts within today's look; B
-("still water") puts one thing in focus, SF Pro titles over mono numbers, colour as a glow behind the focus, a slow
-settle (Prism's number stays white: a red and blue edge read as off-register channels); C ("mist") whitens the chrome and moves colour into a drifting blurred light. Recommended: B (fewest things at
-once; its glows are still images, so no GPU cost in play, where C's moving light competes with the glass). Pitch page
-https://claude.ai/artifact/4GRkKarS6skJBqCkmWSyu4; the call is issue #302 (`needs-jack`). Waiting on Jack's pick; no
-SwiftUI changed. Each direction's removals, which Jack's pick approves as a set, are listed on the page.
-Jack's answer (2026-11-23): none looked different enough; keep Still Water, add three radical directions: a complete
-redesign of everything outside the tank, an experience rather than an app, custom-rendered (one Metal pass), no boxes,
-lists or straight lines, efficient on battery; then (same day) strictly 2D or 2.5D, and no stirring anywhere in the UI.
-He liked the Descent's idea and said Ink needed work for its stirring. Built on the same branch under
-`design/negative-space/world/` (a shader-and-type harness, `render.mjs`): the Descent (a side view down a water
-column, tiers as deeper water, levels as lanterns), Ink (ink blooming and dissolving in still water, a typographic
-page) and the Basin (a pool seen from above, levels as droplets on a current). Recommended: the Descent, keeping
-level numbers rather than its depth labels. Second pitch page https://claude.ai/artifact/AogjiJuH1w1hzJFZGaiGkm; the
-call is issue #303, which replaces #302 (closed).
-Jack picked the Descent (#303) and asked for three versions of it: the Plumb Line (a fine line from a float, levels as
-beads), Lamplight (dark water, a lamp at the next level, solved levels stay lit as a trail) and the Shelf (an
-illustrated slope of ledges, a pebble per level), in `world/plumb`, `world/lamplight` and `world/shelf`.
-Recommended: Lamplight, with dim levels naming themselves on a tap and a dithered ground. Third pitch page
-https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304.
+The design pass's three rounds of directions (to-do 72, #302 to #304) are closed: moved word for word to
+`docs/history.md`.
 Jack picked the Shelf (#304): build it for real, and pitch easter egg ideas (e.g. something seen or done on an
 overscroll). In code the world is called the slope (`Slope*`), as `Shelf.swift` and "the shelf" already mean the pack
 dock and shop. The build lands on its own branch and PR, screen by screen, each shown to Jack before it merges.
@@ -81,7 +59,8 @@ pack covers hold still; tiers change by scrolling or rising to the surface, no h
 own small slope; the daily, archive and endless move to the surface and the foot; level 1's note points to settings at
 the surface; and the six small changes (lock symbols become words; the ↗ and the archive's tags go; the supporter mark
 on the overview and share line only; PACK, BUNDLE and UP A NOTCH lose their capitals; the result's buttons become
-stones; "unstirred." at 34 pt italic). The call on the game's words is #308; no copy cut is applied until it is routed.
+stones; "unstirred." at 34 pt italic). Jack answered the call on the game's words (#308): the 27 cuts and 10 trims are applied, his rewrite's two consent
+lines taken, and every call item kept as it was (`docs/copy-cut.md` on `slope/copy`).
 
 ### Open work (2026-11-15)
 
