@@ -90,7 +90,7 @@ static float3 sandstone(float2 p, float px, device const float2 *g, float t) {
 // slope steeper than the noise, so they run one way across the glass and never close into an eye, which a stir
 // would look like, in rhythm: a packet of fine pale lines, then a quiet band of colour, each band its own. Light crosses the bands.
 static float3 bands(float2 p, float px, device const float2 *g, float t) {
-    const float step = 0.03, tau = 6.2831853;
+    const float step = 0.022, tau = 6.2831853;
     float3 a = noised(1.05 * p + float2(5.2, 1.4), g), b = noised(2.9 * p + float2(0.6, 3.3), g + 64);
     const float2 lie = float2(0.55, 0.95);
     float v = dot(p, lie) + 0.5 * a.x + 0.15 * b.x;
