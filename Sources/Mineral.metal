@@ -84,13 +84,14 @@ static float3 sandstone(float2 p, float px, device const float2 *g, float t) {
     return c;
 }
 
-// Agate, in linear light at p: the bands a cavity lays down wall inward, the contours of two octaves of noise, in
-// rhythm: a packet of fine pale lines, then a quiet band of colour, each band its own. Light crosses the bands.
+// Agate, in linear light at p: the bands a cavity lays down wall inward, the contours of two octaves of noise on a
+// slope, so they run one way across the glass and close on themselves only here and there, in rhythm: a packet of fine pale lines, then a quiet band of colour, each band its own. Light crosses the bands.
 static float3 bands(float2 p, float px, device const float2 *g, float t) {
     const float step = 0.016, tau = 6.2831853;
     float3 a = noised(1.05 * p + float2(5.2, 1.4), g), b = noised(2.9 * p + float2(0.6, 3.3), g + 64);
-    float v = a.x + 0.3 * b.x;
-    float2 grad = 1.05 * a.yz + 0.3 * 2.9 * b.yz;
+    const float2 lie = float2(0.33, 0.57);
+    float v = dot(p, lie) + a.x + 0.3 * b.x;
+    float2 grad = lie + 1.05 * a.yz + 0.3 * 2.9 * b.yz;
     float s = v / step, n = floor(s + 0.5), gl = max(length(grad), 1e-4);
     float d = abs(s - n) * step / gl, room = step / gl;
     // Six lines to a packet: the first heavy, three fine, two left out for the quiet band.

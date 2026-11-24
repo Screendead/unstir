@@ -484,7 +484,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   <layout> <picture>...` measures how a turn shows: each rod turned alone by a step, the share of its shear ring's
   and its core's pixels whose light moves by more than 0.12, the worst rod's; today's live pictures the lab draws
   read 0.17 to 0.49 on hex, and every candidate reads 0.21 or more. `scripts/shots.sh slope-art-` shoots a level of
-  each tier on each set and on today's picture, dealt and unstirred, and `scripts/film.sh slope-art-` films each set
+  each tier on each set and on today's picture, dealt and unstirred (`scripts/slope-art-sheet.py` lays them out a sheet a tier), and `scripts/film.sh slope-art-` films each set
   wound in and unwound on plughole 14 and whirlpool 03.
 - **Brim.swift** and **Brim.metal** draw endless's brim as a measuring jug on the tank's own bezel, ported from the
   mockup Jack approved (2026-09-28) with its constants in its own units (`Brim.unit` to the glass's radius): ticks
