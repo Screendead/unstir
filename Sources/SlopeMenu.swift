@@ -205,7 +205,7 @@ struct SlopeMenu: View {
                     try? await Task.sleep(for: .seconds(1))
                     var stone = SlopeSkim(from: 150, over: 9, speed: SlopeEggHarness.speed, width: plan.size.width, luck: 0)
                     stone?.held = SlopeEggHarness.held
-                    if stone?.held != nil { skim = stone } else { throwStone(stone) }
+                    if stone?.held != nil, !reduceMotion { skim = stone } else { throwStone(stone) }
                 }
             }
             if SlopeEggHarness.wanted == .seam {
@@ -261,7 +261,7 @@ struct SlopeMenu: View {
         .allowsHitTesting(!moving)
         // A drag takes the screen from the words under it; a tap is still theirs. Under Reduce Motion nothing follows
         // the finger here, and the dive's own bounce is the one way past either end.
-        .highPriorityGesture(DragGesture(minimumDistance: 12)
+        .highPriorityGesture(DragGesture(minimumDistance: 12, coordinateSpace: .global)
             .updating($tug) { drag, tug, _ in
                 // A drag along the water line is a stone's, and pulls nothing.
                 if !flicks(drag, water: 0.188 * h) { tug = drag.translation.height }
@@ -283,7 +283,7 @@ struct SlopeMenu: View {
             world(view, plan, cull: false)
         }
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
-        .simultaneousGesture(DragGesture(minimumDistance: 12).onEnded { flick($0, water: -scroll.top, plan) })
+        .simultaneousGesture(DragGesture(minimumDistance: 12, coordinateSpace: .global).onEnded { flick($0, water: -scroll.top, plan) })
         // The edge swipe has the screen's leading edge to itself: a drag over the whole dive would take the rows' taps.
         .overlay(alignment: .leading) {
             Color.clear.frame(width: Self.edge).contentShape(Rectangle()).gesture(backSwipe(plan)).ignoresSafeArea()
@@ -324,7 +324,8 @@ struct SlopeMenu: View {
 
     // MARK: The skimming stone
 
-    /// The drag began by the water line, at `water` on the screen, and runs along it.
+    /// The drag began by the water line, at `water` on the screen, and runs along it. The drag is read in the screen's
+    /// space, as the water line is: a view's own starts under the status bar.
     private func flicks(_ drag: DragGesture.Value, water: CGFloat) -> Bool {
         abs(drag.startLocation.y - water) < 40 && abs(drag.translation.width) > 2 * abs(drag.translation.height)
     }
@@ -332,13 +333,13 @@ struct SlopeMenu: View {
     /// A drag let go: along the water line and fast enough, it throws a stone (`SlopeSkim`). Reduce Motion and a
     /// saving `Power` throw none.
     private func flick(_ drag: DragGesture.Value, water: CGFloat, _ plan: SlopeMenuPlan) {
-        guard flicks(drag, water: water), water > plan.top + 30, skim == nil, !reduceMotion, !Power.shared.saving else { return }
+        guard flicks(drag, water: water), water > plan.top + 30 else { return }
         throwStone(SlopeSkim(from: drag.location.x, over: min(max(water - drag.location.y, 4), 30), speed: drag.velocity.width,
                              width: plan.size.width))
     }
 
     private func throwStone(_ stone: SlopeSkim?) {
-        guard let stone else { return }
+        guard let stone, skim == nil, !reduceMotion, !Power.shared.saving else { return }
         Log.write("slope skim \(stone.touches)")
         skim = stone
         skips = 0

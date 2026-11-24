@@ -240,7 +240,7 @@ extension EnvironmentValues {
 #if DEBUG
 /// UNSTIR_EGG: an egg shown without its finger, for shots and films (scripts/shots/slope-eggs.sh). Debug builds only.
 ///
-/// - `still`: the menu idles two seconds in, not twenty.
+/// - `still`: the menu idles two seconds in, not twenty, and is touched six seconds after that.
 /// - `night`: a second in, the overview is pulled down past the surface, held five seconds and let go.
 /// - `skim`: a second in, a stone is skimmed from beside the bank; UNSTIR_EGGSPEED is the flick's (1900 points a second),
 ///   and UNSTIR_EGGAT holds it that many seconds into its throw, for a still.
@@ -261,6 +261,12 @@ enum SlopeEggHarness: String {
         guard wanted == .still else { return }
         Power.shared.idleSooner = .seconds(2)
         Power.shared.touched()
+        guard !posed else { return }
+        Task {
+            try? await Task.sleep(for: .seconds(8))
+            Power.shared.idleSooner = nil
+            Power.shared.touched()
+        }
     }
 }
 #endif

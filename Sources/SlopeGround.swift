@@ -60,6 +60,8 @@ struct SlopeGround: View {
     /// When the clock read 0; and when it last stopped, with what still water had cost it by then.
     @State private var epoch = Date.now
     @State private var stopped: (at: Date, lost: Double)?
+    /// What still water had cost every clock before this one began.
+    @State private var before = Power.shared.calm.lost(.now)
     /// Since when the camera has been held past the column's foot.
     @State private var sunk: Date?
 
@@ -89,7 +91,7 @@ struct SlopeGround: View {
         // A skimmed stone moves at the display's rate; the drift alone needs 30 Hz.
         TimelineView(.animation(minimumInterval: skimming ? nil : 1.0 / 30, paused: still)) { timeline in
             let power = Power.shared
-            let lost = eggs == nil ? 0 : stopped?.lost ?? power.calm.lost(timeline.date)
+            let lost = eggs == nil ? 0 : (stopped?.lost ?? power.calm.lost(timeline.date)) - before
             let t = clock ?? (reduceMotion ? 0 : (stopped?.at ?? timeline.date).timeIntervalSince(epoch) - lost)
             let calm = eggs == nil || fixed ? 0 : power.turning ? power.calm.level(timeline.date) : power.calm.to
             // The night stands over a surface pulled down past its place.
