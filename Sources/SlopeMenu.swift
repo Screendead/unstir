@@ -99,6 +99,9 @@ struct SlopeMenu: View {
     @State private var shown = Tier.stored()
     @State private var today: Date
     @State private var model: SlopeMenuModel
+    /// How many times the model has been read again: what was made from it holds until the next.
+    @State private var loads = 0
+    @State private var plans = SlopePlans()
     @State private var saved: Resume?
     @State private var arm = NewRunArm()
     @State private var supporter = Settings.supporter
@@ -184,7 +187,7 @@ struct SlopeMenu: View {
     private func screen(_ geo: GeometryProxy) -> some View {
         let size = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
                           height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
-        let plan = SlopeMenuPlan(size: size, type: typeSize, model: model, top: geo.safeAreaInsets.top, bottom: geo.safeAreaInsets.bottom)
+        let plan = plans.plan(size: size, type: typeSize, model: model, loads: loads, top: geo.safeAreaInsets.top, bottom: geo.safeAreaInsets.bottom)
         // As it comes up in the dive, the menu is there from its first frame, under the level's leaving.
         let opening = rest.flatMap { plan.aim($0) }
         let below = (diving && !surfaced) || (opening != nil && !diving)
@@ -203,6 +206,7 @@ struct SlopeMenu: View {
         .onAppear {
             settle(plan)
             #if DEBUG
+            if let motion = SlopeFlag.touring { tour(motion, plan) }
             SlopeEggHarness.start()
             if SlopeEggHarness.wanted == .skim {
                 Task {
@@ -237,6 +241,7 @@ struct SlopeMenu: View {
     }
 
     private func reload() {
+        loads += 1
         saved = run
         model = SlopeMenuModel(today: today, saved: run, playing: playing)
     }
@@ -247,10 +252,11 @@ struct SlopeMenu: View {
     private func scene(_ plan: SlopeMenuPlan) -> some View {
         // The pull gives as a scroll's end does.
         let h = plan.size.height, pulled = tug * h * 0.55 / (h + 0.55 * abs(tug)) + drawn
-        let at = (share ?? plan.overview(holding: hold)) + (zoom == 0 && !moving ? pulled / h : 0)
-        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
+        return SlopeScene(column: plan.column, focus: hold, at: share ?? plan.overview(holding: hold), z: zoom,
+                          pull: zoom == 0 && !moving ? pulled : 0, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
                           eggs: eggs) { view in
-            world(view, plan, cull: true)
+            // A pull moves the column whole: its rows are laid out where the camera rests, and none again as it moves.
+            world(view.unpulled, plan, cull: true).offset(y: view.pull)
             // Pulled up past its foot, the overview's words sink away under the status bar as the dive's do.
             let over = view.top - view.lay.travel(height: view.size.height).upperBound
             if over > 0, view.lay.e <= 0, plan.top > 0 {
@@ -309,8 +315,8 @@ struct SlopeMenu: View {
     }
 
     private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
-        SlopeMenuWorld(view: view, plan: plan, model: model, cull: cull, held: held, supporter: Store.shared.bought && supporter,
-                       saved: saved, yours: yours, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
+        SlopeMenuWorld(view: view, plan: plan, model: model, loads: loads, cull: cull, held: held, supporter: Store.shared.bought && supporter,
+                       saved: saved, yours: yours, arm: $arm, armed: arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
                        openSettings: { settings = true },
                        enter: { enter($0, plan) },
                        visit: { offer in go(to: plan.hollow(offer), plan) },
@@ -324,6 +330,7 @@ struct SlopeMenu: View {
                            saved = nil
                            pick(.endless(Run(seed: .random(in: .min ... .max))), ledge: nil, plan, anew: true)
                        })
+            .equatable()
             .opacity(bare ? 0 : 1).allowsHitTesting(!bare).accessibilityHidden(bare)
             .animation(.easeOut(duration: 0.6), value: bare)
     }
@@ -562,6 +569,96 @@ struct SlopeMenu: View {
         .animation(.easeOut(duration: 0.3), value: below)
         .animation(.easeInOut(duration: 0.4), value: yours)
         .accessibilitySortPriority(2)
+    }
+}
+
+#if DEBUG
+extension SlopeMenu {
+    /// UNSTIR_SLOPE=tour: the menu moved as a finger moves it, for a trace on the phone: the overview pulled, the
+    /// zoom, the dive scrolled, the edge swipe, the rise, the overview at rest and then idle until the water is still.
+    /// `only` names one of them (tour:scroll), reached the short way, so each can be traced from a cool phone. The
+    /// pull and the edge swipe step their state with no animation, as a drag's events do; the dive scrolls to one aim
+    /// after another. Each motion is marked in the log with how many times the ground has been drawn.
+    fileprivate func tour(_ only: String, _ plan: SlopeMenuPlan) {
+        func mark(_ motion: String) {
+            Log.write("tour \(motion), ground drawn \(SlopeGround.draws)")
+            Power.shared.touched()
+        }
+        func rest(_ seconds: Double) async { try? await Task.sleep(for: .seconds(seconds)) }
+        func step(_ seconds: Double, _ set: (Double) -> Void) async {
+            let start = Date.now
+            while Date.now.timeIntervalSince(start) < seconds {
+                set(Date.now.timeIntervalSince(start) / seconds)
+                try? await Task.sleep(for: .milliseconds(8))
+            }
+            set(1)
+        }
+        func wants(_ motion: String) -> Bool { only.isEmpty || only == motion }
+        Task {
+            await rest(2.5)
+            if wants("pull") {
+                mark("pull")
+                await step(3) { drawn = 200 * sin(2 * .pi * $0) }
+                await rest(1)
+            }
+            if !wants("rest") || only.isEmpty, only != "pull" {
+                mark("zoom")
+                enter(.plughole, plan)
+                await rest(2.5)
+            }
+            if wants("scroll") {
+                mark("scroll")
+                let last = plan.deep.count - 1
+                for n in [8, 12, 16, 20, 24, 28, 44, 60, 76, 92, last, 60, 20] {
+                    go(to: SlopeAim(ledge: n, share: 0.49), plan)
+                    await rest(0.9)
+                }
+                await rest(1)
+            }
+            if wants("swipe") {
+                mark("swipe")
+                swiping = true
+                lift(plan)
+                await step(1.5) { zoom = 1 - 0.4 * sin(.pi * $0) }
+                pull = 0.1
+                released(plan)
+                await rest(1.5)
+            }
+            if wants("rise") {
+                mark("rise")
+                rise(plan)
+                await rest(2.5)
+            }
+            if wants("rest") {
+                mark("rest")
+                await rest(4)
+                mark("still")
+                Power.shared.idleSooner = .seconds(1)
+                Power.shared.touched()
+                await rest(10)
+                Power.shared.idleSooner = nil
+            }
+            Log.write("tour ends, ground drawn \(SlopeGround.draws)")
+        }
+    }
+}
+#endif
+
+/// The plan last made, kept while what it was made from holds: a drag reads the menu again at every touch, and a plan
+/// measures every row's words.
+@MainActor private final class SlopePlans {
+    private struct Key: Equatable {
+        let size: CGSize, type: DynamicTypeSize, loads: Int, top: CGFloat, bottom: CGFloat
+    }
+
+    private var made: (key: Key, plan: SlopeMenuPlan)?
+
+    func plan(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, loads: Int, top: CGFloat, bottom: CGFloat) -> SlopeMenuPlan {
+        let key = Key(size: size, type: type, loads: loads, top: top, bottom: bottom)
+        if let made, made.key == key { return made.plan }
+        let plan = SlopeMenuPlan(size: size, type: type, model: model, top: top, bottom: bottom)
+        made = (key, plan)
+        return plan
     }
 }
 
@@ -907,17 +1004,16 @@ struct SlopeMenuModel {
         packLead = shelf.first { offer in offer.pack.map { Marks.line($0, owned: store.state($0) == .owned || !store.ready, fits: $0.fits(), played: $0.tastePlayed())?.new == true } ?? false }
             ?? shelf.first { $0.pack.map { store.state($0) != .owned } ?? true } ?? shelf.first
         if lead.modes {
-            let days = Archive.days(today: today).map { Level.daily($0, archived: true) }
-            let atPar = days.filter { Best.load($0.id)?.over == 0 }.count
+            let (days, atPar) = Archive.tally(today: today)
             // Unsaid until the store has read what the player owns, so an owner never meets it closed.
             let known = store.ready, open = known && Archive.open
-            let spoken = Spoken.archiveRow(open: open, days: days.count, atPar: atPar)
+            let spoken = Spoken.archiveRow(open: open, days: days, atPar: atPar)
             archiveOpen = open
             archive = SlopeLedge(name: String(localized: "Archive"), state: open ? .solved : .closed,
-                                 facts: !known ? String(localized: "\(days.count) past dailies", comment: "The menu's archive row. Past dailies")
-                                     : open ? String(localized: "\(days.count) past dailies \u{00B7} \(atPar) at par",
+                                 facts: !known ? String(localized: "\(days) past dailies", comment: "The menu's archive row. Past dailies")
+                                     : open ? String(localized: "\(days) past dailies \u{00B7} \(atPar) at par",
                                                      comment: "The menu's archive row, open. Past dailies, then those at par")
-                                     : String(localized: "\(days.count) past dailies \u{00B7} comes with any pack",
+                                     : String(localized: "\(days) past dailies \u{00B7} comes with any pack",
                                               comment: "The menu's archive row, shut. Past dailies"),
                                  opens: known && !open ? String(localized: "unlocked by purchasing any pack") : nil, reason: true,
                                  label: spoken.label, value: spoken.value, hint: spoken.hint)
@@ -948,10 +1044,14 @@ struct SlopeMenuModel {
 
 /// Everything the menu sets on the main column, drawn from one view of it: the overview's words while the depth is
 /// closed, the dive's once it has opened, and the pebbles all the way between.
-private struct SlopeMenuWorld: View {
+///
+/// It is drawn again only for a new camera, a model read again (`loads`) or a change in what it is handed by value:
+/// its closures and the plan change with those and never on their own.
+private struct SlopeMenuWorld: View, Equatable {
     let view: SlopeView
     let plan: SlopeMenuPlan
     let model: SlopeMenuModel
+    let loads: Int
     /// Leaves out what is off the screen: the scene lays everything out again each frame, the dive once.
     let cull: Bool
     let held: String?
@@ -960,6 +1060,8 @@ private struct SlopeMenuWorld: View {
     /// "Lens is yours", standing under the wordmark while it is said (2.10).
     let yours: Offer?
     @Binding var arm: NewRunArm
+    /// `arm` as it stood when this was made, for `==`: a binding reads the same now from the old view and the new.
+    let armed: NewRunArm
     let voiceOver: Bool
     let hollow: ((Offer, SlopeSpot) -> AnyView)?
     let archiveLedge: ((SlopeSpot) -> AnyView)?
@@ -972,6 +1074,13 @@ private struct SlopeMenuWorld: View {
     let newRun: () -> Void
 
     @AccessibilityFocusState private var newRunFocused: Bool
+
+    nonisolated static func == (a: Self, b: Self) -> Bool {
+        a.view.top == b.view.top && a.view.lay.z == b.view.lay.z && a.view.size == b.view.size && a.loads == b.loads
+            && a.plan.type == b.plan.type && a.plan.top == b.plan.top && a.plan.bottom == b.plan.bottom && a.cull == b.cull
+            && a.held == b.held && a.supporter == b.supporter && a.saved == b.saved && a.yours == b.yours && a.armed == b.armed
+            && a.voiceOver == b.voiceOver
+    }
 
     private var lay: SlopeLay { view.lay }
     /// 1 in the dive, 0 until the depth is nearly open: the names fade in as the pitch passes 44 pt.

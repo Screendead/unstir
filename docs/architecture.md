@@ -1159,8 +1159,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `SlopeFlag.on`, and sets `\.slopeWorld` from it for the play screen and the result. A Debug launch with
   `UNSTIR_SLOPE=1` (or `=world`) stores the flag and one with `=0` clears it, so a phone's home screen keeps opening it
   (`UNSTIR_SLOPE=1 scripts/run-ios.sh Debug`); any other harnessed launch and the test host clear it, and no Release
-  build reads either. Its other values are `SlopeHarness`'s stages. In the world: `SlopeMenu` stands in for `MenuView`,
-  a ledge opening its level through `show`. A level grows out of the pebble A hands over (2.9): the play screen leaves
+  build reads either. `UNSTIR_SLOPE=tour` is the world with its menu moved through every motion with no finger
+  (`SlopeMenu.tour`: the overview pulled, the zoom, the dive scrolled, the edge swipe, the rise, the overview at rest,
+  then idle until the water is still), and `tour:pull`, `:zoom`, `:scroll`, `:swipe`, `:rise` or `:rest` one of them
+  from a cool phone; each is marked `tour` in the log with how many times the ground has been drawn
+  (`SlopeGround.draws`), for a trace on the phone. Its other values are `SlopeHarness`'s stages. In the world:
+  `SlopeMenu` stands in for `MenuView`, a ledge opening its level through `show`. A level grows out of the pebble A
+  hands over (2.9): the play screen leaves
   its ground to the root (`slopeGroundOwned`), which keeps `SlopeBackdrop` mounted, all but unseen, under the menu (a
   ground made as the level opens draws black for its first frames) and fills it from the level's `SlopePlayStage`;
   the tank and chrome scale up from the pebble while the menu crossfades into that ground (an animated offset leaves

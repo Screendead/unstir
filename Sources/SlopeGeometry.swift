@@ -302,9 +302,13 @@ struct SlopeLay: Sendable {
 
     /// What Slope.metal reads: the camera and the column's measures, each rock's shape, then every ledge's top, lip,
     /// drop, rock, back and fathoms.
-    func uniforms(top: CGFloat) -> [Float] {
+    func uniforms(top: CGFloat, height: CGFloat? = nil) -> [Float] {
+        // The ledges a screen `height` tall can show, where the shader looks for a pixel's own: the overview's bow and
+        // lift move a depth 26 pt at the most.
+        let from = height == nil ? 0 : tops.prefix { $0 <= top - 30 }.count
+        let to = height.map { reach in tops.prefix { $0 <= top + reach + 30 }.count } ?? count
         var u: [CGFloat] = [top, e, pitch, CGFloat(count), foot, CGFloat(column.foot.rawValue), column.surface ? 1 : 0,
-                            CGFloat(column.first ?? -1), column.still, column.pitch, 0, 0, 0, 0, 0, 0]
+                            CGFloat(column.first ?? -1), column.still, column.pitch, CGFloat(from - 1), CGFloat(to - 1), 0, 0, 0, 0]
         for s in SlopeColumn.shapes { u += [s.thick, s.under, s.nose, s.ripple] }
         for n in 0 ..< count { u += [tops[n], tips[n], drops[n], CGFloat(rocks[n].rawValue), backs[n], fathoms[n]] }
         return u.map(Float.init)

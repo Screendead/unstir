@@ -643,12 +643,25 @@ enum SlopeFlag {
     }
 
     /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
-    static func phone(_ env: [String: String]) -> Bool { ["1", "world", "0"].contains(env["UNSTIR_SLOPE"]) }
+    static func phone(_ env: [String: String]) -> Bool {
+        env["UNSTIR_SLOPE"].map { ["1", "world", "0"].contains($0) || tour($0) != nil } ?? false
+    }
+
+    /// "tour" is every motion, "tour:scroll" that one: "" or its name.
+    private static func tour(_ value: String) -> String? {
+        value == "tour" ? "" : value.hasPrefix("tour:") ? String(value.dropFirst(5)) : nil
+    }
+
+    #if DEBUG
+    /// UNSTIR_SLOPE=tour, or tour:pull, :zoom, :scroll, :swipe, :rise or :rest: the world, its menu moved through
+    /// every motion, or that one, with no finger, for a trace (`SlopeMenu.tour`).
+    static let touring = ProcessInfo.processInfo.environment["UNSTIR_SLOPE"].flatMap(tour)
+    #endif
 
     static func read(_ env: [String: String], harnessed: Bool) {
         #if DEBUG
         // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
-        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(["1", "world"].contains(env["UNSTIR_SLOPE"]), forKey: key) }
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(env["UNSTIR_SLOPE"].map { ["1", "world"].contains($0) || tour($0) != nil } ?? false, forKey: key) }
         #endif
     }
 }
@@ -837,8 +850,7 @@ struct RootView: View {
         .overlay { slopeCovers }
         // Read when a level opens, leaves or finishes, never per frame of the camera.
         .onChange(of: revision, initial: true) {
-            let past = archiveDays
-            archiveTally = (past.count, past.filter { Best.load($0.level.id)?.over == 0 }.count)
+            archiveTally = Archive.tally(today: harness?.day ?? .now)
         }
         .animation(.easeOut(duration: 0.25), value: settings)
         .animation(.easeInOut(duration: 0.6), value: asking)

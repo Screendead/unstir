@@ -23,7 +23,8 @@ struct SlopeHollow: View {
     /// A tap, with the opening's middle on the screen, which its cover rises out of (`SlopePack.from`).
     let open: (CGPoint) -> Void
     var store = Store.shared
-    @State private var middle = CGPoint.zero
+    /// Read only by a tap: kept out of the view's state, which a moving camera would otherwise change every frame.
+    @State private var middle = Middle()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// `light`: the opening alone, hanging in open water with no rock round it.
@@ -39,13 +40,13 @@ struct SlopeHollow: View {
         let state = store.state(offer), ready = store.ready
         // Unowned until the launch's first read has finished, so a pack's free levels wait for it.
         let line = offer.pack.flatMap { Marks.line($0, owned: state == .owned || !ready, fits: $0.fits(), played: $0.tastePlayed()) }
-        Button { open(middle) } label: {
+        Button { open(middle.point) } label: {
             mouth
                 .frame(width: side, height: side)
                 .onGeometryChange(for: CGPoint.self) { geo in
                     let frame = geo.frame(in: .global)
                     return CGPoint(x: frame.midX, y: frame.midY)
-                } action: { middle = $0 }
+                } action: { middle.point = $0 }
                 .overlay(alignment: beside == nil ? .top : .leading) {
                     caption(state: ready ? state : .unowned, line: line)
                         .opacity(words)
@@ -63,7 +64,7 @@ struct SlopeHollow: View {
         .task {
             guard ProcessInfo.processInfo.environment["UNSTIR_PACKSTAP"] == offer.key,
                   (try? await Task.sleep(for: .seconds(2))) != nil else { return }
-            open(middle)
+            open(middle.point)
         }
         #endif
         // Unseen until the launch's read of what is owned and its price fetch have settled, then fading in once, so
@@ -170,6 +171,11 @@ extension Offer {
 extension Pack {
     /// The packs the slope sells: `sold()` less one that doesn't ship.
     static func hollowed() -> [Pack] { sold().filter(\.ships) }
+}
+
+/// Where a hollow's opening is on the screen.
+@MainActor private final class Middle {
+    var point = CGPoint.zero
 }
 
 extension SlopeHollow {

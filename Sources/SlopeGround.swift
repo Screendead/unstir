@@ -26,6 +26,13 @@ struct SlopeView {
     let lay: SlopeLay
     let top: CGFloat
     let size: CGSize
+    /// How far a finger has pulled the camera off its place, already in `top`: everything on the column stands this
+    /// much lower on the screen than `unpulled` has it.
+    var pull: CGFloat = 0
+
+    /// The camera where it rests: a pull moves the whole column as one, so a screen lays it out from here once and
+    /// moves it by `pull`.
+    var unpulled: SlopeView { SlopeView(lay: lay, top: top + pull, size: size) }
 
     /// A point of the column (x, depth) on the screen.
     func point(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: p.y - top) }
@@ -82,6 +89,11 @@ struct SlopeGround: View {
     private var dawning: Bool { past > SlopeEggs.held && !fixed }
     private var still: Bool { fixed || !turning && !skimming && !dawning && (clock != nil || Power.shared.idle) }
 
+    #if DEBUG
+    /// How many times a whole ground has been worked out for drawing, for `SlopeMenu.tour`'s log.
+    static var draws = 0
+    #endif
+
     /// How far the surface line stands off its place at x: Slope.metal's sway.
     private static func sway(_ x: CGFloat, _ t: Double, calm: Double) -> CGFloat {
         (1 - calm) * (3.2 * sin(x * 0.024 + t * 1.1) + 1.8 * sin(x * 0.063 - t * 1.6 + 1.3))
@@ -101,6 +113,9 @@ struct SlopeGround: View {
             let out = fixed ? 1 : waited * waited * (3 - 2 * waited)
             let mirror = view.top - past + view.size.height
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
+            #if DEBUG
+            let _ = band == nil ? Self.draws += 1 : ()
+            #endif
             ZStack {
                 let common: [Shader.Argument] = [
                     .float2(view.size),
@@ -109,7 +124,7 @@ struct SlopeGround: View {
                     .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
                     .float(look.paper),
                     .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
-                    .floatArray(view.lay.uniforms(top: view.top))]
+                    .floatArray(view.lay.uniforms(top: view.top, height: view.size.height))]
                 // The menu's ground is its own function, so no other pays for an egg it never shows.
                 let shader = eggs.map {
                     Shader(function: ShaderLibrary.default.slopeMenu, arguments: common + [.floatArray(
@@ -143,12 +158,14 @@ struct SlopeGround: View {
 
 /// A column seen from a camera that may travel and open: the ground, and over it whatever `content` sets on it from
 /// the same frame, so a pebble stays on its ledge all the way from the overview to the dive. The camera holds ledge
-/// `focus`'s top at `at`, a share of the screen's height, at zoom `z`; those two and the look animate.
+/// `focus`'s top at `at`, a share of the screen's height, at zoom `z`, moved down the screen by `pull`; those three
+/// and the look animate.
 struct SlopeScene<Content: View>: View, Animatable {
     var column: SlopeColumn
     var focus: Int
     var at: CGFloat
     var z: CGFloat
+    var pull: CGFloat = 0
     var held = false
     var look = SlopeLook()
     var clock: Double?
@@ -156,15 +173,16 @@ struct SlopeScene<Content: View>: View, Animatable {
     var eggs: SlopeEggs?
     @ViewBuilder var content: (SlopeView) -> Content
 
-    nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>,
+    nonisolated var animatableData: AnimatablePair<AnimatablePair<CGFloat, AnimatablePair<CGFloat, CGFloat>>,
         AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, AnimatablePair<Double, Double>>>> {
         get {
-            AnimatablePair(AnimatablePair(at, z), AnimatablePair(AnimatablePair(look.level, look.glint),
-                                                                  AnimatablePair(look.clear, AnimatablePair(look.light, look.paper))))
+            AnimatablePair(AnimatablePair(at, AnimatablePair(z, pull)), AnimatablePair(AnimatablePair(look.level, look.glint),
+                                                                                       AnimatablePair(look.clear, AnimatablePair(look.light, look.paper))))
         }
         set {
             at = newValue.first.first
-            z = newValue.first.second
+            z = newValue.first.second.first
+            pull = newValue.first.second.second
             look.level = newValue.second.first.first
             look.glint = newValue.second.first.second
             look.clear = newValue.second.second.first
@@ -177,7 +195,7 @@ struct SlopeScene<Content: View>: View, Animatable {
         GeometryReader { geo in
             let size = geo.whole
             let lay = SlopeLay(column, z: z)
-            let view = SlopeView(lay: lay, top: lay.camera(on: focus, at: at, height: size.height).top, size: size)
+            let view = SlopeView(lay: lay, top: lay.camera(on: focus, at: at, height: size.height).top - pull, size: size, pull: pull)
             SlopeLayer {
                 SlopeGround(view: view, held: held, look: look, clock: clock, near: near, eggs: eggs)
                 content(view)

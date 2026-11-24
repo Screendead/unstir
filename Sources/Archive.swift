@@ -24,6 +24,12 @@ enum Archive {
         return days
     }
 
+    /// How many days the archive holds and how many of them are at par, read by their ids: no day is dealt.
+    @MainActor static func tally(today: Date = .now) -> (days: Int, atPar: Int) {
+        let days = days(today: today)
+        return (days.count, days.filter { Best.load(Level.dailyID($0))?.over == 0 }.count)
+    }
+
     /// Any purchase opens it; so does the developer unlock, where it opens a pack's levels (`Pack.access`).
     static func opens(bought: Bool, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
                       playtest: Bool = Build.playtest) -> Bool {

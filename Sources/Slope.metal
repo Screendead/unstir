@@ -235,8 +235,9 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     // Grain and banding are the dive's: they would shimmer as the depth opens.
     float fine = smoothstep(0.7, 1.0, open);
 
-    // Which ledge's row this is: the last whose top is at or over this depth.
-    float lo = -1.0, hi = count - 1.0;
+    // Which ledge's row this is: the last whose top is at or over this depth, looked for among the ledges the screen
+    // can show (g[10] to g[11], SlopeLay.uniforms).
+    float lo = g[10], hi = g[11];
     for (int i = 0; i < 8; i++) {
         if (lo >= hi) break;
         float mid = ceil((lo + hi) * 0.5);
@@ -265,46 +266,6 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     if (egg.skim.w > 0.0) d -= slopeRings(pos.x, egg.skim) * exp(-abs(d) / 9.0);
     float under = step(0.0, d);
     float sun = exp(-max(m + 2.8, 0.0) / (26.0 + 90.0 * calm)) * 0.75 + 0.25;
-    float3 col;
-    if (d < 0.0) {
-        // The air: dusk, warm along the water.
-        col = mix(float3(0.03, 0.028, 0.05), float3(0.60, 0.37, 0.21), exp(d / 62.0) * 0.8);
-        col += float3(0.5, 0.3, 0.12) * exp(-length((pos - float2(60.0, surface)) * float2(0.006, 0.02))) * 0.22;
-        if (egg.night > 0.0) col = slopeNight(col, pos, surface - pos.y, size.x, tm, egg);
-    } else {
-        col = wc;
-        float sx = pos.x + d * 0.32 + tm * 4.0;
-        float rays = slopeNoise(float2(sx * 0.016, 1.7)) * slopeNoise(float2(sx * 0.041 + 9.0, tm * 0.12));
-        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / (8.0 + 44.0 * calm)) * 0.08 * (1.0 - 0.3 * calm);
-        col += float3(0.55, 0.50, 0.30) * exp(-d / 46.0) * 0.16;
-        col += float3(0.45, 0.30, 0.10) * exp(-length((pos - float2(40.0, surface)) * float2(0.004, 0.0046))) * 0.16;
-        col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * (0.5 + 0.3 * calm);
-        if (egg.night > 0.0) {
-            // The moon on the water: a bright stretch of the surface under it, and broken glints going down.
-            float mx = pos.x - 0.73 * size.x;
-            float a = exp(-d / 1.6) * slopeBell(mx / 44.0) * 0.45
-                + slopeBell(mx / (13.0 + d * 0.22)) * exp(-d / 60.0) * (0.8 + 0.2 * sin(pos.x * 0.4 + tm * 3.0)) * 0.1;
-            col += float3(1.0, 0.96, 0.86) * a * egg.night * 0.5 * (1.0 - egg.moon.x);
-        }
-    }
-
-    // Two far ridges, each moving slower than the shelf, and both ending at the drop-off. Haze takes them towards the
-    // water's own colour: the further one is the fainter, and neither is ever lighter than the water.
-    float taper = g[5] == 1.0 ? smoothstep(-1.2, 0.6, past) : 0.0;
-    for (int j = 0; j < 2; j++) {
-        float fj = float(j);
-        float yy = pos.y * mix(1.5, 1.0, open) + top * open * (0.3 + 0.28 * fj) + 300.0 * fj;
-        float e = size.x - 122.0 + 72.0 * fj + (38.0 - 12.0 * fj) * sin(yy * (0.0057 + 0.0031 * fj) + 1.7 * fj + 0.4)
-            + 13.0 * sin(yy * 0.0173 + 4.0 * fj) + 4.5 * sin(yy * 0.061 + fj) + 260.0 * taper * taper;
-        float soft = 2.6 - 1.4 * fj;
-        float3 rc = wc * (0.80 - 0.22 * fj);
-        // Light from above catches the ridge's shoulder where there is light to catch.
-        rc += wc * 0.5 * sun * sun * exp(-max(pos.x - e, 0.0) / (10.0 + 8.0 * fj)) * (0.5 + 0.5 * sin(yy * 0.061 + fj + 1.6)) * (0.6 - 0.25 * fj);
-        // In still water the far ridges come out of the haze.
-        rc += wc * calm * (0.5 - 0.2 * fj) * exp(-max(pos.x - e, 0.0) / (26.0 + 30.0 * fj));
-        col = mix(col, rc, smoothstep(-soft, soft, pos.x - e) * under * smoothstep(0.0, 40.0, d));
-    }
-
     // The shelf.
     float e0, lean, sc = 1.0;
     float4 sp = slopeShape(ledge.w, g);
@@ -330,6 +291,54 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         dry = pos.y - (surface - (26.0 * slopeBell(x / 80.0) - 6.0));
         below = slopeStep(dry);
     }
+    float3 col = float3(0.0);
+    // Where the rock covers the pixel whole, the water behind it is never seen.
+    if (mask * below >= 1.0 && paper < 1.0) {
+    } else if (d < 0.0) {
+        // The air: dusk, warm along the water.
+        col = mix(float3(0.03, 0.028, 0.05), float3(0.60, 0.37, 0.21), exp(d / 62.0) * 0.8);
+        col += float3(0.5, 0.3, 0.12) * exp(-length((pos - float2(60.0, surface)) * float2(0.006, 0.02))) * 0.22;
+        if (egg.night > 0.0) col = slopeNight(col, pos, surface - pos.y, size.x, tm, egg);
+    } else {
+        col = wc;
+        // The rays die away with depth: past a tenth of one part in 255 they are left out.
+        float reach = exp(-max(m + 2.8, 0.0) / (8.0 + 44.0 * calm)) * 0.08 * (1.0 - 0.3 * calm);
+        if (reach > 0.0005) {
+            float sx = pos.x + d * 0.32 + tm * 4.0;
+            float rays = slopeNoise(float2(sx * 0.016, 1.7)) * slopeNoise(float2(sx * 0.041 + 9.0, tm * 0.12));
+            col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * reach;
+        }
+        col += float3(0.55, 0.50, 0.30) * exp(-d / 46.0) * 0.16;
+        col += float3(0.45, 0.30, 0.10) * exp(-length((pos - float2(40.0, surface)) * float2(0.004, 0.0046))) * 0.16;
+        col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * (0.5 + 0.3 * calm);
+        if (egg.night > 0.0) {
+            // The moon on the water: a bright stretch of the surface under it, and broken glints going down.
+            float mx = pos.x - 0.73 * size.x;
+            float a = exp(-d / 1.6) * slopeBell(mx / 44.0) * 0.45
+                + slopeBell(mx / (13.0 + d * 0.22)) * exp(-d / 60.0) * (0.8 + 0.2 * sin(pos.x * 0.4 + tm * 3.0)) * 0.1;
+            col += float3(1.0, 0.96, 0.86) * a * egg.night * 0.5 * (1.0 - egg.moon.x);
+        }
+    }
+
+    // Two far ridges, each moving slower than the shelf, and both ending at the drop-off. Haze takes them towards the
+    // water's own colour: the further one is the fainter, and neither is ever lighter than the water.
+    float taper = g[5] == 1.0 ? smoothstep(-1.2, 0.6, past) : 0.0;
+    for (int j = 0; j < (mask * below >= 1.0 && paper < 1.0 ? 0 : 2); j++) {
+        float fj = float(j);
+        // Nothing of a ridge shows in the air, or further left than its edge ever comes.
+        if (d <= 0.0 || pos.x <= size.x - 177.5 + 84.0 * fj - (2.6 - 1.4 * fj)) continue;
+        float yy = pos.y * mix(1.5, 1.0, open) + top * open * (0.3 + 0.28 * fj) + 300.0 * fj;
+        float e = size.x - 122.0 + 72.0 * fj + (38.0 - 12.0 * fj) * sin(yy * (0.0057 + 0.0031 * fj) + 1.7 * fj + 0.4)
+            + 13.0 * sin(yy * 0.0173 + 4.0 * fj) + 4.5 * sin(yy * 0.061 + fj) + 260.0 * taper * taper;
+        float soft = 2.6 - 1.4 * fj;
+        float3 rc = wc * (0.80 - 0.22 * fj);
+        // Light from above catches the ridge's shoulder where there is light to catch.
+        rc += wc * 0.5 * sun * sun * exp(-max(pos.x - e, 0.0) / (10.0 + 8.0 * fj)) * (0.5 + 0.5 * sin(yy * 0.061 + fj + 1.6)) * (0.6 - 0.25 * fj);
+        // In still water the far ridges come out of the haze.
+        rc += wc * calm * (0.5 - 0.2 * fj) * exp(-max(pos.x - e, 0.0) / (26.0 + 30.0 * fj));
+        col = mix(col, rc, smoothstep(-soft, soft, pos.x - e) * under * smoothstep(0.0, 40.0, d));
+    }
+
     float thick = sp.x * sc;
     // 1 on the wall under a lip, where its shadow falls, gone by the next ledge's top.
     float shade = exp(-max(din, 0.0) / (14.0 * sc + 1.0)) * smoothstep(thick * 0.45, thick, f)
@@ -343,8 +352,10 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         tone *= 1.0 - 0.38 * shade;
         // Soft bands that bow with the slope and a little grain.
         float u = depth / g[9];
-        tone *= 1.0 + fine * (0.05 * sin((u + x * x * 0.00002) * 9.4) + 0.035 * sin((u - x * 0.004) * 23.0));
-        tone *= 1.0 + fine * 0.08 * (slopeNoise(float2(x, depth) * 0.11) - 0.5);
+        if (fine > 0.0) {
+            tone *= 1.0 + fine * (0.05 * sin((u + x * x * 0.00002) * 9.4) + 0.035 * sin((u - x * 0.004) * 23.0));
+            tone *= 1.0 + fine * 0.08 * (slopeNoise(float2(x, depth) * 0.11) - 0.5);
+        }
         // The ledge's top catches the light: a bright line along it and a glow under that, dappled by the water.
         float crown = 10.0 * sc * (1.0 - pow(saturate((tip - x) / max(tip - back, 1.0)), 1.0 / 3.0));
         float sunk = max(f - crown, 0.0);
@@ -395,7 +406,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         col = mix(col, mix(fc, wc * 1.25, 0.2), slopeStep(dd));
     }
 
-    if (egg.nook.x > 0.0 && fine > 0.0) {
+    // The spur is at most 38 pt thick under its top, which bows 3 pt: no other depth holds any of it.
+    if (egg.nook.x > 0.0 && fine > 0.0 && depth - egg.nook.y > -0.7 && depth - egg.nook.y < 42.0) {
         // Under the last ledge, where the rock has curved back off the screen, a spur of it comes in again: a bowed top,
         // a round nose, its underside cut back to the edge (SlopeEggs.nook seats a pebble on it).
         float u = saturate(x / egg.nook.x), over = depth - egg.nook.y - 3.0 * u * u;
@@ -407,7 +419,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     }
 
     // A near silhouette, out of focus, moving faster than the shelf.
-    if (view.z > 0.0) {
+    if (view.z > 0.0 && pos.x > size.x - 48.0) {
         float yy = pos.y + top * 1.55;
         float e = size.x + 6.0 - 40.0 * pow(max(sin(yy * 0.0047 + 0.9), 0.0), 3.0) - 5.0 * sin(yy * 0.019);
         col = mix(col, wc * 0.34, smoothstep(-9.0, 9.0, pos.x - e) * 0.92 * view.z * smoothstep(0.0, 70.0, d) * (1.0 - taper));
@@ -451,9 +463,12 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float fk = float(j), cell = 46.0 + fk * 22.0;
         float2 q = float2(pos.x + fk * 37.0 - tm * 1.2, pos.y + top * open * (0.35 + fk * 0.3) - tm * (4.0 + fk * 3.0)) / cell;
         float2 id = floor(q), fr = fract(q) - 0.5;
+        // A mote lies within 0.35 of its cell's middle and is 0.7 + 0.5 fk across, and under half the cells hold one.
+        float size = 0.7 + fk * 0.5;
+        if (max(abs(fr.x), abs(fr.y)) >= 0.35 + size / cell || slopeHash(id + 3.3) < 0.55) continue;
         float2 jo = float2(slopeHash(id), slopeHash(id + 7.1)) - 0.5;
         float r = length((fr - jo * 0.7) * cell);
-        float b = smoothstep(0.7 + fk * 0.5, 0.0, r) * step(0.55, slopeHash(id + 3.3));
+        float b = smoothstep(size, 0.0, r);
         col += float3(0.95, 0.9, 0.75) * b * (0.08 + fk * 0.06) * view.w * under * falling * (1.0 - 0.7 * calm);
     }
     if (falling < 1.0) {
