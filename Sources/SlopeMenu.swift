@@ -74,6 +74,8 @@ struct SlopeMenu: View {
     @State private var moving = false
     @State private var travel: Travel?
     @State private var journeys = 0
+    /// The journey whose arrival has already done what it was for.
+    @State private var done = 0
     /// Where the finger has left the camera, in the dive and on an overview that scrolls; nothing is drawn from it.
     @State private var scroll = SlopeScroll()
     @State private var surfaced = true
@@ -164,7 +166,7 @@ struct SlopeMenu: View {
     private func screen(_ geo: GeometryProxy) -> some View {
         let size = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
                           height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
-        let plan = SlopeMenuPlan(size: size, type: typeSize, model: model, top: geo.safeAreaInsets.top)
+        let plan = SlopeMenuPlan(size: size, type: typeSize, model: model, top: geo.safeAreaInsets.top, bottom: geo.safeAreaInsets.bottom)
         // As it comes up in the dive, the menu is there from its first frame, under the level's leaving.
         let opening = rest.flatMap { plan.aim($0) }
         let below = (diving && !surfaced) || (opening != nil && !diving)
@@ -205,15 +207,13 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
+        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, onMove: { top in
+            scroll.top = top
+            let up = top < 1
+            if up != surfaced { surfaced = up }
+        }) { view in
             world(view, plan, cull: false)
-            sounding(view, plan) { top in
-                scroll.top = top
-                let up = top < 1
-                if up != surfaced { surfaced = up }
-            }
         }
-        .coordinateSpace(.named(Self.space))
         .simultaneousGesture(MagnifyGesture().onEnded { if $0.magnification < 0.8 { rise(plan) } })
         // The edge swipe has the screen's leading edge to itself: a drag over the whole dive would take the rows' taps.
         .overlay(alignment: .leading) {
@@ -227,20 +227,10 @@ struct SlopeMenu: View {
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false) { view in
+        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false,
+                  onMove: { scroll.wide = $0 }) { view in
             world(view, plan, cull: false)
-            sounding(view, plan) { scroll.wide = $0 }
         }
-        .coordinateSpace(.named(Self.space))
-    }
-
-    private static let space = "slope.menu"
-
-    /// The camera's depth as the finger scrolls a dive, read from where the surface's own line of the content has
-    /// got to. (`SlopeDive.onMove` hears only 0 on iOS 27.)
-    private func sounding(_ view: SlopeView, _ plan: SlopeMenuPlan, heard: @escaping (CGFloat) -> Void) -> some View {
-        Color.clear.frame(width: 1, height: 1).slopePlace(CGPoint(x: 0, y: view.y(0)), anchor: .top)
-            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.space)).minY } action: { heard(-($0 + plan.top)) }
     }
 
     private func world(_ view: SlopeView, _ plan: SlopeMenuPlan, cull: Bool) -> some View {
@@ -296,7 +286,9 @@ struct SlopeMenu: View {
     }
 
     /// The camera travels to rest on `target` in the dive, from wherever it is, then the dive is the finger's.
-    private func go(to target: SlopeAim, _ plan: SlopeMenuPlan, then: @escaping () -> Void = {}) {
+    /// `early`: what it does on arriving starts as the camera slows into its rest, 0.4 s short of the travel's end,
+    /// so a level opens as the camera arrives and not after it has stood still.
+    private func go(to target: SlopeAim, _ plan: SlopeMenuPlan, early: Bool = false, then: @escaping () -> Void = {}) {
         guard !moving else { return }
         journeys += 1
         let journey = journeys
@@ -322,6 +314,13 @@ struct SlopeMenu: View {
             } completion: {
                 arrive(journey)
             }
+            if early {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                    guard journeys == journey, travel != nil, done != journey else { return }
+                    done = journey
+                    then()
+                }
+            }
         }
     }
 
@@ -336,7 +335,10 @@ struct SlopeMenu: View {
         aim = travel.aim
         diving = true
         surfaced = false
-        travel.then()
+        if done != journey {
+            done = journey
+            travel.then()
+        }
     }
 
     /// "↑ surface", a pinch in and the edge swipe: the dive rises to the overview.
@@ -420,7 +422,7 @@ struct SlopeMenu: View {
         }
         guard !diving else { return onPick(level, seat(scroll.top)) }
         let target = ledge.map { SlopeAim(ledge: $0, share: plan.rest(on: $0)) } ?? plan.foot
-        go(to: target, plan) { onPick(level, seat(plan.deep.rest(target, height: plan.size.height))) }
+        go(to: target, plan, early: true) { onPick(level, seat(plan.deep.rest(target, height: plan.size.height))) }
     }
 
     // MARK: Over the slope
@@ -473,6 +475,8 @@ struct SlopeMenuPlan {
     let type: DynamicTypeSize
     /// The top safe area, under which the dive's top control stands.
     let top: CGFloat
+    /// The bottom safe area, which the overview's last words keep clear of.
+    let bottom: CGFloat
     let column: SlopeColumn
     /// The column at full depth, the dive, and closed, the overview.
     let deep: SlopeLay
@@ -496,10 +500,11 @@ struct SlopeMenuPlan {
     static let headerFoot: CGFloat = 48
     static let bandLead: CGFloat = -8
 
-    init(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, top: CGFloat) {
+    init(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, top: CGFloat, bottom: CGFloat = 0) {
         self.size = size
         self.type = type
         self.top = top
+        self.bottom = bottom
         let large = type.isAccessibilitySize
         var column = SlopeColumn.main(size: size, type: type)
         func line(_ s: SlopeSize) -> CGFloat { SlopeMeasure.line(s, at: type) }
@@ -1053,6 +1058,8 @@ private struct SlopeMenuWorld: View {
                             .frame(width: side, height: side))
                     }
                 }
+                // The pinned way back wins: a hollow fades whole as it rises to it.
+                .slopeUnderBars(near > 0 ? plan.top + 52 : 0, lead: 0)
                 // At the overview a tap on one dives to it, and the packs' line speaks for them all; in the dive the
                 // hollow's own view takes its taps.
                 .overlay {
@@ -1092,8 +1099,8 @@ private struct SlopeMenuWorld: View {
                 if model.lights > 0 { lights }
             }
             .slopePlace(CGPoint(x: x, y: y), anchor: UnitPoint(x: 0.5, y: 0))
-            // At the overview the word stands a little higher, so its line and "new run" clear the screen's foot.
-            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large ? 0 : 20 * (1 - lay.e)))
+            // At the overview the word stands as much higher as keeps its line and "new run" clear of the home bar.
+            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large ? 0 : lift(from: y, continues: continues) * (1 - lay.e)))
         }
         if model.sandbox, near > 0, shown(y, 400) {
             // Debug's sandbox, out of v1: a plain row under the brink.
@@ -1103,6 +1110,13 @@ private struct SlopeMenuWorld: View {
             .opacity(near)
             .slopePlace(CGPoint(x: x, y: y + 0.36 * view.size.height))
         }
+    }
+
+    /// How far endless's words rise at the overview so their last line ends 8 pt over the bottom safe area.
+    private func lift(from y: CGFloat, continues: Bool) -> CGFloat {
+        func line(_ s: SlopeSize) -> CGFloat { SlopeMeasure.line(s, at: plan.type) }
+        let words = line(.title) / 2 + (model.endlessLine != nil ? 4 + line(.detail) : 0) + (continues ? 10 + line(.body) : 0)
+        return max(y + words - (view.size.height - plan.bottom - 8), 0)
     }
 
     /// One small light per tank of the best run, hanging in the dark: how far down the player has been.

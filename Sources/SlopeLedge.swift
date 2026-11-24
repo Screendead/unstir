@@ -157,7 +157,7 @@ struct SlopeLedgeRow: View {
                 } else if ledge.playing {
                     Text("playing").font(.slope(.ui, .detail)).foregroundStyle(ink(.ink2))
                 } else if let facts = ledge.facts {
-                    Text(facts).font(.slope(ledge.reason ? .ui : .data, frontier ? .label : .detail))
+                    Text(facts).font(.slope(ledge.reason ? .ui : .data, frontier ? .label : .detail)) // loc: verbatim localized by the row's maker
                         .foregroundStyle(ledge.reason ? SlopeInk.ink3.colour : ink(frontier ? .ink2 : .ink3)) // loc: verbatim localized by the row's maker
                 }
             }
@@ -206,11 +206,12 @@ struct SlopeLedgeRow: View {
 
 extension View {
     /// Words on a column that fade out as their first line rises to the top bars, `bars` tall, and are gone before it
-    /// reaches them.
-    func slopeUnderBars(_ bars: CGFloat) -> some View {
+    /// reaches them. `lead` is how much of the view may pass under first: a line's height for words, nothing for a
+    /// thing that must stay whole.
+    func slopeUnderBars(_ bars: CGFloat, lead: CGFloat = 30) -> some View {
         visualEffect { words, place in
             let frame = place.frame(in: .global)
-            return words.opacity(bars > 0 ? min(max((frame.minY + min(frame.height, 30) - bars) / 28, 0), 1) : 1)
+            return words.opacity(bars > 0 ? min(max((frame.minY + min(frame.height, lead) - bars) / 28, 0), 1) : 1)
         }
     }
 }
