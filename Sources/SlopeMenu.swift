@@ -199,6 +199,7 @@ struct SlopeMenu: View {
         .onAppear {
             settle(plan)
             #if DEBUG
+            if SlopeFlag.touring { tour(plan) }
             SlopeEggHarness.start()
             if SlopeEggHarness.wanted == .skim {
                 Task {
@@ -560,6 +561,63 @@ struct SlopeMenu: View {
         .accessibilitySortPriority(2)
     }
 }
+
+#if DEBUG
+extension SlopeMenu {
+    /// UNSTIR_SLOPE=tour: the menu moved as a finger moves it, each motion marked in the log, for a trace on the
+    /// phone. The pull and the edge swipe step their state with no animation, as a drag's events do; the dive
+    /// scrolls to one aim after another. It ends idle, the water gone still.
+    fileprivate func tour(_ plan: SlopeMenuPlan) {
+        func mark(_ motion: String) {
+            Log.write("tour \(motion)")
+            Power.shared.touched()
+        }
+        func rest(_ seconds: Double) async { try? await Task.sleep(for: .seconds(seconds)) }
+        func step(_ seconds: Double, _ set: (Double) -> Void) async {
+            let start = Date.now
+            while Date.now.timeIntervalSince(start) < seconds {
+                set(Date.now.timeIntervalSince(start) / seconds)
+                try? await Task.sleep(for: .milliseconds(8))
+            }
+            set(1)
+        }
+        Task {
+            await rest(3)
+            mark("pull")
+            await step(3) { drawn = 200 * sin(2 * .pi * $0) }
+            await rest(1)
+            mark("zoom")
+            enter(.plughole, plan)
+            await rest(2.5)
+            mark("scroll")
+            let last = plan.deep.count - 1
+            for n in Array(stride(from: 8, to: 32, by: 4)) + Array(stride(from: 44, to: last, by: 12)) + [last, 60, 20] {
+                go(to: SlopeAim(ledge: n, share: 0.49), plan)
+                await rest(0.9)
+            }
+            await rest(1)
+            mark("swipe")
+            swiping = true
+            lift(plan)
+            await step(1.5) { zoom = 1 - 0.4 * sin(.pi * $0) }
+            pull = 0.1
+            released(plan)
+            await rest(1.5)
+            mark("rise")
+            rise(plan)
+            await rest(2.5)
+            mark("rest")
+            await rest(3)
+            Log.write("tour still")
+            Power.shared.idleSooner = .seconds(1)
+            Power.shared.touched()
+            await rest(10)
+            Log.write("tour ends")
+            Power.shared.idleSooner = nil
+        }
+    }
+}
+#endif
 
 /// Where the finger has left the dive's camera: read as the dive rises or a level opens from it, never drawn from.
 @MainActor private final class SlopeScroll {

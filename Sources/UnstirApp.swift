@@ -643,12 +643,17 @@ enum SlopeFlag {
     }
 
     /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
-    static func phone(_ env: [String: String]) -> Bool { ["1", "world", "0"].contains(env["UNSTIR_SLOPE"]) }
+    static func phone(_ env: [String: String]) -> Bool { ["1", "world", "0", "tour"].contains(env["UNSTIR_SLOPE"]) }
+
+    #if DEBUG
+    /// UNSTIR_SLOPE=tour: the world, its menu moved through every motion with no finger, for a trace (`SlopeMenu.tour`).
+    static let touring = ProcessInfo.processInfo.environment["UNSTIR_SLOPE"] == "tour"
+    #endif
 
     static func read(_ env: [String: String], harnessed: Bool) {
         #if DEBUG
         // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
-        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(["1", "world"].contains(env["UNSTIR_SLOPE"]), forKey: key) }
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(["1", "world", "tour"].contains(env["UNSTIR_SLOPE"]), forKey: key) }
         #endif
     }
 }
