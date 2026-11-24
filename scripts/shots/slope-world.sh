@@ -54,7 +54,7 @@ shot slope-archive "The archive's calendar on its own stretch of the shallows: a
 shot slope-archive-xxxl "The same at xxxLarge: a list, a ledge a day, newest first." SLOPEARCHIVE=calendar CLOCK=3 TYPESIZE=xxxLarge
 shot slope-archive-ax3 "The same at accessibility3." SLOPEARCHIVE=calendar CLOCK=3 TYPESIZE=accessibility3
 shot slope-archive-ledge "The archive's ledge on open water: shut, open with 12 at par, and before the store has read." SLOPEARCHIVE=ledge CLOCK=3
-shot slope-world-archive "The archive opened over the menu, Lens owned, the last six dailies solved at par." \
+hold=6 shot slope-world-archive "The archive opened over the menu, Lens owned, the last six dailies solved at par." \
   SLOPE=1 SCREEN=menu BESTS=$par27 DAILIES=6 OWNED=lens ARCHIVE=1 CLOCK=3
 hold=6 shot slope-world-archive-day "A past daily opened from the archive: its way back \"↑ archive\"." \
   SLOPE=1 MODE=archive DAY=3 OWNED=lens CLOCK=3
