@@ -10,6 +10,8 @@ enum SlopePacksAt: String {
     case surface = "a"
     /// Lit caves in a spur of the far ridge that reaches across the water between the shallows and plughole.
     case reef = "b"
+    /// Lights hanging in the dark under maelstrom's last ledge, over endless.
+    case deep = "c"
 
     /// UNSTIR_PACKSAT=a, the harness's.
     static let chosen: SlopePacksAt? = {
@@ -64,8 +66,9 @@ struct SlopePackBand {
         let from: CGFloat = switch at {
         case .surface: 60 + width(String(localized: "settings"), name) + 16
         case .reef: 56
+        case .deep: 24
         }
-        let to = size.width - 20, gaps = CGFloat(offers.count - 1)
+        let to = size.width - (at == .deep ? 24 : 20), gaps = CGFloat(offers.count - 1)
         // In a row with each name under its cover; where the names would meet, the covers alone with the names in one
         // line under them all; where even those don't fit, or at the largest sizes, stacked.
         let named = under.map { max($0, side) }, bare = under.map { _ in side }
@@ -76,7 +79,7 @@ struct SlopePackBand {
             // The floats keep to the trailing side; the others stand in the middle of their room.
             let left = at == .surface ? to - run : from + (to - from - run) / 2
             let list = slots == named ? nil : words.map { $0.name.replacingOccurrences(of: " ", with: "\u{00A0}") }.joined(separator: " \u{00B7} ")
-            let wide = at == .surface ? min(max(run, 200), to - 20) : to - left
+            let wide = at == .surface ? min(max(run, 200), to - 20) : at == .reef ? to - left : to - from
             let said = caption.map { SlopeMeasure.height($0, .detail, width: wide, at: type) } ?? 0
             let listed = list.map { SlopeMeasure.height($0, .detail, width: wide, at: type) } ?? 0
             // Over the floats is air, so their line goes under their names; the others' leads them.
@@ -84,22 +87,22 @@ struct SlopePackBand {
             var x = left
             var seats: [CGPoint] = []
             for (i, slot) in slots.enumerated() {
-                // Floats lie level on the water; caves wander a little, never in a ruled row.
+                // Floats lie level on the water; caves and lights wander a little, never in a ruled row.
                 let wander = at == .surface ? 0 : 4 * (1 + sin(2.1 * CGFloat(i) + 4.2))
                 seats.append(CGPoint(x: x + slot / 2, y: top + side / 2 + wander))
                 x += slot + gap
             }
             self.seats = seats
             self.side = side
-            dress = at == .surface ? .float : .hollow
+            dress = at == .surface ? .float : at == .reef ? .hollow : .light
             beside = nil
             names = list
             let under = top + side + (at == .surface ? 0 : 8)
             namesAt = under + 8
             let foot = list == nil ? under + 10 * side / SlopeHollow.full + lines * (line + 2) : under + 8 + listed
             captionWidth = wide
-            captionAlignment = at == .surface ? .trailing : .leading
-            captionAt = CGPoint(x: at == .surface ? to - wide : left, y: at == .surface ? foot + 5 : 4)
+            captionAlignment = at == .surface ? .trailing : at == .reef ? .leading : .center
+            captionAt = CGPoint(x: at == .surface ? to - wide : at == .reef ? left : from, y: at == .surface ? foot + 5 : 4)
             height = at == .surface ? foot + 5 + said : foot
         } else {
             // Stacked under the anchor, as the dive sets a hollow at the largest sizes: the cover leading, its words
@@ -119,7 +122,7 @@ struct SlopePackBand {
             }
             self.seats = seats
             self.side = SlopeHollow.full
-            dress = .hollow
+            dress = at == .deep ? .light : .hollow
             beside = room
             names = nil
             namesAt = 0
@@ -179,7 +182,7 @@ struct SlopePackRow: View {
 
         func body(content: Content) -> some View {
             content
-                .multilineTextAlignment(band.captionAlignment == .trailing ? .trailing : .leading)
+                .multilineTextAlignment(band.captionAlignment == .trailing ? .trailing : band.captionAlignment == .center ? .center : .leading)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(width: band.captionWidth, alignment: band.captionAlignment)
                 .shadow(color: Color(0x03060A).opacity(0.7), radius: 3)

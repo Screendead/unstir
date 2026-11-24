@@ -26,7 +26,8 @@ struct SlopeHollow: View {
     @State private var middle = CGPoint.zero
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    enum Dress { case hollow, float }
+    /// `light`: the opening alone, hanging in open water with no rock round it.
+    enum Dress { case hollow, float, light }
 
     static let full: CGFloat = 58
     /// The opening's middle at the accessibility sizes, from the screen's leading edge, where the menu sets it.
@@ -87,7 +88,7 @@ struct SlopeHollow: View {
             if dress == .float {
                 float(light)
             } else {
-            if beside != nil {
+            if beside != nil, dress == .hollow {
                 // Sandstone in shade, as the slope's own wall, swelling from the leading edge round the opening.
                 Ellipse()
                     .fill(RadialGradient(stops: [.init(color: Color(red: 0.52, green: 0.39, blue: 0.29), location: 0),

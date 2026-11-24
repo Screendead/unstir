@@ -647,10 +647,13 @@ struct SlopeMenuPlan {
         } else if let band, band.at == .reef {
             taken = band.height + Self.bandFoot
             column.stretches[1].above = taken
+        } else if let band {
+            taken = band.height + Self.bandFoot
+            column.sunk = taken
         }
         if band != nil, model.modes {
             // Endless's words rise to keep clear of the home bar (`lift`). With the tiers giving up room to the covers,
-            // the foot gets what the words rise by, so they stay clear of maelstrom's.
+            // the foot gets what the words rise by, so they meet neither maelstrom's words nor the lights over them.
             let words = line(.title) / 2 + (model.endlessLine != nil ? 4 + line(.detail) : 0) + (model.continues ? 10 + line(.body) : 0)
             let tiers = column.stretches.reduce(0) { $0 + ($1.height ?? 0) }
             let risen = max(0.188 * size.height + column.lead - (band?.at == .surface ? taken : 0) + tiers + 46 + words - (size.height - bottom - 8), 0)
@@ -779,6 +782,7 @@ struct SlopeMenuPlan {
         switch band.at {
         case .surface: return nil
         case .reef: return SlopeAim(ledge: SlopeColumn.ledge(tier: 0, level: 1), share: 0.8)
+        case .deep: return SlopeAim(ledge: wide.count - 1, share: 0.25)
         }
     }
 
@@ -1010,6 +1014,7 @@ private struct SlopeMenuWorld: View {
             let y: CGFloat = switch band.at {
             case .surface: view.y(0)
             case .reef: view.y(lay.tops[SlopeColumn.ledge(tier: 0, level: 1)]) - band.height - SlopeMenuPlan.bandFoot - 6
+            case .deep: view.y(lay.foot) + 8
             }
             SlopePackRow(band: band, view: view, yours: band.at == .surface ? yours : nil, hollow: hollow)
                 .opacity(wide).allowsHitTesting(wide >= 1)
