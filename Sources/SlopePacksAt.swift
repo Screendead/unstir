@@ -8,6 +8,8 @@ import SwiftUI
 enum SlopePacksAt: String {
     /// Glass floats riding the water line beside the bank, their names in the shallows under them.
     case surface = "a"
+    /// Lit caves in a spur of the far ridge that reaches across the water between the shallows and plughole.
+    case reef = "b"
 
     /// UNSTIR_PACKSAT=a, the harness's.
     static let chosen: SlopePacksAt? = {
@@ -17,10 +19,12 @@ enum SlopePacksAt: String {
         nil
         #endif
     }()
+
+    static let shows = ProcessInfo.processInfo.environment["UNSTIR_PACKSHOW"] == "1"
 }
 
 /// The covers' places at the overview for one screen, type size and shelf, measured from the band's own anchor: the
-/// water line for the floats. Where their names would meet in a row, the row stacks and each name stands beside its
+/// water line for the floats, the band's top for the others. Where their names would meet in a row, the row stacks and each name stands beside its
 /// cover (docs/slope.md, 1.1).
 struct SlopePackBand {
     /// What is written by a cover: its name, whether a glyph follows it, and its line.
@@ -34,8 +38,9 @@ struct SlopePackBand {
     let seats: [CGPoint]
     /// The room each cover's words have beside it once the row has stacked; nil in a row, where they stand under it.
     let beside: CGFloat?
-    /// The names in one line under a row whose covers stand too close for a name under each; it ends over the packs' line.
+    /// The names in one line under a row whose covers stand too close for a name under each, and its top.
     let names: String?
+    let namesAt: CGFloat
     /// The packs' line, its leading top, its width and how it is set in it.
     let caption: String?
     let captionAt: CGPoint
@@ -55,40 +60,47 @@ struct SlopePackBand {
         let under = words.map { max(width($0.name, name) + ($0.mark ? name.pointSize + 4 : 0), $0.line.map { width($0, data) } ?? 0) }
         let lines: CGFloat = words.contains { $0.line != nil } ? 2 : 1
         let side: CGFloat = at == .surface ? 46 : SlopeHollow.full
-        // The floats start clear of the stone on the bank and its word.
-        let from: CGFloat = at == .surface ? 60 + width(String(localized: "settings"), name) + 16 : 0
+        // The floats start clear of the stone on the bank and its word; the reef's caves clear of the slope's wall.
+        let from: CGFloat = switch at {
+        case .surface: 60 + width(String(localized: "settings"), name) + 16
+        case .reef: 56
+        }
         let to = size.width - 20, gaps = CGFloat(offers.count - 1)
         // In a row with each name under its cover; where the names would meet, the covers alone with the names in one
         // line under them all; where even those don't fit, or at the largest sizes, stacked.
         let named = under.map { max($0, side) }, bare = under.map { _ in side }
         let fits = [named, bare].first { $0.reduce(0, +) + 10 * gaps <= to - from }
         if !type.isAccessibilitySize, let slots = fits {
-            let across = slots.reduce(0, +), gap = gaps > 0 ? min((to - from - across) / gaps, 22) : 0
-            var x = to - across - gap * gaps
+            let across = slots.reduce(0, +), gap = gaps > 0 ? min((to - from - across) / gaps, at == .surface ? 22 : 30) : 0
+            let run = across + gap * gaps
+            // The floats keep to the trailing side; the others stand in the middle of their room.
+            let left = at == .surface ? to - run : from + (to - from - run) / 2
+            let list = slots == named ? nil : words.map { $0.name.replacingOccurrences(of: " ", with: "\u{00A0}") }.joined(separator: " \u{00B7} ")
+            let wide = at == .surface ? min(max(run, 200), to - 20) : to - left
+            let said = caption.map { SlopeMeasure.height($0, .detail, width: wide, at: type) } ?? 0
+            let listed = list.map { SlopeMeasure.height($0, .detail, width: wide, at: type) } ?? 0
+            // Over the floats is air, so their line goes under their names; the others' leads them.
+            let top = at == .surface ? -side * SlopeHollow.draught : 4 + said + (said > 0 ? 9 : 0)
+            var x = left
             var seats: [CGPoint] = []
-            for slot in slots {
-                // The water line crosses a float `draught` of the way down it.
-                seats.append(CGPoint(x: x + slot / 2, y: side * (0.5 - SlopeHollow.draught)))
+            for (i, slot) in slots.enumerated() {
+                // Floats lie level on the water; caves wander a little, never in a ruled row.
+                let wander = at == .surface ? 0 : 4 * (1 + sin(2.1 * CGFloat(i) + 4.2))
+                seats.append(CGPoint(x: x + slot / 2, y: top + side / 2 + wander))
                 x += slot + gap
             }
             self.seats = seats
             self.side = side
-            dress = .float
+            dress = at == .surface ? .float : .hollow
             beside = nil
-            let wide = min(max(to - seats[0].x + slots[0] / 2, 200), to - 20)
-            var foot = side * (1 - SlopeHollow.draught)
-            if slots == named {
-                names = nil
-                foot += 10 * side / SlopeHollow.full + lines * (line + 2)
-            } else {
-                let list = words.map { $0.name.replacingOccurrences(of: " ", with: "\u{00A0}") }.joined(separator: " \u{00B7} ")
-                names = list
-                foot += 8 + SlopeMeasure.height(list, .detail, width: wide, at: type)
-            }
+            names = list
+            let under = top + side + (at == .surface ? 0 : 8)
+            namesAt = under + 8
+            let foot = list == nil ? under + 10 * side / SlopeHollow.full + lines * (line + 2) : under + 8 + listed
             captionWidth = wide
-            captionAt = CGPoint(x: to - wide, y: foot + 5)
-            captionAlignment = .trailing
-            height = foot + 5 + (caption.map { SlopeMeasure.height($0, .detail, width: wide, at: type) } ?? 0)
+            captionAlignment = at == .surface ? .trailing : .leading
+            captionAt = CGPoint(x: at == .surface ? to - wide : left, y: at == .surface ? foot + 5 : 4)
+            height = at == .surface ? foot + 5 + said : foot
         } else {
             // Stacked under the anchor, as the dive sets a hollow at the largest sizes: the cover leading, its words
             // beside it, wrapping.
@@ -110,12 +122,10 @@ struct SlopePackBand {
             dress = .hollow
             beside = room
             names = nil
+            namesAt = 0
             height = y - 16
         }
     }
-
-    /// Where the names' line starts, over the packs' line.
-    var namesAt: CGFloat { side * (1 - SlopeHollow.draught) + 8 }
 
     /// How much further down the overview's first ledge stands for the floats' words: what they reach under the water
     /// line, less the room the shallows already leave over "today", whose first line's middle is 8 pt over the ledge.
@@ -133,21 +143,24 @@ struct SlopePackRow: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            VStack(alignment: band.captionAlignment.horizontal, spacing: 5) {
-                if let names = band.names { Text(names).font(.slope(.ui, .detail)).ink(.ink) } // loc: verbatim the packs' names
+            if band.at == .reef, band.beside == nil, let first = band.seats.first {
+                SlopeReef(nose: first.x - band.side / 2 - 40, top: (band.seats.map(\.y).min() ?? 0) - band.side / 2 - 13,
+                          foot: (band.seats.map(\.y).max() ?? 0) + band.side / 2 + 13)
+                    .fill(LinearGradient(colors: [Color(0x04121A).opacity(0.3), Color(0x04121A).opacity(0.55)], startPoint: .leading, endPoint: .trailing))
+                    .accessibilityHidden(true)
+            }
+            if let names = band.names {
+                words(Text(names).font(.slope(.ui, .detail)).foregroundStyle(SlopeInk.ink.colour), at: band.namesAt) // loc: verbatim the packs' names
+            }
+            Group {
                 if let yours {
                     Text(yours.yours).font(.slope(.place, .body)).foregroundStyle(yours.ink).transition(.opacity) // loc: verbatim localized by Offer
                 } else if let caption = band.caption {
                     Text(caption).font(.slope(.ui, .detail)).ink(.ink3).transition(.opacity) // loc: verbatim localized by Menu.packsCaption
                 }
             }
-            .multilineTextAlignment(band.captionAlignment == .trailing ? .trailing : .leading)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(width: band.captionWidth, alignment: band.captionAlignment)
-            .shadow(color: Color(0x03060A).opacity(0.7), radius: 3)
-            .accessibilityHidden(true)
+            .modifier(Lined(band: band, y: band.captionAt.y))
             .animation(.easeInOut(duration: 0.4), value: yours)
-            .offset(x: band.captionAt.x, y: band.names == nil ? band.captionAt.y : band.namesAt)
             ForEach(Array(band.offers.enumerated()), id: \.element) { i, offer in
                 let seat = band.seats[i]
                 hollow(offer, SlopeSpot(view: view, ledge: 0, point: seat, side: band.side, near: band.names == nil ? 1 : 0, dress: band.dress, beside: band.beside))
@@ -155,5 +168,46 @@ struct SlopePackRow: View {
             }
         }
         .frame(width: view.size.width, height: max(band.height, 1), alignment: .topLeading)
+    }
+
+    private func words(_ text: Text, at y: CGFloat) -> some View { text.modifier(Lined(band: band, y: y)) }
+
+    /// A line of the band's own words, set in its width with the water's shade under it.
+    private struct Lined: ViewModifier {
+        let band: SlopePackBand
+        let y: CGFloat
+
+        func body(content: Content) -> some View {
+            content
+                .multilineTextAlignment(band.captionAlignment == .trailing ? .trailing : .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: band.captionWidth, alignment: band.captionAlignment)
+                .shadow(color: Color(0x03060A).opacity(0.7), radius: 3)
+                .accessibilityHidden(true)
+                .offset(x: band.captionAt.x, y: y)
+        }
+    }
+}
+
+/// A spur of the far ridge reaching across the water from the trailing edge to a blunt nose: a flat shape in the far
+/// ridges' tone, its top and foot wandering, for the reef's caves to open in.
+struct SlopeReef: Shape {
+    let nose: CGFloat
+    let top: CGFloat
+    let foot: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let middle = (top + foot) / 2, half = (foot - top) / 2
+        // Thin at the nose, whole within 90 pt of it.
+        func swell(_ x: CGFloat) -> CGFloat { sqrt(min(max((x - nose) / 90, 0), 1)) }
+        func upper(_ x: CGFloat) -> CGFloat { middle - half * swell(x) + 5 * sin(x * 0.023 + 1.1) + 2.5 * sin(x * 0.061) }
+        func lower(_ x: CGFloat) -> CGFloat { middle + half * swell(x) + 6 * sin(x * 0.019 + 2.7) + 2.5 * sin(x * 0.047 + 0.8) }
+        let end = rect.maxX + 4
+        var path = Path()
+        path.move(to: CGPoint(x: nose, y: (upper(nose) + lower(nose)) / 2))
+        for x in stride(from: nose, through: end, by: 4) { path.addLine(to: CGPoint(x: x, y: upper(x))) }
+        for x in stride(from: end, through: nose, by: -4) { path.addLine(to: CGPoint(x: x, y: lower(x))) }
+        path.closeSubpath()
+        return path
     }
 }

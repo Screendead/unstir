@@ -302,7 +302,7 @@ struct SlopeMenu: View {
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false, eggs: eggs,
+        SlopeDive(column: plan.column, aim: plan.bandAim, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false, eggs: eggs,
                   onMove: { scroll.wide = $0 }) { view in
             world(view, plan, cull: false)
         }
@@ -607,6 +607,8 @@ struct SlopeMenuPlan {
     /// From a header's foot to its stretch's first ledge, and from a stretch's top at the overview to its words.
     static let headerFoot: CGFloat = 48
     static let bandLead: CGFloat = -8
+    /// From the foot of the packs' covers' band at the overview to what lies under it.
+    static let bandFoot: CGFloat = 10
 
     init(size: CGSize, type: DynamicTypeSize, model: SlopeMenuModel, top: CGFloat, bottom: CGFloat = 0) {
         self.size = size
@@ -642,6 +644,18 @@ struct SlopeMenuPlan {
         if let band, band.at == .surface {
             taken = band.sinks(lead: column.lead, title: line(.title))
             column.lead += taken
+        } else if let band, band.at == .reef {
+            taken = band.height + Self.bandFoot
+            column.stretches[1].above = taken
+        }
+        if band != nil, model.modes {
+            // Endless's words rise to keep clear of the home bar (`lift`). With the tiers giving up room to the covers,
+            // the foot gets what the words rise by, so they stay clear of maelstrom's.
+            let words = line(.title) / 2 + (model.endlessLine != nil ? 4 + line(.detail) : 0) + (model.continues ? 10 + line(.body) : 0)
+            let tiers = column.stretches.reduce(0) { $0 + ($1.height ?? 0) }
+            let risen = max(0.188 * size.height + column.lead - (band?.at == .surface ? taken : 0) + tiers + 46 + words - (size.height - bottom - 8), 0)
+            taken += max(risen - 21, 0)
+            column.sunk += max(risen - 21, 0)
         }
         var needs: [CGFloat] = []
         for (t, tier) in model.tiers.enumerated() {
@@ -691,7 +705,7 @@ struct SlopeMenuPlan {
         let spare = max(share - needs.reduce(0, +), 0) / CGFloat(max(needs.count, 1))
         for (t, need) in needs.enumerated() { column.stretches[t + 1].height = need + spare }
         // Endless's word, its line and "new run" under its middle; the default sizes fit what the overview leaves.
-        if model.modes, large { column.under = line(.title) / 2 + 2 * line(.detail) + line(.body) + 24 }
+        if model.modes, large || (band != nil && needs.reduce(0, +) > share) { column.under = line(.title) / 2 + 2 * line(.detail) + line(.body) + 24 }
         self.headers = headers
         self.column = column
         deep = SlopeLay(column, z: 1)
@@ -759,6 +773,15 @@ struct SlopeMenuPlan {
         return SlopeAim(ledge: n, share: (deep.tops[n] - camera) / h)
     }
 
+    /// UNSTIR_PACKSHOW=1, the harness's: where the overview scrolls, it opens with the covers' band in sight.
+    var bandAim: SlopeAim? {
+        guard let band, SlopePacksAt.shows else { return nil }
+        switch band.at {
+        case .surface: return nil
+        case .reef: return SlopeAim(ledge: SlopeColumn.ledge(tier: 0, level: 1), share: 0.8)
+        }
+    }
+
     /// The dive's foot: endless's word at the middle of the screen, held by the last ledge.
     var foot: SlopeAim {
         let n = deep.count - 1
@@ -805,6 +828,8 @@ struct SlopeMenuModel {
     let endless: Level
     let endlessLine: String?
     let endlessNew: Bool
+    /// A run is saved: "new run" stands under endless's line.
+    let continues: Bool
     /// The best run's tanks, as lights under the word while no run is saved.
     let lights: Int
     let spokenEndless: (label: String, value: String, hint: String)
@@ -857,6 +882,7 @@ struct SlopeMenuModel {
         endless = .endless(kept ?? Run(seed: .random(in: .min ... .max)))
         endlessLine = Menu.endlessLine(saved, tanks: tanks)
         endlessNew = new && kept == nil
+        continues = kept != nil
         lights = kept == nil ? min(tanks, 24) : 0
         spokenEndless = Spoken.marked(Spoken.row(endless, result: nil, tanks: tanks,
                                                  detail: kept != nil ? endlessLine : nil,
@@ -983,8 +1009,9 @@ private struct SlopeMenuWorld: View {
         if let band = plan.band, let hollow, wide > 0 {
             let y: CGFloat = switch band.at {
             case .surface: view.y(0)
+            case .reef: view.y(lay.tops[SlopeColumn.ledge(tier: 0, level: 1)]) - band.height - SlopeMenuPlan.bandFoot - 6
             }
-            SlopePackRow(band: band, view: view, yours: yours, hollow: hollow)
+            SlopePackRow(band: band, view: view, yours: band.at == .surface ? yours : nil, hollow: hollow)
                 .opacity(wide).allowsHitTesting(wide >= 1)
                 .slopePlace(CGPoint(x: 0, y: y), anchor: .topLeading)
         }
@@ -1244,7 +1271,7 @@ private struct SlopeMenuWorld: View {
             }
             .slopePlace(CGPoint(x: x, y: y), anchor: UnitPoint(x: 0.5, y: 0))
             // At the overview the word stands as much higher as keeps its line and "new run" clear of the home bar.
-            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large ? 0 : lift(from: y, continues: continues) * (1 - lay.e)))
+            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large || (plan.band != nil && plan.scrolls) ? 0 : lift(from: y, continues: continues) * (1 - lay.e)))
         }
         if model.sandbox, near > 0, shown(y, 400) {
             // Debug's sandbox, out of v1: a plain row under the brink.
