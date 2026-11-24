@@ -1202,6 +1202,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
     column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
     overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.
+  - `SlopeEggs.swift` is the menu's eggs (Jack's call on issue 306: found, never told, rewarding nothing): a
+    `SlopeEggs` only `SlopeMenu` hands its ground, which Slope.metal reads as a `SlopeEgg`, every term skipped at 0, so
+    any other ground draws and costs what it did. `UNSTIR_EGG` (Debug) shows each without its finger
+    (scripts/shots/slope-eggs.sh, `film.sh slope-egg-`), and `scripts/slope-lab.sh` takes each as a number.
+    - Still water: where any other ground's clock stops at once on `Power.idle`, the menu's slows to a stop over
+      `Calm.settle` (4.4 s) as the surface flattens, the light reaches down, the ridges come out of the haze and the
+      motes thin, and a touch brings it back over `Calm.wake`. `Power.calm` holds the turn and what the clock has
+      lost to it, so the ground and the dive's veil read both for any moment and the ground draws only while
+      `Power.turning`. The way on's glow breathes out and holds (`\.slopeStill`). Reduce Motion and `Power.saving`
+      have none of it. Its light is kept under the shallows' own brightest, so the inks keep their floors.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

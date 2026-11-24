@@ -107,6 +107,21 @@ static float3 slopeSand(float3 rock, float3 lit, float3 water, float tone, float
     return mix(mix(rock * 0.5, water * 2.4, 0.42), rock * 1.36 + lit * 0.05, smoothstep(0.4, 1.3, tone)) + lit * glint;
 }
 
+// What the menu's ground may show beyond the slope (SlopeEggs, docs/architecture.md): each term is skipped while its
+// number is 0, so a ground with none costs what it did.
+struct SlopeEgg {
+    // How far the night stands over the surface, the mirrored sky under the foot, still water, and a meteor night.
+    float night, deep, calm, meteors;
+    // The moon's terminator across its disc (1 new, -1 full) and its lit side (1 the trailing, -1 the leading).
+    float2 moon;
+    // The depth the mirrored sky starts at, and how far its lights have come out.
+    float2 mirror;
+    // A skimmed stone: seconds since it left the hand, where it first touched, its first hop (signed), its touches.
+    float4 skim;
+    // Gold in each tier's rock.
+    float4 seam;
+};
+
 // view: pixels to a point, the ground's clock in seconds, how much of the near silhouette shows, and of the motes.
 // play: how far a level has taken the screen (the shelf draws aside and one terrace rises under the tank), a solved
 // tank's glint, Prism's clear water, and the ground's light (1 its own; consent draws it at 0.35).
@@ -115,7 +130,7 @@ static float3 slopeSand(float3 rock, float3 lit, float3 water, float tone, float
 // upper: a second terrace over the lone one, a short lip of the same rock for a stone with a row of its own: the
 // middle of its top on the screen, half its width, and how far it is there.
 static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, float4 upper,
-                          device const float *g) {
+                          device const float *g, SlopeEgg egg) {
     float top = g[0], open = g[1], count = g[3], foot = g[4];
     float tm = view.y;
     float x = pos.x + 280.0 * play.x;
@@ -149,9 +164,11 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     float3 wc = slopeWater(m);
     if (g[5] == 1.0) wc = mix(wc, float3(0.008, 0.006, 0.014), smoothstep(-0.5, 2.0, past));
     float surface = -top;
-    float d = g[6] > 0.0 ? pos.y - (surface + 3.2 * sin(pos.x * 0.024 + tm * 1.1) + 1.8 * sin(pos.x * 0.063 - tm * 1.6 + 1.3)) : 1000.0;
+    // Still water lies flat, and light reaches further down it.
+    float calm = egg.calm;
+    float d = g[6] > 0.0 ? pos.y - (surface + (1.0 - calm) * (3.2 * sin(pos.x * 0.024 + tm * 1.1) + 1.8 * sin(pos.x * 0.063 - tm * 1.6 + 1.3))) : 1000.0;
     float under = step(0.0, d);
-    float sun = exp(-max(m + 2.8, 0.0) / 26.0) * 0.75 + 0.25;
+    float sun = exp(-max(m + 2.8, 0.0) / (26.0 + 90.0 * calm)) * 0.75 + 0.25;
     float3 col;
     if (d < 0.0) {
         // The air: dusk, warm along the water.
@@ -161,10 +178,10 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         col = wc;
         float sx = pos.x + d * 0.32 + tm * 4.0;
         float rays = slopeNoise(float2(sx * 0.016, 1.7)) * slopeNoise(float2(sx * 0.041 + 9.0, tm * 0.12));
-        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / 8.0) * 0.08;
+        col += float3(0.85, 0.78, 0.55) * smoothstep(0.12, 0.55, rays) * exp(-max(m + 2.8, 0.0) / (8.0 + 44.0 * calm)) * 0.08 * (1.0 - 0.3 * calm);
         col += float3(0.55, 0.50, 0.30) * exp(-d / 46.0) * 0.16;
         col += float3(0.45, 0.30, 0.10) * exp(-length((pos - float2(40.0, surface)) * float2(0.004, 0.0046))) * 0.16;
-        col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * 0.5;
+        col += float3(1.0, 0.9, 0.72) * exp(-d / 1.3) * (0.5 + 0.3 * calm);
     }
 
     // Two far ridges, each moving slower than the shelf, and both ending at the drop-off. Haze takes them towards the
@@ -179,6 +196,8 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float3 rc = wc * (0.80 - 0.22 * fj);
         // Light from above catches the ridge's shoulder where there is light to catch.
         rc += wc * 0.5 * sun * sun * exp(-max(pos.x - e, 0.0) / (10.0 + 8.0 * fj)) * (0.5 + 0.5 * sin(yy * 0.061 + fj + 1.6)) * (0.6 - 0.25 * fj);
+        // In still water the far ridges come out of the haze.
+        rc += wc * calm * (0.5 - 0.2 * fj) * exp(-max(pos.x - e, 0.0) / (26.0 + 30.0 * fj));
         col = mix(col, rc, smoothstep(-soft, soft, pos.x - e) * under * smoothstep(0.0, 40.0, d));
     }
 
@@ -312,7 +331,7 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
         float2 jo = float2(slopeHash(id), slopeHash(id + 7.1)) - 0.5;
         float r = length((fr - jo * 0.7) * cell);
         float b = smoothstep(0.7 + fk * 0.5, 0.0, r) * step(0.55, slopeHash(id + 3.3));
-        col += float3(0.95, 0.9, 0.75) * b * (0.08 + fk * 0.06) * view.w * under * falling;
+        col += float3(0.95, 0.9, 0.75) * b * (0.08 + fk * 0.06) * view.w * under * falling * (1.0 - 0.7 * calm);
     }
     if (falling < 1.0) {
         float2 q = float2(pos.x - tm * 3.0, pos.y + top * open * 0.8 + 6.0 * sin(pos.x * 0.011 + tm * 0.2)) / 150.0;
@@ -350,9 +369,19 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     return col;
 }
 
+// The ground with no eggs: every screen's but the menu's.
+static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, float4 lone, float paper, float4 upper,
+                          device const float *g) {
+    SlopeEgg none = {};
+    return slopeGround(pos, size, view, play, lone, paper, upper, g, none);
+}
+
+// eggs: SlopeEggs.uniforms, a SlopeEgg's numbers in its own order.
 [[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
-                             float4 upper, device const float *g, int count) {
-    float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g);
+                             float4 upper, device const float *g, int count, device const float *eggs, int eggCount) {
+    SlopeEgg egg = { eggs[0], eggs[1], eggs[2], eggs[3], float2(eggs[4], eggs[5]), float2(eggs[6], eggs[7]),
+                     float4(eggs[8], eggs[9], eggs[10], eggs[11]), float4(eggs[12], eggs[13], eggs[14], eggs[15]) };
+    float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g, egg);
     // The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel,
     // keeps them from banding and never crawls.
     float2 pixel = floor(pos * view.x);

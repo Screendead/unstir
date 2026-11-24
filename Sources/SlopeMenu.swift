@@ -128,7 +128,9 @@ struct SlopeMenu: View {
     }
 
     private var covered: Bool { card != nil || archive || settings }
-    private var still: Bool { covered || peeking || playing != nil || Power.shared.saving || Power.shared.idle }
+    /// Idle is the ground's own to answer: its water goes still (`SlopeEggs`).
+    private var still: Bool { covered || peeking || playing != nil || Power.shared.saving }
+    private var eggs: SlopeEggs { SlopeEggs() }
 
     var body: some View {
         watched
@@ -180,7 +182,13 @@ struct SlopeMenu: View {
             }
             chrome(plan, below: below && !bare)
         }
-        .onAppear { settle(plan) }
+        .environment(\.slopeStill, Power.shared.idle && !reduceMotion && !still)
+        .onAppear {
+            settle(plan)
+            #if DEBUG
+            SlopeEggHarness.start()
+            #endif
+        }
         .onChange(of: dragging) { if !dragging { released(plan) } }
         .onChange(of: start) { if let start { enter(start, plan) } }
     }
@@ -195,7 +203,8 @@ struct SlopeMenu: View {
     /// The overview, and every move of the camera.
     private func scene(_ plan: SlopeMenuPlan) -> some View {
         let at = share ?? plan.overview(holding: hold)
-        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large) { view in
+        return SlopeScene(column: plan.column, focus: hold, at: at, z: zoom, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large,
+                          eggs: eggs) { view in
             world(view, plan, cull: true)
         }
         .allowsHitTesting(!moving)
@@ -207,7 +216,7 @@ struct SlopeMenu: View {
 
     /// The dive at rest, the finger's to scroll, opened where the camera came to rest.
     private func dive(_ plan: SlopeMenuPlan, aim: SlopeAim?) -> some View {
-        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, onMove: { top in
+        SlopeDive(column: plan.column, aim: aim, held: still, look: SlopeLook(light: light), clock: clock, near: !plan.large, eggs: eggs, onMove: { top in
             scroll.top = top
             let up = top < 1
             if up != surfaced { surfaced = up }
@@ -227,7 +236,7 @@ struct SlopeMenu: View {
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false,
+        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false, eggs: eggs,
                   onMove: { scroll.wide = $0 }) { view in
             world(view, plan, cull: false)
         }

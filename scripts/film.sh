@@ -384,3 +384,6 @@ fi
 # overview's depth opening onto plughole 14, the scrolling dive taking over where it lands, and closing again.
 film slope-descent 19 "fps=2,scale=165:-1,tile=10x4:padding=4" SLOPE=descent SLOPESECONDS=16
 film slope-zoom 20 "fps=4,scale=165:-1,tile=10x8:padding=4" SLOPE=zoom SLOPEAT=L14
+# The slope's eggs (SlopeEggs.swift, UNSTIR_EGG), each shown without its finger.
+eggs=(SLOPE=1 SCREEN=menu BESTS=plughole:000000000000000000000000000,endless:9 DAILIES=4)
+film slope-egg-still 11 "fps=2,scale=165:-1,tile=11x2:padding=4" "${eggs[@]}" EGG=still

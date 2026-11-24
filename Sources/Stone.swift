@@ -36,6 +36,7 @@ struct SlopePebble: View {
     static func lean(_ n: Int) -> Angle { .radians(0.22 * sin(Double(n) * 1.7 + 0.5)) }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.slopeStill) private var stilled
     @State private var swollen = false
 
     private var stops: [Color] {
@@ -83,6 +84,12 @@ struct SlopePebble: View {
         .onAppear {
             guard let breath, !reduceMotion else { return }
             withAnimation(.easeInOut(duration: breath / 2).repeatForever(autoreverses: true)) { swollen = true }
+        }
+        .onChange(of: stilled) {
+            // Still water: the glow breathes out and holds, and breathes again at a touch.
+            guard let breath, !reduceMotion else { return }
+            let out = Animation.easeInOut(duration: breath / 2)
+            withAnimation(stilled ? out : out.repeatForever(autoreverses: true)) { swollen = !stilled }
         }
         .accessibilityHidden(true)
     }
