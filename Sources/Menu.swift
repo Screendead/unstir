@@ -512,8 +512,7 @@ struct MenuView: View {
     /// The modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
     /// the end under "anything goes" (Jack's call D2 = A, round 13), so the list leads with 01.
     private func rows(_ lead: Menu.Lead) -> some View {
-        let sandbox = LevelRow(level: .sandbox, detail: String(localized: "any picture, any rods \u{00B7} nothing counts",
-                                                               comment: "The sandbox's row, under its title"), enabled: true,
+        let sandbox = LevelRow(level: .sandbox, detail: nil, enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
             Color.clear.frame(height: 0).id(Self.top)
@@ -538,8 +537,7 @@ struct MenuView: View {
                                           comment: "Endless's row, a run saved: its tank, its brim, then the best run's tanks")
                                  : String(localized: "continue \u{00B7} tank \(tank) \u{00B7} brim \(brim)",
                                           comment: "Endless's row, a run saved: its tank, then its brim")
-                         } ?? String(localized: "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                                     comment: "VoiceOver: endless's row. Eight is the brim's room, in words"),
+                         },
                          best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)", comment: "Endless's row: the best run's tanks") : nil, enabled: true,
                          new: new && kept == nil, continues: kept != nil, brief: kept == nil, playing: playing?.run != nil,
                          pick: pick, refuse: refuse)

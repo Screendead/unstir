@@ -106,27 +106,23 @@ enum Offer: Hashable, Sendable {
 
     var productID: String { pack?.productID ?? Pack.triptychID }
 
-    var pitch: String {
+    /// The pack's pitch; the bundle has none.
+    var pitch: String? {
         switch self {
         case .pack(.firstStir): String(localized: "a story told backwards", comment: "First Stir's pitch, on its card")
         case .pack(.lens): String(localized: "some rods zoom instead of turning", comment: "Lens's pitch, on its card")
         case .pack(.escapement): String(localized: "clocks tick after every move, on a budget of ticks",
                                         comment: "Escapement's pitch, on its card")
         case .pack(.prism): String(localized: "each rod stirs only some colours", comment: "Prism's pitch, on its card")
-        case .complete: String(localized: "three packs, for less", comment: "The bundle's pitch, on its card")
+        case .complete: nil
         }
     }
 
-    /// What the pack assumes of the player, as its card says it.
-    var assumes: String {
+    /// What the pack assumes of the player, as its card says it; the free levels show the rest (Jack, #308).
+    var assumes: String? {
         switch self {
         case .pack(.firstStir): String(localized: "anyone \u{00B7} an evening, not a challenge", comment: "Who First Stir is for")
-        case .pack(.lens): String(localized: "after plughole", comment: "Who Lens is for. The first tier, in lower case")
-        case .pack(.escapement): String(localized: "hard \u{00B7} composed problems", comment: "Who Escapement is for")
-        case .pack(.prism): String(localized: "after plughole \u{00B7} reading by colour",
-                                   comment: "Who Prism is for. The first tier, in lower case")
-        case .complete: String(localized: "after plughole, then harder",
-                               comment: "Who the bundle is for. The first tier, in lower case")
+        default: nil
         }
     }
 
@@ -134,12 +130,7 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): String(localized: "\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
                                        comment: "What First Stir holds. Its levels counted")
-        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
-                                  comment: "What Lens holds. Its levels counted")
-        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
-                                        comment: "What Escapement holds. Its levels counted")
-        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in five trays",
-                                   comment: "What Prism holds. Its levels counted")
+        case .pack(let pack): pack.counted(pack.planned)
         case .complete: String(localized: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels",
                                comment: "What the bundle holds. Its packs, then their levels")
         }
@@ -449,20 +440,14 @@ extension Shop {
             ledge.label = String(localized: "asked", comment: "The buy pill, an Ask to Buy sent: tapped, sends it again")
             ledge.spoken = String(localized: "Ask again for \(offer.name)", comment: "VoiceOver: the buy pill, an Ask to Buy sent. The pack")
             ledge.under = [Line(words: String(localized: "waiting for approval", comment: "A pack's card: its Ask to Buy sent"),
-                                signal: .amber, light: true),
-                           Line(words: failure?.words
-                                ?? String(localized: "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again.",
-                                          comment: "A pack's card: its Ask to Buy sent. Asked is the buy pill's word"))]
+                                signal: .amber, light: true)] + (failure?.words.map { [Line(words: $0)] } ?? [])
         case .pending:
             // Waiting on Triptych I's request alone: the pack's own stone still buys it alone.
             ledge.label = String(localized: "buy", comment: "The buy pill")
             ledge.spoken = String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
             ledge.under.insert(contentsOf: [
                 Line(words: String(localized: "\(Offer.bundleName) is waiting for approval", comment: "A pack's card: the bundle's Ask to Buy sent"),
-                     signal: .amber, light: true),
-                Line(words: failure?.words
-                     ?? String(localized: "Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.",
-                               comment: "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"))], at: 0)
+                     signal: .amber, light: true)] + (failure?.words.map { [Line(words: $0)] } ?? []), at: 0)
         case .unowned, .owned:
             ledge.label = String(localized: "buy", comment: "The buy pill")
             ledge.spoken = String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")

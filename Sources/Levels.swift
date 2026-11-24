@@ -656,8 +656,6 @@ struct Level: Hashable, Sendable {
 
     static let sandbox = Level(id: "sandbox", label: String(localized: "box", comment: "The sandbox's row, in a level number's place"), title: String(localized: "Sandbox",
                                                                           comment: "The sandbox's title"),
-                               note: String(localized: "Stir anything. Undo is free here.",
-                                            comment: "The sandbox's line under the tank"),
                                layout: .tri, scramble: [])
 
     /// Out of v1 until it offers what the packs a player owns add (Jack's call snd2-sandbox, round 16): a Release build

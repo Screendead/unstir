@@ -741,9 +741,7 @@ struct SlopeMenuModel {
         endlessNew = new && kept == nil
         lights = kept == nil ? min(tanks, 24) : 0
         spokenEndless = Spoken.marked(Spoken.row(endless, result: nil, tanks: tanks,
-                                                 detail: kept != nil ? endlessLine
-                                                     : String(localized: "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                                                              comment: "VoiceOver: endless's row. Eight is the brim's room, in words"),
+                                                 detail: kept != nil ? endlessLine : nil,
                                                  enabled: true, needs: nil, started: kept != nil, new: new && kept == nil),
                                       playing: playing?.run != nil)
         let store = Store.shared

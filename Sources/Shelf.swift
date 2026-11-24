@@ -68,15 +68,19 @@ struct PackCard: View {
                             Text(verbatim: offer.name).font(.ui(.display)).tracking(2)
                                 .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                                 .accessibilityAddTraits(.isHeader)
-                            Text(offer.pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4) // loc: verbatim localized by Offer
+                            if let pitch = offer.pitch {
+                                Text(pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4) // loc: verbatim localized by Offer
+                            }
                             // Bounded by the height too, so buy is still on the first screen of the smallest phone.
                             PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
                                                              g.size.height * 0.36), held: clock)
                                 .frame(maxWidth: .infinity).padding(.top, 28)
                             // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                             VStack(alignment: .leading, spacing: 9) {
-                                fact(String(localized: "for", comment: "A pack's card: the key beside who it is for"),
-                                     Text(offer.assumes)) // loc: verbatim localized by Offer
+                                if let assumes = offer.assumes {
+                                    fact(String(localized: "for", comment: "A pack's card: the key beside who it is for"),
+                                         Text(assumes)) // loc: verbatim localized by Offer
+                                }
                                 if state != .owned {
                                     fact(String(localized: "free", comment: "A pack's card: the key beside its free levels"),
                                          Text(offer.free)) // loc: verbatim localized by Offer
@@ -364,13 +368,6 @@ struct PackCard: View {
                 // Ask to Buy's explanation, so buy stays on the first screen of the smallest phone.
                 if let why = store.failures[offer.productID]?.words {
                     detail(why)
-                } else {
-                    (asked ? Text("Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again.",
-                                  comment: "A pack's card: its Ask to Buy sent. Asked is the buy pill's word")
-                        : Text("Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.",
-                               comment: "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"))
-                        .font(.ui(.detail)).foregroundStyle(Color.text2)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .accessibilityElement(children: .combine)
@@ -698,7 +695,7 @@ struct PackDock: View, Equatable {
                         : Text("\(offer.name), pack", comment: "VoiceOver: a pack's cover. Its name"))
                     .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil) // loc: verbatim localized by Purchase and Marks
                                          ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
-                    .accessibilityHint(offer.pitch) // loc: verbatim localized by Offer
+                    .accessibilityHint(offer.pitch ?? "") // loc: verbatim localized by Offer
                     .accessibilityShowsLargeContentViewer {
                         Text(verbatim: offer.name)
                     }

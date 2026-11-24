@@ -104,9 +104,6 @@ struct SlopeResult: View {
                     }
                 }
                 .font(.slope(.data, .label))
-                if let takes = SlopeExplains.cleanTakes(game) {
-                    Text(takes).font(.slope(.ui, .detail)).foregroundStyle(page.slope(.ink3)) // loc: verbatim localized by SlopeExplains
-                }
             }
             if let b = game.bests, let line = ResultCard.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
                 Text(line).font(.slope(.data, .label)).foregroundStyle(page.slope(.ink2)) // loc: verbatim localized by bestLine
@@ -312,17 +309,8 @@ private struct SlopeUpANotch: View {
     }
 }
 
-/// The result's explanatory lines, each written in one place so it can be cut whole: what clean takes, and what a
-/// closed up a notch lacks.
+/// The result's explanatory lines, each written in one place so it can be cut whole: what a closed up a notch lacks.
 @MainActor enum SlopeExplains {
-    /// Only where the solve is neither clean nor over par.
-    static func cleanTakes(_ game: Game) -> String? {
-        let par = game.level.ratchets.isEmpty
-        guard game.level.run == nil, !game.clean, !par || game.over == 0 else { return nil }
-        return game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? String(localized: "clean needs no undo or reset")
-            : String(localized: "clean counts on the first try")
-    }
-
     static func unsolved(_ from: Tier) -> String {
         String(localized: "\(from.solved().filter { !$0 }.count) \(from.word) levels unsolved",
                comment: "The card's way up, the next tier shut. Levels unsolved, then their tier")

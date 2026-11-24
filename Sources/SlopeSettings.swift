@@ -33,7 +33,7 @@ struct SlopeSettings: View {
         let name: String
         /// Beside the name: "on" or "off", or nothing.
         let state: String?
-        let detail: String
+        let detail: String?
         let kind: Kind
         var stone: Bool { if case .toggle = kind { true } else { false } }
         var on: Bool { if case let .toggle(b, _, _) = kind { b.wrappedValue } else { true } }
@@ -41,25 +41,25 @@ struct SlopeSettings: View {
 
     private var rows: [Row] {
         var rows: [Row] = []
-        func toggle(_ name: LocalizedStringResource, _ detail: String, _ mirror: Binding<Bool>, _ keep: @escaping (Bool) -> Void) {
+        func toggle(_ name: LocalizedStringResource, _ detail: String?, _ mirror: Binding<Bool>, _ keep: @escaping (Bool) -> Void) {
             rows.append(Row(name: String(localized: name), state: mirror.wrappedValue ? Self.on : Self.off, detail: detail,
                             kind: .toggle(mirror, keep, log: name.key)))
         }
-        toggle(ConsentWords.music, ConsentWords.musicDetail, $music) {
+        toggle(ConsentWords.music, nil, $music) {
             Settings.music = $0
             Sound.shared.music($0)
         }
-        toggle(ConsentWords.sounds, ConsentWords.soundsDetail, $sounds) {
+        toggle(ConsentWords.sounds, nil, $sounds) {
             Settings.sounds = $0
             Sound.shared.sounds($0)
             // The switch's own tap went out while sounds were off.
             if $0 { Sound.shared.play(.tap) }
         }
-        toggle(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
-        toggle(ConsentWords.letters, ConsentWords.lettersDetail,
+        toggle(ConsentWords.haptics, nil, $haptics) { Settings.haptics = $0 }
+        toggle(ConsentWords.letters, nil,
                Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
         if store.bought {
-            toggle(ConsentWords.supporter, ConsentWords.supporterDetail, $supporter) { Settings.supporter = $0 }
+            toggle(ConsentWords.supporter, nil, $supporter) { Settings.supporter = $0 }
         }
         #if EDITORS || DEBUG
         if Build.editorsSwitch {
@@ -73,10 +73,10 @@ struct SlopeSettings: View {
             rows.append(Row(name: ConsentWords.analytics, state: nil, detail: yes ? ConsentWords.analyticsOn : ConsentWords.analyticsOff,
                             kind: .toggle(Binding(get: { analytics.consent == .yes }, set: { _ in }), { analytics.decide($0) }, log: "")))
         }
-        rows.append(Row(name: ConsentWords.restore, state: nil, detail: store.restoreNote ?? ConsentWords.restoreDetail, kind: .restore))
+        rows.append(Row(name: ConsentWords.restore, state: nil, detail: store.restoreNote, kind: .restore))
         // Today's sheet offers it with or without a support address, sharing the log where there is none.
         rows.append(Row(name: ConsentWords.report, state: nil, detail: ConsentWords.reportDetail, kind: .report))
-        rows.append(Row(name: ConsentWords.policy, state: nil, detail: ConsentWords.policyDetail, kind: .policy))
+        rows.append(Row(name: ConsentWords.policy, state: nil, detail: nil, kind: .policy))
         return rows
     }
 
@@ -157,7 +157,7 @@ struct SlopeSettings: View {
         let body = TypeRole.body.line(at: typeSize).height, detail = TypeRole.detail.line(at: typeSize).height
         let needs = rows.map { row -> CGFloat in
             let name = ceil(TypeRole.body.width(of: row.name + "   off", at: typeSize) / room)
-            let under = ceil(TypeRole.detail.width(of: row.detail, at: typeSize) * 1.04 / room)
+            let under = row.detail.map { ceil(TypeRole.detail.width(of: $0, at: typeSize) * 1.04 / room) } ?? 0
             return body * name + detail * under + 32
         }
         let stretch = SlopeColumn.Stretch(rock: .sand, terraces: Array(repeating: 1, count: rows.count), rows: needs)
@@ -173,8 +173,10 @@ struct SlopeSettings: View {
                         .accessibilityHidden(true)
                 }
             }
-            Text(row.detail).font(.slope(.ui, .detail)).ink(.ink3) // loc: verbatim localized by ConsentWords and Store
-                .accessibilityHidden(row.stone)
+            if let detail = row.detail {
+                Text(detail).font(.slope(.ui, .detail)).ink(.ink3) // loc: verbatim localized by ConsentWords and Store
+                    .accessibilityHidden(row.stone)
+            }
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -191,7 +193,7 @@ struct SlopeSettings: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(row.name) // loc: verbatim localized by ConsentWords
             .accessibilityValue(row.on ? Self.on : Self.off) // loc: verbatim localized above
-            .accessibilityHint(row.detail) // loc: verbatim localized by ConsentWords
+            .accessibilityHint(row.detail ?? "") // loc: verbatim localized by ConsentWords
             .accessibilityAddTraits(.isToggle)
         case .restore:
             Button { Task { await store.restoreAndAnnounce() } } label: { words }

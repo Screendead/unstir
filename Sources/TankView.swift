@@ -758,8 +758,7 @@ struct LevelView: View {
         let practice = game.level.archived
             ? String(localized: "Practice: this day's best was set on its day.", comment: "The caption of an archive day replayed")
             : String(localized: "Practice: only the first try counts.", comment: "The caption of a daily replayed")
-        let opening = game.level.replay
-            ? String(localized: "watch the stir \u{00B7} tap to skip", comment: "The caption over a replay's opening stir") : toSkip
+        let opening = toSkip
         let away = showResult || ending || shown != nil
         let text = notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening)
         if slope {

@@ -448,9 +448,11 @@ private struct HollowInside: View {
                     .accessibilityAddTraits(.isHeader)
             }
             .modifier(Arrive(turn: 0, on: entered))
-            Text(offer.pitch).font(.slope(.place, .body)).foregroundStyle(ink(.ink)) // loc: verbatim localized by Offer
-                .multilineTextAlignment(.center).padding(.top, 6)
-                .modifier(Arrive(turn: 1, on: entered))
+            if let pitch = offer.pitch {
+                Text(pitch).font(.slope(.place, .body)).foregroundStyle(ink(.ink)) // loc: verbatim localized by Offer
+                    .multilineTextAlignment(.center).padding(.top, 6)
+                    .modifier(Arrive(turn: 1, on: entered))
+            }
             facts(owned).padding(.top, 18)
                 .modifier(Arrive(turn: 2, on: entered))
             VStack(spacing: 6) {
@@ -502,7 +504,7 @@ private struct HollowInside: View {
     /// its progress, on the floor, for what it holds.
     private func facts(_ owned: Bool) -> some View {
         VStack(spacing: 4) {
-            fact(offer.assumes)
+            if let assumes = offer.assumes { fact(assumes) }
             if !owned { fact(offer.free) }
             if !owned || pack == nil { fact(offer.holds) }
             if pack == nil, !owned, let saving = store.saving {

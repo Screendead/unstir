@@ -64,7 +64,7 @@ struct SlopeHollow: View {
             : Text("\(offer.name), pack", comment: "VoiceOver: a pack's cover. Its name"))
         .accessibilityValue([(ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil) // loc: verbatim localized by Purchase and Marks
                              ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
-        .accessibilityHint(offer.pitch) // loc: verbatim localized by Offer
+        .accessibilityHint(offer.pitch ?? "") // loc: verbatim localized by Offer
     }
 
     /// The rock's bulge at the accessibility sizes, the cover's light on the rock, the dark mouth, the cover, the
