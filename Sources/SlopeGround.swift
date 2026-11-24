@@ -97,17 +97,21 @@ struct SlopeGround: View {
             let mirror = view.top - past + view.size.height
             let glow = look.glow ?? SIMD3(1, 0.86, 0.6)
             ZStack {
-                Rectangle().fill(.black)
-                    .colorEffect(ShaderLibrary.slope(
-                        .float2(view.size),
-                        .float4(scale, t, near ? view.lay.e * (1 - look.level) : 0, 1),
-                        .float4(look.level, look.glint, look.clear, look.light),
-                        .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
-                        .float(look.paper),
-                        .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
-                        .floatArray(view.lay.uniforms(top: view.top)),
-                        .floatArray(eggs?.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), deep: SlopeEggs.deep(sunk: past), out: out,
-                                                   mirror: mirror, lay: view.lay, at: timeline.date) ?? SlopeEggs.none)))
+                let common: [Shader.Argument] = [
+                    .float2(view.size),
+                    .float4(scale, t, near ? view.lay.e * (1 - look.level) : 0, 1),
+                    .float4(look.level, look.glint, look.clear, look.light),
+                    .float4(glow.x, glow.y, glow.z, Float(look.rock.rawValue)),
+                    .float(look.paper),
+                    .float4(look.upper?.x ?? 0, look.upper?.y ?? 0, look.upperWidth / 2, look.upper == nil ? 0 : 1),
+                    .floatArray(view.lay.uniforms(top: view.top))]
+                // The menu's ground is its own function, so no other pays for an egg it never shows.
+                let shader = eggs.map {
+                    Shader(function: ShaderLibrary.default.slopeMenu, arguments: common + [.floatArray(
+                        $0.uniforms(calm: calm, night: SlopeEggs.night(lift: lift), deep: SlopeEggs.deep(sunk: past), out: out,
+                                    mirror: mirror, lay: view.lay, at: timeline.date))])
+                } ?? Shader(function: ShaderLibrary.default.slope, arguments: common)
+                Rectangle().fill(.black).colorEffect(shader)
                 // The veil's band draws the water again, not what is on it.
                 if let skim = eggs?.skim, skimming, band == nil {
                     SlopeSkimLayer(skim: skim, date: timeline.date) { -view.top + Self.sway($0, t, calm: calm) }

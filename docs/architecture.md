@@ -1235,6 +1235,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
       stars come out one by one over `dawning` seconds, the sky's own field upside down; at once under Reduce Motion.
     - Meteor nights: `SlopeEggs.shower` is the three nights, noon to noon, round 12 August and 13 December; the night
       above then draws one meteor in most spells of 2.3 s, falling away from a radiant high off the leading side.
+    - Cost, on the Mac's GPU at the reference phone's 1320 x 2868 (`slope-lab.sh bench`): every other ground calls
+      `slope`, whose eggs are a constant nothing the compiler drops, and costs what it did (0.869 ms at the overview);
+      the menu's `slopeMenu` costs 0.909 ms with no egg showing, 1.01 under the night, 1.02 with a stone skimming, 0.94
+      with every seam (1.09 in the dive, of 0.99), 1.24 over the mirrored sky and 1.09 beside the nook.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A

@@ -85,8 +85,6 @@ struct SlopeEggs: Equatable {
                 Float(age), Float(skim?.x ?? 0), Float(skim?.hop ?? 0), Float(skim?.touches ?? 0)]
             + (0 ..< 4).map { $0 < seams.count && seams[$0] ? 1 : 0 } + [Float(nook?.reach ?? 0), Float(nook?.top ?? 0), 0, 0]
     }
-
-    static let none = [Float](repeating: 0, count: 20)
 }
 
 /// A flat stone skimmed along the water: thrown from `from` (the screen's x, and how far over the water line), it

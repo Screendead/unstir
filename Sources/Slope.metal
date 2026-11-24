@@ -499,18 +499,28 @@ static float3 slopeGround(float2 pos, float2 size, float4 view, float4 play, flo
     return col;
 }
 
-// eggs: SlopeEggs.uniforms, a SlopeEgg's numbers in its own order.
-[[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
-                             float4 upper, device const float *g, int count, device const float *eggs, int eggCount) {
-    SlopeEgg egg = { eggs[0], eggs[1], eggs[2], eggs[3], float2(eggs[4], eggs[5]), float2(eggs[6], eggs[7]),
-                     float4(eggs[8], eggs[9], eggs[10], eggs[11]), float4(eggs[12], eggs[13], eggs[14], eggs[15]),
-                     float2(eggs[16], eggs[17]) };
-    float3 col = slopeGround(pos, size, view, play, lone, paper, upper, g, egg);
-    // The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel,
-    // keeps them from banding and never crawls.
+// The dark water's steps are under one part in 255 apart: a triangular dither of one part, fixed to the pixel, keeps
+// them from banding and never crawls.
+static half4 slopeDithered(float3 col, float2 pos, float4 view) {
     float2 pixel = floor(pos * view.x);
     float n = slopeHash(pixel) + slopeHash(pixel + 61.7) - 1.0;
     return half4(half3(saturate(col + n / 255.0)), 1.0h);
+}
+
+// Every ground but the menu's: with no eggs, the compiler drops their terms, and it costs what it did before them.
+[[ stitchable ]] half4 slope(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
+                             float4 upper, device const float *g, int count) {
+    SlopeEgg none = {};
+    return slopeDithered(slopeGround(pos, size, view, play, lone, paper, upper, g, none), pos, view);
+}
+
+// The menu's ground. eggs: SlopeEggs.uniforms, a SlopeEgg's numbers in its own order.
+[[ stitchable ]] half4 slopeMenu(float2 pos, half4 color, float2 size, float4 view, float4 play, float4 lone, float paper,
+                                 float4 upper, device const float *g, int count, device const float *eggs, int eggCount) {
+    SlopeEgg egg = { eggs[0], eggs[1], eggs[2], eggs[3], float2(eggs[4], eggs[5]), float2(eggs[6], eggs[7]),
+                     float4(eggs[8], eggs[9], eggs[10], eggs[11]), float4(eggs[12], eggs[13], eggs[14], eggs[15]),
+                     float2(eggs[16], eggs[17]) };
+    return slopeDithered(slopeGround(pos, size, view, play, lone, paper, upper, g, egg), pos, view);
 }
 
 // The inside of a hollow (8.2): still dark water between two jambs of pale stone, a floor near the foot, a ledge that
