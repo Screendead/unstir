@@ -135,7 +135,7 @@ struct SlopeArchive: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 0) {
                             head
-                            if typeSize.isAccessibilitySize {
+                            if listed(geo.size.width) {
                                 dive
                             } else {
                                 ForEach(months, id: \.self) { month(month: $0, width: geo.size.width) }
@@ -147,7 +147,7 @@ struct SlopeArchive: View {
                     .onAppear {
                         // The day just left at the middle; else the calendar's newest week at the foot, the dive's newest day at the top.
                         let known = focus.flatMap { f in days.contains { $0.level.id == f } ? f : nil }
-                        guard let id = known ?? (typeSize.isAccessibilitySize ? nil : "today") else { return }
+                        guard let id = known ?? (listed(geo.size.width) ? nil : "today") else { return }
                         DispatchQueue.main.async { reader.scrollTo(id, anchor: known != nil ? .center : .bottom) }
                     }
                 }
@@ -236,6 +236,12 @@ struct SlopeArchive: View {
                 }
             }
         }
+    }
+
+    /// A ledge a day, newest first, where a seat can't hold its widest word ("clean", in mono) whole: the
+    /// accessibility sizes, and xxxLarge.
+    private func listed(_ width: CGFloat) -> Bool {
+        typeSize.isAccessibilitySize || 5 * 0.62 * TypeRole.detail.points(at: typeSize) > pitch(width) - 4
     }
 
     /// Seats 52 pt apart, or a sixth of what leaves 31 pt each side.
@@ -350,7 +356,7 @@ private struct WeekLedge: View {
                 let t = (x - from) / span
                 return top - min(6, 1.5 + span * 0.012) * sin(.pi * t) + 1.6 * sin(x * 0.03 + phase)
             }
-            let thick: CGFloat = 9, under: CGFloat = 15
+            let thick: CGFloat = 9, under = min(15, span * 0.1)
             func path(_ steps: Int = 48) -> Path {
                 var rock = Path()
                 rock.move(to: CGPoint(x: from, y: crest(from) + 3))
