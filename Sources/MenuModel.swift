@@ -179,12 +179,11 @@ extension Menu {
         tier.below.map { String(localized: "opens with every \($0.word) level solved", comment: "A shut tier's gate. The tier below") }
     }
 
-    /// The packs' caption under plughole's name, the dock's three states: no pack owned, one owned, every one owned.
+    /// The packs' line under plughole's name, at the overview and in the dive (Jack's call, 2026-11-23): "packs" alone
+    /// once every pack is owned. It breaks only after "packs ·".
     static func packsCaption(owned: Int, of all: Int) -> String {
-        owned == 0 ? String(localized: "packs \u{00B7} paid add-ons \u{00B7} first 3 levels of each free",
-                            comment: "The slope's menu, under plughole's name: the packs in its rock, none owned")
-            : owned < all ? String(localized: "packs \u{00B7} first 3 levels of each free",
-                                   comment: "The slope's menu, under plughole's name: the packs in its rock, one owned")
+        owned < all ? String(localized: "packs \u{00B7} first\u{00A0}3\u{00A0}levels of\u{00A0}each\u{00A0}free",
+                             comment: "The slope's menu, under plughole's name: the packs in its rock. The spaces that don't break keep the line's second half whole")
             : String(localized: "packs", comment: "The slope's menu, under plughole's name: the packs in its rock, all owned")
     }
 

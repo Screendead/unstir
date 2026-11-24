@@ -248,6 +248,11 @@ struct SlopeMenu: View {
                        saved: saved, yours: yours, arm: $arm, voiceOver: voiceOver, hollow: hollow, archiveLedge: archiveLedge,
                        openSettings: { settings = true },
                        enter: { enter($0, plan) },
+                       visit: { offer in go(to: plan.hollow(offer), plan) },
+                       openArchive: {
+                           Log.write("archive shown")
+                           withAnimation(.snappy(duration: 0.42)) { archive = true }
+                       },
                        pick: { level, ledge in pick(level, ledge: ledge, plan) },
                        newRun: {
                            Resume.remove("endless")
@@ -517,6 +522,7 @@ struct SlopeMenuPlan {
                                               3 * (archive - line(.body) * 0.5 + 8))
         }
         hollows = model.hollows.map { ($0, SlopeMenuPlan.hollowAfter($0)) }
+        var needs: [CGFloat] = []
         for (t, tier) in model.tiers.enumerated() {
             let first = SlopeColumn.ledge(tier: t, level: 1), room = words(first, seat: 0).width
             var height: CGFloat
@@ -552,8 +558,17 @@ struct SlopeMenuPlan {
             // At the overview a stretch is as tall as its words need, where that is more than its share of the screen.
             var need = Self.bandLead + line(.title) + 3 + SlopeMeasure.height(tier.reason ?? tier.progress, .detail, width: beside, at: type) + 8
             if model.wayOn?.tier == tier.tier { need += line(.body) + 14 }
-            column.stretches[t + 1].height = max(column.stretches[t + 1].height ?? 0, need)
+            if t == 0, let packs = model.packs {
+                need += SlopeMeasure.height(packs, .detail, width: beside, at: type) + 10
+                    + (model.packNames.map { SlopeMeasure.height($0, .detail, width: beside, at: type) + 2 } ?? 0)
+            }
+            needs.append(need)
         }
+        // Each tier first takes what its words need; what is left of the tiers' share of the screen is shared out
+        // evenly (1.6). Where the needs alone pass it, each has its need and the overview scrolls.
+        let share = column.stretches.dropFirst().reduce(0) { $0 + ($1.height ?? 0) }
+        let spare = max(share - needs.reduce(0, +), 0) / CGFloat(max(needs.count, 1))
+        for (t, need) in needs.enumerated() { column.stretches[t + 1].height = need + spare }
         // Endless's word, its line and "new run" under its middle; the default sizes fit what the overview leaves.
         if model.modes, large { column.under = line(.title) / 2 + 2 * line(.detail) + line(.body) + 24 }
         self.headers = headers
@@ -617,6 +632,14 @@ struct SlopeMenuPlan {
         return SlopeAim(ledge: n, share: rest(on: n))
     }
 
+    /// The dive's aim for an offer's hollow: the ledge over it, a little above the middle, so the hollow is.
+    func hollow(_ offer: Offer) -> SlopeAim {
+        let n = SlopeColumn.ledge(tier: 0, level: Self.hollowAfter(offer))
+        let h = size.height, range = deep.travel(height: h)
+        let camera = min(max(deep.between(n) - 0.49 * h, range.lowerBound), range.upperBound)
+        return SlopeAim(ledge: n, share: (deep.tops[n] - camera) / h)
+    }
+
     /// The dive's foot: endless's word at the middle of the screen, held by the last ledge.
     var foot: SlopeAim {
         let n = deep.count - 1
@@ -664,9 +687,15 @@ struct SlopeMenuModel {
     /// The best run's tanks, as lights under the word while no run is saved.
     let lights: Int
     let spokenEndless: (label: String, value: String, hint: String)
-    /// The shelf's offers once the hollows show, and the packs' caption under plughole's name.
+    /// The shelf's offers once the hollows show, the packs' line under plughole's name and, at the overview, their names.
     let hollows: [Offer]
     let packs: String?
+    let packNames: String?
+    /// The offer the packs' line dives to: the first marked new, else the first unowned, else the first.
+    let packLead: Offer?
+    /// The archive's row (2.5), and whether a tap opens it.
+    let archive: SlopeLedge?
+    let archiveOpen: Bool
 
     @MainActor init(today: Date, saved: Resume?, playing: Level?) {
         let unlocked = Best.unlocked, lead = Menu.lead(unlocked: unlocked)
@@ -717,6 +746,29 @@ struct SlopeMenuModel {
         hollows = shelf
         let sold = Pack.sold()
         packs = shelf.isEmpty ? nil : Menu.packsCaption(owned: sold.filter { store.state($0) == .owned }.count, of: sold.count)
+        // A name keeps to one line: the names break only between them.
+        packNames = shelf.isEmpty ? nil : shelf.map { $0.name.replacingOccurrences(of: " ", with: "\u{00A0}") }.joined(separator: " \u{00B7} ")
+        packLead = shelf.first { offer in offer.pack.map { Marks.line($0, owned: store.state($0) == .owned || !store.ready, fits: $0.fits(), played: $0.tastePlayed())?.new == true } ?? false }
+            ?? shelf.first { $0.pack.map { store.state($0) != .owned } ?? true } ?? shelf.first
+        if lead.modes {
+            let days = Archive.days(today: today).map { Level.daily($0, archived: true) }
+            let atPar = days.filter { Best.load($0.id)?.over == 0 }.count
+            // Unsaid until the store has read what the player owns, so an owner never meets it closed.
+            let known = store.ready, open = known && Archive.open
+            let spoken = Spoken.archiveRow(open: open, days: days.count, atPar: atPar)
+            archiveOpen = open
+            archive = SlopeLedge(name: String(localized: "Archive"), state: open ? .solved : .closed,
+                                 facts: !known ? String(localized: "\(days.count) past dailies", comment: "The menu's archive row. Past dailies")
+                                     : open ? String(localized: "\(days.count) past dailies \u{00B7} \(atPar) at par",
+                                                     comment: "The menu's archive row, open. Past dailies, then those at par")
+                                     : String(localized: "\(days.count) past dailies \u{00B7} comes with any pack",
+                                              comment: "The menu's archive row, shut. Past dailies"),
+                                 opens: known && !open ? String(localized: "unlocked by purchasing any pack") : nil, reason: true,
+                                 label: spoken.label, value: spoken.value, hint: spoken.hint)
+        } else {
+            archive = nil
+            archiveOpen = false
+        }
     }
 
     /// A tier's level as its ledge's row (2.2).
@@ -757,6 +809,9 @@ private struct SlopeMenuWorld: View {
     let archiveLedge: ((SlopeSpot) -> AnyView)?
     let openSettings: () -> Void
     let enter: (Tier) -> Void
+    /// The packs' line or a small hollow tapped at the overview: the dive to that offer's hollow.
+    let visit: (Offer) -> Void
+    let openArchive: () -> Void
     let pick: (Level, Int?) -> Void
     let newRun: () -> Void
 
@@ -871,8 +926,23 @@ private struct SlopeMenuWorld: View {
                 let spot = SlopeSpot(view: view, ledge: a, point: at, side: lay.half(.dull) * 2, near: near)
                 if let archiveLedge {
                     archiveLedge(spot)
-                } else {
-                    AnyView(SlopePebble(kind: .dull, width: spot.side, lean: SlopePebble.lean(a)).seated(at: at))
+                } else if let archive = model.archive {
+                    // Until piece E's lands: the archive's row by 2.5, closed until any pack is bought.
+                    if wide > 0 {
+                        Button { model.archiveOpen ? openArchive() : () } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(archive.name).font(.slope(.ui, .body)).ink(model.archiveOpen ? .ink : .ink4) // loc: verbatim localized by the model
+                                if let facts = archive.facts { Text(facts).font(.slope(.ui, .detail)).ink(.ink3) } // loc: verbatim localized by the model
+                            }
+                            .multilineTextAlignment(.leading)
+                            .frame(width: plan.room, alignment: .leading)
+                            .hit(12, 0)
+                        }
+                        .modifier(Speech((archive.label, archive.value, archive.hint)))
+                        .opacity(wide).allowsHitTesting(wide >= 1)
+                        .slopeLine(CGPoint(x: plan.beside, y: at.y - 4))
+                    }
+                    SlopeLedgeRow(ledge: archive, view: view, n: a, near: near, bars: bars, open: openArchive)
                 }
             }
         }
@@ -897,31 +967,40 @@ private struct SlopeMenuWorld: View {
                 // The band's own button says both to VoiceOver.
                 Text(tier.tier.word).font(.slope(.place, .title)).ink(tier.open ? .ink : .ink4).accessibilityHidden(true) // loc: verbatim localized by Tier.word
                 Text(tier.reason ?? tier.progress).font(.slope(tier.open ? .data : .ui, .detail)).ink(.ink3).accessibilityHidden(true) // loc: verbatim localized by Menu
-                if let way = model.wayOn, way.tier == tier.tier { Color.clear.frame(height: wayHeight) }
-            }
-            .multilineTextAlignment(.leading)
-            .frame(width: plan.room, alignment: .leading)
-            .overlay(alignment: .bottomLeading) {
                 if let way = model.wayOn, way.tier == tier.tier, let n = SlopeColumn.ledge(of: way.level) {
                     Button { pick(way.level, n) } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text(way.level.label).font(.slope(.data, .body)).ink(.ink) // loc: verbatim a number
                             Text(verbatim: way.level.title + " \u{203A}").font(.slope(.name, .body)).ink(.ink)
                         }
+                        .padding(.top, 4)
                         .hit(12, 12)
                     }
                     .accessibilityLabel(Text("next, \(way.level.label), \(way.level.title)",
                                              comment: "VoiceOver: the slope's overview, the way on. The next level's number, then its name"))
                     .allowsHitTesting(wide >= 1)
                 }
+                if t == 0, let packs = model.packs, let lead = model.packLead {
+                    // The packs' line and their names: with the small hollows in the rock, the way to them.
+                    Button { visit(lead) } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(packs).font(.slope(.ui, .detail)).ink(.ink3) // loc: verbatim localized by Menu.packsCaption
+                            if let names = model.packNames { Text(names).font(.slope(.ui, .detail)).ink(.ink2) } // loc: verbatim the packs' names
+                        }
+                        .multilineTextAlignment(.leading)
+                        .padding(.top, 5)
+                        .hit(8, 12)
+                    }
+                    .allowsHitTesting(wide >= 1)
+                }
             }
+            .frame(width: plan.room, alignment: .leading)
             .accessibilityElement(children: .contain)
             .opacity(wide)
             .slopePlace(CGPoint(x: plan.beside, y: top + SlopeMenuPlan.bandLead), anchor: .topLeading)
         }
     }
 
-    private var wayHeight: CGFloat { SlopeMeasure.line(.body, at: plan.type) + 4 }
 
     /// A tier's header in the dive, over its first ledge at the words' x: its name, its progress and, under
     /// plughole's, the packs' caption; a closed tier's is its gate.
@@ -952,28 +1031,37 @@ private struct SlopeMenuWorld: View {
 
     // MARK: The hollows and the foot
 
-    /// The packs' hollows in plughole's wall (8.1), each between two ledges. They are not drawn until the depth is
-    /// half open, and grow from 16 to 58 pt across as it opens.
+    /// The packs' hollows in plughole's wall (8.1). At the overview they are small in the rock on the leading side of
+    /// plughole's terraces, 16 pt across and 24 pt apart; as the depth opens each travels to its place between two
+    /// ledges and grows to 58 pt.
     @ViewBuilder private var hollows: some View {
-        if lay.e > 0.5 {
-            ForEach(plan.hollows, id: \.offer) { place in
-                let above = SlopeColumn.ledge(tier: 0, level: place.after), side = 16 + 42 * lay.e
-                // At the largest sizes there is no rock beside the ledges: the hollow has a row of its own under its ledge.
-                let y = large ? view.y(lay.tops[above] + lay.drops[above] - SlopeMenuPlan.hollowRow(plan.type) - 6)
-                    : view.y(lay.between(above)) - side / 2
-                if shown(y) {
-                    let spot = SlopeSpot(view: view, ledge: above, point: CGPoint(x: large ? 48 : 56, y: y), side: side, near: near)
-                    Group {
-                        if let hollow {
-                            hollow(place.offer, spot)
-                        } else {
-                            AnyView(SlopePebble(kind: .dull, width: lay.half(.dull) * 2, lean: SlopePebble.lean(place.after))
-                                .padding(.top, side / 2 - lay.half(.dull) * 0.72))
-                        }
+        let first = SlopeColumn.ledge(tier: 0, level: 1), e = lay.e
+        ForEach(Array(plan.hollows.enumerated()), id: \.element.offer) { i, place in
+            let above = SlopeColumn.ledge(tier: 0, level: place.after), side = 16 + 42 * e
+            // At the largest sizes there is no rock beside the ledges: the hollow has a row of its own under its ledge.
+            let deep = large ? view.y(lay.tops[above] + lay.drops[above] - SlopeMenuPlan.hollowRow(plan.type) - 6)
+                : view.y(lay.between(above)) - side / 2
+            let far = view.y(lay.tops[first]) + 24 + 24 * CGFloat(i) - 8
+            let x = 18 + ((large ? 48 : 56) - 18) * e, y = far + (deep - far) * e
+            if shown(y) {
+                let spot = SlopeSpot(view: view, ledge: above, point: CGPoint(x: x, y: y), side: side, near: near)
+                Group {
+                    if let hollow {
+                        hollow(place.offer, spot)
+                    } else {
+                        AnyView(SlopePebble(kind: .dull, width: lay.half(.dull) * 2, lean: SlopePebble.lean(place.after))
+                            .frame(width: side, height: side))
                     }
-                    .opacity(min((lay.e - 0.5) / 0.3, 1))
-                    .slopePlace(spot.point, anchor: .top)
                 }
+                // At the overview a tap on one dives to it, and the packs' line speaks for them all; in the dive the
+                // hollow's own view takes its taps.
+                .overlay {
+                    if wide >= 1 {
+                        Button { visit(place.offer) } label: { Color.clear.contentShape(Rectangle()).hit(14, 14) }
+                            .buttonStyle(.plain).accessibilityHidden(true)
+                    }
+                }
+                .slopePlace(spot.point, anchor: .top)
             }
         }
     }

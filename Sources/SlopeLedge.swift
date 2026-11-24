@@ -40,6 +40,8 @@ struct SlopeLedge: Equatable {
     var playing = false
     /// What opens a closed row, said in the facts' place for two seconds when it is tapped.
     var opens: String?
+    /// A closed row's facts stay readable, at `ink3`, where they are its reason: the archive's.
+    var reason = false
     var look = Look.warm
     /// The pebble's glow where it is lit: its rock's, a pack's.
     var glow: Color?
@@ -155,7 +157,8 @@ struct SlopeLedgeRow: View {
                 } else if ledge.playing {
                     Text("playing").font(.slope(.ui, .detail)).foregroundStyle(ink(.ink2))
                 } else if let facts = ledge.facts {
-                    Text(facts).font(.slope(.data, frontier ? .label : .detail)).foregroundStyle(ink(frontier ? .ink2 : .ink3)) // loc: verbatim localized by the row's maker
+                    Text(facts).font(.slope(ledge.reason ? .ui : .data, frontier ? .label : .detail))
+                        .foregroundStyle(ledge.reason ? SlopeInk.ink3.colour : ink(frontier ? .ink2 : .ink3)) // loc: verbatim localized by the row's maker
                 }
             }
             .transition(.opacity)
