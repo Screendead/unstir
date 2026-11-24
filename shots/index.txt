@@ -1054,6 +1054,15 @@ slope-archive-ax3.png  The same at accessibility3.
 slope-archive-ledge.png  The archive's ledge on open water: shut, open with 12 at par, and before the store has read.
 slope-world-archive.png  The archive opened over the menu, Lens owned, the last six dailies solved at par.
 slope-world-archive-day.png  A past daily opened from the archive: its way back "↑ archive".
+slope-packsat-a.png  The overview with the packs' covers as glass floats on the water line beside the bank, on the reference phone's 428 x 926 points, plughole done.
+slope-packsat-a-full.png  The same on the fullest overview: plughole 25 the way on, Lens owned, Escapement waiting, Prism's taste begun, an endless run saved.
+slope-packsat-a-ax3.png  The same at accessibility3, the covers stacked with their names beside them.
+slope-packsat-b.png  The overview with the packs' covers as lit caves in a spur of the far ridge between the shallows and plughole, on the reference phone's 428 x 926 points, plughole done.
+slope-packsat-b-full.png  The same on the fullest overview: plughole 25 the way on, Lens owned, Escapement waiting, Prism's taste begun, an endless run saved.
+slope-packsat-b-ax3.png  The same at accessibility3, the covers stacked with their names beside them.
+slope-packsat-c.png  The overview with the packs' covers as lights hanging in the dark under maelstrom, over endless, on the reference phone's 428 x 926 points, plughole done.
+slope-packsat-c-full.png  The same on the fullest overview: plughole 25 the way on, Lens owned, Escapement waiting, Prism's taste begun, an endless run saved.
+slope-packsat-c-ax3.png  The same at accessibility3, the covers stacked with their names beside them.
 slope-egg-still.png  Still water: the menu left alone (two seconds here, twenty in play), its surface flat, its light reaching down and the far ridges out of the haze.
 slope-egg-night.png  The night above: the overview pulled down past the surface, stars over the dusk and the moon at its phase for the day, full on 24 November 2026.
 slope-egg-night-crescent.png  The same four days after the new moon of 9 November: a waxing crescent, lit on the right as the north sees it.

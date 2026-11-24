@@ -26,8 +26,8 @@ enum SlopePacksAt: String {
 }
 
 /// The covers' places at the overview for one screen, type size and shelf, measured from the band's own anchor: the
-/// water line for the floats, the band's top for the others. Where their names would meet in a row, the row stacks and each name stands beside its
-/// cover (docs/slope.md, 1.1).
+/// water line for the floats, the band's top for the others. Where their names would meet in a row the layout gives
+/// way, never the type (docs/slope.md, 1.1).
 struct SlopePackBand {
     /// What is written by a cover: its name, whether a glyph follows it, and its line.
     typealias Words = (name: String, mark: Bool, line: String?)
