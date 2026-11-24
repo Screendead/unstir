@@ -259,13 +259,14 @@ struct SlopeMenu: View {
             }
         }
         .allowsHitTesting(!moving)
-        // A drag takes the screen from the words under it; a tap is still theirs.
+        // A drag takes the screen from the words under it; a tap is still theirs. Under Reduce Motion nothing follows
+        // the finger here, and the dive's own bounce is the one way past either end.
         .highPriorityGesture(DragGesture(minimumDistance: 12)
             .updating($tug) { drag, tug, _ in
                 // A drag along the water line is a stone's, and pulls nothing.
-                if !flicks(drag, water: at * h - plan.overview(holding: hold) * h + 0.188 * h) { tug = drag.translation.height }
+                if !flicks(drag, water: 0.188 * h) { tug = drag.translation.height }
             }
-            .onEnded { flick($0, water: 0.188 * h, plan) }, including: zoom == 0 && !moving ? .all : .subviews)
+            .onEnded { flick($0, water: 0.188 * h, plan) }, including: zoom == 0 && !moving && !reduceMotion ? .all : .subviews)
         .overlay {
             // A tap during the travel skips to its end.
             if travel != nil { Color.clear.contentShape(Rectangle()).onTapGesture { arrive(journeys) }.ignoresSafeArea() }
