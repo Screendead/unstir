@@ -27,9 +27,14 @@ enum Spoken {
     static func back(_ level: Level) -> String {
         if let pack = level.pack { return String(localized: "Back to \(pack.name)",
                                                  comment: "VoiceOver: the back button. A pack's name") }
-        return level.archived ? String(localized: "Back to the archive",
-                                       comment: "VoiceOver: the back button of a daily opened from the archive")
-            : String(localized: "Back to levels", comment: "VoiceOver: the back button, to the menu")
+        if level.archived {
+            return String(localized: "Back to the archive", comment: "VoiceOver: the back button of a daily opened from the archive")
+        }
+        // On the slope the daily, endless and the sandbox go back to the menu, as their "↑ menu" says (`Level.slopeBack`).
+        if SlopeFlag.on, level.run != nil || level.sandbox || level.id.hasPrefix("daily-") {
+            return String(localized: "Back to the menu", comment: "VoiceOver: the slope's back button from the daily or endless")
+        }
+        return String(localized: "Back to levels", comment: "VoiceOver: the back button, to the menu")
     }
 
     /// The archive's row on the menu: shut until any purchase, then how much of it is at par.

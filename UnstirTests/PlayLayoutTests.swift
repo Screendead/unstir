@@ -262,7 +262,7 @@ final class PlayLayoutTests: XCTestCase {
             XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, "\(level.id) at \(type)", file: file, line: line)
         }
         for text in [LevelView.refills, "Practice: this day's best was set on its day.", "Practice: only the first try counts.",
-                     "watch the stir \u{00B7} tap to skip", "the tank is full: undo or reset"] {
+                     "tap to skip", "the tank is full: undo or reset"] {
             XCTAssertLessThanOrEqual(lines(text, mono), 2, "\(text) at \(type)", file: file, line: line)
         }
         for bank in [0, 1] {
@@ -782,14 +782,14 @@ final class PlayLayoutTests: XCTestCase {
 
     @MainActor func testBesidePlayTheRowOfThePlayingLevelOpensNothing() {
         let l11 = Level.plughole[10], l12 = Level.plughole[11]
-        XCTAssertTrue(MenuView.opens(l12, playing: nil))
-        XCTAssertTrue(MenuView.opens(l12, playing: l11))
-        XCTAssertFalse(MenuView.opens(l11, playing: l11), "the playing level is open already")
+        XCTAssertTrue(Menu.opens(l12, playing: nil))
+        XCTAssertTrue(Menu.opens(l12, playing: l11))
+        XCTAssertFalse(Menu.opens(l11, playing: l11), "the playing level is open already")
         // Endless's row would deal a new run over the one playing; its new run does.
         let run = Level.endless(Run(seed: 7)), other = Level.endless(Run(seed: 8))
-        XCTAssertFalse(MenuView.opens(other, playing: run))
-        XCTAssertTrue(MenuView.opens(other, playing: run, anew: true))
-        XCTAssertTrue(MenuView.opens(run, playing: l11))
+        XCTAssertFalse(Menu.opens(other, playing: run))
+        XCTAssertTrue(Menu.opens(other, playing: run, anew: true))
+        XCTAssertTrue(Menu.opens(run, playing: l11))
     }
 
     @MainActor func testACardPutAwayBesidePlayReturnsOnlyWithTheLevelItOpened() {

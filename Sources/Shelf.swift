@@ -2,489 +2,6 @@
 
 import SwiftUI
 
-/// What the shelf sells: a pack, or the bundle (`complete`), which grants `Pack.bundled`.
-enum Offer: Hashable, Sendable {
-    /// The bundle's name wherever a player reads it, and the App Store's display name with it (Jack's pick, M1).
-    static let bundleName = "Triptych I"
-
-    /// A count of packs in words.
-    static func countWord(_ n: Int) -> String {
-        guard n >= 2, n <= 6 else { return "\(n)" }
-        return [String(localized: "two", comment: "A count of packs or levels, in words"),
-                String(localized: "three", comment: "A count of packs or levels, in words"),
-                String(localized: "four", comment: "A count of packs or levels, in words"),
-                String(localized: "five", comment: "A count of packs or levels, in words"),
-                String(localized: "six", comment: "A count of packs or levels, in words")][n - 2]
-    }
-
-    case pack(Pack)
-    case complete
-
-    static let all: [Offer] = Pack.allCases.map(Offer.pack) + [.complete]
-
-    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste, and the bundle only once
-    /// every pack it grants is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can
-    /// be looked at.
-    static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
-        guard release else { return all }
-        let sold = Pack.sold(release: release), packs = sold.filter(ready)
-        return packs.map(Offer.pack) + (Pack.bundled.allSatisfy(packs.contains) ? [.complete] : [])
-    }
-
-    /// The pack a completion's card points to: the first on the shelf the player doesn't own, other than the one just
-    /// completed; none once every pack is owned.
-    @MainActor static func pointer(after completed: Completion?, shelf: [Offer] = Offer.shelf(),
-                                   owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
-        guard let completed else { return nil }
-        return unowned(except: completed.pack, shelf: shelf, owned: owned)
-    }
-
-    /// The first pack on the shelf the player doesn't own, other than `except`.
-    @MainActor static func unowned(except: Pack? = nil, shelf: [Offer] = Offer.shelf(),
-                                   owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
-        shelf.compactMap(\.pack).first { $0 != except && !owned($0) }
-    }
-
-    /// The pack "more puzzles in the packs ›" opens, once, on the card of the free ladder's last level (Jack's call M6,
-    /// round 14); none where the card already points to a pack from a completion, once it has shown, or once every pack is
-    /// owned.
-    @MainActor static func ladderEnd(_ level: Level, completed: Completion?, shown: Bool, shelf: [Offer] = Offer.shelf(),
-                                     owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
-        guard level.pack == nil, level.run == nil, level.id == Tier.allCases.last?.levels.last?.id, !shown,
-              pointer(after: completed, shelf: shelf, owned: owned) == nil else { return nil }
-        return unowned(shelf: shelf, owned: owned)
-    }
-
-    /// The offer a promoted purchase of product `id` buys, if this build sells it.
-    static func promoted(_ id: String, release: Bool = Build.release) -> Offer? {
-        all.first { $0.productID == id && ($0.pack.map { Pack.sold(release: release).contains($0) } ?? true) }
-    }
-
-    /// What the bundle saves over buying the `bundled` packs not `owned` one by one (a pending pack is unowned): nil
-    /// unless it saves something and every price that takes is known (Jack's call C7, round 13).
-    static func saving(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Decimal? {
-        let left = bundled.filter { !owned.contains($0) }.map { amounts[$0.productID] }
-        guard !left.isEmpty, let complete = amounts[Pack.triptychID], !left.contains(nil) else { return nil }
-        let saving = left.compactMap { $0 }.reduce(0, +) - complete
-        return saving > 0 ? saving : nil
-    }
-
-    /// Whether the bundle is on offer: once every price `saving` takes is in, while it saves; while none is in (loading,
-    /// unreachable, or no product came back), only while none of the `bundled` packs is owned, when it holds them all
-    /// for less; and with some in but not all, as when the App Store sells the packs here but not the bundle, never.
-    /// The prices decide, never whether a fetch is running, so with none of its packs owned a card's fetch never moves
-    /// the dock under it.
-    static func offersComplete(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Bool {
-        let left = bundled.filter { !owned.contains($0) }
-        guard !left.isEmpty else { return false }
-        let needed = [Pack.triptychID] + left.map(\.productID)
-        if needed.allSatisfy({ amounts[$0] != nil }) { return saving(amounts: amounts, owned: owned, bundled: bundled) != nil }
-        return left.count == bundled.count && needed.allSatisfy { amounts[$0] == nil }
-    }
-
-    /// Whether this build sells it.
-    var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
-
-    /// Some of what it sells is still to come.
-    var arriving: Bool { (pack.map { [$0] } ?? Pack.bundled).contains { $0.levels.count < $0.planned } }
-
-    /// A pack's prefix, or "complete", as the harness names it and the clip's file is named.
-    init?(name: String) {
-        if name == "complete" { self = .complete } else if let p = Pack(rawValue: name) { self = .pack(p) } else { return nil }
-    }
-
-    var key: String {
-        switch self {
-        case .pack(let p): p.rawValue
-        case .complete: "complete"
-        }
-    }
-
-    var pack: Pack? { if case .pack(let p) = self { p } else { nil } }
-
-    var name: String { pack?.name ?? Offer.bundleName }
-
-    var productID: String { pack?.productID ?? Pack.triptychID }
-
-    var pitch: String {
-        switch self {
-        case .pack(.firstStir): String(localized: "a story told backwards", comment: "First Stir's pitch, on its card")
-        case .pack(.lens): String(localized: "some rods zoom instead of turning", comment: "Lens's pitch, on its card")
-        case .pack(.escapement): String(localized: "clocks tick after every move, on a budget of ticks",
-                                        comment: "Escapement's pitch, on its card")
-        case .pack(.prism): String(localized: "each rod stirs only some colours", comment: "Prism's pitch, on its card")
-        case .complete: String(localized: "three packs, for less", comment: "The bundle's pitch, on its card")
-        }
-    }
-
-    /// What the pack assumes of the player, as its card says it.
-    var assumes: String {
-        switch self {
-        case .pack(.firstStir): String(localized: "anyone \u{00B7} an evening, not a challenge", comment: "Who First Stir is for")
-        case .pack(.lens): String(localized: "after plughole", comment: "Who Lens is for. The first tier, in lower case")
-        case .pack(.escapement): String(localized: "hard \u{00B7} composed problems", comment: "Who Escapement is for")
-        case .pack(.prism): String(localized: "after plughole \u{00B7} reading by colour",
-                                   comment: "Who Prism is for. The first tier, in lower case")
-        case .complete: String(localized: "after plughole, then harder",
-                               comment: "Who the bundle is for. The first tier, in lower case")
-        }
-    }
-
-    var holds: String {
-        switch self {
-        case .pack(.firstStir): String(localized: "\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
-                                       comment: "What First Stir holds. Its levels counted")
-        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
-                                  comment: "What Lens holds. Its levels counted")
-        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
-                                        comment: "What Escapement holds. Its levels counted")
-        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in five trays",
-                                   comment: "What Prism holds. Its levels counted")
-        case .complete: String(localized: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels",
-                               comment: "What the bundle holds. Its packs, then their levels")
-        }
-    }
-
-    /// The dock's header once its Ask to Buy is approved.
-    var yours: String { String(localized: "\(name) is yours", comment: "The dock's header once an Ask to Buy is approved") }
-    /// A line under the facts, owned or not.
-    var note: String? {
-        self == .pack(.prism) ? String(localized: "letters for colour-blind play, in settings", comment: "Prism's card, under its facts") : nil
-    }
-
-    var free: String {
-        switch self {
-        case .pack(let p): String(localized: "levels 1\u{2013}\(p.taste) free, no purchase", comment: "A pack's card: its free levels")
-        case .complete: String(localized: "each pack's first 3 levels", comment: "The bundle's card: what is free")
-        }
-    }
-
-    var sweep: [Color] {
-        switch self {
-        case .pack(.firstStir): [Color(0xFFC857), Color(0xFF6FA5), Color(0x7A7CFF)]
-        case .pack(.lens): [.neonCyan, .magenta, Color(0xFFE600)]
-        case .pack(.escapement): [Color(0xF3EAD8), Color(0xD8402A)]
-        case .pack(.prism): [Color(0xFF2A2A), Color(0x2AFF5A), Color(0x3A6BFF)]
-        case .complete: [Color(0xFFC857), .neonCyan, Color(0xD8402A)]
-        }
-    }
-
-    var glow: Color {
-        switch self {
-        case .pack(.firstStir): Color(0xFFC857)
-        case .pack(.lens): .magenta
-        case .pack(.escapement): Color(0xD8402A)
-        case .pack(.prism): .white
-        case .complete: .neonCyan
-        }
-    }
-
-    /// The pack's levels; before it has any, a Debug build lists `placeholders` of the harness's stand-ins.
-    func levels(placeholders: Int = 0) -> [Level] {
-        guard let pack else { return [] }
-        #if DEBUG
-        if pack.levels.isEmpty, placeholders > 0 { return (1...placeholders).map(pack.placeholder) }
-        #endif
-        return pack.levels
-    }
-
-    var gradient: LinearGradient { LinearGradient(colors: sweep, startPoint: .leading, endPoint: .trailing) }
-}
-
-extension Store {
-    /// The bundle is owned once its own product or every pack it grants is.
-    func state(_ offer: Offer) -> Purchase {
-        switch offer {
-        case .pack(let p): return state(p)
-        case .complete:
-            let l = harness ?? ledger
-            if Pack.bundled.allSatisfy({ l.state($0) == .owned }) { return .owned }
-            return l.products[Pack.triptychID] ?? .unowned
-        }
-    }
-
-    /// Its own product waits on Ask to Buy, so asking again re-sends that request.
-    func asked(_ offer: Offer) -> Bool { (harness ?? ledger).asked(offer.productID) }
-
-    /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
-    func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
-
-    /// A level this build may open: any outside a pack but a sandbox it withholds, and a pack's that the build sells.
-    func opens(_ level: Level, release: Bool = Build.release) -> Bool {
-        (!level.sandbox || Level.playsSandbox(release: release)) && access(level, release: release) != .withheld
-    }
-}
-
-extension Store {
-    /// A restore that finds nothing changes no state, so VoiceOver hears what it came to here.
-    func restoreAndAnnounce() async {
-        await restore()
-        if let note = restoreNote { AccessibilityNotification.Announcement(note).post() } // loc: verbatim localized by restoreNote
-    }
-
-    /// What the last restore came to, on a card and in settings; nil before one.
-    var restoreNote: String? {
-        if restoring { return String(localized: "restoring\u{2026}", comment: "Restore purchases, running") }
-        return switch restored {
-        case .found(let packs): String(localized: "restored \(Pack.named(Pack.sold().filter(packs.contains)))",
-                                       comment: "Restore purchases, done. The packs it found")
-        case .nothing: String(localized: "nothing to restore on this Apple ID", comment: "Restore purchases, nothing found")
-        case .failed: String(localized: "couldn't reach the App Store", comment: "Restore purchases, failed")
-        case nil: nil
-        }
-    }
-}
-
-extension Failure {
-    /// Said under the failed purchase; nil where "the purchase didn't go through" is all there is to say.
-    var words: String? {
-        switch self {
-        case .offline: String(localized: "No connection. Try again when you're online.", comment: "A purchase failed, offline")
-        case .storefront: String(localized: "Not sold in your country's App Store.", comment: "A purchase failed: not sold here")
-        case .refused: String(localized: "In-app purchases are turned off on this iPhone.",
-                              comment: "Purchases are barred on this phone")
-        case .cancelled, .other: nil
-        }
-    }
-}
-
-extension Pricing {
-    /// In a price's place on the buy pill while there is none.
-    var words: String? {
-        switch self {
-        case .fetching: String(localized: "price loading", comment: "The buy pill, in the price's place while it loads")
-        case .unreachable: String(localized: "App Store unreachable", comment: "The buy pill, in the price's place, no App Store")
-        case .fetched: nil
-        }
-    }
-}
-
-extension Purchase {
-    /// The dock's glyph beside a cover's name.
-    var mark: String? {
-        switch self {
-        case .owned: "checkmark"
-        case .pending: "hourglass"
-        case .unowned, .failed, .revoked: nil
-        }
-    }
-
-    /// The shelf's one word for a state, nil when there is nothing to say. `unshared`: revoked as a family's share
-    /// ended, not a refund, as the card's status says it.
-    func tag(unshared: Bool = false) -> (word: String, colour: Color)? {
-        switch self {
-        case .unowned: nil
-        case .owned: (String(localized: "owned", comment: "A pack's state"), .lime)
-        case .pending: (String(localized: "waiting for approval", comment: "A pack's state: an Ask to Buy sent"), .amber)
-        case .failed: (String(localized: "purchase failed", comment: "A pack's state"), .magenta)
-        case .revoked: (unshared ? String(localized: "no longer shared with you", comment: "A pack's state: a family's share ended")
-                        : String(localized: "no longer on this Apple ID", comment: "A pack's state: refunded"), Color.text2)
-        }
-    }
-}
-
-/// What each pack's cover has shown: whether its card has opened since the pack fit the player, and how many levels it
-/// had then, so the cover says "new" once for each (Jack's call C6, round 13).
-enum Marks {
-    /// False for a harnessed launch, whose cards' openings last only that launch.
-    @MainActor static var stored = true
-
-    static func fitKey(_ pack: Pack) -> String { "shelf.fit.\(pack.rawValue)" }
-    static func levelsKey(_ pack: Pack) -> String { "shelf.levels.\(pack.rawValue)" }
-
-    /// It fits and its card hasn't opened since, or an update added levels since it last opened.
-    static func new(_ pack: Pack, fits: Bool, in defaults: UserDefaults = .standard) -> Bool {
-        let seen = defaults.integer(forKey: levelsKey(pack))
-        return (fits && !defaults.bool(forKey: fitKey(pack))) || (seen > 0 && pack.levels.count > seen)
-    }
-
-    /// Its card has opened.
-    @MainActor static func seen(_ pack: Pack, fits: Bool, store: Bool = stored, in defaults: UserDefaults = .standard) {
-        var marks: [String: Any] = [levelsKey(pack): pack.levels.count]
-        if fits { marks[fitKey(pack)] = true }
-        if store { for (key, value) in marks { defaults.set(value, forKey: key) } } else { defaults.register(defaults: marks) }
-    }
-
-    /// The line under a cover's name: "new", else how many of an unowned pack's free levels are solved, else nothing.
-    static func line(_ pack: Pack, owned: Bool, fits: Bool, played: Int?) -> (words: String, spoken: String, new: Bool)? {
-        if new(pack, fits: fits) {
-            let new = String(localized: "new", comment: "Under a pack's cover, until its card opens")
-            return (new, new, true)
-        }
-        guard !owned, let played else { return nil }
-        return (String(localized: "\(played)/\(pack.taste) free", comment: "Under a pack's cover: its free levels solved, of all"),
-                String(localized: "\(played) of \(pack.taste) free levels solved",
-                       comment: "VoiceOver: a pack's cover. Its free levels solved, of all"), false)
-    }
-}
-
-// MARK: - Covers
-
-extension Offer {
-    /// The levels its cover stirs, each with the stack it stirs it by: its clip's, as the clip opens, so the dock shows
-    /// what the card plays; the bundle's, each pack it grants.
-    var covers: [(level: Level, stack: [Game.Entry])] { Clip.of(self).reels.map { ($0.level, $0.opening) } }
-}
-
-/// An offer's cover in a tank: its clip's level on its own picture, as the game draws it, stirred by the stack its clip
-/// opens on, the level's own deal for every pack but Lens (`Reel.lensOpening`). `clock` nil holds it so; otherwise the
-/// loop at that time: clean, stirred in bottom first, then unstirred top first a move at a time. Triptych I's shows a wedge of each pack's, cut from the centre, the first
-/// centred at the top, each on its own loop. Its knobs are drawn as the game draws them, each turned by its rod's share
-/// of the stack, and a clock's ratchet counts what it owes, so a cover shows how its pack plays (Jack, round 16); a
-/// wedge whose key knob (a clock, else a lens, else a masked rod) falls outside it is turned to bring it in.
-struct PackTank: View {
-    let offer: Offer
-    let side: CGFloat
-    var clock: Double?
-
-    static let period = 7.0
-
-    var body: some View {
-        let levels = offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
-        ZStack {
-            ForEach(levels.indices, id: \.self) { k in
-                let from = start + span * Double(k)
-                tank(levels[k].level, levels[k].stack)
-                    .rotationEffect(.degrees(levels.count > 1 ? Self.turn(levels[k].level, into: from + span / 2, span: span) : 0))
-                    .clipShape(Wedge(from: from, to: from + span))
-            }
-            if levels.count > 1 {
-                Path { p in
-                    for k in levels.indices {
-                        let a = (start + span * Double(k)) * .pi / 180
-                        p.move(to: CGPoint(x: r, y: r))
-                        p.addLine(to: CGPoint(x: r + r * cos(a), y: r + r * sin(a)))
-                    }
-                }
-                .stroke(Color.white.opacity(0.85), lineWidth: 0.5)
-            }
-        }
-        .frame(width: side, height: side)
-        .clipShape(Circle())
-        .overlay { Bezel(r: r) }
-        .accessibilityHidden(true)
-    }
-
-    private func tank(_ level: Level, _ stack: [Game.Entry]) -> some View {
-        let wind = clock.map { Self.wind(stack.count, at: $0) } ?? Array(repeating: 1, count: stack.count)
-        // The entries wound away are the identity, so they leave the shader's stack.
-        let on = zip(stack, wind).filter { $0.1 > 0 }
-        var stir = Unstirred(stack: on.map(\.0.twist), layout: level.layout, lenses: level.lenses, masks: level.masks,
-                             liveRod: nil, liveAngle: 0, side: side, fillEntries: level.picture.fillEntries)
-        stir.shares = on.map(\.1)
-        return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: stack.count - on.count, side: side,
-                            stir: stir)
-            .overlay { controls(level, on: on.map { ($0.0.twist, $0.1) }) }
-    }
-
-    private func controls(_ level: Level, on: [(Twist, Double)]) -> some View {
-        let layout = level.layout, rods = layout.rods, r = side / 2, core = 2 * Tank.coreRadius * r
-        func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
-        func angle(_ k: Int) -> Double { on.filter { $0.0.rod == k }.reduce(0) { $0 + Double($1.0.steps) * $1.1 } * Tank.step }
-        return ZStack {
-            ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
-                if k == level.clocks.first?.rod {
-                    ClockHint(radius: min(rods[k].z * r, r - 4)).position(at(k))
-                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core), plate: LevelView.ratchetReach * r, pawl: 0,
-                                lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true)
-                        .position(at(k))
-                } else {
-                    RodView(angle: angle(k), size: core, seized: level.kind(of: k) != .working, grabbed: false,
-                            lens: level.lenses.contains(k), tint: level.tint(of: k))
-                        .position(at(k))
-                }
-            }
-        }
-        .frame(width: side, height: side)
-        .environment(\.page, level.page)
-    }
-
-    /// Degrees to turn a wedge's level so its key knob sits inside the wedge centred at `mid`, or 0 where it already does.
-    static func turn(_ level: Level, into mid: Double, span: Double) -> Double {
-        let rods = level.layout.rods
-        guard let key = level.clocks.first?.rod ?? level.lenses.min() ?? level.masks.filter { $0.value != .white }.keys.min()
-                ?? rods.indices.first, rods[key].x != 0 || rods[key].y != 0 else { return 0 }
-        let at = atan2(rods[key].y, rods[key].x) * 180 / .pi
-        let off = (at - mid).truncatingRemainder(dividingBy: 360), wrapped = off > 180 ? off - 360 : off < -180 ? off + 360 : off
-        return abs(wrapped) < span / 2 - 15 ? 0 : -wrapped
-    }
-
-    /// Each entry's share of its turn, 0 clean to 1 stirred, `t` seconds into the clip.
-    static func wind(_ m: Int, at t: Double) -> [Double] {
-        let t = t.truncatingRemainder(dividingBy: period)
-        func ease(_ x: Double) -> Double { let c = min(max(x, 0), 1); return c * c * (3 - 2 * c) }
-        return (0..<m).map { k in
-            let dIn = 1.2 / Double(m), dOut = 3.2 / Double(m)
-            if t < 2.6 { return ease((t - 1.0 - Double(k) * dIn) / dIn) }
-            return 1 - ease((t - 3.2 - Double(m - 1 - k) * dOut) / (0.8 * dOut))
-        }
-    }
-}
-
-/// A wedge from the centre between two angles in degrees, clockwise from three o'clock; the whole frame at 360.
-private struct Wedge: Shape {
-    let from: Double, to: Double
-
-    func path(in rect: CGRect) -> Path {
-        guard to - from < 360 else { return Path(rect) }
-        let c = CGPoint(x: rect.midX, y: rect.midY)
-        var p = Path()
-        p.move(to: c)
-        p.addArc(center: c, radius: rect.width, startAngle: .degrees(from), endAngle: .degrees(to), clockwise: false)
-        p.closeSubpath()
-        return p
-    }
-}
-
-/// A tank whose clip runs on the clock, unless the harness holds it at `held` seconds. Reduce Motion holds it stirred.
-struct LoopingTank: View {
-    let offer: Offer
-    let side: CGFloat
-    var held: Double?
-    var offset = 0.0
-    /// The dock runs at a lower rate, and stops under the card.
-    var interval = 0.0
-    var paused = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        if let held {
-            PackTank(offer: offer, side: side, clock: held + offset)
-        } else if reduceMotion {
-            PackTank(offer: offer, side: side)
-        } else {
-            PausingTimeline(interval: interval > 0 ? interval : nil, paused: paused) { now in
-                PackTank(offer: offer, side: side, clock: now + offset)
-            }
-        }
-    }
-}
-
-/// The card's clip: the pack's own levels played live by the game (`Clip`), never a committed video.
-struct PackClip: View {
-    let offer: Offer
-    let side: CGFloat
-    var held: Double?
-    @State private var seen = true
-
-    var body: some View {
-        ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
-            .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(offer.pack == nil // loc: verbatim each a key
-                ? Text("\(offer.name): \(offer.pitch). A level from each pack, played.",
-                       comment: "VoiceOver: the bundle's clip. Its name, then its pitch")
-                : Text("\(offer.name): \(offer.pitch). A level played.", comment: "VoiceOver: a pack's clip. Its name, then its pitch"))
-            .accessibilityAddTraits(.isImage)
-    }
-
-    /// Whether any of a view `size` across lies inside its scroll view's `viewport`, in its own space; with no scroll
-    /// view, it shows.
-    nonisolated static func seen(_ size: CGSize, in viewport: CGRect?) -> Bool {
-        viewport.map { $0.intersects(CGRect(origin: .zero, size: size)) } ?? true
-    }
-}
-
 // MARK: - The card
 
 /// A pack's card, or Triptych I's: its clip, what it assumes, the free taste, the App Store's price, buy and restore, and
@@ -502,7 +19,7 @@ struct PackCard: View {
     /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
     var arrived = false
     /// Where back goes: the menu, or Triptych I's card when this card was opened from it.
-    var backTo = PackCard.menu
+    var backTo = Shop.menu
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     /// Triptych I's card opens a pack's card from its name.
@@ -532,7 +49,7 @@ struct PackCard: View {
         // buying too (Jack's call C1B = A, round 16).
         VStack(alignment: .leading, spacing: 0) {
             // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
-            let back = Self.back(to: backTo, beside: beside || closes)
+            let back = Shop.back(to: backTo, beside: beside || closes)
             UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) } // loc: verbatim localized by back
                 .padding(.top, 18).padding(.bottom, 14)
                 .padding(.horizontal, 24)
@@ -551,15 +68,19 @@ struct PackCard: View {
                             Text(verbatim: offer.name).font(.ui(.display)).tracking(2)
                                 .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                                 .accessibilityAddTraits(.isHeader)
-                            Text(offer.pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4) // loc: verbatim localized by Offer
+                            if let pitch = offer.pitch {
+                                Text(pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4) // loc: verbatim localized by Offer
+                            }
                             // Bounded by the height too, so buy is still on the first screen of the smallest phone.
                             PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
                                                              g.size.height * 0.36), held: clock)
                                 .frame(maxWidth: .infinity).padding(.top, 28)
                             // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                             VStack(alignment: .leading, spacing: 9) {
-                                fact(String(localized: "for", comment: "A pack's card: the key beside who it is for"),
-                                     Text(offer.assumes)) // loc: verbatim localized by Offer
+                                if let assumes = offer.assumes {
+                                    fact(String(localized: "for", comment: "A pack's card: the key beside who it is for"),
+                                         Text(assumes)) // loc: verbatim localized by Offer
+                                }
                                 if state != .owned {
                                     fact(String(localized: "free", comment: "A pack's card: the key beside its free levels"),
                                          Text(offer.free)) // loc: verbatim localized by Offer
@@ -594,7 +115,7 @@ struct PackCard: View {
                             // Buying comes before the list, so it is on the first screen whatever the pack holds.
                             if levels.isEmpty { Spacer(minLength: 24) }
                             VStack(alignment: .leading, spacing: 0) {
-                                if arrived, let note = Self.arrival(offer, levels, state: state) {
+                                if arrived, let note = Shop.arrival(offer, levels, state: state) {
                                     Text(note).font(.ui(.label)).foregroundStyle(Color.text2).padding(.bottom, 14) // loc: verbatim localized by arrival
                                         .fixedSize(horizontal: false, vertical: true)
                                         .accessibilityFocused($spoken, equals: .note)
@@ -659,7 +180,7 @@ struct PackCard: View {
                         // first.
                         guard arrived else { return }
                         try? await Task.sleep(for: .milliseconds(600))
-                        spoken = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
+                        spoken = Shop.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
                     }
                 }
             }
@@ -693,7 +214,7 @@ struct PackCard: View {
             guard old.ready, new.state != old.state else { return }
             if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() } // loc: verbatim a name, then a word localized by Purchase
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
-            if Self.lands(old.state, new.state, ready: old.ready) {
+            if Shop.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
                 store.landed = true
                 Sound.shared.play(.solve)
@@ -704,25 +225,10 @@ struct PackCard: View {
         .haptic(.success, trigger: landings)
     }
 
-    static var menu: String { String(localized: "menu", comment: "A pack's card: its back button, to the menu") }
-
-    /// The way out's words and VoiceOver's. Beside the list the menu is already in sight, so going back to it closes
-    /// the card (Jack's call d4-menuback = B, round 16); back to Triptych I's card reads as ever.
-    static func back(to: String, beside: Bool) -> (text: String, spoken: String) {
-        beside && to == menu
-            ? ("\u{2715} " + String(localized: "close", comment: "A pack's card beside the menu: closes it"),
-               String(localized: "Close", comment: "VoiceOver: a pack's card beside the menu, its close button"))
-            : ("\u{2039} \(to)", String(localized: "Back", comment: "VoiceOver: a pack's card, its back button"))
-    }
-
     private struct Reading: Equatable {
         let state: Purchase
         let ready: Bool
     }
-
-    /// A purchase landing on the card: owned now, read after the launch's first read of the entitlements had finished,
-    /// so an owner's card opened in that read's window never chimes.
-    static func lands(_ old: Purchase, _ new: Purchase, ready: Bool) -> Bool { ready && old != .owned && new == .owned }
 
     private var price: String? { store.price(offer.productID) }
 
@@ -845,9 +351,8 @@ struct PackCard: View {
         case .unowned: EmptyView()
         case .owned:
             line(offer.pack == nil
-                 ? String(localized: "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open",
-                          comment: "The bundle's card, owned. Its packs, counted in words")
-                 : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), .lime)
+                 ? String(localized: "\u{2713} owned", comment: "A pack's card, owned")
+                 : String(localized: "\u{2713} owned", comment: "A pack's card, owned"), .lime)
         case .pending:
             // A pack can wait on Triptych I's request alone, which only Triptych I's card asks again.
             let asked = store.asked(offer)
@@ -862,13 +367,6 @@ struct PackCard: View {
                 // Ask to Buy's explanation, so buy stays on the first screen of the smallest phone.
                 if let why = store.failures[offer.productID]?.words {
                     detail(why)
-                } else {
-                    (asked ? Text("Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again.",
-                                  comment: "A pack's card: its Ask to Buy sent. Asked is the buy pill's word")
-                        : Text("Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.",
-                               comment: "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"))
-                        .font(.ui(.detail)).foregroundStyle(Color.text2)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .accessibilityElement(children: .combine)
@@ -880,9 +378,9 @@ struct PackCard: View {
             .accessibilityElement(children: .combine)
         case .revoked:
             // A refund or a family's share ended: said plainly, never as an alarm.
-            line(unshared ? String(localized: "\(offer.name) is no longer shared with you \u{00B7} your progress is kept",
+            line(unshared ? String(localized: "\(offer.name) is no longer shared with you",
                                    comment: "A pack's card: a family's share ended. The pack")
-                 : String(localized: "\(offer.name) isn't on this Apple ID any more \u{00B7} your progress is kept",
+                 : String(localized: "\(offer.name) isn't on this Apple ID any more",
                           comment: "A pack's card: refunded. The pack"), Color.text2, glow: false)
         }
     }
@@ -902,9 +400,9 @@ struct PackCard: View {
     @ViewBuilder private func action(_ state: Purchase) -> some View {
         if state == .owned {
             // The bundle has no levels of its own: its owner goes on in the first pack with a level left to play.
-            let pack = offer.pack == nil ? Pack.bundled.first(where: { Self.pickUp($0.levels) != nil }) : nil
-            if let level = pack.flatMap({ Self.pickUp($0.levels) }) ?? next {
-                let continues = Self.continues(pack?.levels ?? levels), name = pack?.name ?? offer.name
+            let pack = offer.pack == nil ? Pack.bundled.first(where: { Shop.pickUp($0.levels) != nil }) : nil
+            if let level = pack.flatMap({ Shop.pickUp($0.levels) }) ?? next {
+                let continues = Shop.continues(pack?.levels ?? levels), name = pack?.name ?? offer.name
                 let title = switch (continues, pack) {
                 case (true, let pack?): String(localized: "continue \(pack.name) \(level.label) \u{203A}",
                                                comment: "The bundle's card, owned: plays on. The pack, then the level number")
@@ -960,7 +458,7 @@ struct PackCard: View {
                         .accessibilityValue(price ?? store.pricing.words ?? "") // loc: verbatim the App Store's price, or localized by Pricing
                         .accessibilityFocused($spoken, equals: .buy)
                 }
-                if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
+                if let taste = Shop.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
                     let (level, replay) = taste
                     let n = offer.pack?.taste ?? 3
                     UnstirButton(.secondary) { onPlay(level) } label: {
@@ -979,42 +477,7 @@ struct PackCard: View {
 
     private var unreachable: Bool { store.canPay && price == nil && store.pricing == .unreachable }
 
-    private var next: Level? { levels.isEmpty ? Self.placeholder(offer) : Self.pickUp(levels) }
-
-    /// Where an owner picks up: the first level without a best, then the first not at par; none once all are at par.
-    static func pickUp(_ levels: [Level], best: (String) -> Best? = Best.load) -> Level? {
-        levels.first { best($0.id) == nil } ?? levels.first { best($0.id)?.over != 0 }
-    }
-
-    /// The taste's first level without a best, or, once all have one, its first to replay.
-    static func taste(_ levels: [Level], best: (String) -> Best? = Best.load) -> (level: Level, replay: Bool)? {
-        let free = levels.prefix(levels.first?.pack?.taste ?? 0)
-        if let level = free.first(where: { best($0.id) == nil }) { return (level, false) }
-        return free.first.map { ($0, true) }
-    }
-
-    /// Over buying, when a level past the taste opened the card of a pack never owned: that the free levels are
-    /// played, once every one has a best, else, for a player who skipped ahead (a row opens any free level), that they
-    /// are free (Jack's call C1A = B, round 16). A refunded owner has the revocation's line instead.
-    static func arrival(_ offer: Offer, _ levels: [Level], state: Purchase,
-                        best: (String) -> Best? = Best.load) -> String? {
-        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked else { return nil }
-        let free = Offer.countWord(pack.taste)
-        let more = String(localized: "\(levels.count - pack.taste) more in \(pack.name).",
-                          comment: "A pack's card, over buying: the levels past the free ones. How many, then the pack")
-        return taste(levels, best: best)?.replay == true
-            ? String(localized: "You've played the free \(free). \(more)",
-                     comment: "A pack's card, over buying. The free levels counted in words, then the levels past them")
-            : String(localized: "The first \(free) are free. \(more)",
-                     comment: "A pack's card, over buying. The free levels counted in words, then the levels past them")
-    }
-
-    /// Play, until a level past the taste has been solved: then the owner continues.
-    static func continues(_ levels: [Level], best: (String) -> Best? = Best.load) -> Bool {
-        levels.contains { level in
-            best(level.id) != nil && (level.pack.flatMap { $0.number(of: level.id) } ?? 0) > (level.pack?.taste ?? 0)
-        }
-    }
+    private var next: Level? { levels.isEmpty ? Self.placeholder(offer) : Shop.pickUp(levels) }
 
     /// Before a pack has levels, a Debug build plays its harness placeholder.
     private static func placeholder(_ offer: Offer) -> Level? {
@@ -1111,13 +574,6 @@ private struct PulsingDot: View {
 /// dock never stirs all at once. Equatable on what it is handed, since the menu redraws on every frame of a scroll and
 /// each cover's marks read the saved bests.
 struct PackDock: View, Equatable {
-    /// The dock waits for plughole 09 (Jack's call C5, round 13). A pack owned or asked for keeps it after a reinstall
-    /// that lost the bests.
-    static func shown(best: (String) -> Best? = Best.load, unlocked: Bool = Best.unlocked,
-                      state: (Pack) -> Purchase = { Store.shared.state($0) }) -> Bool {
-        best(Level.plughole[8].id) != nil || unlocked || Pack.sold().contains { ![.unowned, .failed].contains(state($0)) }
-    }
-
     let open: (Offer, UnitPoint) -> Void
     let held: Double?
     /// The card covers it.
@@ -1184,10 +640,10 @@ struct PackDock: View, Equatable {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             .animation(.easeInOut(duration: 0.4), value: store.approved.first)
-            .task(id: Saying(offer: Self.saying(store.approved.first, covered: covered, shelved: store.shelved),
+            .task(id: Saying(offer: Shop.saying(store.approved.first, covered: covered, shelved: store.shelved),
                              covered: covered || !store.shelved)) {
                 // Held under UNSTIR_CLOCK, for its shot.
-                guard let offer = Self.saying(store.approved.first, covered: covered, shelved: store.shelved) else { return }
+                guard let offer = Shop.saying(store.approved.first, covered: covered, shelved: store.shelved) else { return }
                 if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() } // loc: verbatim localized by Offer
                 // Five seconds in sight: covered, it waits.
                 guard held == nil else { return }
@@ -1238,7 +694,7 @@ struct PackDock: View, Equatable {
                         : Text("\(offer.name), pack", comment: "VoiceOver: a pack's cover. Its name"))
                     .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil) // loc: verbatim localized by Purchase and Marks
                                          ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
-                    .accessibilityHint(offer.pitch) // loc: verbatim localized by Offer
+                    .accessibilityHint(offer.pitch ?? "") // loc: verbatim localized by Offer
                     .accessibilityShowsLargeContentViewer {
                         Text(verbatim: offer.name)
                     }
@@ -1274,11 +730,6 @@ struct PackDock: View, Equatable {
         .overlay(alignment: .top) {
             Rectangle().fill(Color.rule).frame(height: 1).padding(.horizontal, 20)
         }
-    }
-
-    /// The approval the header says now: none while a card or the settings covers the dock, or before it shows.
-    static func saying(_ approved: Offer?, covered: Bool, shelved: Bool) -> Offer? {
-        covered || !shelved ? nil : approved
     }
 
     private struct Saying: Equatable {

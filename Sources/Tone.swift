@@ -86,3 +86,62 @@ extension Offer {
     /// The pack's colour for words: its levels' numbers on the card, "next ›", "more in … ›". `glow` stays the shadow's.
     var ink: Color { self == .pack(.prism) ? .text : glow }
 }
+
+/// The ink on the slope's water (docs/slope.md, 1.4): one colour, `text`'s, at four strengths, each defined by what it
+/// reads at over the lightest ground its words lie on: `ink` to `ink3` at 4.5:1 or more, `ink4` at 3:1 (`ToneTests`
+/// measures them on what Slope.metal draws, at the overview and in the dive). The lightest ground is the shallows in
+/// sun, and how near the surface a word may stand is its ink's `shallowest`. No word is set on a lit ledge top.
+enum SlopeInk: CaseIterable {
+    /// Names and the way on.
+    case ink
+    /// Details that carry meaning: a count, a fact, a note at rest.
+    case ink2
+    /// Keys, progress and explanations.
+    case ink3
+    /// Only what is closed or off, beside a dull pebble.
+    case ink4
+
+    var strength: Double {
+        switch self {
+        case .ink: 1
+        case .ink2: 0.9
+        case .ink3: 0.84
+        case .ink4: 0.66
+        }
+    }
+
+    var colour: Color { Color.text.opacity(strength) }
+
+    /// The depth from which every ink reads.
+    @available(*, deprecated, message: "each ink has its own: ink.shallowest")
+    static let shallowest: CGFloat = 64
+
+    /// The least depth under the surface, in points, at which words in this ink keep their floor: the surface's own
+    /// light is brighter than any ink reads over, and the quieter inks need the water a little darker again. In the
+    /// air they keep as far above the water line.
+    var shallowest: CGFloat {
+        switch self {
+        case .ink, .ink4: 24
+        case .ink2, .ink3: 64
+        }
+    }
+}
+
+extension View {
+    /// Words in one of the slope's inks.
+    func ink(_ ink: SlopeInk) -> some View { foregroundStyle(ink.colour) }
+}
+
+extension SlopeColumn.Rock {
+    /// The rock's light, for its pebbles' glow: sand's warm white, mauve's rose, slate's blue, basalt's ember, a
+    /// pack's pale stone's white. Slope.metal's `slopeLit`.
+    var light: Color {
+        switch self {
+        case .sand: Color(red: 1, green: 0.82, blue: 0.55)
+        case .mauve: Color(red: 1, green: 0.62, blue: 0.86)
+        case .slate: Color(red: 0.55, green: 0.76, blue: 1)
+        case .basalt: Color(red: 1, green: 0.46, blue: 0.26)
+        case .pale: Color(red: 0.8, green: 0.84, blue: 0.9)
+        }
+    }
+}

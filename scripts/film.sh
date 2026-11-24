@@ -397,3 +397,16 @@ if wants calm-payoff-game || wants calm-payoff-tier; then
   calm false
   trap - EXIT
 fi
+# The slope's foundation (SlopeHarness): the dive scrolled from the surface to endless as a finger would, and the
+# overview's depth opening onto plughole 14, the scrolling dive taking over where it lands, and closing again.
+film slope-descent 19 "fps=2,scale=165:-1,tile=10x4:padding=4" SLOPE=descent SLOPESECONDS=16
+film slope-zoom 20 "fps=4,scale=165:-1,tile=10x8:padding=4" SLOPE=zoom SLOPEAT=L14
+# The slope's eggs (SlopeEggs.swift, UNSTIR_EGG), each shown without its finger.
+eggs=(SLOPE=1 SCREEN=menu BESTS=plughole:000000000000000000000000000,endless:9 DAILIES=4)
+film slope-egg-still 18 "fps=2,scale=165:-1,tile=12x3:padding=4" "${eggs[@]}" EGG=still
+film slope-egg-night 14 "fps=2,scale=165:-1,tile=14x2:padding=4" "${eggs[@]}" EGG=night DAILY=20261113
+film slope-egg-skim 12 "fps=4,scale=165:-1,tile=12x4:padding=4" "${eggs[@]}" EGG=skim
+film slope-egg-pebble 12 "fps=2,scale=165:-1,tile=12x2:padding=4" "${eggs[@]}" EGG=pebble
+film slope-egg-seam 11 "fps=2,scale=165:-1,tile=11x2:padding=4" "${eggs[@]}" EGG=seam
+film slope-egg-deep 15 "fps=2,scale=165:-1,tile=10x3:padding=4" "${eggs[@]}" EGG=deep
+film slope-egg-meteors 16 "fps=4,scale=165:-1,tile=16x4:padding=4" "${eggs[@]}" EGG=night DAILY=20260812

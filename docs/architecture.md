@@ -579,12 +579,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `scramble.count`.
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
-  seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
+  seven, with **PlayChrome.swift**. TankView.swift keeps `LevelView` whole, its state and handlers, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
   `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's,
   its type Type.swift's and its buttons Buttons.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
-  `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
+  `LostStamp` and `StopLook`; PlayChrome.swift the chrome round the tank as views that take values and closures, which
+  `LevelView` builds from its state: `PlayHeader` (the way out, and the count it is handed: `MovesCount`, Escapement's
+  ticks or the sandbox's controls), `PlayTitle`, `PlayCaption`, whose slot holds the result or lost card `LevelView`
+  fills once the level finishes, and `PlayControls` (undo with its `RefillBadge`, and the wait and reset `LevelView`
+  hands in, as their arming and timers are its state). `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
   endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
   on a push, and otherwise reads `text2` under par, amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
   "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
@@ -1094,6 +1098,150 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   0.40 reads 2.4:1 there. TierUp is a primary 56 pt tall (`ButtonFace.tall`) in its tier's sweep with its glow's fill
   and breathing glow; closed, it is unfilled and still. `ToneTests` reads each primary's label over its own fill
   (Escapement's plate vermilion is 4.3:1, Jack's to settle) and the strokes at 3:1.
+- **SlopeGeometry.swift**, **Slope.metal**, **SlopeGround.swift**, **Stone.swift** and **SlopeHarness.swift** are the
+  slope's foundation (docs/slope.md, 1 and 13): the world every screen outside the tank is drawn in, built beside the
+  old screens and reached only from the harness until the pieces land.
+  - `SlopeColumn` is a column as data: stretches (a rock, the seats in each terrace, the room over it for a header,
+    rows taller than the pitch, its height at the overview), a foot (wall, drop-off, floor), whether air stands over
+    it, and the measures a type size changes (`pitch`, `lip`, `step`, and at the overview `wall`, `spread`, `under`).
+    `SlopeColumn.main(size:type:header:)` is the main column (the shallows' three ledges, four tiers of three terraces
+    of nine, the drop-off; `ledge(tier:level:)`, `ledge(of:)`); any other list of stretches is a pack's, settings' or
+    the archive's. `SlopeLay(column, z:)` lays one out at a zoom, 0 the overview to 1 the dive: every ledge's top,
+    lip, pebble, drop, rock and back, each stretch's header, the foot and `endless`. Zoom opens depth and magnifies
+    nothing. `seat(n)` is where a pebble rests, `lip(n)` its ledge's nose, `between(n)` a hollow's depth, `half(_:)` a
+    pebble's size, `depth(n)`, `rest(_:height:)` and `travel(height:)` the camera's places. It has no views, so
+    `scripts/slope-lab.sh` compiles it alone.
+  - A ledge's top runs back `SlopeColumn.shelf` (48 pt) from its lip, so the largest pebble rests clear of the wall
+    and the wall still holds a hollow at x = 56. At the overview the whole shelf bows (`bow`) and lifts towards its
+    lips by what nine ledges step down (`lift`), and each ledge leans back down by as much (`crown`), so every top
+    lies level on the screen, back to the leading edge, and nine ledges 1.3 pt apart read as one long one. `seat`
+    follows both. The overview lights the rock as one mass with no darker heart, and over the first ledge its back
+    wall widens up to the bank.
+  - Slope.metal draws the ground in one pass from `SlopeLay.uniforms(top:)`, 36 floats and six a ledge, so the rock is
+    built from the numbers the pebbles are seated by (`testAPebblesSeatIsOnTheDrawnRock`): water by depth, the
+    surface, two far ridges that are never lighter than the water, the shelf, the near silhouette, three layers of
+    motes, then the looks (`SlopeLook`): `level` draws the shelf aside and raises one terrace alone under a tank
+    (`SlopeLay.terrace` is its top, `rock` and `glow` its stone and light), `upper` a second, a short lip over it), `glint`, `clear` (Prism's water), `light`
+    (consent's 0.35) and `paper` (Escapement's page: the same edges as an engraving in ink on bone). It ends in a
+    triangular dither of one part in 255 fixed to the pixel. `slopeHollow` is a hollow's inside (`SlopeHollowGround`).
+    A change to a ledge's shape changes `slopeEdge`, `slopeScale` and the lean in `slopeGround` together with
+    `SlopeLay.scale`, `crown`, `bow` and `lift`.
+  - `SlopeGround` is that pass as a view for one `SlopeView` (a lay, the depth at the screen's top, the size). Its
+    clock runs at 30 Hz and stops while `held`, under Reduce Motion (at 0), while `Power` saves or idles and on the
+    page; stopped, it draws again only for a new camera. `SlopeScene` holds a column by a ledge and a share of the
+    screen's height at a zoom, all three animatable, and lays `content` out from the same `SlopeView` each frame: the
+    overview and the zoom. `SlopeDive` is the same column in a native scroll view (at `z` 1, or 0 for an overview grown
+    past the screen): `content` is laid out once and the ground redrawn for the scroll's offset in the pass that moves
+    it. It opens on `aim` (`SlopeAim`: a ledge and a share, the camera a scene at that ledge and share has, kept
+    inside the travel), travels there when `aim` changes and tells `onMove` its depth. The scroll view's safe-area
+    insets are given back with negative `safeAreaPadding`: with them a scroll target stops 62 pt short of the top.
+    Under the status bar a dive draws the ground again over its content, whole to the bar's foot and gone 30 pt
+    under it, so rows sink away there and none stands behind the clock.
+    A cleared aim leaves the dive where the finger has it, and a new `stamp` goes back to a place already aimed at.
+    `SlopeLayer` places children at points of one frame (`slopePlace`, `slopeLine`, `seated`, `rested`) and offers each
+    the width from its point to 16 pt short of the side (one placed by its middle, the frame's width less both
+    margins, moving aside to stay inside them), so words wrap and are never cut. `rested(at:)` sets a stone by its
+    pebble's underside (the alignments `stoneSeat` and `stoneMiddle`, which `SlopePebble` carries) on a seat, the
+    lone terrace or the bank (`SlopeView.bankSeat`).
+  - `SlopePebble` is the stone as a mark (lit, next, dull, pale, engraved; `dimmed` for a closed level's) and `Stone`
+    the one control: a pebble with words beside it in a `Button`, its state (`StoneState`: lit, next, dull, armed,
+    pending) the caller's to say, 44 pt either way at the least (`testEveryStoneIsFortyFourEitherWay`), sinking 2 pt
+    and drawing in to 0.97 while pressed, rocking when `refused` changes, sounding `effect` through `Sounding`; `sunk`
+    stands its pebble under its words' middle, for the terrace.
+  - The inks are Tone.swift's `SlopeInk`, one colour at four strengths; each reads at its floor from its own
+    `shallowest` depth down (`testTheSlopesInksReadOnItsWater`, on the shader's own output at the overview and in the
+    dive). The voices and sizes are Type.swift's `Font.slope(_:_:)`, `SlopeVoice` and `SlopeSize`.
+  - `SlopeHarness` (Debug only, `UNSTIR_SLOPE`) shows all of it with stand-in pebbles and words: `overview`, `dive`,
+    `zoom`, `descent`, `play`, `hollow`, `pack`, `stones` (scripts/shots/slope.sh, and `film.sh slope-`).
+    `scripts/slope-lab.sh render|bench|probe` draws, times and measures the ground on the Mac's GPU, and
+    `scripts/slope-lab/peek.sh` shoots one harness case on a booted simulator.
+- **The slope's world in the app** (docs/slope.md, 13): `RootView` draws it in place of today's screens while
+  `SlopeFlag.on`, and sets `\.slopeWorld` from it for the play screen and the result. A Debug launch with
+  `UNSTIR_SLOPE=1` (or `=world`) stores the flag and one with `=0` clears it, so a phone's home screen keeps opening it
+  (`UNSTIR_SLOPE=1 scripts/run-ios.sh Debug`); any other harnessed launch and the test host clear it, and no Release
+  build reads either. Its other values are `SlopeHarness`'s stages. In the world: `SlopeMenu` stands in for `MenuView`,
+  a ledge opening its level through `show`. A level grows out of the pebble A hands over (2.9): the play screen leaves
+  its ground to the root (`slopeGroundOwned`), which keeps `SlopeBackdrop` mounted, all but unseen, under the menu (a
+  ground made as the level opens draws black for its first frames) and fills it from the level's `SlopePlayStage`;
+  the tank and chrome scale up from the pebble while the menu crossfades into that ground (an animated offset leaves
+  the menu's Metal ground ahead of its words, so the spec's 280 pt slide is not drawn). Under the back swipe (2.11)
+  the level shrinks toward its ledge with the stage's `swipe` and the menu comes back in; a committed swipe carries
+  on into the pebble, the leaving level keeping its swipe's scale. Views leaving the ZStack keep their order only by
+  explicit zIndex. `SlopeSettings` covers the menu while settings is open; consent is `SlopeConsent` over the menu
+  drawn `bare` at `SlopeConsent.light`, the light returning over 0.6 s; the archive's calendar is `SlopeArchive`. A
+  pack's hollow opens `SlopePack` in the old card's place, from the hollow's point; it draws itself in and out, and an
+  edge swipe over it bumps `swiped` (it rises from the pack's slope or leaves); a pack opened from Triptych I's inside
+  goes back there (`CameFrom`). A cold launch rests on the overview: only a closed
+  tier's way up, or `UNSTIR_TIER`, opens the menu on a tier. `Spoken.back` says "Back to the menu" for the slope's
+  daily, endless and sandbox, as their "↑ menu" does.
+  - `SlopeMenu.swift`, `SlopeLedge.swift` and `SlopeGate.swift` are the menu (2, 3): the overview and every move of the
+    camera are a `SlopeScene`, the resting dive a `SlopeDive` on the same camera; `SlopeMenuPlan` sizes each room
+    from measured type, and `SlopeMenuModel`, the rows' words and states, is read afresh on a revision, a sync, the
+    store and a new day, never per frame. A ledge's row is `SlopeLedge` (number, name, marks or a word, facts,
+    state); a closed tier's gate is `SlopeGate`. It hands `onPick` the pebble's point on the screen, and takes the
+    hollow (`hollow`) and the archive's ledge (`archiveLedge`) as views, a dull pebble standing in until they land.
+  - `SlopePlay.swift` is the play screen's ground (`SlopePlayGround`: the slope drawn aside, the water at the level's
+    depth, one terrace), header, title, caption and the stones on its terrace, drawn by `LevelView` while
+    `slopeWorld`; the slope's chrome's measure and reserve live in `PlayLayout`. `TerraceSeats` (PlayChrome.swift) is
+    how the view in the card's slot hands its stones to the terrace: leading, middle, trailing, a second terrace and a
+    line under them.
+  - `SlopeResult.swift` is the result on the slope (5): lines on the water under the solved tank and stones on the
+    terrace by `TerraceSeats`, every finish and the lost screen in one layout; `ResultCard` hands over to it while the
+    slope is on.
+  - `SlopeHollow.swift` and `SlopePack.swift` are the packs (8): a hollow in plughole's wall (`SlopeHollow`, its cover
+    held still); its inside (`SlopePack`: `HollowGround` with its own `SlopePack.metal`, `HollowInside`, `HollowFloor`)
+    where a pack is shown, tried, bought and restored; and under its floor the pack's own slope (`PackSlope`,
+    `SlopeColumn.pack`) on the menu's ledge rows. Offer.swift holds the slope's rules beside the shop's: `Shop.ledge`
+    is 8.3's table of the ledge's stone by the store's state as one function.
+  - `SlopeArchive.swift` is the archive (2.5, 7): `ArchiveLedge`, its row on the menu's archive ledge
+    (`ArchiveLedge.seated` on A's spot, in place of A's stand-in row), refusing with a rock until a pack is bought; and
+    `SlopeArchive`, the calendar on its own stretch of the shallows, a month to a stretch and a week to a terrace of
+    seven seats (a ledge a day at the accessibility sizes), opened over the menu in the old `ArchiveView`'s place. The
+    root tallies the ledge's days and those at par once per revision, never per frame. A day opened from it says
+    "↑ archive" and returns there.
+  - `SlopeSettings.swift` and `SlopeConsent.swift` (9): settings are a `SlopeDive` over their own one-stretch sandstone
+    column, a ledge per row, a switch's row a whole-row button with its stone seated; consent is words only over the
+    overview. Both reuse `ConsentWords`, `SettingsSheet`'s support, policy and version, `MailSheet` and `SafariSheet`.
+  - `SlopeEggs.swift` is the menu's eggs (Jack's call on issue 306: found, never told, rewarding nothing): a
+    `SlopeEggs` only `SlopeMenu` hands its ground, which Slope.metal reads as a `SlopeEgg`, every term skipped at 0, so
+    any other ground draws and costs what it did. `UNSTIR_EGG` (Debug) shows each without its finger
+    (scripts/shots/slope-eggs.sh, `film.sh slope-egg-`), and `scripts/slope-lab.sh` takes each as a number; `scripts/slope-lab/strip.sh` and `reel.sh` lay a simulator's
+    screenshots, or a recording's frames, side by side.
+    - Still water: where any other ground's clock stops at once on `Power.idle`, the menu's slows to a stop over
+      `Calm.settle` (4.4 s) as the surface flattens, the light reaches down, the ridges come out of the haze and the
+      motes thin, and a touch brings it back over `Calm.wake`. `Power.calm` holds the turn and what the clock has
+      lost to it, so the ground and the dive's veil read both for any moment and the ground draws only while
+      `Power.turning`. The way on's glow breathes out and holds (`\.slopeStill`). Reduce Motion and `Power.saving`
+      have none of it. Its light is kept under the shallows' own brightest, so the inks keep their floors.
+    - The night above: the ground reads how far its camera stands over the travel's top (`SlopeEggs.night(lift:)`, in by
+      150 pt) and draws stars fixed to the sky, and the moon 250 pt over the surface at its phase for the menu's day
+      (`SlopeEggs.elongation`, Meeus' six-term phase angle, checked against the eclipses of 2024-04-08, 2025-03-14 and
+      2026-08-12; lit on the left where the region is southern), with its light on the water. The dive's own bounce
+      pulls it there; the overview, which doesn't scroll, takes a drag of its own (`tug`, giving as a scroll's end
+      does, as a high-priority gesture so the bands under it keep their taps and lose their drags; none under
+      Reduce Motion, where nothing follows the finger). The ground reads a pull only at the camera's two rests, as on
+      its way between them it may pass either end of the travel.
+    - Skimming stone: a drag along the water line let go at 500 points a second or more throws a `SlopeSkim`: one
+      to nine touches by its speed and a little luck, as far as the water runs, each hop a fifth shorter and sooner.
+      The shader's `slopeRings` and `SlopeSkimLayer` read the same times and places; the layer is drawn inside the
+      ground on the ground's clock, so the stone meets the water line where it is drawn, sway and all, at the
+      display's rate while it flies. Each touch is a light haptic; the count stands two seconds where it sank.
+      Reduce Motion and `Power.saving` throw none. The drag is read in the screen's space, as the water line is.
+    - The unnumbered pebble: `SlopeEggs.nook` is a spur of rock 1.3 pitches under the main column's last ledge, drawn
+      by the shader in the dive and seating `SlopeUnnumbered`, a dull `Stone` whose words, "made by screendead", show
+      four seconds after a tap; VoiceOver has it as a button of that name.
+    - The seam: `SlopeMenuModel.TierRows.seam` (every level at par, read with the model, never per frame) lights
+      `slopeSeam` in that tier's rock: a thread that wanders by the water's depth in ledges, so it keeps its place in
+      the rock from the overview to the dive, pinching out and coming back, with flecks beside it.
+    - The sky at the bottom: past the foot of the travel by `SlopeEggs.held` (the dive's bounce, or the overview's
+      drag), the ground counts the hold on its own timeline, as a held finger sends no scroll events, and the
+      stars come out one by one over `dawning` seconds, the sky's own field upside down; at once under Reduce Motion.
+    - Meteor nights: `SlopeEggs.shower` is the three nights, noon to noon, round 12 August and 13 December; the night
+      above then draws one meteor in most spells of 2.3 s, falling away from a radiant high off the leading side.
+    - Cost, on the Mac's GPU at the reference phone's 1320 x 2868 (`slope-lab.sh bench`): every other ground calls
+      `slope`, whose eggs are a constant nothing the compiler drops, and costs what it did (0.869 ms at the overview);
+      the menu's `slopeMenu` costs 0.909 ms with no egg showing, 1.01 under the night, 1.02 with a stone skimming, 0.94
+      with every seam (1.09 in the dive, of 0.99), 1.24 over the mirrored sky and 1.09 beside the nook.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
@@ -1146,12 +1294,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
   cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
-  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule: the
+  too. `MenuLayout.of` (**MenuLayout.swift**) splits the menu wherever play splits, by play's own rule: the
   list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
   neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the
   card's way out reads "✕ close" (VoiceOver "Close"), as the menu is in sight, unless it goes back to the bundle's
-  card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
+  card (`Shop.back`; Jack's call d4-menuback = B, round 16). It holds
   one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
   card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
   turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
@@ -1201,7 +1349,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
   level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
   has read what the player owns, decided again once it has); the playing level's own row opens nothing and doesn't tap
-  (`MenuView.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
+  (`Menu.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
   and up a notch open in place without the switch (`RootView.proceed`), as on a phone, so a cleared tank sends no run's
   quit. The list follows the playing level (`MenuView.playing`: its tier, switched to without the switch's sound; its
   row centred, again once the list has glided to a new slot, as the phone folds; its hairline at full and
@@ -1209,7 +1357,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   on each return, reads its rows, run and dailies afresh on `RootView.revision`, bumped by every level opened, left or
   finished. A pack's card or the archive opens over the whole trailing half, its ground running on to the fold, as a
   phone's covers the menu (its way out "‹ menu", modal
-  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `MenuView.closes`, Jack's call
+  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `Menu.closes`, Jack's call
   s5b-back = B), the level playing on under it: from the dock, a result card's pointer, a gate or a promoted purchase.
   A level opened from a card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that
   level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a
@@ -1231,9 +1379,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `archived`, again is no practice, and it has no share line or next daily's time; but a day that kept a best on its
   day keeps it, the archive replaying it as practice (`Game.counts`), so the archive never moves `Daily.run`.
   `Resume.known` holds its days, so a try left there survives a launch.
-- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
+- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards, `PackCard`'s and
+  `PackDock`'s views; **Offer.swift** what they sell and the rules they follow apart from how they draw: `Offer`, the
+  `Store`, `Failure`, `Pricing` and `Purchase` extensions, `Marks`, and `Shop`, the card's and the dock's rules
+  (`back`, `menu`, `lands`, `pickUp`, `taste`, `arrival`, `continues`, `shown`, `saying`); **PackCovers.swift** the
+  covers and the card's clip (`PackTank`, `Wedge`, `LoopingTank`, `PackClip`). `Offer` is a pack or
   the bundle, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
-  for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
+  for, or under the developer unlock (`Shop.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
   draws it (`LevelPicture`: the halftone, black until its bake lands, its lenses' cores drawn finer once their detail bakes, as the glass's are (`unstirLens`), Escapement 2's engraved plate, the fern; the bundle a wedge of
@@ -1273,7 +1425,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tried). An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
-  once all are (`PackCard.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
+  once all are (`Shop.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and the bundle's cover once it saves nothing (the bundle owned, or the packs left cost no more than
   it), animating the shelf's change, its height kept whatever the covers' lines say; the bundle's card names each pack as a link to its
@@ -1282,7 +1434,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
-  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
+  entitlements is no landing (`Shop.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
   status, buy and Triptych's line, so an owner never sees a price on a pack they own, then reads as owned or not,
   without a chime or an announcement. Offline the read still ends, as the entitlements are kept on the device, and the
   card shows its state with "App Store unreachable" where the price goes, as before. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
@@ -1291,10 +1443,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes
   ("more in Lens ›"; Jack's call C1 = B, round 13), and every pack level's next is in the pack's colour, owned or not.
   The card that gate opens (`RootView.arrived`, that showing only) is scrolled to buying, under a line for a pack
-  never owned (`PackCard.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
+  never owned (`Shop.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
   else, for a player who skipped ahead, "The first three are free. 22 more in Lens." (Jack's call C1A = B, round 16); a
   refunded owner has only the revocation's line. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
-  one (`PackCard.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
+  one (`Shop.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
   its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (Type.swift's roles; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
@@ -1449,7 +1601,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   own, as `rawValue` is the stored one), and a translated name is cased for the locale (`localizedUppercase`). The
   version line is drawn verbatim and the editors' switch's words are do-not-translate keys (CAT7); a switch's name is
   a `LocalizedStringResource`, so its `settings:` log line keeps the English key.
-- **Menu.swift** holds `MenuView`. What it leads with follows plughole 23 (`MenuView.lead`, Jack's call C4,
+- **Menu.swift** holds `MenuView` and its views; **MenuModel.swift** what the menu shows and does apart from how it
+  draws, with nothing of SwiftUI's views in it: `Tier.step`, `frontier`, `short` and `landing`, `Level.focus(solved:)`,
+  `Menu` (`lead`, `dailyLines`, `opens`, `closes`, a closed row's line, `closedLine` and `reached`, and the gate's
+  ticks, `gate`), `Refusal` (a closed row's shake and its two seconds' line), `NewRunArm` (endless's "new run", armed as
+  reset is) and `CameFrom`; **SupporterMark.swift** the supporter mark. What it leads with follows plughole 23 (`Menu.lead`, Jack's call C4,
   round 13). The tank's rule, "Every stir in this tank has an exact inverse.", left the menu for the App Store page
   (Jack's call D1 = A, round 13), and the "next: 07 · Sprinkle ›" line that took its place went too (Jack,
   2026-11-11), so the first header, "today" or the tier's, stands 24 pt under the chips as drawn, with no gap kept
@@ -1462,7 +1618,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
-  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`MenuView.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), led on a frost day by "frost day" (`Menu.dailyLines`, the only daily that seizes knobs; Jack's pick when shipping frost days), which wraps at accessibility sizes rather than shrink, and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
   leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip holds every tier as a chip, 36 pt tall in a 44 pt target: the picked one stroked in its tier's sweep over its glow at 0.12, an open one in `line`, a locked one in `rule` with a lock after its dimmed name; the picked face moves to its chip as it is picked (`matchedGeometryEffect`), ahead of the list. The strip

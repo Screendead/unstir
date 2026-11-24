@@ -10,7 +10,7 @@ import SwiftUI
 enum ConsentWords {
     static var title: String { String(localized: "Help improve Unstir?", comment: "Analytics consent: its question") }
     static var body: String {
-        String(localized: "Let the game tell us how you play. Never who you are.", comment: "Analytics consent: under its question")
+        String(localized: "How you play. Never who you are.", comment: "Analytics consent: under its question")
     }
     static var sendsLink: String {
         String(localized: "What does it send? \u{203A}", comment: "Analytics consent: the link that shows what is sent")
@@ -20,10 +20,9 @@ enum ConsentWords {
     }
     static var sends: String {
         String(localized: """
-            If you say yes, the game tells us how you play: which puzzles you finish, how many moves and \
-            undos they take, which days you play, which packs you buy, and roughly which country you're in. It never \
-            sends your name, your Apple ID, or anything that tells us who you are. You can change your mind any time in \
-            settings.
+            Yes means we see which puzzles you finish, how many moves and undos, which days you play, which packs you \
+            buy, and roughly your country. Never your name, Apple ID, or anything that identifies you. Change it any time \
+            in settings.
             """, comment: "Analytics consent: what is sent. Keep in step with the privacy policy")
     }
     static var yes: String { String(localized: "Yes", comment: "Analytics consent: the answer that agrees") }
@@ -38,35 +37,16 @@ enum ConsentWords {
         String(localized: "off \u{00B7} nothing is sent", comment: "Settings: the analytics switch, off")
     }
     static let music = LocalizedStringResource("music", comment: "Settings: the music switch")
-    static var musicDetail: String {
-        String(localized: "the beds under the menu and the levels", comment: "Settings: what the music switch plays")
-    }
     static let sounds = LocalizedStringResource("sounds", comment: "Settings: the sounds switch")
-    static var soundsDetail: String { String(localized: "every effect and button", comment: "Settings: what the sounds switch plays") }
     static let haptics = LocalizedStringResource("haptics", comment: "Settings: the haptics switch")
-    static var hapticsDetail: String {
-        String(localized: "the tank's knocks and taps", comment: "Settings: what the haptics switch plays")
-    }
     static var report: String { String(localized: "report a problem", comment: "Settings: the row that mails the log") }
     static var reportDetail: String {
         String(localized: "with the log: touches, moves, purchases and errors", comment: "Settings: what a report sends")
     }
     static var policy: String { String(localized: "privacy policy", comment: "Settings: the row that opens the policy") }
     static var restore: String { String(localized: "restore purchases", comment: "Settings and a pack's card: restore") }
-    static var restoreDetail: String {
-        String(localized: "packs bought on this Apple ID", comment: "Settings: what restore brings back")
-    }
-    static var policyDetail: String {
-        String(localized: "what the game keeps, and why", comment: "Settings: what the policy says")
-    }
     static let letters = LocalizedStringResource("colour letters", comment: "Settings: the switch for Prism's knob letters")
-    static var lettersDetail: String {
-        String(localized: "R, G and B on Prism's knobs", comment: "Settings: what the colour letters switch shows")
-    }
     static let supporter = LocalizedStringResource("supporter mark", comment: "Settings: the supporter mark's switch")
-    static var supporterDetail: String {
-        String(localized: "\u{2726} by the title and in the daily's share line", comment: "Settings: where the supporter mark shows")
-    }
     static let editors = LocalizedStringResource("open every tier", comment: "Editors' build words")
     static var editorsDetail: String {
         String(localized: "every level and pack too, without buying", comment: "Editors' build words")
@@ -221,21 +201,21 @@ struct SettingsSheet: View {
                 Text(ConsentWords.settings).font(.ui(.title)).padding(.top, 26)
                     .accessibilityAddTraits(.isHeader)
                 VStack(alignment: .leading, spacing: 0) {
-                    switchRow(ConsentWords.music, ConsentWords.musicDetail, $music) {
+                    switchRow(ConsentWords.music, nil, $music) {
                         Settings.music = $0
                         Sound.shared.music($0)
                     }
-                    switchRow(ConsentWords.sounds, ConsentWords.soundsDetail, $sounds) {
+                    switchRow(ConsentWords.sounds, nil, $sounds) {
                         Settings.sounds = $0
                         Sound.shared.sounds($0)
                         // The switch's own tap went out while sounds were off.
                         if $0 { Sound.shared.play(.tap) }
                     }
-                    switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
-                    switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
+                    switchRow(ConsentWords.haptics, nil, $haptics) { Settings.haptics = $0 }
+                    switchRow(ConsentWords.letters, nil,
                               Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
                     if store.bought {
-                        switchRow(ConsentWords.supporter, ConsentWords.supporterDetail, $supporter) { Settings.supporter = $0 }
+                        switchRow(ConsentWords.supporter, nil, $supporter) { Settings.supporter = $0 }
                     }
                     #if EDITORS || DEBUG
                     if Build.editorsSwitch {
@@ -253,7 +233,7 @@ struct SettingsSheet: View {
                     }
                     Button { Task { await store.restoreAndAnnounce() } } label: {
                         HStack(spacing: 12) {
-                            row(ConsentWords.restore, store.restoreNote ?? ConsentWords.restoreDetail)
+                            row(ConsentWords.restore, store.restoreNote)
                             Spacer(minLength: 8)
                         }
                         .padding(.vertical, 12)
@@ -276,7 +256,7 @@ struct SettingsSheet: View {
                         ShareButton(items: { [Log.url] }) { outward(ConsentWords.report, ConsentWords.reportDetail) }
                     }
                     rule
-                    Button { reading = true } label: { outward(ConsentWords.policy, ConsentWords.policyDetail) }
+                    Button { reading = true } label: { outward(ConsentWords.policy, nil) }
                         .buttonStyle(Sounding())
                         .sheet(isPresented: $reading) { SafariSheet(url: SettingsSheet.policy).ignoresSafeArea() }
                 }
@@ -312,7 +292,7 @@ struct SettingsSheet: View {
     private var rule: some View { Rectangle().fill(Color.rule).frame(height: 1) }
 
     /// A stored switch: `store` keeps the choice and acts on it, the mirror moves the knob.
-    private func switchRow(_ name: LocalizedStringResource, _ detail: String, _ mirror: Binding<Bool>,
+    private func switchRow(_ name: LocalizedStringResource, _ detail: String?, _ mirror: Binding<Bool>,
                            store: @escaping (Bool) -> Void) -> some View {
         VStack(spacing: 0) {
             Toggle(isOn: Binding(get: { mirror.wrappedValue }, set: {
@@ -329,7 +309,7 @@ struct SettingsSheet: View {
     }
 
     /// A row that opens something outside the game's own screens, a mail or a web page, marked with the amber arrow.
-    private func outward(_ name: String, _ detail: String) -> some View {
+    private func outward(_ name: String, _ detail: String?) -> some View {
         HStack(alignment: .center, spacing: 12) {
             row(name, detail)
             Spacer(minLength: 8)
@@ -341,16 +321,16 @@ struct SettingsSheet: View {
         .contentShape(Rectangle())
     }
 
-    private func row(_ name: String, _ detail: String) -> some View {
+    private func row(_ name: String, _ detail: String?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(name).font(.ui(.body)) // loc: verbatim localized by ConsentWords
-            Text(detail).font(.ui(.detail)).foregroundStyle(Color.text3) // loc: verbatim localized by ConsentWords and Store
+            if let detail { Text(detail).font(.ui(.detail)).foregroundStyle(Color.text3) } // loc: verbatim localized by ConsentWords and Store
         }
     }
 }
 
 /// "report a problem": a mail to the support address, its log attached and the device line in the body.
-private struct MailSheet: UIViewControllerRepresentable {
+struct MailSheet: UIViewControllerRepresentable {
     let to: String
 
     static var subject: String { "\(SettingsSheet.version): a problem" }
@@ -386,7 +366,7 @@ private struct MailSheet: UIViewControllerRepresentable {
 }
 
 /// The privacy policy, read in the app.
-private struct SafariSheet: UIViewControllerRepresentable {
+struct SafariSheet: UIViewControllerRepresentable {
     let url: URL
 
     func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }

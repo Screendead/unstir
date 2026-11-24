@@ -384,8 +384,8 @@ extension Level {
                        comment: "Escapement's note under the tank opening its third chapter: the tick budget, then the chapter's rule")
         case 3: String(localized: "rule.escapement.4", defaultValue: "Unstir in \(budget) ticks. A wound-back clock ticks the other way.",
                        comment: "Escapement's note under the tank opening its fourth chapter: the tick budget, then the chapter's rule")
-        default: String(localized: "rule.escapement.5", defaultValue: "Unstir in \(budget) ticks. Three clocks.",
-                       comment: "Escapement's note under the tank opening its fifth chapter: the tick budget, then the chapter's rule")
+        default: String(localized: "rule.escapement.5", defaultValue: "Unstir in \(budget) ticks.",
+                       comment: "Escapement's note under the tank opening its fifth chapter: the tick budget")
         }
     }
 

@@ -182,19 +182,14 @@ struct ArchiveView: View {
         ScrollViewReader { reader in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    let back = PackCard.back(to: PackCard.menu, beside: beside)
-                    UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) } // loc: verbatim localized by PackCard.back
+                    let back = Shop.back(to: Shop.menu, beside: beside)
+                    UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) } // loc: verbatim localized by Shop.back
                         .padding(.top, 18)
-                        .accessibilityLabel(back.spoken) // loc: verbatim localized by PackCard.back
-                    Text("PAST DAILIES").font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3).padding(.top, 26)
+                        .accessibilityLabel(back.spoken) // loc: verbatim localized by Shop.back
                     Text("Archive").font(.ui(.display)).tracking(2)
                         .foregroundStyle(Tier.plughole.sweep).shadow(color: Color.amber.opacity(0.55), radius: 10)
-                        .padding(.top, 6)
+                        .padding(.top, 26)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Every daily as it was dealt. A best here is its own: only a daily solved on its day adds to the days running.")
-                        .font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4).fixedSize(horizontal: false, vertical: true)
-                    Text("done \(marks.filter { $0 == .clean || $0 == .par }.count)/\(days.count) at par")
-                        .font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 14)
                     ForEach(months, id: \.self) { month in
                         block(month, marks: marks).padding(.top, 30)
                     }

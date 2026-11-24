@@ -141,3 +141,62 @@ extension Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
 }
+
+/// The slope's voices (docs/slope.md, 1.3): who is speaking decides the face, the size its text style. Every one
+/// follows Dynamic Type to the largest sizes; nothing on the slope shrinks to fit.
+enum SlopeVoice {
+    /// The names of places and what the game says: New York italic, light.
+    case place
+    /// A level's or a pack's name, the wordmark: SF Pro, light.
+    case name
+    /// Controls, row titles, details, explanations: SF Pro, regular.
+    case ui
+    /// Numbers and counts: SF Mono, regular.
+    case data
+}
+
+/// The slope's five sizes, at the default setting.
+enum SlopeSize {
+    /// 34 pt.
+    case display
+    /// 28 pt.
+    case title
+    /// 17 pt.
+    case body
+    /// 15 pt.
+    case label
+    /// 13 pt: nothing that means something is under it.
+    case detail
+
+    var style: Font.TextStyle {
+        switch self {
+        case .display: .largeTitle
+        case .title: .title
+        case .body: .body
+        case .label: .subheadline
+        case .detail: .footnote
+        }
+    }
+}
+
+extension SlopeSize {
+    /// A line's height at `type`, as `Text` lays the size's text style out: what a column's pitch, header and
+    /// stretch heights are sized from.
+    func line(at type: DynamicTypeSize) -> CGFloat {
+        UIFont.preferredFont(forTextStyle: style.ui, compatibleWith:
+            UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(type))).lineHeight
+    }
+}
+
+extension Font {
+    /// Text in one of the slope's voices at one of its sizes; `weight` where a voice takes another (a control that
+    /// is the way on is medium, "buy" semibold).
+    static func slope(_ voice: SlopeVoice, _ size: SlopeSize, _ weight: Font.Weight? = nil) -> Font {
+        switch voice {
+        case .place: .system(size.style, design: .serif, weight: weight ?? .light).italic()
+        case .name: .system(size.style, design: .default, weight: weight ?? .light)
+        case .ui: .system(size.style, design: .default, weight: weight ?? .regular)
+        case .data: .system(size.style, design: .monospaced, weight: weight ?? .regular)
+        }
+    }
+}

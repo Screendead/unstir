@@ -41,6 +41,7 @@ struct ResultCard: View {
     /// The pack "more puzzles in the packs ›" opens, read as the card appears, which spends its one showing.
     @State private var packs: Pack?
     @Environment(\.page) private var page
+    @Environment(\.slopeWorld) private var slopeWorld
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve, which a daily's first on its day is over a best the archive saved
@@ -57,15 +58,48 @@ struct ResultCard: View {
             : String(localized: "best \u{00B7} \(mark(was))", comment: "The card: this solve didn't beat the best. The best")
     }
 
+    /// The ways on from a finish, the old card's and the slope's: the next level or tank, the tier up a notch, and
+    /// which one leads. One primary: an open up a notch, else next, else share; "again" never is.
+    struct Way {
+        let next: Level?
+        let up: Tier?
+        let upLeads: Bool
+        let nextLeads: Bool
+        /// A pack level's tier is plughole's by default, so a pack takes its own colour first.
+        let accent: Color
+
+        @MainActor init(_ game: Game) {
+            next = game.level.run != nil ? game.nextTank
+                : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
+            up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil)
+            upLeads = up?.isOpen() == true
+            nextLeads = next != nil && !upLeads
+            accent = game.level.pack.map { Offer.pack($0).ink } ?? game.level.tier.ink
+        }
+
+        /// Next's words: past a pack's free taste, unowned, it opens the pack's card and says so; a spilled run starts
+        /// another.
+        @MainActor func label(_ game: Game) -> String {
+            let gate = next.flatMap { Store.shared.card(for: $0) }
+            return game.spilled ? String(localized: "new run \u{203A}", comment: "Endless's card, spilled: starts another run")
+                : gate.map { String(localized: "more in \($0.name) \u{203A}", comment: "The card's next, past a pack's free levels. The pack") }
+                ?? String(localized: "next \u{203A}", comment: "The card's next level or tank")
+        }
+    }
+
     var body: some View {
+        if slopeWorld {
+            SlopeResult(game: game, onNext: onNext, onLook: onLook, again: again, now: now, onOffer: onOffer)
+        } else {
+            card
+        }
+    }
+
+    @ViewBuilder private var card: some View {
         let run = game.level.run
-        // A pack level's tier is plughole's by default, so a pack takes its own colour first.
-        let accent = game.level.pack.map { Offer.pack($0).ink } ?? game.level.tier.ink
-        let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
-        let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil)
-        // One primary: an open TierUp's, else next's, else share's; "again" never is.
-        let upLeads = up?.isOpen() == true
-        let nextLeads = next != nil && !upLeads
+        let way = Way(game)
+        let accent = way.accent, next = way.next, up = way.up
+        let upLeads = way.upLeads, nextLeads = way.nextLeads
         // Marks, the verdict, the facts and what they need said, then the way on: the lines 4 apart, 16 between things.
         VStack(spacing: 16) {
             VStack(spacing: 10) {
@@ -112,11 +146,6 @@ struct ResultCard: View {
                         } else {
                             facts.foregroundStyle(quiet)
                         }
-                        if !game.clean && (!par || game.over == 0) {
-                            (game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? Text("clean needs no undo or reset")
-                                : Text("clean counts on the first try"))
-                                .font(.ui(.detail)).tone(page.tone(.text3))
-                        }
                     }
                     if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
                         Text(line).tone(.text2) // loc: verbatim localized by bestLine
@@ -156,11 +185,7 @@ struct ResultCard: View {
                             .accessibilityLabel("Share result")
                     }
                     if let next {
-                        // Past a pack's free taste, unowned, next opens its card: the button says so.
-                        let gate = Store.shared.card(for: next)
-                        let label = game.spilled ? String(localized: "new run \u{203A}", comment: "Endless's card, spilled: starts another run")
-                            : gate.map { String(localized: "more in \($0.name) \u{203A}", comment: "The card's next, past a pack's free levels. The pack") }
-                            ?? String(localized: "next \u{203A}", comment: "The card's next level or tank")
+                        let label = way.label(game)
                         UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) } // loc: verbatim localized here
                             .accessibilityLabel(game.spilled ? Text("New run", comment: "VoiceOver: starts a new endless run") // loc: verbatim each a key
                                                 : run != nil ? Text("Next tank", comment: "VoiceOver: endless's card, the next tank")
@@ -285,8 +310,17 @@ struct LostCard: View {
     let again: () -> Void
     @AccessibilityFocusState private var focused: Bool
     @Environment(\.page) private var page
+    @Environment(\.slopeWorld) private var slopeWorld
 
     var body: some View {
+        if slopeWorld {
+            SlopeLost(game: game, notice: notice, undo: undo, again: again)
+        } else {
+            card
+        }
+    }
+
+    @ViewBuilder private var card: some View {
         VStack(spacing: 26) {
             Text("out of ticks on move \(game.moves)").font(.ui(.label))
                 .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused)
