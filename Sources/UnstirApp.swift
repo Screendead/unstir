@@ -801,7 +801,7 @@ struct RootView: View {
         // A cold launch rests on the overview, so only a closed tier's "up a notch", or the harness's UNSTIR_TIER, names a tier.
         SlopeMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
                   settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
-                  held: harness?.lockTap, peeking: level != nil, revision: revision,
+                  held: harness?.lockTap, peeking: peeking, revision: revision,
                   run: Self.save("endless", harnessed: harnessed, harnessSave),
                   light: asking ? SlopeConsent.light : 1, bare: asking,
                   hollow: { offer, spot in
@@ -822,17 +822,17 @@ struct RootView: View {
     /// The time a level takes to come in over the slope, or to leave it, while the slope draws aside or back in.
     static let slopeTravel = 0.9
 
-    /// The slope drawn 280 pt aside to the leading edge as a level opens over it, and back as it leaves (2.9).
-    private var slopeAside: AnyTransition {
-        reduceMotion ? .opacity : .offset(x: -280).combined(with: .opacity)
-    }
+    /// The menu's slope crossfades into the level's, which `SlopeBackdrop` draws drawn aside (2.9), and back as it leaves.
+    /// An offset is not animated here: the menu's Metal ground jumps to it, ahead of the words.
+    private var slopeAside: AnyTransition { .opacity }
 
     /// The level grows out of its pebble into the tank's place and shrinks back into it as it leaves (2.9): the play
     /// screen leaves its ground to the root (`slopeGroundOwned`), so only the tank and its chrome grow. Without a pebble
     /// (endless from the foot, the harness), or under Reduce Motion, it fades.
     private var slopeGrow: AnyTransition {
         guard !reduceMotion, let anchor = pebbleAnchor else { return .opacity }
-        return .scale(scale: Self.pebbleScale, anchor: anchor).combined(with: .opacity)
+        // Lit from its first frames, so the growth is seen from the pebble's size.
+        return .scale(scale: Self.pebbleScale, anchor: anchor).combined(with: .opacity.animation(.easeOut(duration: 0.15)))
     }
 
     /// A pebble's width over a tank's.
@@ -917,6 +917,21 @@ struct RootView: View {
             } else if let slope = slopeStage {
                 slope
             } else {
+                // The open level's ground, whole under the slope and the level, so only the tank and chrome grow from the
+                // pebble. Kept in place, all but unseen, while the menu is up, so its first frame is drawn before a level
+                // opens over it: a ground made as the level opens shows black for its first few frames.
+                if slope {
+                    SlopeBackdrop(stage: stage ?? SlopePlayStage(level: focus ?? Level.plughole[0], lit: false, sinking: false,
+                                                                 swipe: 0, tank: .zero))
+                        .ignoresSafeArea()
+                        .opacity(level == nil ? 0.001 : 1 - swipe)
+                        // Whole at once as a level opens, under the slope drawing aside; it follows only the swipe.
+                        .animation(nil, value: level)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                        .zIndex(-1)
+                }
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
                 // level, whose ground it leaves uncovered.
@@ -925,9 +940,9 @@ struct RootView: View {
                         .allowsHitTesting(level == nil)
                         .accessibilityHidden(level != nil)
                         // Under a back swipe the slope draws back in as the level shrinks toward its ledge.
-                        .offset(x: level == nil ? 0 : -280 * (1 - swipe))
-                        .opacity(level == nil ? 1 : swipe)
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
+                        // Only while it peeks: as a level opens, the menu leaves through its own transition.
+                        .offset(x: level != nil && peeking ? -280 * (1 - swipe) : 0)
+                        .opacity(level != nil && peeking ? swipe : 1)
                         .transition(slopeAside)
                 } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
@@ -943,15 +958,6 @@ struct RootView: View {
                     .accessibilityHidden(level != nil && !beside)
                     .transition(level == nil ? dip : wide ? .opacity : .identity)
                     .zIndex(beside ? 1 : 0)
-                }
-                // The open level's ground, drawn whole behind it, so the tank and chrome alone grow from the pebble.
-                if slope, level != nil, let stage {
-                    SlopeBackdrop(stage: stage)
-                        .ignoresSafeArea()
-                        .opacity(1 - swipe)
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
-                        .transition(.opacity)
-                        .allowsHitTesting(false)
                 }
                 if let level {
                     LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
