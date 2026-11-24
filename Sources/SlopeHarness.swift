@@ -284,7 +284,7 @@ private struct SlopeStandIns: View {
 
     /// The packs' hollows, dark mouths in plughole's wall with a light inside, centred at x = 56.
     @ViewBuilder private var hollows: some View {
-        ForEach(Array(zip(Pack.allCases, [2, 6, 11, 16])), id: \.0) { pack, after in
+        ForEach(Array(zip(Pack.hollowed(), [6, 11, 16])), id: \.0) { pack, after in
             let y = view.y(lay.between(SlopeColumn.ledge(tier: 0, level: after)))
             if shown(y) {
                 VStack(spacing: 8) {

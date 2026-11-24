@@ -469,7 +469,7 @@ private struct HollowInside: View {
                         .accessibilityFocused($spoken, equals: .note)
                 }
                 counter(state).padding(.top, 24).id("buy")
-                if store.ready, pack != nil, !owned, store.canPay, let saving = store.saving, Offer.shelf().contains(.complete) {
+                if store.ready, pack != nil, !owned, store.canPay, let saving = store.saving, Offer.hollows().contains(.complete) {
                     triptych(saving).padding(.top, 20)
                 }
             }
@@ -482,7 +482,7 @@ private struct HollowInside: View {
                     HollowFloor(offer: offer, levels: levels, owned: owned, width: size.width, action: onDive, store: store)
                         .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.space)).minY + HollowFloor.sill } action: { floor = $0 }
                 }
-                if Pack.sold().contains(where: { store.state($0) != .owned }) { restore.padding(.top, 14) }
+                if Pack.hollowed().contains(where: { store.state($0) != .owned }) { restore.padding(.top, 14) }
             }
             .modifier(Arrive(turn: 5, on: entered))
         }
@@ -1050,7 +1050,7 @@ struct SlopePackHarness: View {
                     if Shop.shown() {
                         // As the menu places them (`SlopeMenu`'s hollows).
                         let large = typeSize.isAccessibilitySize, lay = view.lay
-                        ForEach(Offer.shelf().filter { $0 != .complete || Store.shared.offersComplete }, id: \.self) { offer in
+                        ForEach(Offer.hollows().filter { $0 != .complete || Store.shared.offersComplete }, id: \.self) { offer in
                             let above = SlopeColumn.ledge(tier: 0, level: SlopeMenuPlan.hollowAfter(offer))
                             let y = large ? view.y(lay.tops[above] + lay.drops[above] - SlopeMenuPlan.hollowRow(typeSize) - 6)
                                 : view.y(lay.between(above)) - SlopeHollow.full / 2
@@ -1073,7 +1073,7 @@ struct SlopePackHarness: View {
         if type.isAccessibilitySize {
             let row = SlopeMeasure.line(.body, at: type) + SlopeMeasure.line(.detail, at: type) + 8
             var rows = [CGFloat](repeating: 0, count: 27)
-            for offer in Offer.shelf() { rows[SlopeMenuPlan.hollowAfter(offer) - 1] = row + SlopeMenuPlan.hollowRow(type) + 60 }
+            for offer in Offer.hollows() { rows[SlopeMenuPlan.hollowAfter(offer) - 1] = row + SlopeMenuPlan.hollowRow(type) + 60 }
             column.stretches[1].rows = rows
         }
         return column

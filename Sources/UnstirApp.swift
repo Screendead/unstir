@@ -900,7 +900,8 @@ struct RootView: View {
     private var asking: Bool { Analytics.shared.asks && Analytics.shared.consent == .undecided }
 
     @ViewBuilder private var slopeCovers: some View {
-        if let offer = card {
+        // A pack that doesn't ship has no hollow to open, in Debug either.
+        if let offer = card, offer.pack?.ships ?? true {
             // It brings itself in from the hollow and draws itself in again before its way back.
             let returns = packCameFrom?.returns(card: offer, offersComplete: Store.shared.offersComplete)
             SlopePack(offer: offer, clock: harness?.clock, levels: offer.levels(placeholders: placeholders),

@@ -49,7 +49,7 @@ struct SlopeResult: View {
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { placed = $0 }
         .onAppear {
             focused = true
-            guard packs == nil, let pack = Offer.ladderEnd(game.level, completed: game.completed, shown: Best.packsPointed)
+            guard packs == nil, let pack = Offer.ladderEnd(game.level, completed: game.completed, shown: Best.packsPointed, shelf: Offer.hollows())
             else { return }
             packs = pack
             if game.storesProgress { Best.packsPointed = true }
@@ -121,7 +121,7 @@ struct SlopeResult: View {
 
     /// One quiet pointer to the packs: a completion's to the first pack unowned, or once, the end of the ladder's.
     @ViewBuilder private var pointer: some View {
-        if let pack = Offer.pointer(after: game.completed) {
+        if let pack = Offer.pointer(after: game.completed, shelf: Offer.hollows()) {
             quiet(Text("try \(pack.name) \u{203A}"), spoken: Text("Try \(pack.name)")) { onOffer(pack) }
         } else if let pack = packs {
             quiet(Text("more puzzles in the packs \u{203A}"), spoken: Text("More puzzles in the packs")) { onOffer(pack) }

@@ -684,15 +684,13 @@ struct SlopeMenuPlan {
         wide = SlopeLay(column, z: 0)
     }
 
-    /// The level of plughole a shelf's offer lies under (8.1): Lens between 6 and 7, then every five; Debug's First
-    /// Stir between 2 and 3.
+    /// The level of plughole a shelf's offer lies under (8.1): Lens between 6 and 7, then every five.
     static func hollowAfter(_ offer: Offer) -> Int {
         switch offer {
         case .pack(.lens): 6
         case .pack(.escapement): 11
         case .pack(.prism): 16
-        case .complete: 21
-        default: 2
+        case .complete, .pack(.firstStir): 21
         }
     }
 
@@ -849,9 +847,9 @@ struct SlopeMenuModel {
                                                  enabled: true, needs: nil, started: kept != nil, new: new && kept == nil),
                                       playing: playing?.run != nil)
         let store = Store.shared
-        let shelf = Shop.shown() ? Offer.shelf().filter { $0 != .complete || store.offersComplete } : []
+        let shelf = Shop.shown() ? Offer.hollows().filter { $0 != .complete || store.offersComplete } : []
         hollows = shelf
-        let sold = Pack.sold()
+        let sold = Pack.hollowed()
         packs = shelf.isEmpty ? nil : Menu.packsCaption(owned: sold.filter { store.state($0) == .owned }.count, of: sold.count)
         // A name keeps to one line: the names break only between them.
         packNames = shelf.isEmpty ? nil : shelf.map { $0.name.replacingOccurrences(of: " ", with: "\u{00A0}") }.joined(separator: " \u{00B7} ")

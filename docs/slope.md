@@ -616,7 +616,7 @@ Each offer on the shelf (`Offer.shelf`: in Release Lens, Escapement, Prism, and 
 **hollow**: a round opening in the rock, dark inside, with the offer's cover (58 pt across) lit within, its light
 spilling on the rock and catching the opening's lower lip in the pack's glow. They lie in plughole's stretch, in the
 wall on the leading side of the ledges, centred at x = 56: Lens between ledges 6 and 7, Escapement between 11 and
-12, Prism between 16 and 17, Triptych I between 21 and 22 (Debug's First Stir between 2 and 3).
+12, Prism between 16 and 17, Triptych I between 21 and 22. First Stir, out of v1, has no hollow in any build, Debug's too (Jack, 2026-11-24).
 
 Under a hollow, centred: its name (ui, detail, `ink`), with today's glyph after it for its state (a check owned, an
 hourglass waiting on Ask to Buy). Under that, today's line by today's rules: "new" in the pack's ink (`Marks`), else

@@ -120,6 +120,17 @@ struct SlopeHollow: View {
     }
 }
 
+extension Offer {
+    /// The slope's shelf: `shelf()` less a pack that doesn't ship, which a build outside Release keeps on the dock.
+    /// First Stir has no hollow in any build (Jack, 2026-11-24).
+    static func hollows() -> [Offer] { shelf().filter { $0.pack?.ships ?? true } }
+}
+
+extension Pack {
+    /// The packs the slope sells: `sold()` less one that doesn't ship.
+    static func hollowed() -> [Pack] { sold().filter(\.ships) }
+}
+
 extension SlopeHollow {
     /// The hollow the menu sets on a spot of its column, the opening's top centre at the spot's point: as big as the
     /// depth has opened it, its words arriving with the dive's.
