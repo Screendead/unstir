@@ -1205,7 +1205,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   - `SlopeEggs.swift` is the menu's eggs (Jack's call on issue 306: found, never told, rewarding nothing): a
     `SlopeEggs` only `SlopeMenu` hands its ground, which Slope.metal reads as a `SlopeEgg`, every term skipped at 0, so
     any other ground draws and costs what it did. `UNSTIR_EGG` (Debug) shows each without its finger
-    (scripts/shots/slope-eggs.sh, `film.sh slope-egg-`), and `scripts/slope-lab.sh` takes each as a number.
+    (scripts/shots/slope-eggs.sh, `film.sh slope-egg-`), and `scripts/slope-lab.sh` takes each as a number; `scripts/slope-lab/strip.sh` and `reel.sh` lay a simulator's
+    screenshots, or a recording's frames, side by side.
     - Still water: where any other ground's clock stops at once on `Power.idle`, the menu's slows to a stop over
       `Calm.settle` (4.4 s) as the surface flattens, the light reaches down, the ridges come out of the haze and the
       motes thin, and a touch brings it back over `Calm.wake`. `Power.calm` holds the turn and what the clock has

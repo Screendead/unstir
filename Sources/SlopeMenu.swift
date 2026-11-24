@@ -258,6 +258,8 @@ struct SlopeMenu: View {
                     .frame(maxHeight: .infinity, alignment: .top)
             }
         }
+        // Open water and air take a drag too, not only the words.
+        .contentShape(Rectangle())
         .allowsHitTesting(!moving)
         // A drag takes the screen from the words under it; a tap is still theirs. Under Reduce Motion nothing follows
         // the finger here, and the dive's own bounce is the one way past either end.
