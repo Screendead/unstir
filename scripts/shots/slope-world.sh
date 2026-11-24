@@ -14,8 +14,8 @@ shot slope-world-dive-ax3 "The same at accessibility3." SLOPE=1 SCREEN=menu TIER
 shot slope-world-gate "Vortex's gate: whirlpool's pebbles as a tally on the sill, the runs still short." \
   SLOPE=1 SCREEN=menu TIER=vortex BESTS=$par27,whirlpool:00001000000200000100 CLOCK=3
 hold=8 shot slope-world-lock-tap "A closed row tapped in the dive: its pebble rocks and the row says what opens it." \
-  SLOPE=1 SCREEN=menu TIER=plughole BESTS=$thirteen LOCKTAP=L20 CLOCK=3
-shot slope-world-run "Endless's saved run at the foot: tank 5, the brim at 3." SLOPE=1 SCREEN=menu MODE=endless RESUME= RESUMETANK=5 BRIM=3 CLOCK=3
+  SLOPE=1 SCREEN=menu TIER=plughole BESTS=$thirteen LOCKTAP=L15 CLOCK=3
+shot slope-world-run "Endless's saved run at the foot: tank 5, the brim at 3." SLOPE=1 SCREEN=menu BESTS=$par27,endless:9 MODE=endless RESUME= RESUMETANK=5 BRIM=3 CLOCK=3
 shot slope-world-yours "Lens approved by Ask to Buy and landed: \"Lens is yours\" under the wordmark." SLOPE=1 SCREEN=menu APPROVED=lens OWNED=lens CLOCK=3
 hold=8 shot slope-world-pick "A second and a half in, plughole 05 picked: the level comes in over the slope as the slope draws aside." \
   SLOPE=1 SCREEN=menu BESTS=$thirteen CLOCK=3 PICK=L5
