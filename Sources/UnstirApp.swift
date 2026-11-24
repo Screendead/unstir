@@ -840,13 +840,16 @@ struct RootView: View {
 
     /// Where the open level's pebble lies, as a point of the root's frame; nil when it wasn't opened from one.
     private var pebbleAnchor: UnitPoint? {
-        guard let pebble, pebble.id == level?.id, frame.width > 0, frame.height > 0 else { return nil }
+        guard let pebble, level == nil || pebble.id == level?.id, frame.width > 0, frame.height > 0 else { return nil }
         // The menu measures from the screen's top (its dive cancels the safe area); the root sits inside it.
         return UnitPoint(x: (pebble.point.x - frame.minX) / frame.width, y: (pebble.point.y - frame.minY) / frame.height)
     }
 
     /// How far the back swipe has taken the level toward its ledge, 0 to 1 (2.11).
-    private var swipe: Double { reduceMotion ? 0 : playStage?.swipe ?? 0 }
+    private var swipe: Double { reduceMotion ? 0 : stage?.swipe ?? 0 }
+
+    /// What the open level shows of its ground; one a level that has gone published is ignored.
+    private var stage: SlopePlayStage? { playStage.flatMap { $0.level == level ? $0 : nil } }
 
     /// The edge swipe back over a screen that draws its own way out, judged as the level's is (`BackSwipe`): `done`
     /// once it is let go past the threshold.
@@ -924,15 +927,9 @@ struct RootView: View {
                         // Under a back swipe the slope draws back in as the level shrinks toward its ledge.
                         .offset(x: level == nil ? 0 : -280 * (1 - swipe))
                         .opacity(level == nil ? 1 : swipe)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
                         .transition(slopeAside)
                 }
-                // The open level's ground, drawn whole behind it, so the tank and chrome alone grow from the pebble.
-                if slope, level != nil, let stage = playStage {
-                    SlopeBackdrop(stage: stage)
-                        .ignoresSafeArea()
-                        .opacity(1 - swipe)
-                        .transition(.opacity)
-                        .allowsHitTesting(false)
                 } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
@@ -947,6 +944,15 @@ struct RootView: View {
                     .accessibilityHidden(level != nil && !beside)
                     .transition(level == nil ? dip : wide ? .opacity : .identity)
                     .zIndex(beside ? 1 : 0)
+                }
+                // The open level's ground, drawn whole behind it, so the tank and chrome alone grow from the pebble.
+                if slope, level != nil, let stage {
+                    SlopeBackdrop(stage: stage)
+                        .ignoresSafeArea()
+                        .opacity(1 - swipe)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: swipe)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
                 }
                 if let level {
                     LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
