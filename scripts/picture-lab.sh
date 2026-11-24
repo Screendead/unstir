@@ -2,7 +2,9 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]
 #        scripts/picture-lab.sh bench <picture>...
-# Renders a live picture on the Mac's GPU, stirred by a stack if given, or times its fill against a stack entry.
+#        scripts/picture-lab.sh read <layout> <picture>...
+# Renders a live picture on the Mac's GPU, stirred by a stack if given, times its fill against a stack entry, or
+# measures how much of each rod's ring and core a turn moves.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/picture-lab

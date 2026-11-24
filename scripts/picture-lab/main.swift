@@ -173,6 +173,44 @@ case "bench" where args.count >= 2:
         print(String(format: "%@: %.3f ms, %.2f entries measured, %.2f scaled to the glass's 4", name, cost * 1000,
                      cost / entry, 4 * cost / glass))
     }
+case "read" where args.count >= 3 && Layout(rawValue: args[1]) != nil:
+    // How a turn shows: each rod of the layout turned alone by one step, and by a half turn, against the picture at
+    // rest. Of the pixels in the rod's shear ring, and of those in its rigid core, the share whose light moves by
+    // more than 0.12 of full scale; each picture reads its worst rod.
+    let layout = Layout(rawValue: args[1])!, side = 600, seed = 5, t = 3.0
+    func light(_ f: Frame) -> [Float] {
+        let p = f.out.contents().bindMemory(to: SIMD4<Float>.self, capacity: side * side)
+        return (0..<side * side).map { 0.2126 * p[$0].x + 0.7152 * p[$0].y + 0.0722 * p[$0].z }
+    }
+    print("picture: worst rod's share of pixels moved, ring and core at one step, core at a half turn (\(layout))")
+    for name in args.dropFirst(2) where pictures[name] != nil {
+        let state = try pipeline(name), data = pictures[name]!.data(seed, t)
+        let rest = frame(data, [], side: side, t: t, taps: 4)
+        _ = run(state, rest)
+        let still = light(rest)
+        var worst = (ring: 1.0, core: 1.0, half: 1.0)
+        for (k, rod) in layout.rods.enumerated() {
+            func moved(_ steps: Int) -> (ring: Double, core: Double) {
+                let f = frame(data, twists(args[1], "\(k):+\(steps)"), side: side, t: t, taps: 4)
+                _ = run(state, f)
+                let turned = light(f)
+                var ring = (0, 0), core = (0, 0)
+                for y in 0..<side {
+                    for x in 0..<side {
+                        let q = (SIMD2(Double(x), Double(y)) + 0.5) / Double(side / 2) - 1
+                        let d = ((q.x - rod.x) * (q.x - rod.x) + (q.y - rod.y) * (q.y - rod.y)).squareRoot() / rod.z
+                        guard d < 1, q.x * q.x + q.y * q.y < 1 else { continue }
+                        let hit = abs(turned[y * side + x] - still[y * side + x]) > 0.12 ? 1 : 0
+                        if d < 0.6 { core = (core.0 + hit, core.1 + 1) } else { ring = (ring.0 + hit, ring.1 + 1) }
+                    }
+                }
+                return (Double(ring.0) / Double(max(ring.1, 1)), Double(core.0) / Double(max(core.1, 1)))
+            }
+            let one = moved(1), half = moved(6)
+            worst = (min(worst.ring, one.ring), min(worst.core, one.core), min(worst.half, half.core))
+        }
+        print(String(format: "%@: ring %.2f, core %.2f, half-turn core %.2f", name, worst.ring, worst.core, worst.half))
+    }
 default:
     print(usage)
     exit(2)
