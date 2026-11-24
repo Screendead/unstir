@@ -994,8 +994,9 @@ struct LevelView: View {
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
-                    .modifier(PlayPart.stage(read: 3))
+                    // Inside the part's tag, which the split's layout reads off the stack's own child.
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { if groundOwned { tankFrame = $0 } }
+                    .modifier(PlayPart.stage(read: 3))
                 caption(layout)
                     // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
                     // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
