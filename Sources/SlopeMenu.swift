@@ -434,6 +434,7 @@ struct SlopeMenu: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
                     guard journeys == journey, travel != nil, done != journey else { return }
                     done = journey
+                    Log.write("slope travel hands on early")
                     then()
                 }
             }
@@ -451,6 +452,7 @@ struct SlopeMenu: View {
         aim = travel.aim
         diving = true
         surfaced = false
+        Log.write("slope travel arrives")
         if done != journey {
             done = journey
             travel.then()
@@ -537,6 +539,7 @@ struct SlopeMenu: View {
         func seat(_ top: CGFloat) -> CGPoint? {
             ledge.map { CGPoint(x: plan.deep.seat($0).x, y: plan.deep.seat($0).y - top) }
         }
+        Log.write("slope pick \(level.id), diving \(diving)")
         guard !diving else { return onPick(level, seat(scroll.top)) }
         let target = ledge.map { SlopeAim(ledge: $0, share: plan.rest(on: $0)) } ?? plan.foot
         go(to: target, plan, early: true) { onPick(level, seat(plan.deep.rest(target, height: plan.size.height))) }
@@ -605,7 +608,7 @@ extension SlopeMenu {
                 await step(3) { drawn = 200 * sin(2 * .pi * $0) }
                 await rest(1)
             }
-            if !wants("rest") || only.isEmpty, only != "pull" {
+            if !wants("rest") || only.isEmpty, only != "pull", only != "open" {
                 mark("zoom")
                 enter(.plughole, plan)
                 await rest(2.5)
@@ -632,6 +635,13 @@ extension SlopeMenu {
                 mark("rise")
                 rise(plan)
                 await rest(2.5)
+            }
+            if only == "open" {
+                mark("open")
+                pick(.daily(.now), ledge: SlopeColumn.today, plan)
+                await rest(4.5)
+                mark("played")
+                await rest(4)
             }
             if wants("rest") {
                 mark("rest")
