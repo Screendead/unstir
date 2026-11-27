@@ -24,6 +24,16 @@ The mock-up is the source of truth for the look: `design/negative-space/world/ri
   second tap, or one on the middle, plays it. A tap anywhere else lets it go. This is the mock's, and it is built so
   for now. Jack's earlier rule was that a tap on a level opens it at once; which holds is his call, not yet made. The
   other way is one line: `RingsView.act`'s `.bead(i)` case opens `ring.spots[i]` without naming it first.
+- **The archive's ring** (today) stands above plughole once the daily shows: a bead for each past daily, no
+  numerals, gold at par, and on its sun "today", "30 past dailies · 3 at par" and today's date with a play mark, which
+  plays today's daily. A bead names its day, its best and par; a second tap plays it from the archive. It is shut, its
+  sun down with "comes with any pack", until a purchase opens the archive (`Archive.open`), and until the store's first
+  read, so an owner never meets the lock; a shut bead says "unlocked by purchasing any pack".
+- **Endless's ring** stands below maelstrom once the daily shows: no beads, its circle one neon tube (`.orbit`), a pink
+  sun. With a run saved, the middle says "tank 6 · brim 3 · best 9" over "continue", which plays the run, and "new run"
+  in the play mark's place: a first tap arms it ("new run? tap again", for `ResetArm.window`, under VoiceOver until a
+  second), a second drops the save and deals another, as the old menu's row does. With none saved, "new run" and the
+  play mark deal one, its seed drawn as it plays, so the model stays the same between reads.
 - **The daily** is an evening star on an arc over the ring, "Daily · Fri 27 Nov" and "4 days running" set along the
   arc either side. It shows once the old menu would show it (plughole 23 solved, `MenuView.lead`).
 - **The packs** are three covers on an arc under the ring, each with its name and its line ("new", "2/3 free",
@@ -106,13 +116,14 @@ All three are probes: a Debug build reads them, and a Release build only with `P
 - `UNSTIR_MENU=rings` makes the rings the menu and stores it (`menu.rings`), so the phone's home screen keeps
   opening them; any other value clears it, as does a harnessed launch without the variable and the test host. It
   leaves the launch a plain one, as `UNSTIR_UNLOCK` does. `scripts/run-ios.sh` passes it on.
-- `UNSTIR_RINGSTOUR=swipe|open|pick|rest` moves the menu with no finger, once a launch, three seconds after its art
+- `UNSTIR_RINGSTOUR=swipe|open|pick|speak|rest` moves the menu with no finger, once a launch, three seconds after its art
   is in: `swipe` glides down through every ring and back by the scroll view's own animation; `open` taps the
   middle, so its level opens; `pick` names a bead and lets it go; `rest` waits six seconds. The flight log gets
   "tour swipe, ground drawn 0" as it starts, "tour ends, ground drawn 0" as it ends (the marks the trace readers in
   use already expect) and a line of `RingsCount`'s counts between them with the art's size.
 - `UNSTIR_RINGSPOSE=ring:2`, `place:1.5` or `pick:9` holds a still for a shot, comma-separated in turn. It makes
-  the launch a harnessed one.
+  the launch a harnessed one. Rings count from the top: with the daily showing, 0 is the archive's, 1 to 4 the
+  tiers and 5 endless's.
 
 `scripts/shots.sh rings-` shoots the cases in `scripts/shots/rings.sh`; `SHOTS_ENV="MUSIC=0 SOUNDS=0"` keeps the
 one plain launch, `rings-fresh`, silent too.
@@ -136,10 +147,21 @@ ring forward; back from a level lands on the rings. The shots match the mock but
 its Lens reads "owned ✓" and its Prism "2/3 free" where the app's covers say "new" until each card has opened once,
 as the old dock's do (`Marks.line`).
 
-## Step two
+## Accessibility
 
-Left as seams, not built: the archive's ring above plughole and endless's below maelstrom (two more entries of
-`RingsModel.rings`, each with its own stage); VoiceOver (the view has no accessibility elements yet); Dynamic Type
-(every text piece carries its size, so the plan can hand larger ones); Reduce Motion; the list beside play on a
-wide window, where `RootView` keeps `MenuView`; the level growing out of its bead, which the mock's film shows and
-this step replaces with the root's fade; First Stir's cover, when it ships.
+- **VoiceOver.** `RingsView` is a container of elements made only when VoiceOver asks (`speak`): the daily, the
+  middle, each bead of the ring in front, endless's "New run", the covers and settings. The middle is adjustable: a
+  swipe up or down brings the next ring or the one before at once and moves focus to its middle, which reads the
+  ring's count and the level it plays. A bead opens at once under VoiceOver; naming it first is for the eye. The drawn
+  lines' " · " is read as a pause. `UNSTIR_RINGSTOUR=speak` logs every element's label and value, steps once and logs
+  them again.
+- **Reduce Motion.** The rings only cross-fade: a ring keeps its size, the ground stands still (`apply`), and the
+  setting is followed live.
+
+## Step two, what is left
+
+Dynamic Type at accessibility sizes (`launch-ax.png`: the daily's words set flat under its star, the middle and the
+covers' words larger; every text piece carries its size, so the plan can hand larger ones, but the ring then needs
+room the plan does not yet make); the list beside play on a wide window, where `RootView` keeps `MenuView`; the level
+growing out of its bead, which the mock's film shows and this step replaces with the root's fade; First Stir's cover,
+when it ships.

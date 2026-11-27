@@ -1505,7 +1505,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   new look (Jack, 2026-11-27: "A, sun in the ring"), behind `UNSTIR_MENU=rings` until Jack signs them off; `MenuView`
   stays the default, and stays the menu beside play on a wide window. `docs/rings.md` holds the design, the speed rule
   as built, the flags and what is left. In short: `RingsModel` reads what the menu shows once on the main actor, by the
-  old menu's rules (the daily by `MenuView.lead`, the covers by `PackDock.shown` and `Offer.shelf`, only packs that
+  old menu's rules (the daily, and the archive's ring above the tiers and endless's below, by `MenuView.lead`; the
+  archive's lock by `Archive.open`; endless's new run armed by `ResetArm`; the covers by `PackDock.shown` and `Offer.shelf`, only packs that
   ship, so never First Stir, and each cover's line by `Marks.line`, "new" first, as the dock's); `RingsArt` bakes every
   picture off the main thread into a `CGImage`, kept by a key of what decides its pixels; `RingsView` is a `UIView`
   of layers that hold those bitmaps and only move, scale and fade, with a hidden paging `UIScrollView` as the swipe,
