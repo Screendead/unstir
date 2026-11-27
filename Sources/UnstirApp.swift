@@ -1062,6 +1062,10 @@ struct RootView: View {
             wide = new
         }
         .background(Color.black)
+        .task {
+            try? await Task.sleep(for: .seconds(1.5))
+            if level == nil { LevelWarm.run(slope: slope) }
+        }
         .environment(\.slopeWorld, slope)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
