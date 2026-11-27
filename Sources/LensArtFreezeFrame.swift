@@ -22,10 +22,12 @@ extension LensArt {
         var at: [Double]
         var tones: [Tone]
 
+        func holds(_ p: P) -> Bool { simd_distance_squared(p, centre) < LensArt.core * LensArt.core }
+
+        /// The frame's tone at p, if p is in the band; the glass's is `holds`'s.
         func tone(_ p: P) -> Tone? {
             let d = p - centre, r2 = simd_length_squared(d)
-            guard r2 < outer * outer else { return nil }
-            if r2 < LensArt.core * LensArt.core { return glass }
+            guard r2 < outer * outer, r2 >= LensArt.core * LensArt.core else { return nil }
             var a = atan2(d.y, d.x) * 180 / .pi
             if a < 0 { a += 360 }
             var t = tones[tones.count - 1]
@@ -55,10 +57,12 @@ extension LensArt {
         runs(line, width, keep: keep).flatMap { pieces($0.points, $0.width) }
     }
 
-    /// A panel whose `over` fills lie on top of its lenses' rims, and its `fills` under them, over `ground`.
+    /// A panel whose lenses' glass lies over everything, as a neighbour's frame must not reach into a core, then its
+    /// `over` fills, its lenses' frames, its `fills` and `ground`.
     fileprivate static func framed(_ name: String, rims: [Rim], over: [Fill] = [], fills: [Fill], strokes: [Halftone.Stroke],
                                    ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
         Halftone.Panel(name: name, tones: { p in
+            for r in rims where r.holds(p) { return r.glass }
             for f in over where f.holds(p) { return f.tone }
             for r in rims { if let t = r.tone(p) { return t } }
             for f in fills where f.holds(p) { return f.tone }
