@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/escapement-art.sh render <problem|today> <out.png> [side] [layout]
+# Usage: scripts/escapement-art.sh render <problem|today> <out.png> [side] [layout [cards on a hub]]
 #        scripts/escapement-art.sh deal <problem|today> <layout> <clocks> <scramble> <out.png> [side] [moves]
 #        scripts/escapement-art.sh check <problem|today> <layout>
 #        scripts/escapement-art.sh bench <problem|today>

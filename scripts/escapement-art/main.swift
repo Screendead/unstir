@@ -69,8 +69,8 @@ func raster(_ plate: EscapementArt.Plate, side w: Int, hairline: Double? = nil) 
 }
 
 /// Where the game's controls fall on a plate, for composing round them: a knob on every rod of the layout, and round
-/// each the hub a clock there would wear, as any rod may be one.
-func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int) {
+/// each the hub a clock there would wear, as any rod may be one, drawn larger for two cards (`RatchetView.grown`).
+func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int, cards: Int = 1) {
     let r = Double(w) / 2
     func disc(_ rod: SIMD3<Double>, _ radius: Double) -> CGRect {
         CGRect(x: r + (rod.x - radius) * r, y: r + (rod.y - radius) * r, width: 2 * radius * r, height: 2 * radius * r)
@@ -80,7 +80,7 @@ func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int) {
         ctx.fillEllipse(in: disc(rod, 0.08))
         ctx.setStrokeColor(rgb(0x1F3A5F))
         ctx.setLineWidth(0.006 * r)
-        ctx.strokeEllipse(in: disc(rod, 0.155))
+        ctx.strokeEllipse(in: disc(rod, cards > 1 ? 0.195 : 0.155))
     }
 }
 
@@ -164,13 +164,16 @@ func dealt(_ plate: EscapementArt.Plate, _ layout: Layout, _ stack: [Twist], clo
 }
 
 /// A stack after a line's moves, each running clock's tick committed after every move in the tick order: a running
-/// clock is one with an entry left on its rod. Clocks are rods, each with its tick's steps.
+/// clock is one with an entry left on its rod. Clocks are rods, each with its tick's steps; a move on a clock's rod, or
+/// `wait`, is a wait.
 func played(_ scramble: String, _ line: [String], clocks: [(rod: Int, steps: Int)], in layout: Layout) -> [Twist] {
     var stack = [Twist].parse(scramble, in: layout)
     let order = clocks.sorted { layout.clockwise($0.rod) < layout.clockwise($1.rod) }
     for move in line {
         let f = move.split(separator: ":")
-        if f.count == 2, let r = Int(f[0]), let n = Int(f[1]) { stack.commit(rod: r, steps: n, in: layout) }
+        if f.count == 2, let r = Int(f[0]), let n = Int(f[1]), !clocks.contains(where: { $0.rod == r }) {
+            stack.commit(rod: r, steps: n, in: layout)
+        }
         for clock in order where stack.contains(where: { $0.rod == clock.rod }) { stack.commit(rod: clock.rod, steps: clock.steps, in: layout) }
     }
     return stack
@@ -195,7 +198,7 @@ case "deal" where args.count >= 7:
 case "render" where args.count >= 4:
     let side = args.count > 4 ? Int(args[4])! : 1284
     let (ctx, _) = raster(plate(args[2]), side: side)
-    if args.count > 5 { overlay(ctx, Layout(rawValue: args[5])!, side: side) }
+    if args.count > 5 { overlay(ctx, Layout(rawValue: args[5])!, side: side, cards: args.count > 6 ? Int(args[6])! : 1) }
     let out = CGImageDestinationCreateWithURL(URL(fileURLWithPath: args[3]) as CFURL, UTType.png.identifier as CFString, 1, nil)!
     CGImageDestinationAddImage(out, ctx.makeImage()!, nil)
     CGImageDestinationFinalize(out)
@@ -222,6 +225,6 @@ case "bench" where args.count >= 3:
     }
     print(String(format: "%@  geometry %.1f ms  raster at 1284 px %.0f ms  marks %d  points %d", args[2], build * 200, draw * 200, marks, points))
 default:
-    print("usage: render <problem|today> <out.png> [side] [layout] | deal <problem|today> <layout> <clocks> <scramble> <out.png> [side] [moves] | check <problem|today> <layout> | bench <problem|today>")
+    print("usage: render <problem|today> <out.png> [side] [layout [cards]] | deal <problem|today> <layout> <clocks> <scramble> <out.png> [side] [moves] | check <problem|today> <layout> | bench <problem|today>")
     exit(2)
 }
