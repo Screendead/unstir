@@ -517,15 +517,18 @@ case "search" where args.count == 8:
            seeds: UInt64(args[5])!..<UInt64(args[6])!, rule: rule)
     _ = args[7]
 case "book" where args.count == 2:
-    // One line per problem of the book: number, layout, clocks, par, the bound, clean and split lines at par, keys,
-    // difficulty in bits, the line.
+    // One line per problem of the book: number, layout, clocks, par, the bound, clean and split lines at par (split
+    // only for 1 to 30), keys, difficulty in bits, the line.
     for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
         let f = row.split(separator: "\t").map(String.init)
         let layout = Layout(rawValue: f[1])!
         let p = Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: rule)
-        let clean = Counter(p, span: nil), full = Counter(p, span: 6)
+        let clean = Counter(p, span: nil)
         guard let par = clean.optimum(limit: p.owed(p.stack) + 12) else { print(f[0], "unsolvable"); continue }
-        let keys = p.allMoves(p.stack, after: nil, span: 6).filter { m in
+        // Past the first 30 the search over every turn outgrows any run (problem 33, par 7 with four free knobs, ran past
+        // fifteen minutes; a par 13 past ten), so problems 31 on are counted in whole heals and waits alone.
+        let every = Int(f[0])! <= 30, full = every ? Counter(p, span: 6) : clean
+        let keys = (every ? p.allMoves(p.stack, after: nil, span: 6) : p.cleanMoves(p.stack, after: nil)).filter { m in
             p.play(p.stack, m).map { full.count($0, last: m, left: par - 1) > 0 } ?? false
         }
         let c = chance(p, par: par)
