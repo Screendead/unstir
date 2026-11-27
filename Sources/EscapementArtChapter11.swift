@@ -239,8 +239,104 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 63, Third wheel, hex, clocks 1-,2-.
-    static func plate63() -> Plate? { nil }
+    /// Problem 63, Third wheel, hex, clocks 1-,2-: a Victorian tricycle in side view on its road, the two great
+    /// wheels one behind the other, the small third wheel trailing in the clear lane at five o'clock, its backbone,
+    /// chain, handlebar and sprung seat; the lamp on the steering head in the second ink.
+    static func plate63() -> Plate {
+        var plate = Plate()
+        let road = 0.885
+        let wheel = 0.66, near = P(-0.25, road - wheel), far = near + P(-0.15, -0.06), third = P(0.4, road - 0.19)
+        let head = P(-0.24, -0.5), fork = P(0.33, 0.45), saddle = P(0.16, -0.36)
+        let spine = curve(near + P(0.03, -0.04), P(0.05, 0.12), fork, 30)
+        let stem = Kit.ribbon([near, head], 0.036)
+
+        Kit.ground(&plate, angle: 0.5, around: [arc(near, wheel), arc(third, 0.19), box(P(-1.1, road), P(1.1, 1.1))])
+
+        // The far great wheel, behind: its tyre and spokes seen through the near wheel.
+        spoked(&plate, far, wheel, tyre: 0.03, spokes: 10, spoke: 0.012, phase: 0.13)
+        // The road, and the near great wheel on it.
+        Kit.mass(&plate, box(P(-1.1, road), P(1.1, road + 0.05)))
+        plate.lines(hatch([box(P(-1.1, road + 0.05), P(1.1, 1.1))], angle: 0, gap: 0.03), medium)
+        spoked(&plate, near, wheel, tyre: 0.052, spokes: 10, spoke: 0.028, phase: -0.445)
+        // The axle across to the far wheel's hub, seen through the near wheel's spokes.
+        Kit.mass(&plate, Kit.band(near, far, 0.042))
+        Kit.mass(&plate, arc(far, 0.05))
+        plate.line([near + P(-0.01, -0.012), far + P(0.02, -0.012)], fine, .bone)
+
+        // The chain from the crank's wheel under the seat to the great wheels' axle.
+        let crank = P(0.12, 0.34)
+        plate.line([crank + P(0, -0.07), near + P(0, -0.05)], heavy)
+        plate.line([crank + P(0, 0.07), near + P(0, 0.05)], heavy)
+        Kit.solid(&plate, arc(crank, 0.075), angle: 0.8, gap: 0.014)
+        Kit.mass(&plate, arc(crank, 0.025))
+        Kit.mass(&plate, Kit.band(crank, crank + P(0.1, -0.13), 0.034))
+        Kit.mass(&plate, box(crank + P(0.06, -0.16), crank + P(0.15, -0.12)))
+        Kit.mass(&plate, Kit.band(crank, crank + P(-0.1, 0.13), 0.034))
+
+        // The backbone from the axle back to the third wheel's fork, the steering head and its handlebar.
+        Kit.mass(&plate, Kit.ribbon(spine, 0.046))
+        plate.line(Array(spine[2...27]).map { $0 + P(0, -0.012) }, fine, .bone)
+        Kit.mass(&plate, stem)
+        Kit.mass(&plate, Kit.ribbon(curve(head, head + P(0.2, -0.1), head + P(0.3, 0.04), 16), 0.03))
+        Kit.mass(&plate, ellipse(head + P(0.31, 0.08), 0.05, 0.024, turned: 1.3))
+        Kit.mass(&plate, arc(near, 0.07))
+        plate.fill(arc(near, 0.03))
+        plate.line(arc(near, 0.03), medium)
+
+        // The seat on its pillar, sprung on two coils.
+        Kit.mass(&plate, Kit.band(P(0.12, 0.24), saddle + P(0, 0.08), 0.036))
+        for dx in [-0.05, 0.05] {
+            var coil: [P] = []
+            for i in 0...40 {
+                let t = Double(i) / 40
+                coil.append(saddle + P(dx + 0.022 * sin(t * 8 * .pi), 0.08 - 0.07 * t))
+            }
+            plate.line(coil, medium)
+        }
+        let seat = [saddle + P(-0.15, -0.02), saddle + P(-0.12, -0.07), saddle + P(0.02, -0.06), saddle + P(0.13, -0.11),
+                    saddle + P(0.16, -0.07), saddle + P(0.12, 0.01), saddle + P(-0.15, 0.01), saddle + P(-0.15, -0.02)]
+        Kit.mass(&plate, seat)
+        plate.line([saddle + P(-0.12, -0.035), saddle + P(0.1, -0.06)], fine, .bone)
+        Kit.mass(&plate, box(saddle + P(-0.12, 0.01), saddle + P(0.1, 0.03)))
+
+        // The third wheel trailing in its fork.
+        Kit.mass(&plate, Kit.band(fork, third, 0.04))
+        spoked(&plate, third, 0.19, tyre: 0.045, spokes: 8, spoke: 0.026, phase: 0.2)
+        Kit.mass(&plate, Kit.band(fork + P(-0.02, -0.02), fork + P(0.05, -0.02), 0.06))
+
+        // The lamp on the steering head: its body, chimney and lens.
+        let lamp = head + P(-0.1, -0.16)
+        Kit.mass(&plate, Kit.band(head + P(-0.01, -0.02), lamp + P(0.03, 0.06), 0.022))
+        let body = box(lamp + P(-0.045, -0.06), lamp + P(0.045, 0.06))
+        plate.fill(body, .second)
+        plate.line(body, medium)
+        Kit.mass(&plate, [lamp + P(-0.03, -0.06), lamp + P(-0.015, -0.1), lamp + P(0.015, -0.1), lamp + P(0.03, -0.06),
+                          lamp + P(-0.03, -0.06)])
+        Kit.cut(&plate, arc(lamp + P(-0.045, 0), 0.032), edge: heavy)
+        plate.line(arc(lamp + P(-0.045, 0), 0.016), medium)
+
+        callout(&plate, "A", from: third + P(0.06, 0.06), to: P(0.66, 0.5))
+        callout(&plate, "B", from: lamp + P(0.04, -0.03), to: P(-0.2, -0.83))
+        callout(&plate, "C", from: saddle + P(0.13, -0.09), to: P(0.4, -0.64))
+        callout(&plate, "D", from: polar(near, wheel - 0.03, -2.75), to: P(-0.62, -0.62))
+        return plate
+    }
+
+    /// A spoked wheel in side view: a tyre of ink, its rim's line in bone, straight spokes to a hub.
+    private static func spoked(_ plate: inout Plate, _ c: P, _ r: Double, tyre: Double, spokes: Int, spoke: Double,
+                               phase: Double) {
+        plate.fill(arc(c, r), .black)
+        plate.fill(arc(c, r - tyre))
+        plate.lines(hatch([arc(c, r - tyre)], angle: 0.5, gap: Kit.groundGap), Kit.groundWidth)
+        for k in 0..<spokes {
+            let a = phase + Double(k) * 2 * .pi / Double(spokes)
+            Kit.mass(&plate, Kit.band(polar(c, 0.04, a), polar(c, r - tyre + 0.005, a), spoke))
+        }
+        plate.line(arc(c, r), medium)
+        plate.line(arc(c, r - 0.35 * tyre), fine, .bone)
+        plate.line(arc(c, r - tyre), medium)
+        Kit.mass(&plate, arc(c, max(0.045, 0.1 * r)))
+    }
 
     /// Problem 64, Barrel, hex, clocks 1+,2-.
     static func plate64() -> Plate? { nil }
