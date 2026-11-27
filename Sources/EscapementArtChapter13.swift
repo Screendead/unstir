@@ -268,13 +268,13 @@ extension EscapementArt {
         // The plaza paved in courses closing toward the horizon, its joints running to the vanishing point.
         plate.fill(plaza)
         var z = 0.86
-        while z < 7 {
+        while z < 4.5 {
             let y = horizon + 1 / z
             plate.line([P(-1.1, y), P(1.1, y)], fine + 0.004 * (y - horizon))
             z *= 1.16
         }
         for X in stride(from: -2.4, through: 2.4, by: 0.16) {
-            plate.line([ground(P(X, 0.8)), ground(P(X, 8))], fine)
+            plate.line([ground(P(X, 0.8)), ground(P(X, 4.5))], fine)
         }
         // The hour lines fanned across the plaza from the obelisk's foot, bold, numbered at the rim.
         for h in -5...5 {
@@ -434,7 +434,7 @@ extension EscapementArt {
         plate.line(inner + [P(a, 1.2)], heavy)
         plate.line([P(-a, 1.2)] + inner, heavy)
         plate.line(outer, heavy)
-        for x in [-a - 0.035, a + 0.035] { plate.line([P(x, spring), P(x, 1.1)], 0.07 - 0.0, .bone) }
+        for x in [-a - 0.035, a + 0.035] { plate.line([P(x, spring), P(x, 1.1)], 0.07, .bone) }
         for x in [-a - 0.07, a + 0.07] { plate.line([P(x, spring), P(x, 1.1)], heavy) }
 
         // The hole in the vault and the beam it lets down to the line.
@@ -611,7 +611,8 @@ extension EscapementArt {
         }
         plate.line([field + P(-fr, 0), field + P(fr, 0)], fine)
         plate.lines(dashed([field + P(-fr + 0.01, 0.0), field + P(-0.005, 0.0)], on: 0.006, off: 0.008), heavy)
-        plate.fill(star(field, 0.03, turn: -.pi / 2), .second)
+        plate.fill(star(field, 0.055, turn: -.pi / 2), .second)
+        plate.line(star(field, 0.055, turn: -.pi / 2), fine)
         plate.line(arc(field, fr), heavy)
 
         callout(&plate, "A", from: pivot + up * 0.2 - across * 0.04, to: P(-0.06, -0.33))
@@ -724,7 +725,7 @@ extension EscapementArt {
         // The mouth: lips in the second ink about a dark parting.
         let lips = (0...20).map { i -> P in
             let t = Double(i) / 20
-            return P(-0.1 + 0.2 * t, 0.15 - 0.022 * sin(.pi * t) - 0.012 * sin(2 * .pi * t) * 0)
+            return P(-0.1 + 0.2 * t, 0.15 - 0.022 * sin(.pi * t))
         } + (0...20).map { i -> P in
             let t = Double(i) / 20
             return P(0.1 - 0.2 * t, 0.15 + 0.05 * sin(.pi * t))
@@ -738,7 +739,7 @@ extension EscapementArt {
         // The chin's fold.
         plate.line(arc(P(0, 0.17), 0.1, from: 0.55, to: .pi - 0.55), medium)
 
-        callout(&plate, "A", from: polar(o, 0.6, Double(2) * 2 * .pi / Double(rays) + spin), to: polar(o, 0.62, 0.92))
+        callout(&plate, "A", from: polar(o, 0.6, Double(2) * 2 * .pi / Double(rays) + spin), to: polar(o, 0.66, .pi / 2))
         callout(&plate, "B", from: polar(o, 0.5, Double(5) * 2 * .pi / Double(rays) + spin + 0.08), to: polar(o, 0.72, 2.5))
         callout(&plate, "C", from: polar(o, band + 0.03, -2.2), to: polar(o, 0.72, -2.3))
         return plate
@@ -746,51 +747,63 @@ extension EscapementArt {
 
     // MARK: 78 Analemma
 
-    /// Problem 78, Analemma, hex, clocks 1+: the sun's place at the same hour every week of a year, a tall slender
-    /// figure-of-eight of bold dots, leaning along the clear lane at one o'clock over a horizon of fields and hills,
-    /// with a sighting pole standing from the fields; the summer solstice's dot in the second ink.
+    /// Problem 78, Analemma, hex, clocks 1+: the sun's place at noon every ten days of a year, a tall figure-of-eight
+    /// of bold dots standing in the clear ground by the rim at three o'clock, over a horizon of dark hills and banded
+    /// fields, a sighting pole and its shadow on the left; the summer solstice's dot in the second ink.
     static func plate78() -> Plate {
         var plate = Plate()
-        let up = P(sin(.pi / 6), -cos(.pi / 6)), across = P(-up.y, up.x)
-        let scale = 0.016, wide = 0.032, middle = 0.57
-        /// The sun's place on day d: its declination along the lane, the equation of time across it, in degrees.
+        // Placed and sized so every dot clears a two-card hub on every rod.
+        let tilt = -5 * Double.pi / 180, up = P(sin(tilt), -cos(tilt)), across = P(-up.y, up.x)
+        let centre = P(0.78, -0.17), scale = 0.017, wide = 0.034
+        /// The sun's place on day d: its declination up the figure, the equation of time across it, in degrees.
         func sun(_ d: Double) -> P {
             let b = 2 * .pi * (d - 81) / 364
             let minutes = 9.87 * sin(2 * b) - 7.53 * cos(b) - 1.5 * sin(b)
             let declination = 23.44 * sin(2 * .pi * (d - 80) / 365)
-            return up * (middle + scale * declination) + across * (wide * minutes / 4)
+            return centre + up * (scale * declination) + across * (wide * minutes / 4)
         }
         let horizon = 0.44
 
-        // The sky ruled; the fields below the horizon.
         let land = { () -> [P] in
             let a = asin(horizon / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
             return rim + [rim[0]]
         }()
-        let hills = [P(-1.1, horizon)] + (0...44).map { i -> P in
-            let x = -1.1 + 2.2 * Double(i) / 44
-            return P(x, horizon - 0.04 - 0.09 * pow(max(0, sin(x * 3.1 + 0.8)), 2) - 0.035 * pow(max(0, sin(x * 7.3)), 2))
+        // A dark range of hills along the horizon, high on the left.
+        let hills = [P(-1.1, horizon)] + (0...60).map { i -> P in
+            let x = -1.1 + 2.2 * Double(i) / 60
+            let ridge = 0.2 * pow(max(0, cos((x + 0.55) * 2.2)), 1.5) + 0.07 * pow(max(0, sin(x * 6.1)), 2)
+            return P(x, horizon - 0.035 - ridge)
         } + [P(1.1, horizon), P(-1.1, horizon)]
         // The sky ruled heavier toward the horizon.
         for rule in hatch([Array(glass), land, hills], angle: 0.3, gap: K.groundGap) {
             let y = (rule[0].y + rule[1].y) / 2
             plate.line(rule, K.groundWidth + 0.009 * min(1, max(0, (y + 0.4) / 0.85)))
         }
-        K.mass(&plate, hills)
-        for i in 0..<26 {
-            let x = -1.0 + 2 * rnd(78, i), h = 0.03 + 0.03 * rnd(79, i)
-            let base = horizon - 0.03
-            K.mass(&plate, [P(x - 0.018, base), P(x, base - h), P(x + 0.018, base), P(x - 0.018, base)])
+        // The hills ruled close and heavy across their slopes, a wood in ink along their foot.
+        plate.fill(hills)
+        plate.lines(hatch([hills], angle: -0.7, gap: 0.042), 0.02)
+        plate.line(hills, heavy)
+        K.mass(&plate, box(P(-1.1, horizon - 0.035), P(1.1, horizon)))
+        for i in 0..<34 {
+            let x = -1.0 + 2 * Double(i) / 34
+            plate.line(arc(P(x, horizon - 0.012), 0.014, from: .pi + 0.3, to: 2 * .pi - 0.3), medium, .bone)
         }
-        // The fields in furrows running to the horizon.
+
+        // The fields in strips running to the horizon, every fourth dark.
         plate.fill(land)
-        let vanish = P(0.15, horizon)
-        for k in -24...24 {
-            let far = vanish + P(Double(k) * 0.04, 0.05), near = P(0.15 + Double(k) * 0.16, 1.3)
-            plate.line([far, near], k % 3 == 0 ? 0.014 : 0.006)
+        let vanish = P(0.0, horizon + 0.05)
+        func furrow(_ k: Int) -> (P, P) { (vanish + P(Double(k) * 0.045, 0), P(Double(k) * 0.17, 1.3)) }
+        for k in -24...23 {
+            let (far, near) = furrow(k), (far2, near2) = furrow(k + 1)
+            if (k + 32) % 4 == 0 {
+                K.mass(&plate, [far, near, near2, far2, far])
+            } else {
+                plate.line([far, near], fine)
+            }
         }
-        for y in [0.5, 0.6, 0.76, 0.98] { plate.line([P(-1.1, y), P(1.1, y)], heavy) }
         plate.line([P(-1.1, horizon), P(1.1, horizon)], heavy)
+        plate.line([P(-1.1, horizon + 0.05), P(1.1, horizon + 0.05)], medium)
+        for y in [0.58, 0.76] { plate.line([P(-1.1, y), P(1.1, y)], heavy, .bone) }
         // The bank in the foreground, dark, its grass in bone.
         let bank = [P(-1.1, 1.1)] + (0...40).map { i -> P in
             let x = -1.1 + 2.2 * Double(i) / 40
@@ -802,44 +815,39 @@ extension EscapementArt {
             plate.line([P(x, y), P(x + 0.012 * (rnd(92, i) - 0.5), y - 0.04)], medium, .bone)
         }
 
-        // The sighting pole, ringed, with its vane.
-        let pole = -0.243, top = -0.46
-        K.mass(&plate, K.band(P(pole, horizon + 0.12), P(pole, top), 0.034))
-        for y in stride(from: top + 0.1, to: horizon + 0.1, by: 0.1) {
-            plate.line([P(pole - 0.017, y), P(pole + 0.017, y)], heavy, .bone)
+        // The sighting pole, ringed, with its vane, and its shadow across the fields.
+        let pole = -0.243, top = -0.46, foot = horizon + 0.14
+        K.mass(&plate, [P(pole - 0.02, foot), P(pole + 0.02, foot), P(pole + 0.42, foot + 0.17), P(pole + 0.38, foot + 0.19), P(pole - 0.02, foot)])
+        K.mass(&plate, K.band(P(pole, foot), P(pole, top), 0.044))
+        for y in stride(from: top + 0.1, to: foot, by: 0.1) {
+            plate.line([P(pole - 0.022, y), P(pole + 0.022, y)], heavy, .bone)
         }
-        plate.fill(arc(P(pole, top - 0.03), 0.032), .black)
-        plate.line(arc(P(pole - 0.01, top - 0.04), 0.012, from: 3.3, to: 4.6), medium, .bone)
-        K.mass(&plate, [P(pole, top - 0.06), P(pole + 0.11, top - 0.1), P(pole + 0.09, top - 0.06), P(pole + 0.11, top - 0.02), P(pole, top - 0.04), P(pole, top - 0.06)])
-        plate.line([P(pole, top - 0.06), P(pole, top - 0.11)], heavy)
-        // Its shadow on the fields.
-        K.mass(&plate, [P(pole - 0.017, horizon + 0.12), P(pole + 0.017, horizon + 0.12), P(pole + 0.34, horizon + 0.3), P(pole + 0.3, horizon + 0.31), P(pole - 0.017, horizon + 0.12)])
+        plate.line([P(pole - 0.012, top + 0.02), P(pole - 0.012, foot - 0.02)], fine, .bone)
+        plate.fill(arc(P(pole, top - 0.03), 0.036), .black)
+        plate.line(arc(P(pole - 0.01, top - 0.04), 0.014, from: 3.3, to: 4.6), medium, .bone)
+        K.mass(&plate, [P(pole, top - 0.06), P(pole + 0.12, top - 0.11), P(pole + 0.1, top - 0.065), P(pole + 0.12, top - 0.02), P(pole, top - 0.045), P(pole, top - 0.06)])
+        plate.line([P(pole, top - 0.06), P(pole, top - 0.12)], heavy)
 
-        // The year's path, faint, under its dots.
-        let path = (0...365).map { sun(Double($0)) }
-        plate.line(path, heavy)
-        // A dot every ten days, the summer solstice's in the second ink.
+        // The year's path under its dots: a dot every ten days, smaller up the summer loop so it shows open.
+        plate.line((0...365).map { sun(Double($0)) }, heavy)
         for d in stride(from: 2, to: 365, by: 10) where abs(d - 172) > 6 {
-            let c = sun(Double(d)), r = abs(simd_dot(c, up) - middle) < 0.13 || simd_dot(c, up) < middle ? 0.026 : 0.019
+            let c = sun(Double(d)), summer = simd_dot(c - centre, up) > 0.2
+            let r = summer ? 0.021 : 0.03
             plate.fill(arc(c, r + 0.008))
             plate.fill(arc(c, r), .black)
-            plate.line(arc(c + P(-0.006, -0.006), r * 0.55, from: 3.4, to: 4.5), fine, .bone)
+            plate.line(arc(c + P(-0.007, -0.007), r * 0.55, from: 3.4, to: 4.5), medium, .bone)
         }
         let solstice = sun(172)
-        plate.fill(arc(solstice, 0.05))
-        plate.fill(arc(solstice, 0.04), .second)
-        plate.line(arc(solstice, 0.04), medium)
-        for k in 0..<12 {
-            let a = Double(k) * .pi / 6
-            plate.line([polar(solstice, 0.055, a), polar(solstice, 0.08, a)], heavy)
-        }
+        plate.fill(arc(solstice, 0.048))
+        plate.fill(arc(solstice, 0.038), .second)
+        plate.line(arc(solstice, 0.038), medium)
         // The equinoxes' crossing, ticked across the figure.
         let equinox = sun(80)
-        plate.line([equinox - across * 0.09, equinox + across * 0.09], medium)
+        plate.line([equinox - across * 0.11, equinox + across * 0.11], heavy)
 
-        callout(&plate, "A", from: sun(300) + across * 0.03, to: P(0.74, -0.06))
+        callout(&plate, "A", from: sun(20) - across * 0.035, to: P(0.58, 0.04))
         callout(&plate, "B", from: P(pole, 0.0), to: P(-0.62, -0.02))
-        callout(&plate, "C", from: P(-0.6, horizon - 0.05), to: P(-0.72, 0.28))
+        callout(&plate, "C", from: P(-0.7, horizon - 0.12), to: P(-0.8, 0.1))
         return plate
     }
 }
