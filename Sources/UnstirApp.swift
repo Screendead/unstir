@@ -265,7 +265,7 @@ struct Harness {
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
         // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
         // UNSTIR_SLOPE=1 or =0 is for the phone too, as UNSTIR_UNLOCK is; its other values are the slope's stages.
-        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + (SlopeFlag.phone(env) ? ["UNSTIR_SLOPE"] : [])
+        let phone = ["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS", "UNSTIR_STRANDTOUR"] + (SlopeFlag.phone(env) ? ["UNSTIR_SLOPE"] : [])
         let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !phone.contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
@@ -644,7 +644,7 @@ enum SlopeFlag {
 
     /// UNSTIR_SLOPE names the world, not one of `SlopeHarness`'s stages.
     static func phone(_ env: [String: String]) -> Bool {
-        env["UNSTIR_SLOPE"].map { ["1", "world", "0"].contains($0) || tour($0) != nil } ?? false
+        env["UNSTIR_SLOPE"].map { ["1", "2", "world", "0"].contains($0) || tour($0) != nil } ?? false
     }
 
     /// "tour" is every motion, "tour:scroll" that one: "" or its name.
@@ -658,10 +658,24 @@ enum SlopeFlag {
     static let touring = ProcessInfo.processInfo.environment["UNSTIR_SLOPE"].flatMap(tour)
     #endif
 
+    /// UNSTIR_SLOPE=2: the world with the strand's menu (`StrandMenu`) in place of `SlopeMenu`, stored as 1 is.
+    static let strandKey = "slope.strand"
+
+    static var strand: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: strandKey)
+        #else
+        false
+        #endif
+    }
+
     static func read(_ env: [String: String], harnessed: Bool) {
         #if DEBUG
         // The test host clears it too, so a slope shot on the same simulator never leaves the tests in the slope.
-        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil { UserDefaults.standard.set(env["UNSTIR_SLOPE"].map { ["1", "world"].contains($0) || tour($0) != nil } ?? false, forKey: key) }
+        if phone(env) || harnessed || env["XCTestConfigurationFilePath"] != nil {
+            UserDefaults.standard.set(env["UNSTIR_SLOPE"].map { ["1", "2", "world"].contains($0) || tour($0) != nil } ?? false, forKey: key)
+            UserDefaults.standard.set(env["UNSTIR_SLOPE"] == "2", forKey: strandKey)
+        }
         #endif
     }
 }
@@ -816,6 +830,19 @@ struct RootView: View {
 
     /// The slope's menu (`SlopeMenu`), with what covers it: a pack's hollow opened (`SlopePack`), settings, the consent
     /// question, and the archive's calendar (`SlopeArchive`).
+    /// The strand's menu in the slope menu's place (`SlopeFlag.strand`): the spike takes no hollow or archive ledge.
+    private var strandMenu: some View {
+        StrandMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
+                   settings: $settings, card: $card, archive: $archive, day: harness?.day, clock: harness?.clock,
+                   held: harness?.lockTap, peeking: peeking, revision: revision,
+                   run: Self.save("endless", harnessed: harnessed, harnessSave),
+                   light: asking ? SlopeConsent.light : 1, bare: asking) { next, point in
+            pebble = point.map { (next.id, $0) }
+            show(next)
+        }
+        .overlay { slopeCovers }
+    }
+
     private var slopeMenu: some View {
         // A cold launch rests on the overview, so only a closed tier's "up a notch", or the harness's UNSTIR_TIER, names a tier.
         SlopeMenu(start: level == nil ? look ?? (harness != nil && namesTier ? harness?.menuTier : nil) : nil, focus: focus, returning: revision > 0,
@@ -983,7 +1010,7 @@ struct RootView: View {
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
                 // level, whose ground it leaves uncovered.
                 if slope, level == nil || peeking {
-                    slopeMenu
+                    Group { if SlopeFlag.strand { strandMenu } else { slopeMenu } }
                         .allowsHitTesting(level == nil)
                         .accessibilityHidden(level != nil)
                         // Under a back swipe the slope draws back in as the level shrinks toward its ledge.
