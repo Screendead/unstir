@@ -133,8 +133,109 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 62, Arbor, pent, clocks 0+,1-.
-    static func plate62() -> Plate? { nil }
+    /// Problem 62, Arbor, pent, clocks 0+,1-: a watchmaker's turns held by its tail in the bench vice, the arbor
+    /// between the runners' centres in the clear middle, the bow drawn back with its string once round the ferrule;
+    /// the arbor's right-hand pivot point in the second ink.
+    static func plate62() -> Plate {
+        var plate = Plate()
+        let axis = 0.0, bar = 0.33
+        let poppets = [-1.0, 1.0].map { s in
+            [P(s * 0.4, bar), P(s * 0.4, -0.08), P(s * 0.45, -0.13), P(s * 0.6, -0.13), P(s * 0.62, -0.1), P(s * 0.66, bar), P(s * 0.4, bar)]
+        }
+        let frame = box(P(-1.1, bar), P(1.1, bar + 0.09))
+        let tail = box(P(-0.06, bar + 0.09), P(0.06, 1.1))
+        let jaws = [-1.0, 1.0].map { s in box(P(s * 0.06, 0.58), P(s * 0.3, 1.1)) }
+        // The bow: a cane bent by its string, its handle pulled out to the right.
+        let tip = P(-0.86, -0.46), heel = P(0.74, -0.52)
+        let cane = curve(tip, P(-0.05, -0.98), heel, 48)
+        let stick = Kit.ribbon(cane, 0.05)
+        let handle = [heel + P(-0.02, -0.06), heel + P(0.3, -0.07), heel + P(0.34, 0), heel + P(0.3, 0.07), heel + P(-0.02, 0.06),
+                      heel + P(-0.02, -0.06)]
+        let ferrule = P(-0.15, axis), fr = 0.09
+
+        Kit.ground(&plate, angle: -0.4, around: poppets + jaws + [frame, tail, stick, handle])
+
+        // The vice's jaws gripping the turns' tail, their chops serrated.
+        for (k, jaw) in jaws.enumerated() {
+            let s = k == 0 ? -1.0 : 1.0
+            Kit.cut(&plate, jaw, edge: heavy)
+            plate.lines(hatch([jaw], angle: .pi / 2, gap: 0.03), medium)
+            Kit.mass(&plate, box(P(s * 0.24, 0.58), P(s * 0.3, 1.1)))
+            Kit.solid(&plate, box(P(s * 0.3, 0.5), P(s * 0.06, 0.58)), angle: 0.8, gap: 0.012)
+            var chops: [P] = []
+            for y in stride(from: 0.6, to: 1.08, by: 0.04) { chops += [P(s * 0.06, y), P(s * 0.095, y + 0.02)] }
+            Kit.mass(&plate, [P(s * 0.06, 0.58)] + chops + [P(s * 0.06, 1.1), P(s * 0.06, 0.58)])
+        }
+        Kit.solid(&plate, tail, angle: 0.8, gap: 0.016)
+
+        // The frame bar and its heads, each head's runner bored through and its binding screw on top.
+        Kit.mass(&plate, frame)
+        plate.line([P(-1, bar + 0.02), P(1, bar + 0.02)], fine, .bone)
+        for (k, head) in poppets.enumerated() {
+            let s = k == 0 ? -1.0 : 1.0
+            Kit.cut(&plate, head, edge: heavy)
+            plate.lines(hatch([head], angle: .pi / 2, gap: 0.03), medium)
+            Kit.mass(&plate, [P(s * 0.6, -0.13), P(s * 0.62, -0.1), P(s * 0.66, bar), P(s * 0.6, bar), P(s * 0.6, -0.13)])
+            Kit.solid(&plate, box(P(s * 0.46, bar - 0.11), P(s * 0.56, bar - 0.04)), angle: 0.8, gap: 0.012)
+            let screw = box(P(s * 0.48, -0.23), P(s * 0.58, -0.13))
+            Kit.solid(&plate, screw, angle: 0, gap: 0.016)
+            Kit.mass(&plate, box(P(s * 0.515, -0.13), P(s * 0.545, -0.1)))
+            // The runner: a steel rod through the head, its centre turned to a point at the arbor's pivot.
+            let inner = s * 0.335, outer = s * 1.1
+            Kit.mass(&plate, [P(inner + s * 0.05, axis - 0.026), P(outer, axis - 0.026), P(outer, axis + 0.026),
+                              P(inner + s * 0.05, axis + 0.026), P(inner + s * 0.05, axis - 0.026)])
+            plate.line([P(inner + s * 0.06, axis - 0.01), P(s * 1, axis - 0.01)], fine, .bone)
+            Kit.solid(&plate, [P(inner + s * 0.05, axis - 0.026), P(inner + s * 0.05, axis + 0.026), P(inner, axis + 0.008),
+                               P(inner, axis - 0.008), P(inner + s * 0.05, axis - 0.026)], angle: 0.6, gap: 0.01)
+            for x in stride(from: 0.74, to: 0.95, by: 0.04) {
+                Kit.solid(&plate, box(P(s * x, axis - 0.042), P(s * (x + 0.022), axis + 0.042)), angle: 0.9, gap: 0.01)
+            }
+        }
+
+        // The arbor between the centres: its pivots, the ferrule the string drives, its pinion, the seat for its wheel.
+        Kit.mass(&plate, box(P(-0.29, axis - 0.026), P(0.29, axis + 0.026)))
+        plate.line([P(-0.28, axis - 0.01), P(0.28, axis - 0.01)], fine, .bone)
+        let leaves = box(P(-0.01, axis - 0.06), P(0.12, axis + 0.06))
+        plate.fill(leaves, .black)
+        for y in [-0.04, -0.012, 0.016, 0.042] {
+            Kit.cut(&plate, box(P(0.0, axis + y - 0.008), P(0.11, axis + y + 0.008)), edge: fine)
+        }
+        plate.line(leaves, medium)
+        let seat = [P(0.17, axis - 0.1), P(0.2, axis - 0.1), P(0.2, axis - 0.05), P(0.24, axis - 0.04), P(0.24, axis + 0.04),
+                    P(0.2, axis + 0.05), P(0.2, axis + 0.1), P(0.17, axis + 0.1), P(0.17, axis - 0.1)]
+        Kit.solid(&plate, seat, angle: 0.8, gap: 0.012)
+        let pulley = [ferrule + P(-0.05, -fr), ferrule + P(0.05, -fr), ferrule + P(0.028, 0), ferrule + P(0.05, fr),
+                      ferrule + P(-0.05, fr), ferrule + P(-0.028, 0), ferrule + P(-0.05, -fr)]
+        Kit.solid(&plate, pulley, angle: 0.8, gap: 0.012)
+        for s in [-1.0, 1.0] {
+            let point = [P(s * 0.28, axis - 0.026), P(s * 0.335, axis), P(s * 0.28, axis + 0.026), P(s * 0.28, axis - 0.026)]
+            if s > 0 {
+                plate.fill(point, .second)
+                plate.line(point, fine, .second)
+            } else {
+                Kit.mass(&plate, point)
+            }
+        }
+
+        // The bow's string, from the cane's tip once round the ferrule and back to the handle.
+        let over = ferrule + P(-0.035, -fr + 0.01), under = ferrule + P(0.035, fr - 0.01)
+        plate.line([tip + P(0.01, 0.02), ferrule + P(-0.04, -fr + 0.004)], heavy)
+        plate.line([over, under], heavy)
+        plate.line([ferrule + P(0.04, -fr + 0.004), heel + P(0, 0.03)], heavy)
+        Kit.mass(&plate, stick)
+        plate.line(Array(cane[4...44]), fine, .bone)
+        Kit.mass(&plate, handle)
+        for x in [0.06, 0.14, 0.22] {
+            plate.line([heel + P(x, -0.064), heel + P(x, 0.064)], medium, .bone)
+        }
+        Kit.mass(&plate, Kit.band(tip + P(-0.03, -0.03), tip + P(0.04, 0.05), 0.05))
+
+        callout(&plate, "A", from: P(0.05, axis + 0.05), to: P(0.27, 0.22))
+        callout(&plate, "B", from: ferrule + P(0, -0.03), to: P(-0.25, 0.2))
+        callout(&plate, "C", from: cane[30], to: P(0.42, -0.6))
+        callout(&plate, "D", from: P(-0.8, axis), to: P(-0.72, 0.62))
+        return plate
+    }
 
     /// Problem 63, Third wheel, hex, clocks 1-,2-.
     static func plate63() -> Plate? { nil }
