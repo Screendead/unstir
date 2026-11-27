@@ -27,20 +27,22 @@ SLOTS = {
 
 # Trays 6 to 15 (the pack trebled, Jack, 2026-11-27): depth climbs a step a tray, twice today's slope, from 8 to 20, by
 # (layout, depth, palette). A palette of one primary and its ink (rc, gm, by) moves only two of the three channels' words,
-# so it never splits three ways however deep; the mixed ones (rgb, rcgb, rgbcmy) buy colour order at the cost of mush.
+# so it never splits three ways however deep; the mixed ones (rgb, rcgb, rgbcmy) buy colour order at the cost of mush,
+# and on hex past 13 they split a fifth of the glass three ways or more (and take the solver minutes), so there hex keeps
+# to pairs.
 DEEP = {
     "t6": [("quad", 8, "gm"), ("eye", 9, "by"), ("pent", 9, "gm"), ("pent", 10, "by"), ("hex", 10, "gm"), ("hex", 11, "by")],
     "t7": [("pent", 9, "rgb"), ("eye", 10, "rc"), ("pent", 10, "rgb"), ("hex", 11, "rgb"), ("pent", 11, "rgb"), ("hex", 12, "rc")],
     "t8": [("eye", 10, "gm"), ("pent", 11, "rc"), ("pent", 11, "by"), ("hex", 12, "gm"), ("hex", 12, "rc"), ("hex", 13, "by")],
     "t9": [("tri", 11, "cmy"), ("quad", 12, "cmy"), ("eye", 12, "rgbcmy"), ("pent", 13, "rgbcmy"), ("pent", 13, "cmy"),
-           ("hex", 14, "rgbcmy")],
-    "t10": [("eye", 12, "rc"), ("pent", 13, "rcgb"), ("pent", 13, "rgbcmy"), ("hex", 14, "rcgb"), ("hex", 14, "gm"),
-            ("hex", 15, "rgbcmy")],
-    "t11": [("pent", 13, "gm"), ("pent", 14, "rcgb"), ("hex", 14, "by"), ("hex", 15, "rgb"), ("hex", 15, "rc"), ("hex", 16, "rcgb")],
-    "t12": [("pent", 14, "by"), ("pent", 15, "rc"), ("hex", 15, "rgbcmy"), ("hex", 16, "gm"), ("hex", 16, "rcgb"), ("hex", 17, "by")],
-    "t13": [("eye", 15, "rc"), ("pent", 16, "gm"), ("pent", 16, "rcgb"), ("hex", 17, "rc"), ("hex", 17, "rgb"), ("hex", 18, "gm")],
-    "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("hex", 17, "rcgb"), ("hex", 18, "by"), ("hex", 18, "rgbcmy"), ("hex", 19, "rc")],
-    "t15": [("pent", 17, "gm"), ("hex", 18, "rc"), ("hex", 18, "rcgb"), ("hex", 19, "gm"), ("hex", 19, "by"), ("hex", 20, "rc")],
+           ("pent", 14, "rgbcmy")],
+    "t10": [("eye", 12, "rc"), ("pent", 13, "rcgb"), ("pent", 13, "rgbcmy"), ("hex", 14, "by"), ("hex", 14, "gm"),
+            ("pent", 15, "rgbcmy")],
+    "t11": [("pent", 13, "gm"), ("pent", 14, "rcgb"), ("hex", 14, "rc"), ("pent", 15, "rgb"), ("hex", 15, "rc"), ("hex", 16, "gm")],
+    "t12": [("pent", 14, "by"), ("pent", 15, "rc"), ("pent", 15, "rgbcmy"), ("hex", 16, "rc"), ("hex", 16, "by"), ("hex", 17, "by")],
+    "t13": [("eye", 15, "rc"), ("pent", 16, "gm"), ("pent", 16, "rcgb"), ("hex", 17, "rc"), ("hex", 17, "gm"), ("hex", 18, "gm")],
+    "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("pent", 17, "rgbcmy"), ("hex", 18, "by"), ("hex", 18, "rc"), ("hex", 19, "rc")],
+    "t15": [("pent", 17, "gm"), ("hex", 18, "gm"), ("pent", 18, "rcgb"), ("hex", 19, "gm"), ("hex", 19, "by"), ("hex", 20, "rc")],
 }
 
 
@@ -79,11 +81,12 @@ def main(pool):
 
 
 def deep_readable(r):
-    # Deeper than the prototype's limits allow: at most 75% ghosts and 12% split three ways (the hex-13 pair deals read
-    # 65 to 74% and 0%), cost within the four-tap budget the search keeps, and every once-stirred coloured rod's count
+    # Past the prototype's limits, as the plates drawn for the treble keep their shapes through deeper ghosts (an ink
+    # deal on tri splitting 23% three ways still shows every diatom, looked at 2026-11-27): at most 75% ghosts and 25%
+    # split three ways, cost within the four-tap budget the search keeps, and every once-stirred coloured rod's count
     # showing over at least half its core (today's 30 read 0.58 at least).
     least = r.get("least read", "-")
-    return pct(r["ghost"]) <= 75 and pct(r["triple"]) <= 12 and int(r["cost"]) <= 30 and least != "-" and float(least) >= 0.5
+    return pct(r["ghost"]) <= 75 and pct(r["triple"]) <= 25 and int(r["cost"]) <= 30 and least != "-" and float(least) >= 0.5
 
 
 def hardness(r):

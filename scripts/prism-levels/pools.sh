@@ -4,7 +4,7 @@
 # Writes the pools trays 6 to 15 are picked from, one (layout, depth, palette) a file, then:
 #   scripts/prism-levels/pick.py --deep <dir>
 # Each palette deals from its own seeds, as a two-letter palette's rng draws alike whatever its letters. Four searches
-# run at once at utility priority; the mixed palettes on hex take the longest (tens of seconds a seed).
+# run at once at utility priority (POOL_JOBS sets how many); the mixed palettes on hex take the longest (tens of seconds a seed).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 dir=$1 n=${2:-30}
@@ -16,4 +16,4 @@ scripts/prism-levels/pick.py --specs | while read -r layout depth palette; do
   [[ -s "$f" ]] && continue
   start=$(from "$palette")
   echo "taskpolicy -c utility build/prism-levels/measure search $layout $depth $palette $start $((start + n - 1)) > $f.part && mv $f.part $f"
-done | xargs -P 4 -I{} bash -c {}
+done | xargs -P "${POOL_JOBS:-4}" -I{} bash -c {}
