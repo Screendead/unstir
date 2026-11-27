@@ -720,12 +720,13 @@ struct SlopeMenuPlan {
         return travel.upperBound > travel.lowerBound + 1
     }
 
-    /// How many times its share of the screen each tier has at the overview: UNSTIR_SLOPEROOM in Debug builds.
+    /// How many times its share of the screen each tier has at the overview: 4, a column about 2.5 screens long that
+    /// scrolls (Jack's call, 2026-11-27); UNSTIR_SLOPEROOM sets another in Debug builds.
     static let roominess: CGFloat = {
         #if DEBUG
         if let room = ProcessInfo.processInfo.environment["UNSTIR_SLOPEROOM"].flatMap(Double.init), room >= 1 { return CGFloat(room) }
         #endif
-        return 1
+        return 4
     }()
 
     /// From a header's foot to its stretch's first ledge, and from a stretch's top at the overview to its words.
