@@ -575,13 +575,13 @@ extension LensArt {
 // MARK: - 60: Frosted glass
 
 /// Level 60's name: a window pane blue with frost, ferns of ice growing in from the edge and blooms of it thick and
-/// thin, a heart and a smiling face drawn in it by a finger, and the sash's wood down the left with a glazing bar off it.
-/// Five holes are wiped clear (hex's five lenses on this level), each ringed by its smeared edge, thick frost and wet
-/// streaks by turns, and through each the snowy dusk outside: a snowman at the middle, a street lamp at the top, a fir
-/// tree with its star in the upper right, a sledge in the lower right and a snowflake at the foot.
+/// thin, a heart, a smiling face and a star drawn in it by a finger, and the sash's wood down the left with a glazing
+/// bar off it. Four holes are wiped clear (hex's four lenses on this level), each ringed by its smeared edge, thick
+/// frost and wet streaks by turns, and through each the snowy dusk outside: a snowman at the middle, a street lamp at
+/// the top, a fir tree with its star in the upper right and a snowflake at the foot.
 extension LensArt {
     static let frostedglass: Halftone.Panel = {
-        let rods = hexes, lenses = [0, 1, 2, 3, 4], wiped = 0.205, frame = 0.264
+        let rods = hexes, lenses = [0, 1, 2, 4], wiped = 0.205, frame = 0.264
         let holes = lenses.map { rods[$0] }
         let night = m(0.7), frost = c(0.35), thick = c(0.62), thin = c(0.14), wet = y(0.6)
         let ice = Tone(0.45, 0.4, 0.45), smear = [ice, m(0.95), ice, wet, ice, m(0.95), wet, ice, night, ice, wet, m(0.95)]
@@ -600,13 +600,14 @@ extension LensArt {
         }
         // The window's sash bar down the left and a glazing bar across to the middle, so its twisting rods turn wood too.
         let sash = -0.8, rail = 0.02, wood = y(0.55)
+        let doodle = star(rods[3] + P(0.05, -0.03), 0.16, points: 5, inner: 0.45, degrees: -80)
         let face = rods[5] + P(0.05, 0.04), smile = arc(face, 0.085, 20, 160, 16)
         let eyes = [face + P(-0.05, -0.05), face + P(0.05, -0.05)]
         let lo = heart.reduce(heart[0], simd_min) - P(finger, finger), hi = heart.reduce(heart[0], simd_max) + P(finger, finger)
 
         var s: [Halftone.Stroke] = []
         func clear(_ p: P) -> Bool {
-            abs(p.x - sash) > 0.05 && (abs(p.y - rail) > 0.045 || p.x > -0.3) && holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } && distance(p, heart) > finger + 0.004
+            abs(p.x - sash) > 0.05 && (abs(p.y - rail) > 0.045 || p.x > -0.3) && holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } && distance(p, heart) > finger + 0.004 && distance(p, doodle) > finger + 0.004
                 && abs(simd_distance(p, face) - 0.15) > finger + 0.004
         }
         // The frost's ferns: fronds growing in from the edge, each a stem and its side shoots, cut where the frost is gone.
@@ -631,6 +632,7 @@ extension LensArt {
         }
         // The finger's strokes' edges.
         s.append(stroke(heart, hair))
+        s.append(stroke(doodle, hair))
         s += hoop(face, 0.15 + finger, hair) + hoop(face, 0.15 - finger, hair)
         s.append(stroke(smile, mid))
         for e in eyes { s.append(stroke(circle(e, 0.022, 10), hair)) }
@@ -676,14 +678,6 @@ extension LensArt {
         s.append(stroke(star(fir + P(0, -0.04), 0.008), 0.0018))
         clearKnob(&s, from: mark, rods[2])
         mark = s.count
-        // In the lower right: a sledge, its runners curled up in front, and its rope.
-        let sled = rods[3] + P(0.004, -0.04)
-        s.append(stroke([sled + P(-0.036, 0.012), sled + P(0.03, 0.012)] + arc(sled + P(0.03, 0.002), 0.01, 90, -90, 8).dropFirst(), 0.0032))
-        s.append(stroke(closed(rect(sled.x - 0.032, sled.y - 0.008, sled.x + 0.026, sled.y - 0.002)), 0.003))
-        for x in [-0.024, 0.0, 0.02] { s.append(stroke([sled + P(x, -0.002), sled + P(x, 0.012)], 0.0024)) }
-        s.append(stroke(curve(sled + P(0.03, -0.008), sled + P(0.05, -0.02), sled + P(0.044, -0.04), 8), 0.0016))
-        clearKnob(&s, from: mark, rods[3])
-        mark = s.count
         // At the foot: a snowflake, six arms and their branches.
         let flake = rods[4] + P(0.03, -0.03)
         for k in 0..<6 {
@@ -703,6 +697,7 @@ extension LensArt {
                 return d < wiped ? night : smear[Int(bearing(p, c) / 30) % 12]
             }
             if p.x > lo.x, p.y > lo.y, p.x < hi.x, p.y < hi.y, distance(p, heart) < finger { return night }
+            if simd_distance(p, rods[3]) < 0.27, distance(p, doodle) < finger { return night }
             if abs(simd_distance(p, face) - 0.15) < finger { return night }
             for e in eyes where simd_distance(p, e) < 0.022 { return night }
             if simd_distance(p, face) < 0.11, distance(p, smile) < 0.012 { return wet }
