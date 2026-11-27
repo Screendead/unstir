@@ -290,8 +290,120 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 82, Astrolabe, hex, clocks 1-.
-    static func plate82() -> Plate? { nil }
+    /// A star pointer's flame on an astrolabe's rete: a curved blade from `base` to its tip at `tip`.
+    private static func pointer(_ base: P, _ tip: P, width w: Double, bend: Double = 0.3) -> [P] {
+        let d = tip - base, n = simd_normalize(P(-d.y, d.x))
+        let mid = base + 0.5 * d + n * bend * simd_length(d) * 0.5
+        let left = curve(base + n * w, mid + n * w * 0.5, tip, 12)
+        let right = curve(tip, mid - n * w * 0.3, base - n * w, 12)
+        return left + right.dropFirst() + [left[0]]
+    }
+
+    /// Problem 82, Astrolabe, hex, clocks 1-: an astrolabe's face hung from its throne. Its limb in ink with the hours,
+    /// the plate's tropics and almucantars ruled under, the sky below the horizon shaded, and over them the pierced
+    /// rete in bold ink, its ecliptic ring and star pointers, with the rule across; one star pointer in the second ink.
+    static func plate82() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, limb = 0.74, tropic = 0.6, cancer = 0.26, equator = 0.4
+        let throne = smooth([P(-0.2, -0.7), P(-0.17, -0.8), P(-0.08, -0.82), P(-0.05, -0.88), P(0.05, -0.88), P(0.08, -0.82),
+                             P(0.17, -0.8), P(0.2, -0.7)], 6)
+        Kit.ground(&plate, angle: 0.6, around: [arc(o, limb + 0.01), throne])
+
+        // The throne and its shackle.
+        Kit.solid(&plate, throne, angle: 1.2, gap: 0.03, width: medium, edge: 0.028)
+        for x in [-0.1, 0.1] { Kit.mass(&plate, arc(P(x, -0.77), 0.03)); plate.fill(arc(P(x, -0.77), 0.012)) }
+        Kit.mass(&plate, Kit.band(P(0, -0.84), P(0, -0.74), 0.03))
+        plate.line(arc(P(0, -0.92), 0.05), 0.03)
+        Kit.mass(&plate, box(P(-0.025, -0.9), P(0.025, -0.86)))
+
+        // The limb: ink, its degrees cut and the hours twice round.
+        Kit.mass(&plate, arc(o, limb))
+        Kit.cut(&plate, arc(o, 0.71), edge: heavy)
+        for k in 0..<72 {
+            let a = Double(k) * .pi / 36
+            plate.line([polar(o, 0.71, a), polar(o, limb, a)], k % 3 == 0 ? 0.014 : medium, .bone)
+        }
+        for k in 0..<24 {
+            let a = -.pi / 2 + Double(k) * .pi / 12
+            Kit.mass(&plate, Kit.band(polar(o, 0.62, a), polar(o, 0.7, a), 0.014))
+            let b = a + .pi / 24
+            plate.lines(Kit.numeral(roman(k % 12 + 1), at: polar(o, 0.66, b), height: 0.04, turn: b + .pi / 2, squeeze: 0.66), heavy)
+        }
+        plate.line(arc(o, 0.62), heavy)
+
+        // The plate: the sky below the horizon shaded, the tropics and almucantars ruled.
+        let alts: [(top: Double, bottom: Double)] = (0...5).map { k in (-0.56 + 0.06 * Double(k), 0.5 - 0.13 * Double(k)) }
+        let horizon = arc(P(0, (alts[0].top + alts[0].bottom) / 2), (alts[0].bottom - alts[0].top) / 2)
+        plate.lines(hatch([arc(o, tropic), horizon], angle: 0.6, gap: Kit.groundGap), Kit.groundWidth)
+        for (k, alt) in alts.enumerated() {
+            let ring = arc(P(0, (alt.top + alt.bottom) / 2), (alt.bottom - alt.top) / 2)
+            var run: [P] = []
+            for p in ring {
+                if simd_length(p) < tropic { run.append(p) } else if run.count > 1 { plate.line(run, k == 0 ? 0.016 : fine); run = [] } else { run = [] }
+            }
+            if run.count > 1 { plate.line(run, k == 0 ? 0.016 : fine) }
+        }
+        for r in [cancer, equator] { plate.line(arc(o, r), medium) }
+        plate.line(arc(o, tropic), heavy)
+        plate.line([P(-tropic, 0), P(tropic, 0)], fine)
+        plate.line([P(0, -tropic), P(0, tropic)], fine)
+
+        // The rete: its rim, the ecliptic ring cut with the signs, bars and star pointers.
+        let ecliptic = P(0, -(tropic - cancer) / 2), er = (tropic + cancer) / 2
+        // Turned a little off the meridian, as it stands at some hour of the night.
+        let turn = -Double.pi / 6
+        var rete = Plate()
+        Kit.mass(&rete, Kit.ribbon(arc(o, tropic - 0.02, from: 0.35, to: .pi - 0.35), 0.04))
+        let bars: [[P]] = [
+            curve(polar(o, tropic - 0.02, 0.35), P(0.42, 0.06), polar(ecliptic, er, 0.12)),
+            curve(polar(o, tropic - 0.02, .pi - 0.35), P(-0.42, 0.06), polar(ecliptic, er, .pi - 0.12)),
+            curve(P(0, tropic - 0.03), P(0.04, 0.38), P(0, cancer + 0.02)),
+            curve(polar(ecliptic, er, -0.9), P(0.12, -0.12), P(0.03, -0.03)),
+            curve(polar(ecliptic, er, -2.24), P(-0.12, -0.12), P(-0.03, -0.03)),
+            curve(P(-0.3, equator - 0.12), P(0, equator + 0.04), P(0.3, equator - 0.12)),
+        ]
+        for bar in bars { Kit.mass(&rete, Kit.ribbon(bar, 0.04)) }
+        Kit.mass(&rete, Kit.ribbon(arc(ecliptic, er), 0.06))
+        for k in 0..<36 {
+            let a = Double(k) * .pi / 18
+            rete.line([polar(ecliptic, er - (k % 3 == 0 ? 0.028 : 0.005), a), polar(ecliptic, er + 0.028, a)], k % 3 == 0 ? heavy : medium, .bone)
+        }
+        let stars: [(base: P, tip: P, bend: Double)] = [
+            (polar(ecliptic, er, -1.25), P(0.34, -0.47), 0.4), (polar(ecliptic, er, -1.95), P(-0.36, -0.46), -0.4),
+            (polar(ecliptic, er, 2.6), P(-0.5, 0.0), 0.3), (polar(ecliptic, er, 0.55), P(0.5, 0.0), -0.3),
+            (P(0.3, 0.28), P(0.4, 0.4), 0.4), (P(-0.3, 0.28), P(-0.42, 0.38), -0.4),
+            (P(0.02, 0.48), P(0.12, 0.53), 0.5), (P(-0.02, 0.33), P(-0.14, 0.46), -0.3),
+            (P(0.06, -0.1), P(0.14, -0.2), 0.3), (P(-0.06, -0.1), P(-0.1, -0.21), -0.3),
+        ]
+        for st in stars {
+            Kit.mass(&rete, pointer(st.base, st.tip, width: 0.026, bend: st.bend * 0.4))
+            rete.fill(arc(st.tip, 0.012), .bone)
+            rete.line(arc(st.tip, 0.012), fine)
+        }
+        plate.marks += rete.marks.map { Mark(points: turned($0.points, by: turn), width: $0.width, ink: $0.ink) }
+        let centre = turned([ecliptic], by: turn)[0], from = polar(centre, er - 0.035, -0.47)
+        let named = pointer(from, P(0.13, -0.26), width: 0.028, bend: 0.2)
+        plate.line(named, 0.026, .bone)
+        plate.fill(named, .second)
+        plate.line(named, fine)
+        plate.fill(arc(P(0.13, -0.26), 0.012))
+        plate.line(arc(P(0.13, -0.26), 0.012), fine)
+
+        // The rule across the face, and the pin.
+        let ruleA = polar(o, limb - 0.02, Kit.clock(4.3)), ruleB = polar(o, limb - 0.02, Kit.clock(10.3))
+        let rule = Kit.band(ruleA, ruleB, 0.07)
+        plate.line(rule, 0.03, .bone)
+        Kit.solid(&plate, rule, angle: Kit.clock(4.3) + 0.9, gap: 0.03, edge: heavy)
+        plate.line([ruleA, ruleB], 0.016)
+        Kit.cut(&plate, arc(o, 0.055), edge: 0.016)
+        plate.fill(arc(o, 0.02), .black)
+
+        callout(&plate, "A", from: polar(o, 0.7, Kit.clock(7.5)), to: P(-0.74, 0.6))
+        callout(&plate, "B", from: polar(ecliptic, er, 0.2), to: P(0.84, 0.18))
+        callout(&plate, "C", from: polar(o, 0.5, Kit.clock(4.3)), to: P(0.62, 0.72))
+        callout(&plate, "D", from: P(0.17, -0.78), to: P(0.4, -0.84))
+        return plate
+    }
 
     /// Problem 83, Night watch, hex, clocks 1-.
     static func plate83() -> Plate? { nil }
