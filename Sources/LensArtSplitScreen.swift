@@ -44,6 +44,17 @@ private extension LensArt {
         return left + right.reversed()
     }
 
+    /// Moves the strokes from `start` on, a clue, straight out from its lens core's centre until it clears the knob
+    /// there by 0.022, as a clue must, first drawing it `scale` its size about its middle.
+    static func fit(_ s: inout [Halftone.Stroke], from start: Int, core: P, scale: Double = 1) {
+        let drawn = s[start...].flatMap(\.points), g = drawn.reduce(P(0, 0), +) / Double(drawn.count)
+        for i in start..<s.count { s[i].points = s[i].points.map { g + ($0 - g) * scale } }
+        let points = s[start...].flatMap(\.points), u = simd_normalize(g - core)
+        var shift = 0.0
+        while points.contains(where: { simd_distance($0 + u * shift, core) < 0.022 }) { shift += 0.002 }
+        for i in start..<s.count { s[i].points = s[i].points.map { $0 + u * shift } }
+    }
+
     /// Strokes cut into runs of a few segments each: the bake tests every stroke whose box holds a pixel, segment by
     /// segment, so a long curve's wide box costs every pixel inside it.
     static func pieces(_ strokes: [Halftone.Stroke]) -> [Halftone.Stroke] {
@@ -85,7 +96,7 @@ extension LensArt {
         @Sendable func above(_ p: P) -> Tone {
             let k = p.x < 0 ? 0 : 1, d = p - eyes[k], r2 = simd_length_squared(d)
             if r2 < 0.1764 {
-                if r2 < 0.0144 { return .zero }
+                if r2 < 0.0009 { return .zero }
                 if r2 < 0.069696 { return iris }
                 let a = bearing(d)
                 if r2.squareRoot() < 0.4 + 0.022 * cos(a * 12 * .pi / 180) { return odd(a, seams[k]) ? ruffB : ruffA }
@@ -110,7 +121,7 @@ extension LensArt {
             }), mid))
             for a in seams[k] { s.append(stroke([polar(e, 0.275, a), polar(e, 0.38, a + 6)], hair)) }
             s += runs(circle(e, 0.264, 64), bold) { simd_distance($0, polar(e, 0.264, k == 0 ? 130 : 50)) > 0.05 }
-            s.append(stroke(circle(e, 0.12, 36), mid))
+            s.append(stroke(circle(e, 0.03, 16), hair))
             s.append(stroke(arc(e, 0.2, 200, 250, 10), mid))
         }
         // The breast's feathers between the ruffs, and the feet on the branch.
@@ -134,7 +145,7 @@ extension LensArt {
         s += runs(mirrored(crown), mid, keep: ripple)
         for e in eyes.map({ P($0.x, 2 * water - $0.y) }) {
             s += runs(circle(e, 0.264, 64), mid, keep: ripple)
-            s.append(stroke(circle(e, 0.12, 36), hair))
+            s.append(stroke(circle(e, 0.03, 16), hair))
         }
         s += runs(mirrored(span(beak[0], beak[2], 16) + span(beak[2], beak[1], 16)), hair, keep: ripple)
         for t in tufts { s += runs(mirrored(span(t[1], t[2], 16) + span(t[2], t[0], 16)), hair, keep: ripple) }
@@ -152,13 +163,16 @@ extension LensArt {
         s += (0..<6).map { k in stroke([P(-0.24, 0.77), polar(P(-0.24, 0.77), 0.05, -150 + 24 * Double(k))], mid) }
 
         // What each eye has caught, in its pupil: a mouse; a bat; in the water, a frog and a dragonfly.
-        let mouse = eyes[0] + P(0.018, -0.04)
+        var mark = s.count
+        let mouse = eyes[0] + P(0.01, -0.03)
         s.append(stroke(ellipse(mouse, 0.03, 0.017, 20), 0.0036))
         s.append(stroke(circle(mouse + P(0.02, -0.018), 0.009, 10), 0.003))
         s.append(stroke(circle(mouse + P(0.024, -0.003), 0.0025, 6), 0.003))
         s.append(stroke(curve(mouse + P(-0.03, 0.004), mouse + P(-0.06, 0.03), mouse + P(-0.07, -0.01), 8), 0.0024))
         for dx in ([-0.015, 0.012] as [Double]) { s.append(stroke([mouse + P(dx, 0.016), mouse + P(dx - 0.004, 0.026)], 0.0024)) }
-        let bat = eyes[1] + P(-0.01, -0.045)
+        fit(&s, from: mark, core: eyes[0])
+        mark = s.count
+        let bat = eyes[1] + P(0.0, -0.035)
         for side in ([-1.0, 1.0] as [Double]) {
             let w = { (x: Double, y: Double) in bat + P(side * x, y) }
             s.append(stroke(curve(w(0, 0), w(0.03, -0.03), w(0.07, -0.01), 8) + curve(w(0.07, -0.01), w(0.058, 0.006), w(0.05, 0.004), 4)
@@ -166,7 +180,9 @@ extension LensArt {
         }
         s.append(stroke([bat + P(-0.008, -0.004), bat + P(-0.006, -0.016), bat + P(0, -0.008), bat + P(0.006, -0.016), bat + P(0.008, -0.004)], 0.003))
         s.append(stroke(ellipse(bat + P(0, 0.004), 0.008, 0.012, 10), 0.003))
-        let frog = P(-0.485, 0.28) + P(0.02, 0.04)
+        fit(&s, from: mark, core: eyes[1])
+        mark = s.count
+        let frog = P(-0.485, 0.28) + P(0.01, 0.045)
         s.append(stroke(arc(frog, 0.032, 190, 350, 14) + [frog + P(0.032, 0.0), frog + P(-0.032, 0.0)], 0.0036))
         for dx in ([-0.018, 0.018] as [Double]) {
             s.append(stroke(circle(frog + P(dx, -0.026), 0.009, 10), 0.003))
@@ -174,13 +190,16 @@ extension LensArt {
         }
         s.append(stroke(curve(frog + P(-0.02, -0.006), frog + P(0, 0.004), frog + P(0.02, -0.006), 6), 0.0024))
         for dx in ([-1.0, 1.0] as [Double]) { s.append(stroke([frog + P(0.026 * dx, 0.0), frog + P(0.04 * dx, 0.02), frog + P(0.05 * dx, 0.018)], 0.0024)) }
-        let fly = P(0.485, 0.28) + P(-0.03, 0.03)
+        fit(&s, from: mark, core: P(-0.485, 0.28))
+        mark = s.count
+        let fly = P(0.485, 0.28) + P(-0.01, 0.04)
         s.append(stroke([fly + P(-0.05, 0.03), fly + P(0.02, -0.012)], 0.0034))
         s.append(stroke(circle(fly + P(0.028, -0.017), 0.007, 8), 0.003))
         for (w, t) in [(0.05, -60.0), (0.046, -100), (0.044, 20), (0.04, 60)] {
             let root = fly + P(0.006, -0.004)
             s.append(stroke(ellipse(polar(root, w / 2, t - 30), w / 2, 0.008, degrees: t - 30, 14), 0.0024))
         }
+        fit(&s, from: mark, core: P(0.485, 0.28))
         return Halftone.Panel(name: "owl", tones: { p in
             guard p.y > water else { return above(p) }
             for f in pads where f.holds(p) { return f.tone }
@@ -205,7 +224,7 @@ extension LensArt {
         let eyes = [(P(-0.13, -0.05), -14.0), (P(0.13, -0.05), 14.0)]
         let size = 0.11, root3 = 3.0.squareRoot(), bulge = 0.35
         /// The eye's dome: facets laid out evenly over it, so they crowd towards the rim of the glass.
-        let dome = { (p: P) in p * (1 + bulge * simd_length_squared(p)) }
+        let dome: @Sendable (P) -> P = { p in p * (1 + bulge * simd_length_squared(p)) }
         let flat = { (q: P) -> P in
             let rho = simd_length(q)
             guard rho > 0 else { return q }
@@ -274,14 +293,17 @@ extension LensArt {
         }
 
         // What each facet shows: a swatter, a spider, the window, a sugar cube, an apple core and the lamp.
-        let swat = facets[0] + P(0.03, -0.035)
+        var mark = s.count
+        let swat = facets[0] + P(0.045, -0.05)
         s.append(stroke(closed(squircle(swat, 0.028, 0.032, degrees: 20, 24)), 0.0036))
         for k in -1...1 {
             s.append(stroke([swat + turned(P(Double(k) * 0.012, -0.028), 20), swat + turned(P(Double(k) * 0.012, 0.028), 20)], 0.0016))
             s.append(stroke([swat + turned(P(-0.024, Double(k) * 0.012), 20), swat + turned(P(0.024, Double(k) * 0.012), 20)], 0.0016))
         }
         s.append(stroke([swat + turned(P(0, 0.032), 20), swat + turned(P(0, 0.09), 20)], 0.0034))
-        let spider = facets[1] + P(-0.03, 0.02)
+        fit(&s, from: mark, core: facets[0])
+        mark = s.count
+        let spider = facets[1] + P(-0.055, 0.035)
         s.append(stroke(circle(spider, 0.012, 12), 0.0036))
         s.append(stroke(circle(spider + P(0, -0.02), 0.007, 8), 0.0034))
         s.append(stroke([spider + P(0, -0.027), spider + P(0, -0.1)], 0.0016))
@@ -291,30 +313,39 @@ extension LensArt {
                 s.append(stroke([spider + P(side * 0.008, -0.006 + 0.005 * Double(k)), knee, knee + P(side * 0.012, 0.02)], 0.0024))
             }
         }
-        let window = facets[2] + P(0.03, 0.03)
+        fit(&s, from: mark, core: facets[1])
+        mark = s.count
+        let window = facets[2] + P(0.045, 0.045)
         s.append(stroke(closed(rect(window.x - 0.035, window.y - 0.045, window.x + 0.035, window.y + 0.04)), 0.0036))
         s.append(stroke([window + P(0, -0.045), window + P(0, 0.04)], 0.0024))
         s.append(stroke([window + P(-0.035, -0.005), window + P(0.035, -0.005)], 0.0024))
         s.append(stroke(curve(window + P(-0.035, -0.045), window + P(-0.05, 0.0), window + P(-0.06, 0.05), 8), 0.0024))
         s.append(stroke(circle(window + P(0.016, -0.026), 0.008, 8), 0.0016))
-        let cube = facets[3] + P(-0.025, -0.035)
+        fit(&s, from: mark, core: facets[2])
+        mark = s.count
+        let cube = facets[3] + P(-0.035, -0.045)
         let top = [cube + P(0, -0.03), cube + P(0.03, -0.015), cube, cube + P(-0.03, -0.015)]
         s.append(stroke(closed(top), 0.0036))
         s.append(stroke([top[3], top[3] + P(0, 0.034), cube + P(0, 0.05), top[1] + P(0, 0.034), top[1]], 0.0036))
         s.append(stroke([cube, cube + P(0, 0.05)], 0.0024))
         s += glint(cube + P(0.04, -0.04), 0.014, 0.0016)
-        let apple = facets[4] + P(0.025, -0.03)
+        fit(&s, from: mark, core: facets[3])
+        mark = s.count
+        let apple = facets[4] + P(0.05, -0.05)
         let flesh: [P] = arc(apple + P(0, -0.026), 0.027, 180, 360, 12) + curve(apple + P(0.027, -0.026), apple + P(-0.004, 0), apple + P(0.027, 0.026), 8)
         s.append(stroke(flesh + arc(apple + P(0, 0.026), 0.027, 0, 180, 12) + curve(apple + P(-0.027, 0.026), apple + P(0.004, 0), apple + P(-0.027, -0.026), 8), 0.0036))
         s.append(stroke([apple + P(0, -0.053), apple + P(0.006, -0.07)], 0.0024))
         s.append(stroke(closed(curve(apple + P(0.004, -0.064), apple + P(0.02, -0.08), apple + P(0.03, -0.066), 5) + curve(apple + P(0.03, -0.066), apple + P(0.016, -0.058), apple + P(0.004, -0.064), 5).dropFirst()), 0.0018))
         for yy in ([-0.008, 0.008] as [Double]) { s.append(stroke(ellipse(apple + P(0, yy), 0.003, 0.006, 8), 0.0016)) }
+        fit(&s, from: mark, core: facets[4])
+        mark = s.count
         let lamp = facets[5] + P(0.03, 0.025)
         s.append(stroke(arc(lamp, 0.024, 135, 405, 20) + [lamp + P(0.011, 0.034), lamp + P(-0.011, 0.034), lamp + P(-0.017, 0.017)], 0.0036))
         for yy in ([0.04, 0.046] as [Double]) { s.append(stroke([lamp + P(-0.01, yy), lamp + P(0.01, yy)], 0.0018)) }
         s.append(stroke([lamp + P(-0.008, 0.018), lamp + P(-0.004, -0.004), lamp + P(0, 0.004), lamp + P(0.004, -0.004), lamp + P(0.008, 0.018)], 0.0016))
         s.append(stroke([lamp + P(0, -0.024), lamp + P(0, -0.09)], 0.0016))
 
+        fit(&s, from: mark, core: facets[5])
         return Halftone.Panel(name: "flyseye", tones: { p in
             if simd_length_squared(p) < 0.0841, let t = fly(p) { return t }
             let k = Int(((bearing(p) + 90) / 60).rounded()) % 6, d = p - facets[k]
@@ -364,7 +395,7 @@ extension LensArt {
         let lizard = [face[0], fill(belly, pale)] + bands.map { fill($0, dark) } + [face[1], fill(body, skin)]
             + legs.map { fill($0, skin) } + [fill(ribbon(tail, 0.08, 0.06), skin), ring(coil, 0.035, 0.11, skin), fill(branch, wood)]
             + leaves.map { fill($0, c(0.6)) }
-        let petal = { (a: Double) in 0.27 + 0.15 * abs(cos((a - 10) * 4 * .pi / 180)).squareRoot() * (0.85 + 0.15 * sin(a * .pi / 60)) }
+        let petal: @Sendable (Double) -> Double = { a in 0.27 + 0.15 * abs(cos((a - 10) * 4 * .pi / 180)).squareRoot() * (0.85 + 0.15 * sin(a * .pi / 60)) }
 
         var s: [Halftone.Stroke] = []
         // The chameleon: head and casque, mouth, body and its crest, legs gripping, the tail coiled.
@@ -401,18 +432,23 @@ extension LensArt {
         s.append(stroke(arc(drop, 0.22, 200, 250, 10), mid))
 
         // A cricket in the eye, a hawk on the sun, a bee on the flower and a butterfly in the drop.
+        var mark = s.count
         let cricket = eye + P(-0.03, -0.055)
         s.append(stroke(ellipse(cricket, 0.03, 0.011, degrees: 10, 18), 0.0036))
         s.append(stroke(circle(cricket + P(0.034, 0.006), 0.008, 8), 0.0034))
         s.append(stroke([cricket + P(-0.01, 0.006), cricket + P(-0.03, -0.03), cricket + P(-0.04, 0.02)], 0.003))
         s.append(stroke(curve(cricket + P(0.04, 0.0), cricket + P(0.07, -0.05), cricket + P(0.1, -0.03), 8), 0.0016))
         for dx in ([0.0, 0.016] as [Double]) { s.append(stroke([cricket + P(dx, 0.01), cricket + P(dx + 0.008, 0.028)], 0.002)) }
+        fit(&s, from: mark, core: eye)
+        mark = s.count
         let hawk = sun + P(0.02, 0.035)
         s.append(stroke([hawk + P(-0.08, -0.02), hawk + P(-0.045, -0.032), hawk + P(-0.012, -0.004), hawk + P(0, -0.016),
                          hawk + P(0.012, -0.004), hawk + P(0.045, -0.032), hawk + P(0.08, -0.02)], 0.0038))
         s.append(stroke([hawk + P(-0.065, -0.022), hawk + P(-0.03, 0.004), hawk + P(-0.01, 0.0)], 0.003))
         s.append(stroke([hawk + P(0.065, -0.022), hawk + P(0.03, 0.004), hawk + P(0.01, 0.0)], 0.003))
         s.append(stroke([hawk + P(-0.01, 0.0), hawk + P(-0.014, 0.03), hawk + P(0.014, 0.03), hawk + P(0.01, 0.0)], 0.003))
+        fit(&s, from: mark, core: sun)
+        mark = s.count
         let bee = flower + P(-0.03, -0.045)
         s.append(stroke(ellipse(bee, 0.026, 0.015, 18), 0.0036))
         for dx in ([-0.01, 0.004] as [Double]) { s.append(stroke([bee + P(dx, -0.014), bee + P(dx, 0.014)], 0.003)) }
@@ -420,7 +456,9 @@ extension LensArt {
         s.append(stroke(ellipse(bee + P(-0.006, -0.03), 0.014, 0.018, degrees: -20, 14), 0.0024))
         s.append(stroke(ellipse(bee + P(0.012, -0.028), 0.01, 0.014, degrees: 25, 12), 0.0024))
         s.append(stroke([bee + P(-0.026, 0), bee + P(-0.036, 0.002)], 0.0024))
-        let fly = drop + P(0.03, 0.04)
+        fit(&s, from: mark, core: flower)
+        mark = s.count
+        let fly = drop + P(0.035, 0.05)
         for side in ([-1.0, 1.0] as [Double]) {
             s.append(stroke(closed([fly, fly + P(side * 0.03, -0.045), fly + P(side * 0.055, -0.03), fly + P(side * 0.04, -0.004)]), 0.0034))
             s.append(stroke(closed([fly + P(0, 0.004), fly + P(side * 0.036, 0.01), fly + P(side * 0.03, 0.036)]), 0.003))
@@ -428,6 +466,7 @@ extension LensArt {
         }
         s.append(stroke([fly + P(0, -0.016), fly + P(0, 0.024)], 0.0034))
 
+        fit(&s, from: mark, core: drop)
         return panel("chameleon", fills: [], strokes: pieces(s)) { p in
             let de = simd_length_squared(p - eye), ds = simd_length_squared(p - sun)
             let df = simd_length_squared(p - flower), dd = simd_length_squared(p - drop)
@@ -463,7 +502,7 @@ extension LensArt {
         let swirls: [[Double]] = [[12, 40, 95, 130, 160, 205, 250, 290, 318, 345], [-4, 33, 70, 110, 140, 190, 226, 262, 300, 333]]
         let early = inner.map { fill($0, m(0.6)) } + ears.map { fill($0, fur) } + [disc(wool, 0.2, c(0.55)), fill(leg, fur), oval(P(-0.5, 0.15), 0.1, 0.09, pale)]
         let shadows = marbles.map { oval($0 + P(0.08, 0.1), 0.27, 0.25, .zero) }
-        let liner = { (k: Int, a: Double) in abs(a - (k == 0 ? 330.0 : 150.0)) > 18 }
+        let liner: @Sendable (Int, Double) -> Bool = { k, a in abs(a - (k == 0 ? 330.0 : 150.0)) > 18 }
 
         @Sendable func head(_ p: P) -> Tone? {
             let d = p - crown, x = simd_dot(d, u), y = simd_dot(d, n)
@@ -529,14 +568,17 @@ extension LensArt {
         }
 
         // In its eyes a butterfly and a sparrow; in the marbles a fish's bones and a cat's eye.
-        let bfly = eyes[0] + P(-0.055, -0.005)
+        var mark = s.count
+        let bfly = eyes[0] + P(-0.065, -0.01)
         for side in ([-1.0, 1.0] as [Double]) {
             s.append(stroke(ellipse(bfly + P(side * 0.024, -0.014), 0.024, 0.015, degrees: side * -35, 18), 0.0034))
             s.append(stroke(ellipse(bfly + P(side * 0.017, 0.016), 0.015, 0.01, degrees: side * 35, 14), 0.003))
             s.append(stroke(curve(bfly + P(0, -0.014), bfly + P(side * 0.004, -0.03), bfly + P(side * 0.016, -0.036), 5), 0.0018))
         }
         s.append(stroke([bfly + P(0, -0.012), bfly + P(0, 0.022)], 0.0034))
-        let bird = eyes[1] + P(0.05, -0.03)
+        fit(&s, from: mark, core: eyes[0])
+        mark = s.count
+        let bird = eyes[1] + P(0.07, -0.045)
         s.append(stroke(ellipse(bird, 0.026, 0.016, degrees: -15, 18), 0.0036))
         s.append(stroke(circle(bird + P(0.026, -0.016), 0.01, 10), 0.0034))
         s.append(stroke([bird + P(0.035, -0.02), bird + P(0.046, -0.016), bird + P(0.035, -0.012)], 0.0024))
@@ -544,6 +586,8 @@ extension LensArt {
         s.append(stroke(curve(bird + P(-0.016, -0.006), bird + P(0, -0.004), bird + P(0.012, 0.008), 5), 0.0018))
         for dx in ([-0.004, 0.008] as [Double]) { s.append(stroke([bird + P(dx, 0.015), bird + P(dx, 0.03)], 0.0018)) }
         s.append(stroke([bird + P(-0.05, 0.03), bird + P(0.04, 0.03)], 0.0024))
+        fit(&s, from: mark, core: eyes[1])
+        mark = s.count
         let bones = marbles[0] + P(0.02, -0.05)
         s.append(stroke([bones + P(-0.045, 0), bones + P(0.03, 0)], 0.0034))
         s.append(stroke(ellipse(bones + P(0.042, 0), 0.014, 0.012, 12), 0.0034))
@@ -552,11 +596,14 @@ extension LensArt {
             let x = -0.03 + 0.016 * Double(k)
             s.append(stroke([bones + P(x - 0.006, -0.018), bones + P(x, 0), bones + P(x - 0.006, 0.018)], 0.0024))
         }
+        fit(&s, from: mark, core: marbles[0])
+        mark = s.count
         let look = marbles[1] + P(0.04, 0.035)
         s.append(stroke(closed(curve(look + P(-0.045, 0), look + P(0, -0.04), look + P(0.045, 0), 10) + curve(look + P(0.045, 0), look + P(0, 0.04), look + P(-0.045, 0), 10).dropFirst()), 0.0034))
         s.append(stroke(closed(curve(look + P(0, -0.018), look + P(0.008, 0), look + P(0, 0.018), 6) + curve(look + P(0, 0.018), look + P(-0.008, 0), look + P(0, -0.018), 6).dropFirst()), 0.0028))
         s.append(stroke(circle(look, 0.018, 12), 0.0016))
 
+        fit(&s, from: mark, core: marbles[1])
         return Halftone.Panel(name: "catseye", tones: { p in
             for (k, e) in eyes.enumerated() {
                 let d = p - e, r2 = simd_length_squared(d)
@@ -630,7 +677,7 @@ extension LensArt {
         for f in nape { s.append(stroke(Array(f.prefix(9)), hair)) }
         s += runs(circle(eye, 0.3, 64), bold) { (200...340).contains(bearing($0 - eye)) }
         s.append(stroke(circle(eye, 0.264, 56), mid))
-        s.append(stroke(circle(eye, 0.11, 28), mid))
+        s.append(stroke(circle(eye, 0.03, 16), hair))
         s.append(stroke(arc(eye, 0.2, 200, 240, 8), mid))
         s.append(stroke(closed(beak), bold))
         s.append(stroke(gape, mid))
@@ -641,6 +688,7 @@ extension LensArt {
         }
 
         // What its sights hold: a hare, a dove, a goat; in its eye, a salmon.
+        var mark = s.count
         let hare = sights[0] + P(-0.035, -0.03)
         s.append(stroke(ellipse(hare, 0.03, 0.018, 20), 0.0038))
         s.append(stroke(ellipse(hare + P(0.034, -0.016), 0.013, 0.01, 12), 0.0036))
@@ -648,12 +696,16 @@ extension LensArt {
         for (dx, t) in [(0.026, -20.0), (0.034, 5.0)] { s.append(stroke(ellipse(hare + P(dx, -0.045), 0.006, 0.022, degrees: t, 12), 0.003)) }
         s.append(stroke(circle(hare + P(-0.032, -0.004), 0.007, 8), 0.0024))
         s.append(stroke([hare + P(-0.018, 0.014), hare + P(-0.03, 0.026), hare + P(-0.01, 0.026)], 0.0024))
+        fit(&s, from: mark, core: sights[0])
+        mark = s.count
         let dove = sights[1] + P(0.04, 0.05)
         s.append(stroke(ellipse(dove, 0.024, 0.012, degrees: -10, 16), 0.0036))
         s.append(stroke(circle(dove + P(0.026, -0.01), 0.008, 8), 0.0034))
         s.append(stroke([dove + P(0.034, -0.012), dove + P(0.044, -0.008)], 0.0024))
-        s.append(stroke(closed([dove + P(-0.006, -0.008), dove + P(-0.04, -0.05), dove + P(-0.012, -0.044), dove + P(0.01, -0.01)]), 0.003))
+        s.append(stroke(closed([dove + P(-0.006, -0.008), dove + P(0.0, -0.05), dove + P(0.02, -0.04), dove + P(0.01, -0.01)]), 0.003))
         s.append(stroke(closed([dove + P(-0.022, 0.004), dove + P(-0.046, 0.016), dove + P(-0.044, -0.004)]), 0.0024))
+        fit(&s, from: mark, core: sights[1])
+        mark = s.count
         let goat = sights[2] + P(-0.05, -0.02)
         s.append(stroke(closed(rect(goat.x - 0.028, goat.y - 0.012, goat.x + 0.02, goat.y + 0.008)), 0.0036))
         for dx in ([-0.022, -0.012, 0.008, 0.016] as [Double]) { s.append(stroke([goat + P(dx, 0.008), goat + P(dx, 0.03)], 0.0024)) }
@@ -661,18 +713,20 @@ extension LensArt {
         s.append(stroke(curve(goat + P(0.03, -0.03), goat + P(0.024, -0.05), goat + P(0.01, -0.046), 6), 0.0024))
         s.append(stroke([goat + P(0.036, -0.022), goat + P(0.034, -0.008)], 0.0018))
         s.append(stroke([goat + P(-0.06, 0.04), goat + P(-0.02, 0.03), goat + P(0.04, 0.034), goat + P(0.07, 0.05)], 0.0024))
-        let fish = eye + P(0.04, -0.06)
+        fit(&s, from: mark, core: sights[2])
+        mark = s.count
+        let fish = eye + P(0.012, -0.04)
         s.append(stroke(closed(curve(fish + P(-0.04, 0.02), fish + P(-0.005, -0.03), fish + P(0.035, -0.02), 10)
             + curve(fish + P(0.035, -0.02), fish + P(0.0, 0.0), fish + P(-0.04, 0.02), 10).dropFirst()), 0.0036))
         s.append(stroke(closed([fish + P(-0.038, 0.018), fish + P(-0.06, 0.012), fish + P(-0.052, 0.04)]), 0.003))
         s.append(stroke(circle(fish + P(0.022, -0.017), 0.003, 6), 0.0024))
-        for (k, at) in [P(-0.05, 0.05), P(-0.02, 0.058), P(0.01, 0.052)].enumerated() { s.append(stroke(circle(fish + at, 0.004 + 0.002 * Double(k), 8), 0.0016)) }
-        s.append(stroke(curve(fish + P(-0.08, 0.06), fish + P(-0.02, 0.04), fish + P(0.05, 0.065), 8), 0.0018))
+        for (k, at) in [P(0.05, -0.022), P(0.064, -0.036), P(0.074, -0.056)].enumerated() { s.append(stroke(circle(fish + at, 0.004 + 0.002 * Double(k), 8), 0.0016)) }
 
+        fit(&s, from: mark, core: eye, scale: 0.5)
         return panel("eagleeye", fills: [], strokes: pieces(s)) { p in
             let de = simd_length_squared(p - eye)
             if de < 0.09 {
-                if de < 0.0121 { return .zero }
+                if de < 0.0009 { return .zero }
                 if de < 0.069696 { return y(1) }
                 return (200...340).contains(bearing(p - eye)) ? .zero : y(0.55)
             }
@@ -748,7 +802,8 @@ extension LensArt {
         s.append(stroke([P(-0.6, 0.86), P(0.62, 0.86)], mid))
 
         // In the eyes: a peahen, a rain cloud, a snake, a lotus and a crown.
-        let hen = spots[0] + P(-0.03, -0.02)
+        var mark = s.count
+        let hen = spots[0] + P(-0.035, -0.025)
         s.append(stroke(ellipse(hen, 0.032, 0.02, 20), 0.0036))
         s.append(stroke(curve(hen + P(0.022, -0.016), hen + P(0.03, -0.034), hen + P(0.034, -0.046), 6), 0.0042))
         s.append(stroke(circle(hen + P(0.038, -0.056), 0.009, 10), 0.0036))
@@ -756,9 +811,13 @@ extension LensArt {
         for dx in ([-0.004, 0.0, 0.004] as [Double]) { s.append(stroke([hen + P(0.036 + dx, -0.063), hen + P(0.036 + 2 * dx, -0.075)], 0.0016)) }
         s.append(stroke([hen + P(-0.03, -0.004), hen + P(-0.05, -0.016)], 0.003))
         for dx in ([-0.006, 0.008] as [Double]) { s.append(stroke([hen + P(dx, 0.02), hen + P(dx, 0.036)], 0.0018)) }
+        fit(&s, from: mark, core: spots[0])
+        mark = s.count
         let cloud = spots[1] + P(-0.04, -0.03)
         s.append(stroke(arc(cloud + P(-0.02, 0), 0.014, 90, 270, 8) + arc(cloud + P(0.0, -0.01), 0.018, 180, 330, 10) + arc(cloud + P(0.024, -0.002), 0.014, 250, 450, 10) + [cloud + P(-0.02, 0.014)], 0.0036))
         for (k, dx) in ([-0.016, 0.0, 0.016] as [Double]).enumerated() { s.append(stroke([cloud + P(dx, 0.024 + 0.004 * Double(k)), cloud + P(dx - 0.006, 0.042 + 0.004 * Double(k))], 0.0024)) }
+        fit(&s, from: mark, core: spots[1])
+        mark = s.count
         let snake = spots[2] + P(0.0, -0.06)
         s.append(stroke((0...30).map { k in
             let t = Double(k) / 30
@@ -766,18 +825,23 @@ extension LensArt {
         }, 0.0036))
         s.append(stroke(ellipse(snake + P(0.058, 0.004), 0.012, 0.008, 12), 0.0034))
         s.append(stroke([snake + P(0.07, 0.004), snake + P(0.082, 0.0), snake + P(0.086, -0.004), snake + P(0.082, 0.0), snake + P(0.086, 0.006)], 0.0016))
+        fit(&s, from: mark, core: spots[2])
+        mark = s.count
         let lotus = spots[3] + P(0.03, -0.045)
         for t in ([-50.0, -25, 0, 25, 50] as [Double]) {
             s.append(stroke(closed(curve(lotus, lotus + turned(P(-0.016, -0.03), t), lotus + turned(P(0, -0.045), t), 6)
                 + curve(lotus + turned(P(0, -0.045), t), lotus + turned(P(0.016, -0.03), t), lotus, 6).dropFirst()), abs(t) > 30 ? 0.0024 : 0.0034))
         }
         s.append(stroke(curve(lotus + P(-0.05, 0.006), lotus + P(0, 0.016), lotus + P(0.05, 0.006), 8), 0.0024))
+        fit(&s, from: mark, core: spots[3])
+        mark = s.count
         let crownMark = spots[4] + P(0.045, 0.03)
         s.append(stroke(closed([crownMark + P(-0.03, 0.016), crownMark + P(-0.034, -0.02), crownMark + P(-0.015, 0.0), crownMark + P(0, -0.028),
                                 crownMark + P(0.015, 0.0), crownMark + P(0.034, -0.02), crownMark + P(0.03, 0.016)]), 0.0036))
         for x in ([-0.034, 0.0, 0.034] as [Double]) { s.append(stroke(circle(crownMark + P(x, x == 0 ? -0.034 : -0.026), 0.004, 6), 0.0024)) }
         s.append(stroke([crownMark + P(-0.03, 0.008), crownMark + P(0.03, 0.008)], 0.0016))
 
+        fit(&s, from: mark, core: spots[4])
         return Halftone.Panel(name: "peacock", tones: { p in
             for f in bird where f.holds(p) { return f.tone }
             var best = 0, near = Double.infinity
