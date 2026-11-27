@@ -259,8 +259,86 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 51, Lunar month, hex, clocks 1+,2-,3+.
-    static func plate51() -> Plate? { nil }
+    /// Problem 51, Lunar month, hex, clocks 1+,2-,3+: a crescent moon in solid ink with a face in profile looking into
+    /// its hollow, round it an ellipse of its orbit with the month's twenty-nine days as dots, each in its phase, and
+    /// bold stars past the rim; the new moon's dot, at three o'clock, in the second ink.
+    static func plate51() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin
+        // The crescent: the outer disc less an inner one set to the right, the inner edge cut as a face.
+        let c1 = P(0.0, 0.0), r1 = 0.68, c2 = P(0.34, 0.0), r2 = 0.63
+        func dent(_ t: Double) -> Double {
+            func bump(_ at: Double, _ w: Double, _ h: Double) -> Double { h * exp(-pow((t - at) / w, 2)) }
+            let nose = max(0, 1 - abs(t - .pi + 0.01) / 0.075) * 0.14
+            return nose + bump(.pi + 0.36, 0.16, 0.06) + bump(.pi + 0.2, 0.05, 0.03) + bump(.pi - 0.17, 0.035, 0.045)
+                + bump(.pi - 0.26, 0.03, 0.04) + bump(.pi - 0.42, 0.07, 0.075) + bump(.pi - 0.08, 0.04, 0.02)
+        }
+        let outer = arc(c1, r1, from: -.pi, to: .pi).filter { simd_distance($0, c2) > r2 }
+        let inner = stride(from: .pi - 1.7, through: .pi + 1.7, by: 0.01).map { polar(c2, r2 - dent($0), $0) }
+            .filter { simd_distance($0, c1) < r1 }
+        // Start the outer arc just after its gap so it runs top tip to bottom tip round the left.
+        let gap = outer.indices.dropFirst().first { simd_distance(outer[$0], outer[$0 - 1]) > 0.05 } ?? 0
+        let rim = Array(outer[gap...] + outer[..<gap])
+        let moon = rim + inner.reversed() + [rim[0]]
+
+        // The orbit and its days, the new moon at three o'clock and the days running anticlockwise.
+        let rx = 0.88, ry = 0.82
+        func day(_ i: Int) -> P { P(rx * cos(-2 * .pi * Double(i) / 29), ry * sin(-2 * .pi * Double(i) / 29)) }
+        let disc = 0.042
+
+        // Stars past the rim, in the corners the orbit leaves.
+        let stars = [P(0.72, -0.72), P(-0.74, 0.7), P(0.72, 0.72), P(-0.72, -0.74), P(0.5, -0.4), P(0.52, 0.36),
+                     P(0.2, -0.24), P(0.24, 0.2)]
+        func star(_ c: P, _ r: Double) -> [P] {
+            (0...10).map { i in polar(c, i % 2 == 0 ? r : 0.4 * r, -.pi / 2 + Double(i) * .pi / 5) }
+        }
+
+        Kit.ground(&plate, angle: -0.45, around: [moon] + (0..<29).map { arc(day($0), disc + 0.012) }
+                   + stars.enumerated().map { star($1, $0 < 4 ? 0.07 : 0.05) })
+
+        plate.line(ellipse(o, rx, ry), 0.012)
+
+        // The moon: ink, a bone line along its lit limb, the face's eye, brow, nostril and lips cut in bone, and
+        // craters on its back.
+        Kit.mass(&plate, moon)
+        for r in stride(from: r1 - 0.035, to: r1 - 0.4, by: -0.05) {
+            var run: [P] = []
+            for p in arc(c1, r, from: -.pi, to: .pi) + [polar(c1, r, -.pi)] {
+                if simd_distance(p, c2) > r2 + 0.05 { run.append(p) } else { if run.count > 1 { plate.line(run, 0.028, .bone) }; run = [] }
+            }
+            if run.count > 1 { plate.line(run, 0.028, .bone) }
+        }
+        let face = { (t: Double, d: Double) in polar(c2, r2 - dent(t) + d, t) }
+        let eye = face(.pi + 0.13, 0.06)
+        plate.fill(ellipse(eye, 0.03, 0.014, turned: -0.15))
+        plate.fill(arc(eye + P(0.012, 0), 0.009), .black)
+        plate.line([face(.pi + 0.24, 0.03), face(.pi + 0.18, 0.07), face(.pi + 0.08, 0.075)], 0.012, .bone)
+        plate.line(curve(face(.pi - 0.01, 0.1), face(.pi - 0.07, 0.075), face(.pi - 0.08, 0.045), 6), 0.01, .bone)
+        plate.line([face(.pi - 0.215, 0.0), face(.pi - 0.215, 0.05)], 0.01, .bone)
+        plate.line(curve(face(.pi - 0.34, 0.06), face(.pi - 0.46, 0.13), face(.pi - 0.6, 0.06), 10), 0.01, .bone)
+        
+
+        // The days, each a disc lit as the moon is that day.
+        for i in 0..<29 {
+            let c = day(i), phase = 2 * .pi * Double(i) / 29
+            plate.fill(arc(c, disc))
+            if i == 0 {
+                plate.fill(arc(c, disc + 0.012), .second)
+            } else {
+                let k = phase < .pi ? cos(phase) : -cos(phase), side = phase < .pi ? -1.0 : 1.0
+                let limb = stride(from: -0.5 * .pi, through: 0.5 * .pi, by: 0.1).map { P(side * disc * cos($0), disc * sin($0)) }
+                let term = stride(from: 0.5 * .pi, through: -0.5 * .pi, by: -0.1).map { P(k * disc * cos($0), disc * sin($0)) }
+                plate.fill((limb + term).map { $0 + c }, .black)
+            }
+            plate.line(arc(c, disc), medium)
+        }
+
+        for (i, c) in stars.enumerated() { Kit.mass(&plate, star(c, i < 4 ? 0.07 : 0.05)) }
+
+        callout(&plate, "A", from: P(-0.6, 0.12), to: P(-0.34, 0.48))
+        callout(&plate, "B", from: day(11), to: P(-0.36, -0.46))
+        return plate
+    }
 
     /// Problem 52, Almanac, hex, clocks 1+,3+,5+.
     static func plate52() -> Plate? { nil }
