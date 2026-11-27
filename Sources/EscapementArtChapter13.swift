@@ -340,8 +340,136 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 75, Noon mark, pent, clocks 0+.
-    static func plate75() -> Plate? { nil }
+    // MARK: 75 Noon mark
+
+    /// A pointed arch's outline from the left springing at (-a, spring) to the right one, apex `rise` above them.
+    private static func pointed(_ a: Double, spring: Double, rise: Double, _ n: Int = 30) -> [P] {
+        let r = (a * a + rise * rise) / (2 * a), lc = P(-a + r, spring), rc = P(a - r, spring)
+        let top = 2 * .pi + atan2(-rise, a - r), start = atan2(-rise, r - a)
+        let left = (0...n).map { i in polar(lc, r, .pi + (top - .pi) * Double(i) / Double(n)) }
+        let right = (0...n).map { i in polar(rc, r, start - start * Double(i) / Double(n)) }
+        return left + right.dropFirst()
+    }
+
+    /// Problem 75, Noon mark, pent, clocks 0+: a church nave seen through a pointed arch of dark masonry, a meridian line
+    /// of brass let into its checkered floor, and the beam from a hole in the vault laying the sun's image on the line
+    /// at noon; the sun's image in the second ink.
+    static func plate75() -> Plate {
+        var plate = Plate()
+        let a = 0.78, spring = -0.15, rise = 0.8
+        let opening = pointed(a, spring: spring, rise: rise) + [P(a, 1.2), P(-a, 1.2)]
+        let openingRing = opening + [opening[0]]
+        // The floor in perspective: a point (X, Z) of it, Z its depth.
+        let horizon = -0.05, wall = 0.15
+        func floor(_ q: P) -> P { P(0.5 * q.x / q.y, horizon + 0.5 / q.y) }
+        let back = 0.5 / (wall - horizon)
+
+        // The nave's air, ruled; the floor and the arch's masonry left out.
+        let floorRing = [P(-1.1, wall), P(1.1, wall), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, wall)]
+        K.ground(&plate, angle: 0.5, around: [floorRing])
+
+        // The checkered floor: dark tiles inset in bone, rows closing toward the back wall.
+        plate.fill(floorRing)
+        var zs: [Double] = []
+        var z = back
+        while z > 0.3 { zs.append(z); z /= 1.22 }
+        let tile = 0.2
+        for (row, z0) in zs.enumerated() where row + 1 < zs.count {
+            let z1 = zs[row + 1]
+            for col in -8...8 where (row + col) % 2 == 0 && col != 0 {
+                let x0 = Double(col) * tile - tile / 2, x1 = x0 + tile, inset = 0.03
+                let q = [P(x0 + inset, z0 - inset * z0), P(x1 - inset, z0 - inset * z0), P(x1 - inset, z1 + inset * z1), P(x0 + inset, z1 + inset * z1)]
+                plate.fill((q + [q[0]]).map(floor), .black)
+            }
+        }
+        for z in zs { plate.line([P(-1.1, horizon + 0.5 / z), P(1.1, horizon + 0.5 / z)], fine) }
+        for col in -9...9 {
+            let x = Double(col) * tile - tile / 2
+            plate.line([floor(P(x, back)), floor(P(x, 0.3))], fine)
+        }
+        // The meridian line: a brass strip along the floor's middle, ticked at each degree, its ends capped.
+        let strip = [P(-0.035, back), P(0.035, back), P(0.035, 0.3), P(-0.035, 0.3), P(-0.035, back)].map(floor)
+        plate.fill(strip)
+        plate.line(strip, heavy)
+        var tick = back
+        var n = 0
+        while tick > 0.32 {
+            let w = n % 5 == 0 ? 0.035 : 0.018
+            plate.line([floor(P(-w, tick)), floor(P(w, tick))], n % 5 == 0 ? heavy : medium)
+            tick /= 1.045
+            n += 1
+        }
+        plate.line([floor(P(0, back)), floor(P(0, 0.3))], fine)
+
+        // The back wall: three dark arches, the middle one over the meridian's end.
+        plate.line([P(-1.1, wall), P(1.1, wall)], heavy)
+        for (x, w, h) in [(0.0, 0.13, 0.42), (-0.36, 0.09, 0.3), (0.36, 0.09, 0.3)] {
+            let arch = pointed(w, spring: wall - h + w, rise: w * 1.3, 12).map { P($0.x + x, $0.y) } + [P(x + w, wall), P(x - w, wall)]
+            K.mass(&plate, arch + [arch[0]])
+            plate.line(arch.map { P(x + ($0.x - x) * 1.25, $0.y - 0.02) }.dropLast(2), medium)
+        }
+
+        // The arch of dark masonry framing the nave: ashlar coursed in bone, its moulding ruled.
+        let masonry = [Array(glass), openingRing]
+        let foot = sqrt(1.06 * 1.06 - a * a), turn = atan2(foot, a)
+        let frame = [P(-a, foot)] + pointed(a, spring: spring, rise: rise) + [P(a, foot)] + arc(.zero, 1.06, from: turn, to: -.pi - turn).dropFirst()
+        plate.fill(frame, .black)
+        plate.lines(hatch(masonry, angle: 0, gap: 0.07), medium, .bone)
+        for (i, y) in stride(from: -1.085, through: 1.06, by: 0.07).enumerated() {
+            for x in stride(from: -1.06 + (i % 2 == 0 ? 0 : 0.07), through: 1.06, by: 0.14) {
+                let from = P(x, y), to = P(x, y + 0.07)
+                guard !inside(openingRing, (from + to) / 2) else { continue }
+                plate.lines(clipped(Array(glass), from: from, to: to), medium, .bone)
+            }
+        }
+        // The arch's moulding: a bone band with its voussoirs.
+        let inner = pointed(a, spring: spring, rise: rise), outer = pointed(a + 0.07, spring: spring, rise: rise + 0.07)
+        let moulding = inner + outer.reversed() + [inner[0]]
+        plate.fill(moulding)
+        for k in stride(from: 0, to: inner.count, by: 3) {
+            plate.line([inner[k], outer[min(k, outer.count - 1)]], medium)
+        }
+        plate.line(inner + [P(a, 1.2)], heavy)
+        plate.line([P(-a, 1.2)] + inner, heavy)
+        plate.line(outer, heavy)
+        for x in [-a - 0.035, a + 0.035] { plate.line([P(x, spring), P(x, 1.1)], 0.07 - 0.0, .bone) }
+        for x in [-a - 0.07, a + 0.07] { plate.line([P(x, spring), P(x, 1.1)], heavy) }
+
+        // The hole in the vault and the beam it lets down to the line.
+        let hole = P(-0.68, -0.66), image = floor(P(0, 0.62))
+        let along = simd_normalize(image - hole), side = P(-along.y, along.x)
+        let beam = [hole + side * 0.012, image + side * 0.06, image - side * 0.06, hole - side * 0.012, hole + side * 0.012]
+        plate.fill(beam)
+        plate.line([hole + side * 0.012, image + side * 0.06], medium)
+        plate.line([hole - side * 0.012, image - side * 0.06], medium)
+        for f in [-0.5, 0.0, 0.5] {
+            plate.lines(dashed([hole + side * 0.012 * f, image + side * 0.06 * f], on: 0.05, off: 0.03), fine)
+        }
+        plate.fill(arc(hole, 0.03))
+        plate.line(arc(hole, 0.03), heavy)
+        for k in 0..<8 {
+            let r = Double(k) * .pi / 4
+            plate.line([polar(hole, 0.045, r), polar(hole, 0.07, r)], heavy, .bone)
+        }
+        // The sun's image lying on the meridian, an ellipse foreshortened along the line.
+        plate.fill(ellipse(image, 0.075, 0.035), .second)
+        plate.line(ellipse(image, 0.075, 0.035), medium)
+
+        callout(&plate, "A", from: floor(P(0.0, 1.3)), to: P(0.2, 0.18))
+        callout(&plate, "B", from: hole + P(0.02, 0.03), to: P(-0.4, -0.5))
+        callout(&plate, "C", from: image + P(0.07, 0), to: P(0.17, 0.72))
+        return plate
+    }
+
+    /// Whether p lies inside a ring, by the even-odd rule.
+    private static func inside(_ ring: [P], _ p: P) -> Bool {
+        var odd = false
+        for i in 0..<(ring.count - 1) {
+            let a = ring[i], b = ring[i + 1]
+            if (a.y <= p.y) != (b.y <= p.y), p.x < a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x) { odd.toggle() }
+        }
+        return odd
+    }
 
     /// Problem 76, Meridian, hex, clocks 1+.
     static func plate76() -> Plate? { nil }
