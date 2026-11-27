@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let wideShot: [Int: Halftone.Panel] = [26: dewdrop, 27: fishbowl]
+    static let wideShot: [Int: Halftone.Panel] = [26: dewdrop, 27: fishbowl, 28: marble]
 
     /// A long line cut into strokes of `n` segments each: a stroke costs every pixel in its box once a segment, so a
     /// long outline in one piece is the bake's dearest thing.
@@ -227,6 +227,98 @@ extension LensArt {
             case 1, -1: return Tone(0, 0.25, 0.75)
             default: return Tone(0.3, 0.35, 0)
             }
+        }
+    }()
+}
+
+// MARK: - 28: Glass marble
+
+/// Level 28's name: marbles on a floor of boards, each with its twist of colour, a bag spilling more, and two big clear
+/// marbles over the top and bottom cores (hex's two lenses on this level), each banded at its edge by its own twist
+/// and throwing its shadow on the boards. Through the upper the house outside, upside down, a tree beside it; through
+/// the lower the eye of the child taking aim.
+extension LensArt {
+    static let marble: Halftone.Panel = {
+        let big = [(at: P(0, -0.56), glass: Tone(0.72, 0, 0.12), vane: m(0.9)), (at: P(0, 0.56), glass: Tone(0.3, 0.68, 0), vane: c(0.95))]
+        let rim = 0.25, band = 0.19
+        // The small marbles: where, how big, the glass and the twist of colour in it.
+        let small: [(at: P, r: Double, glass: Tone, vane: Tone, turn: Double)] = [
+            (P(0.13, -0.07), 0.1, c(0.75), y(0.9), 30), (P(-0.1, 0.12), 0.07, m(0.75), c(0.9), -50),
+            (P(0.62, -0.4), 0.12, Tone(0.25, 0.72, 0), y(0.9), 70), (P(-0.6, 0.38), 0.14, Tone(0.7, 0, 0.6), m(0.9), -20),
+            (P(-0.66, -0.2), 0.13, c(0.8), m(0.9), 110), (P(-0.29, -0.45), 0.06, m(0.8), y(0.9), 60), (P(0.3, 0.48), 0.06, c(0.75), m(0.9), 10), (P(0.68, 0.5), 0.065, y(0.85), m(0.9), 140),
+        ]
+        let bag = curve(P(0.4, 0.12), P(0.66, 0.02), P(0.74, 0.24), 8) + curve(P(0.74, 0.24), P(0.78, 0.44), P(0.58, 0.4), 8)
+            + curve(P(0.58, 0.4), P(0.4, 0.34), P(0.4, 0.12), 8)
+        var fills: [Fill] = []
+        for m in small {
+            fills.append(fill(ellipse(m.at, m.r * 0.85, m.r * 0.24, degrees: m.turn, 16), m.vane))
+            fills.append(disc(m.at, m.r, m.glass))
+        }
+        fills.append(fill(bag, Tone(0.15, 0.7, 0.2)))
+        fills += small.map { ($0.at, $0.r) }.map { oval($0.0 + P(0.4 * $0.1, 0.32 * $0.1), $0.1 * 1.05, $0.1 * 0.85, .zero) }
+
+        var s: [Halftone.Stroke] = []
+        // The boards: their seams, at a slant, and where one board butts the next.
+        let slant = 15.0 * .pi / 180, along = P(cos(slant), sin(slant)), across = P(-sin(slant), cos(slant)), width = 0.2
+        let clear = { (p: P) in big.allSatisfy { simd_distance(p, $0.at) > rim + 0.01 } && small.allSatisfy { simd_distance(p, $0.at) > $0.r + 0.01 } && !inside(p, bag) }
+        for k in -6...6 {
+            let o = across * (Double(k) * width)
+            s += runs(span(o - along * 1.1, o + along * 1.1, 66), mid, keep: clear)
+            let butt = o + along * (Double((k * 37) % 11) * 0.14 - 0.7)
+            s += runs(span(butt, butt + across * width, 6), mid, keep: clear)
+            for t in [0.03, width - 0.03] { s.append(stroke(circle(butt + across * t + along * 0.03, 0.008, 6), hair)) }
+        }
+        // The small marbles: their glass, the twist in each, a glint.
+        for m in small {
+            s.append(stroke(circle(m.at, m.r, 28), bold))
+            s.append(stroke(ellipse(m.at, m.r * 0.85, m.r * 0.24, degrees: m.turn, 16), hair))
+            s.append(stroke(arc(m.at, m.r * 0.7, 200, 250, 6), mid))
+        }
+        // The bag, its neck tied and its cord trailing.
+        s.append(stroke(bag, bold))
+        s.append(stroke(curve(P(0.4, 0.12), P(0.34, 0.06), P(0.3, 0.12), 6) + curve(P(0.3, 0.12), P(0.34, 0.2), P(0.4, 0.17), 6), mid))
+        s.append(stroke(curve(P(0.36, 0.2), P(0.3, 0.34), P(0.22, 0.32), 8), mid))
+        for k in 0..<4 { s.append(stroke(curve(P(0.48 + 0.06 * Double(k), 0.14), P(0.52 + 0.06 * Double(k), 0.24), P(0.5 + 0.06 * Double(k), 0.36), 6), hair)) }
+        // The big marbles: the glass's edge, where the twist begins, and a glint.
+        for b in big {
+            s += pieces(circle(b.at, rim, 48), bold, 8)
+            s += pieces(arc(b.at, band, 120, 400, 36), hair, 9)
+            s.append(stroke(arc(b.at, rim - 0.03, 200, 245, 8), bold))
+            s.append(stroke(circle(polar(b.at, rim - 0.075, 228), 0.006, 6), 0.012))
+        }
+        // Through the upper: a house upside down, its roof and chimney below, its door hanging from the ground, and
+        // the sun under it.
+        let house = big[0].at + P(0.018, 0.012)
+        s.append(stroke(closed(rect(house.x - 0.028, house.y - 0.034, house.x + 0.028, house.y + 0.006)), 0.0036))
+        s.append(stroke([house + P(-0.036, 0.006), house + P(0, 0.04), house + P(0.036, 0.006)], 0.0036))
+        s.append(stroke([house + P(0.016, 0.018), house + P(0.016, 0.034), house + P(0.025, 0.034), house + P(0.025, 0.012)], 0.0028))
+        s.append(stroke(closed(rect(house.x - 0.008, house.y - 0.034, house.x + 0.008, house.y - 0.01)), 0.0028))
+        for x in [-0.022, 0.012] { s.append(stroke(closed(rect(house.x + x, house.y - 0.026, house.x + x + 0.011, house.y - 0.014)), 0.0022)) }
+        s.append(stroke([house + P(-0.06, -0.034), house + P(0.06, -0.034)], 0.0024))
+        s += glint(house + P(-0.044, 0.034), 0.02, 0.0024)
+        s.append(stroke(circle(house + P(-0.044, 0.034), 0.007, 10), 0.003))
+        // Through the lower: an eye taking aim, its lashes, iris and the window caught in it.
+        let eye = big[1].at + P(0.016, -0.022)
+        s.append(stroke(curve(eye + P(-0.044, 0), eye + P(0, -0.036), eye + P(0.044, 0), 12) + curve(eye + P(0.044, 0), eye + P(0, 0.03), eye + P(-0.044, 0), 12), 0.0036))
+        s.append(stroke(circle(eye, 0.016, 16), 0.0032))
+        s.append(stroke(circle(eye, 0.006, 8), 0.006))
+        s.append(stroke(closed(rect(eye.x + 0.004, eye.y - 0.012, eye.x + 0.011, eye.y - 0.005)), 0.0014))
+        for k in 0..<5 {
+            let t = 0.2 + 0.15 * Double(k), root = eye + P(-0.044 + 0.088 * t, -0.072 * t * (1 - t) * 2)
+            s.append(stroke([root, root + P(-0.004 + 0.002 * Double(k), -0.012)], 0.0022))
+        }
+        s.append(stroke(curve(eye + P(-0.05, -0.03), eye + P(0, -0.06), eye + P(0.05, -0.034), 10), 0.0028))
+        return panel("marble", fills: fills, strokes: s) { p in
+            for b in big {
+                let d = p - b.at, r = simd_length(d)
+                guard r < rim else { continue }
+                guard r > band else { return b.glass }
+                let turn = atan2(d.y, d.x) * 180 / .pi + 900 * (r - band)
+                return Int(((turn + 360) / 30).rounded(.down)) % 2 == 0 ? b.vane : b.glass
+            }
+            for b in big where simd_length((p - b.at - P(0.4, 0.32) * rim) / P(1.05, 0.85)) < rim { return .zero }
+            let board = Int((simd_dot(p, across) / width + 10).rounded(.down)) % 3
+            return board == 0 ? Tone(0, 0.22, 0.6) : board == 1 ? Tone(0, 0.36, 0.42) : Tone(0, 0.12, 0.75)
         }
     }()
 }
