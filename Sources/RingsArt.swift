@@ -209,7 +209,7 @@ enum RingsLook {
         let floor = height - horizon, ridge = 160 * width / 440, length: CGFloat = 5200
         return [
             RingsGround(name: "sky", x: 0, y: 0, width: width, height: horizon, bakedWidth: 4, bakedHeight: horizon, scale: 1),
-            RingsGround(name: "stars", x: 0, y: 0, width: width, height: horizon, bakedWidth: width, bakedHeight: horizon, scale: 2,
+            RingsGround(name: "stars", x: 0, y: 0, width: width, height: horizon, bakedWidth: width, bakedHeight: horizon, scale: 1.5,
                         dy: -10),
             RingsGround(name: "ridge", x: 0, y: horizon - ridge, width: width, height: ridge, bakedWidth: width, bakedHeight: ridge,
                         scale: 2, front: true),
@@ -409,13 +409,15 @@ enum RingsPaint {
 
     // MARK: The suns
 
+    /// The sun's bitmap is this wide, for its glow.
+    static let sunSide: CGFloat = 400
+
     static func sun(_ tier: Tier, shut: Bool) -> RingsBitmap? {
-        let side: CGFloat = 400, d = RingsLook.sun, r = d / 2, set = RingsLook.set, scale: CGFloat = 2
-        return raster(side, side, scale: scale) { ctx in
+        // Cut off at the horizon it sets on, so no pixel is kept for what is never seen.
+        let side = sunSide, d = RingsLook.sun, r = d / 2, set = RingsLook.set, scale: CGFloat = 2, tall = side / 2 + set
+        return raster(side, tall, scale: scale, offset: CGPoint(x: 0, y: (tall - side) / 2)) { ctx in
             let mid = CGPoint(x: side / 2, y: side / 2)
             let stops: [Int] = shut ? [0x2A1060, 0x3C1272, 0x5A1A7A] : tier == .plughole ? [0xF6FFA0, 0x7AF0C0, 0x22C4E0] : [0xFFF27A, 0xFFB347, 0xFF3D9A]
-            // Nothing below the horizon it sets on.
-            ctx.clip(to: CGRect(x: 0, y: 0, width: side, height: mid.y + set))
             ctx.saveGState()
             if !shut { ctx.setShadow(offset: .zero, blur: 26 * scale, color: colour((1, 90 / 255, 150 / 255), 0.9)) }
             ctx.setFillColor(colour(stops[1]))
@@ -525,7 +527,7 @@ enum RingsPaint {
 
     /// A pack's cover: its glass as the promoted-purchase image draws it, cut to a disc (`scripts/rings-covers.sh`).
     static func cover(_ pack: Pack, scale: CGFloat) -> RingsBitmap? {
-        let side = coverWidth + 56, r = coverWidth / 2
+        let side = coverWidth + 36, r = coverWidth / 2
         let glass = UIImage(named: "RingsCover-\(pack.rawValue)")?.cgImage
         return raster(side, side, scale: scale) { ctx in
             let mid = CGPoint(x: side / 2, y: side / 2)

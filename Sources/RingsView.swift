@@ -115,6 +115,8 @@ final class RingsView: UIView, UIScrollViewDelegate {
         let at: CGPoint
         var size: CGSize?
         var turn: CGFloat = 0
+        /// Drawn in with the ring on a small screen.
+        var shrink: CGFloat = 1
     }
 
     private struct Ring {
@@ -243,8 +245,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
             made.whole.addSublayer(made.words)
             made.sun.position = plan.centre
             suns.addSublayer(made.sun)
-            let side = 400 * plan.k
-            seats.append(Seat(piece: .sun(ring.tier, shut: !ring.open), layer: made.sun, at: plan.centre, size: CGSize(width: side, height: side)))
+            seats.append(Seat(piece: .sun(ring.tier, shut: !ring.open), layer: made.sun, at: plan.centre, shrink: plan.k))
 
             let n = ring.spots.count, spots = (0 ..< n).map { plan.bead($0, of: n) }
             for j in 0 ..< n where n > 1 {
@@ -335,7 +336,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
     /// The bake is in: every layer takes its bitmap in one commit, and the scene shows.
     private func landed(_ art: [RingsPiece: RingsBitmap], _ pieces: Set<RingsPiece>) {
-        for seat in seats { fill(seat.layer, art[seat.piece], at: seat.at, size: seat.size, turn: seat.turn) }
+        for seat in seats { fill(seat.layer, art[seat.piece], at: seat.at, size: seat.size, turn: seat.turn, shrink: seat.shrink) }
         RingsArt.shared.keep(pieces)
         whole = true
         if scene.opacity == 0 { fade(scene, to: 1, 0.2) }
@@ -344,10 +345,10 @@ final class RingsView: UIView, UIScrollViewDelegate {
         #endif
     }
 
-    private func fill(_ layer: CALayer, _ bitmap: RingsBitmap?, at: CGPoint, size: CGSize? = nil, turn: CGFloat = 0) {
+    private func fill(_ layer: CALayer, _ bitmap: RingsBitmap?, at: CGPoint, size: CGSize? = nil, turn: CGFloat = 0, shrink: CGFloat = 1) {
         guard let bitmap else { return }
-        let size = size ?? bitmap.size, scale = window?.screen.scale ?? 3
-        var position = CGPoint(x: at.x + bitmap.offset.x, y: at.y + bitmap.offset.y)
+        let size = size ?? CGSize(width: bitmap.size.width * shrink, height: bitmap.size.height * shrink), scale = window?.screen.scale ?? 3
+        var position = CGPoint(x: at.x + bitmap.offset.x * shrink, y: at.y + bitmap.offset.y * shrink)
         if turn == 0, layer.anchorPoint == CGPoint(x: 0.5, y: 0.5) {
             // On the pixel grid, so a bitmap is never drawn between pixels at rest.
             position.x = ((position.x - size.width / 2) * scale).rounded() / scale + size.width / 2
