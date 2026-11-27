@@ -7,7 +7,8 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass, 59: skylight, 60: frostedglass]
+    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass, 59: skylight, 60: frostedglass,
+                                                    61: bullseye]
 
     /// Hex's rods' centres, by rod.
     private static let hexes: [P] = [P(0, 0)] + (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
@@ -24,6 +25,14 @@ extension LensArt {
     /// A line with each segment cut in six, for `runs` to cut it close to where something lies over it.
     private static func fine(_ line: [P]) -> [P] {
         zip(line, line.dropFirst()).flatMap { a, b in (0..<6).map { a + (b - a) * (Double($0) / 6) } } + [line.last!]
+    }
+
+    /// A long stroke as short ones of `every` segments: the bake tests every point of each stroke whose box holds a
+    /// pixel, and a long slant's box holds most of the glass.
+    private static func chop(_ s: Halftone.Stroke, every: Int = 6) -> [Halftone.Stroke] {
+        stride(from: 0, to: s.points.count - 1, by: every).map { k in
+            stroke(Array(s.points[k...min(k + every, s.points.count - 1)]), s.width)
+        }
     }
 
     /// The angle of p about c in degrees, 0 at three o'clock and clockwise on screen, from 0 to 360.
@@ -635,6 +644,95 @@ extension LensArt {
             // The frost in blooms, thin in places and thick in others.
             for f in blooms where f.holds(p) { return f.tone }
             return frost
+        }, strokes: s)
+    }()
+}
+
+// MARK: - 61: Bullseye pane
+
+/// Level 61's name: an old casement leaded in diamond quarries of green, blue, rose and smoke glass, its iron latch
+/// off the middle and its wooden frame round the edge. Four bullseyes are set in it (hex's four lenses on this level),
+/// the thick middles of crown glass, amber, each swirled round its rim, and through each, small and bent, the tavern
+/// inside: a candle in the upper right, a tankard in the lower right, a clay pipe smoking in the lower left and the
+/// ace of hearts in the upper left.
+extension LensArt {
+    static let bullseye: Halftone.Panel = {
+        let rods = hexes, lenses = [2, 3, 5, 6], glass = 0.2, frame = 0.264
+        let holes = lenses.map { rods[$0] }
+        let amber = y(0.75), swirl = [y(0.95), Tone(0.04, 0.04, 0.08), Tone(0, 0.6, 0.9), Tone(0.04, 0.04, 0.08)]
+        let quarries = [Tone(0.55, 0, 0.6), c(0.8), m(0.65), Tone(0.38, 0.32, 0.42), c(0.25), Tone(0.3, 0.5, 0)]
+        let wood = Tone(0, 0.3, 0.35), iron = Tone(0.03, 0.03, 0.05)
+        // The leads run at 60 and 120 degrees, `spacing` apart, so the quarries stand tall.
+        let spacing = 0.17, normals = [P(-sin(.pi / 3), cos(.pi / 3)), P(-sin(2 * .pi / 3), cos(2 * .pi / 3))]
+        let latch = bar(P(0.07, 0.06), P(0.3, 0.06), 0.06), keeper = rect(0.3, 0.0, 0.34, 0.12), knob = P(0.07, 0.06)
+        let hash: @Sendable (Int, Int) -> Int = { i, j in
+            let v = sin(Double(i) * 17.31 + Double(j) * 41.77) * 43758.5453
+            return Int((v - v.rounded(.down)) * 6)
+        }
+
+        var s: [Halftone.Stroke] = []
+        func open(_ p: P) -> Bool { simd_length(p) < 0.9 && holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } }
+        // The leads, each cut short so the bake tests few of them a pixel.
+        for n in normals {
+            let along = P(n.y, -n.x)
+            for k in -7...7 {
+                let line = span(n * (spacing * Double(k)) - along * 1.1, n * (spacing * Double(k)) + along * 1.1, 66)
+                for piece in runs(line, mid, keep: open) { s += chop(piece) }
+            }
+        }
+        // The frame, the latch and its keeper.
+        s += hoop(P(0, 0), 0.9, bold, pieces: 12)
+        s.append(stroke(closed(latch), mid))
+        s.append(stroke(circle(knob, 0.045, 16), mid))
+        s.append(stroke(closed(keeper), mid))
+        // The bullseyes: rim, swirl and the ripples of the spun glass.
+        for c in holes {
+            s += hoop(c, frame, bold, pieces: 4) + hoop(c, glass, hair, pieces: 4)
+            s.append(stroke(spiral(c, 0.205, grow: 0.0006, turn: 12, 90), hair))
+            for r in [0.115, 0.16] { s += hoop(c, r, hair, pieces: 4, from: 20) }
+        }
+
+        // In the upper right: a candle in its stick, lit.
+        let candle = rods[2] + P(0.028, -0.026)
+        s.append(stroke(closed(rect(candle.x - 0.006, candle.y - 0.01, candle.x + 0.006, candle.y + 0.026)), 0.003))
+        s.append(stroke(closed([candle + P(0, -0.04), candle + P(0.006, -0.026), candle + P(0, -0.016), candle + P(-0.006, -0.026)]), 0.0026))
+        s.append(stroke([candle + P(0, -0.016), candle + P(0, -0.01)], 0.0016))
+        s.append(stroke(ellipse(candle + P(0, 0.028), 0.018, 0.005, 14), 0.003))
+        s.append(stroke(arc(candle + P(0.024, 0.02), 0.008, -90, 90, 8), 0.0024))
+        for a in [-150.0, -90, -30] { s.append(stroke([polar(candle + P(0, -0.026), 0.016, a), polar(candle + P(0, -0.026), 0.024, a)], 0.0016)) }
+        // In the lower right: a tankard, its lid up and its handle.
+        let mug = rods[3] + P(0.026, -0.03)
+        s.append(stroke(closed(rect(mug.x - 0.016, mug.y - 0.016, mug.x + 0.016, mug.y + 0.024)), 0.0034))
+        s.append(stroke(arc(mug + P(0.016, 0.004), 0.012, -70, 70, 8), 0.003))
+        s.append(stroke([mug + P(-0.016, -0.016), mug + P(-0.006, -0.034), mug + P(0.016, -0.03)], 0.003))
+        for x in [-0.008, 0.0, 0.008] { s.append(stroke([mug + P(x, -0.01), mug + P(x, 0.018)], 0.0014)) }
+        s.append(stroke(curve(mug + P(-0.016, -0.016), mug + P(-0.02, -0.024), mug + P(-0.012, -0.024), 5), 0.0024))
+        // In the lower left: a clay pipe and its smoke.
+        let pipe = rods[5] + P(0.03, -0.022)
+        s.append(stroke(closed([pipe + P(0.006, -0.016), pipe + P(0.02, -0.016), pipe + P(0.018, 0.006), pipe + P(0.008, 0.006)]), 0.0034))
+        s.append(stroke(curve(pipe + P(0.008, 0.002), pipe + P(-0.02, 0.012), pipe + P(-0.048, 0.006), 10), 0.003))
+        s.append(stroke(curve(pipe + P(0.013, -0.02), pipe + P(0.0, -0.034), pipe + P(0.014, -0.044), 8)
+            + curve(pipe + P(0.014, -0.044), pipe + P(0.028, -0.054), pipe + P(0.012, -0.064), 8).dropFirst(), 0.0024))
+        // In the upper left: the ace of hearts.
+        let card = rods[6] + P(0.03, -0.03)
+        s.append(stroke(closed(squircle(card, 0.018, 0.026, 32)), 0.003))
+        s.append(stroke(closed(arc(card + P(-0.005, -0.002), 0.005, 150, 360, 6) + arc(card + P(0.005, -0.002), 0.005, 180, 390, 6) + [card + P(0, 0.01)]), 0.0026))
+        s.append(stroke([card + P(-0.012, -0.018), card + P(-0.009, -0.024), card + P(-0.006, -0.018)], 0.0016))
+        s.append(stroke([card + P(0.006, 0.018), card + P(0.009, 0.024), card + P(0.012, 0.018)], 0.0016))
+
+        return Halftone.Panel(name: "bullseye", tones: { p in
+            for c in holes {
+                let d = simd_distance(p, c)
+                guard d < frame else { continue }
+                if d < glass { return amber }
+                // The crown glass's swirl: bands that wind outwards as they go round.
+                let t = (d - glass) / (frame - glass) * 0.5 + bearing(p, c) / 90
+                return swirl[Int(t * 2) % 4]
+            }
+            if simd_length(p) > 0.9 { return wood }
+            if simd_distance(p, knob) < 0.045 || inside(p, latch) || inside(p, keeper) { return iron }
+            let i = Int((simd_dot(p, normals[0]) / spacing).rounded(.down)), j = Int((simd_dot(p, normals[1]) / spacing).rounded(.down))
+            return quarries[hash(i, j)]
         }, strokes: s)
     }()
 }
