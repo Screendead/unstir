@@ -43,7 +43,8 @@ struct RatchetView: View {
     var was: Int?
     var fall = 1.0
     var still = false
-    /// Cards on the hub: two for a clock dealt more than 9 ticks, for the whole problem, so a count never changes width.
+    /// Cards on the hub: two on every clock of a problem with one dealt more than 9 ticks, for the whole problem, so the
+    /// hubs match each other and a count never changes width.
     var digits = 1
 
     var body: some View {

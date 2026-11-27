@@ -2326,7 +2326,7 @@ struct LevelView: View {
                            stopped: !game.canTick(k) && f >= 1 && shown == nil && !demoing, back: back,
                            owed: started == false ? owed + 1 : owed, was: started == true ? owed + 1 : nil,
                            fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion,
-                           digits: game.level.owed(k, on: game.level.scramble) > 9 ? 2 : 1)
+                           digits: game.level.clocks.contains { game.level.owed($0.rod, on: game.level.scramble) > 9 } ? 2 : 1)
     }
 
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a

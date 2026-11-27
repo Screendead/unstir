@@ -748,8 +748,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `finished` counts). Without a pushed tick a clock's count reaches 0 exactly as its rod empties, so it ends no proved
   line (`testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine`, `testEachHubCountsItsOwnClockAndTheHeaderIsTheirSum`,
   which also checks the counts through a wrong move and its undo before every move of every line). No clock in the
-  first 30 problems owes more than 9, so their hubs show one card; a clock dealt more than 9, from problem 31 on, shows
-  two for the whole problem (`RatchetView.digits`), lower so their corners stay inside the hub's ring, and none owes more
+  first 30 problems owes more than 9, so their hubs show one card; where a clock is dealt more than 9, from problem 31 on,
+  every hub shows two for the whole problem (`RatchetView.digits`), lower so their corners stay inside the hub's ring, and none owes more
   than 99 (`testEveryHubCountFitsItsCards`). A solve spends the budget to the
   last tick, so `over` is always 0 and its best stores as solved; its wave, the tank's swell, the glass easing home and
   the chime wait for that tick, `tickBeat` and more after the lift, and the result card follows the wave by its usual
