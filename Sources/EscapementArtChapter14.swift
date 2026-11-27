@@ -99,8 +99,88 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 80, Candle clock, hex, clocks 1-.
-    static func plate80() -> Plate? { nil }
+    /// A flame's outline, its base at `c`, `h` tall, licking a little to the right.
+    private static func flame(_ c: P, _ h: Double, _ w: Double) -> [P] {
+        let tip = c + P(0.12 * w, -h)
+        return curve(tip, c + P(0.9 * w, -0.35 * h), c + P(0.05 * w, 0.02 * h), 16)
+            + curve(c + P(0.05 * w, 0.02 * h), c + P(-0.95 * w, -0.25 * h), tip, 16).dropFirst()
+    }
+
+    /// Problem 80, Candle clock, hex, clocks 1-: a tall candle in a pricket stick, banded in ink with the hours, burned
+    /// past the third into the fourth, the burned length ghosted above it and its light thrown out in rays across the
+    /// night; the flame in the second ink.
+    static func plate80() -> Plate {
+        var plate = Plate()
+        let x = -0.2, half = 0.1, top = -0.22, foot = 0.56, wick = top - 0.03
+        let light = P(x, top - 0.09)
+
+        // The light, ink rays with a hairline down each bone one between.
+        let n = 30
+        for k in 0..<n {
+            let a = 2 * .pi * Double(k) / Double(n) + 0.04
+            let b = a + 0.68 * .pi / Double(n)
+            plate.fill([polar(light, 0.16, a), polar(light, 2.2, a), polar(light, 2.2, b), polar(light, 0.16, b), polar(light, 0.16, a)], .black)
+            plate.line([polar(light, 0.3, a + 1.34 * .pi / Double(n)), polar(light, 2.2, a + 1.34 * .pi / Double(n))], fine)
+        }
+        for r in [0.1, 0.13] { plate.line(arc(light, r), fine) }
+
+        // The burned length, ghosted: the candle's first three hours.
+        let gone = top - 3 * 0.085
+        plate.fill(box(P(x - half, gone), P(x + half, top - 0.012)))
+        plate.lines(dashed(box(P(x - half, gone), P(x + half, top - 0.012)), on: 0.025, off: 0.02), medium)
+        for k in 1...2 {
+            plate.lines(dashed([P(x - half, gone + Double(k) * 0.085), P(x + half, gone + Double(k) * 0.085)], on: 0.02, off: 0.02), fine)
+        }
+
+        // The candle: bone, its hours banded in ink and numbered, the fourth now burning; shaded down its right side.
+        let body = [P(x - half, top + 0.01), P(x - 0.05, top - 0.012), P(x + 0.05, top - 0.012), P(x + half, top + 0.01),
+                    P(x + half, foot), P(x - half, foot), P(x - half, top + 0.01)]
+        Kit.cut(&plate, body, edge: 0.016)
+        plate.lines(hatch([box(P(x + half - 0.045, top + 0.02), P(x + half, foot))], angle: .pi / 2, gap: 0.014), fine)
+        for k in 1...9 {
+            let y = top + Double(k) * 0.085
+            Kit.mass(&plate, Kit.ribbon(curve(P(x - half, y - 0.01), P(x, y + 0.012), P(x + half, y - 0.01), 10), 0.022))
+            plate.lines(Kit.numeral(roman(3 + k), at: P(x - 0.012, y - 0.047), height: 0.034, squeeze: 0.72), heavy)
+        }
+        // Wax run down its left side and pooled.
+        let run = smooth([P(x - half - 0.01, top + 0.005), P(x - half + 0.03, top + 0.0), P(x - half + 0.02, top + 0.13),
+                          P(x - half - 0.005, top + 0.17), P(x - half - 0.02, top + 0.1)], 5)
+        Kit.cut(&plate, run, edge: heavy)
+
+        // The wick.
+        plate.line([P(x, top - 0.01), P(x + 0.006, wick), P(x + 0.014, wick - 0.012)], 0.012)
+
+        // The pricket stick: pan, baluster, foot and a ring to carry it by.
+        let pan = ellipse(P(x, foot + 0.03), 0.28, 0.055)
+        plate.line(pan, 0.05, .bone)
+        Kit.solid(&plate, pan, angle: 0.4, gap: 0.022, edge: 0.03)
+        Kit.mass(&plate, Kit.ribbon(ellipse(P(x, foot + 0.03), 0.25, 0.04, from: 0.15, to: .pi - 0.15), 0.025))
+        let stem = smooth([P(x - 0.04, foot + 0.07), P(x + 0.04, foot + 0.07), P(x + 0.09, foot + 0.15), P(x + 0.03, foot + 0.2),
+                           P(x + 0.06, foot + 0.27), P(x - 0.06, foot + 0.27), P(x - 0.03, foot + 0.2), P(x - 0.09, foot + 0.15)], 6)
+        plate.line(stem, 0.04, .bone)
+        Kit.mass(&plate, stem)
+        plate.line(curve(P(x + 0.05, foot + 0.11), P(x + 0.075, foot + 0.15), P(x + 0.035, foot + 0.19)), heavy, .bone)
+        let base = ellipse(P(x, foot + 0.3), 0.24, 0.06)
+        plate.line(base, 0.05, .bone)
+        Kit.mass(&plate, base)
+        plate.line(ellipse(P(x, foot + 0.3), 0.2, 0.035, from: 0.2, to: .pi - 0.2), heavy, .bone)
+        let ring = P(x + 0.37, foot + 0.04)
+        plate.line(arc(ring, 0.07), 0.07, .bone)
+        plate.line(arc(ring, 0.07), 0.035)
+        Kit.mass(&plate, Kit.band(P(x + 0.26, foot + 0.04), P(x + 0.31, foot + 0.04), 0.03))
+
+        let tongue = flame(P(x + 0.01, wick + 0.01), 0.13, 0.045)
+        plate.line(tongue, 0.03, .bone)
+        plate.fill(tongue, .second)
+        plate.line(tongue, fine)
+        plate.fill(flame(P(x + 0.01, wick), 0.05, 0.016))
+
+        callout(&plate, "A", from: P(x, gone + 0.03), to: P(-0.46, -0.66))
+        callout(&plate, "B", from: P(x + 0.06, top + 0.25), to: P(0.26, 0.14))
+        callout(&plate, "C", from: P(x - 0.25, foot + 0.04), to: P(-0.68, 0.44))
+        callout(&plate, "D", from: P(x + 0.2, foot + 0.32), to: P(0.4, 0.8))
+        return plate
+    }
 
     /// Problem 81, Nocturnal, hex, clocks 1-.
     static func plate81() -> Plate? { nil }
