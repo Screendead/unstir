@@ -531,8 +531,7 @@ struct SlopeMenu: View {
 
     // MARK: Opening a level
 
-    /// A row, the way on, the daily or endless tapped. From the dive it opens where it lies; from the overview the
-    /// camera first sinks to its ledge (2.9), endless's off the last ledge into the dark.
+    /// A row, the way on, the daily or endless tapped: it opens where its pebble lies, in the dive or on the overview.
     private func pick(_ level: Level, ledge: Int?, _ plan: SlopeMenuPlan, anew: Bool = false) {
         guard Menu.opens(level, playing: playing, anew: anew) else { return }
         // Where the pebble lies on the screen under a camera at `top`.
@@ -541,8 +540,8 @@ struct SlopeMenu: View {
         }
         Log.write("slope pick \(level.id), diving \(diving)")
         guard !diving else { return onPick(level, seat(scroll.top)) }
-        let target = ledge.map { SlopeAim(ledge: $0, share: plan.rest(on: $0)) } ?? plan.foot
-        go(to: target, plan, early: true) { onPick(level, seat(plan.deep.rest(target, height: plan.size.height))) }
+        // From the overview it opens at once, out of its pebble where that lies: a tap never waits on the camera.
+        onPick(level, ledge.map { CGPoint(x: plan.wide.seat($0).x, y: plan.wide.seat($0).y - scroll.wide) })
     }
 
     // MARK: Over the slope
