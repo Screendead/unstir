@@ -179,8 +179,157 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 39, Lap time, hex, clocks 1+,2+.
-    static func plate39() -> Plate? { nil }
+    /// A limb or a stroke of a silhouette: a solid strip through the joints, rounded at each, cut from what lies
+    /// under it by a bone halo `halo` wide.
+    private static func limb(_ plate: inout Plate, _ joints: [P], _ width: Double, halo: Double = 0.022) {
+        if halo > 0 {
+            plate.line(joints, width + halo, .bone)
+            for j in joints { plate.fill(arc(j, (width + halo) / 2)) }
+        }
+        plate.fill(Kit.ribbon(joints, width), .black)
+        for j in joints { plate.fill(arc(j, width / 2), .black) }
+    }
+
+    /// A tapered strip through the joints, `widths` wide at each, as one outline.
+    private static func taper(_ joints: [P], _ widths: [Double]) -> [P] {
+        var left: [P] = [], right: [P] = []
+        for i in joints.indices {
+            let d = joints[min(i + 1, joints.count - 1)] - joints[max(i - 1, 0)]
+            let n = simd_normalize(P(-d.y, d.x)) * (widths[i] / 2)
+            left.append(joints[i] + n)
+            right.append(joints[i] - n)
+        }
+        return left + right.reversed() + [left[0]]
+    }
+
+    /// A limb of a silhouette: a tapered solid strip, rounded at each joint, cut from what lies under it by a bone halo.
+    private static func limb(_ plate: inout Plate, _ joints: [P], _ widths: [Double], halo: Double = 0.024) {
+        let strip = taper(joints, widths)
+        plate.line(strip, halo, .bone)
+        for (j, w) in zip(joints, widths) { plate.fill(arc(j, w / 2 + halo / 2)) }
+        plate.fill(strip, .black)
+        for (j, w) in zip(joints, widths) { plate.fill(arc(j, w / 2), .black) }
+    }
+
+    /// Problem 39, Lap time, hex, clocks 1+,2+: a running track's bend in perspective, its lanes curving across the glass
+    /// in alternate ink and bone with their numbers, a stand along the far side, the finish line chequered across
+    /// them, and a runner in silhouette dipping through the line along the lane at three, clear of every hub, the
+    /// broken tape falling from his chest; the tape in the second ink.
+    static func plate39() -> Plate {
+        var plate = Plate()
+        let c = P(0.27, -1.75), stretch = 1.35
+        let edges = [-0.12, -0.02, 0.09, 0.21, 0.34, 0.48, 0.63, 0.79, 0.96, 1.14].map { $0 - c.y }
+        func edge(_ rho: Double) -> [P] {
+            stride(from: -1.1, through: 1.1, by: 0.02).map { x in
+                let u = (x - c.x) / (stretch * rho)
+                return P(x, c.y + rho * (1 - u * u).squareRoot())
+            }
+        }
+        func height(_ rho: Double, at x: Double) -> Double {
+            let u = (x - c.x) / (stretch * rho)
+            return c.y + rho * (1 - u * u).squareRoot()
+        }
+        // Where a ray from the bend's middle toward `d` crosses the edge `rho`.
+        func cross(_ d: P, _ rho: Double) -> P { c + d * (rho / ((d.x / stretch) * (d.x / stretch) + d.y * d.y).squareRoot()) }
+
+        Kit.ground(&plate, angle: 0, around: [])
+        // The stand along the far side: its roof in ink, the crowd's heads under it.
+        let far = edge(edges[0]), roof = far.map { P($0.x, $0.y - 0.135 - 0.045 * max(0, -$0.x)) }
+        Kit.mass(&plate, far.map { P($0.x, $0.y - 0.012) } + roof.reversed() + [P(far[0].x, far[0].y - 0.012)])
+        plate.line(far.map { P($0.x, $0.y - 0.1 - 0.033 * max(0, -$0.x)) }, 0.02, .bone)
+        for (k, p) in far.enumerated() where k % 2 == 0 {
+            plate.fill(arc(P(p.x, p.y - 0.05 - 0.02 * max(0, -p.x) - (k % 4 == 0 ? 0.012 : 0)), 0.017))
+        }
+        for (k, p) in roof.enumerated() where k % 4 == 0 {
+            plate.line([p + P(0, 0.04), P(p.x, far[k].y - 0.015)], 0.036, .bone)
+        }
+        for (k, p) in roof.enumerated() where k % 10 == 5 {
+            plate.line([p, p + P(0, -0.08)], medium)
+            plate.fill([p + P(0, -0.08), p + P(0.05, -0.065), p + P(0, -0.05), p + P(0, -0.08)], .black)
+        }
+
+        // The lanes, ink and bone in turn, a bone stripe down each inked one, and their numbers at nine.
+        let lanes = edges.count - 1
+        for k in 0..<lanes {
+            let inner = edge(edges[k]), outer = edge(edges[k + 1])
+            plate.fill(inner + outer.reversed() + [inner[0]], k % 2 == 0 ? .black : .bone)
+            if k % 2 == 0 { plate.line(edge((edges[k] + edges[k + 1]) / 2), 0.038 + 0.011 * Double(k), .bone) }
+            let x = -0.74, y0 = height(edges[k], at: x), y1 = height(edges[k + 1], at: x)
+            guard simd_length(P(x, (y0 + y1) / 2)) < 0.9 else { continue }
+            let h = 0.45 * (y1 - y0)
+            plate.fill(box(P(x - 0.6 * h, (y0 + y1) / 2 - 0.65 * h), P(x + 0.6 * h, (y0 + y1) / 2 + 0.65 * h)),
+                       k % 2 == 0 ? .black : .bone)
+            plate.lines(Kit.numeral(roman(lanes - k), at: P(x, (y0 + y1) / 2), height: h, squeeze: 1.1), max(medium, 0.14 * h),
+                        k % 2 == 0 ? .bone : .black)
+        }
+        // Two staggers of start marks, each lane's further round the bend than the next lane in.
+        for x0 in [-0.66, -0.2, 0.95] {
+            for k in 0..<lanes {
+                let x = x0 - 0.075 * Double(k), y = (height(edges[k], at: x) + height(edges[k + 1], at: x)) / 2
+                let ray = P(x, y) - c, a = cross(ray, edges[k]), b = cross(ray, edges[k + 1]), w = 0.016 * simd_length(a - c)
+                let n = P(-ray.y, ray.x) / simd_length(ray) * w
+                plate.fill([a - n, b - n, b + n, a + n, a - n], k % 2 == 0 ? .bone : .black)
+            }
+        }
+        for rho in edges { plate.line(edge(rho), heavy) }
+
+        // The finish line, chequered across the lanes.
+        let foot = P(0.28, 0.4), d = simd_normalize(foot - c), across = P(-d.y, d.x)
+        for k in 0..<lanes {
+            for half in 0..<2 {
+                let r0 = edges[k] + Double(half) * (edges[k + 1] - edges[k]) / 2, r1 = r0 + (edges[k + 1] - edges[k]) / 2
+                let a = cross(d, r0), b = cross(d, r1), wa = 0.02 * simd_length(a - c), wb = 0.02 * simd_length(b - c)
+                for side in 0..<2 {
+                    let s0 = Double(side) - 1, s1 = Double(side)
+                    let square = [a + across * (s0 * wa), b + across * (s0 * wb), b + across * (s1 * wb), a + across * (s1 * wa)]
+                    plate.fill(square + [square[0]], (k * 2 + half + side) % 2 == 0 ? .bone : .black)
+                }
+            }
+        }
+
+        // The runner, dipping at the line along the lane at three, arms flung back: solid ink, each part cut clear by a
+        // bone halo.
+        limb(&plate, [P(0.41, -0.05), P(0.565, -0.115), P(0.7, -0.21), P(0.745, -0.25)], [0.05, 0.042, 0.034, 0.03])
+        limb(&plate, [P(0.69, -0.06), P(0.815, 0.09), P(0.915, 0.22), P(0.94, 0.185)], [0.1, 0.064, 0.04, 0.03])
+        let torso = [P(0.3, -0.045), P(0.42, -0.085), P(0.55, -0.095), P(0.66, -0.11), P(0.72, -0.07), P(0.7, 0.0),
+                     P(0.6, 0.02), P(0.5, 0.05), P(0.39, 0.085), P(0.31, 0.065), P(0.29, 0.01), P(0.3, -0.045)]
+        plate.line(torso, 0.024, .bone)
+        Kit.mass(&plate, torso)
+        let head = P(0.232, 0.005)
+        plate.fill(arc(head, 0.071))
+        Kit.mass(&plate, arc(head, 0.058))
+        plate.fill(arc(P(0.252, -0.015), 0.034), .black)
+        plate.line(arc(head, 0.04, from: 3.3, to: 4.5), medium, .bone)
+        limb(&plate, [P(0.66, -0.03), P(0.643, 0.16), P(0.685, 0.37), P(0.632, 0.405)], [0.1, 0.062, 0.04, 0.03])
+        limb(&plate, [P(0.37, 0.02), P(0.5, 0.095), P(0.61, 0.07), P(0.645, 0.045)], [0.054, 0.044, 0.034, 0.03])
+        // His singlet's hem, the number on his bib, the spikes under his shoes.
+        plate.line([P(0.62, 0.03), P(0.655, -0.11)], 0.016, .bone)
+        Kit.cut(&plate, [P(0.4, -0.04), P(0.52, -0.06), P(0.525, 0.0), P(0.41, 0.025), P(0.4, -0.04)], edge: fine)
+        plate.lines(Kit.numeral("VII", at: P(0.462, -0.018), height: 0.04, turn: -0.17, squeeze: 0.9), medium)
+        plate.line([P(0.65, 0.425), P(0.64, 0.44)], medium)
+        plate.line([P(0.955, 0.17), P(0.97, 0.16)], medium)
+
+        // The tape, broken on his chest, its ends falling away either side of him along the line.
+        let upper = (0...14).map { k -> P in
+            let t = Double(k) / 14
+            return P(0.3 - 0.02 * t + 0.014 * sin(t * 3 * .pi), 0.025 - 0.32 * t)
+        }
+        let lower = (0...14).map { k -> P in
+            let t = Double(k) / 14
+            return P(0.31 - 0.025 * t + 0.014 * sin(t * 3 * .pi + 1), 0.075 + 0.3 * t)
+        }
+        for tail in [upper, lower] {
+            let ribbon = Kit.ribbon(tail, 0.03)
+            plate.line(ribbon, 0.022, .bone)
+            plate.fill(ribbon, .second)
+            plate.line(ribbon, fine)
+        }
+
+        callout(&plate, "A", from: cross(d, edges[7] + 0.05), to: P(0.06, 0.74))
+        callout(&plate, "B", from: P(-0.45, -0.5), to: P(-0.27, -0.76))
+        callout(&plate, "C", from: P(0.66, -0.09), to: P(0.86, -0.2))
+        return plate
+    }
 
     /// Problem 40, Split second, hex, clocks 1+,3+.
     static func plate40() -> Plate? { nil }
