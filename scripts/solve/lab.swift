@@ -31,7 +31,7 @@ func lab(_ args: [String]) -> Never {
     }
     func signed(_ t: Twist) -> String { "\(t.rod):\(t.steps > 0 ? "+" : "")\(t.steps)" }
     print("entries \(stack.count): \(stack.map(signed).joined(separator: ",")); \(ruleWords)")
-    print(solver.exhaustive ? "counts tried: every one from -12 to +12 on every knob (a proof to that range)"
+    print(solver.exhaustive || rules.keel != nil || rules.flip ? "counts tried: every one from -12 to +12 on every knob (a proof to that range)"
           : "counts tried: cancels, overshoots onto another entry, marks, and +-1 (the solver's bounded optimum)")
     guard let line else {
         print("no line within \(limit) moves")

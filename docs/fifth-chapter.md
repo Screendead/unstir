@@ -37,10 +37,12 @@ level's note is cleared, as each is taught without words. `scripts/film.sh lab-`
 
 `scripts/solve.sh lab <layout> <scramble> <rules> [exhaustive]` proves a level: A* over stacks with an admissible
 heuristic (each rod whose entries don't sum to 0 needs a turn of its own; a key at rest, off a mark a ward still needs,
-one more). By default it tries on each knob the counts that cancel an entry, that overshoot onto the negation of
-another entry of its rod, that bring a key to a mark or a knob to where it must end, and +-1: the solver's bounded
-optimum, the standard maelstrom's par already keeps. `exhaustive` tries every count from -12 to +12 on every knob,
-a proof to that range, which agrees on every level checked with it.
+one more). Under the keel and ebb and flow it tries every count from -12 to +12 on every knob, a proof to that range:
+their levels are won by splitting a turn at a count no short list names (a bounded search put the keel's hardest at
+7; every count found 5), and their room keeps that cheap. Under keys alone it tries by default the counts that cancel
+an entry, that overshoot onto the negation of another entry of its rod, that bring a key to a mark or a knob to where
+it must end, and +-1, the solver's bounded optimum (maelstrom's par keeps that standard); `exhaustive` tries every
+count there too, which agrees on every keys level it finished.
 
 ### Keys
 
@@ -54,9 +56,11 @@ a proof to that range, which agrees on every level checked with it.
   unstirring passes through the mark at the right moment (level 2, `0:+5,2:+4` keyed at -2: stop the key halfway,
   par 3, not 4). With keys that overlap their wards, and chains (a key that is itself a ward), the order matters
   several moves ahead.
-- **Hardest proved.** Pent on columns, `2:+3,0:+4,1:-3,3:+5`, ward 3 keyed by knob 1 at +2 and ward 1 keyed by knob
-  4 at -3: optimum 9 for 4 entries, one first move of 11 reaches it (`4:-3`), untwisting alone is stranded; 20 s on
-  the Mac. Hex chains ran past two minutes, so a tier's hex levels would need a faster proof.
+- **Hardest found.** Pent on columns, `2:+3,0:+4,1:-3,3:+5`, ward 3 keyed by knob 1 at +2 and ward 1 keyed by knob
+  4 at -3: 9 moves for 4 entries, one first move of 11 reaches it (`4:-3`), untwisting alone is stranded. That is the
+  bounded optimum (20 s); over every count, no shorter line was ruled out in 15 minutes. The hardest proved over every
+  count is pent on lamellae, `0:+4,1:-3,2:+5,3:-2`, ward 2 keyed by knob 0 at -2: 6 for 4 entries (3 s). Hex chains
+  ran past two minutes even bounded, so a tier's hex levels would need a faster proof.
 
 ### The keel
 
@@ -67,9 +71,9 @@ a proof to that range, which agrees on every level checked with it.
   knocks; the other one first brings the bead the other way, and then the first goes all the way.
 - **The skill.** Keeping a running sum within bounds: choosing the order of the free choices, and turning a knob the
   wrong way for a while to make room. Every turn on the tank matters to every other.
-- **Hardest proved.** Pent on agate, `4:+4,1:-3,2:-5,1:-2,4:+3` (knob 4's two merge as dealt), keel 3: optimum 7 for
-  4 entries, one first move of 12 reaches it (`1:+2`), untwisting alone stranded; the line splits knob 2's turn in
-  three to keep the bead on the scale. Quad on agate, `0:+5,1:+4,2:-3,3:-6`, keel 4, takes 6 for 4.
+- **Hardest proved.** Pent on agate, `4:+4,1:-3,2:-5,1:-2,4:+3` (knob 4's two merge as dealt), keel 3: 5 moves for
+  4 entries, proved over every count; one first move of 30 reaches it (`1:+2`), and the line splits knob 4's turn in
+  two round knob 2's to keep the bead on the scale. Quad on agate, `0:+5,1:+4,2:-3,3:-6`, keel 4: 6 for 4, proved.
 
 ### Ebb and flow
 
@@ -80,8 +84,8 @@ a proof to that range, which agrees on every level checked with it.
   opposite turn the arrow asks for.
 - **The skill.** Choosing each turn's size for the turn after it: an overshoot now buys the opposite turn later. It is
   the answer to the benched one-way knobs, whose flaw (a wrong stir couldn't be turned straight back) it doesn't have.
-- **Hardest proved.** Pent on lamellae, `1:+4,0:-3,1:+2,2:-5,4:+3`: optimum 6 for 5 entries, three first moves of
-  21, untwisting alone stranded.
+- **Hardest proved.** Pent on lamellae, `1:+4,0:-3,1:+2,2:-5,4:+3`: 6 moves for 5 entries, proved over every count
+  (no line of 5), untwisting alone stranded.
 
 ### Tried and dropped
 

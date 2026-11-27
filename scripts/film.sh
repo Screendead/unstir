@@ -342,8 +342,8 @@ film lab-keys-hard 50 "$whole" "${lab[@]}" LABEL=9 TITLE=Keys PICTURE=columns LA
   "LAB=keys=3:1@2,1:4@-3" PAR=9 MOVES=4:-3,1:+2,4:+3,3:-5,4:-3,1:+1,4:+3,2:-3,0:-4
 film lab-keel-1 40 "$whole" "${lab[@]}" LABEL=1 TITLE=Keel PICTURE=agate LAYOUT=quad STACK=0:+4,2:-3 "LAB=keel=3" PAR=2 \
   MOVES=0:-4,2:+3,0:-4
-film lab-keel-hard 40 "$whole" "${lab[@]}" LABEL=9 TITLE=Keel PICTURE=agate LAYOUT=pent STACK=4:+4,1:-3,2:-5,1:-2,4:+3 \
-  "LAB=keel=3" PAR=7 MOVES=1:+2,2:+1,4:-1,2:+1,4:-6,2:+3,1:+3
+film lab-keel-hard 45 "$whole" "${lab[@]}" LABEL=9 TITLE=Keel PICTURE=agate LAYOUT=pent STACK=4:+4,1:-3,2:-5,1:-2,4:+3 \
+  "LAB=keel=3" PAR=5 MOVES=1:+2,4:-4,2:+5,4:-3,1:+3
 film lab-flip-1 44 "$whole" "${lab[@]}" LABEL=1 TITLE="Ebb and flow" PICTURE=lamellae LAYOUT=quad STACK=0:+3,1:-2,0:+4,2:-3 \
   LAB=flip PAR=5 MOVES=0:-4,2:+3,0:-3,u,u,0:-7,2:+3,0:+3,1:+2,0:-3
 film lab-flip-hard 36 "$whole" "${lab[@]}" LABEL=9 TITLE="Ebb and flow" PICTURE=lamellae LAYOUT=pent STACK=1:+4,0:-3,1:+2,2:-5,4:+3 \

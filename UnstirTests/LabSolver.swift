@@ -8,8 +8,8 @@
 /// Solves a level under `LabRules`: the fewest moves that empty the stack, as `Play.count` counts them, by A* over
 /// stacks (and, under ebb and flow, each knob's last sense), each move a commit to a knob other than the last one turned.
 ///
-/// What it tries, so what its optimum is a bound over: every count from -12 to +12 when `exhaustive`, so a proof on
-/// that range; otherwise, on each knob, the counts that bring the entry the turn lands on (or a pushed one) to 0 or to
+/// What it tries, so what its optimum is a bound over: every count from -12 to +12 when `exhaustive` or under the keel
+/// or ebb and flow, so a proof on that range; otherwise, under keys alone, on each knob, the counts that bring the entry the turn lands on (or a pushed one) to 0 or to
 /// the negation of one or two other entries of its rod (an overshoot that a later turn, or a fall, takes off), the
 /// counts that bring its pointer to a mark it keys or to where it must end, and +-1 as a detour; each only where the
 /// rules allow it. Its heuristic is admissible (`h`), so within those counts the optimum is proved.
@@ -81,7 +81,9 @@ final class LabSolver {
 
     /// The counts tried on `rod` from stack `s`.
     func counts(_ rod: Int, _ stack: [Twist], sense: Int) -> [Int] {
-        if exhaustive { return (-12...12).filter { $0 != 0 && allowed(rod, $0, stack, sense) } }
+        // The keel and ebb and flow are won by splitting a turn at the right count, which no short list names, and their
+        // room keeps every count cheap to try.
+        if exhaustive || rules.keel != nil || rules.flip { return (-12...12).filter { $0 != 0 && allowed(rod, $0, stack, sense) } }
         let mine = stack.filter { $0.rod == rod }.map(\.steps)
         var want: Set<Int> = [0]
         for (i, a) in mine.enumerated() {
