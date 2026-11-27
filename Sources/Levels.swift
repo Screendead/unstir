@@ -133,6 +133,8 @@ struct Level: Hashable, Sendable {
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
+    /// The fifth chapter's candidate rules, empty on every level; only a Debug harness launch sets them (`UNSTIR_LAB`).
+    var lab = LabRules()
     #if FIRST_STIR
     /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
     var story: Story?

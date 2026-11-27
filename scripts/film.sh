@@ -332,6 +332,22 @@ film editors-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FING
 film editors-vortex-02 24 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=0.2 MOVES=3:+8,4:+7,0:-4
 film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=0.2 \
   MOVES=-1:+1,2:+8,3:-7,0:+4
+# The fifth chapter's candidate rules (UNSTIR_LAB, Debug only, `LabRules`), each unstirred at par by a drawn fingertip
+# on Mineral's pictures: its first level, which shows the rule by a turn it refuses, and the hardest level
+# `scripts/solve.sh lab` proved. A refused try, and ebb and flow's undone start, cost no move.
+lab=(TIER=plughole LEVEL=14 OPEN=1 FINGER=1 REST=0.6 TURN=0.16)
+film lab-keys-1 22 "$whole" "${lab[@]}" LABEL=1 TITLE=Keys PICTURE=strata LAYOUT=quad STACK=2:+4 "LAB=keys=2:0@3" PAR=3 \
+  MOVES=2:-4,0:+3,2:-4,0:-3
+film lab-keys-hard 50 "$whole" "${lab[@]}" LABEL=9 TITLE=Keys PICTURE=columns LAYOUT=pent STACK=2:+3,0:+4,1:-3,3:+5 \
+  "LAB=keys=3:1@2,1:4@-3" PAR=9 MOVES=4:-3,1:+2,4:+3,3:-5,4:-3,1:+1,4:+3,2:-3,0:-4
+film lab-keel-1 20 "$whole" "${lab[@]}" LABEL=1 TITLE=Keel PICTURE=agate LAYOUT=quad STACK=0:+4,2:-3 "LAB=keel=3" PAR=2 \
+  MOVES=0:-4,2:+3,0:-4
+film lab-keel-hard 40 "$whole" "${lab[@]}" LABEL=9 TITLE=Keel PICTURE=agate LAYOUT=pent STACK=4:+4,1:-3,2:-5,1:-2,4:+3 \
+  "LAB=keel=3" PAR=7 MOVES=1:+2,2:+1,4:-1,2:+1,4:-6,2:+3,1:+3
+film lab-flip-1 44 "$whole" "${lab[@]}" LABEL=1 TITLE="Ebb and flow" PICTURE=lamellae LAYOUT=quad STACK=0:+3,1:-2,0:+4,2:-3 \
+  LAB=flip PAR=5 MOVES=0:-4,2:+3,0:-3,u,u,0:-7,2:+3,0:+3,1:+2,0:-3
+film lab-flip-hard 36 "$whole" "${lab[@]}" LABEL=9 TITLE="Ebb and flow" PICTURE=lamellae LAYOUT=pent STACK=1:+4,0:-3,1:+2,2:-5,4:+3 \
+  LAB=flip PAR=6 MOVES=4:-3,1:-2,0:+3,1:+2,2:+5,1:-6
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
 if wants editors-lens-03; then

@@ -15,6 +15,8 @@ struct RodView: View {
     var channels: Channels?
     /// A frost day's seized knob: true frozen, false thawed by the solve, when it is drawn as a working knob; nil any other.
     var frost: Bool?
+    /// The fifth chapter's candidate rules on this knob, Debug prototypes only.
+    var lab: LabKnob?
     @Environment(\.channelLetters) private var letters
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
@@ -61,6 +63,7 @@ struct RodView: View {
         }
         .frame(width: size, height: size)
         .rotationEffect(.radians(angle))
+        .overlay { lab?.cap(size: size) }
         .overlay(alignment: .bottom) {
             // Upright, off the turning cap.
             if letters, let channels {
@@ -72,6 +75,7 @@ struct RodView: View {
         .background {
             Circle().strokeBorder(Color.black.opacity(0.7), lineWidth: 3).padding(-3)
             ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(lit.opacity(0.5), lineWidth: width)
+            lab?.dial(size: size)
             // Lit inside the knob's own footprint, so the picture round it stays in view.
             if grabbed {
                 ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(Color.live, lineWidth: width)

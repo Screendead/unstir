@@ -75,6 +75,8 @@ final class Game {
     /// Turns a full stack refused (`Tank.maxStack`), and the knob of the last, which shakes.
     private(set) var refusals = 0
     private(set) var refusedKnob = 0
+    /// A turn the fifth chapter's candidate rules refused (`LabRules`), and its knob.
+    private(set) var labRefusals = 0
     /// The tier this solve opened, on whichever level was the last to be solved: the card goes up a notch.
     private(set) var opened: Tier?
     /// What this solve completed, the one that gave the last of a pack's levels, or of the last tier's, a best.
@@ -267,10 +269,40 @@ final class Game {
     func slot(of knob: Int) -> Int { level.layout.slot(of: knob, at: position) }
     func knob(over slot: Int) -> Int { level.layout.knob(over: slot, at: position) }
 
+    /// A knob's kind now: a ward whose key is off its mark is seized while it stays so (`LabRules`).
+    func kind(of knob: Int) -> Level.Knob {
+        let kind = level.kind(of: knob)
+        guard kind == .working, !level.lab.isEmpty else { return kind }
+        return level.lab.opens(slot(of: knob), stack: stack, dealt: level.scramble) ? .working : .seized
+    }
+
+    /// The turns knob `knob` may make now, in steps, or nil where no candidate rule limits them (`LabRules.room`).
+    func labRoom(_ knob: Int) -> ClosedRange<Int>? {
+        guard level.lab.keel != nil || level.lab.flip else { return nil }
+        let slot = self.slot(of: knob)
+        // Ebb and flow counts moves, so a turn joining the open move counts with it and the move before it sets the sense.
+        let joined = openStir?.rod == slot ? openStir!.steps : 0
+        let before = stirs.dropLast(joined != 0 ? 1 : 0).last { $0.twist.rod == slot }?.twist.steps ?? 0
+        return level.lab.room(slot, stack: stack, dealt: level.scramble, sense: before.signum(), joined: joined)
+    }
+
+    /// The sense knob `knob` must turn next under ebb and flow: +1, -1, or 0 either way.
+    func labSense(_ knob: Int) -> Int {
+        guard level.lab.flip else { return 0 }
+        let slot = self.slot(of: knob)
+        return -(stirs.last { $0.twist.rod == slot }?.twist.steps.signum() ?? 0)
+    }
+
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
         if !level.ratchets.isEmpty { return clockCommit(knob: rod, steps: steps) }
+        if !level.lab.isEmpty, kind(of: rod) != .working || labRoom(rod).map({ !$0.contains(steps) }) == true {
+            log("commit \(Twist(rod: rod, steps: steps)) refused by the lab's rules")
+            refusedKnob = rod
+            labRefusals += 1
+            return
+        }
         let slot = self.slot(of: rod), was = entries, playedWas = played
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0

@@ -44,6 +44,7 @@
 		50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A3010678E45A15B0543C3 /* Consent.swift */; };
 		5149A9D99C1F252AF495DA01 /* GPUBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882752BC69C1C5819416967C /* GPUBench.swift */; };
 		52972B0C126203096364F0AF /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E8193F7A9FB37B678695D2 /* Menu.swift */; };
+		5619232B85DAB9DE09672F0E /* LabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644073DA78FFB99713AE6973 /* LabViews.swift */; };
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
 		5DBA55C92B9F8415AE633266 /* Frost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE5E713943E3199845C370B /* Frost.swift */; };
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
@@ -182,6 +183,7 @@
 		5D1B40452790F8A476242FC3 /* StirMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StirMap.swift; sourceTree = "<group>"; };
 		63330CD5793ABE158F314B89 /* Unstir.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Unstir.metal; sourceTree = "<group>"; };
 		63E173CE4887FF0DF1142C19 /* SyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncTests.swift; sourceTree = "<group>"; };
+		644073DA78FFB99713AE6973 /* LabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabViews.swift; sourceTree = "<group>"; };
 		6499D4977A88A7764419D373 /* Brim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brim.swift; sourceTree = "<group>"; };
 		64A48099D8C6DA81CFAC630E /* LensArtDoubleTake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtDoubleTake.swift; sourceTree = "<group>"; };
 		67E7B4754B893A8AD4AC3AD4 /* CatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogTests.swift; sourceTree = "<group>"; };
@@ -379,6 +381,7 @@
 				C45CEE9950106BAFE3A297A1 /* Icon.swift */,
 				B3380A991210C9195237AA14 /* Info.plist */,
 				AA47CB3393B9B0BCD308D9F8 /* LabRules.swift */,
+				644073DA78FFB99713AE6973 /* LabViews.swift */,
 				9671F664A49B27787D8573AD /* LensArt.swift */,
 				9B4B009E49499F923115A97B /* LensArtBigPicture.swift */,
 				8582290C096A27A793005B80 /* LensArtCloseUp.swift */,
@@ -573,6 +576,7 @@
 				4D6FD82491E362F2301B13A3 /* Hand.swift in Sources */,
 				973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */,
 				87E578C9F1E0F1D25B9204AE /* LabRules.swift in Sources */,
+				5619232B85DAB9DE09672F0E /* LabViews.swift in Sources */,
 				D97B6716323430A910684B48 /* LensArt.swift in Sources */,
 				C940A6344D7C3951F53F1746 /* LensArtBigPicture.swift in Sources */,
 				12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */,
