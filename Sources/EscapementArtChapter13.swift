@@ -621,8 +621,128 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 77, Solar time, pent, clocks 0+.
-    static func plate77() -> Plate? { nil }
+    // MARK: 77 Solar time
+
+    /// Problem 77, Solar time, pent, clocks 0+: the sun with a face in the middle, his rays alternate straight and
+    /// flaming wedges of ink, inside a dark band of the day's hours in bone; his mouth in the second ink.
+    static func plate77() -> Plate {
+        var plate = Plate()
+        let o = K.origin, face = 0.31, band = 0.87, rays = 16, spin = 0.12
+
+        // The rays, each laid from the sun's rim outward: straight wedges between flaming ones.
+        var wedges: [[P]] = []
+        for k in 0..<rays {
+            let a = Double(k) * 2 * .pi / Double(rays) + spin
+            if k % 2 == 0 {
+                let tip = polar(o, 0.83, a), w = 0.12
+                wedges.append([polar(o, face + 0.02, a - w), tip, polar(o, face + 0.02, a + w), polar(o, face + 0.02, a - w)])
+            } else {
+                var left: [P] = [], right: [P] = []
+                for i in 0...30 {
+                    let t = Double(i) / 30, r = face + 0.02 + (0.72 - face) * t
+                    let bend = 0.09 * sin(3 * .pi * t) * t, half = 0.13 * pow(1 - t, 0.8) + 0.006
+                    left.append(polar(o, r, a + bend - half))
+                    right.append(polar(o, r, a + bend + half))
+                }
+                wedges.append(left + right.reversed() + [left[0]])
+            }
+        }
+        let rim = arc(o, band)
+        K.ground(&plate, angle: 0.4, around: [arc(o, face + 0.02)] + wedges)
+        for (k, wedge) in wedges.enumerated() {
+            K.mass(&plate, wedge)
+            // A bone line down each ray's middle, the engraver's light.
+            let a = Double(k) * 2 * .pi / Double(rays) + spin
+            if k % 2 == 0 {
+                plate.line([polar(o, face + 0.06, a - 0.03), polar(o, 0.7, a - 0.006)], heavy, .bone)
+                plate.line([polar(o, face + 0.06, a + 0.05), polar(o, 0.5, a + 0.03)], medium, .bone)
+            } else {
+                for f in [-0.45, 0.45] {
+                    let spine = (0...20).map { i -> P in
+                        let t = 0.05 + 0.6 * Double(i) / 20, half = 0.13 * pow(1 - t, 0.8) + 0.006
+                        return polar(o, face + 0.02 + (0.72 - face) * t, a + 0.09 * sin(3 * .pi * t) * t + f * half)
+                    }
+                    plate.line(spine, medium, .bone)
+                }
+            }
+        }
+
+        // The band of hours round the rim, dark, its numerals and ticks in bone.
+        K.mass(&plate, Array(glass) + Array(rim.reversed()))
+        plate.line(arc(o, band + 0.018), medium, .bone)
+        for k in 0..<48 {
+            let a = K.clock(Double(k) / 4)
+            plate.line([polar(o, band + 0.025, a), polar(o, band + (k % 4 == 0 ? 0.06 : 0.04), a)], k % 4 == 0 ? heavy : medium, .bone)
+        }
+        for h in 1...12 {
+            let a = K.clock(Double(h) - 0.5)
+            plate.lines(K.numeral(roman(h), at: polar(o, band + 0.07, a), height: 0.07, turn: a + .pi / 2, squeeze: 0.7), heavy, .bone)
+        }
+
+        // The face: a bone disc in a heavy ring of little flames.
+        plate.fill(arc(o, face + 0.03))
+        for k in 0..<36 {
+            let a = Double(k) * .pi / 18
+            K.mass(&plate, [polar(o, face, a - 0.07), polar(o, face + 0.045, a + 0.03), polar(o, face, a + 0.08), polar(o, face, a - 0.07)])
+        }
+        plate.line(arc(o, face), 0.016)
+        // Brows, bold.
+        for s in [-1.0, 1.0] {
+            let brow = (0...12).map { i -> P in
+                let t = Double(i) / 12
+                return P(s * (0.04 + 0.17 * t), -0.13 - 0.05 * sin(.pi * t) + 0.02 * t)
+            }
+            K.mass(&plate, K.ribbon(brow, 0.03))
+        }
+        // Eyes: heavy upper lids, irises in ink with a bone glint.
+        for s in [-1.0, 1.0] {
+            let c = P(s * 0.12, -0.055)
+            let upper = (0...12).map { i -> P in
+                let t = Double(i) / 12
+                return c + P(-0.075 + 0.15 * t, -0.035 * sin(.pi * t))
+            }
+            let lower = (0...12).map { i -> P in
+                let t = Double(i) / 12
+                return c + P(0.075 - 0.15 * t, 0.02 * sin(.pi * t))
+            }
+            plate.fill(upper + lower)
+            plate.fill(arc(c + P(0, -0.004), 0.026), .black)
+            plate.fill(arc(c + P(-0.008, -0.012), 0.008))
+            K.mass(&plate, K.ribbon(upper, 0.018))
+            plate.line(lower, medium)
+            plate.line(upper.map { $0 + P(0, -0.03) }.dropFirst(3).dropLast(3).map { $0 }, fine)
+        }
+        // The nose.
+        plate.line([P(-0.01, -0.06), P(-0.025, 0.03), P(-0.04, 0.05)], heavy)
+        plate.line(curve(P(-0.04, 0.05), P(0, 0.075), P(0.035, 0.05), 8), heavy)
+        plate.line(arc(P(0.04, 0.045), 0.012, from: -1.4, to: 1.8), medium)
+        // Cheeks, round and ruled.
+        for s in [-1.0, 1.0] {
+            let cheek = arc(P(s * 0.19, 0.06), 0.055)
+            plate.lines(hatch([cheek], angle: 0.7 * s, gap: 0.016), fine)
+        }
+        // The mouth: lips in the second ink about a dark parting.
+        let lips = (0...20).map { i -> P in
+            let t = Double(i) / 20
+            return P(-0.1 + 0.2 * t, 0.15 - 0.022 * sin(.pi * t) - 0.012 * sin(2 * .pi * t) * 0)
+        } + (0...20).map { i -> P in
+            let t = Double(i) / 20
+            return P(0.1 - 0.2 * t, 0.15 + 0.05 * sin(.pi * t))
+        }
+        plate.fill(lips, .second)
+        plate.line(lips + [lips[0]], medium)
+        plate.line((0...16).map { i -> P in
+            let t = Double(i) / 16
+            return P(-0.1 + 0.2 * t, 0.153 + 0.012 * sin(.pi * t))
+        }, heavy)
+        // The chin's fold.
+        plate.line(arc(P(0, 0.17), 0.1, from: 0.55, to: .pi - 0.55), medium)
+
+        callout(&plate, "A", from: polar(o, 0.6, Double(2) * 2 * .pi / Double(rays) + spin), to: polar(o, 0.62, 0.92))
+        callout(&plate, "B", from: polar(o, 0.5, Double(5) * 2 * .pi / Double(rays) + spin + 0.08), to: polar(o, 0.72, 2.5))
+        callout(&plate, "C", from: polar(o, band + 0.03, -2.2), to: polar(o, 0.72, -2.3))
+        return plate
+    }
 
     /// Problem 78, Analemma, hex, clocks 1+.
     static func plate78() -> Plate? { nil }
