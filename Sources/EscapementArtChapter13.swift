@@ -28,8 +28,10 @@ extension EscapementArt {
             let p = ring[i], e = ring[i + 1] - p, den = d.x * e.y - d.y * e.x
             guard abs(den) > 1e-12 else { continue }
             let w = p - a, t = (w.x * e.y - w.y * e.x) / den, u = (w.x * d.y - w.y * d.x) / den
-            if u >= 0 && u < 1 && t >= 0 && t <= 1 { ts.append(t) }
+            if u >= 0 && u < 1 && t > 0 && t < 1 { ts.append(t) }
         }
+        if inside(ring, a) { ts.append(0) }
+        if inside(ring, b) { ts.append(1) }
         ts.sort()
         return stride(from: 0, to: ts.count - 1, by: 2).map { [a + d * ts[$0], a + d * ts[$0 + 1]] }
     }
@@ -471,8 +473,153 @@ extension EscapementArt {
         return odd
     }
 
-    /// Problem 76, Meridian, hex, clocks 1+.
-    static func plate76() -> Plate? { nil }
+    // MARK: 76 Meridian
+
+    /// Problem 76, Meridian, hex, clocks 1+: a transit telescope on its stone pier under the night sky, its tube
+    /// pointed up the meridian at a star, its axis end-on in its bearing and its counterpoise weights hung from a
+    /// beam above; inset, the field of its eyepiece with the transit wires, the star in its sight in the second ink.
+    static func plate76() -> Plate {
+        var plate = Plate()
+        // The tube lies along the lane at one o'clock, clear of every hub.
+        let up = P(sin(.pi / 6), -cos(.pi / 6)), across = P(-up.y, up.x)
+        let pivot = up * 0.52, eyepiece = up * 0.2, objective = up * 0.86
+        let floorTop = 0.08, floorBottom = 0.14, footing = 0.8
+
+        // The night sky ruled heavy over the platform; below it, the ground in section.
+        let below = { () -> [P] in
+            let a = asin(floorTop / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
+            return rim + [rim[0]]
+        }()
+        K.ground(&plate, angle: -0.25, around: [below], width: 0.017)
+        for i in 0..<40 {
+            let p = P(-1 + 2 * rnd(76, i), -1 + 1.02 * rnd(77, i))
+            guard simd_length(p) < 0.97, simd_distance(p, pivot) > 0.25, simd_distance(p, P(-0.425, -0.736)) > 0.2 else { continue }
+            let r = 0.026 + 0.03 * rnd(78, i)
+            plate.fill(star(p, r, turn: 6 * rnd(79, i)))
+            plate.line(star(p, r, turn: 6 * rnd(79, i)), fine)
+        }
+        plate.fill(below)
+        // The earth in section, ruled across the sky's grain, its stones cut out of it.
+        var stones: [[P]] = []
+        for i in 0..<60 {
+            let p = P(-1.05 + 2.1 * rnd(80, i), floorBottom + 0.04 + 0.9 * rnd(81, i))
+            let r = 0.025 + 0.04 * rnd(82, i) * rnd(83, i)
+            guard simd_length(p) < 1.02, stones.allSatisfy({ simd_distance($0[0], p) > 0.11 }) else { continue }
+            stones.append([p] + (0..<8).map { k in polar(p, r * (0.75 + 0.45 * rnd(85, i * 8 + k)), Double(k) * .pi / 4) })
+        }
+        let earthRules = hatch([below] + stones.map { Array($0.dropFirst()) + [$0[1]] }, angle: 0.7, gap: 0.05)
+        plate.lines(earthRules, 0.019)
+        for stone in stones {
+            let ring = Array(stone.dropFirst()) + [stone[1]]
+            plate.line(ring, heavy)
+            plate.line(Array(ring.prefix(4)).map { stone[0] + ($0 - stone[0]) * 0.6 }, fine)
+        }
+        // The platform's slab in section, clear of the pier all round.
+        let slab = [box(P(-1.1, floorTop), P(0.07, floorBottom)), box(P(0.44, floorTop), P(1.1, floorBottom))]
+        for piece in slab {
+            plate.fill(piece)
+            plate.lines(hatch([piece], angle: .pi / 4, gap: 0.025), medium)
+            plate.line(piece, heavy)
+        }
+
+        // The pier: dressed stone above the platform, lit face coarsely ruled, east face in shadow; below it, its
+        // masonry in section down to a broad footing.
+        let top = pivot.y + 0.07
+        let lit = [P(0.14, top), P(0.27, top), P(0.27, floorTop), P(0.12, floorTop), P(0.14, top)]
+        let shade = [P(0.27, top), P(0.37, top - 0.02), P(0.39, floorTop), P(0.27, floorTop), P(0.27, top)]
+        plate.fill(lit)
+        plate.lines(hatch([lit], angle: .pi / 2, gap: 0.04), medium)
+        plate.line(lit, heavy)
+        plate.fill(shade)
+        plate.lines(hatch([shade], angle: 0, gap: 0.03), 0.018)
+        plate.line(shade, heavy)
+        for y in stride(from: top + 0.12, to: floorTop, by: 0.13) {
+            plate.line([P(0.13, y), P(0.27, y)], heavy)
+            plate.line([P(0.27, y), P(0.38, y - 0.01)], heavy, .bone)
+        }
+        let foundation = [P(0.12, floorTop), P(0.39, floorTop), P(0.42, footing - 0.08), P(0.56, footing - 0.08), P(0.56, footing),
+                          P(-0.05, footing), P(-0.05, footing - 0.08), P(0.09, footing - 0.08), P(0.12, floorTop)]
+        plate.fill(foundation)
+        for (i, y) in stride(from: floorTop + 0.1, to: footing, by: 0.1).enumerated() {
+            plate.lines(EscapementArt.across(foundation, at: y), 0.016)
+            for x in i % 2 == 0 ? [0.2, 0.33] : [0.14, 0.27, 0.4] {
+                plate.lines(clipped(foundation, from: P(x, y - 0.1), to: P(x, y)), 0.016)
+            }
+        }
+        plate.line(foundation, heavy)
+        // The capital and the Y bearing.
+        K.mass(&plate, box(P(0.12, top - 0.035), P(0.39, top)))
+        plate.line([P(0.12, top - 0.018), P(0.39, top - 0.018)], medium, .bone)
+        K.mass(&plate, [P(pivot.x - 0.08, top - 0.035), P(pivot.x - 0.06, pivot.y - 0.02), P(pivot.x, pivot.y + 0.03),
+                         P(pivot.x + 0.06, pivot.y - 0.02), P(pivot.x + 0.08, top - 0.035), P(pivot.x - 0.08, top - 0.035)])
+
+        // The counterpoise: a post from the capital, a beam, and a weight hung at each end, its rods down to the axis.
+        let beam = P(pivot.x, -0.75)
+        K.mass(&plate, K.band(P(pivot.x + 0.1, top - 0.03), beam + P(0.02, 0), 0.03))
+        for s in [-1.0, 1.0] {
+            let end = beam + P(0.13 * s, 0.01 * s)
+            plate.line([end + P(0, 0.02), pivot + P(0.05 * s, -0.04)], heavy)
+            plate.line([end, end + P(0, -0.07)], heavy)
+            let ball = end + P(0, -0.11)
+            plate.fill(arc(ball, 0.05), .black)
+            plate.line(arc(ball, 0.05, from: 3.6, to: 4.6).map { $0 + P(0.012, 0.012) }, heavy, .bone)
+        }
+        K.mass(&plate, K.band(beam - P(0.15, 0.015), beam + P(0.15, 0.015), 0.035))
+        plate.line([beam - P(0.14, 0.015), beam + P(0.14, 0.015)], fine, .bone)
+        plate.fill(arc(beam, 0.022))
+        plate.line(arc(beam, 0.022), heavy)
+
+        // The tube: two cones from the centre cube, banded, lit along one side.
+        func cone(_ from: P, _ to: P, _ w0: Double, _ w1: Double) -> [P] {
+            [from + across * w0, to + across * w1, to - across * w1, from - across * w0, from + across * w0]
+        }
+        for (a, b, w0, w1) in [(pivot, objective, 0.06, 0.075), (pivot, eyepiece, 0.06, 0.04)] {
+            let body = cone(a, b, w0, w1)
+            K.mass(&plate, body)
+            plate.line([a + across * (w0 * 0.55), b + across * (w1 * 0.55)], 0.012, .bone)
+            for t in stride(from: 0.25, through: 0.95, by: 0.35) {
+                let m = a + (b - a) * t, w = w0 + (w1 - w0) * t
+                plate.line([m + across * w, m - across * w], 0.012, .bone)
+            }
+        }
+        // The dew cap at the objective and the eyepiece's drawtube.
+        K.mass(&plate, cone(objective, objective + up * 0.08, 0.085, 0.085))
+        plate.line([objective + across * 0.085, objective - across * 0.085], medium, .bone)
+        K.mass(&plate, cone(eyepiece, eyepiece - up * 0.07, 0.022, 0.022))
+        plate.fill(arc(eyepiece - up * 0.07, 0.03))
+        plate.line(arc(eyepiece - up * 0.07, 0.03), heavy)
+        // The axis end-on: the cube and the pivot's disc.
+        K.mass(&plate, turned(box(P(-0.075, -0.075), P(0.075, 0.075)), by: .pi / 6).map { $0 + pivot })
+        plate.fill(arc(pivot, 0.055))
+        plate.line(arc(pivot, 0.055), heavy)
+        plate.lines(hatch([arc(pivot, 0.04), arc(pivot, 0.018)], angle: 0.6, gap: 0.012), fine)
+        plate.line(arc(pivot, 0.04), medium)
+        plate.fill(arc(pivot, 0.018), .black)
+
+        // The star the tube is aimed at, on the meridian beyond the objective.
+        let aim = up * 0.97
+        plate.lines(dashed([objective + up * 0.09, aim - up * 0.03], on: 0.015, off: 0.012), medium)
+        plate.fill(arc(aim, 0.035))
+        plate.line(star(aim, 0.03, turn: -.pi / 2), medium)
+
+        // Inset: the eyepiece's field, the transit wires, the star crossing the middle wire.
+        let field = P(-0.425, -0.736), fr = 0.13
+        plate.fill(arc(field, fr + 0.02), .black)
+        plate.fill(arc(field, fr))
+        for k in -2...2 {
+            plate.line([field + P(Double(k) * 0.04, -fr), field + P(Double(k) * 0.04, fr)], k == 0 ? medium : fine)
+        }
+        plate.line([field + P(-fr, 0), field + P(fr, 0)], fine)
+        plate.lines(dashed([field + P(-fr + 0.01, 0.0), field + P(-0.005, 0.0)], on: 0.006, off: 0.008), heavy)
+        plate.fill(star(field, 0.03, turn: -.pi / 2), .second)
+        plate.line(arc(field, fr), heavy)
+
+        callout(&plate, "A", from: pivot + up * 0.2 - across * 0.04, to: P(-0.06, -0.33))
+        callout(&plate, "B", from: pivot - across * 0.05, to: P(0.08, -0.2))
+        callout(&plate, "C", from: beam + P(-0.13, -0.11), to: P(-0.08, -0.92))
+        callout(&plate, "D", from: P(0.2, 0.5), to: P(-0.22, 0.4))
+        return plate
+    }
 
     /// Problem 77, Solar time, pent, clocks 0+.
     static func plate77() -> Plate? { nil }
