@@ -1,0 +1,71 @@
+# Problems 31 to 90 (scripts/escapement/pick.py build/pools scripts/escapement/plan-31-90.txt 31), each chapter six.
+# Long Count: one forward clock, a loose seam that is not yet due.
+pent-0+-7 7 teach decoy
+hex-1+-7 7 hard
+pent-0+-8 8 hard
+hex-1+-8 8 hard
+pent-0+-9 9 hard
+hex-1+-9 9 hard
+# Chronograph: two forward clocks.
+pent-0+_2+-8 8 teach
+hex-1+_3+-9 9 hard
+hex-1+_2+-9 9 hard
+hex-1+_3+-10 10 hard
+hex-1+_2+-11 11 hard
+hex-1+_3+-11 11 hard
+# Retrograde: one clock forward, one wound back.
+pent-0+_1--9 9 teach
+hex-1+_3--10 10 hard
+hex-1+_2--11 11 hard
+pent-0+_1--12 12 hard
+hex-1+_3--12 12 hard
+hex-1+_2--13 13 hard
+# Triple Calendar: three clocks.
+hex-1+_3+_5+-9 9 teach
+hex-1+_2+_3+-10 10 hard
+hex-1+_3+_5+-11 11 hard
+hex-1+_2+_3+-12 12 hard
+hex-1+_2-_3+-12 12 hard
+hex-1+_3+_5+-13 13 hard
+# Countdown: every clock wound back.
+hex-1--11 11 teach
+hex-1-_2--12 12 hard
+hex-1-_3--13 13 hard
+hex-1--14 14 hard
+hex-1-_2--14 14 hard
+hex-1--15 15 hard
+# Gear Train: neighbouring clocks, the first's tick freeing the second's seam.
+hex-1+_2+-12 12 teach
+pent-0+_1--13 13 hard
+hex-1-_2--14 14 hard
+hex-1+_2--15 15 hard
+hex-1-_2--15 15 hard
+hex-1+_2+-16 16 hard
+# Dead Beat: waits in the middle of the line.
+hex-1+-13-w2-4 13 teach wait
+pent-0+-14-w2-4 14 hard wait
+hex-1+-15-w2-4 15 hard wait
+pent-0+-16-w2-4 16 hard wait
+hex-1+-17-w2-4 17 hard wait
+hex-1+-18-w2-4 18 hard wait
+# Fusee: one forward clock, deep.
+pent-0+-16 16 teach
+hex-1+-17 17 hard
+pent-0+-18 18 hard
+hex-1+-19 19 hard
+pent-0+-20 20 hard
+hex-1+-21 21 hard
+# Tourbillon: one wound-back clock, deep.
+hex-1--18 18 teach
+hex-1--19 19 hard
+hex-1--20 20 hard
+hex-1--22 22 hard 36
+hex-1--23 23 hard 36
+hex-1--24 24 hard 36
+# Perpetual: the deepest.
+pent-0+-21 21 teach
+hex-1+-23 23 hard
+hex-1+-24 24 hard 36
+hex-1+-26 26 hard 38
+hex-1+-27 27 hard 38
+hex-1+-29 29 hard 38
