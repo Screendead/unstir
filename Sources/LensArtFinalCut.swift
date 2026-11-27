@@ -180,13 +180,15 @@ extension LensArt {
 // MARK: - 69: Eclipse glasses
 
 /// Level 69's name: a total eclipse watched from a dark hillside, a woman in card eclipse glasses looking up from the
-/// lower right, and over hex's five lenses on this level the sun as her glasses show it, gold in the dark filter, each
-/// framed in the printed card: in the four ring lenses the moon biting deeper into the sun (a nick, half, a thin
-/// crescent, the diamond ring) and in the hub, where the glasses come off, totality: the black moon in its corona, two
-/// prominences at its edge.
+/// lower right, and over hex's four lenses on this level the sun as her glasses show it, gold in the dark filter, each
+/// framed in the printed card: in the three ring lenses the moon biting deeper into the sun (half, a thin crescent, the
+/// diamond ring) and in the hub, where the glasses come off, totality: the black moon in its corona, two prominences at
+/// its edge. Over the upper left, a twist rod, clouds lit gold underneath and Venus out in the darkened sky.
 extension LensArt {
     static let eclipseglasses: Halftone.Panel = {
-        let phases = [hex[5], hex[6], hex[1], hex[2]], sun = hex[0]
+        let phases = [hex[5], hex[1], hex[2]], sun = hex[0]
+        let venus = hex[6] + P(-0.1, 0.1)
+        let clouds = [(hex[6] + P(0.05, 0.03), P(0.2, 0.065), m(0.55)), (hex[6] + P(-0.06, -0.12), P(0.14, 0.045), y(0.6))]
         let head = P(0.6, 0.44), eye = P(0.44, 0.36)
         let nose = [P(0.405, 0.4), P(0.35, 0.47), P(0.41, 0.49)]
         let card = [P(0.33, 0.33), P(0.56, 0.27), P(0.7, 0.27), P(0.7, 0.35), P(0.56, 0.35), P(0.35, 0.41)]
@@ -219,7 +221,13 @@ extension LensArt {
             s.append(stroke(closed([base + P(-0.045, 0), base + P(0, -h), base + P(0.045, 0)]), mid))
             s.append(stroke([base, base + P(0, 0.04)], mid))
         }
-        for at in [P(-0.85, -0.12), P(0.32, -0.86), P(-0.22, -0.3), P(0.86, -0.02), P(-0.72, -0.62), P(0.7, -0.66), P(0.26, 0.04)] { s += glint(at, 0.03, hair) }
+        for at in [P(-0.85, -0.12), P(0.32, -0.86), P(0.86, -0.02), P(-0.72, -0.62), P(0.7, -0.66), P(0.26, 0.04)] { s += glint(at, 0.03, hair) }
+        // The clouds lit from under, and Venus, out at totality.
+        for (c, r, _) in clouds {
+            s += runs(ellipse(c, r.x, r.y, 36), mid) { p in clouds.allSatisfy { $0.0 == c || simd_length_squared((p - $0.0) / $0.1) > 1 } }
+        }
+        s.append(stroke(circle(venus, 0.035, 16), mid))
+        s += glint(venus, 0.08, hair)
         s = clear(s, of: phases + [sun])
         // The card frames round the filters, printed with a border and their safety marks.
         for c in phases {
@@ -227,12 +235,12 @@ extension LensArt {
             s.append(stroke(circle(c, core + 0.05, 56), mid))
             for k in 0..<9 { let a = 40 * Double(k) + 7; s.append(stroke([polar(c, core + 0.012, a), polar(c, core + 0.038, a + 4)], hair)) }
         }
-        // The sun in the filters, the moon biting in deeper each time: a nick, half, a crescent, the diamond ring.
+        // The sun in the filters, the moon biting in deeper each time: half, a crescent, the diamond ring.
         for (k, c) in phases.enumerated() {
-            let o = c + P(0.03, -0.022), r = 0.032, d = [0.05, 0.034, 0.014, 0.004][k], moon = o + d * simd_normalize(P(1, -0.6))
+            let o = c + P(0.03, -0.022), r = 0.032, d = [0.034, 0.014, 0.004][k], moon = o + d * simd_normalize(P(1, -0.6))
             s += runs(circle(o, r, 40), 0.0035) { simd_distance($0, moon) > r + 0.001 }
-            if k < 3 { s += runs(circle(moon, r, 40), 0.002) { simd_distance($0, o) < r } }
-            if k == 3 {
+            if k < 2 { s += runs(circle(moon, r, 40), 0.002) { simd_distance($0, o) < r } }
+            if k == 2 {
                 s.append(stroke(circle(o, r + 0.01, 40), 0.0015))
                 s += glint(o + polar(P(0, 0), r, 210), 0.034, 0.0028)
             }
@@ -262,6 +270,10 @@ extension LensArt {
                 if d < reach { return y(0.85) }
             }
             for f in figure where f.holds(p) { return f.tone }
+            if p.y < 0.1, p.x < -0.1 {
+                if simd_distance(p, venus) < 0.035 { return y(0.9) }
+                for (cc, r, t) in clouds where simd_length_squared((p - cc) / r) < 1 { return t }
+            }
             return p.y < 0.38 ? c(0.42) : m(0.5)
         }, strokes: pieces(s))
     }()
@@ -270,15 +282,15 @@ extension LensArt {
 // MARK: - 70: Searchlight
 
 /// Level 70's name: a battery of searchlights on the roofs of a city at night, their beams crossing high over the top
-/// and upper right where a plane is caught in them, each lamp's glass over one of hex's five lenses on this level, its
-/// drum rim bolted, a clamp at one side. In each glass, the thing its beam has found: in the big lamp at the hub the
-/// arc itself, spitting between its two carbons; in the others a biplane (upper left), an airship (lower left), a bat
-/// (bottom) and a balloon (lower right).
+/// and upper right where a plane is caught in them, each lamp's glass over one of hex's four lenses on this level, its
+/// drum rim bolted, a clamp at one side, and at the bottom, a twist rod, a roof with its water tank and lit windows
+/// below. In each glass, the thing its beam has found: in the big lamp at the hub the arc itself, spitting between its
+/// two carbons; in the others a biplane (upper left), an airship (lower left) and a balloon (lower right).
 extension LensArt {
     static let searchlight: Halftone.Panel = {
-        let lamps = [hex[0], hex[6], hex[5], hex[4], hex[3]], back = P(-0.05, 0.08)
+        let lamps = [hex[0], hex[6], hex[5], hex[3]], back = P(-0.05, 0.08)
         // Each beam: its lamp, its heading (degrees, -90 straight up) and its half-spread.
-        let beams: [(P, Double, Double)] = [(hex[0], -62, 9), (hex[6], -72, 8), (hex[5], -100, 7), (hex[3], -96, 8), (hex[4], -80, 6)]
+        let beams: [(P, Double, Double)] = [(hex[0], -62, 9), (hex[6], -72, 8), (hex[5], -100, 7), (hex[3], -96, 8)]
         let wedges = beams.map { ($0.0, polar(P(0, 0), 1, $0.1), cos($0.2 * .pi / 180)) }
         let towers = [rect(-0.82, -0.02, -0.18, 1), rect(0.2, 0.2, 0.9, 1), rect(-0.3, 0.42, 0.34, 1)]
         let plane = P(0.18, -0.62)
@@ -286,7 +298,10 @@ extension LensArt {
                           plane + P(0.15, -0.02), plane + P(0.18, -0.06), plane + P(0.2, -0.06), plane + P(0.19, 0.02), plane + P(0.06, 0.03),
                           plane + P(0.1, 0.12), plane + P(0.06, 0.12), plane + P(-0.02, 0.03)]
         let cloud = [(P(0.62, -0.42), P(0.2, 0.06)), (P(0.48, -0.36), P(0.12, 0.05)), (P(-0.38, -0.74), P(0.18, 0.05))]
-        let blocks = [fill(planeShape, .zero)] + cloud.map { oval($0.0, $0.1.x, $0.1.y, y(0.35)) }
+        // The roof under the bottom rod: a water tank on its legs and a stair hut, and lit windows below.
+        let tank = rect(-0.2, 0.3, -0.06, 0.38), hut = rect(0.06, 0.34, 0.2, 0.42)
+        let windows = [rect(-0.22, 0.5, -0.15, 0.58), rect(-0.02, 0.5, 0.05, 0.58), rect(0.12, 0.66, 0.19, 0.74), rect(-0.12, 0.66, -0.05, 0.74)]
+        let blocks = [fill(tank, m(0.7)), fill(hut, m(0.55))] + windows.map { fill($0, y(0.85)) } + [fill(planeShape, .zero)] + cloud.map { oval($0.0, $0.1.x, $0.1.y, y(0.35)) }
             + towers.enumerated().map { fill($0.element, [c(0.6), y(0.45), c(0.45)][$0.offset]) }
 
         var s: [Halftone.Stroke] = []
@@ -310,6 +325,9 @@ extension LensArt {
                 }
             }
         }
+        for r in [tank, hut] + windows { s.append(stroke(closed(r), mid)) }
+        for x in [-0.18, -0.08] { s.append(stroke([P(x, 0.38), P(x, 0.42)], mid)) }
+        s.append(stroke(arc(P(-0.13, 0.3), 0.07, 180, 360, 12), mid))
         s.append(stroke(closed(planeShape), mid))
         s.append(stroke([plane + P(-0.06, 0.0), plane + P(0.12, 0.0)], hair))
         for (c, r) in cloud { s += runs(ellipse(c, r.x, r.y, 36), mid) { p in cloud.allSatisfy { $0.0 == c || simd_length_squared((p - $0.0) / $0.1) > 1 } } }
@@ -352,13 +370,6 @@ extension LensArt {
         s.append(stroke(closed(rect(ship.x - 0.012, ship.y + 0.02, ship.x + 0.014, ship.y + 0.03)), 0.0025))
         for x in [-0.025, 0.0, 0.025] { s.append(stroke([ship + P(x, -0.018), ship + P(x, 0.018)], 0.0018)) }
         s.append(stroke(closed([ship + P(-0.05, 0), ship + P(-0.07, -0.016), ship + P(-0.066, 0.0), ship + P(-0.07, 0.016)]), 0.0025))
-        // A bat.
-        let bat = hex[4] + P(0.024, -0.022)
-        s.append(stroke(closed([bat + P(0, -0.01), bat + P(0.02, -0.02), bat + P(0.05, -0.022), bat + P(0.042, -0.008), bat + P(0.048, 0.004), bat + P(0.034, 0.0),
-                                bat + P(0.03, 0.012), bat + P(0.018, 0.004), bat + P(0.006, 0.014), bat + P(0, 0.006), bat + P(-0.006, 0.014), bat + P(-0.018, 0.004),
-                                bat + P(-0.03, 0.012), bat + P(-0.034, 0.0), bat + P(-0.048, 0.004), bat + P(-0.042, -0.008), bat + P(-0.05, -0.022), bat + P(-0.02, -0.02)]), 0.003))
-        s.append(stroke([bat + P(-0.006, -0.012), bat + P(-0.004, -0.02)], 0.0022))
-        s.append(stroke([bat + P(0.006, -0.012), bat + P(0.004, -0.02)], 0.0022))
         // A balloon.
         let balloon = hex[3] + P(-0.024, -0.03)
         s.append(stroke(arc(balloon, 0.032, 150, 390, 24) + [balloon + P(0.008, 0.05), balloon + P(-0.008, 0.05)] + [polar(balloon, 0.032, 150)], 0.003))
@@ -367,7 +378,7 @@ extension LensArt {
         s.append(stroke(curve(balloon + P(0, -0.032), balloon + P(-0.018, 0.0), balloon + P(-0.006, 0.048), 8), 0.0018))
         s.append(stroke(curve(balloon + P(0, -0.032), balloon + P(0.018, 0.0), balloon + P(0.006, 0.048), 8), 0.0018))
 
-        let glass = [y(0.85), y(0.7), y(0.85), y(0.7), y(0.85)]
+        let glass = [y(0.85), y(0.7), y(0.85), y(0.7)]
         let cuts: [Double] = [0, 30, 54, 90, 120, 160, 196, 230, 262, 300, 330]
         return Halftone.Panel(name: "searchlight", tones: { p in
             for (k, lamp) in lamps.enumerated() {
@@ -689,21 +700,23 @@ extension LensArt {
 // MARK: - 74: Space telescope
 
 /// Level 74's name: a space telescope in orbit, its steel-blue tube banded in gold foil running in from the left with
-/// a solar wing up and a solar wing down, its open end over the hub, and round it, over the other four of hex's five
+/// a solar wing up and a solar wing down, its open end over the hub, and round it, over the other three of hex's four
 /// lenses on this level, the worlds it turns to, each limb ringed with its own weather: banded Jupiter (top), ringed
-/// Saturn (upper right), the moon (lower right) and the blue Earth below (bottom). In the hub, down the tube, a
-/// deep field of faint galaxies; on Jupiter its great red spot, on Saturn the hexagon storm at its pole, on the moon a
-/// lander on its legs, and on Earth a hurricane.
+/// Saturn (upper right) and the blue Earth below (bottom). In the hub, down the tube, a deep field of faint galaxies;
+/// on Jupiter its great red spot, on Saturn the hexagon storm at its pole, and on Earth a hurricane. Over the lower
+/// right, a twist rod, the moon half in shadow, cratered, a lander on its legs at the edge of the dark.
 extension LensArt {
     static let spacetelescope: Halftone.Panel = {
-        let worlds = [hex[1], hex[2], hex[3], hex[4]]
+        let worlds = [hex[1], hex[2], hex[4]]
+        let moon = hex[3] + P(0.05, 0.02), shadow = moon + P(-0.09, -0.07)
+        let craters = [(moon + P(0.07, 0.05), 0.04), (moon + P(0.02, 0.12), 0.03), (moon + P(0.11, -0.05), 0.025)]
         let tube = rect(-1, -0.25, 0, 0.25)
         let wings = [bar(P(-0.5, -0.26), P(-0.62, -0.96), 0.24), bar(P(-0.5, 0.26), P(-0.4, 0.96), 0.24)]
         let foil = [rect(-0.8, -0.25, -0.62, 0.25), rect(-0.38, -0.25, -0.3, 0.25)]
         let craft = foil.map { fill($0, y(0.75)) } + [fill(tube, c(0.3))] + wings.map { fill($0, c(0.65)) }
         // Saturn's rings' own frame, tipped 10 degrees.
         let ringFrame: @Sendable (P) -> P = { q in P(q.x * 0.985 + q.y * 0.174, -q.x * 0.174 + q.y * 0.985) }
-        let globes = [Tone(0, 0.3, 0.55), y(0.7), m(0.35), c(0.6)]
+        let globes = [Tone(0, 0.3, 0.55), y(0.7), c(0.6)]
 
         var s: [Halftone.Stroke] = []
         // The craft: the tube and its foil, the handrails, the solar wings, their cells and booms.
@@ -748,15 +761,16 @@ extension LensArt {
         let hexagon = worlds[1] + P(-0.024, -0.028)
         s.append(stroke(closed((0..<6).map { polar(hexagon, 0.03, 60 * Double($0) + 10) }), 0.003))
         s.append(stroke((0...12).map { i in polar(hexagon, 0.003 + 0.0015 * Double(i), 30 * Double(i)) }, 0.002))
-        // A lander on the moon, on its four legs, by a crater.
-        let lander = worlds[2] + P(0.02, 0.02)
-        s.append(stroke(closed([lander + P(-0.018, -0.006), lander + P(0.018, -0.006), lander + P(0.022, 0.008), lander + P(-0.022, 0.008)]), 0.003))
-        s.append(stroke(closed([lander + P(-0.012, -0.006), lander + P(-0.008, -0.024), lander + P(0.01, -0.024), lander + P(0.014, -0.006)]), 0.0025))
-        for e in [-1.0, 1.0] { s.append(stroke([lander + P(e * 0.018, 0.008), lander + P(e * 0.034, 0.03), lander + P(e * 0.04, 0.03)], 0.0025)) }
-        s.append(stroke([lander + P(0.01, -0.024), lander + P(0.016, -0.038)], 0.002))
-        s.append(stroke(closed(ellipse(lander + P(-0.05, -0.04), 0.014, 0.007, 12)), 0.002))
+        // The moon: its limb, the shadow's edge, its craters and a lander at the edge of the dark.
+        s.append(stroke(circle(moon, 0.18, 48), mid))
+        s += runs(circle(shadow, 0.17, 48), mid) { simd_distance($0, moon) < 0.18 }
+        for (c, r) in craters { s.append(stroke(circle(c, r, 16), hair)) }
+        let lander = moon + P(-0.03, 0.06)
+        s.append(stroke(closed([lander + P(-0.036, -0.012), lander + P(0.036, -0.012), lander + P(0.044, 0.016), lander + P(-0.044, 0.016)]), mid))
+        s.append(stroke(closed([lander + P(-0.024, -0.012), lander + P(-0.016, -0.048), lander + P(0.02, -0.048), lander + P(0.028, -0.012)]), mid))
+        for e in [-1.0, 1.0] { s.append(stroke([lander + P(e * 0.036, 0.016), lander + P(e * 0.068, 0.06), lander + P(e * 0.08, 0.06)], mid)) }
         // A hurricane on Earth, its eye and arms.
-        let storm = worlds[3] + P(-0.026, 0.022)
+        let storm = worlds[2] + P(-0.026, 0.022)
         s.append(stroke(circle(storm, 0.006, 8), 0.0025))
         for k in 0..<3 {
             s.append(stroke((0...14).map { i in polar(storm, 0.008 + 0.0028 * Double(i), 120 * Double(k) + 22 * Double(i)) }, 0.0025))
@@ -771,15 +785,19 @@ extension LensArt {
                 let d = simd_distance(p, w)
                 if d < core { return globes[k] }
                 if d < core + 0.04 {
-                    // Each limb's weather: Jupiter's belts, Saturn's ring shadow, the moon's dark rim, Earth's clouds.
+                    // Each limb's weather: Jupiter's belts, Saturn's ring shadow, Earth's clouds.
                     let q = p - w
                     switch k {
                     case 0: return Int(((q.y + 0.4) / 0.07).rounded(.down)) % 2 == 0 ? m(0.6) : y(0.75)
                     case 1: return abs(ringFrame(q).y) < 0.07 ? .zero : y(0.4)
-                    case 2: return bearing(p, w) < 180 ? m(0.12) : m(0.6)
                     default: return sin(bearing(p, w) * .pi / 30) > 0.2 ? y(0.8) : m(0.5)
                     }
                 }
+            }
+            if simd_distance(p, moon) < 0.18 {
+                if simd_distance(p, shadow) < 0.17 { return m(0.12) }
+                for (c, r) in craters where simd_distance(p, c) < r { return m(0.3) }
+                return y(0.55)
             }
             let rings = simd_length_squared(ringFrame(p - hex[2]) / P(0.34, 0.085))
             if rings < 1, rings > 0.6 { return y(0.45) }
