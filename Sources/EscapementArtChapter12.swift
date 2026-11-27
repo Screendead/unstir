@@ -5,6 +5,19 @@ import simd
 
 /// Chapter 12, Dead Beat: problems 67 to 72's plates, drawn with `Kit`.
 extension EscapementArt {
+    /// A strip along a path that swells from `thin` at its ends to `thick` in its middle, as one outline.
+    private static func swell(_ path: [P], _ thin: Double, _ thick: Double) -> [P] {
+        var left: [P] = [], right: [P] = []
+        for i in path.indices {
+            let d = path[min(i + 1, path.count - 1)] - path[max(i - 1, 0)]
+            let w = thin + (thick - thin) * sin(.pi * Double(i) / Double(path.count - 1))
+            let n = simd_normalize(P(-d.y, d.x)) * (w / 2)
+            left.append(path[i] + n)
+            right.append(path[i] - n)
+        }
+        return left + right.reversed() + [left[0]]
+    }
+
     /// A sail hung slack from a yard at `yard`: bone cloth in ink folds that widen to its foot, the foot gathered.
     private static func limpSail(_ plate: inout Plate, _ yard: P, half: Double, drop: Double, seed: Int) {
         let foot = (0...16).map { i -> P in
@@ -150,8 +163,107 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 68, Interlude, pent, clocks 0+.
-    static func plate68() -> Plate? { nil }
+    /// Problem 68, Interlude, pent, clocks 0+: a theatre's stage with its curtains drawn, heavy folds of ink and bone
+    /// under a valance of three swags, the footlights along the apron and the dark of the pit below; the tassel hanging
+    /// between the right-hand swags in the second ink, clear of every hub.
+    static func plate68() -> Plate {
+        var plate = Plate()
+        let opening = 0.74, top = -0.84, stage = 0.5, apron = 0.7
+        Kit.ground(&plate, angle: -0.6)
+
+        // The proscenium's pilasters, fluted, either side of the opening, and its arch over the top.
+        for side in [-1.0, 1.0] {
+            let inner = side * opening, outer = side * (opening + 0.13)
+            let pilaster = box(P(min(inner, outer), -1.0), P(max(inner, outer), apron))
+            Kit.cut(&plate, pilaster, edge: heavy)
+            for k in 0..<2 {
+                let x = inner + side * (0.035 + 0.06 * Double(k))
+                plate.line([P(x, -0.9), P(x, apron - 0.1)], 0.014)
+                plate.lines(hatch([box(P(x + 0.008, -0.9), P(x + 0.024, apron - 0.1))], angle: 0, gap: 0.016), fine)
+            }
+            plate.lines(hatch([box(P(min(inner, outer), apron - 0.08), P(max(inner, outer), apron))], angle: 0.8, gap: 0.016), fine)
+            plate.line([P(min(inner, outer), apron - 0.08), P(max(inner, outer), apron - 0.08)], medium)
+        }
+        Kit.solid(&plate, box(P(-opening, -1.0), P(opening, top)), angle: 0.8, gap: 0.03)
+        Kit.mass(&plate, box(P(-opening, top - 0.03), P(opening, top)))
+
+        // The curtains, drawn to meet in the middle: bone cloth, deep folds of ink that sway and flare toward the hem.
+        Kit.cut(&plate, box(P(-opening, top), P(opening, stage)))
+        for side in [-1.0, 1.0] {
+            for k in 0..<5 {
+                let x0 = side * (0.08 + 0.14 * Double(k))
+                let path = (0...24).map { i -> P in
+                    let y = top + (stage - 0.02 - top) * Double(i) / 24, t = max(0, y + 0.1) / (stage + 0.1)
+                    return P(x0 + 0.014 * sin(7 * y + Double(k)) + side * 0.05 * t * t * (1 - abs(x0) / opening), y)
+                }
+                let width = (0...24).map { 0.04 + 0.024 * Double($0) / 24 }
+                let ring = path.indices.map { path[$0] - P(width[$0] / 2, 0) } + path.indices.reversed().map { path[$0] + P(width[$0] / 2, 0) }
+                plate.fill(ring + [ring[0]], .black)
+                // The light side of each fold, shaded toward its shadow.
+                let shade = path.indices.map { path[$0] + P(width[$0] / 2, 0) } + path.indices.reversed().map { path[$0] + P(width[$0] / 2 + 0.026, 0) }
+                plate.lines(hatch([shade + [shade[0]]], angle: 0.2, gap: 0.02), fine)
+            }
+        }
+        plate.line([P(0, top), P(0, stage)], heavy)
+        // The hem, a fringed band of bone, the cloth pooling on the boards.
+        let hem = curve(P(-opening, stage - 0.06), P(0, stage - 0.03), P(opening, stage - 0.06), 24)
+        Kit.cut(&plate, Kit.ribbon(hem, 0.05), edge: medium)
+        for i in stride(from: 1, to: 24, by: 1) { plate.line([hem[i] + P(0, 0.008), hem[i] + P(0, 0.025)], medium) }
+
+        // The valance: three swags hung in festoons, each a sag of ink folds on bone, over the curtains' heads.
+        let swags = [(-opening, -0.25), (-0.25, 0.25), (0.25, opening)]
+        for (a, b) in swags {
+            let m = (a + b) / 2
+            let hang = curve(P(a, top + 0.24), P(m, top + 0.5), P(b, top + 0.24), 20)
+            Kit.cut(&plate, [P(a, top)] + hang + [P(b, top), P(a, top)], edge: medium)
+            for k in 0..<2 {
+                let d = 0.07 + 0.13 * Double(k)
+                let fold = curve(P(a + 0.02, top + 0.05 + 0.6 * d), P(m, top + 0.05 + 2.3 * d), P(b - 0.02, top + 0.05 + 0.6 * d), 24)
+                Kit.mass(&plate, swell(fold, 0.008, 0.06))
+            }
+        }
+        // The tassels where the swags meet, one in the second ink.
+        for x in [-0.25, 0.25] {
+            let knot = P(x, top + 0.3)
+            let ink: Ink = x > 0 ? .second : .black
+            plate.line([P(x, top + 0.24), knot], heavy)
+            plate.fill(arc(knot, 0.03), ink)
+            plate.line(arc(knot, 0.03), medium)
+            let skirt = [knot + P(-0.024, 0.02), knot + P(0.024, 0.02), knot + P(0.055, 0.17), knot + P(-0.055, 0.17), knot + P(-0.024, 0.02)]
+            plate.fill(skirt, ink)
+            for k in 0..<7 { plate.line([knot + P(-0.018 + 0.006 * Double(k), 0.03), knot + P(-0.045 + 0.015 * Double(k), 0.165)], fine) }
+            plate.line([knot + P(-0.03, 0.045), knot + P(0.03, 0.045)], medium)
+            plate.line(skirt, medium)
+        }
+
+        // The stage's boards in perspective and the footlights along the apron.
+        let boards = box(P(-opening, stage), P(opening, apron))
+        Kit.cut(&plate, boards, edge: heavy)
+        for k in -7...7 {
+            plate.line([P(0.06 * Double(k), stage), P(0.1 * Double(k), apron)], fine)
+        }
+        for x in stride(from: -0.6, through: 0.61, by: 0.2) {
+            let c = P(x, apron - 0.04)
+            let hood = arc(c, 0.055, from: .pi, to: 2 * .pi) + [c + P(0.055, 0.03), c + P(-0.055, 0.03), c + P(-0.055, 0)]
+            for k in 0..<4 {
+                let a = -.pi / 2 + (Double(k) - 1.5) * 0.45
+                plate.line([polar(c, 0.075, a), polar(c, 0.11, a)], medium)
+            }
+            Kit.mass(&plate, hood)
+            plate.line(arc(c + P(0, 0.008), 0.024, from: .pi, to: 2 * .pi), medium, .bone)
+        }
+        // The pit, dark below the stage's lip, its rail in bone.
+        Kit.mass(&plate, box(P(-1.1, apron), P(1.1, 1.1)))
+        plate.line([P(-1.1, apron + 0.07), P(1.1, apron + 0.07)], 0.02, .bone)
+        for x in stride(from: -0.9, through: 0.9, by: 0.1) { plate.line([P(x, apron + 0.07), P(x, apron + 0.16)], 0.016, .bone) }
+        plate.line([P(-1.1, apron + 0.16), P(1.1, apron + 0.16)], 0.016, .bone)
+
+        callout(&plate, "A", from: P(-0.5, top + 0.2), to: P(-0.86, -0.55))
+        callout(&plate, "B", from: P(-0.3, 0.1), to: P(-0.9, 0.2))
+        callout(&plate, "C", from: P(0.2, apron - 0.04), to: P(0.6, 0.86))
+        callout(&plate, "D", from: P(0.27, top + 0.42), to: P(0.42, -0.3))
+        return plate
+    }
 
     /// Problem 69, Siesta, hex, clocks 1+.
     static func plate69() -> Plate? { nil }
