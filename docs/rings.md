@@ -124,7 +124,7 @@ at rest.
 
 ## Flags
 
-All three are probes: a Debug build reads them, and a Release build only with `PROBES=YES`.
+All four are probes: a Debug build reads them, and a Release build only with `PROBES=YES`.
 
 - `UNSTIR_MENU=rings` makes the rings the menu and stores it (`menu.rings`), so the phone's home screen keeps
   opening them; any other value clears it, as does a harnessed launch without the variable and the test host. It
@@ -140,6 +140,11 @@ All three are probes: a Debug build reads them, and a Release build only with `P
 - `UNSTIR_RINGSPOSE=ring:2`, `place:1.5` or `pick:9` holds a still for a shot, comma-separated in turn. It makes
   the launch a harnessed one. Rings count from the top: with the daily showing, 0 is the archive's, 1 to 4 the
   tiers and 5 endless's.
+- `UNSTIR_CADEBUG=CA_COLOR_OFFSCREEN,CA_PRINT_OFFSCREENS` (any of Core Animation's `CA_COLOR_*` and `CA_PRINT_*`
+  debug names) turns those options on in the render server as the tour or pose starts, as the Simulator's Debug
+  menu would: offscreen layers tinted yellow in a shot, and each frame's offscreen passes printed in the
+  simulator's log (`xcrun simctl spawn <sim> log show --last 20s | grep CADebug`). They hold for every app on that
+  simulator until it shuts down, so use a simulator of your own.
 
 `scripts/shots.sh rings-` shoots the cases in `scripts/shots/rings.sh`; `SHOTS_ENV="MUSIC=0 SOUNDS=0"` keeps the
 one plain launch, `rings-fresh`, silent too.

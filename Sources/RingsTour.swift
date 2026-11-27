@@ -23,6 +23,7 @@ extension RingsView {
     func tour() {
         guard !Self.toured, Self.touring != nil || Self.pose != nil else { return }
         Self.toured = true
+        RenderDebug.apply()
         if let pose = Self.pose {
             // Once the launch's layouts have settled, so none builds the menu again at rest.
             Task {
@@ -121,6 +122,29 @@ extension RingsView {
             }
         }
         Log.write("rings pose \(pose): \(RingsCount.since([0, 0, 0, 0, 0, 0])); art \(RingsArt.shared.count) bitmaps, \(RingsArt.shared.bytes / 1024) KB")
+    }
+}
+
+/// UNSTIR_CADEBUG=CA_COLOR_OFFSCREEN,CA_PRINT_OFFSCREENS (any of QuartzCore's `CA_COLOR_*` and `CA_PRINT_*` names) turns
+/// those options on in the render server, as the Simulator's Debug menu does: for a simulator of the agent's own, as
+/// they hold for every app on it until it is shut down. Private QuartzCore calls, looked up at run time.
+enum RenderDebug {
+    @MainActor static func apply() {
+        guard let wanted = ProcessInfo.processInfo.environment["UNSTIR_CADEBUG"]?.split(separator: ",").map(String.init),
+              let named = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CAGetDebugOptionEnvVariableName"),
+              let setter = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CARenderServerSetDebugOption") else { return }
+        let name = unsafeBitCast(named, to: (@convention(c) (Int32) -> UnsafePointer<CChar>?).self)
+        let set = unsafeBitCast(setter, to: (@convention(c) (UInt32, Int32, Int32) -> Void).self)
+        var on: [String] = []
+        for option in Int32(0) ..< 96 {
+            guard let c = name(option) else { continue }
+            let label = String(cString: c)
+            if wanted.contains(label) {
+                set(0, option, 1)
+                on.append("\(label)=\(option)")
+            }
+        }
+        Log.write("render debug on: \(on.joined(separator: ", "))")
     }
 }
 #endif
