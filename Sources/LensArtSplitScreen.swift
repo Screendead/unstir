@@ -651,7 +651,11 @@ extension LensArt {
         let snow = [[P(-0.64, -0.56), P(-0.52, -0.74), P(-0.42, -0.6), P(-0.48, -0.62), P(-0.54, -0.56), P(-0.6, -0.6)],
                     [P(0.3, -0.5), P(0.42, -0.62), P(0.52, -0.53), P(0.46, -0.55), P(0.4, -0.5), P(0.35, -0.53)]]
         let river = curve(P(0.62, -0.06), P(0.3, 0.06), P(-0.1, -0.02), 12) + curve(P(-0.1, -0.02), P(-0.5, -0.08), P(-0.9, 0.12), 12).dropFirst()
-        let nape = (0..<4).map { k in ribbon(curve(P(-0.95 + 0.17 * Double(k), 0.22), P(-0.8 + 0.2 * Double(k), 0.5), P(-0.6 + 0.2 * Double(k), 0.95), 8), 0.07, 0.02) }
+        let nape: [[P]] = (0..<4).map { (k: Int) -> [P] in
+            let d = Double(k)
+            let line: [P] = curve(P(-0.95 + 0.17 * d, 0.22), P(-0.8 + 0.2 * d, 0.5), P(-0.6 + 0.2 * d, 0.95), 8)
+            return ribbon(line, 0.07, 0.02)
+        }
         let fills = [fill(tip, c(0.5)), fill(beak, y(0.95))] + nape.map { fill($0, y(0.7)) } + [fill(head, m(0.6))]
             + snow.map { fill($0, Tone(0.35, 0.35, 0.4)) } + [fill(peaks, m(0.55)), fill(ribbon(river, 0.14, 0.04), c(0.85))]
 

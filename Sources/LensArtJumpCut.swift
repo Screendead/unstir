@@ -414,8 +414,10 @@ extension LensArt {
         let bulb = lamp + P(0.034, -0.038)
         s.append(stroke(arc(bulb, 0.03, 130, 410, 16) + [bulb + P(0.012, 0.045), bulb + P(-0.012, 0.045)] + [polar(bulb, 0.03, 130)], 0.003))
         for k in 0..<3 { s.append(stroke([bulb + P(-0.013, 0.05 + 0.007 * Double(k)), bulb + P(0.013, 0.05 + 0.007 * Double(k))], 0.0022)) }
-        s.append(stroke([bulb + P(-0.008, 0.042), bulb + P(-0.012, 0.0)] + (0...6).map { bulb + P(-0.012 + 0.004 * Double($0), $0 % 2 == 0 ? 0.0 : -0.01) }
-            + [bulb + P(0.012, 0.0), bulb + P(0.008, 0.042)], 0.0026))
+        let zigzag: [P] = (0...6).map { (k: Int) -> P in bulb + P(-0.012 + 0.004 * Double(k), k % 2 == 0 ? 0.0 : -0.01) }
+        let legs: (P, P) = (bulb + P(-0.008, 0.042), bulb + P(0.008, 0.042))
+        let filament: [P] = [legs.0, bulb + P(-0.012, 0.0)] + zigzag + [bulb + P(0.012, 0.0), legs.1]
+        s.append(stroke(filament, 0.0026))
         return panel("projector", fills: fills, strokes: s) { _ in Tone(0.2, 0.2, 0) }
     }()
 }
@@ -490,7 +492,8 @@ extension LensArt {
         let cake = lens + P(0.032, 0.034)
         s.append(stroke(closed(rect(cake.x - 0.034, cake.y, cake.x + 0.034, cake.y + 0.024)), 0.0034))
         s.append(stroke(closed(rect(cake.x - 0.024, cake.y - 0.018, cake.x + 0.024, cake.y)), 0.0032))
-        s.append(stroke((0...8).map { cake + P(-0.034 + 0.0085 * Double($0), $0 % 2 == 0 ? 0.004 : 0.01) }, 0.0022))
+        let icing: [P] = (0...8).map { (k: Int) -> P in cake + P(-0.034 + 0.0085 * Double(k), k % 2 == 0 ? 0.004 : 0.01) }
+        s.append(stroke(icing, 0.0022))
         for x in [-0.014, 0.0, 0.014] {
             s.append(stroke([cake + P(x, -0.018), cake + P(x, -0.032)], 0.0026))
             s.append(stroke(closed([cake + P(x, -0.046), cake + P(x + 0.004, -0.038), cake + P(x, -0.034), cake + P(x - 0.004, -0.038)]), 0.002))

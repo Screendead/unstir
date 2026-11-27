@@ -302,7 +302,8 @@ extension LensArt {
         }
         // The lamp's window: its rim, the bulb and its filament, the filter's disc on its pin.
         s += hoop(lamp, 0.22, bold) + hoop(bulb, 0.12, mid, pieces: 3) + hoop(filter, 0.1, mid, pieces: 3)
-        s.append(stroke((0..<7).map { bulb + P(-0.045 + 0.015 * Double($0), $0 % 2 == 0 ? 0.01 : -0.01) }, mid))
+        let filament: [P] = (0..<7).map { (k: Int) -> P in bulb + P(-0.045 + 0.015 * Double(k), k % 2 == 0 ? 0.01 : -0.01) }
+        s.append(stroke(filament, mid))
         s.append(stroke([bulb + P(-0.045, 0.01), bulb + P(-0.05, 0.07)], hair))
         s.append(stroke([bulb + P(0.045, 0.01), bulb + P(0.05, 0.07)], hair))
         s += hoop(filter + P(-0.05, 0.03), 0.015, mid, pieces: 1)

@@ -350,7 +350,11 @@ extension LensArt {
         // The tent: its stripes' seams, the table's edge and the fringe of its cloth.
         for k in -6...6 {
             let x = Double(k) * 0.16 + 0.08
-            s += runs(span(P(x, -1), P(x, table), 40), hair) { simd_distance($0, ball) > 0.47 && simd_distance($0, moon) > window + 0.06 && simd_distance($0, head) > 0.11 && simd_length(($0 - body) / P(0.17, 0.2)) > 1.05 && simd_length($0) < 1 }
+            s += runs(span(P(x, -1), P(x, table), 40), hair) { (q: P) -> Bool in
+                let clear: Bool = simd_distance(q, ball) > 0.47 && simd_distance(q, moon) > window + 0.06
+                let offCat: Bool = simd_distance(q, head) > 0.11 && simd_length((q - body) / P(0.17, 0.2)) > 1.05
+                return clear && offCat && simd_length(q) < 1
+            }
         }
         s += runs(span(P(-1, table), P(1, table), 50), bold) { !inside($0, stand) && simd_length(($0 - body) / P(0.17, 0.2)) > 1 && !inside($0, tail) }
         s += runs((0...60).map { P(-1 + Double($0) / 30, 0.9 + ($0 % 2 == 0 ? 0 : 0.04)) }, mid) { simd_length($0) < 1 }

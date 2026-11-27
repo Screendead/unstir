@@ -24,7 +24,10 @@ extension LensArt {
 
     /// A line with each segment cut in six, for `runs` to cut it close to where something lies over it.
     private static func fine(_ line: [P]) -> [P] {
-        zip(line, line.dropFirst()).flatMap { a, b in (0..<6).map { a + (b - a) * (Double($0) / 6) } } + [line.last!]
+        let cut: [P] = zip(line, line.dropFirst()).flatMap { (a: P, b: P) -> [P] in
+            (0..<6).map { (k: Int) -> P in a + (b - a) * (Double(k) / 6) }
+        }
+        return cut + [line.last!]
     }
 
     /// A long stroke as short ones of `every` segments: the bake tests every point of each stroke whose box holds a
@@ -672,8 +675,11 @@ extension LensArt {
         for (k, (y0, w)) in [(-0.02, 0.012), (0.0, 0.02), (0.022, 0.028)].enumerated() {
             outline += [fir + P(w, y0 + 0.004), fir + P(w * 0.4, y0 - 0.006 - 0.004 * Double(k))]
         }
-        s.append(stroke(closed([fir + P(0, -0.034)] + outline.dropLast() + [fir + P(0.028, 0.026), fir + P(-0.028, 0.026)]
-            + outline.dropLast().reversed().map { fir + P(-($0 - fir).x, ($0 - fir).y) }), 0.003))
+        let right: [P] = Array(outline.dropLast())
+        let left: [P] = right.reversed().map { (q: P) -> P in fir + P(-(q - fir).x, (q - fir).y) }
+        let base: [P] = [fir + P(0.028, 0.026), fir + P(-0.028, 0.026)]
+        let tree: [P] = [fir + P(0, -0.034)] + right + base + left
+        s.append(stroke(closed(tree), 0.003))
         s.append(stroke(closed(rect(fir.x - 0.004, fir.y + 0.026, fir.x + 0.004, fir.y + 0.036)), 0.0026))
         s.append(stroke(star(fir + P(0, -0.04), 0.008), 0.0018))
         clearKnob(&s, from: mark, rods[2])
