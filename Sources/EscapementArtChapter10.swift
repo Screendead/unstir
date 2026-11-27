@@ -270,8 +270,81 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 57, Deadline, hex, clocks 1-,3-.
-    static func plate57() -> Plate? { nil }
+    /// Problem 57, Deadline, hex, clocks 1-,3-: a bold rule drawn across the whole glass, the quill that drew it at
+    /// rest on it with the inkwell beside, and below them a folded letter, its flaps closed on a seal with ribbon
+    /// tails; the wax seal in the second ink, at the flaps' point in the lane at five o'clock.
+    static func plate57() -> Plate {
+        var plate = Plate()
+        let rule = Kit.band(P(-1.1, -0.06), P(1.1, -0.06), 0.05)
+        let well = [P(0.53, -0.085), P(0.83, -0.085), P(0.79, -0.3), P(0.57, -0.3), P(0.53, -0.085)]
+        let neck = box(P(0.61, -0.37), P(0.75, -0.3))
+        let nib = P(0.2, -0.085)
+        let spine = curve(nib, P(-0.18, -0.42), P(-0.78, -0.56), 60)
+        let feather = vane(Array(spine[16...]), left: { 0.15 * pow(sin(.pi * min(1, $0 * 1.2)), 0.6) },
+                           right: { 0.1 * pow(sin(.pi * min(1, $0 * 1.1)), 0.7) })
+        let barrel = Kit.ribbon(Array(spine[3...18]), 0.034)
+        let seal = P(0.21, 0.37), turn = -0.1
+        let half = P(0.56, 0.29), centre = P(0.2, 0.39)
+        let corners = [P(-half.x, -half.y), P(half.x, -half.y), P(half.x, half.y), P(-half.x, half.y)].map {
+            turned([$0], by: turn)[0] + centre
+        }
+        let letter = corners + [corners[0]]
+        let shadow = letter.map { $0 + P(0.025, 0.032) }
+        Kit.ground(&plate, angle: -0.6, around: [rule, well, neck, feather, barrel, letter, shadow])
+
+        // The letter, its shadow in ink, the lower flap in ink, the side flaps ruled boldly.
+        Kit.mass(&plate, shadow)
+        plate.fill(letter)
+        Kit.mass(&plate, [corners[0], seal, corners[3], corners[0]])
+        let leftFlap = [corners[0], seal, corners[3], corners[0]].map { ($0 - seal) * 0.97 + seal + P(0.008, 0) }
+        plate.lines(hatch([leftFlap], angle: -0.9, gap: 0.095), 0.045, .bone)
+        plate.lines(hatch([[corners[1], seal, corners[2], corners[1]]], angle: 0.9, gap: 0.06), 0.022)
+        plate.line([corners[3], seal, corners[2]], 0.02)
+        plate.fill([corners[0], corners[1], seal, corners[0]])
+        plate.line([corners[0], seal, corners[1]], 0.026)
+        plate.line([corners[0] + P(0.03, 0.03), seal + P(0, 0.035), corners[1] + P(-0.03, 0.03)], 0.012)
+        plate.line(letter, 0.022)
+
+        // The ribbon's tails and the seal on them.
+        for end in [P(0.05, 0.62), P(0.33, 0.63)] {
+            let tail = Kit.band(seal, end, 0.06), d = simd_normalize(end - seal), n = P(-d.y, d.x) * 0.03
+            Kit.mass(&plate, tail)
+            plate.fill([end + n, end - n, end - d * 0.035, end + n])
+        }
+        let wax = lump(seal, 0.088, seed: 57, squash: 1)
+        plate.fill(wax, .second)
+        plate.line(wax, medium)
+        plate.line(arc(seal, 0.052), 0.012, .bone)
+        plate.lines(Kit.numeral("X", at: seal, height: 0.05), 0.012, .bone)
+
+        // The rule, the inkwell and the quill at rest on the rule.
+        Kit.mass(&plate, rule)
+        Kit.mass(&plate, well)
+        Kit.mass(&plate, neck)
+        plate.fill(Kit.band(P(0.6, -0.11), P(0.62, -0.27), 0.04))
+        plate.fill(box(P(0.535, -0.2), P(0.825, -0.17)))
+        plate.fill(box(P(0.53, -0.125), P(0.83, -0.105)))
+        for x in [0.68, 0.76] { plate.fill(Kit.band(P(x, -0.22), P(x + 0.01, -0.28), 0.03)) }
+        plate.line(box(P(0.6, -0.39), P(0.76, -0.37)), 0.02)
+        Kit.mass(&plate, feather)
+        let along = Array(spine[16...])
+        for i in stride(from: 4, to: along.count - 3, by: 3) {
+            let d = simd_normalize(along[i + 1] - along[i - 1]), n = P(-d.y, d.x)
+            plate.line([along[i], along[i] + n * 0.11 + d * 0.06], 0.016, .bone)
+            plate.line([along[i], along[i] - n * 0.08 + d * 0.05], 0.016, .bone)
+        }
+        plate.line(along, 0.014, .bone)
+        Kit.cut(&plate, barrel, edge: 0.012)
+        let d = simd_normalize(spine[3] - nib), n = P(-d.y, d.x)
+        Kit.mass(&plate, [nib, spine[3] + n * 0.017, spine[3] - n * 0.017, nib])
+        plate.line([nib + d * 0.01, nib + d * 0.04], fine, .bone)
+
+        callout(&plate, "A", from: seal + P(0.07, 0.04), to: P(0.47, 0.58))
+        callout(&plate, "B", from: P(-0.33, -0.72), to: P(-0.62, -0.62))
+        callout(&plate, "C", from: P(0.76, -0.22), to: P(0.8, -0.5))
+        callout(&plate, "D", from: P(-0.8, -0.06), to: P(-0.8, -0.3))
+        return plate
+    }
 
     /// Problem 58, Final hour, hex, clocks 1-.
     static func plate58() -> Plate? { nil }
