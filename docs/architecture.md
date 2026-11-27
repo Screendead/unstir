@@ -1619,7 +1619,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and
   **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across
   files), and 31 to 90 in a file a chapter (**EscapementArtChapter6.swift** to **EscapementArtChapter15.swift**, their
-  helpers private and named for their plate). Those sixty are dealt 9 to 38 entries deep, and a deep stack shears the
+  helpers private and named for their plate). Those sixty are dealt 9 to 32 entries deep, and a deep stack shears the
   first book's fine ruling (0.034 apart) into a grey that hides every seam, so they are cut bold
   (**EscapementArtKit.swift**, `EscapementArt.Kit`): a coarse ground ruled 0.06 apart at 0.008, masses of ink and
   bone at least 0.05 wide, fine hatching kept to small parts. A mass of solid ink can't cover a core, where the step
