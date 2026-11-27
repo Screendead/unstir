@@ -46,7 +46,7 @@ extension EscapementArt {
         }
     }
 
-    /// Problem 43, Spring forward, pent, clocks 0+,1-: a hare in mid-leap over an hour hand laid flat, a sprig of
+    /// Problem 43, Spring forward, pent, clocks 0+,1-: a hare in mid-leap over a Breguet hand laid flat, a sprig of
     /// blossom at the hand's tip, a forward arrow cut in the meadow under it, and the top of the dial's chapter ring
     /// round the rim; one blossom in the second ink.
     static func plate43() -> Plate {
@@ -58,14 +58,14 @@ extension EscapementArt {
             (-0.72, 0.3), (-0.73, 0.265), (-0.55, 0.225), (-0.43, 0.17), (-0.47, 0.11), (-0.54, 0.07), (-0.55, 0.01),
             (-0.49, -0.015), (-0.4, -0.05), (-0.24, -0.11), (-0.04, -0.125), (0.16, -0.1), (0.28, -0.08), (0.37, -0.1),
             (0.44, -0.075),
-        ], at: P(0.02, -0.1), scale: 0.75), steps: 5)
+        ], at: P(0.02, -0.1), scale: 0.71), steps: 5)
         let ears = [(P(0.31, -0.085), P(0.02, -0.3), 0.05), (P(0.35, -0.095), P(0.1, -0.33), 0.055)].map { base, tip, w -> [P] in
             let d = simd_normalize(tip - base), n = P(-d.y, d.x) * w
             return smooth([base, (base * 0.55 + tip * 0.45) + n, tip, (base * 0.5 + tip * 0.5) - n * 0.6], steps: 6)
-                .map { P(0.02, -0.1) + 0.75 * $0 }
+                .map { P(0.02, -0.1) + 0.71 * $0 }
         }
         let hand = Kit.hand(P(-0.82, 0.25), toward: 0, length: 1.46, width: 0.1, tail: 0.1)
-        let meadow = smoothed([P(-1.1, 0.7), P(-0.6, 0.76), P(-0.25, 0.64), P(0.15, 0.62), P(0.55, 0.74), P(1.1, 0.66)])
+        let meadow = smoothed([P(-1.1, 0.72), P(-0.6, 0.79), P(-0.15, 0.68), P(0.15, 0.67), P(0.55, 0.77), P(1.1, 0.68)])
             + [P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.7)]
         let ring = arc(o, 1.08, from: Kit.clock(9.45), to: Kit.clock(14.55)) + arc(o, 0.86, from: Kit.clock(14.55), to: Kit.clock(9.45))
             + [polar(o, 1.08, Kit.clock(9.45))]
@@ -89,9 +89,9 @@ extension EscapementArt {
             let lean = 0.03 * (rnd(43, k) - 0.3)
             plate.line([P(x, top + 0.07), P(x + lean, top + 0.012)], heavy, .bone)
         }
-        let shaft = Kit.band(P(-0.3, 0.83), P(0.2, 0.83), 0.06)
+        let shaft = Kit.band(P(-0.3, 0.85), P(0.2, 0.85), 0.06)
         plate.fill(shaft)
-        plate.fill(Kit.barb(P(0.34, 0.83), toward: 0, size: 0.15))
+        plate.fill(Kit.barb(P(0.34, 0.85), toward: 0, size: 0.15))
 
         // The hand laid flat, its arbor bored.
         Kit.mass(&plate, hand)
@@ -100,8 +100,8 @@ extension EscapementArt {
         plate.fill(arc(P(-0.82, 0.25), 0.016), .black)
         plate.line([P(-0.7, 0.25), P(0.22, 0.25)], fine, .bone)
         // A Breguet hand's hollow moon near the tip.
-        Kit.mass(&plate, arc(P(0.34, 0.25), 0.075))
-        Kit.cut(&plate, arc(P(0.34, 0.25), 0.042))
+        Kit.mass(&plate, arc(P(0.42, 0.25), 0.075))
+        Kit.cut(&plate, arc(P(0.42, 0.25), 0.042))
 
         // The sprig from the hand's tip, its blossoms bone and one in the second ink.
         let twig = smoothed([P(0.62, 0.25), P(0.72, 0.19), P(0.8, 0.06), P(0.86, -0.04), P(0.93, -0.12)])
@@ -121,7 +121,7 @@ extension EscapementArt {
         }
 
         // The leap's path, dotted, and the hare.
-        let at = { (x: Double, y: Double) in P(0.02, -0.1) + 0.75 * P(x, y) }
+        let at = { (x: Double, y: Double) in P(0.02, -0.1) + 0.71 * P(x, y) }
         plate.lines(dashed(curve(P(-0.98, 0.17), P(-0.8, 0.05), at(-0.72, 0.25)), on: 0.03, off: 0.028), heavy)
         plate.lines(dashed(curve(at(0.6, 0.27), P(0.6, 0.1), P(0.72, 0.17)), on: 0.03, off: 0.028), heavy)
         for ear in ears { Kit.mass(&plate, ear) }
@@ -140,7 +140,7 @@ extension EscapementArt {
         callout(&plate, "A", from: P(-0.1, -0.08), to: P(-0.3, -0.5))
         callout(&plate, "B", from: P(-0.82, 0.25), to: P(-0.72, 0.5))
         callout(&plate, "C", from: red, to: P(0.68, -0.48))
-        callout(&plate, "D", from: P(0.0, 0.83), to: P(0.0, 0.55))
+        callout(&plate, "D", from: P(0.0, 0.85), to: P(0.0, 0.58))
         return plate
     }
 
