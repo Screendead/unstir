@@ -42,8 +42,8 @@ DEEP = {
     "t11": [("pent", 13, "gm"), ("pent", 14, "rcgb"), ("hex", 14, "rc"), ("pent", 15, "rgb"), ("hex", 15, "rc"), ("hex", 16, "gm")],
     "t12": [("pent", 14, "by"), ("pent", 15, "rc"), ("pent", 15, "rgbcmy"), ("hex", 16, "rc"), ("hex", 16, "by"), ("hex", 17, "by")],
     "t13": [("eye", 15, "rc"), ("pent", 16, "gm"), ("pent", 16, "rcgb"), ("hex", 17, "rc"), ("hex", 17, "gm"), ("hex", 18, "gm")],
-    "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("pent", 17, "rgbcmy"), ("hex", 18, "by"), ("pent", 18, "gm"), ("hex", 19, "rc")],
-    "t15": [("pent", 17, "gm"), ("hex", 18, "gm"), ("pent", 18, "rcgb"), ("pent", 19, "by"), ("hex", 19, "by"), ("pent", 20, "rc")],
+    "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("pent", 17, "rgbcmy"), ("hex", 18, "by"), ("pent", 18, "gm"), ("pent", 19, "rc")],
+    "t15": [("pent", 17, "gm"), ("hex", 18, "gm"), ("pent", 18, "rcgb"), ("pent", 19, "by"), ("pent", 19, "gm"), ("pent", 20, "rc")],
 }
 
 
@@ -96,16 +96,19 @@ def hardness(r):
 
 
 def deep(pool):
-    used = set()
+    used, seen = set(), set()
     for tray, slots in DEEP.items():
-        tray_masks = set()
         for k, (layout, depth, palette) in enumerate(slots):
-            # The slot's own pool, or when nothing in it reads, every pool of its depth.
-            for paths in ([p for p in [f"{pool}/{layout}-{depth}-{palette}.tsv"] if glob.glob(p)], sorted(glob.glob(f"{pool}/*-{depth}-*.tsv"))):
+            # The slot's own pool, or when nothing in it reads, every pool of its depth. Two specimens on the same rods
+            # and masks read as one dealt deeper, so each takes rods and masks no earlier one has, unless no pool of its
+            # depth has any.
+            own = [p for p in [f"{pool}/{layout}-{depth}-{palette}.tsv"] if glob.glob(p)]
+            every = sorted(glob.glob(f"{pool}/*-{depth}-*.tsv"))
+            for paths, fresh in ((own, True), (every, True), (own, False), (every, False)):
                 rows = [r for path in paths for r in csv.DictReader(open(path), delimiter="\t") if deep_readable(r)]
                 rows = [r for r in rows if r["scramble"] not in used]
-                # Two specimens of a tray on the same rods and masks read as one, so a tray's masks differ where they can.
-                rows = [r for r in rows if (r["layout"], r["masks"]) not in tray_masks] or rows
+                if fresh:
+                    rows = [r for r in rows if (r["layout"], r["masks"]) not in seen]
                 if rows:
                     break
             if not rows:
@@ -116,7 +119,7 @@ def deep(pool):
             share = 0.5 + 0.5 * k / (len(slots) - 1)
             r = rows[round(share * (len(rows) - 1))]
             used.add(r["scramble"])
-            tray_masks.add((r["layout"], r["masks"]))
+            seen.add((r["layout"], r["masks"]))
             print("\t".join([tray, r["layout"], r["masks"], r["scramble"], r["free"], r["blocked"], r["right/step"],
                              r["forced"], r["sums"], r["least read"], r["ghost"], r["triple"], r["cost"]]))
 
