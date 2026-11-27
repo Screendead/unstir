@@ -331,8 +331,87 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 40, Split second, hex, clocks 1+,3+.
-    static func plate40() -> Plate? { nil }
+    /// Problem 40, Split second, hex, clocks 1+,3+: a rattrapante's two seconds hands split from one arbor, the split
+    /// hand stopped at five seconds in bone and the chronograph hand running on at fifteen in ink, each down a lane
+    /// between the hubs, over a bold chapter ring, and below them the isolator's column wheel through a window cut in
+    /// the dial; the stopped hand's tip in the second ink.
+    static func plate40() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, stopped = Kit.clock(1), running = Kit.clock(3)
+        let chapter = (inner: 0.79, outer: 0.95), window = P(0, 0.56), opening = 0.41
+
+        Kit.ground(&plate, angle: -0.4, around: [arc(window, opening)])
+        // The chapter ring: ink, a bone tick a second and a bone baton every five.
+        Kit.mass(&plate, annulus(o, chapter.inner, chapter.outer))
+        for k in 0..<60 {
+            let t = Double(k) * .pi / 30
+            if k % 5 == 0 {
+                plate.fill(Kit.band(polar(o, chapter.inner + 0.02, t), polar(o, chapter.outer - 0.015, t), k % 15 == 0 ? 0.05 : 0.034))
+            } else {
+                plate.line([polar(o, chapter.outer - 0.06, t), polar(o, chapter.outer - 0.015, t)], 0.012, .bone)
+            }
+        }
+        plate.line(arc(o, chapter.outer + 0.025), heavy)
+        plate.line(arc(o, chapter.inner - 0.025), medium)
+
+        // The sector ring between the arbor and the hubs: ink, a bone bar every five seconds.
+        Kit.mass(&plate, annulus(o, 0.27, 0.35))
+        for k in 0..<12 {
+            let t = Kit.clock(Double(k))
+            plate.line([polar(o, 0.285, t), polar(o, 0.335, t)], 0.026, .bone)
+        }
+        plate.line(arc(o, 0.375), heavy)
+
+        // The window and the column wheel in it: seven columns standing off its ratchet.
+        plate.fill(arc(window, opening))
+        plate.lines(hatch([arc(window, opening), arc(window, 0.36)], angle: 1.1, gap: 0.03), fine)
+        let ratchet = (0..<21).flatMap { k -> [P] in
+            let t = Double(k) * 2 * .pi / 21 + 0.1
+            return [polar(window, 0.305, t), polar(window, 0.355, t + 0.2), polar(window, 0.305, t + 2 * .pi / 21)]
+        }
+        Kit.mass(&plate, ratchet + [ratchet[0]])
+        plate.fill(arc(window, 0.29))
+        plate.lines(hatch([arc(window, 0.29)], angle: -0.5, gap: 0.03), fine)
+        plate.line(arc(window, 0.29), medium)
+        for k in 0..<7 {
+            let t = Double(k) * 2 * .pi / 7 + 0.25, w = 0.16
+            let column = arc(window, 0.27, from: t - w, to: t + w) + arc(window, 0.2, from: t + w * 1.25, to: t - w * 1.25)
+            Kit.mass(&plate, column + [column[0]])
+            plate.line(arc(window, 0.255, from: t - w * 0.7, to: t + w * 0.7), fine, .bone)
+        }
+        plate.line(arc(window, opening), 0.03)
+        plate.line(arc(window, opening - 0.03), fine)
+
+        // How far the chronograph hand has run since the split.
+        for (r, on) in [(0.7, 0.03), (0.62, 0.02)] {
+            plate.lines(dashed(arc(o, r, from: stopped + 0.12, to: running - 0.1), on: on, off: 0.018), medium)
+        }
+        plate.line(Kit.barb(polar(o, 0.7, running - 0.08), toward: running + .pi / 2 - 0.08, size: 0.045), medium)
+
+        // The split hand: bone, edged in ink, its tip in the second ink.
+        let split = profile([(-0.2, 0.026), (0.0, 0.04), (0.12, 0.046), (0.62, 0.028), (0.88, 0.0)], at: o, toward: stopped)
+        plate.line(split, 0.026, .bone)
+        plate.fill(split)
+        plate.line(split, heavy)
+        plate.line([polar(o, 0.2, stopped), polar(o, 0.6, stopped)], medium)
+        let tip = profile([(0.7, 0.019), (0.88, 0.0)], at: o, toward: stopped)
+        plate.fill(tip, .second)
+        plate.line(tip, medium)
+        // The chronograph hand: solid ink, running on, a counterweight behind the arbor.
+        let hand = profile([(-0.24, 0.034), (-0.12, 0.028), (0.0, 0.044), (0.12, 0.05), (0.66, 0.026), (0.9, 0.0)],
+                           at: o, toward: running)
+        plate.line(hand, 0.026, .bone)
+        Kit.mass(&plate, hand)
+        plate.line([polar(o, 0.22, running), polar(o, 0.68, running)], fine, .bone)
+        Kit.mass(&plate, arc(o, 0.075))
+        plate.line(arc(o, 0.05), medium, .bone)
+
+        callout(&plate, "A", from: polar(o, 0.8, stopped), to: polar(o, 0.87, Kit.clock(0.45)))
+        callout(&plate, "B", from: polar(o, 0.82, running), to: polar(o, 0.87, Kit.clock(3.6)))
+        callout(&plate, "C", from: window + polar(o, 0.24, 3.3) - o, to: polar(o, 0.76, Kit.clock(7)))
+        callout(&plate, "D", from: polar(o, 0.82, Kit.clock(9.3)), to: P(-0.64, 0))
+        return plate
+    }
 
     /// Problem 41, Flyback, hex, clocks 1+,2+.
     static func plate41() -> Plate? { nil }
