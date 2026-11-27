@@ -80,7 +80,12 @@ at rest.
 - **The swipe is a native scroll view.** A hidden paging `UIScrollView` 240 pt tall (the finger's travel for one
   ring) holds no content; its pan recognizer is moved onto the menu. A drag, the paging glide after it and a touch
   that catches it mid-glide are all UIKit's, at the display's rate, and `scrollViewDidScroll` does nothing but
-  call `apply`. There is no display link of the menu's own and no SwiftUI animation.
+  call `apply`. There is no display link of the menu's own and no SwiftUI animation. Its scroll edge effects are
+  hidden (iOS 26 on): it stands under the status bar, where UIKit otherwise blurs the backdrop into a soft edge
+  ("Pocket") and renders it again on every frame it scrolls, 16 offscreen passes a frame on a 13 Pro Max simulator,
+  and it holds nothing to edge. Without it the stars run sharp to the top of the screen, as in the mock, and a glide
+  costs 2 passes a frame, both the system's (64-pixel backdrop copies by the status bar). The menu's own layers
+  cost none.
 - **The floor.** The grid's lines along the floor do not move when the floor runs, so they are baked flat with it.
   The lines across it are one strip of the flat floor, laid back at a right angle under its window's fixed
   perspective (`sublayerTransform`'s `m34`, the vanishing point the window's top middle) and slid along itself by

@@ -178,6 +178,11 @@ final class RingsView: UIView, UIScrollViewDelegate {
         pager.scrollsToTop = false
         pager.alwaysBounceVertical = true
         pager.isUserInteractionEnabled = false
+        if #available(iOS 26, *) {
+            // The pager stands under the status bar, where UIKit gives a scroll view a blurred edge of its backdrop,
+            // rendered again on every frame it scrolls: 16 offscreen passes a frame on a 13 Pro Max. It holds nothing.
+            for edge in [pager.topEdgeEffect, pager.bottomEdgeEffect, pager.leftEdgeEffect, pager.rightEdgeEffect] { edge.isHidden = true }
+        }
         pager.delegate = self
         addSubview(pager)
         // The pager is only its physics: its pan listens on the whole menu, and it shows nothing.
