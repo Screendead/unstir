@@ -101,9 +101,10 @@ every count that needs no detour it gives the same optimum (keys 3, 6 and 9, ebb
   without the rule; along the line 20 of 29 steps have one move of several that keeps par, and 76 moves tried there
   lose it, against none without the rule (this deal untwists one way only). 44 ms.
 - **Ebb and flow scales.** Hex, 20 entries, `2:-5,6:-2,4:-4,5:-6,1:-2,4:+2,1:-6,4:-8,5:-3,6:-6,4:+2,1:-6,2:+5,1:-6,3:-2,5:-4,0:-6,1:-5,6:+8,2:+6,4:+4,1:-7`:
-  30 against 20, 16 steps forced; 0.8 s. On pent, 19 entries: 30 against 19.
+  30 against 20, 16 steps forced; 0.8 s. On pent, maelstrom's own 18-entry deal
+  (`0:-4,4:-5,2:-2,3:-7,2:-8,4:+2,1:+2,2:-3,3:+4,4:+3,3:+3,1:-2,4:-5,2:-3,1:-5,0:-4,4:-7,2:+3`): 31 against 18, 16 forced, 1.6 s.
 - **The keel doesn't.** Its final list is fixed by the deal, so a deep deal must balance; balanced deals of 20 to 26
-  entries on pent and hex came out at par or one over (40 deals, keel 8 to 14), and a tighter keel left them with no
+  entries on pent and hex came out at par or one over wherever a line existed (100 deals, keel 8 to 14), and a tighter keel left them with no
   line but detours pushed for their own sake, which neither the player can read nor the deep search proves. The keel
   is out of the pitch.
 
