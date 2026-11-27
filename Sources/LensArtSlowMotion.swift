@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow]
+    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus]
 
     /// Hex's rods' centres, by rod.
     private static let hexes: [P] = [P(0, 0)] + (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
@@ -147,6 +147,131 @@ extension LensArt {
             }
             for k in knots where simd_distance(p, k) < 0.032 { return gold }
             return stone
+        }, strokes: s)
+    }()
+}
+
+// MARK: - 57: Oculus
+
+/// Level 57's name: looking up into a coffered dome, the great oculus open to the sky a little off the middle, the sun
+/// in it, and its disc of sunlight fallen on the coffers in the lower right, the dome lit on that side and dim on the
+/// far one. Five lesser oculi pierce the dome round it (hex's five lenses on this level), each in a ring of stone
+/// blocks lit on the sun's side, its keystone and the block facing the middle dark, and through each something passes
+/// in the sky: a swallow at the top, a kite in the upper right, a hot-air balloon at the foot, an aeroplane in the lower
+/// left and a butterfly in the upper left. The coffers nearest the middle are ten, so a quarter turn of the hub, half a
+/// coffer out of step, sets rib where coffer was round each oculus's inner side.
+extension LensArt {
+    static let oculus: Halftone.Panel = {
+        let rods = hexes, lenses = [1, 2, 4, 5, 6], glass = 0.15, frame = 0.264
+        let sky = c(0.85), dark = Tone(0.06, 0.04, 0.1)
+        let eye = P(0.04, -0.05), opening = 0.2, rim = 0.235, sun = eye + P(-0.09, -0.08)
+        let patch = rods[3] + P(0.11, 0.02)
+        // The coffers' rings: inner and outer radius, how many round, and the share of each turn that is coffer.
+        let rings: [(Double, Double, Int, Double)] = [(0.24, 0.43, 10, 0.5), (0.47, 0.64, 18, 0.7), (0.68, 0.8, 24, 0.72), (0.84, 0.93, 30, 0.74)]
+        let holes = lenses.map { rods[$0] }
+        // Each ring's block that faces the middle, dark as its keystone is.
+        let inward = holes.map { ((bearing(P(0, 0), $0) / 30).rounded() * 30).truncatingRemainder(dividingBy: 360) }
+
+        var s: [Halftone.Stroke] = []
+        // The coffers, each stepped, cut where an opening lies over it.
+        func open(_ p: P) -> Bool {
+            holes.contains { simd_distance(p, $0) < frame + 0.006 } || simd_distance(p, eye) < rim + 0.006
+        }
+        for (r0, r1, n, share) in rings {
+            for j in 0..<n {
+                let a0 = 360 * (Double(j) + 0.5 - share / 2) / Double(n), a1 = 360 * (Double(j) + 0.5 + share / 2) / Double(n)
+                s += runs(closed(sector(P(0, 0), r0, r1, a0, a1)), hair) { !open($0) }
+                let mid0 = r0 + 0.25 * (r1 - r0), mid1 = r1 - 0.25 * (r1 - r0), w = 0.22 * (a1 - a0)
+                s += runs(closed(sector(P(0, 0), mid0, mid1, a0 + w, a1 - w)), hair) { !open($0) }
+            }
+        }
+        s += hoop(P(0, 0), 0.95, bold, pieces: 12)
+        // The great oculus, its bronze ring, and the sun in it.
+        s += hoop(eye, rim, bold) + hoop(eye, opening, mid)
+        s.append(stroke(circle(sun, 0.05, 16), mid))
+        // The lesser oculi: each ring of stone blocks and its joints.
+        for c in holes {
+            s += hoop(c, frame, bold) + hoop(c, glass, mid)
+            for j in 0..<12 { s.append(stroke([polar(c, glass, 30 * Double(j) + 15), polar(c, frame, 30 * Double(j) + 15)], hair)) }
+        }
+
+        // Through the top: a swallow, wings swept and tail forked.
+        let swallow = rods[1] + P(0.026, -0.034)
+        let bird: [P] = [P(0, -0.024), P(0.006, -0.014), P(0.03, -0.012), P(0.052, 0.006), P(0.026, 0.0), P(0.008, 0.006), P(0.006, 0.018),
+                         P(0.018, 0.044), P(0, 0.024), P(-0.018, 0.044), P(-0.006, 0.018), P(-0.008, 0.006), P(-0.026, 0), P(-0.052, 0.006),
+                         P(-0.03, -0.012), P(-0.006, -0.014)]
+        s.append(stroke(closed(bird.map { swallow + $0 }), 0.0034))
+        s.append(stroke(circle(swallow + P(0, -0.014), 0.003, 6), 0.002))
+        // In the upper right: a kite, its spars, its tail of bows and its string.
+        let kite = rods[2] + P(0.024, -0.034)
+        let corners = [kite + P(0, -0.03), kite + P(0.02, -0.006), kite + P(0, 0.034), kite + P(-0.02, -0.006)]
+        s.append(stroke(closed(corners), 0.0036))
+        s.append(stroke([corners[0], corners[2]], 0.002))
+        s.append(stroke([corners[1], corners[3]], 0.002))
+        s.append(stroke(curve(corners[2], kite + P(0.02, 0.05), kite + P(0.0, 0.07), 8), 0.002))
+        for t in [0.3, 0.7] {
+            let b = kite + P(0.012 - 0.012 * t, 0.04 + 0.03 * t)
+            s.append(stroke([b + P(-0.006, -0.004), b + P(0.006, 0.004), b + P(0.006, -0.004), b + P(-0.006, 0.004), b + P(-0.006, -0.004)], 0.0018))
+        }
+        s.append(stroke(curve(corners[1], kite + P(-0.04, 0.02), kite + P(-0.06, 0.07), 10), 0.0014))
+        // At the foot: a hot-air balloon, its gores, the basket hung under.
+        let balloon = rods[4] + P(-0.028, -0.034)
+        s.append(stroke(closed(arc(balloon, 0.026, 150, 390, 18) + [balloon + P(0.008, 0.036), balloon + P(-0.008, 0.036)]), 0.0036))
+        s.append(stroke(curve(balloon + P(0, -0.026), balloon + P(-0.014, 0.0), balloon + P(-0.006, 0.036), 8), 0.0018))
+        s.append(stroke(curve(balloon + P(0, -0.026), balloon + P(0.014, 0.0), balloon + P(0.006, 0.036), 8), 0.0018))
+        s.append(stroke(closed(rect(balloon.x - 0.007, balloon.y + 0.046, balloon.x + 0.007, balloon.y + 0.056)), 0.003))
+        for x in [-0.007, 0.007] { s.append(stroke([balloon + P(x * 1.1, 0.036), balloon + P(x, 0.046)], 0.0014)) }
+        // In the lower left: an aeroplane seen from below, heading up and right, and its trail.
+        let plane = rods[5] + P(0.036, -0.036), heading = -30.0 * .pi / 180
+        let half: [P] = [P(0.035, 0), P(0.03, 0.004), P(0.008, 0.004), P(-0.006, 0.032), P(-0.012, 0.032), P(-0.012, 0.004),
+                         P(-0.028, 0.003), P(-0.034, 0.014), P(-0.038, 0.014), P(-0.036, 0)]
+        let hull = (half + half.reversed().dropFirst().dropLast().map { P($0.x, -$0.y) }).map { q -> P in
+            let k = 0.85 * q
+            return plane + P(k.x * cos(heading) - k.y * sin(heading), k.x * sin(heading) + k.y * cos(heading))
+        }
+        s.append(stroke(closed(hull), 0.0034))
+        let tail = plane + 0.85 * P(-0.04 * cos(heading), -0.04 * sin(heading)), back = P(-cos(heading), -sin(heading))
+        for side in [-1.0, 1.0] {
+            let off = P(-back.y, back.x) * (0.006 * side)
+            s += dashes(tail + off + back * 0.004, tail + off + back * 0.05, 3, 0.002)
+        }
+        // In the upper left: a butterfly, four wings, body and feelers.
+        let fly = rods[6] + P(0.028, -0.028)
+        for side in [-1.0, 1.0] {
+            s.append(stroke(closed([fly, fly + P(side * 0.026, -0.03), fly + P(side * 0.04, -0.016), fly + P(side * 0.034, -0.002)]), 0.0034))
+            s.append(stroke(closed([fly + P(0, 0.004), fly + P(side * 0.028, 0.008), fly + P(side * 0.026, 0.026), fly + P(side * 0.01, 0.022)]), 0.003))
+            s.append(stroke(curve(fly + P(0, -0.018), fly + P(side * 0.004, -0.03), fly + P(side * 0.014, -0.036), 5), 0.0016))
+        }
+        s.append(stroke([fly + P(0, -0.018), fly + P(0, 0.022)], 0.004))
+
+        return Halftone.Panel(name: "oculus", tones: { p in
+            for (k, c) in holes.enumerated() {
+                let d = simd_distance(p, c)
+                guard d < frame else { continue }
+                if d < glass { return sky }
+                // A block: lit as it faces the sun's side, the keystone at the top dark.
+                let a = bearing(p, c), block = (a / 30 + 0.5).rounded(.down) * 30
+                if block == 270 || block == inward[k] { return dark }
+                let face = 0.5 + 0.5 * cos((block - 40) * .pi / 180)
+                return Tone(0.3 + 0.35 * face, 0.28 + 0.3 * face, 0)
+            }
+            let e = simd_distance(p, eye)
+            if e < opening { return simd_distance(p, sun) < 0.05 ? y(0.95) : sky }
+            if e < rim { return y(0.8) }
+            let r = simd_length(p)
+            if r > 0.95 { return dark }
+            // The dome is lit from the oculus on the side the sun falls, and dims round to the far side; where the sun's
+            // disc lands, all of it is turned up to gold.
+            let a = bearing(p, P(0, 0)), lit = r < 0.45 ? 0.85 : 0.5 + 0.5 * cos((a - 40) * .pi / 180)
+            var tone = y(0.2 + 0.4 * lit)
+            for (r0, r1, n, share) in rings where r > r0 && r < r1 {
+                let t = a / 360 * Double(n), f = t - t.rounded(.down)
+                guard abs(f - 0.5) < share / 2 else { break }
+                let inner = r > r0 + 0.25 * (r1 - r0) && r < r1 - 0.25 * (r1 - r0) && abs(f - 0.5) < share * 0.28
+                tone = m(inner ? 0.5 + 0.4 * lit : 0.3 + 0.35 * lit)
+            }
+            guard simd_distance(p, patch) < 0.21 else { return tone }
+            return tone.y > 0 ? y(0.95) : Tone(0.4, 0.35, 1)
         }, strokes: s)
     }()
 }
