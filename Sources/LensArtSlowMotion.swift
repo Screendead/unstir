@@ -170,7 +170,7 @@ extension LensArt {
         s.append(stroke(closed(rect(lily.x - 0.015, lily.y + 0.003, lily.x + 0.015, lily.y + 0.0105)), 0.003))
 
         clearKnob(&s, from: mark, rods[6])
-        return Halftone.Panel(name: "rosewindow", tones: { p in
+        return Halftone.Panel(name: "rosewindow", tones: { (p: P) -> Tone in
             // The roundels: glass or a picture inside, their frames' cusps round it, the first that holds the point.
             for k in 0..<7 {
                 let d = simd_distance(p, rods[k])
@@ -298,7 +298,7 @@ extension LensArt {
         s.append(stroke([fly + P(0, -0.018), fly + P(0, 0.022)], 0.004))
 
         clearKnob(&s, from: mark, rods[6])
-        return Halftone.Panel(name: "oculus", tones: { p in
+        return Halftone.Panel(name: "oculus", tones: { (p: P) -> Tone in
             for (k, c) in holes.enumerated() {
                 let d = simd_distance(p, c)
                 guard d < frame else { continue }
@@ -433,7 +433,7 @@ extension LensArt {
         s.append(stroke([bike + P(-0.02, -0.03), bike + P(-0.008, -0.03)], 0.003))
 
         clearKnob(&s, from: mark, rods[4])
-        return Halftone.Panel(name: "stainedglass", tones: { p in
+        return Halftone.Panel(name: "stainedglass", tones: { (p: P) -> Tone in
             for h in holes {
                 let d = simd_distance(p, h)
                 guard d < frame else { continue }
@@ -554,7 +554,7 @@ extension LensArt {
         }
 
         clearKnob(&s, from: mark, rods[6])
-        return Halftone.Panel(name: "skylight", tones: { p in
+        return Halftone.Panel(name: "skylight", tones: { (p: P) -> Tone in
             for h in holes {
                 let d = simd_distance(p, h)
                 guard d < frame else { continue }
@@ -696,7 +696,7 @@ extension LensArt {
         }
 
         clearKnob(&s, from: mark, rods[4])
-        return Halftone.Panel(name: "frostedglass", tones: { p in
+        return Halftone.Panel(name: "frostedglass", tones: { (p: P) -> Tone in
             for c in holes {
                 let d = simd_distance(p, c)
                 guard d < frame else { continue }
@@ -796,7 +796,7 @@ extension LensArt {
         s.append(stroke([card + P(0.006, 0.018), card + P(0.009, 0.024), card + P(0.012, 0.018)], 0.0016))
 
         clearKnob(&s, from: mark, rods[6])
-        return Halftone.Panel(name: "bullseye", tones: { p in
+        return Halftone.Panel(name: "bullseye", tones: { (p: P) -> Tone in
             for c in holes {
                 let d = simd_distance(p, c)
                 guard d < frame else { continue }

@@ -199,7 +199,8 @@ enum Halftone {
                 }
                 for v in 0..<s {
                     for u in 0..<s {
-                        let g = UInt8(min(max(0.5 + edge[v * s + u] / (2 * range), 0), 1) * 255 + 0.5)
+                        let level: Double = min(max(0.5 + edge[v * s + u] / (2 * range), 0), 1)
+                        let g = UInt8(level * 255 + 0.5)
                         set(x0 + u, side + 1 + v, g, g, g)
                     }
                 }

@@ -61,7 +61,7 @@ extension LensArt {
     /// `over` fills, its lenses' frames, its `fills` and `ground`.
     fileprivate static func framed(_ name: String, rims: [Rim], over: [Fill] = [], fills: [Fill], strokes: [Halftone.Stroke],
                                    ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
-        Halftone.Panel(name: name, tones: { p in
+        Halftone.Panel(name: name, tones: { (p: P) -> Tone in
             for r in rims where r.holds(p) { return r.glass }
             for f in over where f.holds(p) { return f.tone }
             for r in rims { if let t = r.tone(p) { return t } }
@@ -236,7 +236,11 @@ extension LensArt {
         }
         // The car: the pillars' edges, the dash and its two gauges, the wheel's rim and spokes.
         for b in [right, left] { s.append(stroke([b[0], b[1]], mid)); s.append(stroke([b[3], b[2]], mid)) }
-        s += runs((0...40).map { P(-1 + 0.05 * Double($0), dash(-1 + 0.05 * Double($0))) }, bold) { clear($0) }
+        let dashLine: [P] = (0...40).map { (k: Int) -> P in
+            let x: Double = -1 + 0.05 * Double(k)
+            return P(x, dash(x))
+        }
+        s += runs(dashLine, bold) { (q: P) -> Bool in clear(q) }
         for (at, r) in gauges {
             s.append(stroke(circle(at, r, 20), mid))
             for k in 0..<7 { s.append(stroke([polar(at, r * 0.7, 150 + 40 * Double(k)), polar(at, r * 0.92, 150 + 40 * Double(k))], hair)) }
@@ -466,12 +470,13 @@ extension LensArt {
         s += pieces(circle(mouth, core, 64), mid)
         s += pieces(circle(mouth, 0.32, 64), bold)
         let molar = mouth + P(-0.022, -0.028)
-        s.append(stroke(closed(curve(molar + P(-0.026, -0.006), molar + P(-0.024, -0.03), molar + P(-0.008, -0.022), 6)
-            + curve(molar + P(-0.008, -0.022), molar + P(0, -0.026), molar + P(0.008, -0.022), 4)
-            + curve(molar + P(0.008, -0.022), molar + P(0.024, -0.03), molar + P(0.026, -0.006), 6)
-            + curve(molar + P(0.026, -0.006), molar + P(0.024, 0.02), molar + P(0.018, 0.036), 6)
-            + [molar + P(0.008, 0.036), molar + P(0.004, 0.012), molar + P(-0.004, 0.012), molar + P(-0.008, 0.036), molar + P(-0.018, 0.036)]
-            + curve(molar + P(-0.018, 0.036), molar + P(-0.024, 0.02), molar + P(-0.026, -0.006), 6)), 0.0036))
+        let tooth: [[P]] = [curve(molar + P(-0.026, -0.006), molar + P(-0.024, -0.03), molar + P(-0.008, -0.022), 6),
+            curve(molar + P(-0.008, -0.022), molar + P(0, -0.026), molar + P(0.008, -0.022), 4),
+            curve(molar + P(0.008, -0.022), molar + P(0.024, -0.03), molar + P(0.026, -0.006), 6),
+            curve(molar + P(0.026, -0.006), molar + P(0.024, 0.02), molar + P(0.018, 0.036), 6),
+            [molar + P(0.008, 0.036), molar + P(0.004, 0.012), molar + P(-0.004, 0.012), molar + P(-0.008, 0.036), molar + P(-0.018, 0.036)],
+            curve(molar + P(-0.018, 0.036), molar + P(-0.024, 0.02), molar + P(-0.026, -0.006), 6)]
+        s.append(stroke(closed(Array(tooth.joined())), 0.0036))
         s.append(stroke(circle(molar + P(0.008, -0.01), 0.005, 8), 0.0034))
         s.append(stroke(star(molar + P(-0.03, -0.034), 0.01, points: 4, inner: 0.3), 0.0018))
         return framed("dentalmirror", rims: rims, fills: fills, strokes: s) { _ in c(0.15) }
@@ -626,12 +631,18 @@ extension LensArt {
     fileprivate static func child(_ at: P, sx: Double, sy: Double, wave: Double = 0, head: Double = 1) -> [Halftone.Stroke] {
         func w(_ p: P) -> P { at + P(p.x * sx + wave * sin(p.y * 90), p.y * sy) }
         let crown = P(0, -0.024 - 0.012 * head)
-        let face = (0...16).map { w(crown + 0.012 * head * P(cos(Double($0) * .pi / 8), sin(Double($0) * .pi / 8))) }
+        let face: [P] = (0...16).map { (k: Int) -> P in
+            let t: Double = Double(k) * .pi / 8
+            return w(crown + 0.012 * head * P(cos(t), sin(t)))
+        }
+        let left: [P] = (0...6).map { (k: Int) -> P in w(P(-0.012 * Double(k) / 6, 0.004 + 0.026 * Double(k) / 6)) }
+        let right: [P] = (0...6).map { (k: Int) -> P in w(P(0.012 * Double(k) / 6, 0.004 + 0.026 * Double(k) / 6)) }
+        let nose: [P] = (0...8).map { (k: Int) -> P in w(P(0, -0.024 + 0.0035 * Double(k))) }
         return [stroke(face, 0.0034),
-                stroke((0...8).map { w(P(0, -0.024 + 0.0035 * Double($0))) }, 0.0036),
+                stroke(nose, 0.0036),
                 stroke([w(P(-0.018, 0.0)), w(P(-0.008, -0.012)), w(P(0, -0.018)), w(P(0.01, -0.012)), w(P(0.018, -0.006))], 0.003),
-                stroke((0...6).map { w(P(-0.012 * Double($0) / 6, 0.004 + 0.026 * Double($0) / 6)) }, 0.003),
-                stroke((0...6).map { w(P(0.012 * Double($0) / 6, 0.004 + 0.026 * Double($0) / 6)) }, 0.003),
+                stroke(left, 0.003),
+                stroke(right, 0.003),
                 stroke([w(P(0.018, -0.006)), w(P(0.03, -0.016))], 0.0024),
                 stroke((0...10).map { w(P(0.035, -0.022) + 0.007 * P(cos(Double($0) * .pi / 5), sin(Double($0) * .pi / 5))) }, 0.003),
                 stroke([w(crown + P(-0.004, 0.006 * head)), w(crown + P(-0.004, 0.006 * head) + P(0.001, 0.001))], 0.004),

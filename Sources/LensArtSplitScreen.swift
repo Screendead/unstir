@@ -200,7 +200,7 @@ extension LensArt {
             s.append(stroke(ellipse(polar(root, w / 2, t - 30), w / 2, 0.008, degrees: t - 30, 14), 0.0024))
         }
         fit(&s, from: mark, core: P(0.485, 0.28))
-        return Halftone.Panel(name: "owl", tones: { p in
+        return Halftone.Panel(name: "owl", tones: { (p: P) -> Tone in
             guard p.y > water else { return above(p) }
             for f in pads where f.holds(p) { return f.tone }
             // Under the waterline, the owl again, mirrored, shaken sideways by the ripples, and gone cool.
@@ -269,7 +269,11 @@ extension LensArt {
         // The head: its capsule, the eyes and their gleams, the face's plate, feelers with their bristles, the mouth and
         // its pad, and bristles round the crown.
         let at = { (x: Double, y: Double) in head + turned(P(x, y), tilt) }
-        s.append(stroke(closed((0..<40).map { at(0.27 * cos(Double($0) * .pi / 20), 0.02 + 0.235 * sin(Double($0) * .pi / 20)) }), bold))
+        let rim: [P] = (0..<40).map { (k: Int) -> P in
+            let t: Double = Double(k) * .pi / 20
+            return at(0.27 * cos(t), 0.02 + 0.235 * sin(t))
+        }
+        s.append(stroke(closed(rim), bold))
         for (c, t) in eyes {
             s.append(stroke(closed((0..<32).map { i -> P in
                 let a = Double(i) * .pi / 16, e = turned(P(0.13 * cos(a), 0.17 * sin(a)), t) + c
@@ -281,12 +285,20 @@ extension LensArt {
             }, mid))
         }
         for x in ([-0.035, 0.035] as [Double]) {
-            s.append(stroke(closed((0..<16).map { at(x + 0.025 * cos(Double($0) * .pi / 8), 0.06 + 0.05 * sin(Double($0) * .pi / 8)) }), mid))
+            let nostril: [P] = (0..<16).map { (k: Int) -> P in
+                let t: Double = Double(k) * .pi / 8
+                return at(x + 0.025 * cos(t), 0.06 + 0.05 * sin(t))
+            }
+            s.append(stroke(closed(nostril), mid))
             s.append(stroke([at(x, 0.09), at(x * 2.2, 0.17)], hair))
         }
         s.append(stroke([at(-0.028, 0.1), at(-0.028, 0.2)], mid))
         s.append(stroke([at(0.028, 0.1), at(0.028, 0.2)], mid))
-        s.append(stroke(closed((0..<16).map { at(0.07 * cos(Double($0) * .pi / 8), 0.215 + 0.03 * sin(Double($0) * .pi / 8)) }), mid))
+        let mouth: [P] = (0..<16).map { (k: Int) -> P in
+            let t: Double = Double(k) * .pi / 8
+            return at(0.07 * cos(t), 0.215 + 0.03 * sin(t))
+        }
+        s.append(stroke(closed(mouth), mid))
         for k in 0..<9 {
             let a = 200 + 17 * Double(k)
             s.append(stroke([at(0.27 * cos(a * .pi / 180), 0.02 + 0.235 * sin(a * .pi / 180)), at(0.33 * cos((a + 6) * .pi / 180), 0.02 + 0.29 * sin((a + 6) * .pi / 180))], hair))
@@ -346,7 +358,7 @@ extension LensArt {
         s.append(stroke([lamp + P(0, -0.024), lamp + P(0, -0.09)], 0.0016))
 
         fit(&s, from: mark, core: facets[5])
-        return Halftone.Panel(name: "flyseye", tones: { p in
+        return Halftone.Panel(name: "flyseye", tones: { (p: P) -> Tone in
             if simd_length_squared(p) < 0.0841, let t = fly(p) { return t }
             let k = Int(((bearing(p) + 90) / 60).rounded()) % 6, d = p - facets[k]
             if simd_length_squared(d) < 0.069696 { return cores[k] }
@@ -604,7 +616,7 @@ extension LensArt {
         s.append(stroke(circle(look, 0.018, 12), 0.0016))
 
         fit(&s, from: mark, core: marbles[1])
-        return Halftone.Panel(name: "catseye", tones: { p in
+        return Halftone.Panel(name: "catseye", tones: { (p: P) -> Tone in
             for (k, e) in eyes.enumerated() {
                 let d = p - e, r2 = simd_length_squared(d)
                 guard r2 < 0.09 else { continue }
@@ -846,7 +858,7 @@ extension LensArt {
         s.append(stroke([crownMark + P(-0.03, 0.008), crownMark + P(0.03, 0.008)], 0.0016))
 
         fit(&s, from: mark, core: spots[4])
-        return Halftone.Panel(name: "peacock", tones: { p in
+        return Halftone.Panel(name: "peacock", tones: { (p: P) -> Tone in
             for f in bird where f.holds(p) { return f.tone }
             var best = 0, near = Double.infinity
             for (k, c) in spots.enumerated() {

@@ -156,7 +156,8 @@ extension LensArt {
         s += pieces(arc(bowl, wall - 0.07, 150, 215, 16), bold, 8)
         s += runs(span(P(-1, 0.86), P(1, 0.86), 40), mid) { abs($0.x) > 0.4 }
         // The gravel's top, the weed and the castle with its door and window.
-        s += pieces((0...30).map { P(-0.75 + 0.05 * Double($0), 0.66 + 0.015 * sin(Double($0) * 2.1)) }, mid)
+        let gravel: [P] = (0...30).map { (k: Int) -> P in P(-0.75 + 0.05 * Double(k), 0.66 + 0.015 * sin(Double(k) * 2.1)) }
+        s += pieces(gravel, mid)
         for w in weed { s += pieces(w, mid, 5) }
         s.append(stroke(closed(tower), bold))
         for c in crenels { s.append(stroke([c[3], c[0], c[1], c[2]], mid)) }
@@ -475,7 +476,11 @@ extension LensArt {
         s.append(stroke(closed(rect(0.06, 0.74, 0.4, 0.86)), mid))
         for x in [0.08, 0.38] { s.append(stroke(circle(P(x, 0.8), 0.008, 6), hair)) }
         // The snow's edge, the firs, the snowman.
-        s += runs((0...50).map { P(-0.9 + 0.036 * Double($0), horizon(-0.9 + 0.036 * Double($0))) }, mid) { p in
+        let skyline: [P] = (0...50).map { (k: Int) -> P in
+            let x: Double = -0.9 + 0.036 * Double(k)
+            return P(x, horizon(x))
+        }
+        s += runs(skyline, mid) { (p: P) -> Bool in
             firs.allSatisfy { !inside(p, $0) } && simd_distance(p, pond) > 0.35 && !inside(p, wall) && !inside(p, roof)
         }.flatMap { pieces($0.points, mid) }
         for f in firs { s.append(stroke(closed(f), mid)) }

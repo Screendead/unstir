@@ -49,7 +49,7 @@ extension LensArt {
             let lo = P(Double(k % n), Double(k / n)) * cell - 1, hi = lo + cell
             return layers.filter { $0.lo.x <= hi.x && $0.lo.y <= hi.y && $0.hi.x >= lo.x && $0.hi.y >= lo.y }
         }
-        return Halftone.Panel(name: name, tones: { p in
+        return Halftone.Panel(name: name, tones: { (p: P) -> Tone in
             let i = min(max(Int((p.x + 1) / cell), 0), n - 1), j = min(max(Int((p.y + 1) / cell), 0), n - 1)
             for l in grid[j * n + i] { if let t = l.tone(p) { return t } }
             return ground(p)
@@ -202,11 +202,12 @@ extension LensArt {
         s.append(stroke([diva + P(0.0445, -0.05), diva + P(0.0445, -0.075), diva + P(0.054, -0.068)], 0.0024))
         // Through the far glass: a domino mask on its stick, a ribbon trailing.
         let mask = far + P(0.012, -0.024)
-        s.append(stroke(closed(curve(mask + P(-0.04, -0.008), mask + P(-0.02, -0.024), mask + P(0, -0.008), 8)
-            + curve(mask + P(0, -0.008), mask + P(0.02, -0.024), mask + P(0.04, -0.008), 8)
-            + curve(mask + P(0.04, -0.008), mask + P(0.03, 0.02), mask + P(0.008, 0.01), 8)
-            + curve(mask + P(0.008, 0.01), mask + P(0, 0.004), mask + P(-0.008, 0.01), 4)
-            + curve(mask + P(-0.008, 0.01), mask + P(-0.03, 0.02), mask + P(-0.04, -0.008), 8)), 0.0034))
+        let domino: [[P]] = [curve(mask + P(-0.04, -0.008), mask + P(-0.02, -0.024), mask + P(0, -0.008), 8),
+            curve(mask + P(0, -0.008), mask + P(0.02, -0.024), mask + P(0.04, -0.008), 8),
+            curve(mask + P(0.04, -0.008), mask + P(0.03, 0.02), mask + P(0.008, 0.01), 8),
+            curve(mask + P(0.008, 0.01), mask + P(0, 0.004), mask + P(-0.008, 0.01), 4),
+            curve(mask + P(-0.008, 0.01), mask + P(-0.03, 0.02), mask + P(-0.04, -0.008), 8)]
+        s.append(stroke(closed(Array(domino.joined())), 0.0034))
         for x in [-0.018, 0.018] { s.append(stroke(ellipse(mask + P(x, -0.002), 0.008, 0.005, degrees: x < 0 ? 12 : -12, 12), 0.0026)) }
         s.append(stroke([mask + P(0.038, 0.002), mask + P(0.05, 0.05)], 0.003))
         s.append(stroke(curve(mask + P(-0.04, -0.008), mask + P(-0.06, 0.0), mask + P(-0.05, 0.03), 6), 0.002))
@@ -351,7 +352,10 @@ extension LensArt {
         let fist = turned(squircle(grip + P(0.03, 0.03), 0.14, 0.1, 32), about: grip + P(0.03, 0.03), 25)
         let cuff = bar(grip + P(0.2, 0.16), grip + P(0.26, 0.21), 0.24)
         let fanPivot = P(-0.2, -0.44)
-        let pleats = (0..<9).map { k in [fanPivot] + arc(fanPivot, 0.42, -150 + 12 * Double(k), -138 + 12 * Double(k), 4) }
+        let pleats: [[P]] = (0..<9).map { (k: Int) -> [P] in
+            let a0: Double = -150 + 12 * Double(k)
+            return [fanPivot] + arc(fanPivot, 0.42, a0, a0 + 12, 4)
+        }
 
         var layers: [Layer] = [layer(disc(a, 0.348, glass)), layer(disc(b, 0.264, glass))]
         // The frames: gilt beaded with jet and a garnet, unevenly, so each reads its way round.

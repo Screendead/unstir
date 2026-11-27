@@ -113,7 +113,7 @@ extension LensArt {
                        fill(painted([P(-0.6, 0.16), P(-0.28, -0.08), P(0.0, 0.1), P(0.0, 0.16)]), m(0.8)), fill(painted(rect(-0.55, 0.16, 0.0, 0.5)), m(0.5)),
                        fill(painted(rect(-0.62, 0.5, 0.62, 0.62)), Tone(0.45, 0, 0.6))]
         let warm = m(0.6), warmer = m(0.42)
-        let bands = (0..<12).map { k in fill(sector(screen, 0.25, 0.335, 30 * Double(k) + 5, 30 * Double(k) + 19), y(0.85)) }
+        let bands = (0..<12).map { (k: Int) -> Fill in fill(sector(screen, 0.25, 0.335, 30 * Double(k) + 5, 30 * Double(k) + 19), y(0.85)) }
         let board = rect(screen.x - 0.37, screen.y - 0.37, screen.x + 0.37, screen.y + 0.37)
         let legs = [(P(0.26, 0.24), P(0.14, 0.94)), (P(0.54, 0.24), P(0.68, 0.9)), (P(0.4, 0.3), P(0.42, 0.98))]
         let fills = [disc(screen, 0.25, c(0.5))] + bands + legs.map { fill(bar($0.0, $0.1, 0.05), Tone(0, 0.4, 0.75)) } + [ring(screen, 0.25, 0.335, m(0.7)), disc(hole, 0.2, c(0.65)), ring(hole, 0.2, 0.245, y(0.85)),
@@ -212,7 +212,7 @@ extension LensArt {
         }
         var fills = [disc(peep, 0.19, m(0.85)), ring(peep, 0.19, 0.245, brass), disc(hub, 0.19, c(0.6))] + border(hub)
         fills += [disc(shown, 0.19, c(0.6))] + border(shown)
-        fills += (0..<9).map { k in fill(sector(shown, 0.245, 0.3, 40 * Double(k), 40 * Double(k) + 22), y(0.85)) }
+        fills += (0..<9).map { (k: Int) -> Fill in fill(sector(shown, 0.245, 0.3, 40 * Double(k), 40 * Double(k) + 22), y(0.85)) }
         fills += [fill(hood, brass), fill(tube, y(0.6)), fill(slide, Tone(0.35, 0.5, 0)), fill(beam, y(0.55)), fill(crown, brass), fill(chimney, c(0.55)),
                   fill(roof, brass), fill(body, c(0.55))]
         fills.append(disc(heads[0].0 + P(0.08, -0.08), 0.045, y(0.9)))
@@ -296,7 +296,7 @@ extension LensArt {
         let band = rect(-rx, 0.02, rx, 0.1), ribbon = rect(-0.2, -0.86, 0.2, 0.99)
         var fills = frames.map { disc($0, 0.19, c(0.6)) }
         for f in frames {
-            fills += (0..<6).map { k in fill(sector(f, 0.19, 0.245, 60 * Double(k) + 20, 60 * Double(k) + 40), y(0.85)) }
+            fills += (0..<6).map { (k: Int) -> Fill in fill(sector(f, 0.19, 0.245, 60 * Double(k) + 20, 60 * Double(k) + 40), y(0.85)) }
             fills.append(ring(f, 0.19, 0.245, m(0.45)))
         }
         fills.append(fill(ribbon, y(0.35)))
@@ -348,11 +348,11 @@ extension LensArt {
         let filmOut = [sprockets[1] + P(0.06, 0.04), sprockets[1] + P(0.12, -0.04), polar(takeUp, 0.2, 110) + P(-0.02, 0.06), polar(takeUp, 0.2, 110)]
         let metal = Tone(0.45, 0, 0.3), film = Tone.zero
         func reel(_ at: P) -> [Fill] {
-            (0..<6).map { k in fill(sector(at, 0.205, 0.275, 60 * Double(k) + 15, 60 * Double(k) + 45), .zero) } + [disc(at, 0.19, m(0.55)), ring(at, 0.19, 0.29, y(0.85))]
+            (0..<6).map { (k: Int) -> Fill in fill(sector(at, 0.205, 0.275, 60 * Double(k) + 15, 60 * Double(k) + 45), .zero) } + [disc(at, 0.19, m(0.55)), ring(at, 0.19, 0.29, y(0.85))]
         }
         var fills = reel(feed) + reel(takeUp) + [disc(lamp, 0.19, y(0.75))]
-        fills += (0..<12).map { k in fill(sector(lamp, 0.19, 0.245, 30 * Double(k), 30 * Double(k) + 14), .zero) } + [ring(lamp, 0.19, 0.245, m(0.7))]
-        fills += (0..<8).map { k in fill(sector(lamp, 0.25, 0.3, 45 * Double(k) + 10, 45 * Double(k) + 30), .zero) } + [ring(lamp, 0.245, 0.3, y(0.85))]
+        fills += (0..<12).map { (k: Int) -> Fill in fill(sector(lamp, 0.19, 0.245, 30 * Double(k), 30 * Double(k) + 14), .zero) } + [ring(lamp, 0.19, 0.245, m(0.7))]
+        fills += (0..<8).map { (k: Int) -> Fill in fill(sector(lamp, 0.25, 0.3, 45 * Double(k) + 10, 45 * Double(k) + 30), .zero) } + [ring(lamp, 0.245, 0.3, y(0.85))]
         fills += [fill(bar(filmIn[0], filmIn[1], 0.07), film), fill(bar(filmIn[1], filmIn[2], 0.07), film), fill(bar(filmOut[1], filmOut[2], 0.07), film),
                   fill(bar(filmOut[2], filmOut[3], 0.07), film)]
         fills += sprockets.map { disc($0, 0.09, c(0.85)) }
@@ -418,7 +418,7 @@ extension LensArt {
         let legs: (P, P) = (bulb + P(-0.008, 0.042), bulb + P(0.008, 0.042))
         let filament: [P] = [legs.0, bulb + P(-0.012, 0.0)] + zigzag + [bulb + P(0.012, 0.0), legs.1]
         s.append(stroke(filament, 0.0026))
-        return panel("projector", fills: fills, strokes: s) { _ in Tone(0.2, 0.2, 0) }
+        return panel("projector", fills: fills, strokes: s) { (_: P) -> Tone in Tone(0.2, 0.2, 0) }
     }()
 }
 
@@ -435,9 +435,9 @@ extension LensArt {
         let print = rect(-0.36, 0.5, 0.2, 0.95), image = rect(-0.31, 0.55, 0.15, 0.8)
         let stripes = [y(0.9), Tone(0, 0.6, 0.8), m(0.85), Tone(0.45, 0.6, 0)]
         var fills = [disc(finder, 0.19, m(0.6)), ring(finder, 0.19, 0.245, .zero)]
-        fills += (0..<6).map { k in fill(sector(finder, 0.245, 0.3, 60 * Double(k) + 20, 60 * Double(k) + 50), .zero) } + [ring(finder, 0.245, 0.3, y(0.85)), disc(mirror, 0.19, y(0.75)), disc(lens, 0.19, c(0.75))]
-        fills += (0..<8).map { k in fill(sector(mirror, 0.19, 0.245, 45 * Double(k), 45 * Double(k) + 22), .zero) } + [ring(mirror, 0.19, 0.245, m(0.8))]
-        fills += (0..<4).map { k in fill(sector(lens, 0.19, 0.245, 90 * Double(k) + 10, 90 * Double(k) + 40), y(0.85)) } + [ring(lens, 0.19, 0.245, .zero)]
+        fills += (0..<6).map { (k: Int) -> Fill in fill(sector(finder, 0.245, 0.3, 60 * Double(k) + 20, 60 * Double(k) + 50), .zero) } + [ring(finder, 0.245, 0.3, y(0.85)), disc(mirror, 0.19, y(0.75)), disc(lens, 0.19, c(0.75))]
+        fills += (0..<8).map { (k: Int) -> Fill in fill(sector(mirror, 0.19, 0.245, 45 * Double(k), 45 * Double(k) + 22), .zero) } + [ring(mirror, 0.19, 0.245, m(0.8))]
+        fills += (0..<4).map { (k: Int) -> Fill in fill(sector(lens, 0.19, 0.245, 90 * Double(k) + 10, 90 * Double(k) + 40), y(0.85)) } + [ring(lens, 0.19, 0.245, .zero)]
         fills += [ring(lens, 0.245, 0.31, m(0.55)), ring(lens, 0.31, 0.38, .zero), fill(image, Tone(0.15, 0.1, 0)), fill(print, y(0.55)), fill(flash, y(0.85)),
                   disc(button, 0.1, m(0.95))]
         fills += stripes.enumerated().map { k, t in fill(rect(-0.34 + 0.07 * Double(k), -0.82, -0.27 + 0.07 * Double(k), 0.5), t) }
@@ -516,7 +516,7 @@ extension LensArt {
         var fills: [Fill] = []
         for (at, t) in zip([wide, mid0, tight], tones) {
             fills.append(disc(at, 0.19, t))
-            fills += (0..<7).map { k in fill(sector(at, 0.19, 0.245, 360 / 7 * Double(k), 360 / 7 * Double(k) + 26), y(0.9)) }
+            fills += (0..<7).map { (k: Int) -> Fill in fill(sector(at, 0.19, 0.245, 360 / 7 * Double(k), 360 / 7 * Double(k) + 26), y(0.9)) }
             fills.append(ring(at, 0.19, 0.245, .zero))
             fills += [m(0.8), c(0.9), y(0.9)].enumerated().map { k, t in fill(sector(at, 0.245, 0.3, 120 * Double(k) + 40, 120 * Double(k) + 110), t) }
         }

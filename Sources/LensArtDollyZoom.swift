@@ -46,7 +46,7 @@ extension LensArt {
         let short = strokes.flatMap { s in
             stride(from: 0, to: s.points.count - 1, by: 8).map { stroke(Array(s.points[$0...min($0 + 8, s.points.count - 1)]), s.width) }
         }
-        return Halftone.Panel(name: name, tones: { p in
+        return Halftone.Panel(name: name, tones: { (p: P) -> Tone in
             for g in glasses { if let t = g.tone(at: p) { return t } }
             for f in fills where f.holds(p) { return f.tone }
             return ground(p)

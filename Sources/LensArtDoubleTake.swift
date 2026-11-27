@@ -371,7 +371,9 @@ extension LensArt {
         let rock = curve(P(0.2, 0.7), P(0.4, 0.42), P(0.58, 0.7), 12)
         // The sight's mark round each find: a ring of bright dashes, which a twist that slides the lens's rim along itself
         // carries round.
-        let marks = [a, b].flatMap { c in (0..<8).map { sector(c, 0.37, 0.415, 45 * Double($0) + 6, 45 * Double($0) + 32) } }
+        let marks: [[P]] = [a, b].flatMap { (c: P) -> [[P]] in
+            (0..<8).map { (k: Int) -> [P] in sector(c, 0.37, 0.415, 45 * Double(k) + 6, 45 * Double(k) + 32) }
+        }
         let branch = bar(P(0.62, -0.25), P(-0.2, -0.3), 0.035)
         var fills = marks.map { fill($0, bright) }
         // Inside each mark the sight is turned up: the find black on bright green, the wood round it dim.
