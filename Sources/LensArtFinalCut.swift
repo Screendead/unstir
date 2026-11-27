@@ -180,13 +180,15 @@ extension LensArt {
 // MARK: - 69: Eclipse glasses
 
 /// Level 69's name: a total eclipse watched from a dark hillside, a woman in card eclipse glasses looking up from the
-/// lower right, and over hex's five lenses on this level the sun as her glasses show it, gold in the dark filter, each
-/// framed in the printed card: in the four ring lenses the moon biting deeper into the sun (a nick, half, a thin
-/// crescent, the diamond ring) and in the hub, where the glasses come off, totality: the black moon in its corona, two
-/// prominences at its edge.
+/// lower right, and over hex's four lenses on this level the sun as her glasses show it, gold in the dark filter, each
+/// framed in the printed card: in the three ring lenses the moon biting deeper into the sun (half, a thin crescent, the
+/// diamond ring) and in the hub, where the glasses come off, totality: the black moon in its corona, two prominences at
+/// its edge. Over the upper left, a twist rod, clouds lit gold underneath and Venus out in the darkened sky.
 extension LensArt {
     static let eclipseglasses: Halftone.Panel = {
-        let phases = [hex[5], hex[6], hex[1], hex[2]], sun = hex[0]
+        let phases = [hex[5], hex[1], hex[2]], sun = hex[0]
+        let venus = hex[6] + P(-0.1, 0.1)
+        let clouds = [(hex[6] + P(0.05, 0.03), P(0.2, 0.065), m(0.55)), (hex[6] + P(-0.06, -0.12), P(0.14, 0.045), y(0.6))]
         let head = P(0.6, 0.44), eye = P(0.44, 0.36)
         let nose = [P(0.405, 0.4), P(0.35, 0.47), P(0.41, 0.49)]
         let card = [P(0.33, 0.33), P(0.56, 0.27), P(0.7, 0.27), P(0.7, 0.35), P(0.56, 0.35), P(0.35, 0.41)]
@@ -219,7 +221,13 @@ extension LensArt {
             s.append(stroke(closed([base + P(-0.045, 0), base + P(0, -h), base + P(0.045, 0)]), mid))
             s.append(stroke([base, base + P(0, 0.04)], mid))
         }
-        for at in [P(-0.85, -0.12), P(0.32, -0.86), P(-0.22, -0.3), P(0.86, -0.02), P(-0.72, -0.62), P(0.7, -0.66), P(0.26, 0.04)] { s += glint(at, 0.03, hair) }
+        for at in [P(-0.85, -0.12), P(0.32, -0.86), P(0.86, -0.02), P(-0.72, -0.62), P(0.7, -0.66), P(0.26, 0.04)] { s += glint(at, 0.03, hair) }
+        // The clouds lit from under, and Venus, out at totality.
+        for (c, r, _) in clouds {
+            s += runs(ellipse(c, r.x, r.y, 36), mid) { p in clouds.allSatisfy { $0.0 == c || simd_length_squared((p - $0.0) / $0.1) > 1 } }
+        }
+        s.append(stroke(circle(venus, 0.035, 16), mid))
+        s += glint(venus, 0.08, hair)
         s = clear(s, of: phases + [sun])
         // The card frames round the filters, printed with a border and their safety marks.
         for c in phases {
@@ -227,12 +235,12 @@ extension LensArt {
             s.append(stroke(circle(c, core + 0.05, 56), mid))
             for k in 0..<9 { let a = 40 * Double(k) + 7; s.append(stroke([polar(c, core + 0.012, a), polar(c, core + 0.038, a + 4)], hair)) }
         }
-        // The sun in the filters, the moon biting in deeper each time: a nick, half, a crescent, the diamond ring.
+        // The sun in the filters, the moon biting in deeper each time: half, a crescent, the diamond ring.
         for (k, c) in phases.enumerated() {
-            let o = c + P(0.03, -0.022), r = 0.032, d = [0.05, 0.034, 0.014, 0.004][k], moon = o + d * simd_normalize(P(1, -0.6))
+            let o = c + P(0.03, -0.022), r = 0.032, d = [0.034, 0.014, 0.004][k], moon = o + d * simd_normalize(P(1, -0.6))
             s += runs(circle(o, r, 40), 0.0035) { simd_distance($0, moon) > r + 0.001 }
-            if k < 3 { s += runs(circle(moon, r, 40), 0.002) { simd_distance($0, o) < r } }
-            if k == 3 {
+            if k < 2 { s += runs(circle(moon, r, 40), 0.002) { simd_distance($0, o) < r } }
+            if k == 2 {
                 s.append(stroke(circle(o, r + 0.01, 40), 0.0015))
                 s += glint(o + polar(P(0, 0), r, 210), 0.034, 0.0028)
             }
@@ -262,6 +270,10 @@ extension LensArt {
                 if d < reach { return y(0.85) }
             }
             for f in figure where f.holds(p) { return f.tone }
+            if p.y < 0.1, p.x < -0.1 {
+                if simd_distance(p, venus) < 0.035 { return y(0.9) }
+                for (cc, r, t) in clouds where simd_length_squared((p - cc) / r) < 1 { return t }
+            }
             return p.y < 0.38 ? c(0.42) : m(0.5)
         }, strokes: pieces(s))
     }()
