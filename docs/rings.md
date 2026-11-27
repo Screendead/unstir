@@ -93,6 +93,11 @@ at rest.
   costs scroll callbacks alone (112 at the simulator's 60 Hz over four rings, 184 over six), with no layout, build or
   bake.
 - **A named bead** bakes its three lines on a tap, off the main thread, and shows them as they land.
+- **The model's read** runs on the main thread at launch and on each return from a level. The archive's ring deals
+  thirty past dailies, which took 0.3 s in a Debug build on the simulator, so `RingsModel` keeps each daily as dealt
+  (the generator is frozen) and a later read takes about 3 ms. The launch's first read still deals them, as the old
+  menu does in its own init: about 0.3 s before the menu's first frame in Debug, not yet measured in Release or on
+  the phone. A Debug or probe build logs each read's time ("rings model read").
 
 ## The files
 
@@ -119,7 +124,7 @@ All three are probes: a Debug build reads them, and a Release build only with `P
 - `UNSTIR_MENU=rings` makes the rings the menu and stores it (`menu.rings`), so the phone's home screen keeps
   opening them; any other value clears it, as does a harnessed launch without the variable and the test host. It
   leaves the launch a plain one, as `UNSTIR_UNLOCK` does. `scripts/run-ios.sh` passes it on.
-- `UNSTIR_RINGSTOUR=swipe|open|pick|speak|rest` moves the menu with no finger, once a launch, three seconds after its art
+- `UNSTIR_RINGSTOUR=swipe|open|pick|speak|renew|rest` moves the menu with no finger, once a launch, three seconds after its art
   is in: `swipe` glides down through every ring and back by the scroll view's own animation; `open` taps the
   middle, so its level opens; `pick` names a bead and lets it go; `rest` waits six seconds. The flight log gets
   "tour swipe, ground drawn 0" as it starts, "tour ends, ground drawn 0" as it ends (the marks the trace readers in

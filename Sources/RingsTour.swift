@@ -6,7 +6,8 @@ import UIKit
 /// The rings moved with no finger, for a trace on the phone. UNSTIR_RINGSTOUR names one motion: `swipe` (down
 /// through every ring and back, by the pager's own glide, the path a finger's release takes), `open` (the middle
 /// tapped, so its level opens), `pick` (a bead named in the middle and let go), `speak` (what VoiceOver reads, logged,
-/// before and after the middle steps to the next ring) or `rest` (six seconds untouched).
+/// before and after the middle steps to the next ring), `renew` (endless's new run tapped twice, a run saved) or `rest`
+/// (six seconds untouched).
 /// Each is marked in the flight log as the trace's reader expects ("tour swipe" ... "tour ends"), with what the main
 /// thread did meanwhile on a line of its own.
 /// UNSTIR_RINGSPOSE holds a still for a shot: `ring:2`, that ring in front; `place:1.5`, a swipe stopped there;
@@ -48,6 +49,13 @@ extension RingsView {
             case "open":
                 act(.middle)
                 await rest(2)
+            case "renew":
+                // Endless's new run tapped twice inside its window, with a run saved: the second deals a new one.
+                go(to: model.rings.count - 1, animated: false)
+                act(.renew)
+                await rest(0.3)
+                act(.renew)
+                await rest(1)
             case "speak":
                 func said() -> String {
                     (accessibilityElements ?? []).compactMap { $0 as? UIAccessibilityElement }.map {
