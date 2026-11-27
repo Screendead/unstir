@@ -121,7 +121,7 @@ extension LensArt {
 
 /// Level 27's name: a goldfish bowl filled to its lip, two goldfish turning in it, weed and a castle in the gravel, an
 /// air bubble at the top core and a coin in the gravel at the bottom (eye's two lenses on this level). Through the
-/// bubble the cat that is looking down into the bowl; on the coin, seen through the water, a ship under sail.
+/// bubble the cat that is looking down into the bowl; on the coin, seen through the water, a crown.
 extension LensArt {
     static let fishbowl: Halftone.Panel = {
         let bubble = P(0, -0.56), coin = P(0, 0.56), bowl = P(0, 0.05), wall = 0.86, surface = -0.72
@@ -194,14 +194,16 @@ extension LensArt {
         }
         s.append(stroke(closed([cat + P(-0.005, 0.006), cat + P(0.005, 0.006), cat + P(0, 0.012)]), 0.0024))
         s.append(stroke(curve(cat + P(-0.008, 0.02), cat + P(0, 0.016), cat + P(0.008, 0.02), 4), 0.0018))
-        // On the coin: a ship under two sails on a line of sea, a pennant at her masthead.
-        let ship = coin + P(0.018, -0.02)
-        s.append(stroke(closed([ship + P(-0.036, 0.016), ship + P(0.036, 0.016), ship + P(0.026, 0.03), ship + P(-0.026, 0.03)]), 0.0034))
-        s.append(stroke([ship + P(0, 0.016), ship + P(0, -0.05)], 0.0028))
-        s.append(stroke(curve(ship + P(-0.026, -0.04), ship + P(-0.03, -0.014), ship + P(-0.026, 0.01), 6) + [ship + P(-0.004, 0.01), ship + P(-0.004, -0.04), ship + P(-0.026, -0.04)], 0.0028))
-        s.append(stroke(curve(ship + P(0.026, -0.03), ship + P(0.032, -0.008), ship + P(0.026, 0.01), 6) + [ship + P(0.004, 0.01), ship + P(0.004, -0.03), ship + P(0.026, -0.03)], 0.0028))
-        s.append(stroke(closed([ship + P(0, -0.05), ship + P(0.018, -0.045), ship + P(0, -0.04)]), 0.002))
-        s.append(stroke((0...8).map { ship + P(-0.05 + 0.0125 * Double($0), 0.04 + ($0 % 2 == 0 ? 0 : 0.005)) }, 0.0022))
+        // On the coin: a crown, its band set with stones, an orb and cross on top.
+        let crown = coin + P(0.016, -0.02)
+        s.append(stroke(closed([crown + P(-0.036, 0.022), crown + P(-0.04, -0.018), crown + P(-0.02, 0.0), crown + P(0, -0.03), crown + P(0.02, 0.0),
+                                crown + P(0.04, -0.018), crown + P(0.036, 0.022)]), 0.0036))
+        s.append(stroke([crown + P(-0.036, 0.01), crown + P(0.036, 0.01)], 0.0024))
+        for x in [-0.018, 0.0, 0.018] { s.append(stroke(circle(crown + P(x, 0.016), 0.003, 6), 0.0024)) }
+        for at in [P(-0.04, -0.022), P(0.04, -0.022)] { s.append(stroke(circle(crown + at, 0.004, 6), 0.0026)) }
+        s.append(stroke(circle(crown + P(0, -0.036), 0.005, 8), 0.0026))
+        s.append(stroke([crown + P(0, -0.041), crown + P(0, -0.056)], 0.0024))
+        s.append(stroke([crown + P(-0.006, -0.05), crown + P(0.006, -0.05)], 0.0024))
         return panel("fishbowl", fills: fills, strokes: s) { p in
             let dc = p - coin, rc = simd_length(dc)
             if rc < 0.25 {
