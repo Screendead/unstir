@@ -2,7 +2,7 @@
 ; Sketches for the synthwave menu, for Jack's ear: three directions (outrun, night, dark), each a menu bed of 16 bars
 ; and four menu effects (a bead's tap, the tier swipe, a level opening, a locked bead's tap).
 ; scripts/synthwave-sketches.sh passes the sketch (SKETCH), its tempo (BPM), the seconds to render (DUR) and the
-; output (OUT); NOLEAD leaves a bed's top line out. Stereo, 48 kHz, 32-bit float; the script sets the level and cuts
+; output (OUT); NOLEAD leaves a bed's top line out, and BASSONLY renders the bass alone, dry, to measure it. Stereo, 48 kHz, 32-bit float; the script sets the level and cuts
 ; a bed's loop from its second period.
 ;
 ; Every event of a bed is scheduled from a beat number on one grid (giB). No voice draws a random number that
@@ -36,6 +36,7 @@ gaRvR init 0
 gaDl init 0
 gaGate init 0
 gaPad init 0
+gaBass init 0
 gkPump init 1
 gkGate init 0
 giLeadLast init 0
@@ -186,7 +187,9 @@ instr bass
   af = tanh(giBassDrive * af)
   aenv linsegr 0, 0.003, 1, 0.03, 0
   kpm = 1 - giBassPump * (1 - gkPump)
-  Out af * aenv * p5 * kpm, 0.5, 0, 0
+  ab = af * aenv * p5 * kpm
+  gaBass += ab
+  Out ab, 0.5, 0, 0
 endin
 
 ; Two saws and a pulse, with a square an octave under: each note glides in from the last one's pitch and its vibrato
@@ -345,6 +348,8 @@ endin
 
 instr outrunTap
   OutrunPatch
+  giPlkDec = 0.2
+  giPlkDrive = 2.4
   schedule "pluck", 0.02, 0.3, 81, 0.6
   schedule "pluck", 0.02, 0.3, 88, 0.25
   turnoff
@@ -396,10 +401,10 @@ opcode NightPatch, 0, 0
   giPadPump = 0.25
   giPadRv = 0.4
   giBassDet = 4
-  giBassCut = 620
-  giBassDec = 0.5
-  giBassRes = 0.15
-  giBassDrive = 1.8
+  giBassCut = 1500
+  giBassDec = 0.3
+  giBassRes = 0.25
+  giBassDrive = 2.8
   giBassPump = 0.45
   giPlkPw = 0.22
   giPlkCut = 2600
@@ -536,10 +541,10 @@ opcode DarkPatch, 0, 0
   giPadAtk = 0.15
   giPadPump = 0.75
   giBassDet = 9
-  giBassCut = 1300
-  giBassDec = 0.09
+  giBassCut = 1800
+  giBassDec = 0.12
   giBassRes = 0.4
-  giBassDrive = 3.4
+  giBassDrive = 3.6
   giBassPump = 0.8
   giPlkCut = 2200
   giPlkRes = 0.45
@@ -617,6 +622,8 @@ endin
 
 instr darkTap
   DarkPatch
+  giPlkDec = 0.2
+  giPlkDrive = 3
   schedule "pluck", 0.02, 0.3, 64, 0.6
   schedule "pluck", 0.02, 0.3, 52, 0.4
   turnoff
@@ -674,8 +681,12 @@ instr master
   aR = gaR + apR + 0.8 * atap + giRvMix * awR + giGateMix * ag * agR
   aL butterhp aL, 28
   aR butterhp aR, 28
+#ifdef BASSONLY
+  aL = gaBass
+  aR = gaBass
+#end
   fout "$OUT", 16, tanh(giTape * aL) / giTape, tanh(giTape * aR) / giTape
-  clear gaL, gaR, gaRvL, gaRvR, gaDl, gaGate, gaPad
+  clear gaL, gaR, gaRvL, gaRvR, gaDl, gaGate, gaPad, gaBass
 endin
 
 schedule "$SKETCH", 0, 0.01
