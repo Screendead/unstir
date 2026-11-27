@@ -602,9 +602,9 @@ extension LensArt {
             let n = bulbs[k].2
             for j in stride(from: 0, to: n, by: 2) { s.append(stroke(circle(polar(c, 0.292, 7 * Double(k) + 360 / Double(n) * (Double(j) + 0.5)), 0.012, 8), hair)) }
         }
-        s += child(mirrors[0] + P(0.026, 0.0), sx: 0.6, sy: 1.5)
+        s += child(mirrors[0] + P(0.024, 0.01), sx: 0.55, sy: 1.35)
         s += child(mirrors[1] + P(0.028, -0.03), sx: 1.7, sy: 0.6)
-        s += child(mirrors[2] + P(0.026, -0.016), sx: 1, sy: 1, wave: 0.009)
+        s += child(mirrors[2] + P(0.022, -0.016), sx: 1, sy: 1, wave: 0.008)
         s += child(mirrors[3] + P(0.024, -0.008), sx: 1, sy: 1, head: 2.2)
         return framed("hallofmirrors", rims: rims, fills: fills, strokes: s) { p in
             if p.y > floor { return c(0.3) }
@@ -616,7 +616,7 @@ extension LensArt {
     /// A child with a lollipop, about 0.07 tall, warped: stretched by `sx` and `sy` about its waist, its head grown by
     /// `head`, and swayed side to side by `wave`.
     fileprivate static func child(_ at: P, sx: Double, sy: Double, wave: Double = 0, head: Double = 1) -> [Halftone.Stroke] {
-        func w(_ p: P) -> P { at + P(p.x * sx + wave * sin(p.y * 160), p.y * sy) }
+        func w(_ p: P) -> P { at + P(p.x * sx + wave * sin(p.y * 90), p.y * sy) }
         let crown = P(0, -0.024 - 0.012 * head)
         let face = (0...16).map { w(crown + 0.012 * head * P(cos(Double($0) * .pi / 8), sin(Double($0) * .pi / 8))) }
         return [stroke(face, 0.0034),
@@ -624,8 +624,8 @@ extension LensArt {
                 stroke([w(P(-0.018, 0.0)), w(P(-0.008, -0.012)), w(P(0, -0.018)), w(P(0.01, -0.012)), w(P(0.018, -0.006))], 0.003),
                 stroke((0...6).map { w(P(-0.012 * Double($0) / 6, 0.004 + 0.026 * Double($0) / 6)) }, 0.003),
                 stroke((0...6).map { w(P(0.012 * Double($0) / 6, 0.004 + 0.026 * Double($0) / 6)) }, 0.003),
-                stroke([w(P(0.018, -0.006)), w(P(0.02, -0.03))], 0.0024),
-                stroke((0...10).map { w(P(0.02, -0.038) + 0.008 * P(cos(Double($0) * .pi / 5), sin(Double($0) * .pi / 5))) }, 0.003),
+                stroke([w(P(0.018, -0.006)), w(P(0.03, -0.016))], 0.0024),
+                stroke((0...10).map { w(P(0.035, -0.022) + 0.007 * P(cos(Double($0) * .pi / 5), sin(Double($0) * .pi / 5))) }, 0.003),
                 stroke([w(crown + P(-0.004, 0.006 * head)), w(crown + P(-0.004, 0.006 * head) + P(0.001, 0.001))], 0.004),
                 stroke([w(crown + P(0.004, 0.006 * head)), w(crown + P(0.004, 0.006 * head) + P(0.001, 0.001))], 0.004)]
     }
