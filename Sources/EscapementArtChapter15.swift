@@ -84,8 +84,122 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 86, Chronometer, hex, clocks 1+.
-    static func plate86() -> Plate? { nil }
+    /// Problem 86, Chronometer, hex, clocks 1+: a marine chronometer seen from above and before in its box, the lid
+    /// thrown back and the box rolled as at sea, while its two gimbal rings, in ink, hold the bowl and dial level: the
+    /// dial's seconds below and its power reserve above, whose hand is in the second ink.
+    static func plate86() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, rise = 0.85, roll = 0.2, pitch = 0.08, scale = 0.7
+        typealias Q = SIMD3<Double>
+        func view(_ q: Q) -> P {
+            let k = 5 / (5 + q.y * cos(rise) - q.z * sin(rise))
+            return P(q.x * k, -(q.y * sin(rise) + q.z * cos(rise)) * k) * scale + P(0, 0.1)
+        }
+        func rolled(_ q: Q) -> Q { Q(q.x * cos(roll) - q.z * sin(roll), q.y, q.x * sin(roll) + q.z * cos(roll)) }
+        func boxed(_ q: Q) -> Q {
+            let r = rolled(q)
+            return Q(r.x, r.y * cos(pitch) - r.z * sin(pitch), r.y * sin(pitch) + r.z * cos(pitch))
+        }
+        func box(_ x: Double, _ y: Double, _ z: Double) -> P { view(boxed(Q(x, y, z))) }
+        func quad(_ a: Q, _ b: Q, _ c: Q, _ d: Q) -> [P] { [a, b, c, d, a].map { view(boxed($0)) } }
+        /// A drawing in a plane laid level at height z, or rolled with the box when the outer ring has taken out its pitch.
+        func laid(_ sub: Plate, z: Double, withRoll: Bool = false) -> [Mark] {
+            sub.marks.map { mark in
+                Mark(points: mark.points.map { f in withRoll ? view(rolled(Q(f.x, -f.y, z))) : view(Q(f.x, -f.y, z)) },
+                     width: mark.width, ink: mark.ink)
+            }
+        }
+        func annulus(_ r0: Double, _ r1: Double) -> [P] { arc(o, r1) + arc(o, r0).reversed() + [polar(o, r1, 0)] }
+
+        Kit.ground(&plate, angle: 0.6)
+
+        // The lid thrown back on its hinges, ebony, with a bone stringing and the maker's plaque.
+        let rim = 1.1, wall = 1.03, deep = 0.5, lean = 0.5, tall = 1.3
+        func lidAt(_ x: Double, _ t: Double) -> Q { Q(x, rim + lean * t, tall * t) }
+        Kit.mass(&plate, [lidAt(-rim, 0), lidAt(rim, 0), lidAt(rim, 1), lidAt(-rim, 1), lidAt(-rim, 0)].map { view(boxed($0)) })
+        Kit.cut(&plate, [lidAt(-0.95, 0.06), lidAt(0.95, 0.06), lidAt(0.95, 0.95), lidAt(-0.95, 0.95), lidAt(-0.95, 0.06)].map { view(boxed($0)) }, edge: heavy)
+        let plaque = [lidAt(-0.4, 0.3), lidAt(0.4, 0.3), lidAt(0.4, 0.66), lidAt(-0.4, 0.66), lidAt(-0.4, 0.3)].map { view(boxed($0)) }
+        Kit.mass(&plate, plaque)
+        plate.line([lidAt(-0.34, 0.35), lidAt(0.34, 0.35), lidAt(0.34, 0.61), lidAt(-0.34, 0.61), lidAt(-0.34, 0.35)].map { view(boxed($0)) }, medium, .bone)
+        for t in [0.43, 0.5] { plate.line([lidAt(-0.24, t), lidAt(0.24, t)].map { view(boxed($0)) }, heavy, .bone) }
+        for t in [0.2, 0.78, 0.86] { plate.line([lidAt(-0.84, t), lidAt(0.84, t)].map { view(boxed($0)) }, medium) }
+        for x in [-0.66, 0.66] {
+            Kit.cut(&plate, [lidAt(x - 0.1, 0), lidAt(x + 0.1, 0), lidAt(x + 0.1, 0.07), lidAt(x - 0.1, 0.07), lidAt(x - 0.1, 0)].map { view(boxed($0)) })
+            plate.line([lidAt(x - 0.1, 0.035), lidAt(x + 0.1, 0.035)].map { view(boxed($0)) }, medium)
+        }
+
+        // The box: its back and side walls inside, the rim, and the front, in ebony grained bold.
+        Kit.cut(&plate, quad(Q(-wall, wall, 0), Q(wall, wall, 0), Q(wall, wall, -deep), Q(-wall, wall, -deep)))
+        for z in [-0.17, -0.34] { plate.line([box(-wall, wall, z), box(wall, wall, z)], heavy) }
+        for x in [-wall, wall] {
+            Kit.cut(&plate, quad(Q(x, wall, 0), Q(x, -wall, 0), Q(x, -wall, -deep), Q(x, wall, -deep)))
+            for z in [-0.17, -0.34] { plate.line([box(x, wall, z), box(x, -wall, z)], heavy) }
+        }
+        let rims = [quad(Q(-rim, rim, 0), Q(rim, rim, 0), Q(wall, wall, 0), Q(-wall, wall, 0)),
+                    quad(Q(rim, rim, 0), Q(rim, -rim, 0), Q(wall, -wall, 0), Q(wall, wall, 0)),
+                    quad(Q(rim, -rim, 0), Q(-rim, -rim, 0), Q(-wall, -wall, 0), Q(wall, -wall, 0)),
+                    quad(Q(-rim, -rim, 0), Q(-rim, rim, 0), Q(-wall, wall, 0), Q(-wall, -wall, 0))]
+        for ring in rims { Kit.mass(&plate, ring) }
+        Kit.mass(&plate, quad(Q(-rim, -rim, 0), Q(rim, -rim, 0), Q(rim, -rim, -deep), Q(-rim, -rim, -deep)))
+        for k in 0..<4 {
+            let z = -0.08 - 0.12 * Double(k)
+            plate.line((0...16).map { i in
+                let x = -rim + 2 * rim * Double(i) / 16
+                return box(x, -rim, z + 0.025 * sin(Double(i) * 0.9 + Double(k)))
+            }, heavy, .bone)
+        }
+        plate.line([box(-rim, -rim, 0), box(rim, -rim, 0)], heavy, .bone)
+
+        // The outer gimbal ring, pivoted in the side walls and pitched with the sea, then the inner ring on it, level.
+        var outer = Plate(), inner = Plate()
+        for side in [-1.0, 1.0] {
+            Kit.mass(&outer, Kit.band(P(0.9 * side, 0), P(1.04 * side, 0), 0.07))
+            outer.fill(arc(P(1.0 * side, 0), 0.02))
+            Kit.mass(&inner, Kit.band(P(0, 0.76 * side), P(0, 0.93 * side), 0.06))
+            inner.fill(arc(P(0, 0.9 * side), 0.018))
+        }
+        Kit.mass(&outer, annulus(0.89, 0.96))
+        for k in 0..<16 { outer.fill(Kit.band(polar(o, 0.895, Double(k) * .pi / 8 + 0.2), polar(o, 0.955, Double(k) * .pi / 8 + 0.2), 0.028), .bone) }
+        Kit.mass(&inner, annulus(0.755, 0.805))
+        inner.line(arc(o, 0.78), heavy, .bone)
+        plate.marks += laid(outer, z: -0.16, withRoll: true)
+        plate.marks += laid(inner, z: -0.14)
+
+        // The bowl under the dial, lit on its near side, the bezel and the dial.
+        let r = 0.62
+        var face = Plate()
+        Kit.mass(&face, arc(o, 0.655))
+        Kit.dial(&face, o, r, numerals: false)
+        for k in 1...12 {
+            face.lines(Kit.numeral(roman(k), at: polar(o, 0.81 * r, Kit.clock(Double(k))), height: 0.13 * r,
+                                   turn: Kit.clock(Double(k)) + .pi / 2, squeeze: 0.66), 0.014)
+        }
+        face.line(arc(o, 0.645), fine, .bone)
+        // The seconds at six, the power reserve over two.
+        let seconds = P(0, 0.31), reserve = polar(o, 0.415, Kit.clock(2)), small = 0.085
+        for (c, ticks) in [(seconds, 12), (reserve, 0)] {
+            face.fill(arc(c, small))
+            face.line(arc(c, small), heavy)
+            for k in 0..<ticks { face.line([polar(c, 0.06, Double(k) * .pi / 6), polar(c, small, Double(k) * .pi / 6)], medium) }
+        }
+        for k in 0...6 {
+            let a = Kit.clock(2) - .pi / 2 - 1.0 + 2.0 * Double(k) / 6
+            face.line([polar(reserve, k % 3 == 0 ? 0.045 : 0.065, a), polar(reserve, small, a)], k % 3 == 0 ? heavy : medium)
+        }
+        Kit.hands(&face, o, r, hours: 3, minutes: 40)
+        Kit.mass(&face, Kit.hand(seconds, toward: Kit.clock(4), length: 0.075, width: 0.016, tail: 0.02))
+        face.fill(arc(seconds, 0.011))
+        Kit.mass(&face, Kit.hand(reserve, toward: Kit.clock(2) - .pi / 2 + 0.55, length: 0.085, width: 0.024, tail: 0.016), ink: .second)
+        face.fill(arc(reserve, 0.011))
+        plate.marks += laid(face, z: -0.08)
+
+        callout(&plate, "A", from: view(rolled(Q(-0.925 * cos(0.7), -0.925 * sin(0.7), -0.16))),
+                to: polar(o, 0.62, Kit.clock(7)))
+        callout(&plate, "B", from: view(Q(0.775 * cos(0.25), -0.775 * sin(0.25), -0.14)), to: polar(o, 0.62, Kit.clock(3)))
+        callout(&plate, "C", from: box(1.03, 0.4, 0), to: polar(o, 0.86, Kit.clock(1.5)))
+        callout(&plate, "D", from: view(Q(reserve.x, -reserve.y + 0.06, -0.08)), to: polar(o, 0.62, Kit.clock(1)))
+        return plate
+    }
 
     /// Problem 87, Longcase clock, hex, clocks 1+.
     static func plate87() -> Plate? { nil }
