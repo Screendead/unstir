@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let jumpCut: [Int: Halftone.Panel] = [38: cameraObscura, 39: magicLantern]
+    static let jumpCut: [Int: Halftone.Panel] = [38: cameraObscura, 39: magicLantern, 40: zoetrope]
 
     /// A circle as `parts` arcs, so each stroke's box is small and a pixel far from the circle tests none of it.
     fileprivate static func hoop(_ c: P, _ r: Double, _ width: Double, parts: Int = 8, from a0: Double = 0) -> [Halftone.Stroke] {
@@ -44,6 +44,18 @@ extension LensArt {
             + arc(P(0.27, 0.55), 0.133, 180, 0, 5) + [P(0.4, 0.04)],
         circle(P(-0.14, -0.06), 0.06, 8), circle(P(0.14, -0.06), 0.06, 8), ellipse(P(0, 0.18), 0.07, 0.1, 10),
     ]
+
+    /// A bird flying in a unit box, its wings `lift` up (negative for down): body, head and beak, tail and wings.
+    fileprivate static func bird(_ lift: Double) -> [[P]] {
+        let shoulder = P(0.04, -0.07), tip = P(-0.12 - 0.22 * (1 - abs(lift)), -0.58 * lift)
+        let lead = shoulder + P(0.06, -0.3 * lift) + P(0, lift == 0 ? -0.06 : 0), back = P(-0.16, 0.0)
+        return [
+            closed(curve(P(0.24, -0.1), P(0.0, 0.18), P(-0.3, 0.02), 8) + curve(P(-0.3, 0.02), P(0, -0.12), P(0.24, -0.1), 8)),
+            circle(P(0.32, -0.12), 0.09, 8), [P(0.4, -0.15), P(0.54, -0.11), P(0.41, -0.08)],
+            [P(-0.28, 0.0), P(-0.56, -0.1), P(-0.5, 0.02), P(-0.56, 0.12), P(-0.28, 0.04)],
+            curve(shoulder, lead, tip, 8) + [tip + (back - tip) * 0.35 + P(0.05, 0.03 * lift), tip + (back - tip) * 0.65, back],
+        ]
+    }
 
     /// An oil lamp's flame in a unit box: the flame, its blue heart, the wick and the burner's collar.
     fileprivate static let flame: [[P]] = [
@@ -230,5 +242,63 @@ extension LensArt {
         for line in place(ghost, at: hub + P(0.026, 0.024), 0.06, degrees: 180) { s.append(stroke(line, 0.0032)) }
         for line in place(ghost, at: shown + P(0.026, -0.026), 0.064) { s.append(stroke(line, 0.0034)) }
         return panel("magiclantern", fills: fills, strokes: s) { _ in m(0.24) }
+    }()
+}
+
+// MARK: - 40: Zoetrope
+
+/// Level 40's name: a zoetrope, its red drum seen from a little above, the strip inside lit through the slits, and its
+/// paper strip pulled out over the front and hanging, three of its frames over the top, hub and bottom cores (hex's
+/// three lenses on this level): a bird with its wings up, level and down, one beat of its flight a frame. Level 40
+/// deals each lens +2.
+extension LensArt {
+    static let zoetrope: Halftone.Panel = {
+        let frames = [P(0, -0.56), P(0, 0), P(0, 0.56)]
+        let top = P(0, -0.48), foot = P(0, 0.3), rx = 0.86, ry = 0.22
+        let front = arc(foot, rx, 0, 180, 24).map { P($0.x, foot.y + ($0.y - foot.y) * ry / rx) }
+        let wall = [P(-rx, top.y), P(rx, top.y)] + front
+        // A slit at `a` degrees round the drum's front, foreshortened as the drum turns away.
+        func slit(_ a: Double) -> [P] {
+            let x = rx * sin(a * .pi / 180), w = 0.036 * cos(a * .pi / 180), drop = ry * cos(a * .pi / 180)
+            return rect(x - w, top.y + drop + 0.05, x + w, top.y + drop + 0.33)
+        }
+        let angles = stride(from: -75.0, through: 75, by: 15).filter { abs($0) > 10 }
+        let band = rect(-rx, 0.02, rx, 0.1), ribbon = rect(-0.2, -0.86, 0.2, 0.99)
+        var fills = frames.map { disc($0, 0.19, c(0.6)) }
+        for f in frames {
+            fills += (0..<6).map { k in fill(sector(f, 0.19, 0.245, 60 * Double(k) + 20, 60 * Double(k) + 40), y(0.85)) }
+            fills.append(ring(f, 0.19, 0.245, m(0.45)))
+        }
+        fills.append(fill(ribbon, y(0.35)))
+        fills += angles.map { fill(slit($0), y(0.9)) }
+        let back = arc(top, rx, 180, 360, 24).map { P($0.x, top.y + ($0.y - top.y) * ry / rx) }
+        let inner = arc(top, rx - 0.04, 360, 180, 24).map { P($0.x, top.y + 0.1 + ($0.y - top.y) * ry / rx) }
+        fills += [fill(back + inner, y(0.6)), oval(top, rx, ry, .zero), fill(band, y(0.8)), fill(wall, m(0.7)),
+                  oval(P(0, 0.82), 0.42, 0.1, Tone(0, 0.4, 0.7)), fill(rect(-1, 0.82, 1, 1), c(0.4))]
+
+        var s: [Halftone.Stroke] = []
+        // The drum: its rims, the slits, the band round it, the stand and its foot, the table's edge.
+        let rim = ellipse(top, rx, ry, 48)
+        for k in 0..<6 { s += runs(Array(rim[(8 * k)...(8 * k + 8)]), bold) { abs($0.x) > 0.21 } }
+        s += runs(front, bold) { abs($0.x) > 0.21 }
+        for x in [-rx, rx] { s.append(stroke([P(x, top.y), P(x, foot.y)], bold)) }
+        for a in angles { s.append(stroke(closed(slit(a)), abs(a) > 50 ? hair : mid)) }
+        for yy in [band[0].y, band[2].y] { s += runs(span(P(-rx, yy), P(rx, yy), 40), mid) { abs($0.x) > 0.21 } }
+        s += runs(ellipse(P(0, 0.82), 0.42, 0.1, 28), bold) { abs($0.x) > 0.2 }
+        s += runs(span(P(-1, 0.82), P(1, 0.82), 40), mid) { abs($0.x) > 0.42 }
+        // The strip, curled over the rim at the top, its edges and a notch between frames, and its frames' numbers.
+        s.append(stroke([P(-0.2, -0.86), P(-0.2, 0.99)], mid))
+        s.append(stroke([P(0.2, -0.86), P(0.2, 0.99)], mid))
+        s.append(stroke(curve(P(-0.2, -0.86), P(0, -0.96), P(0.2, -0.86), 10), mid))
+        for f in frames {
+            s += hoop(f, 0.245, bold)
+            s += hoop(f, 0.19, mid)
+        }
+        for yy in [-0.28, 0.28, 0.84] { s.append(stroke(closed([P(-0.2, yy - 0.03), P(-0.15, yy), P(-0.2, yy + 0.03)]), hair)); s.append(stroke([P(0.12, yy - 0.02), P(0.16, yy + 0.02)], hair)) }
+        // The three beats of the bird's flight.
+        for (f, lift) in zip(frames, [0.9, 0.05, -0.8]) {
+            for line in place(bird(lift), at: f + P(0.026, 0.022), 0.075) { s.append(stroke(line, 0.0032)) }
+        }
+        return panel("zoetrope", fills: fills, strokes: s) { _ in c(0.2) }
     }()
 }
