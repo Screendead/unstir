@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview]
+    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror]
 
     /// A hex rod's core, which a lens magnifies and a twist turns rigidly.
     fileprivate static let core = 0.264
@@ -279,5 +279,92 @@ extension LensArt {
         return framed("rearview", rims: rims, fills: fills, strokes: s) { p in
             p.y < horizon ? Tone(0, 0.35, 0.55) : p.y < dash(p.x) ? c(0.32) : m(0.45)
         }
+    }()
+}
+
+// MARK: - 46: Convex mirror
+
+/// Level 46's name: a mountain road coming down in hairpins under snowy peaks, a round convex mirror on a post at each
+/// blind bend, over the upper right, bottom and lower left cores (hex's three lenses on this level), each rimmed in
+/// orange and red with its hood over the top. Each shows what is coming round its bend, bowed by the glass, the road
+/// curving round it: a bus, a hiker with her stick, and a goat.
+extension LensArt {
+    static let convexmirror: Halftone.Panel = {
+        let mirrors = [P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)]
+        let bends = [P(-1.05, -0.45), P(0.12, -0.36), P(-0.18, -0.02), P(0.66, 0.38), P(0.3, 0.98)]
+        let road = zip(bends, bends.dropFirst()).map { bar($0, $1, 0.11) }
+        let peaks = [P(-1, -0.42), P(-0.7, -0.7), P(-0.5, -0.56), P(-0.12, -0.92), P(0.2, -0.6), P(0.42, -0.78), P(0.9, -0.42), P(1, -0.42)]
+        let snow = [[P(-0.22, -0.8), P(-0.12, -0.92), P(-0.02, -0.8), P(-0.08, -0.82), P(-0.12, -0.77), P(-0.16, -0.82)],
+                    [P(0.36, -0.71), P(0.42, -0.78), P(0.5, -0.69), P(0.45, -0.7), P(0.41, -0.66)]]
+        let pines = [P(-0.62, -0.2), P(-0.78, -0.16), P(0.34, 0.12), P(0.8, 0.1), P(-0.32, 0.52), P(0.62, 0.7)]
+        let tunnel = P(0.84, 0.4)
+
+        let orange = Tone(0, 0.55, 1), red = m(0.95), white = Tone(0.55, 0.55, 0.55), hood = Tone(0.05, 0.05, 0.12), grass = Tone(0.35, 0, 0.45)
+        // Each mirror's rim in orange and red, the hood dark over its top.
+        let rims = mirrors.map {
+            Rim(centre: $0, glass: c(0.6), outer: 0.33, at: [0, 45, 90, 135, 180, 225, 315],
+                tones: [red, orange, red, orange, red, hood, orange])
+        }
+        var fills = mirrors.map { fill(rect($0.x - 0.025, $0.y + 0.3, $0.x + 0.025, $0.y + 0.62), hood) }
+        fills += pines.map { fill([$0 + P(0, -0.14), $0 + P(0.06, 0.02), $0 + P(-0.06, 0.02)], Tone(0.1, 0, 0.15)) }
+        fills += [oval(tunnel, 0.12, 0.13, .zero)] + road.map { fill($0, .zero) } + bends.dropFirst().dropLast().map { disc($0, 0.055, .zero) }
+        fills += snow.map { fill($0, white) } + [fill(peaks + [P(1, -0.4), P(-1, -0.4)], m(0.45))]
+
+        var s: [Halftone.Stroke] = []
+        // The peaks and their snow, the pines, and the tunnel's mouth.
+        s += pieces(Array(peaks.dropFirst()), mid)
+        for q in snow { s.append(stroke(closed(q), hair)) }
+        for p in pines { s.append(stroke(closed([p + P(0, -0.14), p + P(0.06, 0.02), p + P(-0.06, 0.02)]), mid)); s.append(stroke([p + P(0, 0.02), p + P(0, 0.06)], mid)) }
+        s += pieces(arc(tunnel, 0.12, 180, 360, 16) + [tunnel + P(0.12, 0.12), tunnel + P(-0.12, 0.12)] + [tunnel + P(-0.12, 0)], bold)
+        for k in 0..<5 { s.append(stroke([polar(tunnel, 0.12, 190 + 40 * Double(k)), polar(tunnel, 0.16, 190 + 40 * Double(k))], hair)) }
+        // The road: its edges, its centre line in dashes, and a barrier of posts round the outside of each hairpin.
+        let clear: @Sendable (P) -> Bool = { p in mirrors.allSatisfy { simd_distance(p, $0) > 0.33 } }
+        for (a, b) in zip(bends, bends.dropFirst()) {
+            let n = simd_normalize(P(a.y - b.y, b.x - a.x)) * 0.055
+            for side in [n, -n] { s += runs(span(a + side, b + side, 30), mid, keep: clear) }
+            for k in 0..<8 {
+                let t0 = (Double(k) + 0.2) / 8, t1 = (Double(k) + 0.6) / 8
+                if clear(a + (b - a) * t0) && clear(a + (b - a) * t1) { s.append(stroke([a + (b - a) * t0, a + (b - a) * t1], hair)) }
+            }
+        }
+        for (k, c) in bends.dropFirst().dropLast().enumerated() {
+            let out = simd_normalize(c - (bends[k] + bends[k + 2]) / 2)
+            let rail = (0...8).map { polar(c, 0.1, atan2(out.y, out.x) * 180 / .pi - 80 + 20 * Double($0)) }
+            s.append(stroke(rail, mid))
+            for q in rail { s.append(stroke([q, q + P(0, 0.03)], hair)) }
+        }
+        // The mirrors: their rims' edges, hoods and posts, and in each the road bowed round what is coming.
+        for c in mirrors {
+            s += pieces(circle(c, core, 64), mid)
+            s += pieces(circle(c, 0.33, 64), bold)
+            s.append(stroke(closed(rect(c.x - 0.025, c.y + 0.33, c.x + 0.025, c.y + 0.62)), mid))
+            s += pieces(arc(c, 0.36, 220, 320, 12), bold)
+            s.append(stroke(arc(c, 0.16, 20, 160, 16), hair))
+            s.append(stroke(arc(c + P(0, -0.05), 0.12, 35, 145, 12), hair))
+        }
+        // A bus, bowed.
+        let bus = mirrors[0] + P(0.012, -0.03)
+        s.append(stroke(closed(curve(bus + P(-0.04, -0.012), bus + P(0, -0.028), bus + P(0.042, -0.012), 8) + [bus + P(0.046, 0.014)]
+            + curve(bus + P(0.046, 0.014), bus + P(0, 0.024), bus + P(-0.046, 0.014), 8)), 0.0036))
+        for k in 0..<4 { let x = -0.03 + 0.017 * Double(k); s.append(stroke(closed(rect(bus.x + x, bus.y - 0.014, bus.x + x + 0.011, bus.y - 0.002)), 0.002)) }
+        for x in [-0.026, 0.028] { s.append(stroke(circle(bus + P(x, 0.022), 0.008, 10), 0.0034)) }
+        // A hiker with her pack and stick.
+        let hiker = mirrors[1] + P(-0.02, -0.03)
+        s.append(stroke(circle(hiker + P(0, -0.034), 0.008, 10), 0.0034))
+        s.append(stroke([hiker + P(0, -0.026), hiker + P(0.002, 0.008)], 0.0036))
+        s.append(stroke(closed(rect(hiker.x - 0.016, hiker.y - 0.022, hiker.x - 0.003, hiker.y + 0.002)), 0.003))
+        s.append(stroke([hiker + P(0.002, 0.008), hiker + P(-0.012, 0.036)], 0.003))
+        s.append(stroke([hiker + P(0.002, 0.008), hiker + P(0.016, 0.034)], 0.003))
+        s.append(stroke([hiker + P(0.001, -0.016), hiker + P(0.018, -0.004)], 0.0024))
+        s.append(stroke([hiker + P(0.026, -0.022), hiker + P(0.02, 0.04)], 0.0024))
+        // A goat: body, legs, head, horns and beard.
+        let goat = mirrors[2] + P(0.018, -0.03)
+        s.append(stroke(ellipse(goat, 0.028, 0.014, 20), 0.0036))
+        for x in [-0.02, -0.01, 0.012, 0.022] { s.append(stroke([goat + P(x, 0.01), goat + P(x, 0.034)], 0.0026)) }
+        s.append(stroke([goat + P(0.022, -0.008), goat + P(0.036, -0.03), goat + P(0.048, -0.022)], 0.003))
+        s.append(stroke(curve(goat + P(0.034, -0.03), goat + P(0.026, -0.05), goat + P(0.014, -0.044), 6), 0.0026))
+        s.append(stroke([goat + P(0.044, -0.022), goat + P(0.046, -0.01)], 0.002))
+        s.append(stroke([goat + P(-0.028, -0.002), goat + P(-0.036, -0.012)], 0.0024))
+        return framed("convexmirror", rims: rims, fills: fills, strokes: s) { p in p.y < -0.4 ? c(0.35) : grass }
     }()
 }
