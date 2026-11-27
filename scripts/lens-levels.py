@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+# Copyright © 2026 Jack Lusher. All rights reserved.
+"""Lens's levels measured for how hard they are to crack, and dealt to targets, by scripts/lens-table.py's model (a
+lens moves only its core, so overlap decides commutation). Every deal it makes keeps lens-table.py's rules: each dealt
+lens entry +1 to +3, each lens netting at most +3 and reached by a twist, no entry merging as it is dealt, every twist
+dealt over a lens dragging its rim at least 4 dot pitches.
+Measures, per level:
+  rods      the layout's rods, every one a candidate for the next move
+  depth     the entries, par
+  lensE     lens entries; buried: those dealt under a twist that reaches the lens (a broken rim)
+  stacked   lenses holding two or more entries, so the zoom shows their sum and the first undo leaves a zoom behind
+  faint     entries of one step (a +1 lens, a twist of 1), the least a step shows
+  whole     entries whole as dealt, the right moves on the first step
+  right     right moves per step, averaged over the untwist, each right move at each step taken as equally likely
+  forced    the share of steps with only one right move, likewise expected
+  drag      the least rim drag of a twist dealt over a lens, in dot pitches
+Usage: scripts/lens-levels.py table [doc]          a row per level of a doc's table (docs/lens-tables.md)
+       scripts/lens-levels.py deal <layout> <lens slots> <depth> <seed> [count] [--lens-entries n] [--max-whole n]
+                                                    seeded deals meeting the rules, measured, one TSV line each
+       scripts/lens-levels.py time <layout> <lens slots> <depth>...
+                                                    one deal at each depth through scripts/solve.sh, timed"""
+import importlib.util
+import math
+import os
+import random
+import re
+import subprocess
+import sys
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+spec = importlib.util.spec_from_file_location("lens_table", os.path.join(HERE, "lens-table.py"))
+lt = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(lt)
+
+
+def parse(s):
+    return [(int(r), int(v)) for r, v in (e.split(":") for e in s.split(","))]
+
+
+def text(deal):
+    return ",".join(f"{r}:{s:+d}" for r, s in deal)
+
+
+def whole(rods, lenses, stack, alive):
+    """Indices of alive entries with no alive entry above interacting with their rod."""
+    out = []
+    for i in alive:
+        if all(not lt.interacts(rods, lenses, stack[i][0], stack[j][0]) for j in alive if j > i):
+            out.append(i)
+    return out
+
+
+def expected(rods, lenses, stack, samples=400, seed=1):
+    """Mean right moves per step and the share of forced steps over the untwist, exact by memo while the states stay
+    few, else sampled."""
+    memo = {}
+    limit = 200_000
+
+    def go(alive):
+        if not alive:
+            return 0.0, 0.0
+        if alive in memo:
+            return memo[alive]
+        if len(memo) > limit:
+            raise OverflowError
+        w = whole(rods, lenses, stack, alive)
+        right, forced = float(len(w)), 1.0 if len(w) == 1 else 0.0
+        sr = sf = 0.0
+        for i in w:
+            a, b = go(tuple(j for j in alive if j != i))
+            sr += a
+            sf += b
+        memo[alive] = (right + sr / len(w), forced + sf / len(w))
+        return memo[alive]
+
+    n = len(stack)
+    try:
+        r, f = go(tuple(range(n)))
+        return r / n, f / n
+    except OverflowError:
+        rng = random.Random(seed)
+        tr = tf = 0.0
+        for _ in range(samples):
+            alive = list(range(n))
+            while alive:
+                w = whole(rods, lenses, stack, alive)
+                tr += len(w)
+                tf += len(w) == 1
+                alive.remove(rng.choice(w))
+        return tr / (samples * n), tf / (samples * n)
+
+
+def measure(layout, lenses, deal):
+    rods = lt.LAYOUTS[layout]
+    stack, problems = lt.check(layout, lenses, text(deal), 4.0)
+    lens_e = [i for i, (r, _) in enumerate(stack) if r in lenses]
+    buried = sum(any(stack[j][0] not in lenses and lt.interacts(rods, lenses, stack[i][0], stack[j][0])
+                     for j in range(i + 1, len(stack))) for i in lens_e)
+    stacked = sum(sum(r == l for r, _ in stack) > 1 for l in lenses)
+    faint = sum(abs(s) == 1 for _, s in stack)
+    w = len(whole(rods, lenses, stack, tuple(range(len(stack)))))
+    right, forced = expected(rods, lenses, stack)
+    drags = [lt.rim_drag(rods, stack[i][0], t, s) / lt.PITCH for i in lens_e for t, s in stack[i + 1:]
+             if t not in lenses and lt.interacts(rods, lenses, stack[i][0], t)]
+    return dict(rods=len(rods), depth=len(stack), lensE=len(lens_e), buried=buried, stacked=stacked, faint=faint,
+                whole=w, right=right, forced=forced, drag=min(drags) if drags else float("nan"), problems=problems)
+
+
+COLUMNS = ["rods", "depth", "lensE", "buried", "stacked", "faint", "whole", "right", "forced", "drag"]
+
+
+def fmt(m):
+    return "\t".join(f"{m[c]:.2f}" if isinstance(m[c], float) else str(m[c]) for c in COLUMNS)
+
+
+def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, tries=4000):
+    """A random deal of `depth` entries keeping the rules, or None."""
+    rods = lt.LAYOUTS[layout]
+    twists = [r for r in range(len(rods)) if r not in lenses]
+    # Twist counts each pair allows over a lens: enough rim drag.
+    ok = {(l, t): [s for s in range(-5, 6) if s and lt.rim_drag(rods, l, t, s) / lt.PITCH >= 4]
+          for l in lenses for t in twists if lt.interacts(rods, lenses, l, t)}
+    for _ in range(tries):
+        stack, nets = [], {l: 0 for l in lenses}
+        want_lens = lens_entries if lens_entries is not None else None
+        for k in range(depth):
+            left = depth - k
+            lens_left = (want_lens - sum(r in lenses for r, _ in stack)) if want_lens is not None else None
+            options = []
+            for r in range(len(rods)):
+                newest = max((i for i, e in enumerate(stack) if e[0] == r), default=None)
+                if newest is not None and all(not lt.interacts(rods, lenses, r, e[0]) for e in stack[newest + 1:]):
+                    continue
+                if r in lenses:
+                    if lens_left is not None and lens_left <= 0:
+                        continue
+                    for s in (1, 2, 3):
+                        if nets[r] + s <= 3:
+                            options.append((r, s))
+                else:
+                    if lens_left is not None and lens_left >= left:
+                        continue
+                    under = {e[0] for e in stack if e[0] in lenses and lt.interacts(rods, lenses, e[0], r)}
+                    for s in range(-5, 6):
+                        if s and all(s in ok[(l, r)] for l in under):
+                            options.append((r, s))
+            if not options:
+                break
+            r, s = rng.choice(options)
+            stack.append((r, s))
+            if r in lenses:
+                nets[r] += s
+        if len(stack) < depth:
+            continue
+        if any(not any(r == l for r, _ in stack) for l in lenses):
+            continue
+        m = measure(layout, lenses, stack)
+        if m["problems"] or m["depth"] != depth:
+            continue
+        if max_whole is not None and m["whole"] > max_whole:
+            continue
+        return stack, m
+    return None
+
+
+def solve(layout, lenses, scramble):
+    t = time.time()
+    out = subprocess.run([os.path.join(HERE, "solve.sh"), layout, scramble, "lenses=" + ",".join(map(str, sorted(lenses)))],
+                         capture_output=True, text=True).stdout
+    return out, time.time() - t
+
+
+def table_rows(path):
+    for line in open(path, encoding="utf-8"):
+        cells = [c.strip().strip("`") for c in line.strip().strip("|").split("|")]
+        if len(cells) < 5 or not cells[0].isdigit() or cells[2] not in lt.LAYOUTS:
+            continue
+        yield int(cells[0]), cells[2], {int(x) for x in re.findall(r"\d+", cells[3])}, cells[4]
+
+
+def main():
+    args = sys.argv[1:]
+    mode = args[0] if args else "table"
+    if mode == "table":
+        path = args[1] if len(args) > 1 else os.path.join(HERE, "../docs/lens-tables.md")
+        print("#\tlayout\t" + "\t".join(COLUMNS))
+        seen = set()
+        for n, layout, lenses, scramble in table_rows(path):
+            if n in seen:
+                break
+            seen.add(n)
+            print(f"{n}\t{layout}\t{fmt(measure(layout, lenses, parse(scramble)))}")
+    elif mode == "deal":
+        layout, lenses, depth, seed = args[1], {int(x) for x in args[2].split(",")}, int(args[3]), int(args[4])
+        count = int(args[5]) if len(args) > 5 and args[5].isdigit() else 1
+        opt = lambda k: int(args[args.index(k) + 1]) if k in args else None
+        rng = random.Random(seed)
+        for _ in range(count):
+            found = deal(layout, lenses, depth, rng, opt("--lens-entries"), opt("--max-whole"))
+            if found:
+                print(f"{layout}\t{args[2]}\t{fmt(found[1])}\t{text(found[0])}")
+    elif mode == "time":
+        layout, lenses = args[1], {int(x) for x in args[2].split(",")}
+        for depth in map(int, args[3:]):
+            found = deal(layout, lenses, depth, random.Random(depth))
+            if not found:
+                print(f"{depth}: no deal")
+                continue
+            out, took = solve(layout, lenses, text(found[0]))
+            opt = re.search(r"^optimum .*$", out, re.M)
+            stacks = re.search(r"^(\d+) stacks, ([\d.]+) ms", out, re.M)
+            print(f"depth {depth}: {opt and opt.group(0)}; {stacks and stacks.group(0)}; wall {took:.1f} s", flush=True)
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main()
