@@ -5,7 +5,7 @@
 while IFS=$'\t' read -r n layout clocks scramble; do
   shot "escapement-book-$(printf %02d "$n")" "Escapement $n as dealt: $layout, clocks $clocks, scramble $scramble." PACK=escapement OWNED=escapement LEVEL="$n"
 done < scripts/escapement/problems.tsv
-shot escapement-card "Escapement's card, owned, scrolled to its levels under the book's five chapter headings." \
+shot escapement-card "Escapement's card, owned, scrolled to its levels under the book's fifteen chapter headings." \
   CARD=escapement OWNED=escapement CARDSCROLL=1 CLOCK=5.4
 # Escapement 2, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
@@ -61,6 +61,15 @@ shot escapement-hubs-16-out "Escapement 16, the wrong 6:-4 then three waits: bot
   PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,6:-4,4:1,4:1,4:1
 shot escapement-hubs-22-dealt "Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11." \
   PACK=escapement OWNED=escapement LEVEL=22
+# Where a clock is dealt more than 9 ticks every hub shows two cards for the whole problem, the clock drawn larger so
+# they stand as tall as one: 41 (clocks 1 and 2, owing 11 and 7) as dealt and after the first three moves of its line,
+# and 90 (one clock owing 19) after the first five.
+shot escapement-hubs-41-dealt "Escapement 41 as dealt: two cards on each hub, 11 and 07, as tall as a one-card hub's, header 18." \
+  PACK=escapement OWNED=escapement LEVEL=41
+shot escapement-hubs-41-mid "Escapement 41 after 5:+2, 4:-3 and 5:-3: hubs 08 and 04, header 12." \
+  PACK=escapement OWNED=escapement LEVEL=41 PLAYED=5:2,4:-3,5:-3
+shot escapement-hubs-90-mid "Escapement 90 after 4:+3, 0:+4, 3:+3, 4:+2 and 6:+4: its hub at 14, header 14." \
+  PACK=escapement OWNED=escapement LEVEL=90 PLAYED=4:3,0:4,3:3,4:2,6:4
 # Out of ticks as the clocks stop with twists left, each of the three looks (UNSTIR_STOPLOOK): on 3, the book's decoy, a
 # tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
 for look in stamp left rings; do
@@ -76,6 +85,13 @@ while read -r n line; do
   [[ $n == 1 ]] && hold=7
   shot "escapement-plate-$n-dealt" "Escapement $n as dealt on its own plate." \
     PACK=escapement OWNED=escapement LEVEL="$n"
+  # From 31, a third of the way in too, where a deep stack must still read.
+  if ((n > 30)); then
+    moves=(${line//,/ })
+    third=$(IFS=,; echo "${moves[*]:0:$(((${#moves[@]} + 2) / 3))}")
+    shot "escapement-plate-$n-third" "Escapement $n on its own plate a third of the way into its line, after $third." \
+      PACK=escapement OWNED=escapement LEVEL="$n" PLAYED="$third"
+  fi
   shot "escapement-plate-$n-solved" "Escapement $n solved on its own plate, the solve's ink ring run out." \
     PACK=escapement OWNED=escapement LEVEL="$n" PLAYED="$line" WAVE=1.85
   unset hold
@@ -110,6 +126,66 @@ done <<'PLATES'
 28 2:-4,4:-5,2:-3,5:4,6:-4,3:-3,4:5,0:-5,1:1
 29 4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
 30 0:-2,5:3,4:-5,5:4,6:4,5:-3,4:-2,5:-2
+31 1:-2,1:-5,3:-2,4:-5,1:2,1:4
+32 3:5,4:-4,3:2,6:-5,4:-4,3:-2,0:4
+33 3:-4,2:-5,4:-2,3:-2,2:5,3:-5,2:-5
+34 3:-5,4:-2,3:-5,4:5,2:2,5:2,6:-3,3:3
+35 3:4,2:3,3:-3,2:5,3:4,1:3,2:4,3:-3
+36 3:-5,4:-3,3:-4,4:-5,6:-4,3:3,4:-5,3:-5,4:4
+37 1:3,1:2,3:-2,4:2,0:1,3:-2,0:1,3:-3
+38 5:5,2:-2,6:-5,5:-4,0:3,5:3,6:-5,5:2,6:3
+39 5:5,4:2,5:-2,4:-3,5:2,4:-5,5:5,4:5,5:-3
+40 5:-3,0:-4,6:-3,5:-4,4:2,5:-4,6:-4,4:4,2:-3,4:2
+41 5:2,4:-3,5:-3,4:4,5:5,3:-2,4:5,5:-5,4:-2,3:3,4:2
+42 5:3,6:5,6:3,5:2,6:2,4:4,5:-5,6:-2,4:3,2:5,5:4
+43 2:-5,4:-3,2:-4,0:1,2:2,2:-3,2:5,2:-4,3:-4
+44 5:-5,4:-5,6:2,6:-2,4:3,6:5,5:3,6:2,4:4,4:3
+45 4:-5,5:-4,4:-5,6:4,5:-5,4:5,5:4,6:-3,5:5,4:2,0:-2
+46 0:1,2:2,3:3,4:-2,3:-4,4:-4,3:-4,4:-4,3:3,2:5,3:-2,4:4
+47 5:-2,0:-2,5:5,6:5,5:3,0:2,5:-4,6:3,0:4,5:4,0:-5,5:-2
+48 0:-3,5:2,4:-5,5:4,4:5,5:2,3:3,0:3,4:-3,5:4,4:-3,5:-3
+49 2:-4,2:-2,2:-4,2:3,1:1,4:5,2:-2,4:-5,4:2
+50 0:2,6:-3,5:-3,6:-4,5:3,6:-5,5:-5,6:5,5:2,0:3
+51 1:1,1:1,0:2,4:3,5:3,4:-4,5:-4,6:5,5:4,4:3
+52 6:-2,6:2,0:-2,1:1,1:1,0:5,6:3,0:-3,6:-5,2:5,4:4
+53 5:-4,0:-4,4:-4,5:3,0:-4,5:-3,4:4,5:5,4:5,5:-4
+54 2:2,4:3,2:-2,1:1,2:2,6:2,6:2,0:5,6:2,2:-5,4:2,0:5
+55 1:1,6:2,6:-4,6:-5,2:-3,0:-4,2:-4,6:-4,6:-5,2:-4,4:-3
+56 4:-3,5:4,3:-3,4:2,5:-2,4:3,0:3,5:-2,4:2,5:-4,4:5,6:-5
+57 5:-2,4:2,2:-5,0:-4,4:3,5:-5,0:-5,5:5,6:5,5:-2,4:-5,1:1,1:1
+58 5:-3,4:5,2:4,5:4,4:3,3:-2,4:-5,6:-4,6:4,5:4,4:5,3:3,0:2,3:-2
+59 4:-5,5:-2,4:-4,5:5,4:2,5:-3,4:-3,3:4,6:-5,0:-3,1:1,1:1
+60 2:5,3:2,4:-4,5:-2,6:-2,4:-3,5:-3,4:4,5:-4,2:-4,2:3,3:-2,4:-2,5:4,0:-5
+61 0:3,1:1,1:1,6:2,6:-4,0:-5,0:5,3:-5,3:-3,6:3,3:-2,0:4
+62 4:-2,4:-2,3:-5,4:-5,3:5,2:-4,2:5,3:5,4:4,2:2,3:3,4:-4,3:2
+63 5:-3,4:3,5:3,4:-4,5:-4,4:-5,5:-4,0:-5,0:2,4:-5,5:-5,4:2
+64 4:-3,5:3,0:-3,5:4,3:-4,4:-2,5:3,4:4,5:-3,4:5,5:4,0:-3
+65 4:-3,5:5,4:3,5:4,4:-4,6:-5,5:-3,6:3,5:3,4:2,3:-4,4:2
+66 4:-3,5:-3,4:5,5:-5,4:-3,5:2,4:-3,5:-4,4:5,5:-3,6:-2,4:-4
+67 0:3,1:1,1:1,6:2,6:-4,0:-5,0:5,2:-5,2:-3,1:1,6:3,2:-2,0:4
+68 4:2,2:3,3:-3,2:-2,1:-3,2:3,3:2,2:4,3:3,4:5,0:1,0:1,0:1,0:1
+69 4:-5,3:3,4:4,5:-2,2:-4,3:-2,4:5,2:2,6:3,5:5,0:-3,2:-4,2:2,1:1,1:1
+70 3:2,2:-2,3:3,2:-2,4:4,3:2,4:5,1:5,3:4,4:-5,3:5,4:-5,2:3,1:5,0:1,0:1
+71 4:-4,3:5,4:-5,0:-3,2:3,1:1,6:3,2:-3,5:3,0:-3,5:2,4:-2,3:-2,0:-2,1:1,0:2,1:1
+72 0:-4,1:1,1:1,6:-2,5:-5,0:4,5:-4,2:-3,3:4,4:5,5:5,4:2,2:-2,5:4,2:-2,4:3,0:4,4:4
+73 1:4,1:2,2:-3,3:-4,1:2,4:-2,4:3,1:-4,1:4,0:1,0:1,1:3,4:-2,4:-3,4:-5,1:-3,2:3
+74 6:5,4:2,0:-3,1:1,1:1,0:3,3:-2,4:-2,5:3,4:-5,6:3,5:-5,4:-2,3:5,0:-3,3:-3,4:-2,2:5
+75 1:4,2:-5,3:-2,1:3,2:3,3:5,2:5,3:4,1:4,4:-5,3:5,2:-4,1:3,1:-4,2:-3,1:2,3:4,2:-4,3:-5
+76 6:4,2:4,3:5,0:-4,0:-3,3:-3,4:5,3:-5,6:-3,4:-2,5:3,4:5,3:-5,6:-4,5:3,4:2,3:-4,2:-2,5:-4
+77 3:5,2:3,1:4,3:-5,4:-3,2:-2,3:5,2:5,4:3,1:-2,3:4,2:-2,4:-2,3:-2,2:4,3:4,4:-2,4:3,2:-2,3:3,2:4
+78 4:-5,6:4,2:2,6:5,3:2,0:3,3:5,4:-2,5:-3,2:-5,4:-4,5:4,4:4,5:2,2:5,3:-4,4:-2,5:4,4:-3
+79 2:-3,3:-4,0:-3,2:-2,3:5,0:-4,2:3,4:-3,0:-3,6:-2,1:1,1:1,0:4,6:-5,0:2,0:3,5:2
+80 5:-3,4:-3,3:3,4:-2,3:4,0:-4,4:3,0:-3,4:-2,5:3,4:-4,6:-5,0:3,3:-2,4:-4,5:-3,4:-3,0:4,5:-3
+81 3:-3,4:4,5:-2,4:-3,5:-3,2:3,3:-3,6:4,5:4,4:2,6:-4,2:-2,5:-5,4:-2,3:4,6:4,0:3,4:-5
+82 0:5,4:4,3:-4,6:-4,4:-3,3:5,6:5,5:3,4:2,3:-5,4:-4,2:-3,2:-5,5:2,4:-4,6:5,5:-5,6:3,5:-3
+83 0:-5,3:4,4:-3,5:-5,6:-5,4:3,5:2,4:3,5:4,2:-2,3:3,4:4,6:3,3:3,6:5,5:-4,6:-2,5:-5,4:-5
+84 6:-5,4:-4,5:4,0:5,5:-5,4:3,3:3,0:-3,4:-4,5:-3,0:5,4:3,5:3,4:-3,5:2,0:-5,5:-2,0:-3,4:4,5:3
+85 6:4,1:1,2:3,6:4,1:1,2:4,0:-2,6:4,5:-4,6:2,0:-3,4:3,3:5,0:-2,4:-2,5:-4,2:-5,4:2
+86 3:-5,4:-5,3:-2,2:2,3:5,0:-4,3:5,4:3,5:-4,4:-3,6:2,5:-3,4:-5,2:-3,5:5,4:-2,0:-3,3:-4,0:-5
+87 4:-2,3:-5,4:-5,3:3,4:-4,6:4,3:2,2:-4,4:3,3:2,2:5,5:-5,2:4,4:-2,5:-2,6:-5,3:5,2:-4,5:4
+88 3:-3,6:-5,4:5,0:5,5:-4,4:-3,3:-5,4:-2,2:3,3:5,4:-4,6:-2,3:3,4:-3,5:3,2:5,4:4,6:-3,3:2
+89 2:-2,4:5,3:3,6:-2,0:-2,3:5,4:2,3:-4,4:-4,6:-2,5:4,4:-3,6:-4,3:-2,4:-2,0:3,3:2,4:5,3:3,4:-2
+90 4:3,0:4,3:3,4:2,6:4,5:-3,2:3,3:-5,4:-5,6:-4,3:4,4:-5,3:-3,4:5,6:-3,5:-4,2:-2,3:2,4:3
 PLATES
 # The alternates drawn for Jack to choose between (EscapementArt.alternate), which no problem draws unless
 # UNSTIR_ESCALT=1: level 7 as a pause mark on a dial, and Hourglass with its glass inside the top and bottom rods.

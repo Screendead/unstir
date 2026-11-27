@@ -5,7 +5,7 @@ import XCTest
 @testable import Unstir
 
 /// Escapement's clocks, played on a real `Game` through the calls a finger makes: most on the second problem, the packs
-/// mock-up's, and the book's 30 against its table.
+/// mock-up's, and the book's 90 against its table.
 @MainActor final class EscapementTests: XCTestCase {
     /// The second problem under an id of no pack level, so a win keeps no best.
     private func level(_ scramble: String? = nil) -> Level {
@@ -304,6 +304,26 @@ import XCTest
         (.pent, "0-", 6, "3:+4"), (.hex, "1-", 7, "6:+2"),
         (.hex, "1+,3+,5+", 3, "0:-3"), (.pent, "0+,2+", 8, "1:-2"), (.pent, "0+", 9, "2:-2"), (.hex, "1+", 9, "2:-4"),
         (.hex, "1+,3+,5+", 8, "4:-3"), (.hex, "1+,3+", 8, "0:-2"),
+        (.pent, "0+", 6, "1:-2"), (.hex, "1+", 7, "3:+5"), (.pent, "0+", 7, "3:-4"),
+        (.hex, "1+", 8, "3:-5"), (.pent, "0+", 8, "3:+4"), (.hex, "1+", 9, "3:-5"),
+        (.pent, "0+,2+", 8, "1:+3"), (.hex, "1+,3+", 9, "5:+5"), (.hex, "1+,2+", 9, "5:+5"),
+        (.hex, "1+,3+", 10, "5:-3"), (.hex, "1+,2+", 11, "5:+2"), (.hex, "1+,3+", 11, "5:+3"),
+        (.pent, "0+,1-", 9, "2:-5"), (.hex, "1+,3-", 10, "5:-5"), (.hex, "1+,2-", 11, "4:-5"),
+        (.pent, "0+,1-", 12, "wait"), (.hex, "1+,3-", 12, "5:-2"), (.hex, "1+,2-", 12, "0:-3"),
+        (.hex, "1+,3+,5+", 9, "2:-4"), (.hex, "1+,2+,3+", 10, "0:+2"), (.hex, "1+,2-,3+", 10, "wait"),
+        (.hex, "1+,3+,5+", 11, "6:-2"), (.hex, "1+,2+,3+", 10, "5:-4"), (.hex, "1+,3+,5+", 12, "2:+2"),
+        (.hex, "1-", 11, "wait"), (.hex, "1-,2-", 12, "4:-3"), (.hex, "1-,3-", 13, "5:-2"),
+        (.hex, "1-", 14, "5:-3"), (.hex, "1-,2-", 12, "4:-5"), (.hex, "1-", 15, "2:+5"),
+        (.hex, "1+,2+", 12, "0:+3"), (.pent, "0+,1-", 13, "4:-2"), (.hex, "1-,2-", 12, "5:-3"),
+        (.hex, "1+,2-", 12, "4:-3"), (.hex, "1-,2-", 12, "4:-3"), (.hex, "1+,2+", 12, "4:-3"),
+        (.hex, "1+", 13, "0:+3"), (.pent, "0+", 14, "4:+2"), (.hex, "1+", 15, "4:-5"),
+        (.pent, "0+", 16, "3:+2"), (.hex, "1+", 17, "4:-4"), (.hex, "1+", 18, "0:-4"),
+        (.pent, "0+", 17, "1:+4"), (.hex, "1+", 18, "6:+5"), (.pent, "0+", 19, "1:+4"),
+        (.hex, "1+", 19, "6:+4"), (.pent, "0+", 21, "3:+5"), (.hex, "1+", 19, "4:-5"),
+        (.hex, "1-", 17, "2:-3"), (.hex, "1-", 19, "5:-3"), (.hex, "1-", 18, "3:-3"),
+        (.hex, "1-", 19, "0:+5"), (.hex, "1-", 19, "0:-5"), (.hex, "1-", 20, "6:-5"),
+        (.hex, "1+", 18, "6:+4"), (.hex, "1+", 19, "3:-5"), (.hex, "1+", 19, "4:-2"),
+        (.hex, "1+", 19, "3:-3"), (.hex, "1+", 20, "2:-2"), (.hex, "1+", 19, "4:+3"),
     ]
 
     private func clocks(_ level: Level) -> String {
@@ -318,23 +338,40 @@ import XCTest
         }
     }
 
-    /// The 30 problems in the book's order and its five chapters of six, under round 13's titles (Jack's call N1).
+    /// The 90 problems in the book's order and its fifteen chapters of six, under round 13's titles (Jack's call N1) and,
+    /// from 31, the trebled book's.
     func testTheLevelsAreTheBook() {
         let levels = Level.escapement
-        XCTAssertEqual(levels.count, 30)
-        XCTAssertEqual(levels.map(\.id), (1...30).map { "escapement-\($0)" })
-        XCTAssertEqual(levels.map(\.label), (1...30).map { String(format: "%02d", $0) })
-        XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
-        XCTAssertEqual(Level.escapementChapters, ["The Clock", "Tempo", "Two Clocks", "Wound Back", "Grand Complication"])
+        XCTAssertEqual(levels.count, 90)
+        XCTAssertEqual(levels.map(\.id), (1...90).map { "escapement-\($0)" })
+        XCTAssertEqual(levels.map(\.label), (1...90).map { String(format: "%02d", $0) })
+        XCTAssertEqual(levels.compactMap(\.chapter), (0..<90).map { Level.escapementChapters[$0 / 6] })
+        XCTAssertEqual(Level.escapementChapters, ["The Clock", "Tempo", "Two Clocks", "Wound Back", "Grand Complication",
+                                                  "Long Count", "Chronograph", "Retrograde", "Triple Calendar", "Countdown",
+                                                  "Gear Train", "Dead Beat", "Fusee", "Tourbillon", "Perpetual"])
         let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " Sometimes the first move is to wait.",
                      13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks.",
-                     2: " Tap wait: the clock ticks, nothing turns."]
+                     2: " Tap wait: the clock ticks, nothing turns.", 31: " Not every loose seam is due.",
+                     37: " Read both dials before every move.", 43: " One clock forward, one wound back.",
+                     49: " One move, three ticks.", 55: " Every clock wound back.", 61: " One clock's tick can free the next.",
+                     67: " A wait can fall anywhere.", 73: " Count the moves each seam can wait.", 79: " Every seam has its move.",
+                     85: " No move is spare."]
         XCTAssertEqual(levels.map(\.title), [
             "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
             "Counterweight", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
             "Twin dials", "Hour hand", "Minute hand", "Metronome", "Chime", "Cuckoo clock",
             "Rewind", "Fall back", "Mirror dial", "Anticlockwise", "Overwound", "Reverse",
             "Moon phase", "Calendar", "Time zones", "Leap year", "Eleventh hour", "Midnight",
+            "Hairspring", "Balance wheel", "Escape wheel", "Pallet fork", "Click spring", "Crown wheel",
+            "Second hand", "Pushpiece", "Lap time", "Split second", "Flyback", "Tachymeter",
+            "Spring forward", "Recoil", "Backlash", "Ebb tide", "Turnback", "Tide clock",
+            "Weekday", "Fortnight", "Lunar month", "Almanac", "Solstice", "Equinox",
+            "Curfew", "Last orders", "Deadline", "Final hour", "Time's up", "Zero hour",
+            "Pinion", "Arbor", "Third wheel", "Barrel", "Motion work", "Centre wheel",
+            "Lull", "Interlude", "Siesta", "Respite", "Intermission", "Hiatus",
+            "Sundial", "Gnomon", "Noon mark", "Meridian", "Solar time", "Analemma",
+            "Water clock", "Candle clock", "Nocturnal", "Astrolabe", "Night watch", "Small hours",
+            "Regulator", "Chronometer", "Longcase clock", "Atomic clock", "Millennium", "Eternity",
         ])
         for (level, row) in zip(levels, Self.book) {
             XCTAssertEqual(level.layout, row.layout, level.id)
@@ -353,7 +390,7 @@ import XCTest
             .appendingPathComponent("scripts/escapement/problems.tsv")
         guard let text = try? String(contentsOf: url, encoding: .utf8) else { throw XCTSkip("no problems.tsv at \(url.path)") }
         let rows = text.split(separator: "\n").map { $0.split(separator: "\t").map(String.init) }
-        XCTAssertEqual(rows.count, 30)
+        XCTAssertEqual(rows.count, 90)
         for (level, row) in zip(Level.escapement, rows) {
             XCTAssertEqual(level.id, "escapement-\(row[0])")
             XCTAssertEqual(level.layout.rawValue, row[1], level.id)
@@ -364,11 +401,11 @@ import XCTest
 
     /// Every problem ships proved: its par is what its clocks owe, the slowest clock's count on a real `Game`, so no
     /// line is shorter, and the prover finds a line at par in whole heals and waits (every turn of ±1 to ±11 too, under
-    /// UNSTIR_SLOW_TESTS); `testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine` plays it.
+    /// UNSTIR_SLOW_TESTS, for the first 30); `testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine` plays it.
     func testEveryProblemsParIsTheProversOptimum() throws {
         let slow = ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1"
-        for level in Level.escapement {
-            let solver = Solver(level.layout), clocks = level.clocks, steps = slow ? (1...11).flatMap { [$0, -$0] } : []
+        for (i, level) in Level.escapement.enumerated() {
+            let solver = Solver(level.layout), clocks = level.clocks, steps = slow && i < 30 ? (1...11).flatMap { [$0, -$0] } : []
             XCTAssertEqual(Solver.Clockwork(layout: level.layout, lenses: [], clocks: clocks, steps: []).owed(level.scramble),
                            level.par, level.id)
             var seen = 0
@@ -425,10 +462,12 @@ import XCTest
         }
     }
 
-    /// And among every turn of every knob, ±1 to ±11 steps: about a minute in an optimised build, so slow.
+    /// And among every turn of every knob, ±1 to ±11 steps: about a minute in an optimised build, so slow. The first 30
+    /// alone: past par 9 the search over every turn outgrows any run (problems 31 to 90 hold one key among whole heals
+    /// and waits, `testEveryProblemHasOneKey`).
     func testEveryProblemHasOneKeyAmongEveryTurn() throws {
         guard ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1" else { throw XCTSkip("set UNSTIR_SLOW_TESTS=1") }
-        for (level, row) in zip(Level.escapement, Self.book) {
+        for (level, row) in zip(Level.escapement.prefix(30), Self.book) {
             let keys = Solver(level.layout).escapementKeys(level.scramble, clocks: level.clocks, par: level.par)
             XCTAssertEqual(keys.map(key), [row.key], level.id)
         }
@@ -677,11 +716,12 @@ import XCTest
         }
     }
 
-    /// A hub shows one digit: no clock in the book, or in the first problem's demonstration, owes more than 9 as dealt.
-    func testEveryHubCountFitsOneDigit() {
-        for level in Level.escapement {
+    /// A hub's cards hold its count: no clock in the book owes more than 99 as dealt, and none in the first 30 problems,
+    /// or in the first problem's demonstration, more than 9, so their hubs keep the one card they were drawn with.
+    func testEveryHubCountFitsItsCards() {
+        for (i, level) in Level.escapement.enumerated() {
             for c in level.clocks {
-                XCTAssertLessThanOrEqual(level.owed(c.rod, on: level.scramble), 9, level.id)
+                XCTAssertLessThanOrEqual(level.owed(c.rod, on: level.scramble), i < 30 ? 9 : 99, level.id)
                 XCTAssertLessThanOrEqual(level.owed(c.rod, on: level.demo), 9, level.id)
             }
         }
@@ -794,15 +834,14 @@ import XCTest
         for layout in Layout.allCases { assertAStepShows(plate, in: layout, "shared") }
     }
 
-    /// Jack's call (2026-11-11): each problem plays on a plate of its own, drawn as its name. The play screen alone
-    /// asks for it, by the problem's number; a problem with none drawn yet keeps the shared plate, as every miniature
-    /// does.
+    /// Jack's call (2026-11-11): each problem plays on a plate of its own, drawn as its name, all 90 drawn. The play
+    /// screen alone asks for it, by the problem's number; every miniature keeps the shared plate.
     func testEachProblemAsksForItsOwnPlate() {
         for (i, level) in Level.escapement.enumerated() {
             XCTAssertEqual(level.plate, i + 1, level.id)
             XCTAssertEqual(level.panel, 0, level.id)
         }
-        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...Level.escapement.count))
+        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...90))
         for level in Pack.lens.levels + Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.plate, level.panel, level.id) }
     }
 

@@ -605,7 +605,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `Game.turnTank`), drawing the picture through the `Unstirred` shader modifier, and shows the result card. `LevelView.grab`, a pure function, decides what
   a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
-  ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
+  ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit, grown with a two-card clock)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
   it with a thud. The plate stays a shortcut (Jack's call ET1 = B) beside the play row's labelled "wait" control
   (`LevelView.waitControl`, a secondary `UnstirButton`), shown on every level with clocks: between undo and reset where
@@ -748,7 +748,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `finished` counts). Without a pushed tick a clock's count reaches 0 exactly as its rod empties, so it ends no proved
   line (`testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine`, `testEachHubCountsItsOwnClockAndTheHeaderIsTheirSum`,
   which also checks the counts through a wrong move and its undo before every move of every line). No clock in the
-  book owes more than 9, so a hub shows one digit (`testEveryHubCountFitsOneDigit`). A solve spends the budget to the
+  first 30 problems owes more than 9, so their hubs show one card; where a clock is dealt more than 9, from problem 31 on,
+  every hub shows two for the whole problem (`Level.hubCards`, `RatchetView.digits`), each as narrow as its digit
+  (`FlipCounter.narrow`) and as tall as one card on a one-card clock, as text never shrinks: the whole clock, wheel,
+  sub-dial, hub, its dark plate, the tap that waits on it and the rings round it, is drawn 1.26 times larger there
+  (`RatchetView.grown`, `LevelView.ratchetSize`, `ratchetReach(cards:)`),
+  which keeps two cards' rounded corners as far inside the hub's ring as one card's, off the index's track; none owes
+  more than 99 (`testEveryHubCountFitsItsCards`). A solve spends the budget to the
   last tick, so `over` is always 0 and its best stores as solved; its wave, the tank's swell, the glass easing home and
   the chime wait for that tick, `tickBeat` and more after the lift, and the result card follows the wave by its usual
   1.4 s (`LevelView.landSolve`, `solveDelay`; Jack's call tk-finish = B, round 16). One clock stopping while another runs loses nothing.
@@ -838,10 +844,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`PayoffTests`).
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
+  25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 90 in its order and fifteen chapters of six, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
   prover, its one key pinned,
-  `EscapementTests`; the full ±11 key search is slow; Prism 90 in fifteen trays, First Stir's replacement in v1, PK1, trebled 2026-11-27):
+  `EscapementTests`; the full ±11 key search is slow, and run on the first 30 alone, as past par 9 it outgrows any run; Prism 90 in fifteen trays, First Stir's replacement in v1, PK1, trebled 2026-11-27):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
   its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
@@ -1616,21 +1622,37 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   in an old clockmaker's manual's hand), where one is drawn: `Level.plate`, which only TankView asks for, carries the
   problem's number through `PictureLayer`'s `panel` to `engineTurning`, which draws `EscapementArt.plate`'s marks
   (**EscapementArt.swift**: polylines and filled outlines in tank units, in ink, bone and the second ink, vermilion)
-  and falls back to the shared plate when the number has none. The table is that function's switch, a line a problem
-  in blocks of ten, all thirty drawn; the plates are in a file a block (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across files). `EscapementArt.alternate` holds plates drawn for Jack to choose between, registered for no problem: level 7 as a pause mark on a dial without hands, and Hourglass (9) with its glass ending inside the top and bottom rods; `UNSTIR_ESCALT=1` draws them in a debug build, and `scripts/escapement-art.sh` by `7alt` or `9alt`. A dock cover, a card's
+  and falls back to the shared plate when the number has none. The table is that function's switch, a line a problem,
+  every one of the 90 drawn (`testEachProblemAsksForItsOwnPlate`); the first thirty are in a file a block of ten
+  (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and
+  **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across
+  files), and 31 to 90 in a file a chapter (**EscapementArtChapter6.swift** to **EscapementArtChapter15.swift**, their
+  helpers private and named for their plate). Those sixty are dealt 9 to 32 entries deep, and a deep stack shears the
+  first book's fine ruling (0.034 apart) into a grey that hides every seam, so they are cut bold
+  (**EscapementArtKit.swift**, `EscapementArt.Kit`): a coarse ground ruled 0.06 apart at 0.008, masses of ink and
+  bone at least 0.05 wide, fine hatching kept to small parts. A mass of solid ink can't cover a core, where the step
+  measure below wants more than half the core's ink moved by a 30° step, so inside the cores the masses are banded,
+  streaked or broken with bone, and the heaviest ink lies in the lanes between rods and the rim. A plate's long
+  drawing is split into helpers with typed closures, so no function type-checks in over 150 ms nor any expression in
+  over 30 (CI's runner failed on untyped point arithmetic). `EscapementArt.alternate` holds plates drawn for Jack to choose between, registered for no problem: level 7 as a pause mark on a dial without hands, and Hourglass (9) with its glass ending inside the top and bottom rods; `UNSTIR_ESCALT=1` draws them in a debug build, and `scripts/escapement-art.sh` by `7alt` or `9alt`. A dock cover, a card's
   clip and the promoted-purchase image go through `LevelPicture`, which passes `Level.panel`, 0 for Escapement, so for
   now they keep the shared plate. Nothing is stored: `Level.picture` is still `engineTurned`, and the plate is baked
   like the shared one, in memory by `Picture.render` when the play screen's layer appears or changes problem (7 to
   16 ms a plate at a Pro Max's 1284 px on the Mac that drew them, under a millisecond of geometry), one image held at a time and none
-  on disk, so thirty plates cost no storage and no cache to cap. A plate is composed round its layout: no knob, and
-  no hub a clock on any rod would wear, sits on the part it is named for, a ruled tint leaves no core flat, and the
+  on disk, so thirty plates cost no storage and no cache to cap. A plate is composed round its layout: on 1 to 30 no knob, and
+  no hub a clock on any rod would wear, sits on the part it is named for; on 31 to 90, whose subjects are drawn large
+  and bold, no hub of the problem's own clocks sits on its key part (a dial, a jewel, the second ink's part), though
+  knobs and other rods' hubs may cross the subject, a ruled tint leaves no core flat, and the
   second ink keeps to one small part, never a dashed circle, which reads as a clock's disc
   (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every other pixel each way a mix of bone, ink and vermilion,
   the second ink's marks within a circle 0.4 of the tank across and under 3% of the glass, and the step measure in
   every core of the problem's own layout, baked as an SE draws its glass at default type, 328 pt at 2x, not at the
   shared plate's 512 px at 1x, where the 2.2 px hairline is heavier than on any phone and close hatching runs solid). `scripts/escapement-art.sh` renders a plate on the Mac, with a layout
-  marking each rod's knob and hub, measures it as the tests do and times it; `scripts/escapement-art-sheet.py plates`
-  lays those renders out, `shots` the game's (`shots.sh escapement-plate-`, each problem as dealt and solved), a chapter's six a row, `solved` those solved only, and `alternate` a problem's plate beside its alternate.
+  marking each rod's knob and the hub a clock there would wear (grown for two cards), measures it as the tests do and
+  times it, and `deal` sketches it through a problem's scramble and the first moves of its line, each pixel pulled back
+  through the entries' inverses as the shader does but point-sampled, so its shear bands speckle where the game's
+  four taps draw them a softer grey; `scripts/escapement-art-sheet.py plates`
+  lays those renders out, `deals` each plate clean, dealt and a third in on the Mac, `shots` the game's (`shots.sh escapement-plate-`, each problem as dealt and solved, and from 31 a third of the way into its line), a chapter's six a row, `solved` those solved only, and `alternate` a problem's plate beside its alternate.
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,

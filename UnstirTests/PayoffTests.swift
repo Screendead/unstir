@@ -64,7 +64,7 @@ final class PayoffTests: XCTestCase {
             XCTAssertNil(Payoff(again))
         }
         XCTAssertEqual(Pack.allCases.filter(\.ships), [.lens, .escapement, .prism])
-        XCTAssertEqual(Payoff(pack: .escapement, paper: true).stamp, "30 problems unstirred")
+        XCTAssertEqual(Payoff(pack: .escapement, paper: true).stamp, "90 problems unstirred")
     }
 
     /// The last tier's is the whole game's: every tier's name, the completion's line, and the credit, which the card's
