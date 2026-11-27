@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus]
+    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass]
 
     /// Hex's rods' centres, by rod.
     private static let hexes: [P] = [P(0, 0)] + (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
@@ -19,6 +19,11 @@ extension LensArt {
             let a = from + 360 * Double(k) / Double(pieces)
             return stroke(arc(c, r, a, a + 360 / Double(pieces), max(4, 72 / pieces)), width)
         }
+    }
+
+    /// A line with each segment cut in six, for `runs` to cut it close to where something lies over it.
+    private static func fine(_ line: [P]) -> [P] {
+        zip(line, line.dropFirst()).flatMap { a, b in (0..<6).map { a + (b - a) * (Double($0) / 6) } } + [line.last!]
     }
 
     /// The angle of p about c in degrees, 0 at three o'clock and clockwise on screen, from 0 to 360.
@@ -272,6 +277,126 @@ extension LensArt {
             }
             guard simd_distance(p, patch) < 0.21 else { return tone }
             return tone.y > 0 ? y(0.95) : Tone(0.4, 0.35, 1)
+        }, strokes: s)
+    }()
+}
+
+// MARK: - 58: Stained glass
+
+/// Level 58's name: a leaded window close to, its panes cut irregular, coloured to a scene: the sun low in the upper
+/// left in a glow of gold and orange, blue sky, magenta hills, a river winding down through green and gold meadow, all
+/// inside a border of alternating panes. Four clear roundels are leaded into it (hex's four lenses on this level), each
+/// ringed with coloured jewels, and through each the world outside: a bell in its tower at the top, a church's spire in
+/// the upper right, an umbrella in the lower right and a bicycle at the foot.
+extension LensArt {
+    static let stainedglass: Halftone.Panel = {
+        let rods = hexes, lenses = [1, 2, 3, 4], clear = 0.2, frame = 0.264
+        let holes = lenses.map { rods[$0] }, jewels = [m(0.9), y(0.95), c(0.9), y(0.95), m(0.9), c(0.9), y(0.95), m(0.9), c(0.9), y(0.95)]
+        // The panes: a grid of corners, each nudged, each cell cut into two panes along one diagonal or the other.
+        let n = 14, size = 0.16, origin = -1.12
+        func hash(_ i: Int, _ j: Int, _ k: Int) -> Double {
+            let v = sin(Double(i) * 127.1 + Double(j) * 311.7 + Double(k) * 74.7) * 43758.5453
+            return v - v.rounded(.down)
+        }
+        let corners: [[P]] = (0...n).map { j in
+            (0...n).map { i in P(origin + size * Double(i), origin + size * Double(j)) + 0.042 * P(hash(i, j, 1) * 2 - 1, hash(i, j, 2) * 2 - 1) }
+        }
+        func scene(_ q: P, _ v: Double) -> Tone {
+            let sun = P(-0.5, -0.45), ds = simd_distance(q, sun)
+            if ds < 0.2 { return y(0.95) }
+            let horizon = 0.05 + 0.12 * sin(q.x * 2.2 + 0.6)
+            if q.y < horizon {
+                if ds < 0.4 { return v < 0.5 ? y(0.6) : Tone(0, 0.45, 0.85) }
+                return c(0.4 + 0.45 * v)
+            }
+            let depth = q.y - horizon, centre = 0.12 - 0.4 * depth + 0.1 * sin(q.y * 5), width = 0.05 + 0.16 * depth
+            if abs(q.x - centre) < width { return c(0.92) }
+            if depth < 0.24 { return m(0.5 + 0.4 * v) }
+            return v < 0.5 ? Tone(0.55, 0, 0.6) : y(0.5 + 0.35 * v)
+        }
+        // Each cell's two panes as triangles, and each pane's tone.
+        let panes: [(P, P, P, Tone)] = (0..<n * n).flatMap { cell -> [(P, P, P, Tone)] in
+            let i = cell % n, j = cell / n
+            let a = corners[j][i], b = corners[j][i + 1], c = corners[j + 1][i + 1], d = corners[j + 1][i]
+            let cut = hash(i, j, 3) < 0.5 ? [(a, b, c), (a, c, d)] : [(a, b, d), (b, c, d)]
+            return cut.enumerated().map { k, t in (t.0, t.1, t.2, scene((t.0 + t.1 + t.2) / 3, hash(i, j, 4 + k))) }
+        }
+        func lead(_ p: P) -> Bool { simd_length(p) < 0.925 && holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } }
+
+        var s: [Halftone.Stroke] = []
+        // The leads: every row and column of corners, every diagonal, cut at the roundels and the border.
+        for j in 0...n { s += runs(fine(corners[j]), mid, keep: lead) }
+        for i in 0...n { s += runs(fine((0...n).map { corners[$0][i] }), mid, keep: lead) }
+        for j in 0..<n {
+            for i in 0..<n {
+                let a = corners[j][i], b = corners[j][i + 1], c = corners[j + 1][i + 1], d = corners[j + 1][i]
+                s += runs(fine(hash(i, j, 3) < 0.5 ? [a, c] : [b, d]), mid, keep: lead)
+            }
+        }
+        // The border's panes, and the sun's face of rays painted on its glass.
+        s += hoop(P(0, 0), 0.925, bold, pieces: 12)
+        for k in 0..<36 { s.append(stroke([polar(P(0, 0), 0.925, 10 * Double(k)), polar(P(0, 0), 1, 10 * Double(k))], mid)) }
+        // The roundels: their rims and the leads between the jewels.
+        for c in holes {
+            s += hoop(c, frame, bold) + hoop(c, clear, mid)
+            for k in 0..<10 { s.append(stroke([polar(c, clear, 36 * Double(k) + 18), polar(c, frame, 36 * Double(k) + 18)], hair)) }
+        }
+
+        // Through the top: a bell hung in its tower's arch, its rope down.
+        let bell = rods[1] + P(0.026, -0.032)
+        let side: [P] = [P(0.024, 0.014), P(0.016, 0.006), P(0.014, -0.012), P(0.01, -0.02), P(0, -0.024)]
+        s.append(stroke(closed(side + side.reversed().dropFirst().map { P(-$0.x, $0.y) }).map { bell + $0 }, 0.0036))
+        s.append(stroke(circle(bell + P(0, 0.02), 0.005, 8), 0.003))
+        s.append(stroke(arc(bell + P(0, -0.012), 0.036, 180, 360, 16), 0.003))
+        s.append(stroke([bell + P(-0.036, -0.012), bell + P(-0.036, 0.03)], 0.003))
+        s.append(stroke([bell + P(0.036, -0.012), bell + P(0.036, 0.03)], 0.003))
+        s.append(stroke([bell + P(-0.012, 0.014), bell + P(-0.018, 0.04)], 0.0018))
+        // In the upper right: a church's spire, a cross on it and a clock on its tower.
+        let spire = rods[2] + P(0.03, -0.024)
+        s.append(stroke(closed(rect(spire.x - 0.012, spire.y - 0.004, spire.x + 0.012, spire.y + 0.04)), 0.0034))
+        s.append(stroke(closed([spire + P(-0.014, -0.004), spire + P(0, -0.05), spire + P(0.014, -0.004)]), 0.0032))
+        s.append(stroke([spire + P(0, -0.05), spire + P(0, -0.066)], 0.0024))
+        s.append(stroke([spire + P(-0.006, -0.06), spire + P(0.006, -0.06)], 0.0024))
+        s.append(stroke(circle(spire + P(0, 0.01), 0.006, 10), 0.0024))
+        s.append(stroke([spire + P(0, 0.01), spire + P(0.003, 0.006)], 0.0014))
+        s.append(stroke(arc(spire + P(0, 0.04), 0.006, 180, 360, 6), 0.0024))
+        // In the lower right: an umbrella, its ribs scalloped.
+        let brolly = rods[3] + P(0.03, -0.03)
+        s.append(stroke(arc(brolly, 0.032, 180, 360, 16), 0.0036))
+        for k in 0..<4 { s.append(stroke(arc(brolly + P(-0.024 + 0.016 * Double(k), 0), 0.008, 180, 360, 6), 0.0024)) }
+        s.append(stroke([brolly + P(0, -0.032), brolly + P(0, 0.03)], 0.003))
+        s.append(stroke(arc(brolly + P(0.006, 0.03), 0.006, 180, 0, 6), 0.003))
+        s.append(stroke([brolly + P(0, -0.032), brolly + P(0, -0.04)], 0.003))
+        // At the foot: a bicycle.
+        let bike = rods[4] + P(0.002, -0.044)
+        for x in [-0.024, 0.024] { s.append(stroke(circle(bike + P(x, 0), 0.016, 16), 0.003)) }
+        s.append(stroke([bike + P(-0.024, 0), bike + P(-0.004, 0), bike + P(0.014, -0.02), bike + P(-0.012, -0.02), bike + P(-0.024, 0)], 0.0026))
+        s.append(stroke([bike + P(-0.004, 0), bike + P(-0.014, -0.028)], 0.0026))
+        s.append(stroke([bike + P(0.024, 0), bike + P(0.012, -0.03), bike + P(0.02, -0.032)], 0.0026))
+        s.append(stroke([bike + P(-0.02, -0.03), bike + P(-0.008, -0.03)], 0.003))
+
+        return Halftone.Panel(name: "stainedglass", tones: { p in
+            for h in holes {
+                let d = simd_distance(p, h)
+                guard d < frame else { continue }
+                if d < clear { return c(0.3) }
+                return jewels[Int(bearing(p, h) / 36) % 10]
+            }
+            let r = simd_length(p)
+            if r > 0.925 { return Int(bearing(p, P(0, 0)) / 10) % 2 == 0 ? m(0.8) : c(0.7) }
+            let i = Int(((p.x - origin) / size).rounded(.down)), j = Int(((p.y - origin) / size).rounded(.down))
+            for (dj, di) in [(0, 0), (0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)] {
+                let ii = i + di, jj = j + dj
+                guard ii >= 0, jj >= 0, ii < n, jj < n else { continue }
+                for k in 0..<2 {
+                    let t = panes[2 * (jj * n + ii) + k]
+                    let e0 = (t.1 - t.0).x * (p - t.0).y - (t.1 - t.0).y * (p - t.0).x
+                    let e1 = (t.2 - t.1).x * (p - t.1).y - (t.2 - t.1).y * (p - t.1).x
+                    let e2 = (t.0 - t.2).x * (p - t.2).y - (t.0 - t.2).y * (p - t.2).x
+                    if (e0 >= 0 && e1 >= 0 && e2 >= 0) || (e0 <= 0 && e1 <= 0 && e2 <= 0) { return t.3 }
+                }
+            }
+            return .zero
         }, strokes: s)
     }()
 }
