@@ -39,8 +39,11 @@ card-back-solved.png  Back from Lens 02's result card after a solve, Lens's card
 rings-launch.png  The rings at rest on whirlpool, 14 of 27 solved (05, 09 and 12 over par), Lens owned: the sun in the ring with the tier, its count and level 15 dark on it, the daily's star over the ring four days running, three covers under it.
 rings-locked.png  The rings on vortex, shut: its sun down, a dusk disc rimmed in the tier's blue, with what opens it; every bead dark.
 rings-bead.png  The rings on whirlpool, bead 09 tapped: a halo round it, and the middle names it, its best and par, and says tap again to play.
-rings-swipe.png  The rings stopped halfway from whirlpool to vortex (UNSTIR_RINGSPOSE=place:1.5): whirlpool's ring grown and fading, vortex's coming up small, the suns crossing, the floor's lines mid-run.
+rings-swipe.png  The rings stopped halfway from whirlpool to vortex (UNSTIR_RINGSPOSE=place:2.5): whirlpool's ring grown and fading, vortex's coming up small, the suns crossing, the floor's lines mid-run.
 rings-plughole.png  The rings on plughole, every level solved and three over par: its own sun, and the middle on the first level short of par.
+rings-today.png  The archive's ring above plughole, Lens owned so it is open: a bead for each past daily, the three before today at par and two over, today's date on the sun with the past dailies' count.
+rings-today-shut.png  The archive's ring with no pack owned: its sun down, what opens it.
+rings-endless.png  Endless's ring below maelstrom, a run saved on tank 6 at brim 3, best 9: a neon circle, continue and new run on its sun.
 rings-fresh.png  The rings before plughole 01 is solved: the ring alone, with no daily and no packs yet, as the old menu shows neither.
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).

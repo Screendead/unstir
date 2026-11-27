@@ -29,6 +29,8 @@ The mock-up is the source of truth for the look: `design/negative-space/world/ri
   plays today's daily. A bead names its day, its best and par; a second tap plays it from the archive. It is shut, its
   sun down with "comes with any pack", until a purchase opens the archive (`Archive.open`), and until the store's first
   read, so an owner never meets the lock; a shut bead says "unlocked by purchasing any pack".
+  Back from a daily, today's or a past one, the menu opens on this ring while it is open (`RingsMenu.opening`), as
+  it does on endless's back from a run and on a tier's back from its level.
 - **Endless's ring** stands below maelstrom once the daily shows: no beads, its circle one neon tube (`.orbit`), a pink
   sun. With a run saved, the middle says "tank 6 · brim 3 · best 9" over "continue", which plays the run, and "new run"
   in the play mark's place: a first tap arms it ("new run? tap again", for `ResetArm.window`, under VoiceOver until a
@@ -143,7 +145,10 @@ then `scripts/pull-log.sh --sim` and read the lines from "tour swipe" to the cou
 On the simulator (iPhone 17 Pro Max, 2026-11-27), by real taps and swipes: the way's bead and the middle open the
 level at once; another bead names it and a second tap plays it; the daily's star opens today's daily; a cover opens
 its pack's card, whose "menu" comes back to the rings; the motes open settings; a finger's swipe brings the next
-ring forward; back from a level lands on the rings. The shots match the mock but for what the mock's data differs in:
+ring forward; back from a level lands on the rings. The archive's middle plays today's daily, a past day's bead
+names it and a second tap plays it, and back from either lands on the archive's ring; endless's "continue" plays the
+saved run on its tank and "new run" arms (logged "rings new run armed"); its second tap inside the two seconds was
+not reached by the simulator's tool, whose taps land seconds apart, and rests on `ResetArm`, as the old row does. The shots match the mock but for what the mock's data differs in:
 its Lens reads "owned ✓" and its Prism "2/3 free" where the app's covers say "new" until each card has opened once,
 as the old dock's do (`Marks.line`).
 
