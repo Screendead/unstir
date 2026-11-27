@@ -97,7 +97,7 @@ function cell(ctx, tier, i, z, style) {
     ctx.fillStyle = ctx.strokeStyle = rgb(col); ctx.lineWidth = 2 * c; ctx.fill(); ctx.stroke();
   } else {
     // dark glass: an edge and a fill of one outline, each mixed with the ground so they never double up
-    const a = style === 'locked' ? 0.5 : 1, w = style === 'next' ? 1.3 * Math.sqrt(z) : Math.max(0.75, 0.4 * z);
+    const a = style === 'locked' ? 0.72 : 1, w = style === 'next' ? 1.3 * Math.sqrt(z) : Math.max(0.75, 0.4 * z);
     const tone = (x) => rgb(col.map((v, n) => mix(GROUND[n], v, x)));
     ctx.fillStyle = ctx.strokeStyle = style === 'next' ? '#fff' : tone(0.36 * a); ctx.lineWidth = 2 * c;
     ctx.fill(); ctx.stroke();
