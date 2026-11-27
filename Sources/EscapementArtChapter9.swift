@@ -340,8 +340,109 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 52, Almanac, hex, clocks 1+,3+,5+.
-    static func plate52() -> Plate? { nil }
+    /// Problem 52, Almanac, hex, clocks 1+,3+,5+: an almanac lying open, its spine along one and seven o'clock, its
+    /// pages fanned in bold over an ink board, a star chart engraved on the left page and a tide table with its curve on
+    /// the right; the ribbon bookmark hanging from the foot of the spine in the second ink.
+    static func plate52() -> Plate {
+        var plate = Plate()
+        let tilt = Double.pi / 6
+        func q(_ points: [P]) -> [P] { turned(points, by: tilt) }
+        func q(_ p: P) -> P { turned([p], by: tilt)[0] }
+
+        // A page, left or right, in the book's own frame: spine up the middle, the far edge rising in perspective.
+        func page(_ side: Double, _ d: Double) -> [P] {
+            let top = curve(P(0, -0.42 + d), P(side * 0.34, -0.53 + d), P(side * (0.68 + d), -0.5 + 0.8 * d), 16)
+            let bottom = curve(P(side * (0.82 + d), 0.44 + d), P(side * 0.4, 0.52 + d), P(0, 0.42 + d), 16)
+            return q(top + bottom + [top[0]])
+        }
+        let board = q([P(-0.88, -0.44), P(0, -0.4), P(0.88, -0.44), P(0.98, 0.56), P(0, 0.56), P(-0.98, 0.56), P(-0.88, -0.44)])
+
+        Kit.ground(&plate, angle: -0.8, around: [board])
+        Kit.mass(&plate, board)
+        for side in [-1.0, 1.0] {
+            for i in stride(from: 3, through: 1, by: -1) {
+                let d = 0.03 * Double(i)
+                if i % 2 == 1 { Kit.cut(&plate, page(side, d)) } else { Kit.mass(&plate, page(side, d)) }
+            }
+            Kit.cut(&plate, page(side, 0), edge: heavy)
+        }
+        // The shadow in the spine's fold, and the fold.
+        for side in [-1.0, 1.0] {
+            Kit.mass(&plate, q(curve(P(0, -0.42), P(side * 0.07, 0), P(0, 0.42), 16) + [P(0, -0.42)]))
+        }
+        plate.line(q(curve(P(0, -0.42), P(0.012, 0), P(0, 0.42), 12)), heavy)
+        plate.lines([q(curve(P(-0.03, -0.41), P(-0.04, 0), P(-0.03, 0.41), 12)), q(curve(P(0.03, -0.41), P(0.04, 0), P(0.03, 0.41), 12))], fine)
+
+        // Each page's printed head: a bold rule over a fine one.
+        for side in [-1.0, 1.0] {
+            Kit.mass(&plate, q(Kit.band(P(side * 0.1, -0.415), P(side * 0.6, -0.445), 0.04)))
+            plate.line(q([P(side * 0.1, -0.375), P(side * 0.6, -0.4)]), medium)
+        }
+
+        // The star chart: a planisphere's rim, its meridians, and constellations in bold.
+        let sc = P(-0.38, 0.0), sr = 0.27
+        plate.line(q(arc(sc, sr)), 0.02)
+        plate.line(q(arc(sc, sr - 0.035)), medium)
+        for k in 0..<24 {
+            let a = Double(k) * .pi / 12
+            plate.line(q([polar(sc, sr - 0.035, a), polar(sc, sr - (k % 2 == 0 ? 0.0 : 0.018), a)]), k % 2 == 0 ? medium : fine)
+        }
+        for k in 0..<6 { plate.line(q([polar(sc, 0.03, Double(k) * .pi / 6), polar(sc, sr - 0.035, Double(k) * .pi / 6)]), fine) }
+        for k in 0..<6 { plate.line(q([polar(sc, 0.03, Double(k) * .pi / 6 + .pi), polar(sc, sr - 0.035, Double(k) * .pi / 6 + .pi)]), fine) }
+        plate.line(q(arc(sc, 0.12)), fine)
+        let figures: [[P]] = [
+            [P(-0.52, -0.12), P(-0.46, -0.16), P(-0.4, -0.13), P(-0.34, -0.17), P(-0.28, -0.1)],
+            [P(-0.5, 0.1), P(-0.44, 0.04), P(-0.38, 0.08), P(-0.42, 0.16), P(-0.5, 0.1)],
+            [P(-0.3, 0.02), P(-0.25, 0.1), P(-0.22, 0.18)],
+        ]
+        for figure in figures {
+            plate.line(q(figure), medium)
+            for (i, p) in figure.enumerated() where i == 0 || p != figure[0] {
+                let r = i % 2 == 0 ? 0.03 : 0.022
+                Kit.mass(&plate, q((0...8).map { j in polar(p, j % 2 == 0 ? r : 0.35 * r, -.pi / 2 + Double(j) * .pi / 4) }))
+            }
+        }
+        Kit.mass(&plate, q(arc(sc, 0.022)))
+
+        // The tide table: ruled columns headed by the hours, the tide's curve in ink and the water under it ruled bold.
+        let left = 0.1, right = 0.66, high = -0.32, low = 0.3
+        for (i, x) in stride(from: left, through: right, by: (right - left) / 6).enumerated() {
+            plate.line(q([P(x, high), P(x, low)]), i == 0 || i == 6 ? medium : fine)
+            if i < 6 {
+                plate.lines(Kit.numeral(roman(i + 1), at: P(x + (right - left) / 12, high - 0.04), height: 0.045, squeeze: 0.8).map(q), medium)
+            }
+        }
+        plate.line(q([P(left, high), P(right, high)]), medium)
+        plate.line(q([P(left, low), P(right, low)]), medium)
+        for y in stride(from: high + 0.1, to: low, by: 0.1) { plate.line(q([P(left, y), P(right, y)]), fine) }
+        let tide = stride(from: left, through: right, by: 0.01).map { x in P(x, 0.0 - 0.13 * sin((x - left) / (right - left) * 4 * .pi + 0.6)) }
+        let water = tide + [P(right, low), P(left, low), tide[0]]
+        plate.lines(hatch([q(water)], angle: tilt, gap: 0.055), 0.022)
+        plate.line(q(tide), 0.026)
+        // Print below the table.
+        for (i, y) in stride(from: 0.36, through: 0.42, by: 0.03).enumerated() {
+            plate.lines(dashed(q([P(left, y), P(right - 0.05 * Double(i), y)]), on: 0.05, off: 0.015), fine)
+        }
+        for (i, y) in stride(from: 0.33, through: 0.42, by: 0.03).enumerated() {
+            plate.lines(dashed(q([P(-0.66 + 0.02 * Double(i), y), P(-0.12, y)]), on: 0.045, off: 0.015), fine)
+        }
+
+        // The ribbon from the foot of the spine, out over the board and down past seven, swallow-tailed.
+        let path = q(curve(P(0, 0.3), P(0.06, 0.62), P(-0.02, 0.86), 20))
+        let ribbon = Kit.ribbon(path, 0.055)
+        plate.fill(ribbon, .second)
+        plate.line(ribbon, medium)
+        let end = path[path.count - 1], dir = simd_normalize(end - path[path.count - 2]), across = P(-dir.y, dir.x)
+        let w = 0.0275
+        let tail: [P] = [end + w * across, end + w * across + 0.06 * dir, end + 0.025 * dir, end - w * across + 0.06 * dir,
+                         end - w * across, end + w * across]
+        plate.fill(tail, .second)
+        plate.line(tail, medium)
+
+        callout(&plate, "A", from: q(polar(sc, sr, -2.2)), to: q(P(-0.36, -0.66)))
+        callout(&plate, "B", from: q(tide[30]), to: q(P(0.56, -0.66)))
+        return plate
+    }
 
     /// Problem 53, Solstice, hex, clocks 1+,2+,3+.
     static func plate53() -> Plate? { nil }
