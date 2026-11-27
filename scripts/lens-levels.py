@@ -198,10 +198,10 @@ def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, chain=0.
     return None
 
 
-def solve(layout, lenses, scramble, limit=None):
+def solve(layout, lenses, scramble, limit=None, *extra):
     """solve.sh's output and its time; empty past `limit` seconds."""
     t = time.time()
-    run = subprocess.Popen([os.path.join(HERE, "solve.sh"), layout, scramble, "lenses=" + ",".join(map(str, sorted(lenses)))],
+    run = subprocess.Popen([os.path.join(HERE, "solve.sh"), layout, scramble, "lenses=" + ",".join(map(str, sorted(lenses))), *extra],
                            stdout=subprocess.PIPE, text=True, start_new_session=True)
     try:
         out = run.communicate(timeout=limit)[0]
@@ -259,6 +259,10 @@ def main():
                 if not found:
                     continue
                 stack, m = found
+                # Most deals that miss par miss it because untwists join, which a fraction of the proof's time shows.
+                quick, _ = solve(layout, lenses, text(stack), None, "untwisting")
+                if f"entries {len(stack)}\nuntwisting {len(stack)}" not in quick:
+                    continue
                 out, _ = solve(layout, lenses, text(stack), limit=int(os.environ.get("PROOF_LIMIT", "60")))
                 entries = re.search(r"^entries (\d+)", out, re.M)
                 opt = re.search(r"^optimum (\d+)", out, re.M)
