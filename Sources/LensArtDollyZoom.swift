@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let dollyZoom: [Int: Halftone.Panel] = [65: sextant, 67: spectroscope]
+    static let dollyZoom: [Int: Halftone.Panel] = [64: ophthalmoscope, 65: sextant, 67: spectroscope]
 
     /// A frame's tone from its last band's end, in degrees clockwise from three o'clock, up to `end`.
     fileprivate struct Band: Sendable {
@@ -263,6 +263,101 @@ extension LensArt {
                 if a > fan.0, a < fan.1 { return bands[min(Int((a - fan.0) / 15), 5)] }
             }
             return c(0.14)
+        }
+    }()
+}
+
+// MARK: - 64: Ophthalmoscope
+
+/// Level 64's name: an ophthalmoscope face on as the doctor holds it, its wheel of lenses on a knurled handle, a thumb
+/// on the wheel's edge by the window that reads its power. Over the hub is its sight hole and the patient's dilated eye
+/// in it, a blue iris round a pupil glowing red, and in the red the back of the eye, the optic disc and its vessels.
+/// The wheel's four other lenses, over the top, upper right, lower right and upper left cores, each focus nearer into
+/// the eye: the lashes at the lid's edge, the iris's fibres at the pupil's edge, the spokes of a cataract in the eye's
+/// lens, and floaters drifting in the vitreous.
+extension LensArt {
+    static let ophthalmoscope: Halftone.Panel = {
+        let hole = P(0, 0), lashes = P(0, -0.56), iris = P(0.485, -0.28), cataract = P(0.485, 0.28), floaters = P(-0.485, -0.28)
+        let silver = Tone(0.42, 0.42, 0.42), dark = Tone.zero, wheel = 0.86, neck = (0.3, 0.68)
+        let glasses = [
+            glass(hole, Tone(0, 0.5, 0.8), frame: [(20, c(0.75)), (45, c(0.45)), (70, c(0.8)), (110, y(0.6)), (140, c(0.45)), (175, c(0.8)),
+                                                    (215, c(0.5)), (240, y(0.6)), (280, c(0.8)), (315, c(0.45)), (360, c(0.75))], glass: 0.19),
+            glass(lashes, y(0.7), frame: [(60, silver), (90, dark), (200, silver), (230, dark), (360, silver)]),
+            glass(iris, m(0.6), frame: [(30, silver), (110, dark), (140, silver), (300, dark), (360, silver)]),
+            glass(cataract, c(0.7), frame: [(60, silver), (100, dark), (125, y(0.85)), (150, silver), (185, m(0.75)), (215, silver), (250, dark), (360, silver)]),
+            glass(floaters, c(0.55), frame: [(140, silver), (175, dark), (260, silver), (330, dark), (360, silver)]),
+        ]
+        let thumb = ellipse(P(-0.66, 0.44), 0.12, 0.2, degrees: 30, 32), readout = rect(-0.36, 0.5, -0.22, 0.6)
+        let handle = rect(-0.1, 0.66, 0.16, 1), collar = rect(-0.12, 0.62, 0.18, 0.7), button = P(0.1, 0.82)
+        let fills = [disc(button, 0.035, m(0.85)), fill(thumb, Tone(0, 0.4, 0.55)), fill(readout, y(0.85)), fill(collar, m(0.75))]
+
+        var s: [Halftone.Stroke] = []
+        let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
+        // The wheel's edge and its knurling, the handle and its collar, its switch, the thumb and the window it reads by.
+        let flank = asin(neck.0 / wheel) * 180 / .pi
+        s += runs(arc(hole, wheel, 180 - flank, 360 + flank, 150), bold, keep: clear)
+        s += runs(arc(hole, wheel - 0.06, 180 - flank, 360 + flank, 150), hair, keep: clear)
+        for side in [-1.0, 1.0] {
+            s += runs(span(P(0.03 + side * (0.13 + (wheel - 0.13) * 0.95), neck.0), P(0.03 + side * 0.13, neck.1), 20), bold, keep: clear)
+        }
+        s.append(stroke([handle[3], handle[0]], mid))
+        s.append(stroke([handle[1], handle[2]], mid))
+        s.append(stroke(closed(collar), mid))
+        s += hoop(button, 0.035, mid, pieces: 2)
+        s.append(stroke(closed(thumb), bold))
+        s.append(stroke(ellipse(P(-0.595, 0.327), 0.05, 0.068, degrees: 30, 16), mid))
+        s.append(stroke(closed(readout), mid))
+        s.append(stroke([P(-0.31, 0.53), P(-0.27, 0.53), P(-0.29, 0.55), P(-0.27, 0.565), P(-0.29, 0.58), P(-0.31, 0.575)], hair))
+        for g in glasses {
+            s += hoop(g.centre, g.rim, bold)
+            s += hoop(g.centre, g.glass, mid)
+        }
+        // In the sight hole, at the back of the eye: the optic disc, its cup, and its vessels branching away.
+        let disc0 = hole + P(0.028, -0.012)
+        s += hoop(disc0, 0.017, 0.0042, pieces: 2)
+        s += hoop(disc0 + P(0.003, 0), 0.007, 0.0022, pieces: 1)
+        for (a, l, fork) in [(-110.0, 0.07, -30.0), (-160, 0.06, 25), (150, 0.07, -25), (100, 0.06, 30)] {
+            let from = polar(disc0, 0.016, a), mid0 = polar(disc0, l * 0.6, a + 10), end = polar(disc0, l, a - 5)
+            s.append(stroke(curve(from, mid0, end, 8), 0.0034))
+            s.append(stroke([mid0, polar(mid0, 0.03, a + fork)], 0.0022))
+        }
+        // The lashes at the lid's edge.
+        let lid = lashes + P(-0.006, 0.024)
+        s.append(stroke(curve(lid + P(-0.08, 0.012), lid + P(0, -0.024), lid + P(0.08, 0.012), 16), 0.0042))
+        for k in -4...4 {
+            let t = (Double(k) + 4) / 8, root = (1 - t) * (1 - t) * (lid + P(-0.08, 0.012)) + 2 * (1 - t) * t * (lid + P(0, -0.024)) + t * t * (lid + P(0.08, 0.012))
+            s.append(stroke(curve(root, root + P(0.006 * Double(k), -0.03), root + P(0.012 * Double(k) + 0.012, -0.044), 6), 0.0026))
+        }
+        // The iris at the pupil's edge, its fibres running out to the collarette.
+        let pupil = iris + P(-0.05, 0.04)
+        s.append(stroke(arc(pupil, 0.05, -80, 10, 14), 0.0042))
+        s.append(stroke(arc(pupil, 0.085, -75, 5, 14), 0.0026))
+        for k in 0..<8 { let a = -78 + 11 * Double(k); s.append(stroke(curve(polar(pupil, 0.054, a), polar(pupil, 0.07, a + 6), polar(pupil, 0.082, a), 5), 0.002)) }
+        s.append(stroke(ellipse(polar(pupil, 0.1, -40), 0.008, 0.005, degrees: 50, 10), 0.0024))
+        // A cataract: the lens's rim and the spokes clouding in from it.
+        let lens0 = cataract + P(0.022, -0.02)
+        s += hoop(lens0, 0.04, 0.0038, pieces: 3)
+        for (a, l) in [(-60.0, 0.022), (10, 0.018), (80, 0.026), (150, 0.016), (215, 0.024)] {
+            s.append(stroke([polar(lens0, 0.04, a - 7), polar(lens0, 0.04 - l, a), polar(lens0, 0.04, a + 7)], 0.0026))
+        }
+        // Floaters: two strands and a few rings, drifting.
+        let fl = floaters + P(0.024, -0.016)
+        s.append(stroke(curve(fl + P(-0.05, 0.02), fl + P(-0.02, -0.03), fl + P(0.01, 0.0), 10) + curve(fl + P(0.01, 0.0), fl + P(0.04, 0.03), fl + P(0.05, -0.02), 10), 0.0034))
+        s.append(stroke(curve(fl + P(-0.03, 0.05), fl + P(0.0, 0.03), fl + P(0.03, 0.06), 10), 0.0026))
+        for (at, r) in [(P(-0.04, -0.03), 0.008), (P(0.03, -0.04), 0.006), (P(0.0, 0.07), 0.007), (P(-0.06, 0.05), 0.005)] { s += hoop(fl + at, r, 0.0024, pieces: 1) }
+        return drawn("ophthalmoscope", glasses: glasses, fills: fills, strokes: s) { p in
+            if p.x > -0.1, p.x < 0.16, p.y > 0.66 { return Int((p.y - 0.66) / 0.04) % 2 == 0 ? silver : Tone(0.15, 0.15, 0.15) }
+            // The head, black, narrowing from the wheel's widest to the handle.
+            if p.y > neck.0 { return p.y < neck.1 && abs(p.x - 0.03) < 0.13 + (wheel - 0.13) * (neck.1 - p.y) / (neck.1 - neck.0) * 0.95 ? dark : m(0.28) }
+            let r2 = simd_length_squared(p)
+            if r2 < wheel * wheel {
+                // The wheel's edge knurled.
+                guard r2 > (wheel - 0.06) * (wheel - 0.06) else { return dark }
+                var a = atan2(p.y, p.x) * 180 / .pi
+                if a < 0 { a += 360 }
+                return Int(a / 6) % 2 == 0 ? silver : dark
+            }
+            return m(0.28)
         }
     }()
 }
