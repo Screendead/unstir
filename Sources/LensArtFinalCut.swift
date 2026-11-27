@@ -282,15 +282,15 @@ extension LensArt {
 // MARK: - 70: Searchlight
 
 /// Level 70's name: a battery of searchlights on the roofs of a city at night, their beams crossing high over the top
-/// and upper right where a plane is caught in them, each lamp's glass over one of hex's five lenses on this level, its
-/// drum rim bolted, a clamp at one side. In each glass, the thing its beam has found: in the big lamp at the hub the
-/// arc itself, spitting between its two carbons; in the others a biplane (upper left), an airship (lower left), a bat
-/// (bottom) and a balloon (lower right).
+/// and upper right where a plane is caught in them, each lamp's glass over one of hex's four lenses on this level, its
+/// drum rim bolted, a clamp at one side, and at the bottom, a twist rod, a roof with its water tank and lit windows
+/// below. In each glass, the thing its beam has found: in the big lamp at the hub the arc itself, spitting between its
+/// two carbons; in the others a biplane (upper left), an airship (lower left) and a balloon (lower right).
 extension LensArt {
     static let searchlight: Halftone.Panel = {
-        let lamps = [hex[0], hex[6], hex[5], hex[4], hex[3]], back = P(-0.05, 0.08)
+        let lamps = [hex[0], hex[6], hex[5], hex[3]], back = P(-0.05, 0.08)
         // Each beam: its lamp, its heading (degrees, -90 straight up) and its half-spread.
-        let beams: [(P, Double, Double)] = [(hex[0], -62, 9), (hex[6], -72, 8), (hex[5], -100, 7), (hex[3], -96, 8), (hex[4], -80, 6)]
+        let beams: [(P, Double, Double)] = [(hex[0], -62, 9), (hex[6], -72, 8), (hex[5], -100, 7), (hex[3], -96, 8)]
         let wedges = beams.map { ($0.0, polar(P(0, 0), 1, $0.1), cos($0.2 * .pi / 180)) }
         let towers = [rect(-0.82, -0.02, -0.18, 1), rect(0.2, 0.2, 0.9, 1), rect(-0.3, 0.42, 0.34, 1)]
         let plane = P(0.18, -0.62)
@@ -298,7 +298,10 @@ extension LensArt {
                           plane + P(0.15, -0.02), plane + P(0.18, -0.06), plane + P(0.2, -0.06), plane + P(0.19, 0.02), plane + P(0.06, 0.03),
                           plane + P(0.1, 0.12), plane + P(0.06, 0.12), plane + P(-0.02, 0.03)]
         let cloud = [(P(0.62, -0.42), P(0.2, 0.06)), (P(0.48, -0.36), P(0.12, 0.05)), (P(-0.38, -0.74), P(0.18, 0.05))]
-        let blocks = [fill(planeShape, .zero)] + cloud.map { oval($0.0, $0.1.x, $0.1.y, y(0.35)) }
+        // The roof under the bottom rod: a water tank on its legs and a stair hut, and lit windows below.
+        let tank = rect(-0.2, 0.3, -0.06, 0.38), hut = rect(0.06, 0.34, 0.2, 0.42)
+        let windows = [rect(-0.22, 0.5, -0.15, 0.58), rect(-0.02, 0.5, 0.05, 0.58), rect(0.12, 0.66, 0.19, 0.74), rect(-0.12, 0.66, -0.05, 0.74)]
+        let blocks = [fill(tank, m(0.7)), fill(hut, m(0.55))] + windows.map { fill($0, y(0.85)) } + [fill(planeShape, .zero)] + cloud.map { oval($0.0, $0.1.x, $0.1.y, y(0.35)) }
             + towers.enumerated().map { fill($0.element, [c(0.6), y(0.45), c(0.45)][$0.offset]) }
 
         var s: [Halftone.Stroke] = []
@@ -322,6 +325,9 @@ extension LensArt {
                 }
             }
         }
+        for r in [tank, hut] + windows { s.append(stroke(closed(r), mid)) }
+        for x in [-0.18, -0.08] { s.append(stroke([P(x, 0.38), P(x, 0.42)], mid)) }
+        s.append(stroke(arc(P(-0.13, 0.3), 0.07, 180, 360, 12), mid))
         s.append(stroke(closed(planeShape), mid))
         s.append(stroke([plane + P(-0.06, 0.0), plane + P(0.12, 0.0)], hair))
         for (c, r) in cloud { s += runs(ellipse(c, r.x, r.y, 36), mid) { p in cloud.allSatisfy { $0.0 == c || simd_length_squared((p - $0.0) / $0.1) > 1 } } }
@@ -364,13 +370,6 @@ extension LensArt {
         s.append(stroke(closed(rect(ship.x - 0.012, ship.y + 0.02, ship.x + 0.014, ship.y + 0.03)), 0.0025))
         for x in [-0.025, 0.0, 0.025] { s.append(stroke([ship + P(x, -0.018), ship + P(x, 0.018)], 0.0018)) }
         s.append(stroke(closed([ship + P(-0.05, 0), ship + P(-0.07, -0.016), ship + P(-0.066, 0.0), ship + P(-0.07, 0.016)]), 0.0025))
-        // A bat.
-        let bat = hex[4] + P(0.024, -0.022)
-        s.append(stroke(closed([bat + P(0, -0.01), bat + P(0.02, -0.02), bat + P(0.05, -0.022), bat + P(0.042, -0.008), bat + P(0.048, 0.004), bat + P(0.034, 0.0),
-                                bat + P(0.03, 0.012), bat + P(0.018, 0.004), bat + P(0.006, 0.014), bat + P(0, 0.006), bat + P(-0.006, 0.014), bat + P(-0.018, 0.004),
-                                bat + P(-0.03, 0.012), bat + P(-0.034, 0.0), bat + P(-0.048, 0.004), bat + P(-0.042, -0.008), bat + P(-0.05, -0.022), bat + P(-0.02, -0.02)]), 0.003))
-        s.append(stroke([bat + P(-0.006, -0.012), bat + P(-0.004, -0.02)], 0.0022))
-        s.append(stroke([bat + P(0.006, -0.012), bat + P(0.004, -0.02)], 0.0022))
         // A balloon.
         let balloon = hex[3] + P(-0.024, -0.03)
         s.append(stroke(arc(balloon, 0.032, 150, 390, 24) + [balloon + P(0.008, 0.05), balloon + P(-0.008, 0.05)] + [polar(balloon, 0.032, 150)], 0.003))
@@ -379,7 +378,7 @@ extension LensArt {
         s.append(stroke(curve(balloon + P(0, -0.032), balloon + P(-0.018, 0.0), balloon + P(-0.006, 0.048), 8), 0.0018))
         s.append(stroke(curve(balloon + P(0, -0.032), balloon + P(0.018, 0.0), balloon + P(0.006, 0.048), 8), 0.0018))
 
-        let glass = [y(0.85), y(0.7), y(0.85), y(0.7), y(0.85)]
+        let glass = [y(0.85), y(0.7), y(0.85), y(0.7)]
         let cuts: [Double] = [0, 30, 54, 90, 120, 160, 196, 230, 262, 300, 330]
         return Halftone.Panel(name: "searchlight", tones: { p in
             for (k, lamp) in lamps.enumerated() {
