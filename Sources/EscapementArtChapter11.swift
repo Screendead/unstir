@@ -424,8 +424,74 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 65, Motion work, hex, clocks 1-,2-.
-    static func plate65() -> Plate? { nil }
+    /// Problem 65, Motion work, hex, clocks 1-,2-: the motion work set out along a dashed axis from eleven to five,
+    /// the cannon pinion in the lane at eleven, the hour wheel on the centre with its rim outside the hub's reach, the
+    /// minute wheel in the lane at five; the minute wheel's pinion in the second ink.
+    static func plate65() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, cannon = polar(o, 0.72, Kit.clock(11)), minute = polar(o, 0.72, Kit.clock(5))
+        let hourR = 0.42, minuteR = 0.205, cannonR = 0.13
+        let hour = gear(o, hourR, teeth: 48, phase: 0.02), small = gear(minute, minuteR, teeth: 30, phase: 0.1)
+        let leaves = gear(cannon, cannonR, teeth: 10, phase: 0.2)
+
+        Kit.ground(&plate, angle: 0.3, around: [hour, small, leaves])
+
+        bold(&plate, o, hourR, outline: hour, rim: 0.09, hub: 0.07, crossings: 4, crossing: 0.034, phase: Kit.clock(0.5))
+        // The hour wheel's pipe, which rides over the cannon pinion's.
+        plate.line(arc(o, 0.115), heavy)
+        plate.line(arc(o, 0.135), fine)
+
+        bold(&plate, minute, minuteR, outline: small, rim: 0.042, hub: 0.075, crossings: 4, crossing: 0.024, phase: 0.4)
+        // The minute wheel's pinion, cut on its arbor.
+        let pinion = gear(minute, 0.062, teeth: 6, phase: 0.3)
+        plate.fill(pinion, .second)
+        plate.line(pinion, medium)
+        plate.fill(arc(minute, 0.018))
+        plate.line(arc(minute, 0.018), medium)
+
+        // The cannon pinion end on: its leaves in ink, its pipe bored for the centre arbor.
+        Kit.mass(&plate, leaves)
+        Kit.cut(&plate, arc(cannon, 0.068), edge: heavy)
+        plate.lines(hatch([arc(cannon, 0.068), arc(cannon, 0.03)], angle: 0.8, gap: 0.012), fine)
+        Kit.mass(&plate, arc(cannon, 0.03))
+        plate.fill(box(cannon - P(0.012, 0.012), cannon + P(0.012, 0.012)))
+
+        // The axis the parts are set out along: a chain line over them all, an arrow at each end showing how they go
+        // together.
+        let line = [polar(o, 0.93, Kit.clock(11)), polar(o, 0.93, Kit.clock(5))]
+        for run in dashed(line, on: 0.06, off: 0.035) where simd_distance(run[0], minute) > 0.07 {
+            plate.line(run, 0.028, .bone)
+            plate.line(run, heavy)
+        }
+        for clock in [11.0, 5.0] {
+            let tip = polar(o, 0.97, Kit.clock(clock))
+            plate.fill(arc(tip - 0.03 * P(cos(Kit.clock(clock)), sin(Kit.clock(clock))), 0.05))
+            Kit.mass(&plate, Kit.barb(tip, toward: Kit.clock(clock), size: 0.07))
+        }
+
+        callout(&plate, "A", from: polar(cannon, 0.1, Kit.clock(2)), to: polar(o, 0.72, Kit.clock(1)) + P(-0.05, 0))
+        callout(&plate, "B", from: polar(o, 0.4, Kit.clock(8.6)), to: polar(o, 0.72, Kit.clock(9)))
+        callout(&plate, "C", from: polar(minute, 0.19, Kit.clock(2.5)), to: polar(o, 0.74, Kit.clock(3)))
+        callout(&plate, "D", from: polar(minute, 0.04, Kit.clock(8)), to: polar(o, 0.72, Kit.clock(7)))
+        return plate
+    }
+
+    /// A wheel face on cut bold: a rim of solid ink inside its teeth, crossings of ink to a hub, the windows ruled as the
+    /// ground.
+    private static func bold(_ plate: inout Plate, _ c: P, _ r: Double, outline: [P], rim: Double, hub: Double,
+                             crossings: Int, crossing: Double, phase: Double, angle: Double = 0.3) {
+        let root = r - 2.4 * r / Double(outline.count / 5)
+        Kit.mass(&plate, outline)
+        plate.line(arc(c, root - 0.012), fine, .bone)
+        let holes = windows(c, hub: hub + 0.01, rim: root - rim, spokes: crossings, width: crossing, phase: phase)
+        for hole in holes {
+            Kit.cut(&plate, hole)
+            plate.lines(hatch([hole], angle: angle, gap: Kit.groundGap), Kit.groundWidth)
+        }
+        Kit.cut(&plate, arc(c, hub))
+        plate.line(arc(c, hub - 0.012), fine)
+        plate.lines(hatch([arc(c, hub - 0.012)], angle: phase + 0.8, gap: 0.014), fine)
+    }
 
     /// Problem 66, Centre wheel, hex, clocks 1+,2+.
     static func plate66() -> Plate? { nil }
