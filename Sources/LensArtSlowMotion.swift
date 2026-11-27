@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass, 59: skylight]
+    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass, 59: skylight, 60: frostedglass]
 
     /// Hex's rods' centres, by rod.
     private static let hexes: [P] = [P(0, 0)] + (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
@@ -503,6 +503,138 @@ extension LensArt {
             }
             for f in clouds where f.holds(p) { return f.tone }
             return sky
+        }, strokes: s)
+    }()
+}
+
+// MARK: - 60: Frosted glass
+
+/// Level 60's name: a window pane blue with frost, ferns of ice growing in from the edge and blooms of it thick and
+/// thin, a heart and a smiling face drawn in it by a finger, and the sash's wood down the left with a glazing bar off it.
+/// Five holes are wiped clear (hex's five lenses on this level), each ringed by its smeared edge, thick frost and wet
+/// streaks by turns, and through each the snowy dusk outside: a snowman at the middle, a street lamp at the top, a fir
+/// tree with its star in the upper right, a sledge in the lower right and a snowflake at the foot.
+extension LensArt {
+    static let frostedglass: Halftone.Panel = {
+        let rods = hexes, lenses = [0, 1, 2, 3, 4], wiped = 0.205, frame = 0.264
+        let holes = lenses.map { rods[$0] }
+        let night = m(0.7), frost = c(0.35), thick = c(0.62), thin = c(0.14), wet = y(0.6)
+        let ice = Tone(0.45, 0.4, 0.45), smear = [ice, m(0.95), ice, wet, ice, m(0.95), wet, ice, night, ice, wet, m(0.95)]
+        // Blooms of the frost, thick and thin, as (centre, radii, thick).
+        let blooms: [Fill] = [(P(-0.7, -0.62), P(0.22, 0.16), true), (P(-0.3, 0.05), P(0.12, 0.2), false), (P(-0.72, 0.55), P(0.2, 0.14), false),
+                              (P(-0.25, 0.62), P(0.16, 0.12), true), (P(-0.52, -0.05), P(0.1, 0.08), true), (P(0.72, 0.0), P(0.18, 0.24), true),
+                              (P(0.3, -0.82), P(0.2, 0.1), true), (P(0.4, 0.84), P(0.24, 0.1), false), (P(-0.05, -0.86), P(0.2, 0.1), false),
+                              (P(0.8, -0.6), P(0.14, 0.2), false), (P(0.82, 0.6), P(0.14, 0.18), true)]
+            .map { oval($0.0, $0.1.x, $0.1.y, $0.2 ? thick : thin) }
+        // The finger's drawings, each a band the width of a fingertip.
+        let finger = 0.034
+        let heartAt = rods[6] + P(0.06, -0.03)
+        let heart = (0...40).map { k -> P in
+            let t = Double(k) / 40 * 2 * .pi
+            return heartAt + 0.0105 * P(16 * pow(sin(t), 3), -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t)))
+        }
+        // The window's sash bar down the left and a glazing bar across to the middle, so its twisting rods turn wood too.
+        let sash = -0.8, rail = 0.02, wood = y(0.55)
+        let face = rods[5] + P(0.05, 0.04), smile = arc(face, 0.085, 20, 160, 16)
+        let eyes = [face + P(-0.05, -0.05), face + P(0.05, -0.05)]
+        let lo = heart.reduce(heart[0], simd_min) - P(finger, finger), hi = heart.reduce(heart[0], simd_max) + P(finger, finger)
+
+        var s: [Halftone.Stroke] = []
+        func clear(_ p: P) -> Bool {
+            abs(p.x - sash) > 0.05 && (abs(p.y - rail) > 0.045 || p.x > -0.3) && holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } && distance(p, heart) > finger + 0.004
+                && abs(simd_distance(p, face) - 0.15) > finger + 0.004
+        }
+        // The frost's ferns: fronds growing in from the edge, each a stem and its side shoots, cut where the frost is gone.
+        for (k, root) in [P(-0.95, -0.2), P(-0.7, 0.7), P(0.2, 0.97), P(0.9, 0.4), P(0.92, -0.3), P(0.4, -0.9), P(-0.4, -0.9), P(-0.95, 0.3),
+                          P(0.7, 0.7), P(-0.2, 0.97), P(0.75, -0.65), P(-0.65, -0.75)].enumerated() {
+            let inward = simd_normalize(-root), bend = Double(k % 2 == 0 ? 1 : -1) * 0.35
+            let stem = curve(root, root + inward * 0.3 + P(-inward.y, inward.x) * (bend * 0.3), root + inward * 0.6 + P(-inward.y, inward.x) * (bend * 0.1), 12)
+            s += runs(stem, mid, keep: clear)
+            for j in stride(from: 2, to: 12, by: 2) {
+                let a = stem[j], dir = simd_normalize(stem[j + 1] - stem[j]), len = 0.15 * (1 - Double(j) / 14)
+                for side in [-1.0, 1.0] {
+                    let tip = a + (dir * 0.5 + P(-dir.y, dir.x) * side) * len
+                    s += runs([a, (a + tip) / 2, tip], mid, keep: clear)
+                }
+            }
+        }
+        // The sash's and the rail's edges.
+        for x in [sash - 0.045, sash + 0.045] { s.append(stroke([P(x, -1), P(x, 1)], mid)) }
+        for yy in [rail - 0.04, rail + 0.04] {
+            s.append(stroke([P(-1, yy), P(sash - 0.045, yy)], mid))
+            s.append(stroke([P(sash + 0.045, yy), P(-0.3, yy)], mid))
+        }
+        // The finger's strokes' edges.
+        s.append(stroke(heart, hair))
+        s += hoop(face, 0.15 + finger, hair) + hoop(face, 0.15 - finger, hair)
+        s.append(stroke(smile, mid))
+        for e in eyes { s.append(stroke(circle(e, 0.022, 10), hair)) }
+        // The holes: each smeared edge, the wipe's arcs, and a drip run down from each.
+        for c in holes {
+            s += hoop(c, frame, mid, pieces: 4) + hoop(c, wiped, hair, pieces: 4)
+            for a in [30.0, 150, 250] { s.append(stroke(arc(c, 0.235, a, a + 40, 8), hair)) }
+            s.append(stroke([polar(c, frame, 100), polar(c, frame + 0.12, 100)], mid))
+        }
+
+        // At the middle: a snowman, hat and scarf, arms of twigs.
+        let man = rods[0] + P(0.034, -0.034)
+        s.append(stroke(circle(man + P(0, 0.018), 0.014, 16), 0.0034))
+        s.append(stroke(circle(man + P(0, -0.006), 0.01, 14), 0.0034))
+        s.append(stroke(closed(rect(man.x - 0.008, man.y - 0.03, man.x + 0.008, man.y - 0.016)), 0.003))
+        s.append(stroke([man + P(-0.013, -0.016), man + P(0.013, -0.016)], 0.003))
+        s.append(stroke([man + P(0.002, -0.006), man + P(0.012, -0.004)], 0.0024))
+        s.append(stroke([man + P(-0.012, 0.01), man + P(-0.032, -0.004), man + P(-0.038, -0.002)], 0.002))
+        s.append(stroke([man + P(0.012, 0.01), man + P(0.03, -0.006), man + P(0.034, -0.012)], 0.002))
+        // At the top: a street lamp, its glass lit and the snow falling through its light.
+        let lamp = rods[1] + P(0.03, -0.036)
+        s.append(stroke([lamp + P(0, 0.006), lamp + P(0, 0.06)], 0.0034))
+        s.append(stroke([lamp + P(-0.008, 0.06), lamp + P(0.008, 0.06)], 0.003))
+        s.append(stroke(closed([lamp + P(-0.008, 0.006), lamp + P(-0.012, -0.012), lamp + P(0.012, -0.012), lamp + P(0.008, 0.006)]), 0.003))
+        s.append(stroke([lamp + P(-0.014, -0.012), lamp + P(0, -0.02), lamp + P(0.014, -0.012)], 0.003))
+        for at in [P(-0.03, -0.02), P(-0.024, 0.01), P(0.026, -0.024), P(0.03, 0.012), P(-0.034, 0.034), P(0.022, 0.04)] {
+            s.append(stroke(circle(lamp + at, 0.0025, 6), 0.0024))
+        }
+        // In the upper right: a fir tree in three tiers, a star on top.
+        let fir = rods[2] + P(0.026, -0.036)
+        var outline: [P] = []
+        for (k, (y0, w)) in [(-0.02, 0.012), (0.0, 0.02), (0.022, 0.028)].enumerated() {
+            outline += [fir + P(w, y0 + 0.004), fir + P(w * 0.4, y0 - 0.006 - 0.004 * Double(k))]
+        }
+        s.append(stroke(closed([fir + P(0, -0.034)] + outline.dropLast() + [fir + P(0.028, 0.026), fir + P(-0.028, 0.026)]
+            + outline.dropLast().reversed().map { fir + P(-($0 - fir).x, ($0 - fir).y) }), 0.003))
+        s.append(stroke(closed(rect(fir.x - 0.004, fir.y + 0.026, fir.x + 0.004, fir.y + 0.036)), 0.0026))
+        s.append(stroke(star(fir + P(0, -0.04), 0.008), 0.0018))
+        // In the lower right: a sledge, its runners curled up in front, and its rope.
+        let sled = rods[3] + P(0.004, -0.04)
+        s.append(stroke([sled + P(-0.036, 0.012), sled + P(0.03, 0.012)] + arc(sled + P(0.03, 0.002), 0.01, 90, -90, 8).dropFirst(), 0.0032))
+        s.append(stroke(closed(rect(sled.x - 0.032, sled.y - 0.008, sled.x + 0.026, sled.y - 0.002)), 0.003))
+        for x in [-0.024, 0.0, 0.02] { s.append(stroke([sled + P(x, -0.002), sled + P(x, 0.012)], 0.0024)) }
+        s.append(stroke(curve(sled + P(0.03, -0.008), sled + P(0.05, -0.02), sled + P(0.044, -0.04), 8), 0.0016))
+        // At the foot: a snowflake, six arms and their branches.
+        let flake = rods[4] + P(0.03, -0.03)
+        for k in 0..<6 {
+            let a = 60 * Double(k) + 15
+            s.append(stroke([flake, polar(flake, 0.026, a)], 0.0026))
+            for t in [0.012, 0.019] {
+                s.append(stroke([polar(flake, t, a), polar(polar(flake, t, a), 0.008, a - 45)], 0.0018))
+                s.append(stroke([polar(flake, t, a), polar(polar(flake, t, a), 0.008, a + 45)], 0.0018))
+            }
+        }
+
+        return Halftone.Panel(name: "frostedglass", tones: { p in
+            for c in holes {
+                let d = simd_distance(p, c)
+                guard d < frame else { continue }
+                return d < wiped ? night : smear[Int(bearing(p, c) / 30) % 12]
+            }
+            if p.x > lo.x, p.y > lo.y, p.x < hi.x, p.y < hi.y, distance(p, heart) < finger { return night }
+            if abs(simd_distance(p, face) - 0.15) < finger { return night }
+            for e in eyes where simd_distance(p, e) < 0.022 { return night }
+            if simd_distance(p, face) < 0.11, distance(p, smile) < 0.012 { return wet }
+            if abs(p.x - sash) < 0.045 || (abs(p.y - rail) < 0.04 && p.x < -0.3) { return wood }
+            // The frost in blooms, thin in places and thick in others.
+            for f in blooms where f.holds(p) { return f.tone }
+            return frost
         }, strokes: s)
     }()
 }
