@@ -17,6 +17,8 @@ extension RingsView {
     private static let pose = ProcessInfo.processInfo.environment["UNSTIR_RINGSPOSE"]
     /// Once a launch: the root builds the menu again each time a level is left.
     private static var toured = false
+    /// The glides begun, so a glide's timer knows whether it is still the one under way.
+    private static var glides = 0
 
     func tour() {
         guard !Self.toured, Self.touring != nil || Self.pose != nil else { return }
@@ -82,18 +84,28 @@ extension RingsView {
         }
     }
 
+    /// Logs "tour glide n→m" as it starts and "tour arrive m" as UIKit reports it ended, so a trace's frames can be
+    /// read glide by glide.
     private func glide(to index: Int) async {
-        guard index != at else { return }
+        let from = at
+        guard index != from else { return }
+        Self.glides += 1
+        let glide = Self.glides, word = model.map { $0.rings.indices.contains(index) ? " (\($0.rings[index].word))" : "" } ?? ""
+        Log.write("tour glide \(from)→\(index)\(word)")
         await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
             glided = { [weak self] in
                 self?.glided = nil
+                Log.write("tour arrive \(index)\(word)")
                 done.resume()
             }
             go(to: index)
-            // A glide UIKit never reports as ended still lets the tour end.
+            // A glide UIKit never reports as ended still lets the tour end. Only this glide's: a timer left over from an
+            // earlier glide that ended would end a later one mid-flight and cut the rest after it short.
             Task {
                 try? await Task.sleep(for: .seconds(1.5))
-                self.glided?()
+                guard Self.glides == glide, let ended = self.glided else { return }
+                Log.write("tour glide \(from)→\(index) not reported ended in 1.5 s")
+                ended()
             }
         }
     }

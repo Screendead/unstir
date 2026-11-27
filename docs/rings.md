@@ -131,7 +131,10 @@ All three are probes: a Debug build reads them, and a Release build only with `P
   is in: `swipe` glides down through every ring and back by the scroll view's own animation; `open` taps the
   middle, so its level opens; `pick` names a bead and lets it go; `rest` waits six seconds. The flight log gets
   "tour swipe, ground drawn 0" as it starts, "tour ends, ground drawn 0" as it ends (the marks the trace readers in
-  use already expect) and a line of `RingsCount`'s counts between them with the art's size.
+  use already expect) and a line of `RingsCount`'s counts between them with the art's size. `swipe` also logs
+  "tour glide 2→3 (vortex)" as each glide starts and "tour arrive 3 (vortex)" as UIKit reports it ended. The flight
+  log's clock is the phone's, which can sit a second or more off the trace's: line the marks up by the first glide's
+  frames.
 - `UNSTIR_RINGSPOSE=ring:2`, `place:1.5` or `pick:9` holds a still for a shot, comma-separated in turn. It makes
   the launch a harnessed one. Rings count from the top: with the daily showing, 0 is the archive's, 1 to 4 the
   tiers and 5 endless's.
