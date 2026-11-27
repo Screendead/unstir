@@ -263,7 +263,7 @@ extension LensArt {
         let clear = { (p: P) in big.allSatisfy { simd_distance(p, $0.at) > rim + 0.01 } && small.allSatisfy { simd_distance(p, $0.at) > $0.r + 0.01 } && !inside(p, bag) }
         for k in -6...6 {
             let o = across * (Double(k) * width)
-            s += runs(span(o - along * 1.1, o + along * 1.1, 66), mid, keep: clear)
+            s += runs(span(o - along * 1.1, o + along * 1.1, 66), mid, keep: clear).flatMap { pieces($0.points, mid) }
             let butt = o + along * (Double((k * 37) % 11) * 0.14 - 0.7)
             s += runs(span(butt, butt + across * width, 6), mid, keep: clear)
             for t in [0.03, width - 0.03] { s.append(stroke(circle(butt + across * t + along * 0.03, 0.008, 6), hair)) }
@@ -465,7 +465,7 @@ extension LensArt {
         // The snow's edge, the firs, the snowman.
         s += runs((0...50).map { P(-0.9 + 0.036 * Double($0), horizon(-0.9 + 0.036 * Double($0))) }, mid) { p in
             firs.allSatisfy { !inside(p, $0) } && simd_distance(p, pond) > 0.35 && !inside(p, wall) && !inside(p, roof)
-        }
+        }.flatMap { pieces($0.points, mid) }
         for f in firs { s.append(stroke(closed(f), mid)) }
         s.append(stroke(circle(man + P(0, 0.04), 0.12, 24), mid))
         s.append(stroke(circle(man + P(0, -0.18), 0.07, 18), mid))
