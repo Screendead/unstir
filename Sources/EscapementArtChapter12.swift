@@ -380,8 +380,106 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 70, Respite, pent, clocks 0+.
-    static func plate70() -> Plate? { nil }
+    /// Problem 70, Respite, pent, clocks 0+: a clinker-built rowing boat drawn up on a shingle beach, its oars shipped
+    /// and crossed over the thwarts, its painter run up the beach to a stake; the mooring ring on the stake in the second
+    /// ink, in the gap between the hubs at two and five.
+    static func plate70() -> Plate {
+        var plate = Plate()
+        let horizon = -0.34
+        func shore(_ x: Double) -> Double { 0.0 - 0.1 * x }
+        let R = 1.06, a0 = asin(horizon / R)
+        let sky = arc(Kit.origin, R, from: .pi - a0, to: 2 * .pi + a0)
+        plate.lines(hatch([sky + [sky[0]]], angle: 0, gap: Kit.groundGap), Kit.groundWidth)
+        // Long clouds low over the sea.
+        for (y, x0, x1) in [(-0.72, -0.62, -0.18), (-0.62, 0.12, 0.7), (-0.5, -0.86, -0.42), (-0.46, 0.4, 0.86)] {
+            Kit.mass(&plate, swell(curve(P(x0, y), P((x0 + x1) / 2, y - 0.03), P(x1, y), 12), 0.01, 0.05))
+        }
+
+        // The sea, in long bands that crowd toward the shore, and its last wave's foam along the shingle.
+        let sea = [P(-1.1, horizon), P(1.1, horizon), P(1.1, shore(1.1)), P(-1.1, shore(-1.1)), P(-1.1, horizon)]
+        plate.fill(sea)
+        for k in 0..<7 {
+            let y = horizon + 0.035 + 0.055 * Double(k) * (1 + 0.15 * Double(k))
+            for seg in 0..<3 {
+                let x0 = -1.0 + 0.7 * Double(seg) + 0.25 * rnd(70, 10 * k + seg), x1 = x0 + 0.3 + 0.25 * rnd(71, 10 * k + seg)
+                guard y + 0.02 < shore(x1) - 0.02 else { continue }
+                Kit.mass(&plate, swell([P(x0, y), P((x0 + x1) / 2, y), P(x1, y)], 0.006, 0.02 + 0.006 * Double(k)))
+            }
+        }
+        plate.line([P(-1.1, shore(-1.1)), P(1.1, shore(1.1))], heavy)
+        plate.lines(dashed(curve(P(-1.1, shore(-1.1) - 0.035), P(0, shore(0) - 0.05), P(1.1, shore(1.1) - 0.035), 30), on: 0.07, off: 0.03), medium)
+
+        // The shingle, ruled, with its pebbles laid in ink.
+        let beach = [P(-1.1, shore(-1.1)), P(1.1, shore(1.1)), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, shore(-1.1))]
+        plate.lines(hatch([beach], angle: 0.45, gap: Kit.groundGap), Kit.groundWidth)
+        for k in 0..<60 {
+            let x = -1.0 + 2.0 * rnd(72, k), y = shore(x) + 0.06 + (1.0 - shore(x)) * rnd(73, k)
+            guard x * x + y * y < 1.0 else { continue }
+            let r = 0.022 + 0.026 * rnd(74, k)
+            Kit.mass(&plate, ellipse(P(x, y), r, 0.6 * r, turned: rnd(75, k) - 0.5))
+            plate.line(ellipse(P(x, y) + P(-0.2 * r, -0.15 * r), 0.45 * r, 0.22 * r, from: .pi, to: 1.7 * .pi, turned: rnd(75, k) - 0.5), fine, .bone)
+        }
+
+        // The boat, lying a little canted on the shingle, bow up the beach.
+        let sheer = curve(P(-0.62, -0.0), P(-0.05, 0.12), P(0.5, -0.1), 30)
+        let far = curve(P(-0.58, -0.05), P(-0.05, 0.03), P(0.46, -0.14), 30)
+        let keel = curve(P(0.36, 0.2), P(-0.08, 0.3), P(-0.52, 0.19), 24)
+        let hull = sheer + [P(0.54, -0.13)] + curve(P(0.54, -0.13), P(0.5, 0.12), P(0.36, 0.2), 10).dropFirst()
+            + keel.dropFirst() + [P(-0.64, -0.01), sheer[0]]
+        // Its shadow on the stones.
+        Kit.mass(&plate, ellipse(P(-0.08, 0.29), 0.46, 0.03, turned: -0.02))
+        // Inside, seen over the near gunwale: the far side's planking, the thwarts.
+        let inside = sheer + far.reversed() + [sheer[0]]
+        Kit.cut(&plate, inside)
+        plate.lines(hatch([inside], angle: 1.2, gap: 0.03), fine)
+        for x in [-0.28, 0.12] {
+            let t = (x + 0.62) / 1.12
+            let top = far[Int(t * 30)], low = sheer[Int(t * 30)]
+            Kit.mass(&plate, [top + P(-0.035, 0), top + P(0.035, 0), low + P(0.035, 0), low + P(-0.035, 0), top + P(-0.035, 0)])
+        }
+        Kit.mass(&plate, hull)
+        // The clinker strakes in bone, each lapping the one below.
+        for k in 1...4 {
+            let f = Double(k) / 5
+            let strake = sheer.indices.map { i -> P in
+                let t = Double(i) / 30, low = keel[min(24, Int((1 - t) * 24))]
+                return sheer[i] + (low - sheer[i]) * f
+            }
+            plate.line(Array(strake[1..<29]), 0.016, .bone)
+        }
+        plate.line(sheer, 0.02, .bone)
+        Kit.mass(&plate, Kit.ribbon(sheer.map { $0 + P(0, -0.012) }, 0.024))
+        // The rowlocks, and the oars shipped and crossed over the thwarts.
+        for x in [-0.2, 0.2] { plate.line([P(x, 0.07 - 0.08 * x - 0.06), P(x, 0.07 - 0.08 * x - 0.02)], 0.018) }
+        for (a, b) in [(P(-0.78, -0.22), P(0.62, 0.08)), (P(-0.74, 0.08), P(0.6, -0.22))] {
+            let d = simd_normalize(b - a), n = P(-d.y, d.x)
+            let neck = a + d * 0.26
+            let blade = [a + n * 0.012, a + n * 0.045 + d * 0.03, neck + n * 0.038, neck + n * 0.014, neck - n * 0.014, neck - n * 0.038,
+                         a - n * 0.045 + d * 0.03, a - n * 0.012, a + n * 0.012]
+            let loom = Kit.band(neck, b - d * 0.06, 0.03)
+            Kit.cut(&plate, loom, edge: medium)
+            Kit.cut(&plate, blade, edge: heavy)
+            plate.line([a + d * 0.03, neck - d * 0.01], 0.014)
+            Kit.cut(&plate, Kit.band(b - d * 0.07, b, 0.024), edge: medium)
+        }
+
+        // The stake up the beach, its ring, and the painter from the stem.
+        let stake = P(0.66, 0.1)
+        Kit.mass(&plate, [stake + P(-0.03, -0.02), stake + P(0.03, -0.035), stake + P(0.035, 0.27), stake + P(-0.025, 0.28), stake + P(-0.03, -0.02)])
+        plate.lines(hatch([[stake + P(0.0, -0.02), stake + P(0.03, -0.035), stake + P(0.035, 0.27), stake + P(0.005, 0.275), stake + P(0.0, -0.02)]], angle: 0.4, gap: 0.012), fine, .bone)
+        let ring = stake + P(-0.012, 0.075)
+        plate.line(arc(ring, 0.05), 0.02, .second)
+        plate.line(arc(ring, 0.06), fine)
+        plate.line(arc(ring, 0.04), fine)
+        plate.line(curve(P(0.46, -0.08), P(0.55, 0.12), ring + P(-0.035, 0.035), 14), 0.012)
+        plate.line(curve(ring + P(-0.035, 0.035), ring + P(-0.06, 0.1), ring + P(-0.05, 0.15), 6), 0.012)
+
+        callout(&plate, "A", from: P(-0.2, 0.25), to: P(-0.64, 0.66))
+        callout(&plate, "B", from: P(-0.62, -0.18), to: P(-0.78, -0.4))
+        callout(&plate, "C", from: P(0.3, 0.5), to: P(0.1, 0.82))
+        callout(&plate, "D", from: ring + P(0.045, 0.02), to: P(0.86, 0.3))
+        return plate
+    }
 
     /// Problem 71, Intermission, hex, clocks 1+.
     static func plate71() -> Plate? { nil }
