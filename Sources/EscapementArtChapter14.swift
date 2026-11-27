@@ -182,8 +182,113 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 81, Nocturnal, hex, clocks 1-.
-    static func plate81() -> Plate? { nil }
+    /// A star of `points` points about `c`, its rays `r` long and its waist `inner`.
+    private static func star(_ c: P, _ r: Double, points: Int = 5, inner: Double = 0.42, turn: Double = -.pi / 2) -> [P] {
+        let ring = (0..<(2 * points)).map { k in
+            polar(c, k % 2 == 0 ? r : inner * r, turn + Double(k) * .pi / Double(points))
+        }
+        return ring + [ring[0]]
+    }
+
+    /// Problem 81, Nocturnal, hex, clocks 1-: the night instrument held up by its handle, its ring of months in ink, its
+    /// toothed hour wheel and its long arm laid along the Plough's guards to the pole star, over hills at the foot of the
+    /// sky; the pole star in the second ink.
+    static func plate81() -> Plate {
+        var plate = Plate()
+        let c = P(-0.16, 0.16), pole = P(0.36, -0.74)
+        let outer = arc(c, 0.44)
+        let hills = [P(-1.1, 0.78), P(-0.7, 0.7), P(-0.42, 0.76), P(-0.1, 0.84), P(0.25, 0.74), P(0.55, 0.64),
+                     P(0.8, 0.7), P(1.1, 0.6), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.78)]
+        let ridge = smooth(Array(hills.dropLast()), 12)
+        let handle = smooth([P(-0.39, 0.5), P(-0.29, 0.56), P(-0.42, 0.74), P(-0.4, 0.9), P(-0.58, 0.92),
+                             P(-0.56, 0.74), P(-0.5, 0.62)], 8)
+        Kit.ground(&plate, angle: 0.25, around: [outer, ridge])
+
+        // The Plough, its two guards in line with the pole star.
+        let plough = [P(0.9, -0.12), P(0.78, -0.02), P(0.66, -0.05), P(0.54, -0.13), P(0.56, -0.32), P(0.38, -0.4), P(0.42, -0.58)]
+        plate.lines(dashed(plough, on: 0.03, off: 0.025), fine)
+        plate.lines(dashed([plough[6], pole], on: 0.015, off: 0.03), fine)
+        for (k, p) in plough.enumerated() {
+            let ray = star(p, k == 4 || k == 6 ? 0.05 : 0.04)
+            plate.line(ray, 0.03, .bone)
+            Kit.mass(&plate, ray)
+        }
+        for (k, p) in [P(-0.62, -0.62), P(-0.78, -0.2), P(-0.3, -0.84), P(0.08, -0.32), P(0.72, -0.56), P(0.84, 0.3),
+                       P(-0.86, 0.18), P(0.12, -0.72), P(-0.5, -0.36)].enumerated() {
+            let ray = star(p, 0.03 + 0.012 * Double(k % 3), points: 4, inner: 0.3, turn: 0.4 * Double(k))
+            plate.line(ray, 0.022, .bone)
+            Kit.mass(&plate, ray)
+        }
+
+        // The hills, ink, a road of bone over them.
+        Kit.mass(&plate, ridge)
+        plate.line(curve(P(-0.95, 0.92), P(0.1, 0.8), P(0.9, 0.86)), 0.014, .bone)
+
+        // The handle.
+        plate.line(handle, 0.05, .bone)
+        Kit.mass(&plate, handle)
+        plate.fill(arc(P(-0.49, 0.83), 0.035))
+        plate.line(arc(P(-0.49, 0.83), 0.035), medium)
+        plate.line(curve(P(-0.45, 0.6), P(-0.5, 0.7), P(-0.47, 0.78)), heavy, .bone)
+
+        // The ring of months: ink, cut with its divisions and numbered in bone.
+        plate.line(outer, 0.05, .bone)
+        Kit.mass(&plate, outer)
+        Kit.cut(&plate, arc(c, 0.37), edge: heavy)
+        for k in 0..<72 {
+            let a = 2 * .pi * Double(k) / 72
+            if k % 6 == 0 {
+                plate.line([polar(c, 0.3, a), polar(c, 0.44, a)], heavy, .bone)
+                plate.line([polar(c, 0.3, a), polar(c, 0.37, a)], heavy)
+            } else {
+                plate.line([polar(c, k % 3 == 0 ? 0.33 : 0.35, a), polar(c, 0.37, a)], medium)
+            }
+        }
+        for k in 1...12 {
+            let a = Kit.clock(Double(k) - 0.5)
+            plate.lines(Kit.numeral(roman(k), at: polar(c, 0.405, a), height: 0.04, turn: a + .pi / 2, squeeze: 0.7), heavy, .bone)
+        }
+
+        // The hour wheel, its teeth to be counted in the dark and its XII tooth long; hatched between its hours.
+        let teeth: [P] = (0..<48).map { k in
+            let a = Kit.clock(Double(k) / 4) - 0.04
+            let r = k % 2 == 0 ? (k == 0 ? 0.35 : 0.29) : 0.245
+            return polar(c, r, a)
+        }
+        Kit.cut(&plate, teeth + [teeth[0]], edge: heavy)
+        plate.line(arc(c, 0.225), 0.016)
+        plate.line(arc(c, 0.155), medium)
+        for k in 0..<12 {
+            let a = Kit.clock(Double(k))
+            plate.lines(hatch([arc(c, 0.225, from: a + 0.1, to: a + 0.42) + arc(c, 0.155, from: a + 0.42, to: a + 0.1)],
+                              angle: a + 0.9, gap: 0.02), fine)
+            Kit.mass(&plate, Kit.band(polar(c, 0.155, a), polar(c, 0.225, a), 0.026))
+        }
+
+        // The arm, sighted along its edge from the pivot's hole to the pole star.
+        let dir = simd_normalize(pole - c), side = P(-dir.y, dir.x)
+        let tip = c + dir * 0.84
+        let arm = [c - dir * 0.12 + side * 0.06, tip + side * 0.012, tip, c - dir * 0.12 - side * 0.06, c - dir * 0.12 + side * 0.06]
+        plate.line(arm, 0.04, .bone)
+        Kit.mass(&plate, arm)
+        plate.line([c + dir * 0.13 - side * 0.01, tip - dir * 0.04], heavy, .bone)
+        plate.lines(dashed([tip, pole - dir * 0.08], on: 0.02, off: 0.025), medium)
+        Kit.cut(&plate, arc(c, 0.07), edge: 0.02)
+        plate.fill(arc(c, 0.026), .black)
+        plate.line(arc(c, 0.045), fine)
+
+        // The pole star.
+        let polaris = star(pole, 0.075, points: 8, inner: 0.36, turn: -.pi / 2)
+        plate.line(polaris, 0.03, .bone)
+        plate.fill(polaris, .second)
+        plate.line(polaris, fine)
+
+        callout(&plate, "A", from: polar(c, 0.4, Kit.clock(8.6)), to: P(-0.74, -0.08))
+        callout(&plate, "B", from: polar(c, 0.24, Kit.clock(4.5)), to: P(0.4, 0.46))
+        callout(&plate, "C", from: c + dir * 0.6, to: P(-0.12, -0.6))
+        callout(&plate, "D", from: P(-0.47, 0.66), to: P(-0.78, 0.5))
+        return plate
+    }
 
     /// Problem 82, Astrolabe, hex, clocks 1-.
     static func plate82() -> Plate? { nil }
