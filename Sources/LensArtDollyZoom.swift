@@ -443,10 +443,10 @@ extension LensArt {
 
 /// Level 66's name: a surveyor's theodolite on its tripod out on the hills on a sunny morning, its telescope between
 /// its two standards at the top, the vertical circle on one side, its base over the hub and the tripod's legs spread
-/// below. The five lenses: over the hub, the base's round level, its bubble off
-/// the ring; over the upper right, the view down the telescope, the staff on the cross hairs; over the lower right the
-/// compass needle and its north; over the bottom, down the plummet, the nail in its peg that marks the station; and
-/// over the lower left the next station, a trig pillar on its hill.
+/// below, and its trough compass in its box on the grass at the lower right, which twists, the needle's two halves
+/// painted apart. The four lenses: over the hub, the base's round level, its bubble off the ring; over the upper right,
+/// the view down the telescope, the staff on the cross hairs; over the bottom, down the plummet, the nail in its peg
+/// that marks the station; and over the lower left the next station, a trig pillar on its hill.
 extension LensArt {
     static let theodolite: Halftone.Panel = {
         let base = P(0, 0), view = P(0.485, -0.28), compass = P(0.485, 0.28), plummet = P(0, 0.56), pillar = P(-0.485, 0.28)
@@ -454,17 +454,19 @@ extension LensArt {
         let glasses = [
             glass(base, c(0.65), frame: [(40, body), (70, dark), (160, body), (185, silver), (300, body), (330, dark), (360, body)]),
             glass(view, y(0.7), frame: [(30, dark), (120, silver), (150, dark), (230, silver), (360, dark)]),
-            glass(compass, m(0.5), frame: [(90, dark), (130, silver), (210, dark), (235, c(0.7)), (360, dark)]),
             glass(plummet, c(0.4), frame: [(20, silver), (50, dark), (140, silver), (180, dark), (290, silver), (320, body), (360, silver)]),
             glass(pillar, m(0.6), frame: [(100, dark), (125, silver), (250, dark), (280, m(0.7)), (360, dark)]),
         ]
         let sun = P(-0.62, -0.5), circle0 = P(-0.22, -0.56)
+        let compassBox = (0..<4).map { polar(compass, 0.33, 57 + 90 * Double($0)) }
+        let needle = [-60.0, 120].map { [polar(compass, 0.17, $0), polar(compass, 0.035, $0 + 90), polar(compass, 0.035, $0 - 90)] }
         let scope = bar(P(-0.3, -0.6), P(0.36, -0.6), 0.12), hood = bar(P(0.3, -0.6), P(0.44, -0.6), 0.16)
         let standards = [rect(-0.2, -0.66, -0.12, -0.2), rect(0.1, -0.66, 0.18, -0.2)], plate = rect(-0.26, -0.26, 0.26, -0.18)
         let legs = [bar(P(-0.06, 0.24), P(-0.62, 1.0), 0.07), bar(P(0.02, 0.26), P(0.12, 1.0), 0.07), bar(P(0.08, 0.24), P(0.66, 0.9), 0.07)]
         let hill = curve(P(-1, -0.04), P(-0.3, -0.24), P(0.2, -0.06), 16) + curve(P(0.2, -0.06), P(0.6, 0.08), P(1, -0.12), 16) + [P(1, 1), P(-1, 1)]
         let cloud = [P(0.3, -0.86), P(0.62, -0.8)].map { oval($0, 0.16, 0.06, Tone(0.4, 0.4, 0.4)) }
-        var fills = [fill(hood, dark), fill(scope, dark), disc(circle0, 0.12, silver)] + standards.map { fill($0, body) } + [fill(plate, body)]
+        var fills = [fill(needle[0], m(0.85)), fill(needle[1], c(0.75)), disc(compass, 0.19, silver), fill(compassBox, dark),
+                     fill(hood, dark), fill(scope, dark), disc(circle0, 0.12, silver)] + standards.map { fill($0, body) } + [fill(plate, body)]
         fills += legs.map { fill($0, wood) } + cloud + [disc(sun, 0.14, y(0.95)), fill(hill, field)]
 
         var s: [Halftone.Stroke] = []
@@ -504,13 +506,13 @@ extension LensArt {
         s.append(stroke([view + P(-0.004, -0.16), view + P(-0.004, -0.024)], 0.0022))
         s.append(stroke([view + P(-0.004, 0.024), view + P(-0.004, 0.16)], 0.0022))
         for dy in [-0.05, 0.05] { s.append(stroke([view + P(-0.03, dy), view + P(-0.008, dy)], 0.0022)) }
-        // The compass: its card's ring, the needle swung a little east of the line, and north.
-        let cc = compass + P(0.024, 0.014)
-        s += hoop(cc, 0.05, 0.0034, pieces: 3)
-        for k in 0..<12 { s.append(stroke([polar(cc, 0.05, 30 * Double(k)), polar(cc, k % 3 == 0 ? 0.038 : 0.044, 30 * Double(k))], 0.0018)) }
-        s.append(stroke(closed([polar(cc, 0.042, -75), polar(cc, 0.007, 15), polar(cc, 0.036, 105), polar(cc, 0.007, 195)]), 0.003))
-        let north = cc + P(-0.008, -0.068)
-        s.append(stroke([north + P(0, 0.012), north + P(0, -0.012), north + P(0.016, 0.012), north + P(0.016, -0.012)], 0.003))
+        // The compass: its box, the card's ring and its marks, the needle, north.
+        s += edges(compassBox, mid, keep: clear)
+        s += hoop(compass, 0.19, mid)
+        for k in 0..<12 { s.append(stroke([polar(compass, 0.19, 30 * Double(k)), polar(compass, k % 3 == 0 ? 0.15 : 0.17, 30 * Double(k))], hair)) }
+        for q in needle { s.append(stroke(closed(q), mid)) }
+        let north = polar(compass, 0.13, -60)
+        s.append(stroke([north + P(-0.016, 0.022), north + P(-0.016, -0.022), north + P(0.016, 0.022), north + P(0.016, -0.022)], mid))
         // Down the plummet: its ring and cross on the nail in the peg's top, and the turf round it.
         let pm = plummet + P(0.022, -0.02)
         s += hoop(pm, 0.03, 0.003, pieces: 2)
