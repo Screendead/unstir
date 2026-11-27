@@ -21,5 +21,11 @@ shot rings-ax3 "The rings at rest on whirlpool at accessibility3, the mock's acc
   MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility3
 shot rings-ax5 "The same at accessibility5, the largest: every word at the system's size, the level's name wrapped to the sun." \
   MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility5
+shot rings-ax3-bead "Accessibility3, bead 09 tapped: the word stays put, the picked level's best, number, name and tap again to play stacked under it." \
+  MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility3 RINGSPOSE=pick:9
+shot rings-ax3-shut "Accessibility3 on vortex, shut: its word and what opens it at the system's sizes." \
+  MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility3 RINGSPOSE=ring:3
+shot rings-ax3-endless "Accessibility3 on endless's ring, a run saved: continue and new run stacked under its count." \
+  MENU=rings TIER=whirlpool BESTS=$ringsBests,endless:9 DAILIES=4 OWNED=lens MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3 TYPESIZE=accessibility3 RINGSPOSE=ring:5
 shot rings-fresh "The rings before plughole 01 is solved: the ring alone, with no daily and no packs yet, as the old menu shows neither." \
-  MENU=rings
+  MENU=rings MUSIC=0 SOUNDS=0
