@@ -632,7 +632,7 @@ final class PackTests: XCTestCase {
             XCTAssertFalse(Offer.complete.holds.contains(pack.name), pack.name)
             XCTAssertFalse(Clip.complete.reels.contains { $0.level.pack == pack }, pack.name)
         }
-        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 85 levels")
+        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 145 levels")
         XCTAssertEqual(Offer.shelf(release: true, ready: { Pack.bundled.contains($0) }).last, .complete)
         XCTAssertEqual(Offer.complete.name, Offer.bundleName)
     }
