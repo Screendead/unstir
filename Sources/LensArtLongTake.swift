@@ -33,29 +33,10 @@ extension LensArt {
     /// Layers over a ground, the first that holds a point giving its tone.
     fileprivate static func layered(_ name: String, _ layers: [Layer], strokes: [Halftone.Stroke],
                                      ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
-        // A line whose box grows large is cut into runs, each with its own small box, as the bake tests every segment of
-        // a stroke whose box holds the pixel; a straight or short one is kept whole, as each stroke costs a box test.
-        let short = strokes.flatMap { s -> [Halftone.Stroke] in
-            var runs: [Halftone.Stroke] = [], run = [s.points[0]], lo = s.points[0], hi = s.points[0]
-            for p in s.points.dropFirst() {
-                let l = simd_min(lo, p), h = simd_max(hi, p)
-                if run.count > 1, (h.x - l.x + s.width) * (h.y - l.y + s.width) > 0.01 {
-                    runs.append(Halftone.Stroke(points: run, width: s.width))
-                    run = [run[run.count - 1]]
-                    lo = simd_min(run[0], p)
-                    hi = simd_max(run[0], p)
-                } else {
-                    lo = l
-                    hi = h
-                }
-                run.append(p)
-            }
-            return runs + [Halftone.Stroke(points: run, width: s.width)]
-        }
-        return Halftone.Panel(name: name, tones: { p in
+        Halftone.Panel(name: name, tones: { p in
             for l in layers { if let t = l(p) { return t } }
             return ground(p)
-        }, strokes: short)
+        }, strokes: strokes)
     }
 
     /// A circle as four quarter arcs, so each stroke's box stays small and the bake tests fewer segments a pixel.
