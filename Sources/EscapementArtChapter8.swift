@@ -3,8 +3,7 @@
 import Foundation
 import simd
 
-/// Chapter 8, Retrograde: problems 43 to 48's plates, drawn with `Kit`. Not drawn yet: each falls back to
-/// the shared plate.
+/// Chapter 8, Retrograde: problems 43 to 48's plates, drawn with `Kit`.
 extension EscapementArt {
     /// A closed outline through the points, rounded by Catmull-Rom.
     private static func smooth(_ points: [P], steps: Int = 6) -> [P] {
@@ -500,6 +499,77 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 48, Tide clock, hex, clocks 1+,2-.
-    static func plate48() -> Plate? { nil }
+    /// Problem 48, Tide clock, hex, clocks 1+,2-: a tide clock's dial set off the hub between the middle rod and the
+    /// two above it, a ring of waves for its hours, tall at high water and flat at low, one bold hand an hour past
+    /// high water, and a ship's wheel behind it whose spokes and handles reach across the glass; the hand's tip in
+    /// the second ink.
+    static func plate48() -> Plate {
+        var plate = Plate()
+        let c = P(0.16, -0.28), face = 0.6, wheel = 0.86
+        let tip = P(0.42, -0.64), toward = atan2(tip.y - c.y, tip.x - c.x), reach = simd_distance(tip, c)
+
+        Kit.ground(&plate, angle: 0.4, around: [arc(c, face + 0.02)])
+        // The ship's wheel behind: its spokes out to turned handles, then its rim.
+        for k in 0..<8 {
+            let a = Kit.clock(0.75) + Double(k) * .pi / 4
+            Kit.mass(&plate, [polar(c, face, a - 0.05), polar(c, wheel + 0.1, a - 0.03), polar(c, wheel + 0.1, a + 0.03),
+                              polar(c, face, a + 0.05), polar(c, face, a - 0.05)])
+            let grip = smooth([polar(c, wheel + 0.1, a - 0.025), polar(c, wheel + 0.16, a - 0.045), polar(c, wheel + 0.26, a - 0.035),
+                               polar(c, wheel + 0.3, a), polar(c, wheel + 0.26, a + 0.035), polar(c, wheel + 0.16, a + 0.045),
+                               polar(c, wheel + 0.1, a + 0.025)], steps: 4)
+            Kit.mass(&plate, grip)
+            plate.line([polar(c, wheel + 0.13, a), polar(c, wheel + 0.25, a)], medium, .bone)
+        }
+        let rim = arc(c, wheel + 0.03) + arc(c, wheel - 0.03).reversed()
+        Kit.mass(&plate, rim)
+        plate.line(arc(c, wheel), medium, .bone)
+        for k in 0..<8 {
+            let a = Kit.clock(0.75) + Double(k) * .pi / 4
+            plate.fill(arc(polar(c, wheel, a), 0.022))
+            plate.line(arc(polar(c, wheel, a), 0.022), medium)
+        }
+
+        // The dial: a heavy bezel, the waves for hours, the face rayed.
+        plate.fill(arc(c, face + 0.02))
+        for k in 0..<36 where k % 2 == 0 {
+            let a = Double(k) * .pi / 18
+            Kit.mass(&plate, [polar(c, 0.1, a), polar(c, 0.6 * face, a - 0.045), polar(c, 0.6 * face, a + 0.045), polar(c, 0.1, a)])
+        }
+        plate.line(arc(c, 0.6 * face), heavy)
+        Kit.mass(&plate, arc(c, face + 0.02) + arc(c, face - 0.035).reversed())
+        for k in 0..<12 {
+            let a = Kit.clock(Double(k)), height = 0.5 + 0.5 * cos(Double(k) * .pi / 6)
+            let amp = 0.006 + 0.022 * height, w = 0.075
+            let up = P(cos(a), sin(a)), along = P(-up.y, up.x)
+            for (row, r) in [0.64, 0.73].enumerated() {
+                let base = polar(c, r * face, a)
+                let swell = (0...24).map { i -> P in
+                    let t = Double(i) / 24 * 2 - 1
+                    return base + along * (t * w) + up * (amp * sin(.pi * 2 * t + Double(row)))
+                }
+                plate.line(swell, 0.016)
+            }
+        }
+        for k in 0..<60 where k % 5 != 0 {
+            let a = Double(k) * .pi / 30
+            plate.line([polar(c, face - 0.085, a), polar(c, face - 0.055, a)], medium)
+        }
+        plate.line(arc(c, face - 0.09), medium)
+
+        // The hand, an hour past high water, its tail weighted and its tip in the second ink.
+        let hand = Kit.hand(c, toward: toward, length: reach, width: 0.07, tail: 0.16)
+        Kit.mass(&plate, hand)
+        Kit.mass(&plate, arc(polar(c, 0.15, toward + .pi), 0.045))
+        let point = [polar(c, 0.66 * reach, toward - 0.07), tip, polar(c, 0.66 * reach, toward + 0.07)]
+        plate.fill(point + [point[0]], .second)
+        plate.line(point + [point[0]], medium)
+        plate.fill(arc(c, 0.03))
+        plate.line(arc(c, 0.03), medium)
+
+        callout(&plate, "A", from: polar(c, 0.68 * face + 0.05, Kit.clock(0)), to: P(-0.28, -0.84))
+        callout(&plate, "B", from: tip, to: P(0.7, -0.62))
+        callout(&plate, "C", from: polar(c, wheel, Kit.clock(7.5)), to: P(-0.82, 0.18))
+        callout(&plate, "D", from: polar(c, 0.68 * face + 0.02, Kit.clock(6)), to: P(0.42, 0.62))
+        return plate
+    }
 }
