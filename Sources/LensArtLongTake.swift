@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez]
+    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette]
 }
 
 // MARK: Drawing
@@ -309,6 +309,104 @@ extension LensArt {
         return layered("pincenez", layers, strokes: s) { p in
             // A dark wall papered in broad gilt stripes.
             (p.x + 2).truncatingRemainder(dividingBy: 0.15) < 0.065 ? y(0.4) : .zero
+        }
+    }()
+}
+
+// MARK: - 34: Lorgnette
+
+/// Level 34's name: a lorgnette, its two glasses joined in gilt beaded with jet, held up on its long gilt handle in a
+/// lady's blue satin glove against rose silk, her painted fan open above; the near glass is over the left core and the
+/// far one over the bottom (eye's two lenses on this level), and what she has spotted with such disdain is a mouse
+/// through the one and its wedge of cheese through the other. The glove, the handle and the fan's pleats are the broad
+/// shapes the two twisting rods turn.
+extension LensArt {
+    static let lorgnette: Halftone.Panel = {
+        let a = P(-0.4, 0), b = P(0, 0.56), knot = a + (b - a) * 0.594
+        let glass = c(0.5), gilt = y(0.9), satin = c(0.6)
+        let hinge = polar(a, 0.41, -40), end = P(0.74, -0.54), grip = hinge + (end - hinge) * 0.55
+        let handle = bar(hinge, end, 0.065)
+        let arm = bar(grip + P(0.04, 0.06), P(1.05, 0.2), 0.17)
+        let fist = turned(squircle(grip + P(0.03, 0.03), 0.14, 0.1, 32), about: grip + P(0.03, 0.03), 25)
+        let cuff = bar(grip + P(0.2, 0.16), grip + P(0.26, 0.21), 0.24)
+        let fanPivot = P(-0.2, -0.44)
+        let pleats = (0..<9).map { k in [fanPivot] + arc(fanPivot, 0.42, -150 + 12 * Double(k), -138 + 12 * Double(k), 4) }
+
+        var layers: [Layer] = [layer(disc(a, 0.348, glass)), layer(disc(b, 0.264, glass))]
+        // The frames: gilt beaded with jet and a garnet, unevenly, so each reads its way round.
+        layers.append(segments(a, 0.348, 0.41, 26, [gilt, gilt, m(0.8), gilt, .zero], phase: 5))
+        layers.append(segments(b, 0.264, 0.315, 20, [gilt, gilt, m(0.8), gilt, .zero], phase: 9))
+        layers += [layer(disc(knot, 0.05, m(0.85))), layer(disc(end, 0.055, gilt)), layer(fill(fist, satin)), layer(fill(handle, gilt)), layer(fill(cuff, m(0.8))),
+                   layer(fill(arm, satin))]
+        for (k, p) in pleats.enumerated() { layers.append(layer(fill(p, k % 2 == 0 ? m(0.75) : y(0.75)))) }
+        layers.append(layer(fill(rect(-1, 0.64, 1, 1), y(0.38))))
+
+        var s: [Halftone.Stroke] = []
+        // The wall's silk stripes and the floor's boards.
+        for k in 0..<14 {
+            let x = -0.97 + 0.14 * Double(k)
+            s += runs(span(P(x, -1), P(x, 0.64), 60)) { p in simd_distance(p, a) > 0.42 && simd_distance(p, b) > 0.33 && !inside(p, handle) && !inside(p, arm) && simd_distance(p, fanPivot) > 0.43 }
+        }
+        s += runs(span(P(-1, 0.64), P(1, 0.64), 60), mid) { simd_distance($0, b) > 0.33 }
+        for (k, yy) in [0.76, 0.9].enumerated() {
+            s += runs(span(P(-1, yy), P(1, yy), 60), hair) { simd_distance($0, b) > 0.33 }
+            for j in 0..<4 {
+                let x = -0.85 + 0.45 * Double(j) + 0.2 * Double(k)
+                if simd_distance(P(x, yy + 0.07), b) > 0.36 { s.append(stroke([P(x, yy), P(x, yy + 0.14)], hair)) }
+            }
+        }
+        // The fan: its pleats, guards and rivet, and a sprig painted across it.
+        for p in pleats { s.append(stroke([p[0], p[1]], hair)) }
+        s.append(stroke(arc(fanPivot, 0.42, -150, -42, 24), mid))
+        s.append(stroke([fanPivot, polar(fanPivot, 0.44, -150)], mid))
+        s.append(stroke([fanPivot, polar(fanPivot, 0.44, -42)], mid))
+        s.append(stroke(arc(fanPivot, 0.14, -150, -42, 12), hair))
+        s += rim(fanPivot, 0.02, mid, 3)
+        s.append(stroke(curve(polar(fanPivot, 0.22, -140), polar(fanPivot, 0.36, -100), polar(fanPivot, 0.26, -55), 16), mid))
+        for t in [-125.0, -100, -75] { s.append(stroke(circle(polar(fanPivot, 0.31, t), 0.02, 8), hair)) }
+        // The handle twisted, its finial, and the glove's fingers round it and the seam up its arm.
+        s.append(stroke(closed(handle), mid))
+        for k in 1..<14 {
+            let q = hinge + (end - hinge) * (Double(k) / 14)
+            s.append(stroke([q + P(-0.02, -0.03), q + P(0.02, 0.03)], hair))
+        }
+        s += rim(end, 0.055, mid, 4)
+        s.append(stroke(closed(fist), bold))
+        s.append(stroke(closed(cuff), mid))
+        for k in 0..<6 { s.append(stroke([cuff[0] + (cuff[1] - cuff[0]) * 0.5 + (cuff[3] - cuff[0]) * (Double(k) / 5), cuff[0] + (cuff[1] - cuff[0]) * 1.1 + (cuff[3] - cuff[0]) * (Double(k) / 5)], hair)) }
+        for k in 0..<4 { s.append(stroke(curve(grip + P(-0.07 + 0.045 * Double(k), -0.06), grip + P(-0.03 + 0.045 * Double(k), 0.03), grip + P(-0.05 + 0.045 * Double(k), 0.09), 6), mid)) }
+        s.append(stroke(curve(grip + P(-0.1, 0.0), grip + P(-0.06, -0.08), grip + P(0.02, -0.1), 6), mid))
+        s.append(stroke([arm[0], arm[1]], bold))
+        s.append(stroke([arm[3], arm[2]], bold))
+        s.append(stroke(span(grip + P(0.1, 0.1), P(1.0, 0.2), 8), hair))
+        // The lorgnette: both frames, the bow knotting them, and a glint on each glass.
+        for (c, r, outer) in [(a, 0.348, 0.41), (b, 0.264, 0.315)] {
+            s += rim(c, outer, bold)
+            s += rim(c, r, mid)
+            s.append(stroke(arc(c, r * 0.78, 200, 245, 10), mid))
+            s.append(stroke(arc(c, r * 0.66, 210, 230, 6), hair))
+        }
+        s += rim(knot, 0.05, mid, 4)
+        s.append(stroke(closed([knot + P(-0.05, 0.02), knot + P(-0.12, -0.02), knot + P(-0.1, 0.07)]), mid))
+        // Through the near glass: a mouse, nose up, whiskers and a long tail.
+        let mouse = a + P(0.014, -0.028)
+        s.append(stroke(closed(curve(mouse + P(-0.024, 0.008), mouse + P(-0.02, -0.02), mouse + P(0.012, -0.012), 10)
+            + [mouse + P(0.03, -0.002), mouse + P(0.012, 0.01)]), 0.0034))
+        s.append(stroke(circle(mouse + P(0.006, -0.016), 0.007, 10), 0.003))
+        s.append(stroke(circle(mouse + P(0.017, -0.006), 0.0022, 6), 0.003))
+        for t in [-20.0, 0, 20] { s.append(stroke([mouse + P(0.03, -0.002), polar(mouse + P(0.03, -0.002), 0.016, t)], 0.0014)) }
+        s.append(stroke(curve(mouse + P(-0.024, 0.006), mouse + P(-0.05, 0.03), mouse + P(-0.06, -0.01), 10), 0.0024))
+        for x in [-0.012, 0.006] { s.append(stroke([mouse + P(x, 0.008), mouse + P(x + 0.002, 0.014)], 0.002)) }
+        // Through the far glass: a wedge of cheese, its holes, and a crumb.
+        let cheese = b + P(0.006, -0.03)
+        s.append(stroke(closed([cheese + P(-0.032, 0.0), cheese + P(0.028, 0.0), cheese + P(0.028, 0.016), cheese + P(-0.032, 0.016)]), 0.0032))
+        s.append(stroke([cheese + P(-0.032, 0.0), cheese + P(0.036, -0.022), cheese + P(0.028, 0.0)], 0.0032))
+        s.append(stroke([cheese + P(0.036, -0.022), cheese + P(0.036, -0.006), cheese + P(0.028, 0.016)], 0.0024))
+        for (at, r) in [(P(-0.018, 0.008), 0.004), (P(0.004, 0.009), 0.0028), (P(0.016, -0.008), 0.0025)] { s.append(stroke(circle(cheese + at, r, 8), 0.002)) }
+        s.append(stroke(circle(cheese + P(-0.046, 0.012), 0.003, 6), 0.0024))
+        return layered("lorgnette", layers, strokes: s) { p in
+            // Rose silk on the wall in broad stripes of two tones.
+            (p.x + 2.04).truncatingRemainder(dividingBy: 0.28) < 0.14 ? m(0.42) : m(0.24)
         }
     }()
 }
