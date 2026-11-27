@@ -14,15 +14,24 @@ extension LensArt {
 // MARK: Drawing
 
 extension LensArt {
-    /// A tone at a point, or nil where the layer leaves the point to the ones under it.
-    fileprivate typealias Layer = @Sendable (P) -> Tone?
+    /// A tone at a point inside a box, or nil where the layer leaves the point to the ones under it.
+    fileprivate struct Layer: Sendable {
+        var lo: P, hi: P
+        var tone: @Sendable (P) -> Tone?
 
-    fileprivate static func layer(_ f: Fill) -> Layer { { f.holds($0) ? f.tone : nil } }
+        init(_ lo: P, _ hi: P, tone: @escaping @Sendable (P) -> Tone?) {
+            self.lo = lo
+            self.hi = hi
+            self.tone = tone
+        }
+    }
+
+    fileprivate static func layer(_ f: Fill) -> Layer { Layer(f.lo, f.hi) { f.holds($0) ? f.tone : nil } }
 
     /// A ring between r0 and r1 about c cut into n equal segments, toned in turn from `tones`, the first from `phase`
     /// degrees: a frame that changes along its length.
     fileprivate static func segments(_ c: P, _ r0: Double, _ r1: Double, _ n: Int, _ tones: [Tone], phase: Double = 0) -> Layer {
-        { p in
+        Layer(c - P(r1, r1), c + P(r1, r1)) { p in
             let d = p - c, l2 = simd_length_squared(d)
             guard l2 < r1 * r1, l2 >= r0 * r0 else { return nil }
             let a = (atan2(d.y, d.x) * 180 / .pi - phase + 720).truncatingRemainder(dividingBy: 360)
@@ -30,11 +39,19 @@ extension LensArt {
         }
     }
 
-    /// Layers over a ground, the first that holds a point giving its tone.
+    /// Layers over a ground, the first that holds a point giving its tone. The tank is cut into a grid, each cell
+    /// listing the layers whose boxes reach it, so a point asks only those: the bake asks every point's tones once
+    /// for each ink.
     fileprivate static func layered(_ name: String, _ layers: [Layer], strokes: [Halftone.Stroke],
                                      ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
-        Halftone.Panel(name: name, tones: { p in
-            for l in layers { if let t = l(p) { return t } }
+        let n = 32, cell = 2.0 / Double(n)
+        let grid: [[Layer]] = (0..<n * n).map { k in
+            let lo = P(Double(k % n), Double(k / n)) * cell - 1, hi = lo + cell
+            return layers.filter { $0.lo.x <= hi.x && $0.lo.y <= hi.y && $0.hi.x >= lo.x && $0.hi.y >= lo.y }
+        }
+        return Halftone.Panel(name: name, tones: { p in
+            let i = min(max(Int((p.x + 1) / cell), 0), n - 1), j = min(max(Int((p.y + 1) / cell), 0), n - 1)
+            for l in grid[j * n + i] { if let t = l.tone(p) { return t } }
             return ground(p)
         }, strokes: strokes)
     }
@@ -42,6 +59,14 @@ extension LensArt {
     /// A circle as four quarter arcs, so each stroke's box stays small and the bake tests fewer segments a pixel.
     fileprivate static func rim(_ c: P, _ r: Double, _ width: Double = mid, _ n: Int = 12) -> [Halftone.Stroke] {
         (0..<4).map { stroke(arc(c, r, 90 * Double($0), 90 * Double($0) + 90, n), width) }
+    }
+
+    /// Strokes cut into pieces of n segments, so a long curve's box does not cover the whole of what it bends round,
+    /// as the bake tests every segment of a stroke whose box holds the pixel.
+    fileprivate static func pieces(_ strokes: [Halftone.Stroke], _ n: Int = 8) -> [Halftone.Stroke] {
+        strokes.flatMap { s in
+            stride(from: 0, to: s.points.count - 1, by: n).map { Halftone.Stroke(points: Array(s.points[$0...min($0 + n, s.points.count - 1)]), width: s.width) }
+        }
     }
 
     /// Points turned `degrees` about c, clockwise on screen.
@@ -97,14 +122,14 @@ extension LensArt {
         // The frames: gilt bands inlaid with pearl, and the spot's edge flaring in rays, each breaking along its length.
         layers.append(segments(near, 0.348, 0.41, 18, [gilt, pearl, gilt, shell], phase: 7))
         layers.append(segments(far, 0.264, 0.32, 14, [gilt, pearl, gilt, shell], phase: 3))
-        layers.append { p in
+        layers.append(Layer(spot - P(0.37, 0.37), spot + P(0.37, 0.37)) { p in
             // The spot's edge in tapering rays, long and short by turns.
             let d = p - spot, l = simd_length(d)
             guard l >= 0.264, l < 0.37 else { return nil }
             let a = (atan2(d.y, d.x) * 180 / .pi + 367).truncatingRemainder(dividingBy: 360) / 15
             let k = Int(a), off = abs(a - Double(k) - 0.5) * 2, reach = k % 2 == 0 ? 0.1 : 0.05
             return off < 1 - (l - 0.264) / reach ? y(0.6) : nil
-        }
+        })
         layers += [layer(disc(wheel, 0.08, m(0.8))), layer(fill(tassel, y(0.9))), layer(disc(tieBack, 0.04, y(0.9))), layer(fill(valance, m(0.7)))]
         layers += [-0.55, -0.35, 0.35, 0.55, 0.75].map { layer(fill(arc(P($0, stage), 0.04, 180, 360, 8), y(0.9))) }
         layers.append(layer(fill(bar(barrels[0].2, barrels[1].2, 0.06), gilt)))
@@ -114,21 +139,21 @@ extension LensArt {
         }
         let folds = SIMD2(cos(0.25), sin(0.25))
         let drapeFill = fill(drape, .zero)
-        layers.append { p in
+        layers.append(Layer(drapeFill.lo, drapeFill.hi) { p in
             guard drapeFill.holds(p) else { return nil }
             // The drape's folds: broad stripes leaning with the swag.
             let k = Int(((simd_dot(p, folds) + 2) / 0.1).rounded(.down))
             return k % 2 == 0 ? m(0.68) : m(0.36)
-        }
+        })
 
         var s: [Halftone.Stroke] = []
         // The valance's scallops and fringe, the drape's edge and folds, the tie-back and its tassel.
         s.append(stroke(Array(valance.dropLast(3)), mid))
         for k in 0..<24 { s.append(stroke([P(-1 + Double(k) / 12, -0.8), P(-1 + Double(k) / 12, -0.75)], hair)) }
-        s += runs(Array(drape.prefix(30)), bold) { simd_distance($0, far) > 0.33 }
+        s += pieces(runs(Array(drape.prefix(30)), bold) { simd_distance($0, far) > 0.33 })
         for k in 0..<6 {
             let x = -0.94 + 0.12 * Double(k)
-            s += runs(curve(P(x + 0.1, -0.84), P(x + 0.02, -0.3), P(-0.7 + 0.01 * Double(k), 0.28), 24), hair) { simd_distance($0, far) > 0.33 }
+            s += pieces(runs(curve(P(x + 0.1, -0.84), P(x + 0.02, -0.3), P(-0.7 + 0.01 * Double(k), 0.28), 24), hair) { simd_distance($0, far) > 0.33 })
         }
         s.append(stroke(closed(tassel), mid))
         for k in 1..<6 { s.append(stroke([tieBack + P(-0.06 + 0.02 * Double(k), 0.06), tieBack + P(-0.07 + 0.025 * Double(k), 0.16)], hair)) }
@@ -250,7 +275,7 @@ extension LensArt {
         s.append(stroke([crown[1], crown[2]], bold))
         s.append(stroke([band[0], band[1]], mid))
         s.append(stroke(brim, bold))
-        s += runs(ellipse(P(0, -0.02), 0.62, 0.8, 96), bold) { $0.y > -0.7 && simd_distance($0, left) > 0.3 && simd_distance($0, right) > 0.3 }
+        s += pieces(runs(ellipse(P(0, -0.02), 0.62, 0.8, 96), bold) { $0.y > -0.7 && simd_distance($0, left) > 0.3 && simd_distance($0, right) > 0.3 })
         for x in [-0.62, 0.62] { s += runs(ellipse(P(x, -0.12), 0.08, 0.13, 24), mid) { abs($0.x) > 0.58 } }
         for b in brows {
             for k in 0..<7 { s.append(stroke([b[2 + 2 * k], b[2 + 2 * k] + P(0.012, -0.03)], hair)) }
@@ -353,7 +378,7 @@ extension LensArt {
         }
         // The fan: its pleats, guards and rivet, and a sprig painted across it.
         for p in pleats { s.append(stroke([p[0], p[1]], hair)) }
-        s.append(stroke(arc(fanPivot, 0.42, -150, -42, 24), mid))
+        s += pieces([stroke(arc(fanPivot, 0.42, -150, -42, 24), mid)])
         s.append(stroke([fanPivot, polar(fanPivot, 0.44, -150)], mid))
         s.append(stroke([fanPivot, polar(fanPivot, 0.44, -42)], mid))
         s.append(stroke(arc(fanPivot, 0.14, -150, -42, 12), hair))
@@ -432,13 +457,13 @@ extension LensArt {
         var layers: [Layer] = [layer(disc(left, 0.264, glass)), layer(disc(right, 0.264, glass))]
         // Browline frames: a brow of tortoiseshell over the top of each glass, flecked unevenly, a gilt wire below.
         for c in [left, right] {
-            layers.append { p in
+            layers.append(Layer(c - P(0.345, 0.345), c + P(0.345, 0.345)) { p in
                 let d = p - c, l = simd_length(d)
                 guard l >= 0.264, l < 0.345 else { return nil }
                 if d.y > 0.02 { return l < 0.288 ? gilt : nil }
                 let k = Int((atan2(d.y, d.x) * 180 / .pi + 400) / 9)
                 return k % 4 == 1 || k % 7 == 3 ? Tone(0, 0.5, 0.65) : .zero
-            }
+            })
         }
         layers.append(layer(fill(ribbon(bridge, 0.04, 0.04), .zero)))
         layers += temples.map { layer(fill($0, .zero)) }
@@ -539,7 +564,7 @@ extension LensArt {
         let fish: [(P, Double)] = [(P(0.56, 0.2), 1), (P(0.76, 0.28), 0.9), (P(0.62, 0.36), 1.1), (P(0.82, 0.12), 0.8), (P(0.44, 0.3), 0.85)]
 
         var layers: [Layer] = [layer(disc(top, 0.264, skin)), layer(disc(low, 0.264, m(0.55)))]
-        layers.append { p in
+        layers.append(Layer(top - P(0.4, 0.4), top + P(0.4, 0.4)) { p in
             // Her mask's skirt: the nose pocket bulging below, a clip either side where the strap meets it.
             let d = p - top, l = simd_length(d)
             guard l >= 0.264, l < 0.4 else { return nil }
@@ -547,7 +572,7 @@ extension LensArt {
             if abs(a - 90) < 22 { return l < 0.38 ? skirt : nil }
             if abs(a) < 9 || abs(abs(a) - 180) < 9 { return l < 0.36 ? m(0.8) : nil }
             return l < 0.33 ? skirt : nil
-        }
+        })
         // The old mask's skirt, rubber with dark seams.
         layers.append(segments(low, 0.264, 0.33, 16, [c(0.75), c(0.75), c(0.75), .zero], phase: 6))
         layers += tentacles.map { layer(fill($0, m(0.6))) }
@@ -566,10 +591,10 @@ extension LensArt {
         // The sand's ripples, the kelp's midrib, the fish, bubbles rising.
         for k in 0..<4 {
             let yy = 0.7 + 0.08 * Double(k)
-            s += runs(curve(P(-1, yy), P(0, yy - 0.12), P(1, yy + 0.04), 40), hair) { p in simd_distance(p, low) > 0.34 && !tentacles.contains { inside(p, $0) } }
+            s += pieces(runs(curve(P(-1, yy), P(0, yy - 0.12), P(1, yy + 0.04), 40), hair) { p in simd_distance(p, low) > 0.34 && !tentacles.contains { inside(p, $0) } })
         }
         s += runs(Array(sand.prefix(25)), mid) { simd_distance($0, low) > 0.33 }
-        s.append(stroke(closed(kelp), mid))
+        s += pieces([stroke(closed(kelp), mid)])
         s.append(stroke((0...20).map { k -> P in
             let t = Double(k) / 20
             return P(-0.86 + 0.08 * sin(t * 9), 0.95 - 1.4 * t)
@@ -583,7 +608,7 @@ extension LensArt {
             s += rim(at, 0.018 + 0.006 * Double(k % 3), hair, 3)
         }
         // The diver: hood, arms and gloves, snorkel; the mask's skirt, its strap and clips.
-        s += runs(ellipse(top + P(0, -0.1), 0.34, 0.4, 48), mid) { simd_distance($0, top) > 0.4 }
+        s += pieces(runs(ellipse(top + P(0, -0.1), 0.34, 0.4, 48), mid) { simd_distance($0, top) > 0.4 })
         for a in arms {
             s.append(stroke([a[0], a[1]], mid))
             s.append(stroke([a[3], a[2]], mid))
@@ -678,7 +703,7 @@ extension LensArt {
         s += runs(span(middle[0], middle[1], 20), bold) { !inside($0, finger) }
         let along = simd_normalize(P(1.15, -0.98) - tip), across = P(-along.y, along.x)
         for d in [0.5, 0.55] { s.append(stroke(curve(tip + along * d + across * 0.28, tip + along * (d - 0.04), tip + along * d - across * 0.28, 10), mid)) }
-        for k in 0..<3 { s += runs(arc(tip, 0.36 + 0.035 * Double(k), 60, 300, 30), hair) { inside($0, finger) || simd_distance($0, tip) < 0.31 } }
+        for k in 0..<3 { s += pieces(runs(arc(tip, 0.36 + 0.035 * Double(k), 60, 300, 30), hair) { inside($0, finger) || simd_distance($0, tip) < 0.31 }) }
         // The lens's edge.
         s += rim(tip, 0.3, mid)
         s += rim(tip, 0.264, hair)
