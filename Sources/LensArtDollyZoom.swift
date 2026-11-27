@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let dollyZoom: [Int: Halftone.Panel] = [64: ophthalmoscope, 65: sextant, 66: theodolite, 67: spectroscope]
+    static let dollyZoom: [Int: Halftone.Panel] = [62: loupe, 64: ophthalmoscope, 65: sextant, 66: theodolite, 67: spectroscope]
 
     /// A frame's tone from its last band's end, in degrees clockwise from three o'clock, up to `end`.
     fileprivate struct Band: Sendable {
@@ -452,5 +452,92 @@ extension LensArt {
         s.append(stroke([tp + P(0.004, -0.034), tp + P(0.004, -0.08)], 0.0026))
         s.append(stroke(closed([tp + P(0.004, -0.08), tp + P(0.036, -0.07), tp + P(0.004, -0.058)]), 0.0026))
         return drawn("theodolite", glasses: glasses, fills: fills, strokes: s) { _ in c(0.3) }
+    }()
+}
+
+// MARK: - 62: Loupe
+
+/// Level 62's name: a jeweller's bench on black velvet, a cut diamond side on in the middle, its facets catching the
+/// light, a diamond paper folded open at the upper left with loose stones on it, and a gold ring and tweezers below,
+/// with four loupes laid over the rest: a folding loupe, its case swung out on its hinge, over the upper right core,
+/// and three in black barrels banded in chrome over the top, lower right and lower left. Under them what the jeweller
+/// is looking for: a feather of a flaw in a brilliant's table, the anchor of the assay office in its shield, a step-cut
+/// emerald and its garden, and 750 struck in its oval inside a band.
+extension LensArt {
+    static let loupe: Halftone.Panel = {
+        let flaw = P(0, -0.56), anchor = P(0.485, -0.28), emerald = P(0.485, 0.28), fineness = P(-0.485, 0.28)
+        let chrome = Tone(0.45, 0.45, 0.45), dark = Tone.zero, velvet = c(0.16)
+        let glasses = [
+            glass(flaw, c(0.6), frame: [(30, chrome), (55, dark), (120, y(0.8)), (150, chrome), (200, dark), (240, chrome), (290, m(0.7)), (320, dark), (360, chrome)]),
+            glass(anchor, y(0.75), frame: [(15, chrome), (100, dark), (140, chrome), (330, dark), (360, chrome)]),
+            glass(emerald, m(0.55), frame: [(40, chrome), (70, dark), (120, chrome), (150, y(0.8)), (175, dark), (230, chrome), (260, c(0.75)), (300, dark), (360, chrome)]),
+            glass(fineness, y(0.5), frame: [(20, chrome), (50, m(0.7)), (75, dark), (150, chrome), (180, dark), (250, c(0.75)), (300, chrome), (320, dark), (360, m(0.7))]),
+        ]
+        // The diamond side on: its crown's facets and its pavilion's, as (polygon, tone).
+        let g = P(0.06, -0.02), w = 0.27
+        let table = [g + P(-0.14, -0.13), g + P(0.14, -0.13)], girdle = [g + P(-w, -0.04), g + P(w, -0.04)], culet = g + P(0, 0.3)
+        let facets: [([P], Tone)] = [
+            ([girdle[0], table[0], g + P(-0.07, -0.04)], c(0.85)), ([table[0], table[1], g + P(0.07, -0.04), g + P(-0.07, -0.04)], chrome),
+            ([table[1], girdle[1], g + P(0.07, -0.04)], m(0.5)),
+            ([girdle[0], g + P(-0.07, -0.04), culet], c(0.5)), ([g + P(-0.07, -0.04), g + P(0.07, -0.04), culet], c(0.9)),
+            ([g + P(0.07, -0.04), girdle[1], culet], Tone(0.5, 0, 0.6)),
+        ]
+        let paper = [P(-0.98, -0.3), P(-0.52, -0.82), P(-0.12, -0.52), P(-0.52, -0.02)], lining = [P(-0.52, -0.82), P(-0.12, -0.52), P(-0.42, -0.42)]
+        let stones = [P(-0.7, -0.36), P(-0.36, -0.3), P(-0.58, -0.6)]
+        let gold = P(0.14, 0.62), tongs = [bar(P(-0.34, 0.98), P(-0.04, 0.42), 0.05), bar(P(-0.22, 1.0), P(0.0, 0.44), 0.05)]
+        let folder = anchor + P(0.28, -0.2)
+        var fills = facets.map { fill($0.0, $0.1) } + stones.map { disc($0, 0.035, c(0.85)) }
+        fills += [fill(lining, c(0.7)), fill(paper, chrome), disc(gold + P(0.0, -0.16), 0.04, c(0.85)), ring(gold, 0.09, 0.15, y(0.85)),
+                  disc(folder, 0.14, chrome)] + tongs.map { fill($0, chrome) }
+
+        var s: [Halftone.Stroke] = []
+        let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
+        // The diamond's facet edges and its fire.
+        for (q, _) in facets { s += runs(closed(q).flatMap { [$0] }, mid, keep: clear) }
+        s += glint(g + P(-0.04, -0.09), 0.09, hair) + glint(g + P(0.13, 0.06), 0.06, hair)
+        // The paper, its fold and the stones on it; the ring, its stone; the tweezers; the folding loupe's case and hinge.
+        s.append(stroke(closed(paper), mid))
+        s.append(stroke([lining[1], lining[2], lining[0]], mid))
+        for st in stones { s.append(stroke(closed((0..<8).map { polar(st, 0.035, 45 * Double($0) + 22.5) }), mid)) }
+        s += hoop(gold, 0.15, mid, pieces: 4) + hoop(gold, 0.09, mid, pieces: 3)
+        s.append(stroke(closed((0..<8).map { polar(gold + P(0, -0.16), 0.04, 45 * Double($0) + 22.5) }), mid))
+        for q in tongs { s += runs(closed(q), mid, keep: clear) }
+        s += runs(arc(folder, 0.14, 0, 360, 40), bold, keep: clear) + runs(arc(folder, 0.1, 0, 360, 30), hair, keep: clear)
+        s.append(stroke(circle(anchor + P(0.2, -0.13), 0.022, 10), mid))
+        // Each loupe's barrel.
+        for gl in glasses {
+            s += hoop(gl.centre, gl.rim, bold)
+            s += hoop(gl.centre, gl.glass, mid)
+        }
+        // A brilliant from above, its table and star facets, and the feather of a flaw in it.
+        let b = flaw + P(0.024, -0.016)
+        let oct = (0..<8).map { polar(b, 0.05, 45 * Double($0) + 22.5) }, tab = (0..<8).map { polar(b, 0.026, 45 * Double($0)) }
+        s.append(stroke(closed(oct), 0.0038))
+        s.append(stroke(closed(tab), 0.003))
+        for k in 0..<8 { s.append(stroke([tab[k], oct[k], tab[(k + 1) % 8]], 0.0018)) }
+        s.append(stroke(curve(b + P(-0.01, 0.012), b + P(0.004, 0.0), b + P(0.016, 0.014), 6), 0.0026))
+        for t in [0.3, 0.6] { s.append(stroke([b + P(-0.01 + 0.026 * t, 0.012 - 0.004 * t), b + P(-0.004 + 0.026 * t, 0.022)], 0.0016)) }
+        // The anchor in its shield.
+        let a = anchor + P(0.026, -0.014)
+        s.append(stroke(closed([a + P(-0.04, -0.046), a + P(0.04, -0.046), a + P(0.04, 0.0)] + arc(a + P(0, 0.0), 0.04, 0, 180, 10).dropFirst() + [a + P(-0.04, 0.0)]), 0.0034))
+        s.append(stroke([a + P(0, -0.032), a + P(0, 0.03)], 0.0036))
+        s += hoop(a + P(0, -0.036), 0.006, 0.0026, pieces: 1)
+        s.append(stroke([a + P(-0.016, -0.018), a + P(0.016, -0.018)], 0.003))
+        s.append(stroke(arc(a + P(0, 0.008), 0.024, 20, 160, 10), 0.0034))
+        // A step-cut emerald, its steps and the garden inside.
+        let e = emerald + P(0.026, 0.02)
+        for (k, r) in [(0, 0.05), (1, 0.034), (2, 0.018)] {
+            let cut = 0.012 - 0.004 * Double(k), h = r * 0.7
+            s.append(stroke(closed([e + P(-r + cut, -h), e + P(r - cut, -h), e + P(r, -h + cut), e + P(r, h - cut), e + P(r - cut, h), e + P(-r + cut, h), e + P(-r, h - cut), e + P(-r, -h + cut)]), k == 0 ? 0.0038 : 0.0022))
+        }
+        s.append(stroke(curve(e + P(-0.03, 0.02), e + P(-0.01, -0.01), e + P(0.02, 0.016), 6), 0.0018))
+        // The fineness struck inside a band: 750 in its oval.
+        let f = fineness + P(-0.022, -0.024)
+        s.append(stroke(ellipse(f, 0.05, 0.026, 24), 0.0034))
+        let d = 0.022, h = 0.012, x0 = f.x - 0.034
+        s.append(stroke([P(x0, f.y - h), P(x0 + 0.016, f.y - h), P(x0 + 0.006, f.y + h)], 0.003))
+        s.append(stroke([P(x0 + d + 0.016, f.y - h), P(x0 + d, f.y - h), P(x0 + d, f.y - 0.002)] + arc(P(x0 + d + 0.007, f.y + 0.004), 0.008, 220, 500, 10).dropFirst(), 0.003))
+        s.append(stroke(ellipse(P(x0 + 2 * d + 0.008, f.y), 0.008, h, 12), 0.003))
+        return drawn("loupe", glasses: glasses, fills: fills, strokes: s) { _ in velvet }
     }()
 }
