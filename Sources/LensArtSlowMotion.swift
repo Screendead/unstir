@@ -567,7 +567,7 @@ extension LensArt {
             for h in holes {
                 let d = simd_distance(p, h)
                 guard d < frame else { continue }
-                return d < bead ? c(0.85) : rim[Int(bearing(p, h) / 45) % 8]
+                return d < bead ? Tone(0.7, 0, 0.45) : rim[Int(bearing(p, h) / 45) % 8]
             }
             let q = p - shaft
             if max(abs(q.x), abs(q.y)) > opening {
