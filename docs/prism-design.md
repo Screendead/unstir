@@ -11,6 +11,12 @@ Prism replaces First Stir as v1's third pack (Jack's call PK1, round 12), every 
 prototype read well to depth 7, and at depth 9 the ghosts separated but single lines could no longer be followed. So
 the later trays are harder by colour order, not depth. Specimens 1 to 3 are the free taste.
 
+Jack trebled the pack on 2026-11-27: "At least treble the number of levels, and make them ramp up slightly faster in
+difficulty, to a much higher maximum difficulty." Specimens 31 to 90 are ten more trays of six, each on its own new
+plate, each a step deeper than the last: depth 8 to 11 in tray 6, 17 to 20 in tray 15, a tray's mean rising one a
+tray against the first five's half (twice the slope). Past depth 8 lifts PK1's cap for those trays only, which goes
+back to Jack with the shots. The section "The treble: trays 6 to 15" below has their rules, measures and tables.
+
 ## Rules every row keeps
 
 - No entry merges as it is dealt, so the depth is the string's length, and it is at most 8 (`testPrismLevels`).

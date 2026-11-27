@@ -138,7 +138,7 @@ enum Offer: Hashable, Sendable {
                                   comment: "What Lens holds. Its levels counted")
         case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
                                         comment: "What Escapement holds. Its levels counted")
-        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in five trays",
+        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in fifteen trays",
                                    comment: "What Prism holds. Its levels counted")
         case .complete: String(localized: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels",
                                comment: "What the bundle holds. Its packs, then their levels")

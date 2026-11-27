@@ -841,7 +841,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
   prover, its one key pinned,
-  `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
+  `EscapementTests`; the full ±11 key search is slow; Prism 90 in fifteen trays, First Stir's replacement in v1, PK1, trebled 2026-11-27):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
   its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
@@ -924,13 +924,18 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
   away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too, and Lens 01
   teaches the drag with a ghost finger down that track (`LensLesson`).
-  `Level.prism` holds Prism's 30 specimens from `docs/prism-design.md`, five trays of six (`Level.prismTrays`, each a
+  `Level.prism` holds Prism's 90 specimens from `docs/prism-design.md`, fifteen trays of six (`Level.prismTrays`, each a
   `chapter` the card heads, on its own plate, `Level.prismPlates`, its opener's note saying the rule it adds): Two
-  Colours (red and cyan), Three Colours (the primaries), Colour Order (the inks), Overprint (both) and Spectrum (any).
-  Every rod is dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, no stack
-  deeper than 8 (Jack's call PK1: deeper reads too busy), par the depth (`testPrismLevels`, which pins the table and
-  checks each stack keeps four taps under `channelCost`), the solver's optimum (`testPrismParIsTheOptimum`, slow,
-  about 4 minutes).
+  Colours (red and cyan), Three Colours (the primaries), Colour Order (the inks), Overprint (both) and Spectrum (any),
+  then the ten the treble added (Jack, 2026-11-27: "at least treble the number of levels... to a much higher maximum
+  difficulty"), each a step deeper than the last, depth 8 to 20: Complements, Second Pass, One Ink, Trapping,
+  Registration, Misregister, Chromatic, Separations, Interference and Full Spectrum.
+  Every rod is dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, the first
+  five trays no deeper than 8 (Jack's call PK1: deeper reads too busy) and the ten after no deeper than 20, par the
+  depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under `channelCost`), the
+  solver's optimum (`testPrismParIsTheOptimum`, slow, behind `UNSTIR_SLOW_TESTS`). Past depth 13 hex keeps to a
+  primary and its ink (red and cyan, green and magenta, blue and yellow), two channels' words, so it never splits three
+  ways; the deepest are dealt past `StirMap.prismLeast` (20 maps), so they draw through the map from the deal.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. It, the other `FirstStir*.swift`,
   `StoryScene.swift` and `FirstStirTests.swift` compile only under `FIRST_STIR` (Debug), as does `Level.story`; the
   shared code reads `Level.isStory` (false without it) and keeps its story branches behind the same condition. A level with a `story` draws it in
@@ -1565,7 +1570,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`, and `lens-NN-last`, one move from
   solved). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
-  nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
+  nautilus, then in their own `Engraving<Name>.swift` leaves, moths, a reef, diatoms, fungi, feathers, starfish,
+  beetles, seahorses and an octopus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white
   (`testEveryPlateIsWhiteLinesOnBlack`). Each fills the glass and breaks every rotation a core could fall on, so a step
   moves most of the light in every core of every layout (`testEveryPlateShowsAStepInEveryCore`); the sandbox skips them.

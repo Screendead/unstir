@@ -6,6 +6,7 @@ trays 6 to 15's from `scripts/prism-levels/pools.sh`'s.
 usage: scripts/prism-levels/pick.py <pool dir>
        scripts/prism-levels/pick.py --deep <pool dir>    trays 6 to 15
        scripts/prism-levels/pick.py --specs              the pools trays 6 to 15 need: layout, depth, palette
+       scripts/prism-levels/pick.py --thin <pool dir>    those pools with fewer than three readable rows
 
 Each slot names its tray's pool by layout and depth. A row is readable when at most 72% of the glass shows ghosts
 (70% on hex) and at most 8% splits three ways, and keeps four taps under the shader's assumed cost. Within a tray the
@@ -41,8 +42,8 @@ DEEP = {
     "t11": [("pent", 13, "gm"), ("pent", 14, "rcgb"), ("hex", 14, "rc"), ("pent", 15, "rgb"), ("hex", 15, "rc"), ("hex", 16, "gm")],
     "t12": [("pent", 14, "by"), ("pent", 15, "rc"), ("pent", 15, "rgbcmy"), ("hex", 16, "rc"), ("hex", 16, "by"), ("hex", 17, "by")],
     "t13": [("eye", 15, "rc"), ("pent", 16, "gm"), ("pent", 16, "rcgb"), ("hex", 17, "rc"), ("hex", 17, "gm"), ("hex", 18, "gm")],
-    "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("pent", 17, "rgbcmy"), ("hex", 18, "by"), ("hex", 18, "rc"), ("hex", 19, "rc")],
-    "t15": [("pent", 17, "gm"), ("hex", 18, "gm"), ("pent", 18, "rcgb"), ("hex", 19, "gm"), ("hex", 19, "by"), ("hex", 20, "rc")],
+    "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("pent", 17, "rgbcmy"), ("hex", 18, "by"), ("pent", 18, "gm"), ("hex", 19, "rc")],
+    "t15": [("pent", 17, "gm"), ("hex", 18, "gm"), ("pent", 18, "rcgb"), ("pent", 19, "by"), ("hex", 19, "by"), ("pent", 20, "rc")],
 }
 
 
@@ -97,13 +98,16 @@ def hardness(r):
 def deep(pool):
     used = set()
     for tray, slots in DEEP.items():
+        tray_masks = set()
         for k, (layout, depth, palette) in enumerate(slots):
-            path = f"{pool}/{layout}-{depth}-{palette}.tsv"
-            try:
-                rows = [r for r in csv.DictReader(open(path), delimiter="\t") if deep_readable(r)]
-            except FileNotFoundError:
-                rows = []
-            rows = [r for r in rows if r["scramble"] not in used]
+            # The slot's own pool, or when nothing in it reads, every pool of its depth.
+            for paths in ([p for p in [f"{pool}/{layout}-{depth}-{palette}.tsv"] if glob.glob(p)], sorted(glob.glob(f"{pool}/*-{depth}-*.tsv"))):
+                rows = [r for path in paths for r in csv.DictReader(open(path), delimiter="\t") if deep_readable(r)]
+                rows = [r for r in rows if r["scramble"] not in used]
+                # Two specimens of a tray on the same rods and masks read as one, so a tray's masks differ where they can.
+                rows = [r for r in rows if (r["layout"], r["masks"]) not in tray_masks] or rows
+                if rows:
+                    break
             if not rows:
                 print(f"{tray} {layout} {depth} {palette}: nothing readable")
                 continue
@@ -112,6 +116,7 @@ def deep(pool):
             share = 0.5 + 0.5 * k / (len(slots) - 1)
             r = rows[round(share * (len(rows) - 1))]
             used.add(r["scramble"])
+            tray_masks.add((r["layout"], r["masks"]))
             print("\t".join([tray, r["layout"], r["masks"], r["scramble"], r["free"], r["blocked"], r["right/step"],
                              r["forced"], r["sums"], r["least read"], r["ghost"], r["triple"], r["cost"]]))
 
@@ -120,6 +125,15 @@ if __name__ == "__main__":
     if sys.argv[1] == "--specs":
         for spec in sorted({s for slots in DEEP.values() for s in slots}, key=lambda s: (s[1], s[0], s[2])):
             print(*spec)
+    elif sys.argv[1] == "--thin":
+        for spec in sorted({s for slots in DEEP.values() for s in slots}, key=lambda s: (s[1], s[0], s[2])):
+            path = f"{sys.argv[2]}/{spec[0]}-{spec[1]}-{spec[2]}.tsv"
+            try:
+                rows = [r for r in csv.DictReader(open(path), delimiter="\t") if deep_readable(r)]
+            except FileNotFoundError:
+                continue
+            if len(rows) < 3:
+                print(*spec)
     elif sys.argv[1] == "--deep":
         deep(sys.argv[2])
     else:
