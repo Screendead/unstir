@@ -217,7 +217,7 @@ enum RingsLook {
                         scale: 2, front: true),
             // The lines across the floor are the only part of the grid a run moves: the lines along it lie where
             // they are, so they are the floor's own.
-            RingsGround(name: "rows", x: 0, y: horizon, width: width, height: floor, bakedWidth: 2, bakedHeight: length, scale: 3,
+            RingsGround(name: "rows", x: 0, y: horizon, width: width, height: floor, bakedWidth: 2, bakedHeight: length, scale: 1.5,
                         front: true, dy: row * run, wrap: row, eye: eye, spread: width * (1 + length / eye), lead: rowLead),
             RingsGround(name: "haze", x: 0, y: horizon - 8, width: width, height: 54, bakedWidth: 4, bakedHeight: 54, scale: 3,
                         front: true),
