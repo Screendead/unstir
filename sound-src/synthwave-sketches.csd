@@ -43,6 +43,11 @@ gaPad init 0
 gaBass init 0
 gkPump init 1
 gkGate init 0
+gkGR init 0
+gkDeskG init 1
+gkGRsum init 0
+gkGRn init 0
+gkGRmax init 0
 giLeadLast init 0
 
 ; The patch: each direction's song sets these before its notes start.
@@ -108,6 +113,20 @@ giTape init 1.1
 giPadVoices init 4
 giPadVoicing init 0
 giSweepDown init 0
+; Round four: giR4 1 sends the mix through round four's desk (a ping-pong delay, a filtered and pre-delayed hall, a
+; glue compressor, a high shelf and warmer tape); giFxLP, when set, rolls an effect's top off at that many Hz. Each
+; voice's release, and the depth of the pad's slow filter swing.
+giR4 init 0
+giFxLP init 0
+giCompThr init -21
+giBassRel init 0.05
+giPlkRel init 0.15
+giTineRel init 0.6
+giLeadRel init 0.22
+giPadLFO init 0.18
+giPlkOct init 12
+giPlkAmp init 1
+giPadAmp init 0.1
 
 opcode Hz, i, i
   im xin
@@ -1062,6 +1081,545 @@ instr hybridTurn
   turnoff
 endin
 
+; ------------------------------------------------------------------ round four: the voices played, not switched
+; Each voice releases in its own time, takes its level as a velocity that also opens its filter, and the held voices
+; drift a few cents. Drift and the pad's swing turn a whole number of times a loop, so every period is the same.
+opcode Drift, k, i
+  icents xin
+  kt times
+  xout cent(icents * (sin(2 * $M_PI * kt * 3 / giLoop) + 0.5 * sin(2 * $M_PI * kt * 7 / giLoop + 1)))
+endop
+
+; Rounder than round one's kick, its click lower and shorter. p4 level, p5 the pump's depth as kick's.
+instr kick4
+  kf expseg 210, 0.012, 108, 0.06, 52, 0.3, 45
+  a1 oscili 1, kf
+  ac rand 1
+  ac butterbp ac, 2400, 1800
+  kce expseg 1, 0.006, 0.001, 1, 0.001
+  aenv transeg 1, p3, -3.2, 0
+  a1 = tanh(2.4 * (a1 * aenv + 0.2 * ac * kce))
+  kp transeg 1, p3 * 0.8, -2.5, 0
+  kpumps = p5 >= 0 ? 1 : 0
+  if kpumps == 1 then
+    gkPump = 1 - p5 * kp
+  endif
+  Out a1 * p4, 0.5, 0.03, 0
+endin
+
+; p4 level, p5 its send to the gated room, p6 the seconds the gate holds; a negative p6 (a ghost) leaves the gate alone.
+instr snare4
+  an rand 1
+  ab butterbp an, 1800, 1800
+  ah butterhp an, 3000
+  ah butterlp ah, giSnCut
+  ken transeg 1, 0.16, -5, 0
+  kf expseg giSnTone * 1.8, 0.016, giSnTone, 1, giSnTone * 0.94
+  at oscili 1, kf
+  ket transeg 1, 0.11, -4, 0
+  a1 = tanh(2.6 * ((1.3 * ab + 0.4 * ah) * ken + 0.9 * at * ket))
+  adc linsegr 1, 0.02, 0
+  a1 *= adc
+  kgates = p6 > 0 ? 1 : 0
+  kg linseg 1, abs(p6), 1, 0.06, 0, 1, 0
+  if kgates == 1 then
+    gkGate = kg
+  endif
+  gaGate += a1 * p5
+  Out a1 * p4, 0.5, 0.12, 0
+endin
+
+; hat's six squares; p4 level, p5 decay, p6 pan.
+instr hat4
+  a1 vco2 1, 205.3 * 1.4, 10
+  a2 vco2 1, 304.4 * 1.4, 10
+  a3 vco2 1, 369.6 * 1.4, 10
+  a4 vco2 1, 522.7 * 1.4, 10
+  a5 vco2 1, 540 * 1.4, 10
+  a6 vco2 1, 800 * 1.4, 10
+  as = a1 + a2 + a3 + a4 + a5 + a6
+  as butterbp as, 6200, 3200
+  as butterhp as, 4500
+  as butterlp as, giHatCut
+  kenv expseg 1, p5, 0.001, 1, 0.001
+  adc linsegr 0, 0.001, 1, 0.01, 0
+  Out tanh(2 * as) * kenv * adc * p4, p6, 0.06, 0
+endin
+
+instr bass4
+  ihz = Hz(p4)
+  icut = giBassCut * (0.75 + 0.5 * p5)
+  a1 vco2 0.5, ihz
+  a2 vco2 0.4, ihz * cent(giBassDet)
+  a3 vco2 0.5, ihz, 2, 0.4
+  kcut expseg icut, giBassDec, icut * 0.28, 1, icut * 0.22
+  kshut linsegr 1, giBassRel, 0.5
+  af moogladder a1 + a2 + a3, kcut * kshut, giBassRes
+  af = tanh(giBassDrive * af)
+  aenv linsegr 0, 0.003, 1, giBassRel, 0
+  kpm = 1 - giBassPump * (1 - gkPump)
+  ab = af * aenv * p5 * kpm
+  gaBass += ab
+  Out ab, 0.5, 0, 0
+endin
+
+instr pad4
+  ihz = Hz(p4)
+  kdr Drift 3
+  kt times
+  kswing = 1 + giPadLFO * sin(2 * $M_PI * kt * 2 / giLoop)
+  kpw oscili 0.3, 0.37
+  a1 vco2 0.38, ihz * cent(giPadDet) * kdr
+  a2 vco2 0.38, ihz * cent(-giPadDet) / kdr
+  a3 vco2 0.32, ihz * kdr, 2, 0.5 + kpw
+  kcut linseg giPadCut * 0.55, p3 * 0.4, giPadCut, p3 * 0.6, giPadCut * 0.75, 1, giPadCut * 0.75
+  af moogladder a1 + a2 + a3, kcut * kswing, 0.12
+  af = tanh(giPadDrive * af)
+  aenv linsegr 0, giPadAtk, 1, giPadRel, 0
+  kpm = 1 - giPadPump * (1 - gkPump)
+  af = af * aenv * p5 * kpm
+  gaPad += af
+  gaRvL += giPadRv * af
+  gaRvR += giPadRv * af
+endin
+
+; p6 pan. A harder pick opens the filter further.
+instr pluck4
+  ihz = Hz(p4)
+  a1 vco2 0.5, ihz, 2, giPlkPw
+  a2 vco2 0.3, ihz * cent(6)
+  icut = giPlkCut * (0.6 + 2 * p5)
+  kcut expseg icut, giPlkDec, icut * 0.14, 1, icut * 0.1
+  af moogladder a1 + a2, kcut, giPlkRes
+  kenv expseg 1, giPlkDec * 2.4, 0.01, 1, 0.001
+  adc linsegr 0, 0.002, 1, giPlkRel, 0
+  af = tanh(giPlkDrive * af) * kenv * adc * p5
+  Out af, (p6 == 0 ? 0.5 : p6), giPlkRv, giPlkDl
+endin
+
+; A softer strike barks less. p5 against 0.36, the hybrid's level.
+instr tine4
+  ihz = Hz(p4)
+  ivel = p5 / 0.36
+  kdr Drift 2
+  kndx expseg giTineNdx * ivel, 0.35, giTineNdx * ivel * 0.3, 2, giTineNdx * ivel * 0.12
+  a1 foscili 1, ihz * kdr, 1, 1, kndx, gisine
+  kn2 expseg giTineBark * ivel + 0.01, 0.06, 0.05, 1, 0.01
+  a2 foscili giTineBarkAmp, ihz * kdr, 1, 5, kn2, gisine
+  kenv expseg 1, 1.4, 0.3, 3, 0.08
+  adc linsegr 0, 0.003, 1, giTineRel, 0
+  af = tanh(giTineDrive * (a1 + a2)) * kenv * adc * p5
+  gaPad += 0.6 * af
+  Out 0.5 * af, 0.5, giTineRv, giTineDl
+endin
+
+instr lead4
+  ihz = Hz(p4)
+  ifrom = giLeadLast > 0 ? giLeadLast : ihz
+  giLeadLast = ihz
+  kdr Drift 3
+  kf expseg ifrom, giLeadGlide, ihz, 1, ihz
+  kvd linseg 0, 0.3, 0, 0.4, 1, 1, 1
+  kvl oscili 1, 5.2
+  kf = kf * kdr * (1 + 0.004 * kvd * kvl)
+  kpw oscili 0.28, 0.9
+  a1 vco2 0.33, kf * cent(giLeadDet)
+  a2 vco2 0.33, kf * cent(-giLeadDet)
+  a3 vco2 0.33, kf, 2, 0.5 + kpw
+  a4 vco2 giLeadSub, kf * 0.5, 10
+  kcut expseg giLeadCut * 0.3, giLeadAtk, giLeadCut * (0.8 + 0.5 * p5), 1.5, giLeadCut * 0.55
+  af moogladder a1 + a2 + a3 + a4, kcut, giLeadRes
+  af = tanh(giLeadDrive * af)
+  aenv linsegr 0, 0.012, 1, giLeadRel, 0
+  Out af * aenv * p5, 0.5, giLeadRv, giLeadDl
+endin
+
+; sweep with p10 the filter's resonance.
+instr sweep4
+  kf expseg Hz(p4), p3, Hz(p5)
+  a1 vco2 0.4, kf * cent(9)
+  a2 vco2 0.4, kf * cent(-9)
+  a3 vco2 0.3, kf * 0.5, 10
+  kcut expseg p7, p3, p8
+  af moogladder a1 + a2 + a3, kcut, p10
+  af = tanh(1.6 * af)
+  krise linseg 0.12, p3 - 0.06, 1, 0.06, 0
+  kfall expseg 1, p3, 0.02
+  adc linsegr 0, 0.004, 1, 0.06, 0
+  Out af * ((1 - p9) * krise + p9 * kfall) * adc * p6, 0.5, 0.3, 0.2
+endin
+
+; Notes, each note's level leaning a little: louder held, the rest varied by its place in the line.
+opcode Notes4, 0, Si[]iiii
+  Sins, iev[], itrans, iamp, igate, ireps xin
+  ir = 0
+  while ir < ireps do
+    ii = 0
+    while ii < lenarray(iev) do
+      ilen = iev[ii + 1] < 2.5 ? iev[ii + 1] : 2.5
+      ivar = 0.88 + 0.08 * sin(ii * 1.37) + 0.04 * ilen
+      schedule Sins, (iev[ii] + ir * giBars * 4) * giB, iev[ii + 1] * giB * igate, iev[ii + 2] + itrans, iamp * ivar
+      ii += 3
+    od
+    ir += 1
+  od
+endop
+
+; The hybrid's song played: its notes, with the kit's ghosts (snares before the backbeat, sixteenth hats, a kick
+; pickup into every fourth bar, a roll into bars 9 and 1) and every voice's level varied. No drum with noise in it
+; strikes the quarter beat before the loop's first downbeat, where the loop is cut: its noise differs period to period.
+opcode HybridSong4, 0, i[]i[]i[]i[]i[]i[]i[]
+  iroot[], ipad[], ipadat[], ipadlen[], ibarch[], ichord[], imotif[] xin
+  ioct[] fillarray 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 12, 0, 0
+  iacc[] fillarray 1, 0.6, 0.8, 0.6
+  ipat[] fillarray 0, 1, 2, 3, -1, 2, 3, 1
+  ihatv[] fillarray 0.1, 0.075, 0.095, 0.12
+  ireps = 3
+  ir = 0
+  while ir < ireps do
+    ibar = 0
+    while ibar < 16 do
+      it = (ir * 16 + ibar) * 4 * giB
+      ic = ibarch[ibar] * 4
+      ik = 0
+      while ik < 4 do
+        schedule "kick4", it + ik * giB, 0.36, 0, 1
+        ik += 1
+      od
+      schedule "kick4", it, 0.34, 0.8 - 0.05 * (ibar % 2), -1
+      schedule "kick4", it + 2.5 * giB, 0.34, 0.6, -1
+      if ibar % 4 == 3 && ibar != 15 then
+        schedule "kick4", it + 3.75 * giB, 0.2, 0.32, -1
+      endif
+      schedule "snare4", it + 2 * giB, 0.5, 0.3 - 0.025 * (ibar % 2), 0.45, 0.34
+      if ibar % 2 == 1 then
+        schedule "snare4", it + 1.75 * giB, 0.2, 0.045, 0, -1
+      endif
+      if ibar % 4 == 2 then
+        schedule "snare4", it + 3.25 * giB, 0.2, 0.04, 0, -1
+      endif
+      if ibar % 8 == 7 then
+        schedule "snare4", it + 3 * giB, 0.2, 0.05, 0, -1
+        schedule "snare4", it + 3.25 * giB, 0.2, 0.07, 0, -1
+        schedule "snare4", it + 3.5 * giB, 0.2, 0.09, 0, -1
+      endif
+      ih = 0
+      while ih < 4 do
+        schedule "hat4", it + (ih + 0.5) * giB, 0.1, ihatv[ih] * (1 - 0.08 * (ibar % 2)), (ih == 3 ? 0.11 : 0.05), 0.56
+        ih += 1
+      od
+      schedule "hat4", it + 0.75 * giB, 0.05, 0.03, 0.025, 0.45
+      schedule "hat4", it + 2.75 * giB, 0.05, 0.035, 0.025, 0.45
+      ih = 0
+      while ih < 16 do
+        ivar = 1 + 0.06 * sin(ibar * 2.1 + ih * 1.3)
+        schedule "bass4", it + ih * 0.25 * giB, 0.2 * giB, iroot[ibar] + ioct[ih], 0.5 * iacc[ih % 4] * ivar
+        ih += 1
+      od
+      ih = 0
+      while ih < 8 do
+        if ipat[ih] >= 0 then
+          ivar = 1 + 0.12 * sin(ibar * 1.7 + ih * 2.3)
+          schedule "pluck4", it + ih * 0.5 * giB, 0.45 * giB, ichord[ic + ipat[ih]] + giPlkOct, \
+            (ih % 4 == 1 ? 0.2 : 0.14) * ivar * giPlkAmp, (ih % 2 == 0 ? 0.42 : 0.58)
+        endif
+        ih += 1
+      od
+      ibar += 1
+    od
+    ic = 0
+    while ic < lenarray(ipadat) do
+      it = (ir * 64 + ipadat[ic]) * giB
+      ip = 0
+      while ip < 4 do
+        schedule "pad4", it, ipadlen[ic] * giB - 0.2, ipad[ic * 4 + ip], giPadAmp
+        ip += 1
+      od
+      ic += 1
+    od
+    ir += 1
+  od
+  if giLeadOn == 1 then
+    Notes4 "tine4", imotif, 0, 0.36, 1, ireps
+  endif
+endop
+
+opcode HybridPatch4, 0, 0
+  HybridPatch
+  giR4 = 1
+  giBassPump = 0.5
+  giPadPump = 0.18
+  giPadAtk = 0.45
+  giPadRel = 0.9
+  giPlkRel = 0.18
+  giPlkDl = 0.4
+  giTineRel = 0.6
+  giRvFb = 0.8
+  giRvCut = 5000
+  giRvMix = 0.55
+  giDlFb = 0.36
+  giGateMix = 0.7
+  giTape = 1.25
+endop
+
+; Round four, the reference produced: round two's hybrid note for note, each voice played and the mix through the desk.
+instr hybridProduced
+  HybridPatch4
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ipad[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 8
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+  imotif[] fillarray 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
+    10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
+    18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
+    26.5, 0.5, 66, 27, 1.5, 69, 28.5, 3, 74, \
+    33.5, 0.5, 71, 34, 1.5, 76, 35.5, 2.5, 74, 38, 1, 71, 39, 0.5, 69, 39.5, 2.5, 67, \
+    42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
+    50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
+    58.5, 0.5, 71, 59, 1.5, 75, 60.5, 3, 78
+  HybridSong4 iroot, ipad, ipadat, ipadlen, ibarch, ipad, imotif
+  turnoff
+endin
+
+; Round four, sevenths: dark's bass line under Em9, Cmaj7, D and B7, the pad rootless and low (Em9 as G B D F#) so
+; the bass gives each chord its root, the pluck walking the pad's own notes under the tine instead of an octave over
+; it, and a new hook written to the sevenths: B, D, F# rising on the offbeat, falling back by step, answered, and
+; sung again in bars 9 to 12. No line note sits a semitone or a minor ninth from a pad note it sounds over.
+instr hybridSevenths
+  HybridPatch4
+  giPlkOct = 0
+  giPlkCut = 3000
+  giPlkAmp = 0.9
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ipad[] fillarray 55, 59, 62, 66, 55, 59, 64, 67, 57, 62, 66, 69, 55, 59, 62, 66, 55, 59, 64, 67, 54, 59, 63, 69
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 8
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+  imotif[] fillarray 0.5, 0.5, 71, 1, 1, 74, 2, 1.5, 78, 3.5, 0.5, 76, 4, 1.5, 74, 6, 2, 71, \
+    8.5, 0.5, 71, 9, 1, 74, 10, 1.5, 76, 11.5, 0.5, 74, 12, 1, 71, 13, 1, 69, 14, 2, 71, \
+    16.5, 0.5, 76, 17, 1.5, 79, 18.5, 1, 76, 19.5, 0.5, 74, 20, 2, 76, 22.5, 0.5, 71, 23, 1, 74, \
+    24, 1.5, 78, 25.5, 0.5, 76, 26, 1.5, 74, 27.5, 0.5, 69, 28, 3, 71, \
+    32.5, 0.5, 71, 33, 1, 74, 34, 1.5, 78, 35.5, 0.5, 76, 36, 1.5, 74, 38, 1, 71, 39, 1, 74, \
+    40.5, 0.5, 76, 41, 1.5, 78, 42.5, 1, 76, 43.5, 1, 74, 44.5, 1, 71, 45.5, 2.5, 76, \
+    48.5, 0.5, 79, 49, 1, 76, 50, 1.5, 71, 51.5, 0.5, 74, 52, 2, 76, 54.5, 0.5, 74, \
+    56, 1, 75, 57, 1.5, 78, 58.5, 0.5, 75, 59, 1.5, 71, 60.5, 0.5, 69, 61, 2.5, 71
+  HybridSong4 iroot, ipad, ipadat, ipadlen, ibarch, ipad, imotif
+  turnoff
+endin
+
+; Round four, night drive: dark's third take's light four on the floor, night's bass line (a held root, a push on the
+; and of 3, the fifth or octave) on dark's roots, the pad's top dropped under night's third take's dark, soft lead,
+; which sings the hybrid's motif, and the pluck quieter and darker behind it.
+instr nightDrive
+  NightPatch
+  giR4 = 1
+  giLeadDet = 4
+  giLeadSub = 0
+  giLeadRes = 0.15
+  giLeadAtk = 0.04
+  giLeadDrive = 1.1
+  giLeadGlide = 0.03
+  giLeadCut = 2100
+  giLeadRv = 0.4
+  giLeadDl = 0.4
+  giBassPump = 0.35
+  giBassRel = 0.08
+  giPadPump = 0.2
+  giPadRel = 0.9
+  giPlkCut = 2400
+  giPlkRel = 0.18
+  giRvFb = 0.8
+  giRvCut = 5000
+  giRvMix = 0.55
+  giDlFb = 0.36
+  giGateMix = 0.6
+  giSnTone = 165
+  giTape = 1.25
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ipad[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 8
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+  ipat[] fillarray 0, 1, 2, 3, -1, 2, 3, 1
+  ikv[] fillarray 0.72, 0.58, 0.68, 0.6
+  ireps = 3
+  ir = 0
+  while ir < ireps do
+    ibar = 0
+    while ibar < 16 do
+      it = (ir * 16 + ibar) * 4 * giB
+      ic = ibarch[ibar] * 4
+      ifill = (ibar % 8 == 7) ? 1 : 0
+      ik = 0
+      while ik < 4 do
+        schedule "kick4", it + ik * giB, 0.36, ikv[ik] * (1 - 0.04 * (ibar % 2)), 1
+        if ik % 2 == 1 then
+          schedule "hat4", it + (ik + 0.5) * giB, 0.2, 0.1, 0.1, 0.56
+        else
+          schedule "hat4", it + (ik + 0.5) * giB, 0.1, 0.04, 0.04, 0.45
+        endif
+        ik += 1
+      od
+      schedule "snare4", it + giB, 0.45, 0.3, 0.3, 0.12
+      if ifill == 0 then
+        schedule "snare4", it + 3 * giB, 0.45, 0.28, 0.3, 0.12
+      else
+        schedule "tom", it + 3 * giB, 0.35, 0.42, 123, 0.25
+        schedule "tom", it + 3.5 * giB, 0.4, 0.42, 98, 0.25
+        schedule "tom", it + 3.75 * giB, 0.5, 0.46, 82, 0.25
+      endif
+      if ibar % 2 == 0 then
+        schedule "snare4", it + 2.75 * giB, 0.2, 0.04, 0, -1
+      endif
+      if ibar % 4 == 1 then
+        schedule "snare4", it + 0.75 * giB, 0.2, 0.035, 0, -1
+      endif
+      if ibar % 2 == 0 then
+        schedule "bass4", it, 2.4 * giB, iroot[ibar], 0.6
+        schedule "bass4", it + 2.5 * giB, 0.9 * giB, iroot[ibar], 0.5
+        schedule "bass4", it + 3.5 * giB, 0.45 * giB, iroot[ibar] + 7, 0.5
+      else
+        schedule "bass4", it, 2.9 * giB, iroot[ibar], 0.6
+        schedule "bass4", it + 3 * giB, 0.9 * giB, iroot[ibar] + 12, 0.45
+      endif
+      ih = 0
+      while ih < 8 do
+        if ipat[ih] >= 0 then
+          ivar = 1 + 0.12 * sin(ibar * 1.7 + ih * 2.3)
+          schedule "pluck4", it + ih * 0.5 * giB, 0.45 * giB, ipad[ic + ipat[ih]] + 12, \
+            (ih % 4 == 1 ? 0.18 : 0.12) * ivar, (ih % 2 == 0 ? 0.42 : 0.58)
+        endif
+        ih += 1
+      od
+      ibar += 1
+    od
+    ic = 0
+    while ic < lenarray(ipadat) do
+      it = (ir * 64 + ipadat[ic]) * giB
+      ip = 0
+      while ip < 3 do
+        schedule "pad4", it, ipadlen[ic] * giB - 0.2, ipad[ic * 4 + ip], 0.11
+        ip += 1
+      od
+      ic += 1
+    od
+    ir += 1
+  od
+  imotif[] fillarray 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
+    10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
+    18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
+    26.5, 0.5, 66, 27, 1.5, 69, 28.5, 3, 74, \
+    33.5, 0.5, 71, 34, 1.5, 76, 35.5, 2.5, 74, 38, 1, 71, 39, 0.5, 69, 39.5, 2.5, 67, \
+    42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
+    50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
+    58.5, 0.5, 71, 59, 1.5, 75, 60.5, 3, 78
+  if giLeadOn == 1 then
+    Notes4 "lead4", imotif, 0, 0.34, 0.92, ireps
+  endif
+  turnoff
+endin
+
+; ------------------------------------------------------------------ round four's swipes: the combined swipe, lower
+; and darker. Each pair is "back up" (rising) and "deeper" (falling) on the same voices.
+opcode SwipePatch4, 0, 0
+  DarkPatch
+  NightTineSoft
+  giR4 = 1
+  giTineRv = 0.4
+  giTineDl = 0.35
+  giTineRel = 0.5
+  giPlkCut = 1500
+  giPlkRes = 0.35
+  giPlkDrive = 1.8
+  giPlkRel = 0.2
+  giRvFb = 0.8
+  giRvCut = 4500
+  giGateMix = 0.6
+endop
+; A pluck run over a saw sliding from isw0 to isw1 (MIDI) as its filter moves from ic0 to ic1 Hz (idown 1 falls in
+; level too), landing on a tom at itom Hz.
+opcode DarkRun4, 0, i[]iiiiiiii
+  irun[], isw0, isw1, ic0, ic1, ires, itom, iamp, idown xin
+  ii = 0
+  while ii < lenarray(irun) do
+    schedule "pluck4", 0.02 + ii * 0.075, 0.25, irun[ii], iamp * (0.35 + 0.04 * ii), 0.5
+    ii += 1
+  od
+  schedule "sweep4", 0.02, 0.5, isw0, isw1, iamp * 0.5, ic0, ic1, idown, ires
+  schedule "tom", 0.5, 0.4, iamp * 0.45, itom, 0.4
+endop
+opcode NightRun4, 0, i[]i
+  irun[], iamp xin
+  ii = 0
+  while ii < lenarray(irun) do
+    schedule "tine4", 0.02 + ii * 0.06, 0.3, irun[ii], iamp * (0.3 + 0.03 * ii)
+    ii += 1
+  od
+endop
+
+; Low tine: round two's combined swipe, its tine's bark and all, with the tine's run an octave down (E3 to E5, not E4
+; to E6), the saw's filter opening to 2 kHz instead of 3.2 and the pluck darker; the whole rolled off above 7 kHz.
+opcode LowTinePatch, 0, 0
+  SwipePatch4
+  giTineNdx = 2.2
+  giTineBark = 1.6
+  giTineBarkAmp = 0.3
+  giTineDrive = 1.5
+  giFxLP = 7000
+  giPlkCut = 2000
+endop
+instr swipeLowUp
+  LowTinePatch
+  ilow[] fillarray 40, 47, 52, 55, 59, 64
+  ihigh[] fillarray 52, 55, 59, 62, 64, 67, 71, 76
+  DarkRun4 ilow, 28, 52, 160, 2000, 0.3, 82, 0.8, 0
+  NightRun4 ihigh, 0.7
+  turnoff
+endin
+instr swipeLowDown
+  LowTinePatch
+  ilow[] fillarray 64, 59, 55, 52, 47, 40
+  ihigh[] fillarray 76, 71, 67, 64, 62, 59, 55, 52
+  DarkRun4 ilow, 52, 28, 2000, 160, 0.3, 82, 0.8, 1
+  NightRun4 ihigh, 0.7
+  turnoff
+endin
+
+; Warm: the pluck run rounder still, an E minor pad swelling under it, the saw sliding one octave through a filter
+; that only reaches 1.2 kHz, more resonant, and the tine kept for the landing alone (E4 then B4 rising, B4 then E4
+; falling), in the band a phone's speaker keeps; the whole rolled off above 3.5 kHz.
+opcode WarmSwipe, 0, i[]iiiiiii
+  irun[], isw0, isw1, ic0, ic1, idown, it1, it2 xin
+  SwipePatch4
+  giFxLP = 3500
+  giPlkCut = 1100
+  giPlkDec = 0.22
+  giPadAtk = 0.1
+  giPadRel = 0.6
+  giPadCut = 1300
+  giPadPump = 0
+  ichord[] fillarray 52, 59, 64, 67
+  ii = 0
+  while ii < 4 do
+    schedule "pad4", 0.02, 0.4, ichord[ii], 0.11
+    ii += 1
+  od
+  DarkRun4 irun, isw0, isw1, ic0, ic1, 0.45, 73, 0.8, idown
+  schedule "tine4", 0.45, 0.5, it1, 0.3
+  schedule "tine4", 0.51, 0.6, it2, 0.32
+endop
+instr swipeWarmUp
+  irun[] fillarray 40, 47, 52, 55, 59, 64
+  WarmSwipe irun, 28, 40, 150, 1200, 0, 64, 71
+  turnoff
+endin
+instr swipeWarmDown
+  irun[] fillarray 64, 59, 55, 52, 47, 40
+  WarmSwipe irun, 40, 28, 1200, 150, 1, 71, 64
+  turnoff
+endin
+
 ; ------------------------------------------------------------------ the desk
 ; Defined last, so it reads every voice's output on the same cycle. The chorus turns a whole number of times a loop.
 instr master
@@ -1072,22 +1630,79 @@ instr master
   ac2 vdelay3 gaPad, 9 - 3.2 * alfo, 30
   apL = 0.62 * (gaPad + ac1)
   apR = 0.62 * (gaPad + ac2)
-  abuf delayr 2
-  atap deltap3 0.75 * giB
-  atapf tone atap, 3500
-  delayw gaDl + giDlFb * atapf
-  awL, awR reverbsc gaRvL + 0.25 * atap, gaRvR + 0.25 * atap, giRvFb, giRvCut
   agL, agR reverbsc gaGate, gaGate, 0.9, 5200
   ag interp gkGate
-  aL = gaL + apL + 0.8 * atap + giRvMix * awL + giGateMix * ag * agL
-  aR = gaR + apR + 0.8 * atap + giRvMix * awR + giGateMix * ag * agR
-  aL butterhp aL, 28
-  aR butterhp aR, 28
+  if giR4 == 0 then
+    abuf delayr 2
+    atap deltap3 0.75 * giB
+    atapf tone atap, 3500
+    delayw gaDl + giDlFb * atapf
+    awL, awR reverbsc gaRvL + 0.25 * atap, gaRvR + 0.25 * atap, giRvFb, giRvCut
+    aL = gaL + apL + 0.8 * atap + giRvMix * awL + giGateMix * ag * agL
+    aR = gaR + apR + 0.8 * atap + giRvMix * awR + giGateMix * ag * agR
+    aL butterhp aL, 28
+    aR butterhp aR, 28
+    aL = tanh(giTape * aL) / giTape
+    aR = tanh(giTape * aR) / giTape
+  else
+    ; Round four's desk. The delay ping-pongs a dotted eighth each way, each side leaning, not panned hard; its
+    ; repeats lose their lows and highs. The hall takes nothing under 220 Hz and waits 18 ms.
+    aFb init 0
+    abL delayr 2
+    atL deltap3 0.75 * giB
+    delayw gaDl + giDlFb * aFb
+    abR delayr 2
+    atR deltap3 0.75 * giB
+    delayw atL
+    aFb tone atR, 3000
+    aFb atone aFb, 250
+    arL butterhp gaRvL + 0.2 * atL, 220
+    arR butterhp gaRvR + 0.2 * atR, 220
+    arL delay arL, 0.018
+    arR delay arR, 0.018
+    awL, awR reverbsc arL, arR, giRvFb, giRvCut
+    aL = gaL + apL + 0.6 * atL + 0.25 * atR + giRvMix * awL + giGateMix * ag * agL
+    aR = gaR + apR + 0.25 * atL + 0.6 * atR + giRvMix * awR + giGateMix * ag * agR
+    ; Glue: 2:1 over giCompThr on the mid's level, 10 ms in and 200 ms out, after a trim that sets its reduction
+    ; near 2 dB and the tape's drive where round two's was.
+    aL *= ampdb(-8.5)
+    aR *= ampdb(-8.5)
+    krms rms (aL + aR) * 0.5, 12
+    kover = dbamp(krms + 1e-6) - giCompThr
+    kgr = kover > 0 ? kover * 0.5 : 0
+    kgr portk kgr, (kgr > gkGR ? 0.01 : 0.2)
+    gkGR = kgr
+    ; The glue's gain reduction over the middle period, printed at the end for the render's log.
+    kt times
+    if kt >= giLoop && kt < 2 * giLoop then
+      gkGRsum += kgr
+      gkGRn += 1
+      gkGRmax = max(gkGRmax, kgr)
+    endif
+    if kt >= p3 - 1 / kr then
+      printks "glue: gain reduction mean %.2f dB, max %.2f dB\n", 0, gkGRsum / max(gkGRn, 1), gkGRmax
+    endif
+    kg = ampdb(-kgr)
+    gkDeskG = kg * ampdb(-8.5)
+    aL *= kg
+    aR *= kg
+    aL pareq aL, 7500, ampdb(-3), 0.7, 2
+    aR pareq aR, 7500, ampdb(-3), 0.7, 2
+    ; Tape leaning a little off centre, for its even harmonics.
+    aL = (tanh(giTape * (aL + 0.03)) - tanh(giTape * 0.03)) / giTape
+    aR = (tanh(giTape * (aR + 0.03)) - tanh(giTape * 0.03)) / giTape
+    aL butterhp aL, 28
+    aR butterhp aR, 28
+    if giFxLP > 0 then
+      aL butterlp aL, giFxLP
+      aR butterlp aR, giFxLP
+    endif
+  endif
 #ifdef BASSONLY
-  aL = gaBass
-  aR = gaBass
+  aL = gaBass * gkDeskG
+  aR = gaBass * gkDeskG
 #end
-  fout "$OUT", 16, tanh(giTape * aL) / giTape, tanh(giTape * aR) / giTape
+  fout "$OUT", 16, aL, aR
   clear gaL, gaR, gaRvL, gaRvR, gaDl, gaGate, gaPad, gaBass
 endin
 

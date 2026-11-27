@@ -1,13 +1,14 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/synthwave-sketches.sh <dir>   Renders round three of the synthwave menu's sketches
-# (sound-src/synthwave-sketches.csd) for Jack's ear: round two's hybrid bed as the reference, three variants of it,
-# night's and dark's third takes again with the pad re-voiced under the lead, and the combined swipe in E minor with its
-# partner for the other direction. Each bed as one seamless loop of its 16 bars at -16 LUFS, and each
+# Usage: scripts/synthwave-sketches.sh <dir>   Renders round four of the synthwave menu's sketches
+# (sound-src/synthwave-sketches.csd) for Jack's ear: round two's hybrid bed note for note through round four's
+# played voices and desk, a hybrid in sevenths with a new hook, night drive (dark's third take's kit, night's bass line
+# and dark lead), and two lower, darker pairs of the combined swipe, each a rising "back up" and a falling "deeper",
+# with round two's swipe to measure them against. Each bed as one seamless loop of its 16 bars at -16 LUFS, and each
 # swipe, louder, as m4a in <dir>; then measures each bed's seam, each file's loudness, each bed's onsets against its
-# beat grid, how much of each bed's bass a phone's speaker keeps, its bass against its round-one bed's, and its share
-# of energy in the bands where a top line turns harsh. Round one (outrun, night and dark with four effects each) is
-# this script's first commit, round two its second. Needs Homebrew's csound and ffmpeg, and numpy.
+# beat grid, how much of each bed's bass a phone's speaker keeps, each bed's share of energy in the bands where a top
+# line turns harsh against round two's hybrid, and each swipe's brightness against round two's. Rounds one to three
+# are this script's earlier commits. Needs Homebrew's csound and ffmpeg, and numpy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -24,23 +25,22 @@ CEILING=-1.2
 BED_I=-16
 # An effect's loudest 400 ms, over a bed's (about -14 at -16 integrated), as a tap is heard over the music.
 FX_M=-11
-# name, instrument, tempo, and the round-one bed whose bass line it keeps.
+# name, instrument, tempo, and the bed it is measured against.
 BEDS="
-hybrid-bed hybrid 100 dark
-hybrid-voiced hybridVoiced 100 dark
-hybrid-melody hybridMelody 100 dark
-hybrid-turn hybridTurn 100 dark
-night-bed-4 night4 96 night
-dark-bed-4 dark4 100 dark
+hybrid-produced hybridProduced 100 hybrid
+hybrid-sevenths hybridSevenths 100 hybrid
+night-drive nightDrive 100 hybrid
 "
 REFS="
-night 96
-dark 100
+hybrid 100
 "
 # name, instrument, and the tempo of the bed it plays over, so its echo falls on that bed's grid.
 SWIPES="
-both-swipe-e swipeBothE 100
-both-swipe-e-down swipeBothEDown 100
+both-swipe-e-r2 swipeBothE 100
+swipe-low-up swipeLowUp 100
+swipe-low-down swipeLowDown 100
+swipe-warm-up swipeWarmUp 100
+swipe-warm-down swipeWarmDown 100
 "
 
 # An 8th-order Butterworth highpass at 250 Hz, as four biquads: roughly what an iPhone's speaker keeps (sounds.sh's).
@@ -128,7 +128,8 @@ while read -r name _ bpm _; do
     done
     [ -f "$D/$name.m4a" ] || { echo "$name: no AAC loops cleanly"; exit 1; }
     read -r m i p < <(loud "$B/$name-bed.wav")
-    printf "%-15s %7s %7s %7s\n" "$name" "$m" "$i" "$p"
+    read -r pm _ _ < <(loud "$B/$name-bed.wav" "$PHONE")
+    printf "%-15s %7s %7s %7s  M through the phone model %s\n" "$name" "$m" "$i" "$p" "$pm"
 done <<<"$BEDS"
 while read -r name _ _; do
     [ -z "$name" ] && continue
@@ -141,7 +142,9 @@ while read -r name _ _; do
     "$TOOL" finish "$B/$name-raw.wav" "$B/$name.wav" "$g" trim
     afconvert -f m4af -d aac -b 256000 "$B/$name.wav" "$D/$name.m4a"
     read -r m i p < <(loud "$B/$name.wav")
-    printf "%-15s %7s %7s %7s  onset %s\n" "$name" "$m" "$i" "$p" "$("$TOOL" onset "$B/$name.wav")"
+    read -r pm _ _ < <(loud "$B/$name.wav" "$PHONE")
+    printf "%-15s %7s %7s %7s  onset %s  M through the phone model %s\n" "$name" "$m" "$i" "$p" \
+        "$("$TOOL" onset "$B/$name.wav")" "$pm"
 done <<<"$SWIPES"
 
 echo
@@ -173,11 +176,20 @@ while read -r name _ bpm _; do
 done <<<"$BEDS"
 
 echo
-echo "each bed's bass against its round-one bed's, both before the level is set (the hybrid's passes through night's"
-echo "lighter tape), and each bed's share of energy in the bands where a top line turns harsh, round one's in brackets"
+echo "each bed's bass against round two's hybrid's, both before the level is set, and each bed's share of energy in"
+echo "the bands where a top line turns harsh, round two's hybrid's in brackets"
 while read -r name _ _ ref; do
     [ -z "$name" ] && continue
     python3 -I scripts/synthwave-sketches/against.py "$B/$name-bass-raw.wav" "$B/ref-$ref-bass-raw.wav" \
         "$B/$name-bed-raw.wav" "$B/ref-$ref-bed-raw.wav" "$name" "$ref"
 done <<<"$BEDS"
+
+echo
+echo "each swipe's brightness, as heard: spectral centroid and share of energy above 2 and 4 kHz"
+swipes=()
+while read -r name _ _; do
+    [ -z "$name" ] && continue
+    swipes+=("$B/$name.wav")
+done <<<"$SWIPES"
+python3 -I scripts/synthwave-sketches/bright.py "${swipes[@]}"
 ls "$D"
