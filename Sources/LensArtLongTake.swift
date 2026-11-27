@@ -32,15 +32,41 @@ extension LensArt {
     /// Layers over a ground, the first that holds a point giving its tone.
     fileprivate static func layered(_ name: String, _ layers: [Layer], strokes: [Halftone.Stroke],
                                      ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
-        Halftone.Panel(name: name, tones: { p in
+        // Long lines are cut into short runs, each with its own small box, as the bake tests every segment of a stroke
+        // whose box holds the pixel.
+        let short = strokes.flatMap { s in
+            stride(from: 0, to: s.points.count - 1, by: 6).map { Halftone.Stroke(points: Array(s.points[$0...min($0 + 6, s.points.count - 1)]), width: s.width) }
+        }
+        return Halftone.Panel(name: name, tones: { p in
             for l in layers { if let t = l(p) { return t } }
             return ground(p)
-        }, strokes: strokes)
+        }, strokes: short)
     }
 
     /// A circle as four quarter arcs, so each stroke's box stays small and the bake tests fewer segments a pixel.
     fileprivate static func rim(_ c: P, _ r: Double, _ width: Double = mid, _ n: Int = 12) -> [Halftone.Stroke] {
         (0..<4).map { stroke(arc(c, r, 90 * Double($0), 90 * Double($0) + 90, n), width) }
+    }
+
+    /// Points turned `degrees` about c, clockwise on screen.
+    fileprivate static func turned(_ points: [P], about c: P, _ degrees: Double) -> [P] {
+        let t = degrees * .pi / 180
+        return points.map { p in
+            let d = p - c
+            return c + P(d.x * cos(t) - d.y * sin(t), d.x * sin(t) + d.y * cos(t))
+        }
+    }
+
+    /// A band along a line, `w0` wide at its start tapering to `w1` at its end, as a polygon.
+    fileprivate static func ribbon(_ line: [P], _ w0: Double, _ w1: Double) -> [P] {
+        var left: [P] = [], right: [P] = []
+        for (k, p) in line.enumerated() {
+            let a = line[max(k - 1, 0)], b = line[min(k + 1, line.count - 1)], u = simd_normalize(b - a), n = P(-u.y, u.x)
+            let w = (w0 + (w1 - w0) * Double(k) / Double(line.count - 1)) / 2
+            left.append(p + n * w)
+            right.append(p - n * w)
+        }
+        return left + right.reversed()
     }
 }
 
