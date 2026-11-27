@@ -21,8 +21,9 @@ The mock-up is the source of truth for the look: `design/negative-space/world/ri
   rotates. The suns cross-fade, the stars shift a little, and the floor's lines run towards the viewer, two a ring.
 - **Taps.** A tap on the middle, or on the bead it names, opens that level at once. A tap on any other bead names
   it in the middle, with its best and par and "tap again to play" (or what opens it, "solve 08 to open"), and a
-  second tap, or one on the middle, plays it. A tap anywhere else lets it go. This is the mock's; Jack's earlier
-  rule was that a tap on a level opens it at once, and the difference is his to settle.
+  second tap, or one on the middle, plays it. A tap anywhere else lets it go. This is the mock's, and it is built so
+  for now. Jack's earlier rule was that a tap on a level opens it at once; which holds is his call, not yet made. The
+  other way is one line: `RingsView.act`'s `.bead(i)` case opens `ring.spots[i]` without naming it first.
 - **The daily** is an evening star on an arc over the ring, "Daily · Fri 27 Nov" and "4 days running" set along the
   arc either side. It shows once the old menu would show it (plughole 23 solved, `MenuView.lead`).
 - **The packs** are three covers on an arc under the ring, each with its name and its line ("new", "2/3 free",
@@ -47,8 +48,10 @@ at rest.
 - **Sprites, not sheets.** A ring is 27 bead layers, 27 numeral layers and 27 short threads between beads, all
   sharing a few bitmaps: four beads a tier colour, one numeral per number and ink, one thread a colour. No ring is
   one bitmap. Soft or large art is baked under the screen's scale: the suns and the floor at 2x, the sky as a strip
-  four points wide. The cross lines' strip is 2 points wide and 5200 long, stretched across the floor. On a Pro Max
-  with every piece baked the art is about 25 MB (the tour's log line prints it).
+  four points wide. The cross lines' strip is 2 points wide and 5200 long, stretched across the floor, baked at 1.5x
+  so it stays under 8192 pixels: at 3x (15,600) the simulator drew a hard-edged pale band over the far floor on some
+  launches, as a texture that size is cut into tiles. On a Pro Max with every piece baked the art is about 23 MB (the
+  tour's log line prints it).
 - **Layers.** `RingsView` (RingsView.swift) is a `UIView` whose layers are `RingsLayer`s, which never animate a
   change by themselves. Back to front: the ground behind the suns (sky, stars), one sun a ring, the ground in front
   (mountains, floor, the cross lines, the horizon's haze), one container a ring (its beads group and its words
@@ -74,7 +77,8 @@ at rest.
   `CADisableMinimumFrameDurationOnPhone` is already in Info.plist.
 - **At rest nothing runs.** No timer, no display link, no animation. `RingsCount` counts what the main thread does
   for the menu (layouts, SwiftUI updates, model reads, builds, bakes, scroll callbacks), and the tour's `rest`
-  prints them over six seconds: all zero.
+  prints them over six seconds: all zero on the simulator (2026-11-27). Its `swipe`, down through every ring and back,
+  costs scroll callbacks alone (112 at the simulator's 60 Hz), with no layout, build or bake.
 - **A named bead** bakes its three lines on a tap, off the main thread, and shows them as they land.
 
 ## The files
@@ -110,7 +114,27 @@ All three are probes: a Debug build reads them, and a Release build only with `P
 - `UNSTIR_RINGSPOSE=ring:2`, `place:1.5` or `pick:9` holds a still for a shot, comma-separated in turn. It makes
   the launch a harnessed one.
 
-`scripts/shots.sh rings-` shoots the cases in `scripts/shots/rings.sh`.
+`scripts/shots.sh rings-` shoots the cases in `scripts/shots/rings.sh`; `SHOTS_ENV="MUSIC=0 SOUNDS=0"` keeps the
+one plain launch, `rings-fresh`, silent too.
+
+A tour on the simulator, silent (`MUSIC=0` and `SOUNDS=0` make the launch a harnessed one, which is muted):
+
+```
+SIMCTL_CHILD_UNSTIR_MUSIC=0 SIMCTL_CHILD_UNSTIR_SOUNDS=0 SIMCTL_CHILD_UNSTIR_MENU=rings \
+  SIMCTL_CHILD_UNSTIR_RINGSTOUR=swipe xcrun simctl launch --terminate-running-process <sim> com.screendead.Unstir
+```
+
+then `scripts/pull-log.sh --sim` and read the lines from "tour swipe" to the counts. On the phone,
+`UNSTIR_MENU=rings UNSTIR_RINGSTOUR=swipe scripts/run-ios.sh Release` with `PROBES=YES`.
+
+## Checked
+
+On the simulator (iPhone 17 Pro Max, 2026-11-27), by real taps and swipes: the way's bead and the middle open the
+level at once; another bead names it and a second tap plays it; the daily's star opens today's daily; a cover opens
+its pack's card, whose "menu" comes back to the rings; the motes open settings; a finger's swipe brings the next
+ring forward; back from a level lands on the rings. The shots match the mock but for what the mock's data differs in:
+its Lens reads "owned ✓" and its Prism "2/3 free" where the app's covers say "new" until each card has opened once,
+as the old dock's do (`Marks.line`).
 
 ## Step two
 

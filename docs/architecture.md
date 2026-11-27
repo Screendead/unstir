@@ -1501,6 +1501,17 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over
   the menu opens centred on its row the same way (`PackCard.focus`), but a gate's card opens on buying
   (`arrived`), and `UNSTIR_CARDSCROLL` on the list: arrived first, then scrolled, then the row.
+- **RingsModel.swift, RingsArt.swift, RingsView.swift, RingsMenu.swift, RingsTour.swift** are the rings, the menu's
+  new look (Jack, 2026-11-27: "A, sun in the ring"), behind `UNSTIR_MENU=rings` until Jack signs them off; `MenuView`
+  stays the default, and stays the menu beside play on a wide window. `docs/rings.md` holds the design, the speed rule
+  as built, the flags and what is left. In short: `RingsModel` reads what the menu shows once on the main actor, by the
+  old menu's rules (the daily by `MenuView.lead`, the covers by `PackDock.shown` and `Offer.shelf`, only packs that
+  ship, so never First Stir, and each cover's line by `Marks.line`, "new" first, as the dock's); `RingsArt` bakes every
+  picture off the main thread into a `CGImage`, kept by a key of what decides its pixels; `RingsView` is a `UIView`
+  of layers that hold those bitmaps and only move, scale and fade, with a hidden paging `UIScrollView` as the swipe,
+  no display link and nothing running at rest (the `rest` tour counts zero main-thread work); `RingsMenu` is its
+  SwiftUI host, laying the old menu's pack card, settings sheet and consent question over it. `RootView` builds it in
+  place of `MenuView` when `RingsFlag.on`.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
