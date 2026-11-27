@@ -50,6 +50,11 @@ extension LensArt {
         stride(from: 0, to: line.count - 1, by: n).map { stroke(Array(line[$0...min($0 + n, line.count - 1)]), width) }
     }
 
+    /// `runs` of a long line, each in `pieces`.
+    fileprivate static func cut(_ line: [P], _ width: Double = hair, keep: (P) -> Bool) -> [Halftone.Stroke] {
+        runs(line, width, keep: keep).flatMap { pieces($0.points, $0.width) }
+    }
+
     /// A panel whose `over` fills lie on top of its lenses' rims, and its `fills` under them, over `ground`.
     fileprivate static func framed(_ name: String, rims: [Rim], over: [Fill] = [], fills: [Fill], strokes: [Halftone.Stroke],
                                    ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
@@ -220,8 +225,8 @@ extension LensArt {
             s.append(stroke([P(x, horizon), P(x, horizon - h)], hair))
             s.append(stroke([P(x - 0.012, horizon - h + 0.008), P(x + 0.012, horizon - h + 0.008)], hair))
         }
-        s += runs(span(road[0], road[1], 30), mid) { clear($0) }
-        s += runs(span(road[0], road[2], 30), mid) { clear($0) }
+        s += cut(span(road[0], road[1], 30), mid) { clear($0) }
+        s += cut(span(road[0], road[2], 30), mid) { clear($0) }
         for at in [P(-0.38, -0.36), P(0.3, -0.24), P(0.52, -0.5)] {
             s.append(stroke(curve(at + P(-0.05, 0), at + P(-0.025, -0.035), at, 5) + curve(at, at + P(0.025, -0.035), at + P(0.05, 0), 5), mid))
         }
@@ -321,7 +326,7 @@ extension LensArt {
         let clear: @Sendable (P) -> Bool = { p in mirrors.allSatisfy { simd_distance(p, $0) > 0.33 } }
         for (a, b) in zip(bends, bends.dropFirst()) {
             let n = simd_normalize(P(a.y - b.y, b.x - a.x)) * 0.055
-            for side in [n, -n] { s += runs(span(a + side, b + side, 30), mid, keep: clear) }
+            for side in [n, -n] { s += cut(span(a + side, b + side, 30), mid, keep: clear) }
             for k in 0..<8 {
                 let t0 = (Double(k) + 0.2) / 8, t1 = (Double(k) + 0.6) / 8
                 if clear(a + (b - a) * t0) && clear(a + (b - a) * t1) { s.append(stroke([a + (b - a) * t0, a + (b - a) * t1], hair)) }
@@ -497,12 +502,11 @@ extension LensArt {
         s.append(stroke(closed(stack), mid))
         for (at, r) in cones { s += pieces(circle(at, r, 24), mid); s.append(stroke(circle(at, r * 0.3, 10), hair)) }
         let clear: @Sendable (P) -> Bool = { p in spots.allSatisfy { simd_distance(p, $0) > 0.32 } && simd_length(p) > 0.33 }
-        for b in beams { s += runs(span(b[1], b[0], 40), hair, keep: clear) }
         s += runs(span(P(-1, floor), P(1, floor), 60), mid, keep: clear)
-        for k in -6...6 { s += runs(span(P(0.1875 * Double(k), floor), P(0.58 * Double(k), 1.05), 24), hair, keep: clear) }
+        for k in -4...4 { s += cut(span(P(0.1875 * Double(k), floor), P(0.58 * Double(k), 1.05), 24), hair, keep: clear) }
         for k in 3...5 { let yy = floor - 0.3 + 1.8 / Double(k); s += runs(span(P(-1, yy), P(1, yy), 60), hair, keep: clear) }
         // Glints the ball throws about the room.
-        for (k, at) in [P(-0.8, -0.6), P(-0.36, -0.62), P(0.4, -0.7), P(0.74, -0.52), P(-0.86, 0.02), P(0.62, 0.66), P(-0.6, 0.72), P(0.3, 0.02)].enumerated() {
+        for (k, at) in [P(-0.8, -0.6), P(0.4, -0.7), P(-0.86, 0.02), P(0.62, 0.66), P(-0.6, 0.72)].enumerated() {
             s += glint(at, k % 2 == 0 ? 0.05 : 0.035, k % 2 == 0 ? mid : hair)
         }
         // The chain, and the ball: its tiles' edge, rows and columns, and in them the couple dancing.
@@ -512,7 +516,7 @@ extension LensArt {
         let couple = ball + P(0.0, -0.034)
         let tiled: @Sendable (P) -> Bool = { p in simd_distance(p, couple) > 0.07 && simd_length(p) < core - 0.005 }
         for yy in stride(from: -0.22, through: 0.22, by: 0.055) { s += runs(span(P(-core, yy), P(core, yy), 40), hair, keep: tiled) }
-        for rx in [0.06, 0.13, 0.2] { s += runs(ellipse(ball, rx, core, 40), hair, keep: tiled) }
+        for rx in [0.06, 0.13, 0.2] { s += cut(ellipse(ball, rx, core, 40), hair, keep: tiled) }
         for a in [-150.0, -20, 70] { s += glint(polar(ball, 0.3, a), 0.07, mid) }
         for (k, x) in [-0.022, 0.022].enumerated() {
             let f = couple + P(x, 0)
@@ -587,12 +591,12 @@ extension LensArt {
         var s: [Halftone.Stroke] = []
         let clear: @Sendable (P) -> Bool = { p in mirrors.allSatisfy { simd_distance(p, $0) > 0.32 } }
         // The tent's seams, and the floor's edge and boards.
-        for k in -9...9 {
+        for k in stride(from: -9, through: 9, by: 2) {
             let a = 90 + 3.2 * Double(k)
-            s += runs((0...30).map { polar(apex, 0.8 + 0.06 * Double($0), a) }.filter { $0.y < floor }, hair, keep: clear)
+            s += cut((0...30).map { polar(apex, 0.8 + 0.06 * Double($0), a) }.filter { $0.y < floor }, hair, keep: clear)
         }
         s += runs(span(P(-1, floor), P(1, floor), 60), bold, keep: clear)
-        for x in stride(from: -0.9, through: 0.9, by: 0.18) { s += runs(span(P(x, floor), P(x * 1.6, 1.05), 20), hair, keep: clear) }
+        for x in stride(from: -0.9, through: 0.9, by: 0.18) { s += cut(span(P(x, floor), P(x * 1.6, 1.05), 20), hair, keep: clear) }
         // The facing mirrors: each arch's edge.
         for q in arches { s += pieces(q + [q[0]], mid) }
         // The warped mirrors: their rims, a bulb on each lit length, and the child in each.
