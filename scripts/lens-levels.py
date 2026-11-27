@@ -246,8 +246,9 @@ def main():
         rows = [l.rstrip("\n").split("\t") for l in open(args[1]) if l.strip() and not l.startswith("#")]
         lo = int(args[2]) if len(args) > 2 else 0
         hi = int(args[3]) if len(args) > 3 else 10 ** 9
+        done = {l.split("\t")[0] for l in open(os.path.join(HERE, "lens-levels/picked.tsv"))} if "PICKED" in os.environ else set()
         for n, layout, slots, depth, n_lens, chain, faint, keep in rows:
-            if not lo <= int(n) <= hi:
+            if not lo <= int(n) <= hi or n in done:
                 continue
             lenses = {int(x) for x in slots.split(",")}
             rng = random.Random(int(n))
@@ -258,7 +259,7 @@ def main():
                 if not found:
                     continue
                 stack, m = found
-                out, _ = solve(layout, lenses, text(stack), limit=60)
+                out, _ = solve(layout, lenses, text(stack), limit=int(os.environ.get("PROOF_LIMIT", "60")))
                 entries = re.search(r"^entries (\d+)", out, re.M)
                 opt = re.search(r"^optimum (\d+)", out, re.M)
                 if not entries or not opt or int(entries.group(1)) != len(stack) or int(opt.group(1)) != len(stack):
