@@ -53,6 +53,13 @@ extension LensArt {
         }, strokes: short)
     }
 
+    /// A polygon's edges, stepped every 0.01 so `keep` can cut them where a glass lies over them.
+    fileprivate static func edges(_ polygon: [P], _ width: Double, keep: (P) -> Bool) -> [Halftone.Stroke] {
+        let q = closed(polygon)
+        let line = (1..<q.count).flatMap { j in span(q[j - 1], q[j], max(Int(simd_distance(q[j - 1], q[j]) / 0.01), 1)).dropLast() } + [q[0]]
+        return runs(line, width, keep: keep)
+    }
+
     /// A circle in `pieces` arcs of eight segments each.
     fileprivate static func hoop(_ c: P, _ r: Double, _ width: Double, pieces: Int = 6) -> [Halftone.Stroke] {
         [stroke(circle(c, r, 8 * pieces), width)]
@@ -97,15 +104,14 @@ extension LensArt {
         var s: [Halftone.Stroke] = []
         let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
         // The diamond's facet edges and its fire.
-        for (q, _) in facets { s += runs(closed(q).flatMap { [$0] }, mid, keep: clear) }
+        for (q, _) in facets { s += edges(q, mid, keep: clear) }
         s += glint(g + P(-0.04, -0.09), 0.09, hair) + glint(g + P(0.13, 0.06), 0.06, hair)
         // The paper, its fold and the stones on it; the ring, its stone; the tweezers; the folding loupe's case and hinge.
-        s.append(stroke(closed(paper), mid))
-        s.append(stroke([lining[1], lining[2], lining[0]], mid))
+        s += edges(paper, mid, keep: clear) + runs(span(lining[1], lining[2], 30) + span(lining[2], lining[0], 30), mid, keep: clear)
         for st in stones { s.append(stroke(closed((0..<8).map { polar(st, 0.035, 45 * Double($0) + 22.5) }), mid)) }
         s += hoop(gold, 0.15, mid, pieces: 4) + hoop(gold, 0.09, mid, pieces: 3)
         s.append(stroke(closed((0..<8).map { polar(gold + P(0, -0.16), 0.04, 45 * Double($0) + 22.5) }), mid))
-        for q in tongs { s += runs(closed(q), mid, keep: clear) }
+        for q in tongs { s += edges(q, mid, keep: clear) }
         s += runs(arc(folder, 0.14, 0, 360, 40), bold, keep: clear) + runs(arc(folder, 0.1, 0, 360, 30), hair, keep: clear)
         s.append(stroke(circle(anchor + P(0.2, -0.13), 0.022, 10), mid))
         // Each loupe's barrel.
@@ -170,7 +176,7 @@ extension LensArt {
             let v = P(-u.y, u.x) * height
             return [c - u * half - v, c + u * half - v, c + u * half + v, c - u * half + v]
         }
-        let mask = squircle(hood, 0.66, 0.32, degrees: -30), cardFace = box(card, along, 0.58, 0.29)
+        let mask = squircle(hood, 0.66, 0.32, degrees: -30, 28), cardFace = box(card, along, 0.58, 0.29)
         let spare = box(paris + P(0.03, -0.02), P(cos(0.2), sin(0.2)), 0.38, 0.3)
         let rod = bar(hood, card - across * 0.3, 0.11), joint = hood + across * 0.42, handle = bar(joint, P(-0.62, 0.78), 0.1)
         let knob = P(-0.47, 0.5), slide = card - across * 0.36
@@ -180,16 +186,16 @@ extension LensArt {
         var s: [Halftone.Stroke] = []
         let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
         // The hood, the rod and its slide, the handle and its turning, the card's edge and the holder's wires, the spare card.
-        s += runs(closed(mask), bold, keep: clear)
+        s += edges(mask, bold, keep: clear)
         s += runs(span(rod[0], rod[1], 40), mid, keep: clear) + runs(span(rod[3], rod[2], 40), mid, keep: clear)
         s.append(stroke(closed(bar(slide - along * 0.14, slide + along * 0.14, 0.07)), mid))
         s += hoop(joint, 0.07, mid, pieces: 2)
         s += runs(span(handle[0], handle[1], 40), mid, keep: clear) + runs(span(handle[3], handle[2], 40), mid, keep: clear)
         s += hoop(knob, 0.085, mid, pieces: 3)
         for t in [0.62, 0.7] { s.append(stroke([joint + (P(-0.62, 0.78) - joint) * t + P(-0.05, -0.03), joint + (P(-0.62, 0.78) - joint) * t + P(0.05, 0.03)], hair)) }
-        s += runs(closed(cardFace).flatMap { [$0] }, bold, keep: clear)
+        s += edges(cardFace, bold, keep: clear)
         for side in [-1.0, 1.0] { s += runs(span(slide + along * (0.14 * side), card + along * (0.55 * side) - across * 0.2, 20), mid, keep: clear) }
-        s += runs(closed(spare), mid, keep: clear)
+        s += edges(spare, mid, keep: clear)
         // Each eyepiece's and photograph's rims.
         for g in glasses {
             s += hoop(g.centre, g.rim, bold)
@@ -220,11 +226,14 @@ extension LensArt {
         s += hoop(py + P(0.05, -0.05), 0.012, 0.003, pieces: 1)
         s += runs(span(pyramid + P(-0.17, 0.014), pyramid + P(0.17, 0.014), 34), 0.0024) { abs($0.x - py.x) > 0.05 }
         let cm = camel + P(0.024, -0.008)
-        s.append(stroke(curve(cm + P(-0.032, 0.004), cm + P(-0.012, -0.05), cm + P(0.012, 0.0), 10)
-            + curve(cm + P(0.012, 0.0), cm + P(0.03, 0.0), cm + P(0.034, -0.03), 6) + [cm + P(0.05, -0.026)], 0.0036))
-        s.append(stroke([cm + P(-0.032, 0.004), cm + P(-0.026, 0.014), cm + P(0.014, 0.014), cm + P(0.02, 0.002)], 0.003))
-        for x in [-0.026, -0.016, 0.006, 0.016] { s.append(stroke([cm + P(x, 0.014), cm + P(x + 0.002, 0.048)], 0.0026)) }
-        s.append(stroke([cm + P(-0.032, 0.004), cm + P(-0.04, 0.024)], 0.002))
+        // Its back over the hump, the neck rising well above it to the head, the belly, the legs in two angled pairs.
+        s.append(stroke([cm + P(-0.034, 0.004)] + curve(cm + P(-0.034, 0.004), cm + P(-0.012, -0.044), cm + P(0.01, -0.002), 10)
+            + curve(cm + P(0.01, -0.002), cm + P(0.03, -0.006), cm + P(0.032, -0.05), 8) + [cm + P(0.052, -0.046), cm + P(0.05, -0.038), cm + P(0.036, -0.036)], 0.0036))
+        s.append(stroke(curve(cm + P(-0.032, 0.006), cm + P(-0.008, 0.016), cm + P(0.022, 0.004), 8) + [cm + P(0.036, -0.03)], 0.003))
+        for (a, b) in [(P(-0.026, 0.01), P(-0.036, 0.05)), (P(-0.018, 0.012), P(-0.01, 0.05)), (P(0.008, 0.01), P(0.0, 0.05)), (P(0.016, 0.008), P(0.026, 0.05))] {
+            s.append(stroke([cm + a, cm + b], 0.0026))
+        }
+        s.append(stroke([cm + P(-0.034, 0.004), cm + P(-0.042, 0.026)], 0.002))
         return drawn("stereoscope", glasses: glasses, fills: fills, strokes: s) { _ in c(0.22) }
     }()
 }
@@ -373,13 +382,13 @@ extension LensArt {
             s.append(stroke(curve(at + P(-0.05, 0), at + P(-0.025, -0.025), at, 5) + curve(at, at + P(0.025, 0.025), at + P(0.05, 0), 5), hair))
         }
         // The index arm on its pivot, the mirror over it, the shades folded out on their hinge.
-        s.append(stroke(closed(index), mid))
+        s += edges(index, mid, keep: clear)
         s.append(stroke(closed(mirror), bold))
         s.append(stroke([P(mirror[0].x + 0.04, -0.92), P(mirror[1].x - 0.03, -0.82)], hair))
         for q in shades { s.append(stroke(closed(q), mid)) }
         s += hoop(pivot, 0.06, bold, pieces: 2) + hoop(hinge, 0.025, mid, pieces: 1)
         // The telescope, banded.
-        s.append(stroke(closed(tube), mid))
+        s += edges(tube, mid, keep: clear)
         for x in [-0.14, 0.04, 0.18] { s.append(stroke([P(x, -0.34), P(x, -0.22)], mid)) }
         // Every glass's rims.
         for g in glasses {
@@ -433,7 +442,7 @@ extension LensArt {
 
 /// Level 66's name: a surveyor's theodolite on its tripod out on the hills on a sunny morning, its telescope between
 /// its two standards at the top, the vertical circle on one side, its base over the hub and the tripod's legs spread
-/// below with a plumb line hung from its head. The five lenses: over the hub, the base's round level, its bubble off
+/// below. The five lenses: over the hub, the base's round level, its bubble off
 /// the ring; over the upper right, the view down the telescope, the staff on the cross hairs; over the lower right the
 /// compass needle and its north; over the bottom, down the plummet, the nail in its peg that marks the station; and
 /// over the lower left the next station, a trig pillar on its hill.
@@ -465,15 +474,14 @@ extension LensArt {
         for k in 0..<8 { s += runs([polar(sun, 0.17, 45 * Double(k) + 10), polar(sun, 0.23, 45 * Double(k) + 10)], hair, keep: clear) }
         for c0 in [P(0.3, -0.86), P(0.62, -0.8)] { s.append(stroke(Array(ellipse(c0, 0.16, 0.06, 24)[12...24]) + arc(c0 + P(0.02, -0.02), 0.08, 0, -180, 10).reversed(), mid)) }
         // The telescope, its hood and eyepiece; the standards, the vertical circle with its scale and clamp; the plate.
-        s.append(stroke(closed(scope), mid))
-        s.append(stroke(closed(hood), bold))
+        s += edges(scope, mid, keep: clear) + edges(hood, bold, keep: clear)
         s.append(stroke(closed(rect(-0.36, -0.63, -0.3, -0.57)), mid))
-        for q in standards { s.append(stroke(closed(q), mid)) }
+        for q in standards { s += edges(q, mid, keep: clear) }
         s += hoop(circle0, 0.12, bold, pieces: 4) + hoop(circle0, 0.03, mid, pieces: 1)
         for k in 0..<24 { s.append(stroke([polar(circle0, 0.1, 15 * Double(k)), polar(circle0, k % 6 == 0 ? 0.075 : 0.088, 15 * Double(k))], hair)) }
-        s.append(stroke(closed(rect(0.18, -0.46, 0.26, -0.38)), mid))
-        s.append(stroke(closed(plate), mid))
-        // The tripod's legs, and the plumb line hung from its head.
+        s += edges(rect(0.18, -0.46, 0.26, -0.38), mid, keep: clear)
+        s += edges(plate, mid, keep: clear)
+        // The tripod's legs.
         for q in legs { s += runs(span(q[0], q[1], 30), mid, keep: clear) + runs(span(q[3], q[2], 30), mid, keep: clear) }
         // Each glass's rims.
         for g in glasses {
@@ -581,12 +589,13 @@ extension LensArt {
         s.append(stroke(arc(polar(ec, 0.03, 120), 0.01, 120, 330, 8), 0.0036))
         // Through the slit's tube: its two jaws, and the flame standing between them.
         let sl = slit + P(0.03, -0.004)
-        for x in [-0.02, 0.02] { s.append(stroke([sl + P(x, -0.07), sl + P(x, 0.07)], 0.004)) }
-        let wick = sl + P(0, 0.024)
-        s.append(stroke(arc(wick, 0.02, 0, 180, 10) + curve(wick + P(-0.02, 0), wick + P(-0.02, -0.04), wick + P(0.006, -0.078), 10)
-            + curve(wick + P(0.006, -0.078), wick + P(0.024, -0.036), wick + P(0.02, 0), 10), 0.0036))
-        s.append(stroke(arc(wick, 0.008, 0, 180, 6) + [wick + P(0.002, -0.03), wick + P(0.008, 0)], 0.0024))
-        /// A strip of spectrum `w` long under its element's name, with its lines at `lines` (shares of the strip).
+        for x in [-0.026, 0.026] { s.append(stroke([sl + P(x, -0.07), sl + P(x, 0.07)], 0.004)) }
+        let wick = sl + P(0, 0.02)
+        s.append(stroke(arc(wick, 0.014, 0, 180, 10) + curve(wick + P(-0.014, 0), wick + P(-0.014, -0.036), wick + P(0.004, -0.07), 10)
+            + curve(wick + P(0.004, -0.07), wick + P(0.016, -0.032), wick + P(0.014, 0), 10), 0.0042))
+        s.append(stroke(arc(wick, 0.006, 0, 180, 6) + [wick + P(0.001, -0.028), wick + P(0.006, 0)], 0.0028))
+        s.append(stroke([wick + P(0, 0.014), wick + P(0, 0.03)], 0.003))
+        /// A strip of spectrum, its lines at `lines` (shares of the strip's length).
         func spectrum(_ at: P, _ lines: [Double]) {
             for dy in [-0.014, 0.014] { s.append(stroke([at + P(-0.06, dy), at + P(0.06, dy)], 0.0024)) }
             for x in lines { s.append(stroke([at + P(-0.06 + 0.12 * x, -0.014), at + P(-0.06 + 0.12 * x, 0.014)], 0.004)) }
