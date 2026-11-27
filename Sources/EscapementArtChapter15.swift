@@ -3,11 +3,10 @@
 import Foundation
 import simd
 
-/// Chapter 15, Perpetual: problems 85 to 90's plates, drawn with `Kit`. Not drawn yet: each falls back to
-/// the shared plate.
+/// Chapter 15, Perpetual: problems 85 to 90's plates, drawn with `Kit`.
 extension EscapementArt {
     /// Problem 85, Regulator, hex, clocks 1+: a regulator's gridiron pendulum caught near the end of its beat, hung
-    /// from its cock between the case's fluted ebony stiles, its steel bars in ink and its brass in bone, the drum bob
+    /// from its cock between the case's fluted ebony stiles, its steel bars in ink and its brass in bone, the lens bob
     /// below and the beat scale under it; the beat scale's index in the second ink.
     static func plate85() -> Plate {
         var plate = Plate()
@@ -451,41 +450,45 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 90, Eternity, hex, clocks 1+: the serpent that eats its tail, round the rim past every hub, about a
-    /// Moebius band, the strip with one side and no end, its face in ink and its back ruled; the serpent's eye in the
+    /// Problem 90, Eternity, hex, clocks 1+: the serpent that eats its tail, round the rim past every hub, its jaws
+    /// closed on its tail at eleven, about a Moebius band, the strip with one side and no end, its face toward the eye
+    /// ruled across in bone and its face away in ink, so the half turn shows as the change; the serpent's eye in the
     /// second ink.
     static func plate90() -> Plate {
         var plate = Plate()
-        let o = Kit.origin, body = 0.865, thick = 0.105
-        // The serpent from its tail just past twelve, clockwise all the way round to its head, swelling from the tail.
-        let start = Kit.clock(0.55), end = Kit.clock(12) + 2 * .pi - 0.1, n = 320
+        let o = Kit.origin, body = 0.85, thick = 0.11, big = 1.5
+        /// A point `s` along the serpent from its neck, clockwise, and `n` out from its spine.
+        let neck = Kit.clock(10.25) + 2 * .pi
+        func local(_ s: Double, _ n: Double) -> P { polar(o, body + n, neck + s / body) }
+        // The serpent from its tail, held in its jaws, clockwise all the way round to its neck, swelling from the tail.
+        let start = neck - 2 * .pi + 0.2 / body, n = 320
         let spine = (0...n).map { i -> P in
             let t = Double(i) / Double(n)
-            return polar(o, body + 0.014 * sin(t * 36 * .pi), start + (end - start) * t)
+            return polar(o, body + 0.012 * sin(t * 36 * .pi) * min(1, 8 * t), start + (neck - start) * t)
         }
-        let girth = (0...n).map { i -> Double in thick * min(1, 0.2 + 4 * Double(i) / Double(n)) }
+        let girth = (0...n).map { i -> Double in thick * min(1, 0.2 + 3.2 * Double(i) / Double(n)) }
         let normals = spine.indices.map { i -> P in
             let d = spine[min(i + 1, n)] - spine[max(i - 1, 0)]
             return simd_normalize(P(-d.y, d.x))
         }
         let serpent = spine.indices.map { spine[$0] + normals[$0] * girth[$0] / 2 }
             + spine.indices.reversed().map { spine[$0] - normals[$0] * girth[$0] / 2 } + [spine[0] + normals[0] * girth[0] / 2]
-        // The head, a blunt wedge biting the tail.
-        let neck = end, snout = end + 0.2
-        let head = [polar(o, body + 0.068, neck), polar(o, body + 0.075, neck + 0.1), polar(o, body + 0.04, snout),
-                    polar(o, body - 0.035, snout), polar(o, body - 0.07, neck + 0.1), polar(o, body - 0.062, neck),
-                    polar(o, body + 0.068, neck)]
+        // The head, wider than the neck, its jaws shut on the tail's tip.
+        let head = [(0.0, 0.056), (0.05, 0.08), (0.11, 0.086), (0.17, 0.068), (0.215, 0.036), (0.215, 0.016), (0.1, 0.014),
+                    (0.1, -0.014), (0.2, -0.018), (0.195, -0.045), (0.13, -0.07), (0.05, -0.074), (0.0, -0.056), (0.0, 0.056)]
+            .map { local(big * $0.0, big * $0.1) }
 
-        // The Moebius band: a strip turned half over in one round, seen from above, its quads laid back to front.
-        let radius = 0.42, half = 0.17, tilt = 1.0, m = 144
+        // The Moebius band: a strip turned half over in one round, seen from above and before, its quads laid back to
+        // front.
+        let radius = 0.42, half = 0.21, tilt = 0.82, m = 160, phase = 0.5
         func at(_ u: Double, _ v: Double) -> SIMD3<Double> {
             let r = radius + v * cos(u / 2)
-            return SIMD3(r * cos(u - .pi / 2), r * sin(u - .pi / 2), v * sin(u / 2))
+            return SIMD3(1.12 * r * cos(u + phase), r * sin(u + phase), v * sin(u / 2))
         }
-        func seen(_ q: SIMD3<Double>) -> P { P(q.x, q.y * cos(tilt) - q.z * sin(tilt) + 0.02) }
+        func seen(_ q: SIMD3<Double>) -> P { P(q.x, q.y * cos(tilt) - q.z * sin(tilt) + 0.03) }
         func depth(_ q: SIMD3<Double>) -> Double { q.y * sin(tilt) + q.z * cos(tilt) }
         let quads = (0..<m).map { i -> (ring: [P], depth: Double, face: Bool, edge: [P], other: [P]) in
-            let u0 = 2 * .pi * Double(i) / Double(m), u1 = 2 * .pi * (Double(i) + 1.08) / Double(m)
+            let u0 = 2 * .pi * Double(i) / Double(m), u1 = 2 * .pi * (Double(i) + 1.06) / Double(m)
             let a = at(u0, -half), b = at(u1, -half), c = at(u1, half), d = at(u0, half)
             // The side facing the eye: the normal's component toward it.
             let normal = simd_cross(b - a, d - a), toward = SIMD3(0, -sin(tilt), cos(tilt))
@@ -496,35 +499,41 @@ extension EscapementArt {
         Kit.ground(&plate, angle: 0.35, around: [serpent, head] + quads.map(\.ring))
         for (k, q) in quads.enumerated().sorted(by: { $0.element.depth < $1.element.depth }) {
             if q.face {
-                plate.fill(q.ring, .black)
-                if k % 6 == 0 { plate.line([q.ring[0], q.ring[3]], fine, .bone) }
-            } else {
                 plate.fill(q.ring)
-                if k % 3 == 0 { plate.line([q.ring[0], q.ring[3]], medium) }
+                if k % 4 == 0 { plate.line([q.ring[0], q.ring[3]], 0.013) }
+            } else {
+                plate.fill(q.ring, .black)
+                if k % 4 == 2 { plate.line([q.ring[0], q.ring[3]], 0.016, .bone) }
             }
-            plate.line(q.edge, heavy)
-            plate.line(q.other, heavy)
+            plate.line(q.edge, 0.014)
+            plate.line(q.other, 0.014)
         }
 
-        // The serpent: ink, its scales in bone across its back, and its belly's line.
+        // The serpent: ink, its scales in bone across its back, its belly's line, then the head over the tail's tip.
         Kit.mass(&plate, serpent)
-        for k in stride(from: 10, to: n - 6, by: 7) {
-            let w = girth[k] * 0.3, ahead = simd_normalize(spine[k + 3] - spine[k]) * 0.022
-            plate.line([spine[k] + normals[k] * w, spine[k] + ahead, spine[k] - normals[k] * w], fine, .bone)
+        for k in stride(from: 12, to: n - 4, by: 7) {
+            let w = girth[k] * 0.32, ahead = simd_normalize(spine[min(k + 3, n)] - spine[k]) * 0.026
+            plate.line([spine[k] + normals[k] * w, spine[k] + ahead, spine[k] - normals[k] * w], medium, .bone)
         }
+        plate.lines(dashed(spine.indices.filter { $0 > 40 }.map { spine[$0] - normals[$0] * girth[$0] * 0.36 }, on: 0.04, off: 0.03), fine, .bone)
         Kit.mass(&plate, head)
-        plate.line([polar(o, body + 0.005, snout - 0.01), polar(o, body - 0.005, neck + 0.04)], medium, .bone)
-        let eye = polar(o, body + 0.03, neck + 0.075)
-        plate.fill(arc(eye, 0.022), .second)
-        plate.line(arc(eye, 0.022), fine, .bone)
-        plate.fill(arc(eye, 0.008), .black)
+        plate.line([local(0.03, 0.0), local(0.15, 0.0)], heavy, .bone)
+        for s in [0.04, 0.1] { plate.line([local(s, 0.075), local(s + 0.03, 0.045), local(s, 0.018)], medium, .bone) }
+        plate.line([local(0.04, -0.075), local(0.07, -0.045), local(0.04, -0.018)], medium, .bone)
+        plate.fill(arc(local(0.285, 0.065), 0.011))
+        let eye = local(0.185, 0.07)
+        plate.fill(arc(eye, 0.04))
+        Kit.mass(&plate, arc(eye, 0.032), ink: .second)
+        let ahead = simd_normalize(local(0.2, 0.07) - eye)
+        Kit.mass(&plate, Kit.band(eye - P(-ahead.y, ahead.x) * 0.022, eye + P(-ahead.y, ahead.x) * 0.022, 0.011))
 
         // The hours outside the serpent, bold.
         for k in 1..<12 {
             Kit.mass(&plate, Kit.band(polar(o, 0.955, Kit.clock(Double(k))), polar(o, 1.01, Kit.clock(Double(k))), 0.035))
         }
         callout(&plate, "A", from: polar(o, body, Kit.clock(7.4)), to: P(-0.68, 0.36))
-        callout(&plate, "B", from: seen(at(.pi * 0.25, 0)), to: P(0.42, 0.62))
+        callout(&plate, "B", from: seen(at(.pi * 0.3, half * 0.6)), to: polar(o, 0.62, Kit.clock(5)))
+        callout(&plate, "C", from: local(0.3, -0.06), to: polar(o, 0.6, Kit.clock(11)))
         return plate
     }
 }
