@@ -45,32 +45,28 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 Closed: moved word for word to `docs/history.md`.
 
+### Open work (2026-11-27): the packs trebled and a fifth chapter
+
+Jack's calls of 2026-11-27 (`docs/decisions.md`, "Packs trebled" and "Mineral kept, as a fifth chapter"). Owned by the
+session on `packs/treble`; its draft PR is the claim.
+
+- **Packs.** Lens 25 to 75, Escapement 30 to 90, Prism 30 to 90. New ids append after today's finale, so today's
+  levels keep their slope and the faster ramp starts at level 26 or 31. A deal is chosen on what makes it hard to
+  crack (right moves per step, forced steps, blocked knobs, decoys, planning gap), not depth alone. Lens needs a drawn
+  panel per level; Prism's titles are a plate's specimens, so 60 more need new plates or more names per plate. A rule
+  change to make a pack tougher goes to Jack as a pitch. Proofs that run past CI's 15 minutes go behind
+  `UNSTIR_SLOW_TESTS`.
+- **Fifth chapter.** Mineral's four pictures (`slope/art`, `Mineral.metal`, self-contained) move to master unchanged
+  and go on a new tier after maelstrom. Its mechanic (Debug prototypes, filmed), name (a stored raw value and prefix)
+  and length go to Jack as one pitch before its levels are built. It must not give away a paid pack's mechanic or touch
+  the frozen generator.
+- Measured 2026-11-27: today's pars run Lens 1 to 12, Escapement 2 to 9, Prism 3 to 8, maelstrom up to 26. At par the
+  solvers deal Prism depth 11 on hex and Escapement 12 with two clocks.
+
 ### Open work (2026-11-23)
 
-**The design pass gets its direction (to-do 72):** Jack's brief of 2026-11-23, below under to-do 72. A dedicated cloud
-session started that day owns it; its draft PR is the claim, and the lead leaves the item alone.
-Built 2026-11-23 on `design/negative-space` (draft PR #298): three directions drawn by `design/negative-space/` over
-glass cut from master's shots, seven screens each (the menu mid-way and all done, plughole 01, plughole 27's result, Prism 01, Prism's card,
-settings), with films, Reduce Motion stills and B at the third accessibility size. A subtracts within today's look; B
-("still water") puts one thing in focus, SF Pro titles over mono numbers, colour as a glow behind the focus, a slow
-settle (Prism's number stays white: a red and blue edge read as off-register channels); C ("mist") whitens the chrome and moves colour into a drifting blurred light. Recommended: B (fewest things at
-once; its glows are still images, so no GPU cost in play, where C's moving light competes with the glass). Pitch page
-https://claude.ai/artifact/4GRkKarS6skJBqCkmWSyu4; the call is issue #302 (`needs-jack`). Waiting on Jack's pick; no
-SwiftUI changed. Each direction's removals, which Jack's pick approves as a set, are listed on the page.
-Jack's answer (2026-11-23): none looked different enough; keep Still Water, add three radical directions: a complete
-redesign of everything outside the tank, an experience rather than an app, custom-rendered (one Metal pass), no boxes,
-lists or straight lines, efficient on battery; then (same day) strictly 2D or 2.5D, and no stirring anywhere in the UI.
-He liked the Descent's idea and said Ink needed work for its stirring. Built on the same branch under
-`design/negative-space/world/` (a shader-and-type harness, `render.mjs`): the Descent (a side view down a water
-column, tiers as deeper water, levels as lanterns), Ink (ink blooming and dissolving in still water, a typographic
-page) and the Basin (a pool seen from above, levels as droplets on a current). Recommended: the Descent, keeping
-level numbers rather than its depth labels. Second pitch page https://claude.ai/artifact/AogjiJuH1w1hzJFZGaiGkm; the
-call is issue #303, which replaces #302 (closed).
-Jack picked the Descent (#303) and asked for three versions of it: the Plumb Line (a fine line from a float, levels as
-beads), Lamplight (dark water, a lamp at the next level, solved levels stay lit as a trail) and the Shelf (an
-illustrated slope of ledges, a pebble per level), in `world/plumb`, `world/lamplight` and `world/shelf`.
-Recommended: Lamplight, with dim levels naming themselves on a tap and a dithered ground. Third pitch page
-https://claude.ai/artifact/8HoL7AEGynDatt4QetdjFm (`page3.py`, `pitch3.html`); the call is issue #304.
+The design pass's three rounds of directions (to-do 72, #302 to #304) are closed: moved word for word to
+`docs/history.md`.
 Jack picked the Shelf (#304): build it for real, and pitch easter egg ideas (e.g. something seen or done on an
 overscroll). In code the world is called the slope (`Slope*`), as `Shelf.swift` and "the shelf" already mean the pack
 dock and shop. The build lands on its own branch and PR, screen by screen, each shown to Jack before it merges.
