@@ -34,6 +34,32 @@ extension EscapementArt {
         return out + [points[points.count - 1]]
     }
 
+    /// The path again, its points `spacing` apart along it.
+    private static func resampled(_ path: [P], spacing: Double) -> [P] {
+        var out = [path[0]], left = spacing
+        for i in 1..<path.count {
+            var a = path[i - 1]
+            let b = path[i]
+            while simd_distance(a, b) >= left {
+                a += simd_normalize(b - a) * left
+                out.append(a)
+                left = spacing
+            }
+            left -= simd_distance(a, b)
+        }
+        return out
+    }
+
+    /// Whether `p` lies inside the ring, by the even-odd rule.
+    private static func inside(_ p: P, _ ring: [P]) -> Bool {
+        var odd = false
+        for i in ring.indices {
+            let a = ring[i], b = ring[(i + 1) % ring.count]
+            if (a.y <= p.y) != (b.y <= p.y), p.x < a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x) { odd.toggle() }
+        }
+        return odd
+    }
+
     private static func placed(_ points: [(Double, Double)], at c: P, scale: Double = 1) -> [P] {
         points.map { c + scale * P($0.0, $0.1) }
     }
@@ -406,8 +432,73 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 47, Turnback, hex, clocks 1+,3-.
-    static func plate47() -> Plate? { nil }
+    /// Problem 47, Turnback, hex, clocks 1+,3-: a road climbing a dark hill in hairpin bends, a bone ribbon kerbed
+    /// in ink, trees on the hillside between its legs, and a signpost on the bend in the three o'clock lane; the
+    /// signpost's arrow in the second ink.
+    static func plate47() -> Plate {
+        var plate = Plate()
+        let legs: [Double] = [0.86, 0.6, 0.37, 0.17, 0.0, -0.15, -0.28, -0.39]
+        let reach: [Double] = [0.38, 0.68, 0.8, 0.78, 0.68, 0.55, 0.42, 0.3]
+        // The road from the foot, bottom right, each leg turned back on itself at alternate ends.
+        var path: [P] = [P(reach[0] + 0.1, 1.08), P(reach[0] - 0.02, legs[0] + 0.04)]
+        for k in 0..<(legs.count - 1) {
+            let side: Double = k % 2 == 0 ? -1 : 1, r = (legs[k] - legs[k + 1]) / 2
+            let e = min(reach[k], reach[k + 1]) - r, mid = (legs[k] + legs[k + 1]) / 2
+            path.append(P(side * e * 0.2, legs[k] - 0.008))
+            for i in 0...14 {
+                let a = Double.pi / 2 + side * Double(i) * Double.pi / 14 * -1
+                path.append(P(side * e + r * cos(a) * side * side, mid + r * sin(a)))
+            }
+        }
+        path.append(P(0.05, legs[legs.count - 1] - 0.005))
+        path = resampled(path, spacing: 0.012)
+        // The road narrows as it climbs away.
+        func width(_ p: P) -> Double { 0.065 + 0.1 * min(1, max(0, (p.y + 0.4) / 1.26)) }
+        var left: [P] = [], right: [P] = []
+        for i in path.indices {
+            let d = path[min(i + 1, path.count - 1)] - path[max(i - 1, 0)]
+            let n = simd_normalize(P(-d.y, d.x)) * (width(path[i]) / 2)
+            left.append(path[i] + n)
+            right.append(path[i] - n)
+        }
+        let road = left + right.reversed() + [left[0]]
+        // The hill a little past each bend, its top just over the last leg.
+        let flank: [P] = [P(0.99, 0.6), P(0.96, 0.37), P(0.9, 0.17), P(0.8, 0.0), P(0.66, -0.17), P(0.5, -0.31), P(0.3, -0.42)]
+        let hill = smoothed(flank.reversed().map { P(-$0.x, $0.y) } + [P(-0.1, -0.47), P(0.08, -0.48)] + flank)
+            + [P(1.1, 0.6), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.6)]
+
+        Kit.ground(&plate, angle: -0.35, around: [hill])
+        Kit.mass(&plate, hill)
+        // Trees on the hillside: bone firs in the ink, thinning toward the top.
+        for k in 0..<700 {
+            let c = P(-1 + 2 * rnd(47, k), -0.6 + 1.6 * rnd(47, k + 200))
+            let h = (0.03 + 0.05 * min(1, max(0, (c.y + 0.5) / 1.3))) * (0.8 + 0.4 * rnd(47, k + 400))
+            guard simd_length(c) < 0.98, inside(c + P(0, -h), hill) else { continue }
+            plate.fill([c + P(0, -h), c + P(0.4 * h, 0), c + P(-0.4 * h, 0), c + P(0, -h)])
+            plate.line([c, c + P(0, 0.25 * h)], medium, .bone)
+        }
+        // The road over them, kerbed, its crown dashed.
+        plate.fill(road)
+        plate.line(left, 0.016)
+        plate.line(right, 0.016)
+        plate.lines(dashed(path.filter { $0.y > -0.2 }, on: 0.03, off: 0.03), medium)
+
+        // The signpost on the bend, its arm pointing back.
+        let foot = P(0.87, 0.16), top = P(0.87, -0.04)
+        Kit.cut(&plate, Kit.band(foot, top, 0.026), edge: medium)
+        let arm = [top + P(0.07, 0.0), top + P(-0.1, 0.0), top + P(-0.15, 0.03), top + P(-0.1, 0.06), top + P(0.07, 0.06),
+                   top + P(0.07, 0.0)]
+        plate.fill(arm, .second)
+        plate.line(arm, medium)
+        plate.fill(arc(top + P(0, -0.012), 0.014))
+        plate.line(arc(top + P(0, -0.012), 0.014), medium)
+
+        callout(&plate, "A", from: path[path.count / 2], to: P(-0.28, -0.75))
+        callout(&plate, "B", from: P(0.74, 0.09), to: P(0.78, -0.4))
+        callout(&plate, "C", from: top + P(-0.12, 0.03), to: P(0.66, 0.6))
+        callout(&plate, "D", from: P(-0.75, 0.3), to: P(-0.86, -0.32))
+        return plate
+    }
 
     /// Problem 48, Tide clock, hex, clocks 1+,2-.
     static func plate48() -> Plate? { nil }
