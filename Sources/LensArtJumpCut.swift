@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let jumpCut: [Int: Halftone.Panel] = [38: cameraObscura]
+    static let jumpCut: [Int: Halftone.Panel] = [38: cameraObscura, 39: magicLantern]
 
     /// A circle as `parts` arcs, so each stroke's box is small and a pixel far from the circle tests none of it.
     fileprivate static func hoop(_ c: P, _ r: Double, _ width: Double, parts: Int = 8, from a0: Double = 0) -> [Halftone.Stroke] {
@@ -35,6 +35,24 @@ extension LensArt {
         [P(0.13, -0.58), P(0.13, -0.72)],
         [P(0.04, -0.66), P(0.22, -0.66)],
         arc(P(-0.27, 0.3), 0.06, 180, 360, 6) + [P(-0.21, 0.4), P(-0.33, 0.4), P(-0.33, 0.3)],
+    ]
+
+    /// A sheet ghost in a unit box, arms up: head and sides, a hem in three scallops, eyes and a round mouth.
+    fileprivate static let ghost: [[P]] = [
+        [P(-0.62, -0.02), P(-0.4, 0.06)] + arc(P(0, 0), 0.4, 180, 360, 14) + [P(0.4, 0.06), P(0.62, -0.02)],
+        [P(-0.4, 0.04), P(-0.4, 0.55)] + arc(P(-0.27, 0.55), 0.133, 180, 0, 5) + arc(P(0, 0.55), 0.133, 180, 0, 5)
+            + arc(P(0.27, 0.55), 0.133, 180, 0, 5) + [P(0.4, 0.04)],
+        circle(P(-0.14, -0.06), 0.06, 8), circle(P(0.14, -0.06), 0.06, 8), ellipse(P(0, 0.18), 0.07, 0.1, 10),
+    ]
+
+    /// An oil lamp's flame in a unit box: the flame, its blue heart, the wick and the burner's collar.
+    fileprivate static let flame: [[P]] = [
+        closed([P(0, -0.6)] + curve(P(0, -0.6), P(0.32, -0.1), P(0.2, 0.18), 8) + arc(P(0, 0.12), 0.21, 15, 165, 8)
+            + curve(P(-0.2, 0.18), P(-0.32, -0.1), P(0, -0.6), 8)),
+        closed(curve(P(0, -0.18), P(0.12, 0.02), P(0, 0.18), 6) + curve(P(0, 0.18), P(-0.12, 0.02), P(0, -0.18), 6)),
+        [P(0, 0.33), P(0, 0.46)],
+        closed(rect(-0.3, 0.46, 0.3, 0.62)),
+        [P(-0.42, 0.62), P(0.42, 0.62)],
     ]
 }
 
@@ -124,5 +142,93 @@ extension LensArt {
         for line in place(church, at: hole + P(0.024, -0.022), 0.05) { s.append(stroke(line, 0.003)) }
         for line in place(church, at: screen + P(-0.01, 0.05), 0.052, degrees: 180) { s.append(stroke(line, 0.0034)) }
         return panel("cameraobscura", fills: fills, strokes: s) { _ in c(0.16) }
+    }()
+}
+
+// MARK: - 39: Magic lantern
+
+/// Level 39's name: a tin magic lantern on its table, side on, its chimney smoking, a painted slide in the gate of its
+/// brass tube, and the beam thrown up onto a sheet hung behind, a child watching. Over the lower left core (one of hex's
+/// three lenses on this level) the lamp house's red peep window, and in it the lamp's flame; over the hub the slide,
+/// and on it a ghost painted upside down, as slides go in; over the upper right core the picture on the sheet, the
+/// ghost the right way up. Level 39 deals each lens +2.
+extension LensArt {
+    static let magicLantern: Halftone.Panel = {
+        let hub = P(0, 0), peep = P(-0.485, 0.28), shown = P(0.485, -0.28)
+        let u = P(cos(-.pi / 6), sin(-.pi / 6)), n = P(-u.y, u.x)
+        let back = hub - u * 0.36, front = hub + u * 0.3
+        let tube = bar(back, front, 0.17), hood = bar(hub + u * 0.2, front, 0.22)
+        let slide = [hub - n * 0.46 - u * 0.27, hub - n * 0.46 + u * 0.27, hub + n * 0.46 + u * 0.27, hub + n * 0.46 - u * 0.27]
+        let toward = simd_normalize(shown - front), across = P(-toward.y, toward.x)
+        let beam = [front + across * 0.1, shown + across * 0.3, shown - across * 0.3, front - across * 0.1]
+        let body = rect(-0.82, -0.06, -0.15, 0.62), roof = [P(-0.88, -0.06), P(-0.09, -0.06), P(-0.22, -0.17), P(-0.75, -0.17)]
+        let chimney = rect(-0.67, -0.6, -0.53, -0.17)
+        let crown = closed([P(-0.72, -0.6), P(-0.48, -0.6), P(-0.48, -0.7), P(-0.52, -0.7), P(-0.52, -0.66), P(-0.58, -0.66), P(-0.58, -0.7),
+                            P(-0.62, -0.7), P(-0.62, -0.66), P(-0.68, -0.66), P(-0.68, -0.7), P(-0.72, -0.7)])
+        let sheet = rect(0.1, -0.9, 0.98, 0.45), heads = [(P(0.42, 0.42), 0.11), (P(0.76, 0.36), 0.1)]
+        let wood = Tone(0, 0.45, 0.7), brass = y(0.8)
+        // The painted border round a slide's picture and round its picture on the sheet.
+        func border(_ c: P) -> [Fill] {
+            (0..<10).map { k in disc(polar(c, 0.218, 36 * Double(k) + 9), 0.017, y(0.9)) } + [ring(c, 0.19, 0.245, m(0.8))]
+        }
+        var fills = [disc(peep, 0.19, m(0.85)), ring(peep, 0.19, 0.245, brass), disc(hub, 0.19, c(0.6))] + border(hub)
+        fills += [disc(shown, 0.19, c(0.6))] + border(shown)
+        fills += [fill(hood, brass), fill(tube, y(0.6)), fill(slide, Tone(0.35, 0.5, 0)), fill(beam, y(0.55)), fill(crown, brass), fill(chimney, c(0.55)),
+                  fill(roof, brass), fill(body, c(0.55))]
+        fills.append(disc(heads[0].0 + P(0.08, -0.08), 0.045, y(0.9)))
+        fills += heads.flatMap { [disc($0.0, $0.1, .zero), oval($0.0 + P(0.02, 0.22), $0.1 * 1.9, $0.1 * 1.3, .zero)] }
+        fills += [fill(sheet, y(0.3)), fill(rect(-1, 0.62, 0.3, 0.72), wood)]
+
+        var s: [Halftone.Stroke] = []
+        // The sheet on its line, pegged, and its folds.
+        s.append(stroke(closed(sheet), mid))
+        s.append(stroke(curve(P(0.0, -0.93), P(0.5, -0.86), P(1.0, -0.93), 16), mid))
+        for x in [0.16, 0.42, 0.7, 0.92] { s.append(stroke(closed(rect(x - 0.012, -0.95, x + 0.012, -0.86)), hair)) }
+        for x in [0.3, 0.56, 0.82] {
+            s += runs(span(P(x, -0.86), P(x + 0.03, 0.43), 50)) { p in simd_distance(p, shown) > 0.27 && heads.allSatisfy { simd_distance(p, $0.0) > $0.1 + 0.01 } }
+        }
+        // The lantern: body and its seams, the roof and its rivets, chimney and crown, smoke, the tube and its rings.
+        s.append(stroke(closed(body), bold))
+        s += runs(span(P(-0.82, 0.04), P(-0.15, 0.04), 30), hair) { simd_distance($0, peep) > 0.25 }
+        s += runs(span(P(-0.82, 0.52), P(-0.15, 0.52), 30), hair) { simd_distance($0, peep) > 0.25 }
+        s.append(stroke(closed(roof), bold))
+        for k in 0..<6 { s.append(stroke(circle(P(-0.76 + 0.11 * Double(k), -0.115), 0.012, 6), hair)) }
+        s.append(stroke(closed(chimney), bold))
+        for k in 0..<3 { s.append(stroke(closed(rect(-0.63, -0.52 + 0.1 * Double(k), -0.57, -0.46 + 0.1 * Double(k))), hair)) }
+        s.append(stroke(crown, mid))
+        s.append(stroke(curve(P(-0.6, -0.74), P(-0.52, -0.82), P(-0.6, -0.88), 10) + curve(P(-0.6, -0.88), P(-0.68, -0.94), P(-0.58, -0.99), 10), mid))
+        s.append(stroke(closed(tube), bold))
+        s.append(stroke(closed(hood), bold))
+        for t in [0.24, 0.28] { s.append(stroke([hub + u * t - n * 0.11, hub + u * t + n * 0.11], hair)) }
+        s.append(stroke(closed(bar(hub + u * 0.24 + n * 0.11, hub + u * 0.24 + n * 0.17, 0.035)), mid))
+        // The slide: its frame, the pull at its end, and the beam's rays.
+        s.append(stroke(closed(slide), bold))
+        s += runs(span(slide[0] + n * 0.06, slide[1] + n * 0.06, 20), hair) { _ in true }
+        s += runs(span(slide[3] - n * 0.06, slide[2] - n * 0.06, 20), hair) { _ in true }
+        s.append(stroke(circle(hub + n * 0.53, 0.04, 10), mid))
+        for t in [-0.6, 0.6] { s += dashes(front + across * (0.08 * t), shown + across * (0.26 * t) - toward * 0.25, 3) }
+        // The peep window's ring, riveted, its catch; the pictures' borders.
+        s += hoop(peep, 0.245, bold)
+        s += hoop(peep, 0.19, mid)
+        for k in 0..<8 where k != 2 { s.append(stroke(circle(polar(peep, 0.218, 45 * Double(k)), 0.01, 6), hair)) }
+        s.append(stroke(closed(bar(polar(peep, 0.2, 90), polar(peep, 0.3, 90), 0.04)), mid))
+        for c in [hub, shown] {
+            s += hoop(c, 0.245, bold)
+            s += hoop(c, 0.19, mid)
+        }
+        // The audience from behind, one with a bow in her hair; the table's edge.
+        for (c, r) in heads {
+            s += runs(circle(c, r, 24), mid) { $0.y < c.y + r * 0.7 }
+            s += runs(ellipse(c + P(0.02, 0.22), r * 1.9, r * 1.3, 28), mid) { simd_distance($0, c) > r }
+        }
+        s.append(stroke(circle(heads[0].0 + P(0.08, -0.08), 0.045, 12), mid))
+        s += runs(span(P(-1, 0.62), P(0.3, 0.62), 40), mid) { _ in true }
+        s.append(stroke([P(0.3, 0.62), P(0.3, 0.72), P(-1, 0.72)], mid))
+        for x in [-0.7, 0.18] { s.append(stroke([P(x, 0.72), P(x + 0.02, 1)], bold)) }
+        // In the peep window the flame; on the slide the ghost upside down; on the sheet the ghost.
+        for line in place(flame, at: peep + P(0.022, -0.028), 0.075) { s.append(stroke(line, 0.0034)) }
+        for line in place(ghost, at: hub + P(0.026, 0.024), 0.06, degrees: 180) { s.append(stroke(line, 0.0032)) }
+        for line in place(ghost, at: shown + P(0.026, -0.026), 0.064) { s.append(stroke(line, 0.0034)) }
+        return panel("magiclantern", fills: fills, strokes: s) { _ in m(0.24) }
     }()
 }
