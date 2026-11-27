@@ -198,10 +198,17 @@ def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, chain=0.
     return None
 
 
-def solve(layout, lenses, scramble):
+def solve(layout, lenses, scramble, limit=None):
+    """solve.sh's output and its time; empty past `limit` seconds."""
     t = time.time()
-    out = subprocess.run([os.path.join(HERE, "solve.sh"), layout, scramble, "lenses=" + ",".join(map(str, sorted(lenses)))],
-                         capture_output=True, text=True).stdout
+    run = subprocess.Popen([os.path.join(HERE, "solve.sh"), layout, scramble, "lenses=" + ",".join(map(str, sorted(lenses)))],
+                           stdout=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        out = run.communicate(timeout=limit)[0]
+    except subprocess.TimeoutExpired:
+        os.killpg(run.pid, 9)
+        run.wait()
+        out = ""
     return out, time.time() - t
 
 
@@ -251,7 +258,7 @@ def main():
                 if not found:
                     continue
                 stack, m = found
-                out, _ = solve(layout, lenses, text(stack))
+                out, _ = solve(layout, lenses, text(stack), limit=60)
                 entries = re.search(r"^entries (\d+)", out, re.M)
                 opt = re.search(r"^optimum (\d+)", out, re.M)
                 if not entries or not opt or int(entries.group(1)) != len(stack) or int(opt.group(1)) != len(stack):
