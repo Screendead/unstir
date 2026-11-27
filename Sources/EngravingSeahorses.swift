@@ -122,9 +122,13 @@ enum Seahorses {
 
     /// A polyline cut where it passes behind an animal.
     private static func clip(_ out: inout [Line], _ points: [P], _ width: Double, _ hulls: [[P]]) {
+        // Each hull's bounds first: an unoptimised build otherwise spends seconds on the polygon test.
+        let boxes = hulls.map { h in (h.reduce(h[0]) { simd_min($0, $1) }, h.reduce(h[0]) { simd_max($0, $1) }) }
         var run: [P] = []
         for p in points {
-            if hulls.contains(where: { inside(p, $0) }) {
+            if hulls.indices.contains(where: { k in
+                all(p .>= boxes[k].0) && all(p .<= boxes[k].1) && inside(p, hulls[k])
+            }) {
                 if run.count > 1 { out.append(Line(points: run, width: width)) }
                 run = []
             } else {
