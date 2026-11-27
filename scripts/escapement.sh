@@ -5,10 +5,12 @@
 #        scripts/escapement.sh build <layout> <clocks> <moves> <waits a-b> <from seed> <to seed>
 #        scripts/escapement.sh book scripts/escapement/problems.tsv
 #        scripts/escapement.sh table scripts/escapement/problems.tsv [span]
+#        scripts/escapement.sh measure scripts/escapement/problems.tsv
 # Escapement's prover for the problem book's draft: every move ticks each running clock once, and a tick that pushes
 # loses, as does the last clock stopping with twists left. check prints the optimum and its proof, the lines at par and each first move's fate; search deals problems
 # whose optimum is what the clocks owe, build deals them backwards from a line, and book proves every problem in the
 # draft book (docs/escapement-problems.md). ESC_RULE=lab plays the lab's re-grab instead of Jack's final tick.
+# ESC_WAIT=one plays a tap on a ratchet as ticking that clock alone (a rule for Jack to weigh, not the game's).
 # ESC_WAIT=0 plays without the waiting move, so only a knob's turn ticks the clocks: build then deals lines of whole
 # heals, or with waits asked for, problems only a spare turn solves, and table measures a book under both rules.
 set -euo pipefail
