@@ -243,24 +243,25 @@ extension LensArt {
 /// Level 64's name: an ophthalmoscope face on as the doctor holds it, its wheel of lenses on a knurled handle, a thumb
 /// on the wheel's edge by the window that reads its power. Over the hub is its sight hole and the patient's dilated eye
 /// in it, a blue iris round a pupil glowing red, and in the red the back of the eye, the optic disc and its vessels.
-/// The wheel's four other lenses, over the top, upper right, lower right and upper left cores, each focus nearer into
-/// the eye: the lashes at the lid's edge, the iris's fibres at the pupil's edge, the spokes of a cataract in the eye's
-/// lens, and floaters drifting in the vitreous.
+/// The wheel's three other lenses, over the top, lower right and upper left cores, each focus nearer into the eye: the
+/// lashes at the lid's edge, the spokes of a cataract in the eye's lens, and floaters drifting in the vitreous. Over the
+/// upper right, which twists, the lamp's window: its bulb lit off to one side and the green filter swung half across.
 extension LensArt {
     static let ophthalmoscope: Halftone.Panel = {
-        let hole = P(0, 0), lashes = P(0, -0.56), iris = P(0.485, -0.28), cataract = P(0.485, 0.28), floaters = P(-0.485, -0.28)
+        let hole = P(0, 0), lashes = P(0, -0.56), lamp = P(0.485, -0.28), cataract = P(0.485, 0.28), floaters = P(-0.485, -0.28)
         let silver = Tone(0.42, 0.42, 0.42), dark = Tone.zero, wheel = 0.86, neck = (0.3, 0.68)
         let glasses = [
             glass(hole, Tone(0, 0.5, 0.8), frame: [(20, c(0.75)), (45, c(0.45)), (70, c(0.8)), (110, y(0.6)), (140, c(0.45)), (175, c(0.8)),
                                                     (215, c(0.5)), (240, y(0.6)), (280, c(0.8)), (315, c(0.45)), (360, c(0.75))], glass: 0.19),
             glass(lashes, y(0.7), frame: [(60, silver), (90, dark), (200, silver), (230, dark), (360, silver)]),
-            glass(iris, m(0.6), frame: [(30, silver), (110, dark), (140, silver), (300, dark), (360, silver)]),
             glass(cataract, c(0.7), frame: [(60, silver), (100, dark), (125, y(0.85)), (150, silver), (185, m(0.75)), (215, silver), (250, dark), (360, silver)]),
             glass(floaters, c(0.55), frame: [(140, silver), (175, dark), (260, silver), (330, dark), (360, silver)]),
         ]
         let thumb = ellipse(P(-0.66, 0.44), 0.12, 0.2, degrees: 30, 32), readout = rect(-0.36, 0.5, -0.22, 0.6)
         let handle = rect(-0.1, 0.66, 0.16, 1), collar = rect(-0.12, 0.62, 0.18, 0.7), button = P(0.1, 0.82)
-        let fills = [disc(button, 0.035, m(0.85)), fill(thumb, Tone(0, 0.4, 0.55)), fill(readout, y(0.85)), fill(collar, m(0.75))]
+        let bulb = lamp + P(0.05, -0.06), filter = lamp + P(-0.07, 0.07)
+        let fills = [disc(button, 0.035, m(0.85)), fill(thumb, Tone(0, 0.4, 0.55)), fill(readout, y(0.85)), fill(collar, m(0.75)),
+                     disc(bulb, 0.12, y(0.9)), disc(filter, 0.1, Tone(0.6, 0, 0.6)), disc(lamp, 0.22, silver)]
 
         var s: [Halftone.Stroke] = []
         let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
@@ -299,12 +300,12 @@ extension LensArt {
             let t = (Double(k) + 4) / 8, root = (1 - t) * (1 - t) * (lid + P(-0.08, 0.012)) + 2 * (1 - t) * t * (lid + P(0, -0.024)) + t * t * (lid + P(0.08, 0.012))
             s.append(stroke(curve(root, root + P(0.006 * Double(k), -0.03), root + P(0.012 * Double(k) + 0.012, -0.044), 6), 0.0026))
         }
-        // The iris at the pupil's edge, its fibres running out to the collarette.
-        let pupil = iris + P(-0.05, 0.04)
-        s.append(stroke(arc(pupil, 0.05, -80, 10, 14), 0.0042))
-        s.append(stroke(arc(pupil, 0.085, -75, 5, 14), 0.0026))
-        for k in 0..<8 { let a = -78 + 11 * Double(k); s.append(stroke(curve(polar(pupil, 0.054, a), polar(pupil, 0.07, a + 6), polar(pupil, 0.082, a), 5), 0.002)) }
-        s.append(stroke(ellipse(polar(pupil, 0.1, -40), 0.008, 0.005, degrees: 50, 10), 0.0024))
+        // The lamp's window: its rim, the bulb and its filament, the filter's disc on its pin.
+        s += hoop(lamp, 0.22, bold) + hoop(bulb, 0.12, mid, pieces: 3) + hoop(filter, 0.1, mid, pieces: 3)
+        s.append(stroke((0..<7).map { bulb + P(-0.045 + 0.015 * Double($0), $0 % 2 == 0 ? 0.01 : -0.01) }, mid))
+        s.append(stroke([bulb + P(-0.045, 0.01), bulb + P(-0.05, 0.07)], hair))
+        s.append(stroke([bulb + P(0.045, 0.01), bulb + P(0.05, 0.07)], hair))
+        s += hoop(filter + P(-0.05, 0.03), 0.015, mid, pieces: 1)
         // A cataract: the lens's rim and the spokes clouding in from it.
         let lens0 = cataract + P(0.022, -0.02)
         s += hoop(lens0, 0.04, 0.0038, pieces: 3)
