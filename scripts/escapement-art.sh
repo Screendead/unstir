@@ -7,9 +7,8 @@
 # Draws an Escapement problem's plate (Sources/EscapementArt*.swift; today is the shared engine-turning) on the Mac
 # with CoreGraphics, with a layout marking where its knobs and a clock's hub on each would sit; seen through a problem's
 # scramble (clocks as problems.tsv writes them), after the first of its line's moves if given, as a sketch of the deal;
-# measures how a 30° step
-# shows in each of a layout's cores and how much second ink it carries, as the plates' test does; or times its geometry
-# and its raster at the Pro Max glass's size, five runs' mean.
+# measures how a 30° step shows in each of a layout's cores and how much second ink it carries, as the plates' test
+# does; or times its geometry and its raster at the Pro Max glass's size, five runs' mean.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/escapement-art
