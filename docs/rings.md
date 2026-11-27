@@ -61,8 +61,11 @@ at rest.
   sharing a few bitmaps: four beads a tier colour, one numeral per number and ink, one thread a colour. No ring is
   one bitmap. Soft or large art is baked under the screen's scale: the suns and the floor at 2x, the sky as a strip
   four points wide. The cross lines' strip is 2 points wide and 5200 long, stretched across the floor, baked at 1.5x
-  so it stays under 8192 pixels: at 3x (15,600) the simulator drew a hard-edged pale band over the far floor on some
-  launches, as a texture that size is cut into tiles. On a Pro Max with every piece baked the art is about 23 MB with
+  (7,800 pixels tall). At 3x (15,600) the simulator drew a hard-edged pale band over the far floor on some launches;
+  at 1.5x thirteen captures of the same pose, from 1.6 s to 5 s after launch, showed none, and one shot of a run that
+  had just installed the app showed a fainter one. The cause is not settled (a texture past 8192 pixels cut into
+  tiles, or mipmaps not yet made), and the phone is the judge; 1.5x also softens the nearest lines a little on a 3x
+  screen, where they are mostly glow. On a Pro Max with every piece baked the art is about 23 MB with
   the four tiers' rings and 31 MB with the archive's and endless's too (the tour's log line prints it).
 - **Layers.** `RingsView` (RingsView.swift) is a `UIView` whose layers are `RingsLayer`s, which never animate a
   change by themselves. Back to front: the ground behind the suns (sky, stars), one sun a ring, the ground in front
