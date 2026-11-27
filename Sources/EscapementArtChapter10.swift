@@ -346,8 +346,125 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 58, Final hour, hex, clocks 1-.
-    static func plate58() -> Plate? { nil }
+    /// A smooth path through points, a Catmull-Rom spline with `n` steps a span.
+    private static func spline(_ points: [P], _ n: Int = 12) -> [P] {
+        var out: [P] = []
+        for i in 0..<(points.count - 1) {
+            let p0 = points[max(i - 1, 0)], p1 = points[i], p2 = points[i + 1], p3 = points[min(i + 2, points.count - 1)]
+            for k in 0..<n {
+                let t = Double(k) / Double(n), t2 = t * t, t3 = t2 * t
+                let a = 2 * p1, b = p2 - p0, c = 2 * p0 - 5 * p1 + 4 * p2 - p3, d = 3 * p1 - p0 - 3 * p2 + p3
+                out.append(0.5 * (a + b * t + c * t2 + d * t3))
+            }
+        }
+        return out + [points[points.count - 1]]
+    }
+
+    /// An outline turned about a vertical axis: half-widths at heights from `base` upward, about x = `x`.
+    private static func lathe(_ x: Double, _ profile: [(Double, Double)]) -> [P] {
+        let right = profile.map { P(x + $0.1, $0.0) }
+        return right + right.reversed().map { P(2 * x - $0.x, $0.y) } + [right[0]]
+    }
+
+    /// Problem 58, Final hour, hex, clocks 1-: a tower's striking jack, a carved figure in hat, ruff and hose on his
+    /// plinth, his hammer raised high over the hour bell hung from its beam on the right, the swing marked; the
+    /// hammer's head in the second ink, up in the rim clear of every hub.
+    static func plate58() -> Plate {
+        var plate = Plate()
+        let fx = -0.46
+        let bell = lathe(0.5, [(0.47, 0.35), (0.42, 0.34), (0.34, 0.29), (0.22, 0.22), (0.06, 0.18), (-0.06, 0.16),
+                               (-0.12, 0.13), (-0.15, 0.08)])
+        let beam = box(P(0.2, -0.27), P(1.1, -0.19))
+        let plinth = box(P(-0.8, 0.8), P(-0.1, 1.1))
+        let hat = [P(fx - 0.17, -0.3), P(fx + 0.17, -0.3), P(fx + 0.17, -0.27), P(fx + 0.08, -0.27), P(fx + 0.07, -0.44),
+                   P(fx - 0.08, -0.44), P(fx - 0.09, -0.27), P(fx - 0.17, -0.27), P(fx - 0.17, -0.3)]
+        let head = ellipse(P(fx, -0.2), 0.075, 0.09)
+        let doublet = [P(fx - 0.17, -0.08), P(fx + 0.17, -0.08), P(fx + 0.15, 0.24), P(fx + 0.2, 0.42), P(fx - 0.2, 0.42),
+                       P(fx - 0.15, 0.24), P(fx - 0.17, -0.08)]
+        let legs = [box(P(fx - 0.13, 0.42), P(fx - 0.03, 0.74)), box(P(fx + 0.03, 0.42), P(fx + 0.13, 0.74))]
+        let boots = [[P(fx - 0.14, 0.72), P(fx - 0.02, 0.72), P(fx - 0.01, 0.8), P(fx - 0.2, 0.8), P(fx - 0.14, 0.72)],
+                     [P(fx + 0.02, 0.72), P(fx + 0.14, 0.72), P(fx + 0.2, 0.8), P(fx + 0.01, 0.8), P(fx + 0.02, 0.72)]]
+        let raised = [P(fx + 0.15, -0.04), P(fx + 0.3, -0.18), P(fx + 0.34, -0.46)]
+        let sleeve = Kit.ribbon(spline(raised, 8), 0.08)
+        let hand = P(fx + 0.34, -0.5)
+        let akimbo = Kit.ribbon(spline([P(fx - 0.15, -0.04), P(fx - 0.27, 0.1), P(fx - 0.14, 0.22)], 8), 0.07)
+        let grip = hand + P(0.03, 0.08), top = P(-0.18, -0.8)
+        let shaft = Kit.band(grip, top, 0.035)
+        let d = simd_normalize(top - grip), n = P(-d.y, d.x)
+        let hammer = [top + n * 0.11 + d * 0.045, top - n * 0.07 + d * 0.045, top - n * 0.09 - d * 0.045,
+                      top + n * 0.11 - d * 0.045, top + n * 0.11 + d * 0.045]
+        Kit.ground(&plate, angle: 0.62, around: [bell, beam, plinth, hat, head, doublet, sleeve, akimbo, shaft, hammer]
+            + legs + boots)
+
+        // The swing, from the hammer down to the bell's shoulder.
+        plate.lines(dashed(arc(P(0.02, -0.12), 0.72, from: -2.0, to: -0.62), on: 0.05, off: 0.035), 0.022)
+        Kit.mass(&plate, Kit.barb(polar(P(0.02, -0.12), 0.72, -0.6), toward: -0.6 + .pi / 2, size: 0.07))
+
+        // The beam, the bell's headstock and the bell, banded in bone.
+        Kit.mass(&plate, beam)
+        plate.line([P(0.2, -0.23), P(1.1, -0.23)], 0.014, .bone)
+        Kit.mass(&plate, box(P(0.43, -0.19), P(0.57, -0.14)))
+        Kit.mass(&plate, bell)
+        for (y, w) in [(-0.06, 0.155), (0.04, 0.17), (0.16, 0.2), (0.27, 0.24), (0.37, 0.31)] {
+            plate.fill(box(P(0.5 - w, y - 0.026), P(0.5 + w, y + 0.026)))
+        }
+        plate.fill(box(P(0.15, 0.43), P(0.85, 0.45)))
+        plate.fill(Kit.ribbon(spline([P(0.4, -0.08), P(0.34, 0.14), P(0.24, 0.36)], 6), 0.07))
+        plate.fill(Kit.ribbon(spline([P(0.6, -0.08), P(0.66, 0.14), P(0.74, 0.32)], 6), 0.02))
+
+        // The plinth, its face in section.
+        Kit.solid(&plate, plinth, angle: -0.7, gap: 0.03)
+        Kit.mass(&plate, box(P(-0.84, 0.8), P(-0.06, 0.85)))
+
+        // The jack: boots, hose, doublet, ruff, face and hat, his free hand on his hip.
+        for leg in legs {
+            Kit.mass(&plate, leg)
+            for y in stride(from: 0.46, to: 0.72, by: 0.065) { plate.fill(box(P(leg[0].x, y), P(leg[1].x, y + 0.034))) }
+        }
+        for boot in boots { Kit.mass(&plate, boot) }
+        Kit.mass(&plate, akimbo)
+        Kit.mass(&plate, doublet)
+        for x in stride(from: fx - 0.12, through: fx + 0.13, by: 0.06) where abs(x - fx) > 0.02 {
+            plate.fill(Kit.band(P(x, -0.02), P(x * 1.0, 0.17), 0.03))
+        }
+        let skirt = [P(fx - 0.15, 0.25), P(fx + 0.15, 0.25), P(fx + 0.2, 0.42), P(fx - 0.2, 0.42), P(fx - 0.15, 0.25)]
+        Kit.cut(&plate, skirt, edge: 0.016)
+        for x in stride(from: -0.1, through: 0.1, by: 0.066) {
+            Kit.mass(&plate, Kit.band(P(fx + x, 0.25), P(fx + 1.35 * x, 0.42), 0.036))
+        }
+        plate.fill(box(P(fx - 0.155, 0.2), P(fx + 0.155, 0.25)))
+        Kit.mass(&plate, box(P(fx - 0.03, 0.195), P(fx + 0.03, 0.255)))
+        for y in [0.0, 0.08, 0.15] { plate.fill(arc(P(fx, y), 0.018)) }
+        for x in [fx - 0.1, fx + 0.1] { plate.fill(Kit.band(P(x, 0.27), P(x * 1.0 + (x < fx ? -0.03 : 0.03), 0.4), 0.03)) }
+        let ruff = (0...10).map { k -> P in
+            let x = fx - 0.15 + 0.03 * Double(k)
+            return P(x, k % 2 == 0 ? -0.08 : -0.12)
+        }
+        Kit.cut(&plate, ruff + [P(fx + 0.15, -0.06), P(fx - 0.15, -0.06), ruff[0]], edge: 0.012)
+        Kit.cut(&plate, head, edge: 0.014)
+        Kit.mass(&plate, [P(fx - 0.06, -0.15), P(fx + 0.06, -0.15), P(fx + 0.035, -0.1), P(fx, -0.08), P(fx - 0.035, -0.1),
+                          P(fx - 0.06, -0.15)])
+        plate.fill(arc(P(fx + 0.03, -0.22), 0.012), .black)
+        plate.fill(arc(P(fx - 0.03, -0.22), 0.012), .black)
+        plate.line([P(fx, -0.21), P(fx + 0.012, -0.17), P(fx - 0.005, -0.165)], 0.01)
+        Kit.mass(&plate, hat)
+        plate.fill(box(P(fx - 0.075, -0.33), P(fx + 0.075, -0.31)))
+
+        // The raised arm, the shaft, and the hammer's head.
+        Kit.mass(&plate, sleeve)
+        plate.line(spline(raised, 8), 0.012, .bone)
+        Kit.mass(&plate, shaft)
+        Kit.cut(&plate, arc(hand, 0.045), edge: 0.012)
+        plate.fill(hammer, .second)
+        plate.line(hammer, medium)
+        plate.line([top + n * 0.11 + d * 0.045, top + n * 0.11 - d * 0.045], 0.02)
+
+        callout(&plate, "A", from: top - n * 0.08, to: P(-0.52, -0.66))
+        callout(&plate, "B", from: P(0.82, 0.4), to: P(0.9, 0.12))
+        callout(&plate, "C", from: P(fx - 0.1, 0.1), to: P(-0.86, 0.02))
+        callout(&plate, "D", from: P(-0.3, 0.92), to: P(-0.05, 0.92))
+        return plate
+    }
 
     /// Problem 59, Time's up, hex, clocks 1-,2-.
     static func plate59() -> Plate? { nil }
