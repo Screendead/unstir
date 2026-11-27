@@ -378,7 +378,7 @@ first five do. The ceiling is the reader's eye, not the prover or the GPU: every
 less waits plus the clocks' own seams, and past about 26 entries on hex the shear of the stack turns even a bold plate to
 grey bands in which no seam can be traced (the plates' shots, 2026-11-27: 80 reads at 25 entries, 82 to 90 did not at 31
 to 38). So every hex problem keeps to 26 entries but 39 and 61 (27 and 32), whose extra entries are one-step seams on
-their clocks, which read; pent, with fewer discs over each other, reads to 29 (77). On hex one clock owing n is dealt in
+their clocks, which read; pent, with fewer discs over each other, reads to 30 (62, 77 at 29). On hex one clock owing n is dealt in
 about n + 6 entries, so one clock's par stops near 20 (`pools.sh`'s `ESC_MOST`, below), and the deepest chapters climb in
 decoys, reach and bits instead (Hardness). A clock owing more than 9 shows two cards on its hub, the clock drawn larger
 so they stand as tall as one.
@@ -393,7 +393,8 @@ half the reach (below). `scripts/escapement/pools-31-90.sh` deals every pool the
 dealt with; each pick's pool and seed are in the tables below and in `scripts/escapement/picks-31-90.tsv`. The 26 slots
 dealt again for the eye (41, 45, 48, 51 to 54, 59, 63 to 66, 74, 76, 78, 79, 81 to 90) pick from pools kept to 26
 entries (`-e26`; 74 to 22, as its plate is light) with `pick.py ... --only=...`, every other slot keeping its pick and
-seed, the last slot picking first so a later problem takes the harder deal; their pars came down 1 to 7. Titles are in `scripts/escapement/titles-31-90.txt`; `scripts/escapement/to-swift.py`
+seed, the last slot picking first so a later problem takes the harder deal; 41, 45, 51, 52 and 74 kept their pars,
+the rest came down 1 to 8 (Eternity, 27 to 19). Titles are in `scripts/escapement/titles-31-90.txt`; `scripts/escapement/to-swift.py`
 writes the rows as Pack.swift's problems.
 
 **Proof.** *Exists* and *none shorter* as for 1 to 30: the line is replayed through `Array.commit`, and par is what the

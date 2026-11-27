@@ -1631,8 +1631,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   now they keep the shared plate. Nothing is stored: `Level.picture` is still `engineTurned`, and the plate is baked
   like the shared one, in memory by `Picture.render` when the play screen's layer appears or changes problem (7 to
   16 ms a plate at a Pro Max's 1284 px on the Mac that drew them, under a millisecond of geometry), one image held at a time and none
-  on disk, so thirty plates cost no storage and no cache to cap. A plate is composed round its layout: no knob, and
-  no hub a clock on any rod would wear, sits on the part it is named for, a ruled tint leaves no core flat, and the
+  on disk, so thirty plates cost no storage and no cache to cap. A plate is composed round its layout: on 1 to 30 no knob, and
+  no hub a clock on any rod would wear, sits on the part it is named for; on 31 to 90, whose subjects are drawn large
+  and bold, no hub of the problem's own clocks sits on its key part (a dial, a jewel, the second ink's part), though
+  knobs and other rods' hubs may cross the subject, a ruled tint leaves no core flat, and the
   second ink keeps to one small part, never a dashed circle, which reads as a clock's disc
   (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every other pixel each way a mix of bone, ink and vermilion,
   the second ink's marks within a circle 0.4 of the tank across and under 3% of the glass, and the step measure in

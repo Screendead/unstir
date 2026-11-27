@@ -2,8 +2,10 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/escapement/pools-31-90.sh [out dir]
 # Deals again every pool that scripts/escapement/plan-31-90.txt picks from, each with the seeds and cap it was dealt
-# with, into build/pools unless given; then `scripts/escapement/pick.py build/pools scripts/escapement/plan-31-90.txt 31`
-# picks problems 31 to 90 again. Hours on one core: run it in the background, under the Mac's load level.
+# with, into build/pools unless given. The book's picks are scripts/escapement/picks-31-90.tsv: the slots dealt within 26
+# entries were picked last slot first (`pick.py build/pools scripts/escapement/plan-31-90.txt 31 --only=...`, the slots
+# the doc's 2b lists), the rest first slot first as a whole-plan run picks. Hours on one core: run it in the
+# background, under the Mac's load level.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 out=${1:-build/pools}
