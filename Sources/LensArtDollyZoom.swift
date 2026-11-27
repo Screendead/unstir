@@ -243,24 +243,25 @@ extension LensArt {
 /// Level 64's name: an ophthalmoscope face on as the doctor holds it, its wheel of lenses on a knurled handle, a thumb
 /// on the wheel's edge by the window that reads its power. Over the hub is its sight hole and the patient's dilated eye
 /// in it, a blue iris round a pupil glowing red, and in the red the back of the eye, the optic disc and its vessels.
-/// The wheel's four other lenses, over the top, upper right, lower right and upper left cores, each focus nearer into
-/// the eye: the lashes at the lid's edge, the iris's fibres at the pupil's edge, the spokes of a cataract in the eye's
-/// lens, and floaters drifting in the vitreous.
+/// The wheel's three other lenses, over the top, lower right and upper left cores, each focus nearer into the eye: the
+/// lashes at the lid's edge, the spokes of a cataract in the eye's lens, and floaters drifting in the vitreous. Over the
+/// upper right, which twists, the lamp's window: its bulb lit off to one side and the green filter swung half across.
 extension LensArt {
     static let ophthalmoscope: Halftone.Panel = {
-        let hole = P(0, 0), lashes = P(0, -0.56), iris = P(0.485, -0.28), cataract = P(0.485, 0.28), floaters = P(-0.485, -0.28)
+        let hole = P(0, 0), lashes = P(0, -0.56), lamp = P(0.485, -0.28), cataract = P(0.485, 0.28), floaters = P(-0.485, -0.28)
         let silver = Tone(0.42, 0.42, 0.42), dark = Tone.zero, wheel = 0.86, neck = (0.3, 0.68)
         let glasses = [
             glass(hole, Tone(0, 0.5, 0.8), frame: [(20, c(0.75)), (45, c(0.45)), (70, c(0.8)), (110, y(0.6)), (140, c(0.45)), (175, c(0.8)),
                                                     (215, c(0.5)), (240, y(0.6)), (280, c(0.8)), (315, c(0.45)), (360, c(0.75))], glass: 0.19),
             glass(lashes, y(0.7), frame: [(60, silver), (90, dark), (200, silver), (230, dark), (360, silver)]),
-            glass(iris, m(0.6), frame: [(30, silver), (110, dark), (140, silver), (300, dark), (360, silver)]),
             glass(cataract, c(0.7), frame: [(60, silver), (100, dark), (125, y(0.85)), (150, silver), (185, m(0.75)), (215, silver), (250, dark), (360, silver)]),
             glass(floaters, c(0.55), frame: [(140, silver), (175, dark), (260, silver), (330, dark), (360, silver)]),
         ]
         let thumb = ellipse(P(-0.66, 0.44), 0.12, 0.2, degrees: 30, 32), readout = rect(-0.36, 0.5, -0.22, 0.6)
         let handle = rect(-0.1, 0.66, 0.16, 1), collar = rect(-0.12, 0.62, 0.18, 0.7), button = P(0.1, 0.82)
-        let fills = [disc(button, 0.035, m(0.85)), fill(thumb, Tone(0, 0.4, 0.55)), fill(readout, y(0.85)), fill(collar, m(0.75))]
+        let bulb = lamp + P(0.05, -0.06), filter = lamp + P(-0.07, 0.07)
+        let fills = [disc(button, 0.035, m(0.85)), fill(thumb, Tone(0, 0.4, 0.55)), fill(readout, y(0.85)), fill(collar, m(0.75)),
+                     disc(bulb, 0.12, y(0.9)), disc(filter, 0.1, Tone(0.6, 0, 0.6)), disc(lamp, 0.22, silver)]
 
         var s: [Halftone.Stroke] = []
         let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
@@ -299,12 +300,12 @@ extension LensArt {
             let t = (Double(k) + 4) / 8, root = (1 - t) * (1 - t) * (lid + P(-0.08, 0.012)) + 2 * (1 - t) * t * (lid + P(0, -0.024)) + t * t * (lid + P(0.08, 0.012))
             s.append(stroke(curve(root, root + P(0.006 * Double(k), -0.03), root + P(0.012 * Double(k) + 0.012, -0.044), 6), 0.0026))
         }
-        // The iris at the pupil's edge, its fibres running out to the collarette.
-        let pupil = iris + P(-0.05, 0.04)
-        s.append(stroke(arc(pupil, 0.05, -80, 10, 14), 0.0042))
-        s.append(stroke(arc(pupil, 0.085, -75, 5, 14), 0.0026))
-        for k in 0..<8 { let a = -78 + 11 * Double(k); s.append(stroke(curve(polar(pupil, 0.054, a), polar(pupil, 0.07, a + 6), polar(pupil, 0.082, a), 5), 0.002)) }
-        s.append(stroke(ellipse(polar(pupil, 0.1, -40), 0.008, 0.005, degrees: 50, 10), 0.0024))
+        // The lamp's window: its rim, the bulb and its filament, the filter's disc on its pin.
+        s += hoop(lamp, 0.22, bold) + hoop(bulb, 0.12, mid, pieces: 3) + hoop(filter, 0.1, mid, pieces: 3)
+        s.append(stroke((0..<7).map { bulb + P(-0.045 + 0.015 * Double($0), $0 % 2 == 0 ? 0.01 : -0.01) }, mid))
+        s.append(stroke([bulb + P(-0.045, 0.01), bulb + P(-0.05, 0.07)], hair))
+        s.append(stroke([bulb + P(0.045, 0.01), bulb + P(0.05, 0.07)], hair))
+        s += hoop(filter + P(-0.05, 0.03), 0.015, mid, pieces: 1)
         // A cataract: the lens's rim and the spokes clouding in from it.
         let lens0 = cataract + P(0.022, -0.02)
         s += hoop(lens0, 0.04, 0.0038, pieces: 3)
@@ -442,10 +443,10 @@ extension LensArt {
 
 /// Level 66's name: a surveyor's theodolite on its tripod out on the hills on a sunny morning, its telescope between
 /// its two standards at the top, the vertical circle on one side, its base over the hub and the tripod's legs spread
-/// below. The five lenses: over the hub, the base's round level, its bubble off
-/// the ring; over the upper right, the view down the telescope, the staff on the cross hairs; over the lower right the
-/// compass needle and its north; over the bottom, down the plummet, the nail in its peg that marks the station; and
-/// over the lower left the next station, a trig pillar on its hill.
+/// below, and its trough compass in its box on the grass at the lower right, which twists, the needle's two halves
+/// painted apart. The four lenses: over the hub, the base's round level, its bubble off the ring; over the upper right,
+/// the view down the telescope, the staff on the cross hairs; over the bottom, down the plummet, the nail in its peg
+/// that marks the station; and over the lower left the next station, a trig pillar on its hill.
 extension LensArt {
     static let theodolite: Halftone.Panel = {
         let base = P(0, 0), view = P(0.485, -0.28), compass = P(0.485, 0.28), plummet = P(0, 0.56), pillar = P(-0.485, 0.28)
@@ -453,17 +454,19 @@ extension LensArt {
         let glasses = [
             glass(base, c(0.65), frame: [(40, body), (70, dark), (160, body), (185, silver), (300, body), (330, dark), (360, body)]),
             glass(view, y(0.7), frame: [(30, dark), (120, silver), (150, dark), (230, silver), (360, dark)]),
-            glass(compass, m(0.5), frame: [(90, dark), (130, silver), (210, dark), (235, c(0.7)), (360, dark)]),
             glass(plummet, c(0.4), frame: [(20, silver), (50, dark), (140, silver), (180, dark), (290, silver), (320, body), (360, silver)]),
             glass(pillar, m(0.6), frame: [(100, dark), (125, silver), (250, dark), (280, m(0.7)), (360, dark)]),
         ]
         let sun = P(-0.62, -0.5), circle0 = P(-0.22, -0.56)
+        let compassBox = (0..<4).map { polar(compass, 0.33, 57 + 90 * Double($0)) }
+        let needle = [-60.0, 120].map { [polar(compass, 0.17, $0), polar(compass, 0.035, $0 + 90), polar(compass, 0.035, $0 - 90)] }
         let scope = bar(P(-0.3, -0.6), P(0.36, -0.6), 0.12), hood = bar(P(0.3, -0.6), P(0.44, -0.6), 0.16)
         let standards = [rect(-0.2, -0.66, -0.12, -0.2), rect(0.1, -0.66, 0.18, -0.2)], plate = rect(-0.26, -0.26, 0.26, -0.18)
         let legs = [bar(P(-0.06, 0.24), P(-0.62, 1.0), 0.07), bar(P(0.02, 0.26), P(0.12, 1.0), 0.07), bar(P(0.08, 0.24), P(0.66, 0.9), 0.07)]
         let hill = curve(P(-1, -0.04), P(-0.3, -0.24), P(0.2, -0.06), 16) + curve(P(0.2, -0.06), P(0.6, 0.08), P(1, -0.12), 16) + [P(1, 1), P(-1, 1)]
         let cloud = [P(0.3, -0.86), P(0.62, -0.8)].map { oval($0, 0.16, 0.06, Tone(0.4, 0.4, 0.4)) }
-        var fills = [fill(hood, dark), fill(scope, dark), disc(circle0, 0.12, silver)] + standards.map { fill($0, body) } + [fill(plate, body)]
+        var fills = [fill(needle[0], m(0.85)), fill(needle[1], c(0.75)), disc(compass, 0.19, silver), fill(compassBox, dark),
+                     fill(hood, dark), fill(scope, dark), disc(circle0, 0.12, silver)] + standards.map { fill($0, body) } + [fill(plate, body)]
         fills += legs.map { fill($0, wood) } + cloud + [disc(sun, 0.14, y(0.95)), fill(hill, field)]
 
         var s: [Halftone.Stroke] = []
@@ -503,13 +506,13 @@ extension LensArt {
         s.append(stroke([view + P(-0.004, -0.16), view + P(-0.004, -0.024)], 0.0022))
         s.append(stroke([view + P(-0.004, 0.024), view + P(-0.004, 0.16)], 0.0022))
         for dy in [-0.05, 0.05] { s.append(stroke([view + P(-0.03, dy), view + P(-0.008, dy)], 0.0022)) }
-        // The compass: its card's ring, the needle swung a little east of the line, and north.
-        let cc = compass + P(0.024, 0.014)
-        s += hoop(cc, 0.05, 0.0034, pieces: 3)
-        for k in 0..<12 { s.append(stroke([polar(cc, 0.05, 30 * Double(k)), polar(cc, k % 3 == 0 ? 0.038 : 0.044, 30 * Double(k))], 0.0018)) }
-        s.append(stroke(closed([polar(cc, 0.042, -75), polar(cc, 0.007, 15), polar(cc, 0.036, 105), polar(cc, 0.007, 195)]), 0.003))
-        let north = cc + P(-0.008, -0.068)
-        s.append(stroke([north + P(0, 0.012), north + P(0, -0.012), north + P(0.016, 0.012), north + P(0.016, -0.012)], 0.003))
+        // The compass: its box, the card's ring and its marks, the needle, north.
+        s += edges(compassBox, mid, keep: clear)
+        s += hoop(compass, 0.19, mid)
+        for k in 0..<12 { s.append(stroke([polar(compass, 0.19, 30 * Double(k)), polar(compass, k % 3 == 0 ? 0.15 : 0.17, 30 * Double(k))], hair)) }
+        for q in needle { s.append(stroke(closed(q), mid)) }
+        let north = polar(compass, 0.13, -60)
+        s.append(stroke([north + P(-0.016, 0.022), north + P(-0.016, -0.022), north + P(0.016, 0.022), north + P(0.016, -0.022)], mid))
         // Down the plummet: its ring and cross on the nail in the peg's top, and the turf round it.
         let pm = plummet + P(0.022, -0.02)
         s += hoop(pm, 0.03, 0.003, pieces: 2)
@@ -533,26 +536,25 @@ extension LensArt {
 // MARK: - 67: Spectroscope
 
 /// Level 67's name: Kirchhoff and Bunsen's spectroscope, a prism under its drum over the hub with brass tubes out to
-/// the lower ring, a burner's flame at the end of the slit's tube, and the light it splits fanned out across the right
-/// of the glass in six broad bands of colour. The five lenses: over the hub, the prism under the drum bending a ray
-/// into a fan; over the top core the sun in eclipse, its corona and a flame of its edge, where helium was first seen;
-/// over the upper left the slit, the flame between its jaws; over the lower left the eyepiece, sodium's two lines and
-/// its name; and over the bottom the scale's tube, hydrogen's four lines and its letter.
+/// the lower ring, the slit's tube ending at its head over the upper left, which twists, where a burner's flame stands
+/// beside it, and the light it splits fanned out across the right of the glass in six broad bands of colour. The four
+/// lenses: over the hub, the prism under the drum bending a ray into a fan; over the top core the sun in eclipse, its
+/// corona and a flame of its edge, where helium was first seen; over the lower left the eyepiece, sodium's two lines
+/// and its name; and over the bottom the scale's tube, hydrogen's four lines and its letter.
 extension LensArt {
     static let spectroscope: Halftone.Panel = {
-        let drum = P(0, 0), sun = P(0, -0.56), slit = P(-0.485, -0.28), eye = P(-0.485, 0.28), scale = P(0, 0.56)
-        let brass = y(0.65), dark = Tone.zero, flame = P(-0.78, -0.47)
+        let drum = P(0, 0), sun = P(0, -0.56), eye = P(-0.485, 0.28), scale = P(0, 0.56)
+        let brass = y(0.65), dark = Tone.zero, flame = P(-0.62, -0.38), head = P(-0.4, -0.23)
         let bands = [Tone(0, 0.75, 0.55), y(0.9), Tone(0.55, 0, 0.75), c(0.85), Tone(0.7, 0.5, 0), m(0.75)]
         let fan = (-45.0, 45.0)
         let glasses = [
             glass(drum, c(0.5), frame: [(25, brass), (60, dark), (150, brass), (170, dark), (290, brass), (325, m(0.7)), (360, brass)]),
-            glass(sun, m(0.5), frame: [(60, dark), (100, y(0.85)), (200, dark), (220, y(0.85)), (330, dark), (360, y(0.85))]),
-            glass(slit, y(0.75), frame: [(30, brass), (140, dark), (175, brass), (250, dark), (360, brass)]),
+            glass(sun, m(0.5), frame: [(40, dark), (80, y(0.85)), (120, dark), (150, c(0.8)), (185, y(0.85)), (215, dark), (300, y(0.85)), (330, dark), (360, c(0.8))]),
             glass(eye, m(0.7), frame: [(80, dark), (110, brass), (230, dark), (265, c(0.7)), (360, dark)]),
             glass(scale, c(0.65), frame: [(50, brass), (75, dark), (200, brass), (235, dark), (300, brass), (330, dark), (360, brass)]),
         ]
-        let tubes = [slit, eye, scale].map { bar(drum, $0, 0.13) }
-        var fills = [oval(flame, 0.05, 0.085, y(0.9)), oval(flame + P(0, 0.03), 0.026, 0.04, c(0.8)), fill(rect(flame.x - 0.025, flame.y + 0.09, flame.x + 0.025, flame.y + 0.3), brass)]
+        let tubes = [head, eye, scale].map { bar(drum, $0, 0.13) }, jaws = bar(head - P(0.866, 0.5) * 0.02, head + P(0.866, 0.5) * 0.05, 0.2)
+        var fills = [oval(flame + P(0, 0.04), 0.035, 0.05, c(0.8)), oval(flame, 0.065, 0.11, y(0.9)), fill(jaws, dark), fill(rect(flame.x - 0.03, flame.y + 0.11, flame.x + 0.03, flame.y + 0.34), brass)]
         fills += tubes.map { fill($0, brass) }
 
         var s: [Halftone.Stroke] = []
@@ -567,10 +569,13 @@ extension LensArt {
         for t in tubes {
             s += runs(span(t[0], t[1], 30), mid, keep: clear) + runs(span(t[3], t[2], 30), mid, keep: clear)
         }
-        s.append(stroke(ellipse(flame, 0.05, 0.085, 20), mid))
-        s.append(stroke(ellipse(flame + P(0, 0.03), 0.026, 0.04, 14), hair))
-        s.append(stroke(closed(rect(flame.x - 0.025, flame.y + 0.09, flame.x + 0.025, flame.y + 0.3)), mid))
-        s.append(stroke(closed(rect(flame.x - 0.07, flame.y + 0.3, flame.x + 0.07, flame.y + 0.34)), mid))
+        s.append(stroke(ellipse(flame, 0.065, 0.11, 24), mid))
+        s.append(stroke(ellipse(flame + P(0, 0.04), 0.035, 0.05, 16), hair))
+        s.append(stroke(closed(rect(flame.x - 0.03, flame.y + 0.11, flame.x + 0.03, flame.y + 0.34)), mid))
+        s.append(stroke(closed(rect(flame.x - 0.08, flame.y + 0.34, flame.x + 0.08, flame.y + 0.38)), mid))
+        // The slit's head on the tube's end, its two jaws and the bright line between them.
+        s.append(stroke(closed(jaws), mid))
+        s.append(stroke([jaws[0] + (jaws[3] - jaws[0]) * 0.5, jaws[1] + (jaws[2] - jaws[1]) * 0.5], mid))
         for g in glasses {
             s += hoop(g.centre, g.rim, bold)
             s += hoop(g.centre, g.glass, mid)
@@ -587,14 +592,6 @@ extension LensArt {
             s.append(stroke([polar(ec, 0.034, a), polar(ec, l, a + 8)], 0.003))
         }
         s.append(stroke(arc(polar(ec, 0.03, 120), 0.01, 120, 330, 8), 0.0036))
-        // Through the slit's tube: its two jaws, and the flame standing between them.
-        let sl = slit + P(0.03, -0.004)
-        for x in [-0.026, 0.026] { s.append(stroke([sl + P(x, -0.07), sl + P(x, 0.07)], 0.004)) }
-        let wick = sl + P(0, 0.02)
-        s.append(stroke(arc(wick, 0.014, 0, 180, 10) + curve(wick + P(-0.014, 0), wick + P(-0.014, -0.036), wick + P(0.004, -0.07), 10)
-            + curve(wick + P(0.004, -0.07), wick + P(0.016, -0.032), wick + P(0.014, 0), 10), 0.0042))
-        s.append(stroke(arc(wick, 0.006, 0, 180, 6) + [wick + P(0.001, -0.028), wick + P(0.006, 0)], 0.0028))
-        s.append(stroke([wick + P(0, 0.014), wick + P(0, 0.03)], 0.003))
         /// A strip of spectrum, its lines at `lines` (shares of the strip's length).
         func spectrum(_ at: P, _ lines: [Double]) {
             for dy in [-0.014, 0.014] { s.append(stroke([at + P(-0.06, dy), at + P(0.06, dy)], 0.0024)) }
