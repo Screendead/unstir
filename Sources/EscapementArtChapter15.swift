@@ -201,8 +201,112 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 87, Longcase clock, hex, clocks 1+.
-    static func plate87() -> Plate? { nil }
+    /// Problem 87, Longcase clock, hex, clocks 1+: a longcase clock the height of the glass in figured mahogany, its
+    /// hood with the arched dial between pillars, the trunk's door in flame figure, and the plinth on bracket feet; the
+    /// pendulum's bob, seen through the lenticle in the door, in the second ink.
+    static func plate87() -> Plate {
+        var plate = Plate()
+        let dial = P(0, -0.53), face = 0.175, lenticle = P(0, 0.28), waist = -0.3
+        /// Straight grain down a rect, in bold lines that wander.
+        func grain(_ x0: Double, _ x1: Double, _ y0: Double, _ y1: Double, gap: Double, seed: Int, ink: Ink = .bone) {
+            var x = x0 + gap / 2, k = 0
+            while x < x1 - gap / 3 {
+                plate.line((0...10).map { i in
+                    P(x + 0.01 * sin(Double(i) * 0.9 + 6 * rnd(seed, k)), y0 + (y1 - y0) * Double(i) / 10)
+                }, 0.012, ink)
+                x += gap
+                k += 1
+            }
+        }
+
+        Kit.ground(&plate, angle: 0.5)
+        // The floor it stands on.
+        Kit.mass(&plate, [P(-1.1, 0.9), P(1.1, 0.9), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.9)])
+        for x in stride(from: -0.9, through: 0.9, by: 0.3) { plate.line([P(x, 0.92), P(x - 0.03, 1.06)], heavy, .bone) }
+
+        // The plinth on its bracket feet, its raised panel figured in burr, and the moulding into the trunk.
+        for side in [-1.0, 1.0] {
+            Kit.mass(&plate, [P(0.42 * side, 0.85), P(0.42 * side, 0.96), P(0.34 * side, 0.96), P(0.3 * side, 0.9), P(0.3 * side, 0.85), P(0.42 * side, 0.85)])
+        }
+        Kit.mass(&plate, box(P(-0.42, 0.86), P(0.42, 0.91)))
+        Kit.mass(&plate, box(P(-0.38, 0.6), P(0.38, 0.88)))
+        Kit.cut(&plate, box(P(-0.34, 0.62), P(0.34, 0.845)), edge: heavy)
+        for k in 0..<3 {
+            let w = 0.24 - 0.075 * Double(k), h = 0.07 - 0.02 * Double(k)
+            plate.line(ellipse(P(0.012 * Double(k), 0.735), w, h), 0.014)
+        }
+        Kit.mass(&plate, box(P(-0.26, 0.555), P(0.26, 0.57)))
+        Kit.cut(&plate, box(P(-0.3, 0.57), P(0.3, 0.6)))
+
+        // The trunk: its stiles in straight grain, the door in flame figure, and the lenticle in the door.
+        Kit.mass(&plate, box(P(-0.22, waist + 0.02), P(0.22, 0.555)))
+        for x in [-0.19, 0.19] { Kit.cut(&plate, box(P(x - 0.03, waist + 0.02), P(x + 0.03, 0.55)), edge: medium) }
+        grain(-0.22, -0.16, waist + 0.04, 0.54, gap: 0.03, seed: 1, ink: .black)
+        grain(0.16, 0.22, waist + 0.04, 0.54, gap: 0.03, seed: 2, ink: .black)
+        let crown = P(0, -0.07), spring = atan2(-0.17 - crown.y, -0.15)
+        let door = [P(-0.15, 0.545)] + arc(crown, simd_distance(crown, P(-0.15, -0.17)), from: spring, to: -.pi - spring)
+            + [P(0.15, 0.545), P(-0.15, 0.545)]
+        Kit.cut(&plate, door, edge: 0.016)
+        for k in 0..<8 {
+            let crest = 0.6 - 0.1 * Double(k)
+            plate.line((0...16).map { i in
+                let x = -0.125 + 0.25 * Double(i) / 16
+                return P(x, min(0.51, crest + 0.14 * pow(abs(x) / 0.125, 1.4) + 0.01 * sin(Double(i + k))))
+            }, 0.024)
+        }
+        Kit.mass(&plate, arc(lenticle, 0.085))
+        plate.line(arc(lenticle, 0.085), 0.016, .bone)
+        plate.line(arc(lenticle, 0.07), fine, .bone)
+        plate.line([lenticle + P(0, -0.07), lenticle + P(0, -0.02)], medium, .bone)
+        Kit.mass(&plate, arc(lenticle + P(0, 0.008), 0.045), ink: .second)
+        plate.line(arc(lenticle + P(-0.014, -0.006), 0.016, from: 3.4, to: 4.6), medium, .bone)
+        Kit.mass(&plate, box(P(-0.27, waist - 0.005), P(0.27, waist + 0.02)))
+        Kit.mass(&plate, box(P(-0.33, waist - 0.035), P(0.33, waist - 0.015)))
+
+        // The hood: its pillars, the arched dial, and the cornice under the finials.
+        let hood = 0.34, square = 0.2, arch = P(0, dial.y - square)
+        Kit.mass(&plate, box(P(-hood, waist - 0.035), P(hood, -0.93)))
+        for side in [-1.0, 1.0] {
+            let x = 0.27 * side
+            Kit.cut(&plate, box(P(x - 0.02, -0.86), P(x + 0.02, waist - 0.06)), edge: medium)
+            for y in [-0.85, waist - 0.07] { Kit.mass(&plate, box(P(x - 0.033, y - 0.018), P(x + 0.033, y + 0.018))) }
+            plate.line([P(x - 0.007, -0.83), P(x - 0.007, waist - 0.09)], medium)
+            Kit.mass(&plate, arc(P(0.33 * side, -0.99), 0.035))
+        }
+        Kit.mass(&plate, box(P(-0.39, -0.94), P(0.39, -0.9)))
+        plate.line([P(-0.38, -0.92), P(0.38, -0.92)], medium, .bone)
+        Kit.mass(&plate, arc(P(0, -1.0), 0.05))
+        let opening = [P(-square - 0.04, waist - 0.05), P(square + 0.04, waist - 0.05), P(square + 0.04, arch.y)]
+            + arc(arch, square + 0.04, from: 0, to: -.pi) + [P(-square - 0.04, waist - 0.05)]
+        Kit.cut(&plate, opening, edge: heavy)
+        // The arch's boss, the moon riding over its hills, and the spandrels' scrolls in the dial's corners.
+        plate.line(arc(arch, 0.15, from: .pi, to: 2 * .pi) + [arch + P(0.15, 0), arch + P(-0.15, 0)], heavy)
+        Kit.solid(&plate, arc(arch, 0.1, from: .pi, to: 2 * .pi) + [arch + P(-0.1, 0)], angle: 0, gap: 0.016)
+        Kit.mass(&plate, arc(arch + P(0.02, -0.06), 0.03))
+        for (sx, sy) in [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)] {
+            let corner = P(0.19 * sx, dial.y + 0.19 * sy)
+            Kit.solid(&plate, [corner + P(0.02 * sx, 0.01 * sy), corner + P(-0.01 * sx, 0.025 * sy), corner + P(-0.045 * sx, -0.01 * sy),
+                               corner + P(-0.01 * sx, -0.045 * sy), corner + P(0.01 * sx, 0.005 * sy), corner + P(0.02 * sx, 0.01 * sy)],
+                      angle: 0.8 * sx * sy, gap: 0.012, width: fine)
+        }
+        // The dial without a heavy rim, so its rings do not hold still under the hub's step.
+        plate.fill(arc(dial, face))
+        for k in 0..<60 where k % 5 == 0 {
+            Kit.mass(&plate, Kit.band(polar(dial, 0.86 * face, Double(k) * .pi / 30), polar(dial, face, Double(k) * .pi / 30), 0.014))
+        }
+        for k in 1...12 {
+            plate.lines(Kit.numeral(roman(k), at: polar(dial, 0.7 * face, Kit.clock(Double(k))), height: 0.2 * face,
+                                    turn: Kit.clock(Double(k)) + .pi / 2, squeeze: 0.72), heavy)
+        }
+        plate.line(arc(dial, 0.93 * face), fine)
+        Kit.hands(&plate, dial, face, hours: 10, minutes: 9)
+
+        callout(&plate, "A", from: P(-0.3, -0.62), to: polar(Kit.origin, 0.62, Kit.clock(10.8)))
+        callout(&plate, "B", from: P(0.19, 0.1), to: polar(Kit.origin, 0.6, Kit.clock(3)))
+        callout(&plate, "C", from: lenticle + P(0.06, 0.03), to: polar(Kit.origin, 0.62, Kit.clock(5)))
+        callout(&plate, "D", from: P(-0.3, 0.73), to: polar(Kit.origin, 0.64, Kit.clock(7)))
+        return plate
+    }
 
     /// Problem 88, Atomic clock, hex, clocks 1+.
     static func plate88() -> Plate? { nil }
