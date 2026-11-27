@@ -338,8 +338,91 @@ extension EscapementArt {
         Kit.mass(&plate, arc(c, max(0.045, 0.1 * r)))
     }
 
-    /// Problem 64, Barrel, hex, clocks 1+,2-.
-    static func plate64() -> Plate? { nil }
+    /// Problem 64, Barrel, hex, clocks 1+,2-: a cask on its side on a cradle of two chocks, its staves bone between
+    /// heavy seams with the one in shadow in ink, four iron hoops set in the lanes clear of every hub, its head turned
+    /// to show its boards; the tap in the head in the second ink.
+    static func plate64() -> Plate {
+        var plate = Plate()
+        let end = 0.78, belly = 0.5, waist = 0.4
+        func half(_ x: Double) -> Double { waist + (belly - waist) * (1 - (x / end) * (x / end)) }
+        let xs = stride(from: -end, through: end, by: 0.02).map { $0 }
+        func seam(_ theta: Double) -> [P] { xs.map { P($0, half($0) * sin(theta)) } }
+        let outline = seam(-.pi / 2) + seam(.pi / 2).reversed() + [P(-end, -waist)]
+        let head = ellipse(P(end, 0), 0.11, waist)
+        let chocks = [-1.0, 1.0].map { s -> [P] in
+            let a = s * 0.42, w = 0.17
+            let top = stride(from: a - w, through: a + w, by: 0.02).map { P($0, half($0) - 0.01) }
+            return top + [P(a + w + 0.03, 0.93), P(a - w - 0.03, 0.93), top[0]]
+        }
+
+        Kit.ground(&plate, angle: -0.5, around: [outline, head] + chocks)
+
+        // The floor under the cradle.
+        Kit.mass(&plate, box(P(-1.1, 0.93), P(1.1, 0.98)))
+        plate.lines(hatch([box(P(-1.1, 0.98), P(1.1, 1.1))], angle: 0, gap: 0.03), medium)
+
+        // The staves: bone between heavy seams, the one in shadow underneath in ink.
+        let seams = (0...12).map { -Double.pi / 2 + Double($0) * .pi / 12 }
+        Kit.cut(&plate, outline, edge: heavy)
+        for k in 0..<12 {
+            let ring = seam(seams[k]) + seam(seams[k + 1]).reversed() + [seam(seams[k])[0]]
+            if k == 11 {
+                Kit.mass(&plate, ring)
+                plate.line(seam((seams[k] + seams[k + 1]) / 2), fine, .bone)
+            } else if k % 2 == 1 {
+                plate.lines(hatch([ring], angle: 0.08, gap: 0.036), fine)
+            }
+        }
+        for theta in seams.dropFirst().dropLast() { plate.line(seam(theta), heavy) }
+
+        // The head, turned to the eye: its chime in ink, its boards, the tap low in it.
+        plate.fill(head, .black)
+        let boards = ellipse(P(end + 0.012, 0), 0.085, waist - 0.035)
+        Kit.cut(&plate, boards)
+        for y in stride(from: -0.27, through: 0.27, by: 0.09) {
+            let dx = 0.085 * sqrt(max(0, 1 - y * y / ((waist - 0.035) * (waist - 0.035))))
+            plate.line([P(end + 0.012 - dx, y), P(end + 0.012 + dx, y)], medium)
+        }
+        plate.line(head, heavy)
+
+        // The hoops: iron bands round the belly and the chimes, each with its rivets.
+        for x in [-0.745, -0.243, 0.243, 0.745] {
+            let w = 0.056, h0 = half(x - w / 2), h1 = half(x + w / 2)
+            let hoop = [P(x - w / 2, -h0 - 0.012), P(x + w / 2, -h1 - 0.012), P(x + w / 2, h1 + 0.012), P(x - w / 2, h0 + 0.012),
+                        P(x - w / 2, -h0 - 0.012)]
+            Kit.mass(&plate, hoop)
+            plate.line([P(x - w / 2 + 0.012, -h0 + 0.01), P(x - w / 2 + 0.012, h0 - 0.01)], fine, .bone)
+            for theta in [-1.0, -0.2, 0.6] {
+                plate.fill(arc(P(x + 0.008, half(x) * sin(theta)), 0.011), .bone)
+            }
+        }
+
+        // The cradle: two chocks hollowed to the belly, their grain in bone.
+        for chock in chocks {
+            Kit.mass(&plate, chock)
+            let a = chock[0].x + 0.17
+            for dx in [-0.08, 0.0, 0.08] {
+                plate.line([P(a + dx, half(a + dx) + 0.05), P(a + dx * 1.15, 0.9)], fine, .bone)
+            }
+        }
+
+        // The tap: a spigot through the head, its key turned across.
+        let spigot = P(end + 0.04, 0.2)
+        let tap = [spigot + P(-0.04, -0.03), spigot + P(0.1, -0.025), spigot + P(0.12, 0.0), spigot + P(0.12, 0.06),
+                   spigot + P(0.09, 0.06), spigot + P(0.09, 0.02), spigot + P(-0.04, 0.03), spigot + P(-0.04, -0.03)]
+        plate.fill(tap, .second)
+        plate.line(tap, medium)
+        let key = [spigot + P(0.02, -0.03), spigot + P(0.02, -0.1), spigot + P(0.06, -0.12), spigot + P(0.07, -0.1),
+                   spigot + P(0.05, -0.03), spigot + P(0.02, -0.03)]
+        plate.fill(key, .second)
+        plate.line(key, medium)
+
+        callout(&plate, "A", from: P(-0.243, -0.3), to: P(-0.3, -0.62))
+        callout(&plate, "B", from: spigot + P(0.11, 0.05), to: P(0.66, 0.6))
+        callout(&plate, "C", from: P(0.1, half(0.1) * sin(-1.05)), to: P(0.3, -0.62))
+        callout(&plate, "D", from: P(-0.5, 0.75), to: P(-0.75, 0.55))
+        return plate
+    }
 
     /// Problem 65, Motion work, hex, clocks 1-,2-.
     static func plate65() -> Plate? { nil }
