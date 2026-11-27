@@ -45,10 +45,10 @@ extension LensArt {
 // MARK: - 56: Rose window
 
 /// Level 56's name: a wheel of seven roundels in stone tracery, its outer ring of petals in blue, ruby and gold. The hub
-/// and three of the ring (hex's four lenses on this level) are plain glass, each in a frame of gold and dark cusps, and
-/// each shows the emblem painted on it: a dove with an olive sprig at the hub, a key in the lower right, a chalice at the
-/// foot and a fleur-de-lis in the upper left. The other three roundels, which twist, hold the sun, the moon and a star,
-/// and a rose, each set off its centre.
+/// and three of the ring (hex's four lenses on this level) are plain glass, each in a frame of cusps, coloured and dark
+/// by turns, and each shows the emblem painted on it: a dove with an olive sprig at the hub, a key in the lower right, a
+/// chalice at the foot and a fleur-de-lis in the upper left. The other three roundels, which twist, hold the sun, the
+/// moon and a star, and a rose, each set off its centre.
 extension LensArt {
     static let rosewindow: Halftone.Panel = {
         let rods = hexes, core = 0.236, frame = 0.292
