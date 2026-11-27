@@ -160,8 +160,10 @@ extension LensArt {
         mark = s.count
         // A fleur-de-lis.
         let lily = rods[6] + P(0.036, -0.02), lq = 0.75
-        s.append(stroke(closed([lily + lq * P(0, -0.05)] + curve(lily + lq * P(0, -0.05), lily + lq * P(0.024, -0.022), lily + lq * P(0.004, 0.004), 8).dropFirst()
-            + curve(lily + lq * P(-0.004, 0.004), lily + lq * P(-0.024, -0.022), lily + lq * P(0, -0.05), 8).dropFirst()), 0.0034))
+        let tip: P = lily + lq * P(0, -0.05)
+        let right: [P] = Array(curve(tip, lily + lq * P(0.024, -0.022), lily + lq * P(0.004, 0.004), 8).dropFirst())
+        let left: [P] = Array(curve(lily + lq * P(-0.004, 0.004), lily + lq * P(-0.024, -0.022), tip, 8).dropFirst())
+        s.append(stroke(closed([tip] + right + left), 0.0034))
         for side in [-1.0, 1.0] {
             s.append(stroke(curve(lily + lq * P(side * 0.006, 0.004), lily + lq * P(side * 0.05, -0.006), lily + lq * P(side * 0.04, -0.036), 10)
                 + curve(lily + lq * P(side * 0.04, -0.036), lily + lq * P(side * 0.026, -0.03), lily + lq * P(side * 0.03, -0.018), 4).dropFirst(), 0.003))
@@ -435,6 +437,7 @@ extension LensArt {
         s.append(stroke([bike + P(-0.02, -0.03), bike + P(-0.008, -0.03)], 0.003))
 
         clearKnob(&s, from: mark, rods[4])
+        let around: [(Int, Int)] = [(0, 0), (0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
         let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for h in holes {
                 let d = simd_distance(p, h)
@@ -445,7 +448,7 @@ extension LensArt {
             let r = simd_length(p)
             if r > 0.925 { return Int(bearing(p, P(0, 0)) / 10) % 2 == 0 ? m(0.8) : c(0.7) }
             let i = Int(((p.x - origin) / size).rounded(.down)), j = Int(((p.y - origin) / size).rounded(.down))
-            for (dj, di) in [(0, 0), (0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)] {
+            for (dj, di) in around {
                 let ii = i + di, jj = j + dj
                 guard ii >= 0, jj >= 0, ii < n, jj < n else { continue }
                 for k in 0..<2 {

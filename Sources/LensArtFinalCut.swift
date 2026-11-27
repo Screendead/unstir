@@ -752,7 +752,8 @@ extension LensArt {
         let field = hex[0]
         let spiral = field + P(0.03, -0.03)
         s.append(stroke((0...16).map { i in polar(spiral, 0.004 + 0.0016 * Double(i), 26 * Double(i)) }, 0.0022))
-        s.append(stroke((0...16).map { i in polar(spiral, 0.004 + 0.0016 * Double(i), 180 + 26 * Double(i)) }, 0.0022))
+        let coil: [P] = (0...16).map { (i: Int) -> P in polar(spiral, 0.004 + 0.0016 * Double(i), 180 + 26 * Double(i)) }
+        s.append(stroke(coil, 0.0022))
         for (at, rx, ry, a) in [(P(-0.04, -0.02), 0.012, 0.006, 30.0), (P(-0.01, 0.045), 0.009, 0.005, -40), (P(0.05, 0.03), 0.007, 0.007, 0)] {
             s.append(stroke(closed(ellipse(field + at, rx, ry, degrees: a, 12)), 0.0022))
         }
