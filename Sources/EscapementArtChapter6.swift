@@ -238,8 +238,100 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 34, Pallet fork, hex, clocks 1+.
-    static func plate34() -> Plate? { nil }
+    /// Problem 34, Pallet fork, hex, clocks 1+: the lever escapement's pallet fork in elevation, standing on a line of
+    /// centres between the middle rods and the right-hand ones: the lever up to its horns, notch and guard pin, the
+    /// anchor's arms down to its two pallet jewels, and the escape wheel's teeth in an arc under them. The entry pallet
+    /// jewel, on the left, is in the second ink.
+    static func plate34() -> Plate {
+        var plate = Plate()
+        let x = 0.24, arbor = P(x, 0.0), wheel = P(x, 1.45), teethTip = 0.84, teeth = 21
+        let tau = 2 * Double.pi / Double(teeth)
+
+        // The lever: from the arbor up to the fork, narrowing; the fork's horns flare either side of the notch.
+        let top = -0.74, notch = 0.034, depth = 0.085
+        let leftEdge = [P(x - 0.082, 0.0), P(x - 0.056, top + 0.06)]
+        let horn = curve(P(x - 0.056, top + 0.06), P(x - 0.07, top + 0.01), P(x - 0.145, top - 0.07), 10)
+        let fork = leftEdge + horn.dropFirst()
+            + [P(x - 0.11, top - 0.105), P(x - notch, top - 0.06), P(x - notch, top - 0.06 + depth)]
+        let lever = fork + fork.reversed().map { P(2 * x - $0.x, $0.y) } + [fork[0]]
+
+        // The anchor: a crescent about the arbor, from seven o'clock round to five, its middle webbed to the arbor.
+        let span = (from: Kit.clock(4.9), to: Kit.clock(7.1)), inner = 0.71, outer = 0.83
+        let crescent = arc(arbor, outer, from: span.from, to: span.to) + arc(arbor, inner, from: span.to, to: span.from)
+        let web = [polar(arbor, 0.05, 0.4), polar(arbor, inner + 0.01, .pi / 2 - 0.1), polar(arbor, inner + 0.01, .pi / 2 + 0.1),
+                   polar(arbor, 0.05, .pi - 0.4)]
+        // The web's lightening slot.
+        let slot = curve(P(x, 0.14), P(x - 0.06, 0.38), P(x, 0.6), 12) + curve(P(x, 0.6), P(x + 0.06, 0.38), P(x, 0.14), 12)
+        // The jewels, set in slots at each end of the crescent and standing out below it.
+        func jewel(_ a: Double, lean: Double) -> [P] {
+            let d = P(cos(a), sin(a)), n = P(-d.y, d.x), base = arbor + d * (inner + 0.02), tip = arbor + d * 0.97
+            return [base + n * 0.03, tip + n * 0.03 + d.x * lean * n, tip - n * 0.03 - d * 0.03, base - n * 0.03, base + n * 0.03]
+        }
+        let entry = jewel(span.to + 0.06, lean: 0), exit = jewel(span.from - 0.06, lean: 0)
+
+        // The escape wheel's rim and teeth under the pallets, phased so a tooth's face lies on each jewel.
+        let phase = atan2(entry[1].y - wheel.y, entry[1].x - wheel.x) - 0.6 * tau
+        var outline: [P] = []
+        for k in stride(from: teeth, to: 0, by: -1) {
+            let a = phase + Double(k) * tau
+            outline += [polar(wheel, 0.78 * teethTip, a), polar(wheel, teethTip, a + 0.18 * tau), polar(wheel, 0.97 * teethTip, a - 0.02 * tau),
+                        polar(wheel, 0.86 * teethTip, a - 0.1 * tau), polar(wheel, 0.78 * teethTip, a - 0.4 * tau)]
+        }
+        outline.append(outline[0])
+
+        Kit.ground(&plate, angle: -0.55)
+        Kit.mass(&plate, outline)
+        plate.line(arc(wheel, 0.72 * teethTip), medium, .bone)
+        for k in 0..<teeth {
+            let a = phase + Double(k) * tau
+            plate.line([polar(wheel, 0.92 * teethTip, a + 0.1 * tau), polar(wheel, 0.9 * teethTip, a - 0.06 * tau)], medium, .bone)
+        }
+
+        Kit.mass(&plate, web + [web[0]])
+        Kit.solid(&plate, crescent + [crescent[0]], angle: 0.9, gap: 0.028, width: medium, edge: 0.014)
+        Kit.mass(&plate, lever)
+        // The lever's polish in bone down its middle, the arbor's collet in section, the screws pinning the anchor.
+        plate.line([P(x, -0.1), P(x, top + 0.07)], fine, .bone)
+        plate.fill(arc(arbor, 0.07))
+        plate.lines(hatch([arc(arbor, 0.07), arc(arbor, 0.025)], angle: 0.7, gap: 0.016), fine)
+        plate.line(arc(arbor, 0.07), heavy)
+        Kit.mass(&plate, arc(arbor, 0.025))
+        Kit.cut(&plate, slot, edge: heavy)
+        plate.lines(hatch([slot], angle: 0.9, gap: 0.03), fine)
+        for p in [polar(arbor, (inner + outer) / 2, span.from + 0.2), polar(arbor, (inner + outer) / 2, span.to - 0.2)] {
+            plate.fill(arc(p, 0.03))
+            plate.line(arc(p, 0.03), medium)
+            plate.line([p + P(-0.024, 0.012), p + P(0.024, -0.012)], 0.01)
+        }
+        // The guard pin, standing in the notch's floor.
+        let pin = P(x, top - 0.06 + depth)
+        Kit.mass(&plate, [pin + P(-0.011, 0.0), pin + P(-0.011, -0.07), pin + P(0, -0.085), pin + P(0.011, -0.07), pin + P(0.011, 0), pin + P(-0.011, 0)])
+
+        Kit.solid(&plate, entry, angle: 0.5, gap: 0.012, ink: .second, width: fine, edge: heavy)
+        Kit.solid(&plate, exit, angle: 0.5, gap: 0.012, width: fine, edge: heavy)
+
+        // The fork again, edge on, to the left: the lever's blade, the staff and its pivots, the pallets' stones hanging
+        // from the anchor, the guard pin standing up at the fork's end.
+        let staff = -0.4, end = -0.92
+        let panel = curve(P(-0.96, -0.2), P(-0.6, -0.24), P(-0.22, -0.2), 12) + curve(P(-0.22, 0.19), P(-0.6, 0.23), P(-0.96, 0.19), 12)
+        Kit.cut(&plate, panel + [panel[0]])
+        Kit.mass(&plate, [P(end, -0.045), P(-0.27, -0.045), P(-0.27, 0.05), P(staff - 0.05, 0.05), P(staff - 0.12, 0.03), P(end, 0.03), P(end, -0.045)])
+        Kit.mass(&plate, Kit.band(P(staff, -0.1), P(staff, 0.11), 0.034))
+        for (y0, y1) in [(-0.135, -0.1), (0.11, 0.145)] { Kit.mass(&plate, Kit.band(P(staff, y0), P(staff, y1), 0.014)) }
+        Kit.solid(&plate, [P(staff - 0.04, -0.075), P(staff + 0.04, -0.075), P(staff + 0.04, -0.03), P(staff - 0.04, -0.03), P(staff - 0.04, -0.075)],
+                  angle: 0.7, gap: 0.014, width: fine)
+        Kit.solid(&plate, box(P(-0.35, 0.05), P(-0.285, 0.13)), angle: 0.5, gap: 0.012, width: fine, edge: heavy)
+        Kit.mass(&plate, Kit.band(P(end + 0.07, -0.04), P(end + 0.07, -0.1), 0.022))
+        plate.line([P(end + 0.02, -0.01), P(-0.29, -0.01)], medium, .bone)
+        for ax in [end, -0.27] { plate.line([P(ax, -0.13), P(ax, -0.19)], fine) }
+        plate.lines(dashed([P(end, -0.16), P(-0.27, -0.16)], on: 0.02, off: 0.012), fine)
+
+        callout(&plate, "A", from: P(x - 0.11, top - 0.04), to: P(-0.18, -0.86))
+        callout(&plate, "B", from: pin + P(0, -0.05), to: P(0.6, -0.72))
+        callout(&plate, "C", from: polar(arbor, 0.9, span.to + 0.06), to: P(-0.62, 0.62))
+        callout(&plate, "D", from: polar(wheel, 0.9 * teethTip, phase + 3.3 * tau), to: P(0.84, 0.28))
+        return plate
+    }
 
     /// Problem 35, Click spring, pent, clocks 0+.
     static func plate35() -> Plate? { nil }
