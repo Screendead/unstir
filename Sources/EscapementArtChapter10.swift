@@ -138,8 +138,137 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 56, Last orders, hex, clocks 1-,2-.
-    static func plate56() -> Plate? { nil }
+    /// An outline from a spine and its half-widths either side, left then right, closed.
+    private static func vane(_ spine: [P], left: (Double) -> Double, right: (Double) -> Double) -> [P] {
+        let n = spine.count - 1
+        var l: [P] = [], r: [P] = []
+        for i in spine.indices {
+            let d = simd_normalize(spine[min(i + 1, n)] - spine[max(i - 1, 0)]), side = P(-d.y, d.x)
+            let t = Double(i) / Double(n)
+            l.append(spine[i] + side * left(t))
+            r.append(spine[i] - side * right(t))
+        }
+        return l + r.reversed() + [l[0]]
+    }
+
+    /// Problem 56, Last orders, hex, clocks 1-,2-: a pewter tankard foaming over on the bar, its handle to the left,
+    /// bottles on the shelf behind, and the bar's bell hung from its scrolled bracket on the right wall, its pull cord
+    /// and tassel below; the bell's clapper in the second ink, under its mouth in the lane at three o'clock.
+    static func plate56() -> Plate {
+        var plate = Plate()
+        let counter = box(P(-1.1, 0.74), P(1.1, 1.1))
+        let body = [P(-0.55, -0.08), P(0.15, -0.08), P(0.2, 0.74), P(-0.6, 0.74), P(-0.55, -0.08)]
+        func edge(_ y: Double) -> (Double, Double) {
+            let t = (y + 0.08) / 0.82
+            return (-0.55 - 0.05 * t, 0.15 + 0.05 * t)
+        }
+        let handlePath = curve(P(-0.56, 0.04), P(-1.02, 0.3), P(-0.58, 0.58))
+        let handle = Kit.ribbon(handlePath, 0.08)
+        let foam: [(P, Double)] = [(P(-0.52, -0.1), 0.075), (P(-0.4, -0.15), 0.09), (P(-0.25, -0.13), 0.085),
+                                    (P(-0.1, -0.16), 0.095), (P(0.06, -0.12), 0.08), (P(0.16, -0.08), 0.065),
+                                    (P(-0.46, -0.24), 0.08), (P(-0.3, -0.28), 0.095), (P(-0.12, -0.3), 0.09),
+                                    (P(0.03, -0.24), 0.08), (P(-0.2, -0.4), 0.075)]
+        let shelf = box(P(-0.75, -0.68), P(0.42, -0.62))
+        let bottles = [-0.6, -0.4, -0.18, 0.04, 0.26].enumerated().map { k, x -> [P] in
+            let h = k % 2 == 0 ? 0.2 : 0.15, w = k % 2 == 0 ? 0.065 : 0.075, y = -0.68
+            return [P(x - w, y), P(x - w, y - h), P(x - 0.025, y - h - 0.07), P(x - 0.025, y - h - 0.17),
+                    P(x + 0.025, y - h - 0.17), P(x + 0.025, y - h - 0.07), P(x + w, y - h), P(x + w, y), P(x - w, y)]
+        }
+        let bellX = 0.7
+        let profile: [(Double, Double)] = [(-0.44, 0.06), (-0.41, 0.095), (-0.36, 0.11), (-0.28, 0.12), (-0.2, 0.135),
+                                           (-0.14, 0.16), (-0.1, 0.2), (-0.075, 0.22)]
+        let bell = profile.map { P(bellX - $0.1, $0.0) } + profile.reversed().map { P(bellX + $0.1, $0.0) }
+            + [P(bellX - 0.06, -0.44)]
+        let arm = Kit.band(P(1.1, -0.53), P(0.58, -0.53), 0.05)
+        let brace = Kit.ribbon(curve(P(1.05, -0.18), P(0.86, -0.22), P(0.84, -0.53)), 0.04)
+        let cordPath = (0...24).map { i -> P in
+            let t = Double(i) / 24
+            return P(bellX + 0.03 * sin(t * 9), 0.08 + 0.34 * t)
+        }
+        let cord = Kit.ribbon(cordPath, 0.04)
+        let tassel = [P(bellX, 0.4), P(bellX + 0.05, 0.46), P(bellX + 0.07, 0.6), P(bellX - 0.07, 0.6), P(bellX - 0.05, 0.46),
+                      P(bellX, 0.4)]
+        let cloud = [P(-0.62, -0.06), P(-0.56, -0.25), P(-0.42, -0.36), P(-0.28, -0.48), P(-0.1, -0.44),
+                     P(0.06, -0.34), P(0.22, -0.14), P(0.24, -0.04), P(-0.62, -0.06)]
+        Kit.ground(&plate, angle: -0.55, around: [counter, body, handle, shelf, bell, arm, brace, cord, tassel, cloud]
+            + bottles.map { Array($0.dropLast()).map { $0 + P(0, -0.002) } + [$0[0] + P(0, -0.002)] })
+
+        // The shelf and its bottles, each with a blank label.
+        for (k, bottle) in bottles.enumerated() {
+            Kit.mass(&plate, bottle)
+            let x = bottle[0].x + (k % 2 == 0 ? 0.065 : 0.075)
+            Kit.cut(&plate, box(P(x - 0.04, -0.75), P(x + 0.04, -0.8 - (k % 2 == 0 ? 0.04 : 0.0))))
+        }
+        Kit.mass(&plate, shelf)
+
+        // The bar, its planks' grain in bold.
+        plate.fill(counter)
+        for y in [0.86, 0.96] {
+            plate.line((0...40).map { i in
+                let x = -1.1 + 2.2 * Double(i) / 40
+                return P(x, y + 0.015 * sin(x * 6 + y * 20))
+            }, 0.03)
+        }
+        for x in [-0.72, 0.5] { plate.line([P(x, 0.79), P(x, 1.1)], 0.03) }
+        Kit.mass(&plate, box(P(-1.1, 0.74), P(1.1, 0.78)))
+
+        // The tankard: pewter in ink, its shine and hoops in bone, the handle's thumb-piece.
+        Kit.mass(&plate, handle)
+        plate.line(handlePath, 0.014, .bone)
+        Kit.mass(&plate, body)
+        let flutes = [P(-0.52, -0.05), P(0.12, -0.05), P(0.165, 0.71), P(-0.56, 0.71), P(-0.52, -0.05)]
+        plate.fill(flutes)
+        plate.lines(hatch([flutes], angle: .pi / 2 + 0.03, gap: 0.085, shift: 0.3), 0.036)
+        plate.fill(Kit.band(P(-0.33, -0.05), P(-0.35, 0.71), 0.05))
+        for y in [0.06, 0.6] {
+            let (l, r) = edge(y)
+            Kit.mass(&plate, box(P(l, y - 0.03), P(r, y + 0.03)))
+            plate.fill(box(P(l + 0.01, y - 0.018), P(r - 0.01, y + 0.018)))
+            for x in stride(from: l + 0.06, to: r - 0.03, by: 0.08) { plate.fill(arc(P(x, y), 0.012), .black) }
+        }
+        Kit.mass(&plate, box(P(-0.6, -0.11), P(0.2, -0.05)))
+
+        // The head of foam over the rim, and its drips down the side.
+        for (from, to) in [(P(-0.1, -0.06), P(-0.11, 0.2)), (P(0.13, -0.06), P(0.15, 0.1))] {
+            Kit.cut(&plate, Kit.ribbon([from, to], 0.055))
+            Kit.cut(&plate, arc(to, 0.034))
+        }
+        for (c, r) in foam { plate.fill(arc(c, r + 0.008), .black) }
+        for (c, r) in foam { plate.fill(arc(c, r - 0.008)) }
+        for (k, (c, r)) in foam.enumerated() where k % 2 == 0 {
+            plate.line(arc(c, 0.55 * r, from: 3.4, to: 5.6), 0.012)
+        }
+        for (k, (c, _)) in foam.enumerated() where k % 2 == 1 { plate.line(arc(c + P(0.02, 0.02), 0.022), 0.012) }
+
+        // The bracket, the bell and its pull.
+        Kit.mass(&plate, brace)
+        Kit.mass(&plate, arm)
+        Kit.mass(&plate, arc(P(0.57, -0.53), 0.04))
+        plate.line(arc(P(bellX, -0.48), 0.035), 0.022)
+        Kit.mass(&plate, cord)
+        for p in cordPath.enumerated() where p.offset % 3 == 1 {
+            plate.line([p.element + P(-0.015, -0.012), p.element + P(0.015, 0.012)], 0.012, .bone)
+        }
+        Kit.mass(&plate, tassel)
+        for y in [0.47, 0.53] { plate.line([P(bellX - 0.06, y), P(bellX + 0.06, y)], 0.014, .bone) }
+        plate.fill(Kit.band(P(bellX, -0.11), P(bellX, -0.02), 0.026), .second)
+        plate.line(Kit.band(P(bellX, -0.11), P(bellX, -0.02), 0.026), medium)
+        plate.fill(arc(P(bellX, 0.025), 0.05), .second)
+        plate.line(arc(P(bellX, 0.025), 0.05), medium)
+        Kit.mass(&plate, bell)
+        for y in [-0.33, -0.15] {
+            let w = y < -0.2 ? 0.118 : 0.16
+            plate.fill(box(P(bellX - w, y - 0.016), P(bellX + w, y + 0.016)))
+        }
+        plate.fill(Kit.band(P(bellX - 0.05, -0.4), P(bellX - 0.09, -0.19), 0.03))
+        plate.line([P(bellX - 0.22, -0.075), P(bellX + 0.22, -0.075)], 0.02)
+
+        callout(&plate, "A", from: P(-0.22, -0.34), to: P(-0.22, -0.42))
+        callout(&plate, "B", from: P(-0.82, 0.3), to: P(-0.86, 0.04))
+        callout(&plate, "C", from: P(0.82, -0.25), to: P(0.86, -0.0))
+        callout(&plate, "D", from: P(-0.3, 0.9), to: P(-0.45, 0.8))
+        return plate
+    }
 
     /// Problem 57, Deadline, hex, clocks 1-,3-.
     static func plate57() -> Plate? { nil }
