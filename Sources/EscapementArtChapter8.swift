@@ -241,8 +241,82 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 45, Backlash, hex, clocks 1+,2-.
-    static func plate45() -> Plate? { nil }
+    /// Problem 45, Backlash, hex, clocks 1+,2-: a pinion on the middle arbor over a rack in elevation, a rack tooth
+    /// riding loose in the pinion's space below, arrows of play either way, the frame's bridge over the top and the
+    /// bed under the rack; the gap's marker in the second ink.
+    static func plate45() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, teeth = 6, pitch = 0.25, m = 2 * pitch / Double(teeth), step = 2 * .pi * pitch / Double(teeth)
+        let slack = 0.06, root = pitch - 1.2 * m, tip = pitch + 0.9 * m, rackTop = pitch + 1.2 * m, rackBottom = 0.52
+        // A pinion of six leaves, a 30° step setting each leaf in a space; a space centred straight down.
+        let tau = 2 * Double.pi / Double(teeth)
+        let leaf: [(Double, Double)] = [(0.0, root), (0.3, root), (0.315, pitch), (0.33, tip - 0.02), (0.38, tip),
+                                        (0.5, tip + 0.012), (0.62, tip), (0.67, tip - 0.02), (0.685, pitch), (0.7, root)]
+        var pinion: [P] = []
+        for k in 0..<teeth {
+            let a: Double = .pi / 2 + Double(k) * tau
+            for (f, r) in leaf { pinion.append(polar(o, r, a + f * tau)) }
+        }
+        pinion.append(pinion[0])
+        // The rack's teeth, each narrowed by the slack and set back against the pinion's driving flank.
+        let half = step / 4 - slack / 2, lean = 0.36 * m
+        var rack: [P] = [P(-1.1, rackBottom), P(-1.1, rackTop)]
+        for k in -5...5 {
+            let x = Double(k) * step - slack / 2
+            rack += [P(x - half - 1.2 * lean, rackTop), P(x - half + 0.9 * lean, pitch - 0.9 * m),
+                     P(x + half - 0.9 * lean, pitch - 0.9 * m), P(x + half + 1.2 * lean, rackTop)]
+        }
+        rack += [P(1.1, rackTop), P(1.1, rackBottom), P(-1.1, rackBottom)]
+        let body = box(P(-1.1, rackTop), P(1.1, rackBottom))
+        let bridge = arc(o, 1.06, from: Kit.clock(9.6), to: Kit.clock(14.4)) + arc(o, 0.85, from: Kit.clock(14.4), to: Kit.clock(9.6))
+            + [polar(o, 1.06, Kit.clock(9.6))]
+        let bed = smoothed([P(-0.9, 0.64), P(-0.5, 0.81), P(0, 0.85), P(0.5, 0.81), P(0.9, 0.64)])
+            + arc(o, 1.06, from: Kit.clock(3.6), to: Kit.clock(8.4)).dropFirst()
+
+        Kit.ground(&plate, angle: -0.5, around: [pinion, bridge, bed, rack])
+        Kit.mass(&plate, bridge)
+        for h in [10.2, 11.3, 12.7, 13.8] {
+            let c = polar(o, 0.94, Kit.clock(h))
+            plate.fill(arc(c, 0.042))
+            plate.line(arc(c, 0.042), medium)
+            Kit.mass(&plate, Kit.band(polar(c, 0.036, Kit.clock(h) + 0.6), polar(c, 0.036, Kit.clock(h) + 0.6 + .pi), 0.016))
+        }
+        Kit.mass(&plate, bed)
+        // The play either way, cut in the bed.
+        plate.fill(Kit.band(P(-0.3, 0.91), P(0.3, 0.91), 0.045))
+        plate.fill(Kit.barb(P(0.44, 0.91), toward: 0, size: 0.15))
+        plate.fill(Kit.barb(P(-0.44, 0.91), toward: .pi, size: 0.15))
+
+        // The gap, marked, then the rack over it: heavy teeth on a sectioned body, its screws in a row.
+        let gap = P(half - slack / 2, pitch)
+        plate.fill(box(gap + P(-0.01, -0.1), gap + P(slack + 0.02, 0.09)), .second)
+        Kit.mass(&plate, rack)
+        Kit.solid(&plate, body, angle: 0.75, gap: 0.06, width: medium)
+        plate.line([P(-1.1, rackTop + 0.008), P(1.1, rackTop + 0.008)], 0.016)
+        plate.line([P(-1.1, rackBottom - 0.008), P(1.1, rackBottom - 0.008)], 0.016)
+        for k in -4...4 {
+            let c = P(Double(k) * 0.25 + 0.125, (rackTop + rackBottom) / 2)
+            plate.fill(arc(c, 0.03))
+            plate.line(arc(c, 0.03), heavy)
+            plate.line([c + P(-0.02, 0.02), c + P(0.02, -0.02)], heavy)
+        }
+
+        // The pinion: heavy leaves, its arbor sectioned, a collet at its face.
+        Kit.mass(&plate, pinion)
+        Kit.solid(&plate, arc(o, root - 0.006), angle: 0.75, gap: 0.05, width: heavy)
+
+        // The play round the pinion, either way.
+        let swing = arc(o, 0.385, from: Kit.clock(10.6), to: Kit.clock(13.4))
+        plate.line(swing, 0.018)
+        plate.fill(Kit.barb(swing[swing.count - 1], toward: Kit.clock(13.4) + .pi / 2, size: 0.07), .black)
+        plate.fill(Kit.barb(swing[0], toward: Kit.clock(10.6) - .pi / 2, size: 0.07), .black)
+
+        callout(&plate, "A", from: polar(o, 0.29, Kit.clock(3.6)), to: P(0.3, -0.06))
+        callout(&plate, "B", from: P(-0.6, 0.31), to: P(-0.78, 0.02))
+        callout(&plate, "C", from: gap + P(slack / 2, 0.07), to: P(0.24, 0.66))
+        callout(&plate, "D", from: P(0.0, 0.91), to: P(-0.12, 0.66))
+        return plate
+    }
 
     /// Problem 46, Ebb tide, pent, clocks 0+,1-.
     static func plate46() -> Plate? { nil }
