@@ -5,7 +5,8 @@ import UIKit
 
 /// The rings moved with no finger, for a trace on the phone. UNSTIR_RINGSTOUR names one motion: `swipe` (down
 /// through every ring and back, by the pager's own glide, the path a finger's release takes), `open` (the middle
-/// tapped, so its level opens), `pick` (a bead named in the middle and let go) or `rest` (six seconds untouched).
+/// tapped, so its level opens), `pick` (a bead named in the middle and let go), `speak` (what VoiceOver reads, logged,
+/// before and after the middle steps to the next ring) or `rest` (six seconds untouched).
 /// Each is marked in the flight log as the trace's reader expects ("tour swipe" ... "tour ends"), with what the main
 /// thread did meanwhile on a line of its own.
 /// UNSTIR_RINGSPOSE holds a still for a shot: `ring:2`, that ring in front; `place:1.5`, a swipe stopped there;
@@ -47,6 +48,18 @@ extension RingsView {
             case "open":
                 act(.middle)
                 await rest(2)
+            case "speak":
+                func said() -> String {
+                    (accessibilityElements ?? []).compactMap { $0 as? UIAccessibilityElement }.map {
+                        "\($0.accessibilityLabel ?? "")=\($0.accessibilityValue ?? "")"
+                    }.joined(separator: " | ")
+                }
+                Log.write("rings spoken: \(said())")
+                let middle = (accessibilityElements ?? []).compactMap { $0 as? UIAccessibilityElement }
+                    .first { $0.accessibilityTraits.contains(.adjustable) }
+                middle?.accessibilityIncrement()
+                await rest(0.5)
+                Log.write("rings spoken after a step: \(said())")
             case "pick":
                 let way = model.rings[at].way ?? 0
                 act(.bead(way == 0 ? 1 : 0))

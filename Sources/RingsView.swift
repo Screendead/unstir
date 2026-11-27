@@ -157,6 +157,12 @@ final class RingsView: UIView, UIScrollViewDelegate {
         // The pager is only its physics: its pan listens on the whole menu, and it shows nothing.
         addGestureRecognizer(pager.panGestureRecognizer)
         addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
+        NotificationCenter.default.addObserver(self, selector: #selector(motionChanged),
+                                               name: UIAccessibility.reduceMotionStatusDidChangeNotification, object: nil)
+    }
+
+    @objc private func motionChanged() {
+        apply(pager.contentOffset.y / RingsPlan.pitch)
     }
 
     @available(*, unavailable) required init?(coder: NSCoder) { fatalError() }
@@ -198,6 +204,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
         RingsCount.builds += 1
         self.model = model
         self.plan = plan
+        spoken = nil
         picked = nil
         picking?.cancel()
         let was = rings.isEmpty ? -1 : rings.count
@@ -396,16 +403,18 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
     // MARK: The swipe
 
-    /// Everything that moves, at `place`: a ring's index, between two mid-swipe. Transforms and opacities only.
+    /// Everything that moves, at `place`: a ring's index, between two mid-swipe. Transforms and opacities only. Under
+    /// Reduce Motion the rings only cross-fade and the ground stands still.
     private func apply(_ place: CGFloat) {
+        let still = UIAccessibility.isReduceMotionEnabled
         for (i, ring) in rings.enumerated() {
-            let pose = RingsPose(depth: CGFloat(i) - place)
-            ring.whole.transform = CATransform3DMakeScale(pose.scale, pose.scale, 1)
+            let pose = RingsPose(depth: CGFloat(i) - place), scale = still ? 1 : pose.scale
+            ring.whole.transform = CATransform3DMakeScale(scale, scale, 1)
             ring.beads.opacity = Float(pose.beads * ring.dim)
             ring.words.opacity = Float(pose.words)
             ring.sun.opacity = Float(pose.sun)
         }
-        let middle = CGFloat(max(rings.count - 1, 0)) / 2
+        let middle = CGFloat(max(rings.count - 1, 0)) / 2, place = still ? middle : place
         for (g, layer) in ground where g.dx != 0 || g.dy != 0 || g.eye > 0 {
             if g.eye > 0 {
                 // Laid back flat, then slid along itself towards the viewer. The art repeats, so it only ever goes half
@@ -557,4 +566,98 @@ final class RingsView: UIView, UIScrollViewDelegate {
             fade(ring.halo, to: 0)
         }
     }
+
+    // MARK: VoiceOver
+
+    /// The elements of the ring in front, made when VoiceOver first asks for them, so nothing is made at rest without it.
+    private var spoken: (at: Int, elements: [Any], middle: RingsSpoken?)?
+
+    override var accessibilityElements: [Any]? {
+        get {
+            if let spoken, spoken.at == at { return spoken.elements }
+            let made = speak()
+            spoken = (at, made.elements, made.middle)
+            return made.elements
+        }
+        set {}
+    }
+
+    /// The daily, the middle (adjustable: a swipe up or down brings the next ring or the one before), each bead of the
+    /// ring in front, the covers and settings. Under VoiceOver a bead opens at once: naming it first is for the eye.
+    private func speak() -> (elements: [Any], middle: RingsSpoken?) {
+        guard let model, let plan, model.rings.indices.contains(at) else { return ([], nil) }
+        let ring = model.rings[at]
+        var out: [Any] = []
+        func around(_ p: CGPoint, _ w: CGFloat, _ h: CGFloat) -> CGRect { CGRect(x: p.x - w / 2, y: p.y - h / 2, width: w, height: h) }
+        @discardableResult
+        func element(_ label: String, _ value: String?, _ frame: CGRect, _ traits: UIAccessibilityTraits = .button,
+                     _ activate: @escaping () -> Void) -> RingsSpoken {
+            let made = RingsSpoken(accessibilityContainer: self)
+            made.accessibilityLabel = Self.said(label)
+            made.accessibilityValue = value.map(Self.said)
+            made.accessibilityTraits = traits
+            made.accessibilityFrameInContainerSpace = frame
+            made.activate = activate
+            out.append(made)
+            return made
+        }
+        if let daily = model.daily {
+            element(daily.title, daily.under, around(plan.daily, 320, 64)) { [weak self] in self?.act(.daily) }
+        }
+        let way = ring.way.map { ring.spots[$0] }
+        let value = way.map {
+            String(localized: "\(ring.under), next \($0.number) \($0.name)",
+                   comment: "VoiceOver: the rings' middle. The tier's count, then the number and name of the level it plays")
+        } ?? ring.under
+        let side = 2 * (plan.radius - 26)
+        let middle = element(ring.word, value, around(plan.centre, side, side), way == nil ? .adjustable : [.button, .adjustable]) {
+            [weak self] in self?.act(.middle)
+        }
+        middle.step = { [weak self] by in self?.step(by) }
+        if ring.open {
+            for (j, spot) in ring.spots.enumerated() {
+                let p = plan.bead(j, of: ring.spots.count)
+                let state = spot.shut ?? (j == ring.way
+                    ? String(localized: "next, \(spot.facts)", comment: "VoiceOver: the rings' bead of the level the middle plays. Its best and par")
+                    : spot.facts)
+                // loc: verbatim a level's number, then its title, localized by Levels
+                element("\(spot.number) \(spot.name)", state, around(CGPoint(x: plan.centre.x + p.x, y: plan.centre.y + p.y), 44, 44),
+                        spot.shut == nil ? .button : [.button, .notEnabled]) { [weak self] in self?.open(spot) }
+            }
+        }
+        for (i, cover) in model.covers.enumerated() {
+            let c = plan.cover(i, of: model.covers.count), foot = RingsPaint.coverWidth / 2
+            element(cover.name, cover.line, CGRect(x: c.x - foot - 10, y: c.y - foot - 6, width: 2 * foot + 20, height: 2 * foot + 56)) {
+                [weak self] in self?.act(.cover(i))
+            }
+        }
+        element(String(localized: "settings", comment: "VoiceOver: the rings' settings, the motes at the foot"), nil,
+                around(plan.settings, 52, 52)) { [weak self] in self?.act(.settings) }
+        return (out, middle)
+    }
+
+    /// A line as VoiceOver should say it: the drawn lines' middle dots read as pauses.
+    private static func said(_ line: String) -> String { line.replacingOccurrences(of: " \u{00B7} ", with: ", ") }
+
+    /// The next ring, or the one before, brought forward at once, and VoiceOver taken to its middle.
+    private func step(_ by: Int) {
+        guard rings.indices.contains(at + by) else { return }
+        go(to: at + by, animated: false)
+        _ = accessibilityElements
+        UIAccessibility.post(notification: .layoutChanged, argument: spoken?.middle)
+    }
+}
+
+/// One thing VoiceOver reads on the rings, with what activating or adjusting it does.
+private final class RingsSpoken: UIAccessibilityElement {
+    var activate: () -> Void = {}
+    var step: ((Int) -> Void)?
+
+    override func accessibilityActivate() -> Bool {
+        activate()
+        return true
+    }
+
+    override func accessibilityIncrement() { step?(1) }
+    override func accessibilityDecrement() { step?(-1) }
 }
