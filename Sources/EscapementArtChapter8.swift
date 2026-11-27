@@ -144,8 +144,102 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 44, Recoil, hex, clocks 1+,3-.
-    static func plate44() -> Plate? { nil }
+    /// Problem 44, Recoil, hex, clocks 1+,3-: a field gun firing to the left along the nine o'clock lane, its barrel
+    /// and wheel in ink on a hatched carriage, smoke billowing round the rim ahead of it and recoil lines along the three
+    /// o'clock lane behind; the muzzle flash in the second ink.
+    static func plate44() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, breech = -0.18, axis = -0.01, length = 0.66
+        // The barrel's radius along it from the breech: base ring, first reinforce, second, chase, muzzle swell.
+        let profile: [(Double, Double)] = [(0, 0.09), (0.04, 0.09), (0.045, 0.082), (0.22, 0.079), (0.23, 0.072),
+                                           (0.4, 0.068), (0.41, 0.061), (0.58, 0.054), (0.6, 0.066), (0.66, 0.07)]
+        let upper = profile.map { P(breech - $0.0, axis - $0.1) }, lower = profile.map { P(breech - $0.0, axis + $0.1) }
+        let barrel = upper + lower.reversed() + [upper[0]]
+        let hub = P(-0.26, 0.17), rim = 0.2, muzzle = P(breech - length, axis)
+        let cheek = smooth([P(-0.56, 0.05), P(-0.26, 0.04), P(-0.16, 0.1), P(0.12, 0.31), P(0.14, 0.355), P(0.07, 0.365),
+                            P(-0.24, 0.21), P(-0.56, 0.13)], steps: 3)
+        // Smoke billowing from the muzzle round the rim, thickest ahead of it: round billows, seen from the middle.
+        let billows = [(8.9, 0.22, 0.98), (9.5, 0.17, 0.9), (8.3, 0.17, 0.93), (10.05, 0.16, 0.95), (7.75, 0.14, 0.97),
+                       (10.6, 0.14, 0.98), (11.1, 0.12, 0.99), (7.3, 0.11, 1.0), (11.6, 0.1, 1.0), (12.05, 0.08, 1.02)]
+            .map { (c: polar(o, $0.2, Kit.clock($0.0)), r: $0.1) }
+        func edge(_ a: Double) -> Double {
+            let d = P(cos(a), sin(a))
+            return billows.compactMap { c, r -> Double? in
+                let along = simd_dot(d, c), off = simd_length_squared(c) - along * along
+                return off < r * r ? along - sqrt(r * r - off) : nil
+            }.min() ?? 1.1
+        }
+        let angles = stride(from: Kit.clock(7.1), through: Kit.clock(12.3), by: 0.004).map { $0 }
+        let inner = angles.map { polar(o, min(edge($0), 1.059), $0) }
+        let smoke = inner + arc(o, 1.059, from: angles[angles.count - 1], to: angles[0]) + [inner[0]]
+        let bank = stride(from: 2.6, through: 7.3, by: 0.05).map { h -> P in
+            polar(o, 0.86 + 0.02 * sin(h * 7) + 0.2 * pow(max(0, (h - 6.6) / 0.7), 2) + 0.2 * pow(max(0, (3.4 - h) / 0.8), 2), Kit.clock(h))
+        }
+        let earth = bank + arc(o, 1.059, from: Kit.clock(7.3), to: Kit.clock(2.6)) + [bank[0]]
+
+        Kit.ground(&plate, angle: 0.3, around: [barrel, cheek, arc(hub, rim), earth, smoke])
+        Kit.mass(&plate, earth)
+        for k in 0..<16 {
+            let h = 3.0 + Double(k) * 0.26 + 0.1 * rnd(44, k), c = polar(o, 0.93 + 0.04 * rnd(44, k + 9), Kit.clock(h))
+            plate.fill(ellipse(c, 0.03, 0.016, turned: Kit.clock(h) + .pi / 2 + 0.5 * rnd(44, k + 18)))
+        }
+        Kit.mass(&plate, smoke)
+        for (k, (c, r)) in billows.enumerated() where r > 0.09 {
+            let a = atan2(-c.y, -c.x) + 0.5 * (rnd(44, k) - 0.5)
+            plate.line(arc(c + simd_normalize(c) * 0.2 * r, 0.75 * r, from: a - 1.2, to: a + 1.0), heavy, .bone)
+            plate.line(arc(c + simd_normalize(c) * 0.45 * r, 0.4 * r, from: a - 0.8, to: a + 1.4), medium, .bone)
+        }
+
+        // The recoil: tapering lines along the lane behind, the wheel's last place dashed, the run back on the platform.
+        for (y, from, to) in [(-0.06, 0.32, 0.7), (-0.025, 0.25, 0.86), (0.025, 0.25, 0.94), (0.06, 0.32, 0.76)] {
+            let w = abs(y) < 0.03 ? 0.03 : 0.022
+            Kit.mass(&plate, [P(from, y - w / 2), P(to, y), P(from, y + w / 2), P(from, y - w / 2)])
+        }
+        Kit.solid(&plate, Kit.band(P(-0.54, 0.39), P(0.24, 0.39), 0.04), angle: 0.8, gap: 0.02)
+        plate.line([P(-0.2, 0.45), P(0.12, 0.45)], heavy)
+        plate.fill(Kit.barb(P(0.2, 0.45), toward: 0, size: 0.06), .black)
+
+        // The carriage, the wheel over it, then the barrel on its trunnions.
+        Kit.solid(&plate, cheek, angle: -0.6, gap: 0.028, width: heavy)
+        Kit.mass(&plate, arc(hub, rim))
+        Kit.cut(&plate, arc(hub, rim - 0.034))
+        for k in 0..<10 {
+            let a = 0.2 + Double(k) * .pi / 5
+            Kit.mass(&plate, Kit.band(polar(hub, 0.03, a), polar(hub, rim - 0.035, a), 0.024))
+        }
+        Kit.mass(&plate, arc(hub, 0.052))
+        plate.fill(arc(hub, 0.018))
+        Kit.mass(&plate, barrel)
+        for (u, _) in [profile[1], profile[3], profile[5], profile[7]] {
+            plate.line([P(breech - u - 0.006, axis - 0.075), P(breech - u - 0.006, axis + 0.075)], medium, .bone)
+        }
+        plate.line([P(breech - 0.06, axis - 0.05), P(breech - 0.56, axis - 0.034)], medium, .bone)
+        Kit.mass(&plate, arc(P(breech + 0.04, axis), 0.036))
+        Kit.mass(&plate, Kit.band(P(breech, axis), P(breech + 0.03, axis), 0.03))
+        plate.fill(arc(P(-0.33, axis), 0.03))
+        plate.line(arc(P(-0.33, axis), 0.03), medium)
+
+        // The flash at the muzzle.
+        let glare = muzzle + P(-0.09, 0)
+        Kit.cut(&plate, arc(glare, 0.15), edge: fine)
+        for k in 0..<24 {
+            let a = Double.pi * Double(k) / 12 + 0.13
+            plate.line([polar(glare, 0.12, a), polar(glare, 0.15, a)], fine)
+        }
+        Kit.mass(&plate, Array(barrel.filter { $0.x < breech - 0.45 }) + [barrel.first { $0.x < breech - 0.45 }!])
+        let flash = (0...16).map { k -> P in
+            let r: Double = k % 2 == 1 ? 0.035 : (k % 4 == 0 ? 0.12 : 0.08)
+            return polar(glare, r, Double.pi * Double(k) / 8)
+        }
+        plate.fill(flash, .second)
+        plate.line(flash, medium)
+
+        callout(&plate, "A", from: P(-0.3, axis - 0.05), to: P(-0.22, -0.42))
+        callout(&plate, "B", from: hub + P(0.13, 0.09), to: P(-0.14, 0.62))
+        callout(&plate, "C", from: muzzle + P(-0.1, 0.05), to: P(-0.6, 0.6))
+        callout(&plate, "D", from: P(0.62, 0.0), to: P(0.76, -0.44))
+        return plate
+    }
 
     /// Problem 45, Backlash, hex, clocks 1+,2-.
     static func plate45() -> Plate? { nil }
