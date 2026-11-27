@@ -567,6 +567,169 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 72, Hiatus, hex, clocks 1+.
-    static func plate72() -> Plate? { nil }
+    /// Problem 72, Hiatus, hex, clocks 1+: a stone bridge across a gorge, its first arch whole, its second fallen
+    /// between the springers so the road stops short over the drop, stones still tumbling into the river below; the
+    /// lamp on its post at the break in the second ink, in the lane between the middle hub and the hubs at twelve and two.
+    static func plate72() -> Plate {
+        var plate = Plate()
+        Kit.ground(&plate, angle: -0.35)
+        let road = 0.0, spring = 0.5
+
+        // The river at the gorge's foot.
+        let river = [P(-1.1, 0.84), P(1.1, 0.8), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.84)]
+        Kit.mass(&plate, river)
+        for k in 0..<4 {
+            let y = 0.87 + 0.045 * Double(k)
+            plate.lines(dashed([P(-0.9 + 0.1 * Double(k % 2), y), P(0.9, y - 0.02)], on: 0.12, off: 0.07), 0.012, .bone)
+        }
+
+        // The gorge's walls: rock in ink, split by bone faults and bedded in strata.
+        let left = [P(-1.1, -0.06), P(-0.7, -0.04), P(-0.64, 0.12), P(-0.68, 0.3), P(-0.58, 0.48), P(-0.62, 0.66), P(-0.5, 0.86),
+                    P(-1.1, 0.88), P(-1.1, -0.06)]
+        let right = [P(1.1, -0.1), P(0.78, -0.08), P(0.74, 0.1), P(0.8, 0.28), P(0.7, 0.46), P(0.74, 0.62), P(0.6, 0.84),
+                     P(1.1, 0.82), P(1.1, -0.1)]
+        for (k, rock) in [left, right].enumerated() {
+            Kit.mass(&plate, rock)
+            let side = k == 0 ? -1.0 : 1.0
+            for j in 0..<6 {
+                let y = 0.02 + 0.14 * Double(j)
+                let inner = side < 0 ? -0.66 + 0.04 * sin(Double(j)) : 0.74 + 0.04 * cos(Double(j))
+                plate.fill(swell(curve(P(inner + side * 0.04, y), P(inner + side * 0.25, y + 0.05 * side), P(side * 1.05, y + 0.02), 14), 0.004, 0.028))
+            }
+            for j in 0..<5 {
+                let y = 0.06 + 0.14 * Double(j), x = side * (0.78 + 0.06 * Double(j % 3)) + (side < 0 ? 0.08 : 0.0)
+                plate.fill(swell([P(x, y), P(x + side * 0.02, y + 0.05), P(x - side * 0.01, y + 0.1)], 0.003, 0.018))
+            }
+        }
+
+        // The whole arch: its opening in shadow, ruled, its ring of voussoirs, the spandrel's coursed masonry above.
+        let c1 = P(-0.28, spring), r1 = 0.36
+        let opening = arc(c1, r1, from: .pi, to: 2 * .pi) + [P(c1.x + r1, 0.86), P(c1.x - r1, 0.86), P(c1.x - r1, spring)]
+        let pier = box(P(0.08, spring - 0.02), P(0.26, 0.86))
+        let spanL = [P(-0.7, road), P(0.34, road), P(0.34, spring - 0.02), P(0.08, spring - 0.02)] + arc(c1, r1, from: 0, to: -.pi).dropFirst()
+            + [P(-0.7, spring), P(-0.7, road)]
+        Kit.cut(&plate, spanL, edge: heavy)
+        coursed(&plate, spanL, from: road, seed: 72)
+        plate.fill(opening)
+        plate.lines(hatch([opening], angle: 0, gap: 0.04), 0.014)
+        plate.line(opening, heavy)
+        voussoirs(&plate, c1, r1, from: .pi, to: 2 * .pi)
+        Kit.cut(&plate, pier, edge: heavy)
+        coursed(&plate, pier, from: spring, seed: 73)
+        // The fallen arch's springers, one off the pier and one off the far rock, the road ragged where it broke.
+        let c2 = P(0.53, spring), r2 = 0.27
+        let stubL = [P(0.26, spring - 0.02), P(0.26, road), P(0.36, road), P(0.4, 0.06), P(0.34, 0.14), P(0.33, 0.22)]
+            + arc(c2, r2, from: .pi + 0.85, to: .pi).dropFirst() + [P(0.26, spring - 0.02)]
+        Kit.cut(&plate, stubL, edge: heavy)
+        coursed(&plate, stubL, from: road, seed: 74)
+        voussoirs(&plate, c2, r2, from: .pi, to: .pi + 0.85)
+        let stubR = [P(0.78, -0.02), P(0.68, -0.02), P(0.66, 0.05), P(0.7, 0.12)] + arc(c2, r2, from: 2 * .pi - 0.7, to: 2 * .pi).dropFirst()
+            + [P(0.8, spring), P(0.78, -0.02)]
+        Kit.cut(&plate, stubR, edge: heavy)
+        coursed(&plate, stubR, from: road, seed: 75)
+        voussoirs(&plate, c2, r2, from: 2 * .pi - 0.7, to: 2 * .pi)
+        // The parapet and its coping along what is left of the road.
+        for (a, b) in [(-0.7, 0.36), (0.68, 0.8)] {
+            Kit.mass(&plate, box(P(a, road - 0.1), P(b, road - 0.075)))
+            let wall = box(P(a + 0.01, road - 0.075), P(b - 0.01, road))
+            Kit.cut(&plate, wall, edge: medium)
+            for x in stride(from: a + 0.07, to: b - 0.03, by: 0.09) { plate.line([P(x, road - 0.075), P(x, road)], 0.012) }
+        }
+        // Stones still falling into the gorge.
+        for (k, c) in [P(0.5, 0.2), P(0.56, 0.42), P(0.46, 0.6), P(0.58, 0.74)].enumerated() {
+            let block = turned(box(P(-0.035, -0.025), P(0.035, 0.025)), by: 0.5 + 0.7 * Double(k)).map { $0 + c }
+            Kit.mass(&plate, block)
+            plate.line([c + P(-0.06, -0.06), c + P(-0.04, -0.1)], medium)
+        }
+
+        // The lamp at the break, its post on the parapet, its lantern in the second ink.
+        let post = P(0.25, road - 0.1)
+        Kit.mass(&plate, Kit.band(post, post + P(0, -0.2), 0.03))
+        Kit.mass(&plate, Kit.band(post + P(0, -0.2), post + P(-0.07, -0.22), 0.022))
+        let lamp = post + P(-0.09, -0.24)
+        let lantern = [lamp + P(-0.035, -0.03), lamp + P(0.035, -0.03), lamp + P(0.028, 0.06), lamp + P(-0.028, 0.06), lamp + P(-0.035, -0.03)]
+        plate.fill(lantern, .second)
+        plate.line(lantern, medium)
+        plate.line([lamp + P(0, -0.03), lamp + P(0, 0.06)], fine)
+        Kit.mass(&plate, [lamp + P(-0.05, -0.03), lamp + P(0, -0.075), lamp + P(0.05, -0.03), lamp + P(-0.05, -0.03)])
+        Kit.mass(&plate, box(lamp + P(-0.03, 0.06), lamp + P(0.03, 0.08)))
+        for k in 0..<5 {
+            let a = -.pi * (0.1 + 0.2 * Double(k))
+            plate.line([polar(lamp + P(0, 0.015), 0.085, a + .pi), polar(lamp + P(0, 0.015), 0.12, a + .pi)], medium)
+        }
+
+        callout(&plate, "A", from: P(-0.28, 0.25), to: P(-0.7, -0.5))
+        callout(&plate, "B", from: P(0.17, 0.6), to: P(0.0, 0.92))
+        callout(&plate, "C", from: P(0.56, 0.42), to: P(0.86, 0.48))
+        callout(&plate, "D", from: lamp + P(0.03, -0.01), to: P(0.5, -0.62))
+        return plate
+    }
+
+    /// Ashlar laid in courses inside an outline: bone blocks, a joint in ink between each, every third block shaded.
+    private static func coursed(_ plate: inout Plate, _ ring: [P], from top: Double, seed: Int) {
+        let xs = ring.map(\.x), ys = ring.map(\.y)
+        guard let x0 = xs.min(), let x1 = xs.max(), let y1 = ys.max() else { return }
+        var row = 0
+        for y in stride(from: top + 0.07, to: y1, by: 0.07) {
+            plate.lines(clip([P(x0, y), P(x1, y)], ring), 0.014)
+            var x = x0 + (row % 2 == 0 ? 0 : 0.06)
+            var k = 0
+            while x < x1 {
+                for piece in clip([P(x, y - 0.07), P(x, y)], ring) { plate.line(piece, 0.014) }
+                if rnd(seed, 100 * row + k) < 0.3 {
+                    let cell = box(P(x + 0.012, y - 0.06), P(x + 0.108, y - 0.01))
+                    if cell.allSatisfy({ inside($0, ring) }) { plate.lines(hatch([cell], angle: 0.8, gap: 0.016), fine) }
+                }
+                x += 0.12
+                k += 1
+            }
+            row += 1
+        }
+    }
+
+    /// The pieces of a segment inside a ring, by the even-odd rule.
+    private static func clip(_ seg: [P], _ ring: [P]) -> [[P]] {
+        let a = seg[0], b = seg[1], d = b - a
+        var ts: [Double] = []
+        for i in 0..<(ring.count - 1) {
+            let p = ring[i], q = ring[i + 1], e = q - p
+            let den = d.x * e.y - d.y * e.x
+            guard abs(den) > 1e-12 else { continue }
+            let t = ((p.x - a.x) * e.y - (p.y - a.y) * e.x) / den, u = ((p.x - a.x) * d.y - (p.y - a.y) * d.x) / den
+            if t >= 0 && t <= 1 && u >= 0 && u < 1 { ts.append(t) }
+        }
+        ts = ([0.0, 1.0] + ts).sorted()
+        var out: [[P]] = []
+        for i in 0..<(ts.count - 1) where ts[i + 1] - ts[i] > 1e-6 {
+            let m = a + d * ((ts[i] + ts[i + 1]) / 2)
+            if inside(m, ring) { out.append([a + d * ts[i], a + d * ts[i + 1]]) }
+        }
+        return out
+    }
+
+    private static func inside(_ p: P, _ ring: [P]) -> Bool {
+        var odd = false
+        for i in 0..<(ring.count - 1) {
+            let a = ring[i], b = ring[i + 1]
+            if (a.y > p.y) != (b.y > p.y) && p.x < a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x) { odd.toggle() }
+        }
+        return odd
+    }
+
+    /// An arch's ring of voussoirs between two angles: bone stones with ink joints, the keystone bold.
+    private static func voussoirs(_ plate: inout Plate, _ c: P, _ r: Double, from a: Double, to b: Double) {
+        let depth = 0.08
+        let band = arc(c, r, from: a, to: b) + arc(c, r + depth, from: b, to: a) + [polar(c, r, a)]
+        Kit.cut(&plate, band, edge: heavy)
+        let n = max(2, Int((b - a) * r / 0.07))
+        for k in 1..<n {
+            let t = a + (b - a) * Double(k) / Double(n)
+            plate.line([polar(c, r, t), polar(c, r + depth, t)], 0.016)
+            if k % 2 == 0 {
+                let t1 = a + (b - a) * Double(k + 1) / Double(n)
+                let stone = arc(c, r + 0.012, from: t + 0.02, to: t1 - 0.02) + arc(c, r + depth - 0.012, from: t1 - 0.02, to: t + 0.02)
+                plate.lines(hatch([stone + [stone[0]]], angle: t, gap: 0.016), fine)
+            }
+        }
+    }
 }
