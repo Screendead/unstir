@@ -225,8 +225,8 @@ function chrome() {
       }
     }
     if (AX) {
-      say(g, 'packs · first 3 levels', 220, 250, F.data(pt(12, 'detail')), ink(0.55));
-      say(g, 'of each free', 220, 282, F.data(pt(12, 'detail')), ink(0.55));
+      say(g, 'packs · first 3 levels', 220, 234, F.data(pt(12, 'detail')), ink(0.55));
+      say(g, 'of each free', 220, 264, F.data(pt(12, 'detail')), ink(0.55));
     } else say(g, 'packs · first 3 levels of each free', 220, 232, F.data(12), ink(0.46), { track: 0.4 });
   });
   L.packs.top = top;
@@ -326,7 +326,7 @@ function draw(g, t) {
   put('wordmark', 220, AX ? 72 : 86, 1, menu);
   put('daily', 220, CY - ORBIT_DAILY - 40 + 130 - (AX ? 20 : 0), 1, menu);
   put('packs', 220, L.packs.top + L.packs.h / 2, 1, menu);
-  put('settings', 220, AX ? 934 : 918, 1, menu);
+  put('settings', 220, AX ? 914 : 910, 1, menu);
 
   const from = beadAt(15), k = glide(ramp(o, 0, 1));
   put('tank', mix(from.x, TANK.x, k), mix(from.y, TANK.y, k), mix(NEXTBEAD / TANK.d, 1, k), ramp(o, 0, 0.12));
