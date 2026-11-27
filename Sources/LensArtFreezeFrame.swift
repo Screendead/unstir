@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror]
+    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror, 47: dentalmirror]
 
     /// A hex rod's core, which a lens magnifies and a twist turns rigidly.
     fileprivate static let core = 0.264
@@ -366,5 +366,105 @@ extension LensArt {
         s.append(stroke([goat + P(0.044, -0.022), goat + P(0.046, -0.01)], 0.002))
         s.append(stroke([goat + P(-0.028, -0.002), goat + P(-0.036, -0.012)], 0.0024))
         return framed("convexmirror", rims: rims, fills: fills, strokes: s) { p in p.y < -0.4 ? c(0.35) : grass }
+    }()
+}
+
+// MARK: - 47: Dental mirror
+
+/// Level 47's name: the dentist from the chair, leaning over in cap and mask, her violet glove bringing the little mouth
+/// mirror in over the lower right core, the head mirror on her brow over the upper right and the lamp's reflector
+/// over the upper left (hex's three lenses on this level). In the mouth mirror a molar, a cavity in it; in the head
+/// mirror the patient's face, eyes wide; in the lamp its bulb alight.
+extension LensArt {
+    static let dentalmirror: Halftone.Panel = {
+        let lamp = P(-0.485, -0.28), brow = P(0.485, -0.28), mouth = P(0.485, 0.28)
+        let face = P(-0.1, 0.14), handle = bar(polar(mouth, 0.3, 128), P(-0.02, 0.92), 0.055)
+        let glove = [P(-0.2, 0.74), P(0.0, 0.66), P(0.16, 0.72), P(0.2, 0.84), P(0.08, 1.0), P(-0.24, 1.0)]
+        let fingers = [(P(0.1, 0.66), 0.035), (P(0.18, 0.7), 0.03), (P(0.03, 0.64), 0.035)]
+        let probe = [P(-0.62, 0.9), P(-0.32, 0.48), P(-0.3, 0.44), P(-0.33, 0.43)]
+        let hand = oval(P(-0.6, 0.76), 0.11, 0.08, Tone(0.3, 0.5, 0))
+        let strap = bar(polar(brow, 0.3, 196), face + P(-0.3, -0.3), 0.05)
+        let arm = [bar(polar(lamp, 0.3, 225), P(-0.75, -0.9), 0.06), bar(P(-0.75, -0.9), P(-0.3, -1.05), 0.06)]
+        let panel = rect(0.08, -0.98, 0.42, -0.78)
+        let scrubs = [P(-1, 0.6), P(-0.3, 0.5), P(0.5, 0.5), P(1, 0.6), P(1, 1), P(-1, 1)]
+
+        let steel = Tone(0.5, 0.5, 0.6), dark = Tone(0.05, 0.05, 0.15), cream = Tone(0.2, 0.2, 0.45), skin = Tone(0, 0.3, 0.45)
+        let rims = [
+            // The lamp's housing, its vents dark; the head mirror's rim, ticked, with the strap's joint; the mouth mirror's
+            // steel ring, its neck dark where the handle meets it.
+            rim(lamp, glass: y(0.75), outer: 0.33, turns(8, [cream, dark], from: 10)),
+            Rim(centre: brow, glass: c(0.55), outer: 0.31, at: [0, 30, 60, 90, 120, 170, 220, 250, 280, 310, 340],
+                tones: [steel, y(0.8), steel, y(0.8), steel, dark, steel, y(0.8), steel, y(0.8), steel]),
+            Rim(centre: mouth, glass: m(0.45), outer: 0.32, at: [0, 50, 105, 150, 210, 270, 320],
+                tones: [steel, dark, steel, dark, steel, dark, steel]),
+        ]
+        var fills = [disc(face + P(-0.14, -0.07), 0.026, .zero), disc(face + P(0.16, -0.07), 0.026, .zero), fill(strap, Tone(0.6, 0.6, 0.7)), fill(handle, Tone(0.6, 0.6, 0.7))] + fingers.map { disc($0.0, $0.1, Tone(0.3, 0.5, 0)) }
+        fills += [fill(glove, Tone(0.3, 0.5, 0)), hand, fill(probe, steel)] + arm.map { fill($0, cream) } + [fill(panel, Tone(0.3, 0.3, 0.3))]
+        // The face: cap, skin, mask, as the first of each that holds.
+        fills += [fill(curve(face + P(-0.4, -0.14), face + P(0, -0.78), face + P(0.4, -0.14), 20), m(0.6)),
+                  fill(curve(face + P(-0.4, 0.06), face + P(0, 0.26), face + P(0.4, 0.06), 12) + curve(face + P(0.4, 0.06), face + P(0.06, 0.78), face + P(-0.4, 0.06), 16), c(0.5)),
+                  oval(face, 0.4, 0.5, skin), fill(scrubs, Tone(0.4, 0, 0.3))]
+
+        var s: [Halftone.Stroke] = []
+        // The ceiling's tiles and its light panel.
+        for x in [-0.5, 0.0, 0.5] { s.append(stroke([P(x, -1), P(x + 0.1, -0.6)], hair)) }
+        s.append(stroke(span(P(-1, -0.72), P(1, -0.64), 4), hair))
+        s.append(stroke(closed(panel), mid))
+        for x in [0.16, 0.25, 0.34] { s.append(stroke([P(x, -0.95), P(x, -0.81)], hair)) }
+        // The dentist: her face's edge, the cap's line and its pleats, her eyes and brows over the mask, its pleats and
+        // ties, and her scrubs' neck.
+        s += pieces(ellipse(face, 0.4, 0.5, 64), bold)
+        s += pieces(curve(face + P(-0.4, -0.14), face + P(0, -0.26), face + P(0.4, -0.14), 16), mid)
+        for x in [-0.2, -0.06, 0.08] { s.append(stroke(curve(face + P(x, -0.2), face + P(x + 0.04, -0.3), face + P(x + 0.02, -0.4), 6), hair)) }
+        for x in [-0.15, 0.15] {
+            let e = face + P(x, -0.07)
+            s.append(stroke(ellipse(e, 0.08, 0.042, 20), mid))
+            s.append(stroke(circle(e + P(0.01, 0), 0.026, 12), mid))
+            s.append(stroke(curve(e + P(-0.06, -0.05), e + P(0, -0.08), e + P(0.06, -0.05), 8), bold))
+        }
+        s += pieces(curve(face + P(-0.4, 0.06), face + P(0, 0.26), face + P(0.4, 0.06), 12), bold)
+        for k in 0..<3 { s.append(stroke(curve(face + P(-0.3, 0.2 + 0.08 * Double(k)), face + P(0, 0.34 + 0.08 * Double(k)), face + P(0.3, 0.2 + 0.08 * Double(k)), 12), hair)) }
+        s.append(stroke(curve(P(-0.3, 0.5), face + P(0, 0.62), P(0.5, 0.5), 12), mid))
+        // Her hands: the glove's fingers on the mirror's handle, and the probe in the other.
+        s.append(stroke(closed(glove), mid))
+        for (at, r) in fingers { s.append(stroke(circle(at, r, 12), mid)) }
+        s.append(stroke(closed(handle), bold))
+        for t in 0..<6 { let at = P(-0.02, 0.92) + (polar(mouth, 0.3, 128) - P(-0.02, 0.92)) * (0.1 + 0.04 * Double(t)); s.append(stroke([at + P(-0.02, -0.01), at + P(0.02, 0.01)], hair)) }
+        s.append(stroke(ellipse(P(-0.6, 0.76), 0.11, 0.08, 20), mid))
+        s.append(stroke(probe, mid))
+        // The head mirror: its strap, rim and joint, and in it the patient looking up.
+        s.append(stroke(closed(strap), bold))
+        s += pieces(circle(brow, core, 64), mid)
+        s += pieces(circle(brow, 0.31, 64), bold)
+        s.append(stroke(circle(polar(brow, 0.31, 195), 0.035, 12), bold))
+        let patient = brow + P(0.026, -0.026)
+        s.append(stroke(circle(patient, 0.026, 20), 0.0036))
+        for x in [-0.01, 0.01] { s.append(stroke(circle(patient + P(x, -0.004), 0.006, 8), 0.0026)); s.append(stroke(circle(patient + P(x, -0.004), 0.0015, 4), 0.003)) }
+        s.append(stroke(circle(patient + P(0, 0.013), 0.005, 8), 0.0026))
+        for x in [-0.014, -0.004, 0.008] { s.append(stroke(curve(patient + P(x, -0.024), patient + P(x + 0.004, -0.036), patient + P(x + 0.012, -0.04), 4), 0.002)) }
+        // The lamp: its arm, its housing's edges, a handle, the reflector's facets and the bulb lit in it.
+        for b in arm { s.append(stroke(closed(b), mid)) }
+        s += pieces(circle(lamp, core, 64), mid)
+        s += pieces(circle(lamp, 0.33, 64), bold)
+        s.append(stroke(closed(bar(polar(lamp, 0.33, 330), polar(lamp, 0.42, 330), 0.05)), mid))
+        for k in 0..<6 { s.append(stroke(arc(lamp, 0.21, 60 * Double(k) + 8, 60 * Double(k) + 52, 6), hair)) }
+        let bulb = lamp + P(0.022, -0.028)
+        s.append(stroke(circle(bulb, 0.018, 16), 0.0036))
+        s.append(stroke([bulb + P(-0.008, 0.016), bulb + P(-0.008, 0.032), bulb + P(0.008, 0.032), bulb + P(0.008, 0.016)], 0.003))
+        s.append(stroke([bulb + P(-0.006, 0.012), bulb + P(-0.004, -0.004), bulb + P(-0.001, 0.002), bulb + P(0.002, -0.004), bulb + P(0.006, 0.012)], 0.002))
+        for k in 0..<6 { s.append(stroke([polar(bulb, 0.026, -150 + 24 * Double(k)), polar(bulb, 0.04, -150 + 24 * Double(k))], 0.0018)) }
+        // The mouth mirror: its ring, and in it a molar, a cavity in its crown and a glint on it.
+        s += pieces(circle(mouth, core, 64), mid)
+        s += pieces(circle(mouth, 0.32, 64), bold)
+        let molar = mouth + P(-0.022, -0.028)
+        s.append(stroke(closed(curve(molar + P(-0.026, -0.006), molar + P(-0.024, -0.03), molar + P(-0.008, -0.022), 6)
+            + curve(molar + P(-0.008, -0.022), molar + P(0, -0.026), molar + P(0.008, -0.022), 4)
+            + curve(molar + P(0.008, -0.022), molar + P(0.024, -0.03), molar + P(0.026, -0.006), 6)
+            + curve(molar + P(0.026, -0.006), molar + P(0.024, 0.02), molar + P(0.018, 0.036), 6)
+            + [molar + P(0.008, 0.036), molar + P(0.004, 0.012), molar + P(-0.004, 0.012), molar + P(-0.008, 0.036), molar + P(-0.018, 0.036)]
+            + curve(molar + P(-0.018, 0.036), molar + P(-0.024, 0.02), molar + P(-0.026, -0.006), 6)), 0.0036))
+        s.append(stroke(circle(molar + P(0.008, -0.01), 0.005, 8), 0.0034))
+        s.append(stroke(star(molar + P(-0.03, -0.034), 0.01, points: 4, inner: 0.3), 0.0018))
+        return framed("dentalmirror", rims: rims, fills: fills, strokes: s) { _ in c(0.15) }
     }()
 }
