@@ -48,9 +48,9 @@ private extension LensArt {
     /// segment, so a long curve's wide box costs every pixel inside it.
     static func pieces(_ strokes: [Halftone.Stroke]) -> [Halftone.Stroke] {
         strokes.flatMap { stroke -> [Halftone.Stroke] in
-            guard stroke.points.count > 9 else { return [stroke] }
-            return stride(from: 0, to: stroke.points.count - 1, by: 8).map {
-                Halftone.Stroke(points: Array(stroke.points[$0...min($0 + 8, stroke.points.count - 1)]), width: stroke.width)
+            guard stroke.points.count > 17 else { return [stroke] }
+            return stride(from: 0, to: stroke.points.count - 1, by: 16).map {
+                Halftone.Stroke(points: Array(stroke.points[$0...min($0 + 16, stroke.points.count - 1)]), width: stroke.width)
             }
         }
     }
@@ -125,7 +125,7 @@ extension LensArt {
         s.append(stroke(curve(P(-0.62, -0.03), P(-0.7, -0.1), P(-0.84, -0.12), 8), mid))
         // The night: stars, a few with rays.
         for (k, at) in [P(-0.08, -0.9), P(0.72, -0.58), P(-0.76, -0.58), P(0.3, -0.9), P(0.86, -0.3), P(-0.9, -0.22)].enumerated() {
-            if k % 3 == 0 { s += glint(at, 0.04, hair) } else { s.append(stroke(circle(at, 0.008, 6), mid)) }
+            if k == 0 { s += glint(at, 0.04, hair) } else { s.append(stroke(circle(at, 0.008, 6), mid)) }
         }
         // The waterline, and the reflection's outlines broken by ripples, which run across the pond.
         s.append(stroke([P(-1, water), P(1, water)], mid))
@@ -138,10 +138,10 @@ extension LensArt {
         }
         s += runs(mirrored(span(beak[0], beak[2], 16) + span(beak[2], beak[1], 16)), hair, keep: ripple)
         for t in tufts { s += runs(mirrored(span(t[1], t[2], 16) + span(t[2], t[0], 16)), hair, keep: ripple) }
-        for (k, yy) in stride(from: 0.08, through: 0.95, by: 0.12).enumerated() {
+        for (k, yy) in stride(from: 0.08, through: 0.95, by: 0.15).enumerated() {
             let half = (1 - yy * yy).squareRoot()
             s += runs(span(P(-half, yy), P(half, yy), 60)) { p in
-                sin((p.x + 0.13 * Double(k)) * 2 * .pi / 0.34) > -0.2 && eyes.allSatisfy { simd_distance(p, P($0.x, -$0.y)) > 0.14 }
+                sin((p.x + 0.13 * Double(k)) * 2 * .pi / 0.5) > -0.3 && eyes.allSatisfy { simd_distance(p, P($0.x, -$0.y)) > 0.14 }
             }
         }
 
@@ -337,7 +337,7 @@ extension LensArt {
 
 // MARK: - 52: Chameleon
 
-/// Level 52's name: a chameleon on a branch at dusk, side on, green with dark bands and a pale lip and belly, casque
+/// Level 52's name: a chameleon on a branch at dusk, side on, blue banded with yellow, its lip and belly pale, casque
 /// up behind, tail curled under; its turret of an eye is over the hub, the low sun over the top core, a flower over
 /// the lower right and a dewdrop over the bottom (hex's four lenses on this level). Each holds what the chameleon has
 /// its eye on: a cricket in the eye, a hawk crossing the sun, a bee on the flower and a butterfly in the drop.
@@ -447,7 +447,7 @@ extension LensArt {
 
 // MARK: - 53: Cat's eye
 
-/// Level 53's name, both ways: a ginger tabby seen from above, head cocked on the blue floorboards, its green eyes over
+/// Level 53's name, both ways: a ginger tabby seen from above, head cocked on the floorboards, its blue eyes over
 /// the lower right and bottom cores, and two cat's-eye marbles it is after over the top and upper left (hex's four
 /// lenses on this level), a paw out for one and a ball of wool by its ear. In its eyes a butterfly and a sparrow; in
 /// the marbles a fish's bones and, looking back, a cat's eye.
@@ -610,11 +610,13 @@ extension LensArt {
 
         var s: [Halftone.Stroke] = []
         // The valley: peaks and their snow, the river, the meadow's hedges and the sun's rays down from behind the top ring.
-        s.append(stroke(Array(peaks.prefix(11)), bold))
+        let clear = { (p: P) in sights.allSatisfy { simd_distance(p, $0) > 0.3 } }
+        let ridge = (0..<10).flatMap { span(peaks[$0], peaks[$0 + 1], 12).dropLast() } + [peaks[10]]
+        s += runs(ridge, bold, keep: clear)
         for p in snow { s.append(stroke(Array(p.dropFirst(3)) + [p[0]], hair)) }
-        s.append(stroke(closed(ribbon(river, 0.14, 0.04)), mid))
+        s += runs(closed(ribbon(river, 0.14, 0.04)), mid, keep: clear)
         for (k, at) in [P(-0.62, -0.1), P(0.66, 0.04), P(-0.32, 0.12), P(0.86, -0.1)].enumerated() {
-            s.append(stroke(curve(at, at + P(0.08, -0.04 + 0.02 * Double(k)), at + P(0.18, 0.0), 8), hair))
+            s += runs(curve(at, at + P(0.08, -0.04 + 0.02 * Double(k)), at + P(0.18, 0.0), 8), hair, keep: clear)
         }
         for a in stride(from: 200.0, through: 340, by: 28) { s.append(stroke([polar(sights[1], 0.34, a), polar(sights[1], 0.42, a)], mid)) }
         // The sights: each ring broken in four, ticked at the quarters.
@@ -689,17 +691,17 @@ extension LensArt {
 
 // MARK: - 55: Peacock
 
-/// Level 55's name: a peacock face on with his train up, its green barbs fanning from behind him, his blue neck up the
+/// Level 55's name: a peacock face on with his train up, its barbs fanning from behind him, his blue neck up the
 /// hub and his body over the bottom rod, and five of the train's eyes over the top and side cores (hex's five lenses on
-/// this level), each a violet heart in teal, bronze and gold. In the eyes: a peahen, a rain cloud, a snake, a lotus and
-/// a crown.
+/// this level), each a magenta heart in a notched teal ring, then bronze and gold, the upper left's heart gilded. In the
+/// eyes: a peahen, a rain cloud, a snake, a lotus and, in the gilded one, a crown.
 extension LensArt {
     static let peacock: Halftone.Panel = {
         let base = P(0, 0.66), spots = [1, 2, 3, 5, 6].map { polar(P(0, 0), 0.56, -90 + 60 * Double($0 - 1)) }
-        let hearts = [m(0.8), m(0.5), m(0.8), m(0.5), m(0.65)], teal = c(0.95), bronze = y(0.9), gold = Tone(0, 0.45, 0.6)
+        let hearts = [m(0.85), m(0.5), m(0.85), m(0.5), y(0.8)], teal = c(0.95), bronze = y(0.9), gold = Tone(0, 0.45, 0.6)
         let barbs = [c(0.35), y(0.28)]
-        let neck = [P(-0.09, 0.42), P(-0.05, 0.16), P(0.02, -0.06), P(0.04, -0.15), P(0.15, -0.14), P(0.13, -0.02), P(0.09, 0.18), P(0.11, 0.42)]
-        let crown = P(0.095, -0.17)
+        let neck = ribbon(curve(P(0.0, 0.44), P(-0.16, 0.12), P(0.07, -0.13), 16), 0.16, 0.07)
+        let crown = P(0.09, -0.17)
         let bird = [oval(crown, 0.07, 0.055, c(0.95)), fill([crown + P(0.05, -0.02), crown + P(0.13, 0.0), crown + P(0.05, 0.02)], y(0.6)),
                     fill(neck, c(0.95)), fill(ellipse(P(0.14, 0.62), 0.16, 0.24, degrees: -18, 28), y(0.6)),
                     oval(P(-0.02, 0.6), 0.2, 0.26, c(0.75)), fill(rect(-0.3, 0.86, 0.36, 1.0), m(0.4))]
@@ -709,9 +711,9 @@ extension LensArt {
 
         var s: [Halftone.Stroke] = []
         // The train: a shaft up each feather from behind him, and the rims of each eye's rings.
-        for k in 0..<23 {
-            let a = 180 + 180 * Double(k) / 22, tip = polar(base, 1.8, a)
-            s += runs(span(base, tip, 90), hair) { p in simd_length(p) < 1 && p.y < 0.5 && spots.allSatisfy { simd_distance(p, $0) > 0.27 } }
+        for k in 0..<15 {
+            let a = 180 + 180 * Double(k) / 14, tip = polar(base, 1.8, a)
+            s += runs(span(base, tip, 60), hair) { p in simd_length(p) < 1 && p.y < 0.5 && spots.allSatisfy { simd_distance(p, $0) > 0.27 } }
         }
         for (k, c) in spots.enumerated() {
             let along = simd_normalize(c - base), across = P(-along.y, along.x)
@@ -790,7 +792,7 @@ extension LensArt {
                 let e = P((along - r.2) / r.0, across / r.1)
                 if simd_length_squared(e) < 1 {
                     // The bronze ring torn into barbs, a few of them gold, so it is never the same twice round.
-                    if j == 0 { return odd(bearing(d), wobble[best]) ? .zero : teal }
+                    if j == 0 { return (bearing(d) + 13 * Double(best)).truncatingRemainder(dividingBy: 40) < 13 ? .zero : teal }
                     return j == 1 && odd(bearing(d), wobble[(best + 2) % 5]) && simd_length_squared(e) > 0.8 ? gold : r.3
                 }
             }
