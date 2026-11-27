@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass]
+    static let slowMotion: [Int: Halftone.Panel] = [56: rosewindow, 57: oculus, 58: stainedglass, 59: skylight]
 
     /// Hex's rods' centres, by rod.
     private static let hexes: [P] = [P(0, 0)] + (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
@@ -397,6 +397,112 @@ extension LensArt {
                 }
             }
             return .zero
+        }, strokes: s)
+    }()
+}
+
+// MARK: - 59: Skylight
+
+/// Level 59's name: looking straight up through a skylight at night, its shaft's four walls round the edge, one lit,
+/// and its glazing bars crossing off the middle; through the glass the full moon in the upper right with a cloud over
+/// it and a long cloud lower down. Five raindrops sit on the glass (hex's five lenses on this level), each a bright bead
+/// with a rim of light and shadow by turns, and through each, bent small, something of the night: a cat peering over the
+/// edge at the top, a bat in the lower right, Cassiopeia's W at the foot, a chimney pot smoking in the lower left and
+/// a falling leaf in the upper left.
+extension LensArt {
+    static let skylight: Halftone.Panel = {
+        let rods = hexes, lenses = [1, 3, 4, 5, 6], bead = 0.2, frame = 0.264
+        let holes = lenses.map { rods[$0] }
+        let sky = c(0.4), cloud = Tone(0.3, 0.26, 0.3), bar = Tone(0.04, 0.03, 0.06)
+        let rim: [Tone] = [m(0.85), y(0.9), Tone(0.45, 0.4, 0.9), y(0.9), bar, m(0.75), bar, y(0.8)]
+        let moon = rods[2] + P(0.08, -0.07)
+        let clouds = [oval(moon + P(-0.02, 0.1), 0.16, 0.045, cloud), oval(moon + P(0.08, 0.13), 0.1, 0.04, cloud),
+                      oval(P(-0.25, 0.3), 0.3, 0.06, cloud), oval(P(-0.05, 0.36), 0.2, 0.05, cloud)]
+        // The shaft: a square opening a little off the middle, its walls seen end on round the edge.
+        let shaft = P(0.05, -0.04), opening = 0.8
+        let walls = [y(0.75), m(0.35), y(0.35), m(0.6)]
+        // The glazing bars, off the middle so a quarter turn of the hub shows.
+        let column = -0.13, row = 0.12, half = 0.035
+
+        var s: [Halftone.Stroke] = []
+        func glass(_ p: P) -> Bool { holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } }
+        // The shaft's inner edge and the corners' mitres.
+        let edge = [shaft + P(-opening, -opening), shaft + P(opening, -opening), shaft + P(opening, opening), shaft + P(-opening, opening)]
+        s += runs(fine(closed(edge)), bold) { simd_length($0) < 1 && glass($0) }
+        for k in 0..<4 { s += runs(span(edge[k], edge[k] + simd_normalize(edge[k] - shaft) * 0.6, 12), mid) { simd_length($0) < 1 } }
+        // The bars' edges, cut at the beads.
+        for x in [column - half, column + half] { s += runs(span(P(x, -1), P(x, 1), 60), mid, keep: glass) }
+        for yy in [row - half, row + half] { s += runs(span(P(-1, yy), P(1, yy), 60), mid, keep: glass) }
+        // The moon, its seas, the clouds' edges, and the stars.
+        s.append(stroke(circle(moon, 0.15, 36), mid))
+        for (at, r) in [(P(-0.05, -0.04), 0.035), (P(0.04, 0.02), 0.05), (P(-0.02, 0.07), 0.025)] { s.append(stroke(circle(moon + at, r, 14), hair)) }
+        for f in clouds {
+            s += runs(fine(ellipse(f.centre, f.radii!.x, f.radii!.y, 28)), hair, keep: glass)
+        }
+        for at in [P(-0.2, -0.3), P(0.2, -0.1), P(-0.7, 0.0), P(0.7, 0.5), P(0.3, 0.62), P(-0.3, 0.74), P(0.1, -0.86), P(-0.12, 0.0)] {
+            s += glint(at, 0.035, hair)
+        }
+        // The beads: their rims, a highlight in each, and the run each has left below it.
+        for c in holes {
+            s += hoop(c, frame, bold, pieces: 4) + hoop(c, bead, hair, pieces: 4)
+            s.append(stroke(arc(c, 0.17, 200, 250, 10), mid))
+        }
+
+        // Through the top: a cat peering down over the edge, ears up, eyes slit.
+        let cat = rods[1] + P(0.024, -0.034)
+        s.append(stroke(closed(arc(cat, 0.024, -20, 200, 18) + [cat + P(-0.02, -0.02), cat + P(-0.016, -0.04), cat + P(-0.006, -0.024),
+                                                                cat + P(0.006, -0.024), cat + P(0.016, -0.04), cat + P(0.02, -0.02)]), 0.0034))
+        for x in [-0.009, 0.009] { s.append(stroke(ellipse(cat + P(x, -0.006), 0.0035, 0.0065, 8), 0.0026)) }
+        s.append(stroke([cat + P(-0.003, 0.006), cat + P(0.003, 0.006), cat + P(0, 0.01), cat + P(-0.003, 0.006)], 0.002))
+        for side in [-1.0, 1.0] {
+            for dy in [0.006, 0.012] { s.append(stroke([cat + P(side * 0.008, 0.01), cat + P(side * 0.038, dy)], 0.0014)) }
+        }
+        // In the lower right: a bat.
+        let bat = rods[3] + P(0.026, -0.03)
+        let wing: [P] = [P(0.004, -0.004), P(0.02, -0.014), P(0.046, -0.012), P(0.038, 0.0), P(0.03, 0.002), P(0.024, 0.012), P(0.014, 0.006), P(0.004, 0.01)]
+        s.append(stroke(closed(wing.map { bat + $0 } + wing.reversed().map { bat + P(-$0.x, $0.y) }), 0.003))
+        s.append(stroke(ellipse(bat + P(0, 0.004), 0.006, 0.01, 10), 0.003))
+        for x in [-0.004, 0.004] { s.append(stroke([bat + P(x, -0.004), bat + P(x * 1.6, -0.012)], 0.002)) }
+        // At the foot: Cassiopeia's W.
+        let w = rods[4] + P(0.0, -0.04)
+        let stars = [P(-0.04, -0.012), P(-0.02, 0.012), P(0.0, -0.004), P(0.022, 0.014), P(0.042, -0.014)].map { w + $0 }
+        s.append(stroke(stars, 0.0016))
+        for (k, at) in stars.enumerated() { s += glint(at, k == 2 ? 0.012 : 0.009, 0.002) }
+        // In the lower left: a chimney pot and its smoke.
+        let pot = rods[5] + P(0.03, -0.02)
+        s.append(stroke(closed([pot + P(-0.012, 0.02), pot + P(-0.008, -0.01), pot + P(0.008, -0.01), pot + P(0.012, 0.02)]), 0.0034))
+        s.append(stroke(closed(rect(pot.x - 0.012, pot.y - 0.016, pot.x + 0.012, pot.y - 0.01)), 0.003))
+        s.append(stroke([pot + P(-0.03, 0.02), pot + P(0.03, 0.02)], 0.003))
+        s.append(stroke(curve(pot + P(0, -0.02), pot + P(-0.02, -0.03), pot + P(-0.006, -0.04), 8) + curve(pot + P(-0.006, -0.04), pot + P(0.01, -0.05), pot + P(-0.012, -0.062), 8).dropFirst(), 0.003))
+        // In the upper left: a falling leaf, its veins and stalk.
+        let leaf = rods[6] + P(0.026, -0.03), lie = P(cos(-0.6), sin(-0.6)), cross = P(-lie.y, lie.x)
+        let blade = (0...20).map { k -> P in
+            let t = Double(k) / 20 * 2 * .pi
+            return leaf + lie * (0.03 * cos(t)) + cross * (0.016 * sin(t) * (1 + 0.25 * cos(3 * t)))
+        }
+        s.append(stroke(blade, 0.0032))
+        s.append(stroke([leaf - lie * 0.044, leaf + lie * 0.03], 0.002))
+        for t in [-0.016, 0.0, 0.016] {
+            for side in [-1.0, 1.0] { s.append(stroke([leaf + lie * t, leaf + lie * (t + 0.01) + cross * (side * 0.012)], 0.0014)) }
+        }
+
+        return Halftone.Panel(name: "skylight", tones: { p in
+            for h in holes {
+                let d = simd_distance(p, h)
+                guard d < frame else { continue }
+                return d < bead ? c(0.85) : rim[Int(bearing(p, h) / 45) % 8]
+            }
+            let q = p - shaft
+            if max(abs(q.x), abs(q.y)) > opening {
+                return walls[abs(q.x) > abs(q.y) ? (q.x > 0 ? 0 : 1) : (q.y > 0 ? 2 : 3)]
+            }
+            if abs(p.x - column) < half || abs(p.y - row) < half { return bar }
+            if simd_distance(p, moon) < 0.15 {
+                for f in clouds.prefix(2) where f.holds(p) { return f.tone }
+                return y(0.9)
+            }
+            for f in clouds where f.holds(p) { return f.tone }
+            return sky
         }, strokes: s)
     }()
 }
