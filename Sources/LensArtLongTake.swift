@@ -7,7 +7,8 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette, 35: readingGlasses, 36: divingMask]
+    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette, 35: readingGlasses,
+                                                  36: divingMask, 37: contactLens]
 }
 
 // MARK: Drawing
@@ -640,6 +641,104 @@ extension LensArt {
         return layered("divingmask", layers, strokes: s) { p in
             // Shafts of light slanting down through the water.
             Int((simd_dot(p, P(0.94, 0.34)) + 3) / 0.2) % 2 == 0 ? c(0.55) : c(0.36)
+        }
+    }()
+}
+
+// MARK: - 37: Contact lens
+
+/// Level 37's name: a contact lens balanced on a fingertip over the top core, and its case open on the bathroom shelf
+/// below, its two wells over the lower left and lower right cores (hex's three lenses on this level), marked L and R,
+/// their caps beside them, a bar of soap on the tiles. Through the lens on the finger, the fingerprint's loops; in the L
+/// well, the top of an eye chart; in the R well, an eye. The finger, the case's edges, its caps and the soap, over pink
+/// tiles in two tones, are the broad shapes the four twisting rods turn.
+extension LensArt {
+    static let contactLens: Halftone.Panel = {
+        let tip = P(0, -0.56), l = P(-0.485, 0.28), r = P(0.485, 0.28)
+        let skin = Tone(0, 0.32, 0.56), tint = c(0.55), plastic = y(0.75)
+        let finger = bar(tip, P(1.15, -0.98), 0.62), middle = bar(P(0.6, -0.36), P(1.2, -0.62), 0.3)
+        let caseBody = bar(l, r, 0.72)
+        let caps = [P(-0.22, 0.83), P(0.26, 0.85)]
+        let soap = squircle(P(-0.62, -0.36), 0.17, 0.09, degrees: -20, 32)
+
+        var layers: [Layer] = [layer(disc(tip, 0.264, tint)), layer(disc(l, 0.264, tint)), layer(disc(r, 0.264, tint))]
+        // The lens's edge catching the light by turns; the wells' threads, cyan for L and magenta for R.
+        layers.append(segments(tip, 0.264, 0.3, 22, [c(0.85), Tone(0.3, 0.3, 0.6), c(0.85), skin], phase: 8))
+        layers.append(segments(l, 0.264, 0.33, 24, [c(0.85), c(0.85), .zero], phase: 3))
+        layers.append(segments(r, 0.264, 0.33, 24, [m(0.85), m(0.85), .zero], phase: 9))
+        layers += [layer(disc(tip, 0.31, skin)), layer(fill(finger, skin)), layer(disc(P(0.6, -0.36), 0.15, Tone(0, 0.42, 0.5))), layer(fill(middle, Tone(0, 0.42, 0.5))),
+                   layer(disc(caps[0], 0.11, c(0.75))), layer(disc(caps[1], 0.11, m(0.75))),
+                   layer(disc(l, 0.36, plastic)), layer(disc(r, 0.36, plastic)), layer(fill(caseBody, plastic)),
+                   layer(fill(soap, c(0.45)))]
+
+        var s: [Halftone.Stroke] = []
+        // The tiles' grout, kept off everything on them, and a few drops of water.
+        func clear(_ p: P) -> Bool {
+            simd_distance(p, tip) > 0.31 && !inside(p, finger) && !inside(p, middle) && simd_distance(p, P(0.6, -0.36)) > 0.15 && !inside(p, caseBody) && simd_distance(p, l) > 0.36
+                && simd_distance(p, r) > 0.36 && !inside(p, soap) && caps.allSatisfy { simd_distance(p, $0) > 0.11 }
+        }
+        for k in 0..<9 {
+            let v = -0.97 + 0.24 * Double(k) + 0.05
+            s += runs(span(P(v, -1), P(v, 1), 80), hair, keep: clear)
+            s += runs(span(P(-1, v + 0.04), P(1, v + 0.04), 80), hair, keep: clear)
+        }
+        for at in [P(0.3, 0.02), P(-0.18, -0.12), P(0.7, -0.08), P(-0.8, 0.0)] {
+            s.append(stroke(closed(arc(at, 0.022, 0, 180, 8) + [at + P(0, -0.04)]), mid))
+        }
+        // The finger: its edge, the crease of its last joint, the whorl of its print round the lens.
+        s.append(stroke([finger[0], finger[1]], bold))
+        s.append(stroke([finger[3], finger[2]], bold))
+        s += runs(circle(tip, 0.31, 48), bold) { !inside($0, finger) }
+        s += runs(arc(P(0.6, -0.36), 0.15, 90, 270, 16) + [middle[2]], bold) { !inside($0, finger) }
+        s += runs(span(middle[0], middle[1], 20), bold) { !inside($0, finger) }
+        let along = simd_normalize(P(1.15, -0.98) - tip), across = P(-along.y, along.x)
+        for d in [0.5, 0.55] { s.append(stroke(curve(tip + along * d + across * 0.28, tip + along * (d - 0.04), tip + along * d - across * 0.28, 10), mid)) }
+        for k in 0..<3 { s += runs(arc(tip, 0.36 + 0.035 * Double(k), 60, 300, 30), hair) { inside($0, finger) || simd_distance($0, tip) < 0.31 } }
+        // The lens's edge.
+        s += rim(tip, 0.3, mid)
+        s += rim(tip, 0.264, hair)
+        s.append(stroke(arc(tip, 0.2, 200, 240, 10), mid))
+        // The case: its outline, the wells' rims, L and R, the caps knurled; the soap's edge and a bubble.
+        s.append(stroke(arc(l, 0.36, 90, 270, 24) + arc(r, 0.36, -90, 90, 24) + [l + P(0, 0.36)], bold))
+        for c in [l, r] {
+            s += rim(c, 0.33, mid)
+            s += rim(c, 0.264, mid)
+            s.append(stroke(arc(c, 0.2, 200, 240, 10), mid))
+        }
+        s.append(stroke([P(-0.2, 0.34), P(-0.2, 0.46), P(-0.13, 0.46)], bold))
+        s.append(stroke([P(0.13, 0.46), P(0.13, 0.34)] + arc(P(0.15, 0.37), 0.03, -90, 90, 8) + [P(0.13, 0.4), P(0.2, 0.46)], bold))
+        for c in caps {
+            s += rim(c, 0.11, bold, 6)
+            for k in 0..<12 { s.append(stroke([polar(c, 0.08, 30 * Double(k)), polar(c, 0.1, 30 * Double(k))], hair)) }
+        }
+        s.append(stroke(closed(soap), mid))
+        s.append(stroke(turned(ellipse(P(-0.62, -0.36), 0.1, 0.04, 20), about: P(-0.62, -0.36), -20), hair))
+        for at in [P(-0.84, -0.52), P(-0.4, -0.5)] { s += rim(at, 0.025, hair, 3) }
+        // Through the lens on the finger: the print's loops, open to one side.
+        let print = tip + P(0.012, -0.03)
+        for k in 0..<4 {
+            let rr = 0.006 + 0.0075 * Double(k)
+            s.append(stroke(arc(print, rr, 150, 390, 12) + [print + P(rr * cos(30 * .pi / 180) + 0.014, rr * 0.5 + 0.026)], 0.0022))
+        }
+        // In the L well: an eye chart's E, and F and P under it.
+        let chart = l + P(0.004, -0.024)
+        s.append(stroke([chart + P(0.016, -0.05), chart + P(-0.006, -0.05), chart + P(-0.006, -0.022), chart + P(0.016, -0.022)], 0.0036))
+        s.append(stroke([chart + P(-0.006, -0.036), chart + P(0.012, -0.036)], 0.0036))
+        s.append(stroke([chart + P(-0.006, 0.006), chart + P(-0.006, -0.012), chart + P(0.004, -0.012)], 0.0026))
+        s.append(stroke([chart + P(-0.006, -0.003), chart + P(0.002, -0.003)], 0.0026))
+        s.append(stroke([chart + P(0.012, 0.006), chart + P(0.012, -0.012)] + arc(chart + P(0.015, -0.0075), 0.0045, -90, 90, 6) + [chart + P(0.012, -0.003)], 0.0026))
+        // In the R well: an eye, its iris and pupil, a gleam, lashes on the upper lid.
+        let eye = r + P(0.01, -0.036)
+        let lid = curve(eye + P(-0.036, 0.006), eye + P(0, -0.03), eye + P(0.036, 0.006), 12)
+        s.append(stroke(lid + curve(eye + P(0.036, 0.006), eye + P(0, 0.028), eye + P(-0.036, 0.006), 12), 0.0032))
+        s.append(stroke(circle(eye + P(0, 0.002), 0.011, 14), 0.003))
+        s.append(stroke(circle(eye + P(0, 0.002), 0.004, 8), 0.0044))
+        s.append(stroke(circle(eye + P(0.005, -0.004), 0.0015, 4), 0.0016))
+        for k in stride(from: 2, to: 12, by: 2) { s.append(stroke([lid[k], lid[k] + simd_normalize(lid[k] - eye - P(0, 0.02)) * 0.01], 0.0018)) }
+        return layered("contactlens", layers, strokes: s) { p in
+            // Pink tiles in two tones, set off the hub's centre.
+            let i = Int((p.x + 2.05) / 0.24), j = Int((p.y + 2.01) / 0.24)
+            return (i + j) % 2 == 0 ? m(0.36) : m(0.2)
         }
     }()
 }
