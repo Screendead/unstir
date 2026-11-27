@@ -439,6 +439,54 @@ func table(_ path: String, span: Int) {
     }
 }
 
+/// How many clean moves can still be played from `s` before every one loses: how far a doomed line runs before the
+/// player sees it is doomed.
+func survival(_ p: Problem, _ s: [Twist], last: Move?, memo: inout [Key: Int]) -> Int {
+    if s.isEmpty { return 0 }
+    let k = Key(s: s, last: last, left: 0, rule: p.rule)
+    if let c = memo[k] { return c }
+    var best = 0
+    for m in p.cleanMoves(s, after: last) {
+        guard let t = p.play(s, m), !t.isEmpty else { continue }
+        best = max(best, 1 + survival(p, t, last: m, memo: &memo))
+    }
+    memo[k] = best
+    return best
+}
+
+/// One problem's hardness, in whole heals and waits: par, entries, clock seams, waits on the line, lines at par, first
+/// moves that miss par of those open, moves on the line with no other way on, the decoys along it (moves that don't push
+/// at once but miss par), the furthest a decoy runs before every move loses, and bits.
+func measure(_ n: String, _ p: Problem) -> String {
+    let clean = Counter(p, span: nil), par = p.owed(p.stack)
+    let lines = clean.count(p.stack, last: nil, left: par)
+    guard lines > 0, let line = clean.lines(p.stack, last: nil, left: par, keep: 1).first else { return "\(n)\tunsolvable" }
+    var s = p.stack, last: Move? = nil, forced = 0, decoys = 0, losses = 0, reach = 0, firstMiss = 0, firstAll = 0
+    var memo: [Key: Int] = [:]
+    for (i, m) in line.enumerated() {
+        var other = false
+        let moves = p.cleanMoves(s, after: last)
+        for o in moves where o != m {
+            guard let t = p.play(s, o) else { losses += 1; if i == 0 { firstMiss += 1 }; continue }
+            if clean.count(t, last: o, left: par - i - 1) > 0 { other = true; continue }
+            decoys += 1
+            if i == 0 { firstMiss += 1 }
+            reach = max(reach, 1 + survival(p, t, last: o, memo: &memo))
+        }
+        if i == 0 { firstAll = moves.count }
+        if !other { forced += 1 }
+        s = p.play(s, m)!
+        last = m
+    }
+    let c = chance(p, par: par)
+    return [n, p.layout.rawValue, p.clocks.map { "\($0.rod)\($0.dir > 0 ? "+" : "-")" }.joined(separator: ","),
+            String(par), String(p.owed(p.stack) == par ? p.clocks.reduce(0) { a, cl in
+                a + max(0, -cl.dir * p.stack.filter { $0.rod == cl.rod }.reduce(0) { $0 + $1.steps }) } : 0),
+            String(p.stack.count), String(line.filter { $0 == .wait }.count), String(lines), "\(firstMiss)/\(firstAll)",
+            String(forced), String(decoys), String(losses), String(reach), String(format: "%.1f", c > 0 ? abs(log2(c)) : 99),
+            line.map(\.description).joined(separator: " ")].joined(separator: "\t")
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 let rule = Rule(rawValue: ProcessInfo.processInfo.environment["ESC_RULE"] ?? "final") ?? .final
 switch args.first {
@@ -472,6 +520,14 @@ case "book" where args.count == 2:
                String(format: "%.1f", c > 0 ? abs(log2(c)) : 99),
                clean.lines(p.stack, last: nil, left: par, keep: 1)[0].map(\.description).joined(separator: " ")]
             .joined(separator: "\t"))
+        fflush(stdout)
+    }
+case "measure" where args.count == 2:
+    print("#\tlayout\tclocks\tpar\tticks\tentries\twaits\tlines\tfirst miss\tforced\tdecoys\tlosses\treach\tbits\tline")
+    for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
+        let f = row.split(separator: "\t").map(String.init)
+        let layout = Layout(rawValue: f[1])!
+        print(measure(f[0], Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: rule)))
         fflush(stdout)
     }
 case "table" where args.count >= 2:
