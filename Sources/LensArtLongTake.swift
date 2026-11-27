@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette, 35: readingGlasses]
+    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette, 35: readingGlasses, 36: divingMask]
 }
 
 // MARK: Drawing
@@ -526,5 +526,120 @@ extension LensArt {
         s.append(stroke(closed([keep + P(-0.024, -0.054), keep + P(-0.008, -0.049), keep + P(-0.024, -0.044)]), 0.002))
         s.append(stroke(curve(keep + P(-0.05, 0.01), keep + P(0, -0.0), keep + P(0.05, 0.012), 10), 0.002))
         return layered("readingglasses", layers, strokes: s) { _ in m(0.36) }
+    }()
+}
+
+// MARK: - 36: Diving mask
+
+/// Level 36's name: a diver coming down head first through shafts of light, her yellow-skirted mask over the top core
+/// and, on the sand below, an old lost mask over the bottom core (eye's two lenses on this level), an octopus moved in.
+/// Through her glass her eyes, wide and looking down at it; through the old glass, the octopus's eye and a curled arm.
+/// Her arms, the kelp, a shoal of yellow fish and the octopus's arms reaching out are the broad shapes the two
+/// twisting rods turn, over the light's bands.
+extension LensArt {
+    static let divingMask: Halftone.Panel = {
+        let top = P(0, -0.56), low = P(0, 0.56)
+        let skin = m(0.4), skirt = y(0.85)
+        let sand = curve(P(-1.05, 0.62), P(0, 0.46), P(1.05, 0.66), 24) + [P(1.05, 1.05), P(-1.05, 1.05)]
+        let arms = [bar(P(-0.26, -0.5), P(-0.6, 0.0), 0.15), bar(P(0.26, -0.5), P(0.6, -0.06), 0.15)]
+        let hands = [P(-0.64, 0.07), P(0.64, 0.0)]
+        let snorkel = bar(P(-0.34, -0.42), P(-0.38, -1.05), 0.065), mouthpiece = bar(P(-0.34, -0.42), P(-0.17, -0.27), 0.06)
+        let kelp = ribbon((0...20).map { k -> P in
+            let t = Double(k) / 20
+            return P(-0.86 + 0.08 * sin(t * 9), 0.95 - 1.4 * t)
+        }, 0.16, 0.05)
+        let tentacles = [ribbon(curve(P(-0.26, 0.48), P(-0.56, 0.5), P(-0.56, 0.3), 16) + curve(P(-0.56, 0.3), P(-0.55, 0.22), P(-0.47, 0.24), 6), 0.08, 0.02),
+                         ribbon(curve(P(0.27, 0.62), P(0.5, 0.78), P(0.58, 0.6), 16) + curve(P(0.58, 0.6), P(0.6, 0.52), P(0.52, 0.53), 6), 0.07, 0.02)]
+        let fish: [(P, Double)] = [(P(0.56, 0.2), 1), (P(0.76, 0.28), 0.9), (P(0.62, 0.36), 1.1), (P(0.82, 0.12), 0.8), (P(0.44, 0.3), 0.85)]
+
+        var layers: [Layer] = [layer(disc(top, 0.264, skin)), layer(disc(low, 0.264, m(0.55)))]
+        layers.append { p in
+            // Her mask's skirt: the nose pocket bulging below, a clip either side where the strap meets it.
+            let d = p - top, l = simd_length(d)
+            guard l >= 0.264, l < 0.4 else { return nil }
+            let a = atan2(d.y, d.x) * 180 / .pi
+            if abs(a - 90) < 22 { return l < 0.38 ? skirt : nil }
+            if abs(a) < 9 || abs(abs(a) - 180) < 9 { return l < 0.36 ? m(0.8) : nil }
+            return l < 0.33 ? skirt : nil
+        }
+        // The old mask's skirt, rubber with dark seams.
+        layers.append(segments(low, 0.264, 0.33, 16, [c(0.75), c(0.75), c(0.75), .zero], phase: 6))
+        layers += tentacles.map { layer(fill($0, m(0.6))) }
+        layers += [layer(fill(mouthpiece, m(0.8))), layer(fill(snorkel, m(0.8)))]
+        layers += hands.map { layer(disc($0, 0.085, skirt)) }
+        layers += [P(-0.26, -0.5), P(0.26, -0.5)].enumerated().map { k, s0 in layer(fill(bar(s0 + (k == 0 ? P(-0.04, 0.02) : P(0.04, 0.02)), (k == 0 ? P(-0.6, 0.0) : P(0.6, -0.06)) + (k == 0 ? P(-0.04, 0.02) : P(0.04, 0.02)), 0.035), y(0.85))) }
+        layers += arms.map { layer(fill($0, .zero)) } + [layer(oval(top + P(0, -0.1), 0.34, 0.4, .zero))]
+        for (at, k) in fish {
+            layers.append(layer(oval(at, 0.06 * k, 0.026 * k, y(0.9))))
+            layers.append(layer(fill([at + P(0.05, 0) * k, at + P(0.1, -0.03) * k, at + P(0.1, 0.03) * k], y(0.9))))
+        }
+        layers += [layer(fill(kelp, Tone(0.4, 0, 0.75))), layer(fill(bar(P(0.98, 1.0), P(0.95, 0.4), 0.2), Tone(0.4, 0, 0.75))),
+                   layer(fill(sand, y(0.5)))]
+
+        var s: [Halftone.Stroke] = []
+        // The sand's ripples, the kelp's midrib, the fish, bubbles rising.
+        for k in 0..<4 {
+            let yy = 0.7 + 0.08 * Double(k)
+            s += runs(curve(P(-1, yy), P(0, yy - 0.12), P(1, yy + 0.04), 40), hair) { p in simd_distance(p, low) > 0.34 && !tentacles.contains { inside(p, $0) } }
+        }
+        s += runs(Array(sand.prefix(25)), mid) { simd_distance($0, low) > 0.33 }
+        s.append(stroke(closed(kelp), mid))
+        s.append(stroke((0...20).map { k -> P in
+            let t = Double(k) / 20
+            return P(-0.86 + 0.08 * sin(t * 9), 0.95 - 1.4 * t)
+        }, hair))
+        for (at, k) in fish {
+            s.append(stroke(ellipse(at, 0.06 * k, 0.026 * k, 16), mid))
+            s.append(stroke(closed([at + P(0.05, 0) * k, at + P(0.1, -0.03) * k, at + P(0.1, 0.03) * k]), hair))
+            s.append(stroke(circle(at + P(-0.035, -0.004) * k, 0.006, 6), hair))
+        }
+        for (k, at) in [P(-0.4, -1.0), P(-0.42, -0.86), P(-0.36, -0.74), P(0.12, 0.34), P(0.18, 0.22), P(0.14, 0.1)].enumerated() {
+            s += rim(at, 0.018 + 0.006 * Double(k % 3), hair, 3)
+        }
+        // The diver: hood, arms and gloves, snorkel; the mask's skirt, its strap and clips.
+        s += runs(ellipse(top + P(0, -0.1), 0.34, 0.4, 48), mid) { simd_distance($0, top) > 0.4 }
+        for a in arms {
+            s.append(stroke([a[0], a[1]], mid))
+            s.append(stroke([a[3], a[2]], mid))
+        }
+        for h in hands {
+            s += rim(h, 0.085, mid, 4)
+            for t in [200.0, 230, 260] { s.append(stroke([polar(h, 0.04, t), polar(h, 0.085, t)], hair)) }
+        }
+        s.append(stroke(closed(snorkel), mid))
+        s.append(stroke(closed(mouthpiece), hair))
+        s += rim(top, 0.264, mid)
+        s += runs(circle(top, 0.33, 48), bold) { abs(atan2($0.y - top.y, $0.x - top.x) * 180 / .pi - 90) > 22 }
+        s.append(stroke(arc(top, 0.38, 68, 112, 8), bold))
+        s.append(stroke(arc(top, 0.2, 200, 240, 10), mid))
+        s.append(stroke(arc(top, 0.15, 205, 225, 6), hair))
+        // The old mask: its skirt, a broken strap, the octopus's arms and their suckers.
+        s += rim(low, 0.264, mid)
+        s += rim(low, 0.33, bold)
+        s.append(stroke(closed(bar(polar(low, 0.33, -10), P(0.7, 0.44), 0.05)), mid))
+        for t in tentacles {
+            s.append(stroke(closed(t), mid))
+            for k in stride(from: 2, to: 20, by: 3) { s.append(stroke(circle((t[k] + t[t.count - 1 - k]) / 2, 0.008, 6), hair)) }
+        }
+        // Through her glass: her eyes, wide, looking down at the octopus, brows up.
+        let face = top + P(0.004, -0.032)
+        for x in [-0.022, 0.022] {
+            s.append(stroke(ellipse(face + P(x, 0), 0.014, 0.009, 16), 0.004))
+            s.append(stroke(circle(face + P(x, 0.0045), 0.0035, 8), 0.0042))
+            s.append(stroke(arc(face + P(x, -0.002), 0.017, 215, 325, 8), 0.0032))
+        }
+        s.append(stroke(curve(face + P(-0.006, 0.012), face + P(0, 0.02), face + P(0.006, 0.012), 6), 0.0022))
+        // Through the old glass: the octopus's eye, its bar of a pupil, and an arm curled, suckers in a row.
+        let octo = low + P(0.016, -0.026)
+        s.append(stroke(ellipse(octo, 0.02, 0.014, 18), 0.0036))
+        s.append(stroke([octo + P(-0.01, 0.001), octo + P(0.01, 0.001)], 0.0044))
+        s.append(stroke(arc(octo + P(0, -0.004), 0.026, 200, 340, 10), 0.0024))
+        let curl = spiral(low + P(-0.03, 0.012), 0.004, grow: 0.0012, turn: -24, 18)
+        s.append(stroke(curl, 0.003))
+        for k in stride(from: 6, to: 18, by: 3) { s.append(stroke(circle(curl[k] + simd_normalize(curl[k] - (low + P(-0.03, 0.012))) * 0.006, 0.0022, 6), 0.0016)) }
+        return layered("divingmask", layers, strokes: s) { p in
+            // Shafts of light slanting down through the water.
+            Int((simd_dot(p, P(0.94, 0.34)) + 3) / 0.2) % 2 == 0 ? c(0.55) : c(0.36)
+        }
     }()
 }
