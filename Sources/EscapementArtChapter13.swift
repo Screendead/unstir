@@ -744,6 +744,102 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 78, Analemma, hex, clocks 1+.
-    static func plate78() -> Plate? { nil }
+    // MARK: 78 Analemma
+
+    /// Problem 78, Analemma, hex, clocks 1+: the sun's place at the same hour every week of a year, a tall slender
+    /// figure-of-eight of bold dots, leaning along the clear lane at one o'clock over a horizon of fields and hills,
+    /// with a sighting pole standing from the fields; the summer solstice's dot in the second ink.
+    static func plate78() -> Plate {
+        var plate = Plate()
+        let up = P(sin(.pi / 6), -cos(.pi / 6)), across = P(-up.y, up.x)
+        let scale = 0.016, wide = 0.032, middle = 0.57
+        /// The sun's place on day d: its declination along the lane, the equation of time across it, in degrees.
+        func sun(_ d: Double) -> P {
+            let b = 2 * .pi * (d - 81) / 364
+            let minutes = 9.87 * sin(2 * b) - 7.53 * cos(b) - 1.5 * sin(b)
+            let declination = 23.44 * sin(2 * .pi * (d - 80) / 365)
+            return up * (middle + scale * declination) + across * (wide * minutes / 4)
+        }
+        let horizon = 0.44
+
+        // The sky ruled; the fields below the horizon.
+        let land = { () -> [P] in
+            let a = asin(horizon / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
+            return rim + [rim[0]]
+        }()
+        let hills = [P(-1.1, horizon)] + (0...44).map { i -> P in
+            let x = -1.1 + 2.2 * Double(i) / 44
+            return P(x, horizon - 0.04 - 0.09 * pow(max(0, sin(x * 3.1 + 0.8)), 2) - 0.035 * pow(max(0, sin(x * 7.3)), 2))
+        } + [P(1.1, horizon), P(-1.1, horizon)]
+        // The sky ruled heavier toward the horizon.
+        for rule in hatch([Array(glass), land, hills], angle: 0.3, gap: K.groundGap) {
+            let y = (rule[0].y + rule[1].y) / 2
+            plate.line(rule, K.groundWidth + 0.009 * min(1, max(0, (y + 0.4) / 0.85)))
+        }
+        K.mass(&plate, hills)
+        for i in 0..<26 {
+            let x = -1.0 + 2 * rnd(78, i), h = 0.03 + 0.03 * rnd(79, i)
+            let base = horizon - 0.03
+            K.mass(&plate, [P(x - 0.018, base), P(x, base - h), P(x + 0.018, base), P(x - 0.018, base)])
+        }
+        // The fields in furrows running to the horizon.
+        plate.fill(land)
+        let vanish = P(0.15, horizon)
+        for k in -24...24 {
+            let far = vanish + P(Double(k) * 0.04, 0.05), near = P(0.15 + Double(k) * 0.16, 1.3)
+            plate.line([far, near], k % 3 == 0 ? 0.014 : 0.006)
+        }
+        for y in [0.5, 0.6, 0.76, 0.98] { plate.line([P(-1.1, y), P(1.1, y)], heavy) }
+        plate.line([P(-1.1, horizon), P(1.1, horizon)], heavy)
+        // The bank in the foreground, dark, its grass in bone.
+        let bank = [P(-1.1, 1.1)] + (0...40).map { i -> P in
+            let x = -1.1 + 2.2 * Double(i) / 40
+            return P(x, 0.84 - 0.03 * sin(x * 4 + 1) - 0.012 * sin(x * 13))
+        } + [P(1.1, 1.1), P(-1.1, 1.1)]
+        K.mass(&plate, bank)
+        for i in 0..<60 {
+            let x = -1.0 + 2 * Double(i) / 60 + 0.01 * rnd(90, i), y = 0.88 + 0.12 * rnd(91, i)
+            plate.line([P(x, y), P(x + 0.012 * (rnd(92, i) - 0.5), y - 0.04)], medium, .bone)
+        }
+
+        // The sighting pole, ringed, with its vane.
+        let pole = -0.243, top = -0.46
+        K.mass(&plate, K.band(P(pole, horizon + 0.12), P(pole, top), 0.034))
+        for y in stride(from: top + 0.1, to: horizon + 0.1, by: 0.1) {
+            plate.line([P(pole - 0.017, y), P(pole + 0.017, y)], heavy, .bone)
+        }
+        plate.fill(arc(P(pole, top - 0.03), 0.032), .black)
+        plate.line(arc(P(pole - 0.01, top - 0.04), 0.012, from: 3.3, to: 4.6), medium, .bone)
+        K.mass(&plate, [P(pole, top - 0.06), P(pole + 0.11, top - 0.1), P(pole + 0.09, top - 0.06), P(pole + 0.11, top - 0.02), P(pole, top - 0.04), P(pole, top - 0.06)])
+        plate.line([P(pole, top - 0.06), P(pole, top - 0.11)], heavy)
+        // Its shadow on the fields.
+        K.mass(&plate, [P(pole - 0.017, horizon + 0.12), P(pole + 0.017, horizon + 0.12), P(pole + 0.34, horizon + 0.3), P(pole + 0.3, horizon + 0.31), P(pole - 0.017, horizon + 0.12)])
+
+        // The year's path, faint, under its dots.
+        let path = (0...365).map { sun(Double($0)) }
+        plate.line(path, heavy)
+        // A dot every ten days, the summer solstice's in the second ink.
+        for d in stride(from: 2, to: 365, by: 10) where abs(d - 172) > 6 {
+            let c = sun(Double(d)), r = abs(simd_dot(c, up) - middle) < 0.13 || simd_dot(c, up) < middle ? 0.026 : 0.019
+            plate.fill(arc(c, r + 0.008))
+            plate.fill(arc(c, r), .black)
+            plate.line(arc(c + P(-0.006, -0.006), r * 0.55, from: 3.4, to: 4.5), fine, .bone)
+        }
+        let solstice = sun(172)
+        plate.fill(arc(solstice, 0.05))
+        plate.fill(arc(solstice, 0.04), .second)
+        plate.line(arc(solstice, 0.04), medium)
+        for k in 0..<12 {
+            let a = Double(k) * .pi / 6
+            plate.line([polar(solstice, 0.055, a), polar(solstice, 0.08, a)], heavy)
+        }
+        // The equinoxes' crossing, ticked across the figure.
+        let equinox = sun(80)
+        plate.line([equinox - across * 0.09, equinox + across * 0.09], medium)
+
+        callout(&plate, "A", from: sun(300) + across * 0.03, to: P(0.74, -0.06))
+        callout(&plate, "B", from: P(pole, 0.0), to: P(-0.62, -0.02))
+        callout(&plate, "C", from: P(-0.6, horizon - 0.05), to: P(-0.72, 0.28))
+        return plate
+    }
 }
