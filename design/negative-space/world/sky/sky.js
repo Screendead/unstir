@@ -35,7 +35,7 @@ function rng(seed) { // mulberry32
 
 // ---------------------------------------------------------------- the sky's plan (points, world y grows downwards)
 const TIER_TOP = 1040, TIER_H = 1020;
-const FIG_Y = 572;                                   // a figure's centre below its tier's top
+const FIG_Y = 552;                                   // a figure's centre below its tier's top
 const tierTop = (i) => TIER_TOP + i * TIER_H;
 const tierScroll = (i) => tierTop(i) + 30;           // the scroll that frames tier i
 const END_TOP = tierTop(4);
@@ -287,7 +287,7 @@ const HOME = AX ? {
   star: [62, 444], next: [112, 438], place: [112, 484],
 } : {
   moon: [116, 272, 124], daily: [212, 254], streak: [212, 279], archive: [212, 346], arc: [214, 312, 172],
-  planets: [[84, 596], [220, 562], [356, 540]], pd: 114,
+  planets: [[84, 606], [220, 560], [356, 544]], pd: 114,
   star: [334, 802], next: [268, 810], place: [268, 778], sub: [268, 836],
 };
 const PACKS = [
