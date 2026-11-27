@@ -3,8 +3,7 @@
 import Foundation
 import simd
 
-/// Chapter 10, Countdown: problems 55 to 60's plates, drawn with `Kit`. Not drawn yet: each falls back to
-/// the shared plate.
+/// Chapter 10, Countdown: problems 55 to 60's plates, drawn with `Kit`.
 extension EscapementArt {
     /// A lump with a ragged edge about `c`, the same on every run for its seed.
     private static func lump(_ c: P, _ r: Double, seed: Int, squash: Double = 0.7) -> [P] {
@@ -556,6 +555,70 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 60, Zero hour, hex, clocks 1-.
-    static func plate60() -> Plate? { nil }
+    /// Problem 60, Zero hour, hex, clocks 1-: a round bomb on the floor, its collar and cast highlights, with its lit
+    /// fuse snaking out of it up past twelve and round the rim to the left; the fuse's spark in the second ink, at its
+    /// burning end in the lane at nine o'clock.
+    static func plate60() -> Plate {
+        var plate = Plate()
+        let c = P(0.12, 0.3), radius = 0.44
+        let body = arc(c, radius)
+        let collarAt = polar(c, radius, -1.25), up = simd_normalize(collarAt - c), side = P(-up.y, up.x)
+        let collar = [collarAt + side * 0.09 - up * 0.03, collarAt + side * 0.08 + up * 0.08,
+                      collarAt - side * 0.08 + up * 0.08, collarAt - side * 0.09 - up * 0.03, collarAt + side * 0.09 - up * 0.03]
+        let spark = P(-0.72, 0.0)
+        let fusePath = spline([collarAt + up * 0.08, P(0.24, -0.36), P(0.14, -0.62), P(-0.08, -0.84), P(-0.42, -0.8),
+                               P(-0.72, -0.56), P(-0.84, -0.26), spark + P(-0.03, -0.05)], 14)
+        let fuse = Kit.ribbon(fusePath, 0.055)
+        let shadow = ellipse(P(0.3, 0.77), 0.36, 0.05)
+        Kit.ground(&plate, angle: 0.45, around: [body, collar, fuse, shadow])
+
+        Kit.mass(&plate, shadow)
+        // The bomb: cast iron in ink, the light across it in bold rings about the lamp, its highlight cut in section.
+        Kit.mass(&plate, body)
+        let light = c + P(0.36, -0.4)
+        for k in 0..<12 {
+            let ring = arc(light, 0.2 + 0.08 * Double(k))
+            var run: [P] = []
+            for p in ring {
+                if simd_distance(p, c) < radius - 0.03 { run.append(p) } else if run.count > 1 {
+                    plate.line(run, 0.046, .bone)
+                    run = []
+                } else { run = [] }
+            }
+            if run.count > 1 { plate.line(run, 0.046, .bone) }
+        }
+        let shine = ellipse(c + P(0.2, -0.16), 0.1, 0.05, turned: 0.75)
+        Kit.solid(&plate, shine, angle: -0.6, gap: 0.022, edge: 0.012)
+
+        // The collar and the fuse, its cord laid in a twist, charred toward the spark.
+        Kit.mass(&plate, collar)
+        plate.line([collarAt + side * 0.085 + up * 0.02, collarAt - side * 0.085 + up * 0.02], 0.016, .bone)
+        Kit.mass(&plate, fuse)
+        for (i, p) in fusePath.enumerated() where i % 3 == 1 && i < fusePath.count - 8 {
+            let d = simd_normalize(fusePath[i + 1] - fusePath[i - 1]), n = P(-d.y, d.x)
+            plate.line([p + n * 0.02 - d * 0.012, p - n * 0.02 + d * 0.012], 0.012, .bone)
+        }
+        for i in (fusePath.count - 8)..<(fusePath.count - 1) where i % 2 == 0 {
+            plate.fill(arc(fusePath[i], 0.012))
+        }
+
+        // The spark: a burst of rays about a hot core.
+        for k in 0..<10 {
+            let a = Double(k) * .pi / 5 + 0.2, l = k % 2 == 0 ? 0.12 : 0.08
+            let ray = [polar(spark, 0.025, a - 0.22), polar(spark, l, a), polar(spark, 0.025, a + 0.22), polar(spark, 0.025, a - 0.22)]
+            plate.fill(ray, .second)
+            plate.line(ray, fine)
+        }
+        plate.fill(arc(spark, 0.035), .second)
+        plate.line(arc(spark, 0.035), medium)
+        plate.fill(arc(spark, 0.014))
+        for (k, a) in [-2.4, -1.2, 0.9, 2.2].enumerated() {
+            plate.fill(arc(polar(spark, 0.16 + 0.02 * Double(k % 2), a), 0.012), .second)
+        }
+
+        callout(&plate, "A", from: collarAt + up * 0.04, to: P(0.42, -0.08))
+        callout(&plate, "B", from: P(-0.42, -0.8), to: P(-0.3, -0.62))
+        callout(&plate, "C", from: c + P(0.26, -0.2), to: P(0.74, 0.62))
+        return plate
+    }
 }
