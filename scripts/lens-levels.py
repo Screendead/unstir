@@ -17,6 +17,11 @@ Measures, per level:
 Usage: scripts/lens-levels.py table [doc]          a row per level of a doc's table (docs/lens-tables.md)
        scripts/lens-levels.py deal <layout> <lens slots> <depth> <seed> [count] [--lens-entries n] [--max-whole n]
                                                     seeded deals meeting the rules, measured, one TSV line each
+       scripts/lens-levels.py pick <spec.tsv> [first n] [last n]
+                                                    for each spec row (n, layout, lens slots, depth, lens entries,
+                                                    chain, faint), seeded deals until `tries` pass scripts/solve.sh
+                                                    at par, the best kept: most lenses stacked, most entries buried,
+                                                    the twists spread over their rods; one TSV line each
        scripts/lens-levels.py time <layout> <lens slots> <depth>...
                                                     one deal at each depth through scripts/solve.sh, timed"""
 import importlib.util
@@ -114,50 +119,75 @@ def fmt(m):
     return "\t".join(f"{m[c]:.2f}" if isinstance(m[c], float) else str(m[c]) for c in COLUMNS)
 
 
-def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, chain=0.0, tries=4000):
+def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, chain=0.0, tries=4000, faint=None):
     """A random deal of `depth` entries keeping the rules, or None. `chain` is the chance that each entry must reach the
-    one before it, which leaves fewer right moves at each step and fewer stacks for the solver to prove."""
+    one before it, which leaves fewer right moves at each step and fewer stacks for the solver to prove. `lens_entries`
+    fixes how many lens entries there are, shared out among the lenses as evenly as it goes, each lens's steps a split
+    of what it nets; `faint` is the chance that a twist is of one step."""
     rods = lt.LAYOUTS[layout]
     twists = [r for r in range(len(rods)) if r not in lenses]
     # Twist counts each pair allows over a lens: enough rim drag.
     ok = {(l, t): [s for s in range(-5, 6) if s and lt.rim_drag(rods, l, t, s) / lt.PITCH >= 4]
           for l in lenses for t in twists if lt.interacts(rods, lenses, l, t)}
     for _ in range(tries):
-        stack, nets = [], {l: 0 for l in lenses}
-        want_lens = lens_entries if lens_entries is not None else None
+        n_lens = lens_entries if lens_entries is not None else rng.randint(len(lenses), min(3 * len(lenses), depth // 2))
+        if n_lens > 3 * len(lenses) or n_lens < len(lenses):
+            return None
+        order = sorted(lenses)
+        rng.shuffle(order)
+        counts = {l: n_lens // len(lenses) + (k < n_lens % len(lenses)) for k, l in enumerate(order)}
+        steps = {}
+        for l, k in counts.items():
+            net = rng.randint(k, 3)
+            split = [1] * k
+            for _ in range(net - k):
+                split[rng.randrange(k)] += 1
+            rng.shuffle(split)
+            steps[l] = split
+        # Lens entries never reach each other, so a chain keeps a twist between any two.
+        n_twist = depth - n_lens
+        if chain >= 1 and n_lens > n_twist + 1:
+            return None
+        if chain >= 1:
+            gaps = set(rng.sample(range(n_twist + 1), n_lens))
+            kinds = []
+            for g in range(n_twist + 1):
+                kinds += [True] * (g in gaps) + [False] * (g < n_twist)
+        else:
+            kinds = [True] * n_lens + [False] * n_twist
+            rng.shuffle(kinds)
+        stack = []
         for k in range(depth):
-            left = depth - k
-            lens_left = (want_lens - sum(r in lenses for r, _ in stack)) if want_lens is not None else None
             options = []
             for r in range(len(rods)):
+                if (r in lenses) != kinds[k]:
+                    continue
                 newest = max((i for i, e in enumerate(stack) if e[0] == r), default=None)
                 if newest is not None and all(not lt.interacts(rods, lenses, r, e[0]) for e in stack[newest + 1:]):
                     continue
                 if r in lenses:
-                    if lens_left is not None and lens_left <= 0:
-                        continue
-                    for s in (1, 2, 3):
-                        if nets[r] + s <= 3:
-                            options.append((r, s))
+                    if steps[r]:
+                        options.append((r, steps[r][0]))
                 else:
-                    if lens_left is not None and lens_left >= left:
-                        continue
                     under = {e[0] for e in stack if e[0] in lenses and lt.interacts(rods, lenses, e[0], r)}
-                    for s in range(-5, 6):
-                        if s and all(s in ok[(l, r)] for l in under):
-                            options.append((r, s))
+                    counts_ok = [s for s in range(-5, 6) if s and all(s in ok[(l, r)] for l in under)]
+                    if faint is not None and counts_ok:
+                        ones = [s for s in counts_ok if abs(s) == 1]
+                        if ones and rng.random() < faint:
+                            counts_ok = ones
+                        else:
+                            counts_ok = [s for s in counts_ok if abs(s) > 1] or counts_ok
+                    options += [(r, s) for s in counts_ok]
             if stack and rng.random() < chain:
                 linked = [o for o in options if lt.interacts(rods, lenses, o[0], stack[-1][0])]
-                options = linked or options
+                options = linked
             if not options:
                 break
             r, s = rng.choice(options)
             stack.append((r, s))
             if r in lenses:
-                nets[r] += s
+                steps[r].pop(0)
         if len(stack) < depth:
-            continue
-        if any(not any(r == l for r, _ in stack) for l in lenses):
             continue
         m = measure(layout, lenses, stack)
         if m["problems"] or m["depth"] != depth:
@@ -205,10 +235,40 @@ def main():
                          float(args[args.index("--chain") + 1]) if "--chain" in args else 0.0)
             if found:
                 print(f"{layout}\t{args[2]}\t{fmt(found[1])}\t{text(found[0])}")
+    elif mode == "pick":
+        rows = [l.rstrip("\n").split("\t") for l in open(args[1]) if l.strip() and not l.startswith("#")]
+        lo = int(args[2]) if len(args) > 2 else 0
+        hi = int(args[3]) if len(args) > 3 else 10 ** 9
+        for n, layout, slots, depth, n_lens, chain, faint, keep in rows:
+            if not lo <= int(n) <= hi:
+                continue
+            lenses = {int(x) for x in slots.split(",")}
+            rng = random.Random(int(n))
+            passed, tried, start = [], 0, time.time()
+            while len(passed) < int(keep) and tried < 400:
+                tried += 1
+                found = deal(layout, lenses, int(depth), rng, int(n_lens), chain=float(chain), faint=float(faint))
+                if not found:
+                    continue
+                stack, m = found
+                out, _ = solve(layout, lenses, text(stack))
+                entries = re.search(r"^entries (\d+)", out, re.M)
+                opt = re.search(r"^optimum (\d+)", out, re.M)
+                if not entries or not opt or int(entries.group(1)) != len(stack) or int(opt.group(1)) != len(stack):
+                    continue
+                uses = [sum(r == t for r, _ in stack) for t in range(len(lt.LAYOUTS[layout])) if t not in lenses]
+                spread = min(uses) / max(uses)
+                passed.append(((m["stacked"], m["buried"], spread, -m["right"]), stack, m))
+            if not passed:
+                print(f"{n}\t{layout}\t{slots}\tnone in {tried}", flush=True)
+                continue
+            _, stack, m = max(passed, key=lambda p: p[0])
+            print(f"{n}\t{layout}\t{slots}\t{fmt(m)}\t{text(stack)}\t{len(passed)} of {tried}, {time.time() - start:.0f} s", flush=True)
     elif mode == "time":
         layout, lenses = args[1], {int(x) for x in args[2].split(",")}
         for depth in map(int, args[3:]):
-            found = deal(layout, lenses, depth, random.Random(depth), chain=float(os.environ.get("CHAIN", "0")))
+            found = deal(layout, lenses, depth, random.Random(depth), chain=float(os.environ.get("CHAIN", "0")),
+                         lens_entries=int(os.environ["LENS"]) if "LENS" in os.environ else None)
             if not found:
                 print(f"{depth}: no deal")
                 continue
