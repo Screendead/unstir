@@ -318,8 +318,93 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 46, Ebb tide, pent, clocks 0+,1-.
-    static func plate46() -> Plate? { nil }
+    /// Problem 46, Ebb tide, pent, clocks 0+,1-: a pier's piles standing in a sea drawn back, its swell in bands of
+    /// ink, the wet tide-line high on the piles, a waning moon over it and its track on the water, and a tide gauge
+    /// on the nearest pile; the gauge's marker at the water in the second ink.
+    static func plate46() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, deck = -0.05, wet = 0.04, water = 0.31, gaugeX = 0.07
+        let piles: [Double] = [-0.8, -0.45, -0.12, gaugeX]
+        func swell(_ j: Int, _ x: Double) -> Double {
+            let y0 = water + 0.05 + Double(j) * 0.1, a = 0.012 + 0.004 * Double(j)
+            return y0 + a * sin(x * (7 - 0.4 * Double(j)) + 1.3 * Double(j)) + 0.5 * a * sin(x * 13 + Double(j))
+        }
+        let sea = box(P(-1.1, water), P(1.1, 1.1))
+        let moon = polar(o, 0.79, Kit.clock(1.3)), lunar = 0.17
+
+        Kit.ground(&plate, angle: 0.3, around: [sea, arc(moon, lunar)])
+        // The sea drawn back: the swell in bands, each heaviest at its crest, then the shingle bared at the foot.
+        plate.fill(sea)
+        plate.line([P(-1.1, water), P(1.1, water)], 0.016)
+        for j in 0..<5 {
+            let xs = stride(from: -1.1, through: 1.1, by: 0.01).map { $0 }
+            let top = xs.map { P($0, swell(j, $0)) }
+            let bottom = xs.reversed().map { x -> P in P(x, swell(j, x) + 0.018 + 0.026 * max(0, sin(x * (7 - 0.4 * Double(j)) + 1.3 * Double(j)))) }
+            Kit.mass(&plate, top + bottom + [top[0]])
+        }
+        let shingle = smoothed([P(-1.1, 0.8), P(-0.6, 0.83), P(-0.2, 0.79), P(0.3, 0.82), P(0.7, 0.78), P(1.1, 0.8)]) + [P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.8)]
+        Kit.mass(&plate, shingle)
+        // The moon's track on the water, broken by the swell.
+        for j in 0..<4 {
+            let y = swell(j, moon.x) - 0.035, w = 0.05 + 0.025 * Double(j)
+            plate.line([P(moon.x - w, y), P(moon.x + w, y)], heavy)
+        }
+
+        // The moon, waning: its lit side bone, its dark side in ink.
+        plate.fill(arc(moon, lunar))
+        let shade = arc(moon, lunar, from: .pi / 2, to: 3 * .pi / 2) + ellipse(moon, 0.06, lunar, from: 3 * .pi / 2, to: .pi / 2).reversed()
+        Kit.mass(&plate, shade)
+        for (d, r) in [(P(0.06, -0.05), 0.022), (P(0.08, 0.05), 0.017), (P(0.02, 0.09), 0.012)] { plate.line(arc(moon + d, r), medium) }
+        plate.line(arc(moon, lunar), heavy)
+
+        // The pier: piles dry and grained above the tide-line, wet and black below it, braced, the deck and its rail.
+        for (k, x) in piles.enumerated() {
+            let dry = box(P(x - 0.038, deck), P(x + 0.038, wet))
+            Kit.solid(&plate, dry, angle: .pi / 2, gap: 0.025, width: fine)
+            Kit.mass(&plate, box(P(x - 0.038, wet), P(x + 0.038, water)))
+            let drowned = box(P(x - 0.034, water), P(x + 0.034, 0.82))
+            plate.fill(drowned)
+            plate.lines(hatch([drowned], angle: 0.25, gap: 0.03), heavy)
+            plate.line([P(x - 0.034, water), P(x - 0.034, 0.82)], heavy)
+            plate.line([P(x + 0.034, water), P(x + 0.034, 0.82)], heavy)
+            let weed = (0...8).map { i -> P in P(x - 0.038 + 0.0095 * Double(i), wet + (i % 2 == 0 ? 0.0 : 0.02 + 0.015 * rnd(46, k * 9 + i))) }
+            plate.line(weed, medium, .bone)
+            if k + 1 < piles.count {
+                let next = piles[k + 1]
+                Kit.mass(&plate, Kit.band(P(x + 0.03, deck + 0.02), P(next - 0.03, water - 0.08), 0.026))
+                Kit.mass(&plate, Kit.band(P(next - 0.03, deck + 0.02), P(x + 0.03, water - 0.08), 0.026))
+            }
+        }
+        Kit.mass(&plate, box(P(-1.1, deck - 0.06), P(gaugeX + 0.12, deck)))
+        for x in stride(from: -0.98, through: gaugeX + 0.1, by: 0.07) {
+            plate.line([P(x, deck - 0.055), P(x, deck - 0.005)], medium, .bone)
+        }
+        for x in stride(from: -0.95, through: gaugeX + 0.1, by: 0.21) { Kit.mass(&plate, Kit.band(P(x, deck - 0.06), P(x, deck - 0.2), 0.024)) }
+        Kit.mass(&plate, Kit.band(P(-1.1, deck - 0.2), P(gaugeX + 0.11, deck - 0.2), 0.026))
+
+        // The tide gauge on the nearest pile: a board ruled in feet, the marker at the water.
+        let board = box(P(gaugeX + 0.04, wet - 0.04), P(gaugeX + 0.12, water + 0.05))
+        Kit.cut(&plate, board, edge: heavy)
+        for (i, y) in stride(from: wet - 0.02, through: water + 0.04, by: 0.03).enumerated() {
+            plate.line([P(gaugeX + 0.04, y), P(gaugeX + (i % 3 == 0 ? 0.1 : 0.07), y)], i % 3 == 0 ? heavy : medium)
+        }
+        for (i, n) in ["IV", "III", "II"].enumerated() {
+            plate.lines(Kit.numeral(n, at: P(gaugeX + 0.155, wet + 0.015 + 0.09 * Double(i)), height: 0.04, squeeze: 0.8), medium)
+        }
+        let marker = [P(gaugeX + 0.125, water), P(gaugeX + 0.2, water - 0.04), P(gaugeX + 0.2, water + 0.04), P(gaugeX + 0.125, water)]
+        plate.fill(marker, .second)
+        plate.line(marker, medium)
+
+        // The ebb, cut in the shingle.
+        plate.fill(Kit.band(P(-0.2, 0.9), P(0.22, 0.9), 0.045))
+        plate.fill(Kit.barb(P(0.36, 0.9), toward: 0, size: 0.14))
+
+        callout(&plate, "A", from: P(-0.26, wet + 0.08), to: P(-0.12, -0.42))
+        callout(&plate, "B", from: moon + P(-0.1, 0.06), to: P(0.2, -0.62))
+        callout(&plate, "C", from: marker[1] + P(0, 0.02), to: P(0.6, 0.18))
+        callout(&plate, "D", from: P(0.7, swell(3, 0.7) + 0.02), to: P(0.82, 0.55))
+        return plate
+    }
 
     /// Problem 47, Turnback, hex, clocks 1+,3-.
     static func plate47() -> Plate? { nil }
