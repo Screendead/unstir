@@ -554,7 +554,7 @@ final class PlayLayoutTests: XCTestCase {
                                        "UNSTIR_TRIED": Level.dailyID(Date())], {}),
             ("the daily with undos", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
             ("the daily clean", ["UNSTIR_SCREEN": "clean", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
-            ("Lens 25 completing Lens on a replay", ["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "25", "UNSTIR_SCREEN": "clean",
+            ("Lens 75 completing Lens on a replay", ["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "75", "UNSTIR_SCREEN": "clean",
                                                      "UNSTIR_OWNED": "first-stir,lens", "UNSTIR_CLOCK": "0",
                                                      "UNSTIR_TRIED": Pack.lens.levels.last!.id],
              { for level in Pack.lens.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) } }),

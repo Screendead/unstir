@@ -164,17 +164,68 @@ final class LensTests: XCTestCase {
         (.hex, [0, 2, 5], "1:+3,0:+1,2:+2,3:-4,6:+5,5:+3,4:-3,0:+2,1:-3,2:+1"),
         (.hex, [0], "3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,0:+1,5:-5,3:+2"),
         (.eye, [2, 3], "0:+4,2:+2,1:-3,3:+1,0:-4,3:+2,1:+5,2:+1,0:+3,1:-2"),
-        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1"),
+        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1"),        (.tri, [0, 2], "1:+3,2:+1,1:+4,2:+1,1:-3,2:+1,1:-2,0:+1,1:-5,0:+1,1:+1,0:+1,1:-5"),
+        (.eye, [2, 3], "2:+1,1:+5,2:+1,0:+5,2:+1,1:+4,0:-1,1:-1,0:+4,3:+1,1:-3,3:+2,0:-5,1:+4"),
+        (.hex, [1, 4], "6:+3,1:+1,0:-4,1:+1,6:+3,5:+5,4:+1,3:-1,2:+4,3:-3,4:+1,3:+3,1:+1,6:+2,5:-5"),
+        (.eye, [0, 2], "1:+2,3:-3,1:+4,0:+1,3:+3,0:+1,3:-5,1:-3,2:+1,1:+4,2:+2,1:+3,3:+4,0:+1,1:+1,3:+3"),
+        (.hex, [0, 3], "2:-2,1:+2,6:+4,0:+1,2:-5,0:+1,6:+3,0:+1,1:-5,3:+1,6:+4,5:+5,4:+1,3:+2,4:+1,5:-5,4:+4"),
+        (.eye, [1, 3], "3:+1,0:-1,2:-2,0:+1,2:-4,1:+1,0:+2,1:+1,0:+4,3:+1,0:-2,2:+3,0:-5,3:+1,0:-3,2:+2,1:+1,2:+5"),
+        (.eye, [1, 2, 3], "0:-5,1:+1,0:-4,2:+1,0:+5,2:+1,0:+4,1:+1,0:+5,3:+1,0:+1,3:+1,0:-4,3:+1,0:+5,2:+1,0:+1,1:+1,0:+1"),
+        (.hex, [2, 6], "3:-3,6:+1,0:-2,6:+1,5:+3,4:+1,5:-3,6:+1,0:-3,4:-5,5:-4,0:+5,1:-4,2:+1,3:+5,4:-2,2:+1,1:-3,2:+1,0:-4"),
+        (.eye, [0, 3], "3:+1,1:+2,2:+5,1:-1,0:+1,1:-3,2:+3,0:+1,2:-2,1:+2,0:+1,2:-5,1:+4,2:-4,3:+1,1:-2,2:-4,1:+5,3:+1,1:-2,2:+4"),
+        (.hex, [3, 5], "6:+2,0:-4,3:+1,4:+3,0:-2,6:-5,5:+1,3:+1,0:+2,5:+1,6:+1,1:-2,2:-3,1:-3,2:+5,0:-1,3:+1,4:+1,0:+3,5:+1,4:+2,0:+1"),
+        (.eye, [2, 3], "1:+5,0:+2,3:+1,1:+4,0:+2,1:-2,2:+1,1:-2,0:-1,1:-3,0:-1,3:+1,0:+4,1:-2,3:+1,0:+5,1:-3,0:-4,2:+1,0:-4,2:+1,0:-4,1:+4"),
+        (.hex, [1, 3, 5], "0:+4,6:-3,1:+1,6:-4,2:-2,0:-3,2:-4,0:+5,6:-4,0:+3,1:+1,3:+1,4:+1,5:+2,0:+5,4:-5,0:-2,2:+5,3:+1,0:+3,3:+1,0:-5,5:+1,4:+3"),
+        (.eye, [1, 2], "0:+1,1:+1,3:-4,0:-4,3:-4,0:+4,3:-5,1:+1,3:+5,0:+4,1:+1,3:-5,0:-2,2:+1,0:-1,2:+1,0:+4,3:-2,0:+3,3:-3,0:+2,2:+1,0:+4,3:+3"),
+        (.hex, [0, 2, 5], "3:-4,4:-3,3:+3,2:+1,1:+4,6:+5,1:-4,6:+5,1:+4,0:+1,1:+3,2:+1,1:+2,6:+4,0:+1,6:+5,1:+4,6:+1,5:+2,4:+5,3:+1,4:-1,0:+1,4:-4,5:+1,6:-5"),
+        (.hex, [0, 1, 4], "3:+5,2:+3,3:+4,0:+1,5:+1,6:-3,0:+1,2:+2,0:+1,5:+1,6:+2,1:+1,6:-3,1:+1,6:+2,1:+1,4:+1,5:+3,6:-2,5:+5,6:-4,5:+4,4:+2,5:-1,6:+1,5:+3,6:-3"),
+        (.hex, [2, 4, 6], "1:-3,0:+1,1:+5,6:+2,0:+2,4:+1,2:+1,1:-4,0:+5,1:-4,0:+1,5:-1,6:+1,0:-4,3:-4,0:+2,4:+1,3:-1,0:-1,5:-4,4:+1,3:-5,0:-5,3:+3,2:+1,0:-2,2:+1,3:+4"),
+        (.hex, [1, 3, 6], "5:+2,4:+5,3:+1,1:+1,6:+1,0:+3,3:+1,2:+3,0:+1,4:-4,3:+1,4:-3,0:-2,2:+3,1:+2,0:+1,6:+1,5:+3,4:-1,5:-4,4:+4,5:+5,6:+1,5:+2,4:+2,0:-2,2:-3,0:+1"),
+        (.hex, [0, 3, 6], "1:-2,2:-1,1:+1,6:+2,5:+3,0:+1,4:+1,3:+1,2:+5,1:-2,6:+1,1:+5,2:+4,1:-1,2:+3,1:+5,2:-1,1:-5,0:+1,1:-1,2:+5,0:+1,2:-2,3:+1,2:-3,1:-4,2:+1,3:+1,2:+1"),
+        (.hex, [1, 2, 4], "0:+2,2:+1,3:-3,0:+4,3:-3,0:-3,5:-3,4:+1,5:+3,4:+2,5:-2,6:+3,0:-1,2:+1,3:-3,2:+1,0:-3,5:-3,0:+5,1:+1,6:-4,5:-3,6:-5,1:+1,6:-4,1:+1,0:-4,5:-5,6:-3,5:-3"),
+        (.hex, [0, 1, 3], "1:+1,6:-3,0:+1,5:-3,6:-3,1:+1,2:-5,0:+1,6:+3,1:+1,6:-5,5:-1,6:-2,5:+1,6:-1,5:-2,6:-2,5:+5,6:+4,5:+4,6:-1,0:+1,4:-2,5:+5,4:+4,3:+1,4:-1,3:+1,2:-1,3:+1,2:-2"),
+        (.hex, [2, 4, 5], "4:+1,3:+1,0:+5,1:-3,2:+1,3:+1,0:+2,4:+1,3:-5,0:-3,3:-4,0:+3,6:-4,5:+1,6:-4,1:+2,2:+1,1:+4,2:+1,0:-5,6:-4,5:+1,0:-2,6:-4,0:-2,4:+1,0:-3,1:-4,6:+1,1:+3,6:+2,5:+1"),
+        (.hex, [2, 3, 6], "3:+1,0:-4,1:+4,0:+1,6:+1,5:-5,4:-3,5:-2,0:+2,1:+4,6:+1,5:-4,4:+1,0:-4,4:+5,0:+5,3:+1,0:+2,4:-4,3:+1,4:-1,5:+4,6:+1,0:-4,1:-4,0:-1,2:+1,0:-2,2:+1,0:-2,2:+1,1:-4,0:+3"),
+        (.hex, [0, 2, 4, 5], "3:+3,2:+1,1:-5,6:+2,1:+1,0:+1,3:-4,0:+1,1:-4,0:+1,3:-2,4:+1,3:+5,4:+1,3:+1,4:+1,3:+1,2:+1,1:+3,6:+2,5:+1,6:+1,5:+1,6:+1,5:+1,6:+1,1:-2,2:+1,3:+2"),
+        (.hex, [1, 2, 4, 5], "4:+1,3:+3,0:-4,3:+2,2:+1,3:+3,4:+1,0:+2,1:+1,0:+3,1:+1,0:+4,5:+1,6:+2,0:-4,6:-1,0:+3,1:+1,6:-3,5:+1,6:+4,5:+1,0:-5,6:-1,0:-2,6:+1,0:-1,4:+1,3:+5,0:+2,2:+1,3:-2,2:+1,3:+1"),
+        (.hex, [2, 3, 5, 6], "1:+2,6:+1,0:+3,1:-5,6:+1,1:+3,0:-3,2:+1,0:+4,1:+3,2:+1,0:+3,3:+1,4:+4,0:+3,3:+1,4:-5,3:+1,0:-1,4:+2,0:+3,5:+1,0:-5,4:+4,0:-1,5:+1,0:-4,1:-5,6:+1,0:-2,4:+3,5:+1,0:+4,2:+1"),
+        (.hex, [1, 2, 3, 4, 5, 6], "3:+1,0:-1,2:+1,0:-4,4:+1,0:-5,6:+1,0:+2,1:+1,0:-2,1:+1,0:+1,5:+1,0:+5,2:+1,0:-3,1:+1,0:-5,2:+1,0:-3,4:+1,0:-5,3:+1,0:+4,6:+1,0:+1,3:+1,0:-4,6:+1,0:+1,5:+1,0:+5,4:+1,0:+3,5:+1"),
+        (.hex, [0, 1, 3, 4], "4:+1,5:+1,6:+1,5:+1,6:+4,5:+1,6:+1,5:-5,0:+1,6:+2,5:-3,4:+1,5:-3,4:+1,5:-5,0:+1,6:-2,5:+5,0:+1,2:+4,1:+1,2:+2,1:+1,6:+2,1:+1,2:-1,3:+1,2:-3,3:+1,2:+1,3:+1"),
+        (.hex, [1, 3, 4, 6], "0:-4,3:+1,2:-4,0:+5,2:+1,1:+1,2:+3,3:+1,0:+1,4:+1,5:-2,4:+1,5:+2,4:+1,5:-4,0:+1,5:-1,6:+1,0:-1,6:+1,5:-4,0:+3,1:+1,2:+4,0:+1,5:+2,6:+1,0:-5,5:-5,0:-1,2:+4,1:+1,0:-2,3:+1,0:+4,2:-4"),
+        (.hex, [0, 1, 2, 4], "0:+1,5:-2,6:-3,5:+1,0:+1,6:+2,5:-3,4:+1,5:+2,6:-3,1:+1,6:+3,5:+3,4:+1,3:+4,0:+1,6:+2,1:+1,6:-5,1:+1,6:-1,5:+3,4:+1,3:-3,2:+1,3:-1,2:+1,3:-2,2:+1,3:-2"),
+        (.hex, [1, 2, 3, 5, 6], "4:-2,0:-2,4:-5,0:+1,5:+1,0:+4,4:+2,3:+1,0:-5,4:-3,3:+1,4:-3,5:+1,0:-3,2:+1,0:-1,4:-3,5:+1,0:-2,1:+1,0:-1,3:+1,0:-4,6:+1,0:+1,1:+1,0:-3,1:+1,0:+5,2:+1,0:-5,2:+1,0:-3,6:+1,0:-3,6:+1"),
+        (.hex, [0, 3, 4, 6], "3:+1,2:+3,3:+1,2:+1,1:+5,2:-3,1:+1,0:+1,5:+1,4:+1,5:-4,6:+1,1:+4,6:+1,5:+4,0:+1,2:-1,3:+1,2:+3,1:+1,2:+1,1:+3,6:+1,5:-2,4:+1,5:-5,4:+1,5:+1,0:+1,5:-3"),
+        (.hex, [1, 2, 4, 5, 6], "2:+1,3:-3,4:+1,0:+3,3:+5,0:+5,6:+1,0:+4,5:+1,0:-5,3:+1,0:-4,3:-4,2:+1,3:-5,4:+1,3:+1,4:+1,3:+4,2:+1,0:-1,5:+1,0:+5,5:+1,0:+1,6:+1,0:+1,6:+1,0:+1,1:+1,0:+1,1:+1,0:+4,1:+1"),
+        (.hex, [1, 2, 3, 4], "1:+1,0:+1,2:+1,0:+4,2:+1,0:+2,3:+1,0:+2,5:+4,4:+1,5:-2,4:+1,0:-2,5:-2,0:+1,2:+1,0:+4,3:+1,0:-1,6:+4,0:+5,5:-5,6:-1,5:+4,6:-1,1:+1,6:+4,5:+3,6:-3,0:-3,1:+1,0:-2,3:+1,0:+1,4:+1"),
+        (.hex, [1, 3, 4, 5, 6], "5:+1,0:+5,6:+1,0:-4,5:+1,0:-5,4:+1,0:+4,5:+1,0:-4,3:+1,0:-4,2:-2,1:+1,0:+5,2:-1,3:+1,0:-1,2:+1,0:-4,2:-1,0:-5,1:+1,2:-3,3:+1,0:+3,6:+1,0:-5,2:-3,1:+1,0:-5,4:+1,0:+3,6:+1,0:+4,4:+1"),
+        (.hex, [0, 1, 2, 4], "5:-3,6:+3,1:+1,6:+5,1:+1,6:+1,5:-4,0:+1,5:-5,6:+3,5:+1,6:+4,5:-1,4:+1,3:+2,0:+1,6:-4,1:+1,6:-1,5:+2,0:+1,3:-5,4:+1,5:-2,4:+1,3:+4,2:+1,3:+1,2:+1,3:+4,2:+1"),
+        (.hex, [2, 3, 5, 6], "1:-3,6:+1,1:-1,6:+1,0:+3,5:+1,0:+4,3:+1,4:-1,0:+3,4:+3,0:+1,4:-1,3:+1,4:-1,0:+1,4:-1,0:-1,3:+1,0:+5,2:+1,0:+1,1:-2,2:+1,0:+1,4:+4,5:+1,0:+4,2:+1,1:+5,6:+1,1:+2,0:+3,4:-2,0:+2,5:+1"),
+        (.hex, [1, 2, 3, 5], "6:-2,5:+1,6:-4,0:+4,4:+2,3:+1,0:+4,2:+1,0:+2,6:+1,0:-3,6:+5,1:+1,0:-3,3:+1,0:+5,6:-3,1:+1,0:+2,1:+1,0:+1,3:+1,0:+2,6:+5,0:+2,2:+1,0:-1,2:+1,0:+1,4:+1,5:+1,6:+1,5:+1,6:+4"),
+        (.hex, [1, 2, 3, 4, 6], "5:+4,0:+1,2:+1,0:+2,6:+1,5:-2,6:+1,5:-2,6:+1,0:+1,2:+1,0:-4,1:+1,0:-1,5:+1,4:+1,5:-1,0:-4,1:+1,0:-2,5:+1,4:+1,0:+5,5:-1,4:+1,0:+1,2:+1,0:+4,1:+1,0:+1,3:+1,0:-3,3:+1,0:+3,3:+1"),
+        (.hex, [0, 1, 3, 6], "1:+1,2:-5,3:+1,2:-4,1:+1,2:+1,0:+1,5:-1,4:-3,5:+2,6:+1,5:+5,4:+1,5:+1,6:+1,5:+1,6:+1,5:+3,4:+1,3:+1,2:-4,1:+1,2:-1,0:+1,4:-1,5:-1,4:-5,3:+1,4:-5,5:-1,4:+5,0:+1"),
+        (.hex, [2, 3, 4, 5, 6], "3:+1,0:-4,6:+1,0:-1,1:+1,2:+1,1:-3,6:+1,0:-1,4:+1,0:+5,4:+1,0:+4,1:+4,6:+1,1:-4,2:+1,1:-4,0:+1,3:+1,0:+5,1:-3,0:+3,5:+1,0:+3,3:+1,0:-4,5:+1,0:+1,5:+1,0:+5,4:+1,0:-2,2:+1"),
+        (.hex, [0, 2, 4, 5], "1:-3,0:+1,1:+5,6:-1,0:+1,1:-4,6:-4,5:+1,6:-1,5:+1,6:-1,1:+3,6:-5,1:-3,6:-1,5:+1,6:-2,0:+1,1:-2,2:+1,1:+1,2:+1,3:-3,4:+1,3:-1,4:+1,3:+3,4:+1,3:+2,2:+1,1:+1"),
+        (.hex, [0, 1, 4, 5], "3:-5,2:-1,1:+1,2:+3,0:+1,2:+2,3:-2,4:+1,3:+5,2:-1,0:+1,3:+1,2:+1,3:+2,4:+1,3:+4,2:+1,0:+1,3:+2,2:+5,1:+1,6:+4,5:+1,6:-3,5:+1,6:+1,5:+1,6:-1,1:+1,2:-1,3:-5,4:+1"),
+        (.hex, [1, 2, 3, 4, 5], "4:+1,0:-1,6:+5,5:+1,6:+5,5:+1,6:-1,5:+1,6:-4,1:+1,0:-2,2:+1,0:-4,3:+1,0:+5,4:+1,0:-2,1:+1,6:-2,0:-1,6:-1,0:+4,4:+1,0:+1,1:+1,6:-5,0:+1,2:+1,0:+2,3:+1,0:+1,2:+1,0:+2,3:+1"),
+        (.hex, [0, 1, 2, 5], "1:+1,6:-5,5:+1,4:+1,5:+1,4:+1,5:+1,6:+2,0:+1,6:-2,1:+1,6:-1,1:+1,6:+1,0:+1,3:+4,0:+1,3:+4,4:+4,3:+2,2:+1,3:-5,2:+1,3:-5,4:+1,3:-1,4:-2,3:-4,2:+1,3:-1,4:+1"),
+        (.hex, [0, 3, 5, 6], "5:+1,4:-1,5:+1,4:+2,5:+1,4:-3,3:+1,2:-5,1:-3,2:-2,1:+1,0:+1,1:-1,0:+1,4:-3,3:+1,2:+1,1:-1,2:-5,3:+1,2:+5,0:+1,1:+5,6:+1,1:+1,6:+1,1:+1,6:+1,1:+1,2:+1,1:-5,2:-1"),
+        (.hex, [1, 2, 3, 5, 6], "3:+1,4:+2,0:-1,4:-5,3:+1,4:+1,0:-2,4:+2,5:+1,4:-1,3:+1,0:-4,1:+1,0:+2,2:+1,0:+5,2:+1,0:+2,2:+1,0:+2,6:+1,0:+3,1:+1,0:+1,4:-3,5:+1,0:-5,4:+2,5:+1,0:-4,6:+1,0:-1,6:+1,0:+2,1:+1"),
+        (.hex, [1, 2, 4, 5, 6], "4:+1,3:-4,0:+3,6:+1,0:+1,6:+1,0:+1,1:+1,0:+1,1:+1,0:+2,1:+1,0:+1,2:+1,3:+4,2:+1,0:-2,4:+1,3:+3,2:+1,0:-5,6:+1,0:-5,4:+1,3:-5,0:-1,3:-1,0:+3,3:+2,0:-5,5:+1,0:+1,5:+1,0:-5,5:+1,0:-1"),
+        (.hex, [1, 3, 4, 5, 6], "2:-2,3:+1,2:-2,1:+1,2:-1,0:+4,6:+1,0:-4,5:+1,0:-1,2:-1,1:+1,0:-5,5:+1,0:-3,5:+1,0:-4,3:+1,0:-5,1:+1,2:+1,0:+1,6:+1,0:-4,3:+1,2:+1,0:+3,4:+1,0:+4,4:+1,0:+3,2:+1,0:+1,6:+1,0:+1,4:+1"),
+        (.hex, [0, 1, 2, 4], "6:-5,5:-1,6:-1,1:+1,6:-1,5:-1,6:+5,1:+1,6:+1,5:+5,0:+1,6:-3,1:+1,6:+3,5:+4,4:+1,5:+1,6:+1,0:+1,5:+2,0:+1,3:+2,2:+1,3:-2,2:+1,3:-1,2:+1,3:+4,4:+1,3:-5,4:+1"),
+        (.hex, [1, 2, 3, 4, 6], "6:+1,0:-4,2:+1,0:+1,5:+1,6:+1,0:+1,5:-1,0:+3,5:-4,4:+1,5:-1,0:+3,1:+1,0:-1,2:+1,0:+3,4:+1,5:-1,6:+1,0:+4,2:+1,0:+1,1:+1,0:+3,5:-2,0:+1,4:+1,0:-5,3:+1,0:-1,3:+1,0:+4,3:+1,0:+1,1:+1"),
     ]
 
     /// The pack's levels: the pinned table, each on the halftone with a lens, every dealt entry kept as dealt, every
     /// dealt lens entry magnifying by 1 to 3 steps and each lens netting at most +3, each lens in reach of a twist; par
-    /// is the depth, and untwisting reaches it on a real game.
+    /// is the depth, and untwisting reaches it on a real game (levels 26 on with the proof, `testLensParIsTheOptimum`).
     @MainActor func testLensLevels() {
-        XCTAssertEqual(Level.lens.count, 25)
-        XCTAssertEqual(Level.lens.map(\.id), (1...25).map { "lens-\($0)" })
-        XCTAssertEqual(Level.lensChapters, ["Close-up", "Cut-in", "Double-take", "Big Picture"])
-        XCTAssertEqual(Level.lens.compactMap(\.chapter), [6, 6, 6, 7].enumerated().flatMap { c, n in
+        XCTAssertEqual(Level.lens.count, 75)
+        XCTAssertEqual(Level.lens.count, Pack.lens.planned)
+        XCTAssertEqual(Level.lens.map(\.id), (1...75).map { "lens-\($0)" })
+        XCTAssertEqual(Level.lensChapters, ["Close-up", "Cut-in", "Double-take", "Big Picture", "Wide shot", "Long take",
+                                            "Jump cut", "Freeze frame", "Split screen", "Slow motion", "Dolly zoom", "Final cut"])
+        XCTAssertEqual(Level.lens.compactMap(\.chapter), [6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 8].enumerated().flatMap { c, n in
             Array(repeating: Level.lensChapters[c], count: n)
         })
         for (level, (layout, lenses, scramble)) in zip(Level.lens, Self.table) {
@@ -183,10 +234,15 @@ final class LensTests: XCTestCase {
             XCTAssertEqual(level.scramble, .parse(scramble, in: layout, lenses: lenses), level.id)
             XCTAssertEqual(level.scramble.count, scramble.split(separator: ",").count, "\(level.id) merges as it is dealt")
             XCTAssertEqual(level.par, level.scramble.count, level.id)
-            let solver = Solver(layout, lenses: lenses)
+            // A twist's disc reaching the lens's core, as scripts/lens-table.py reads it: the solver's own reading
+            // samples every pair of rods and costs a tenth of a second a level unoptimised.
             for lens in lenses {
-                XCTAssertTrue(layout.rods.indices.contains { !lenses.contains($0) && solver.interacts[lens][$0] },
-                              "\(level.id): no twist reaches lens \(lens)")
+                let core = layout.rods[lens]
+                XCTAssertTrue(layout.rods.indices.contains { k in
+                    let rod = layout.rods[k]
+                    return !lenses.contains(k)
+                        && simd_distance(SIMD2(rod.x, rod.y), SIMD2(core.x, core.y)) < rod.z + Tank.plateau * core.z
+                }, "\(level.id): no twist reaches lens \(lens)")
             }
         }
         for level in Level.lens {
@@ -200,18 +256,26 @@ final class LensTests: XCTestCase {
                 XCTAssertLessThanOrEqual(entries.reduce(0, +), 3, level.id)
             }
             XCTAssertFalse(level.layout.looksSolved(level.scramble, lenses: level.lenses), level.id)
-            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
-            while let t = game.reachable, !game.finished { game.commit(rod: t.rod, steps: t.steps) }
-            XCTAssertTrue(game.solved, level.id)
-            XCTAssertEqual(game.moves, level.par, level.id)
         }
+        // Untwisting a deep level on a real game takes a tenth of a second unoptimised, so those replay with the proof.
+        for level in Level.lens.prefix(25) { replay(level) }
     }
 
-    /// Every Lens level's par, its depth, is the solver's optimum: no detour beats untwisting. Over a minute unoptimised,
-    /// so slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks the same in seconds.
-    func testLensParIsTheOptimum() throws {
+    /// Untwisting the level on a real game solves it at par.
+    @MainActor private func replay(_ level: Level) {
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+        while let t = game.reachable, !game.finished { game.commit(rod: t.rod, steps: t.steps) }
+        XCTAssertTrue(game.solved, level.id)
+        XCTAssertEqual(game.moves, level.par, level.id)
+    }
+
+    /// Every Lens level's par, its depth, is the solver's optimum: no detour beats untwisting; and untwisting levels 26
+    /// on on a real game reaches it. Hours unoptimised, as a level whose hub is a lens takes the optimised solver twenty
+    /// minutes, so slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks the optima optimised.
+    @MainActor func testLensParIsTheOptimum() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
                           "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
+        for level in Level.lens.dropFirst(25) { replay(level) }
         for level in Level.lens {
             XCTAssertEqual(Solver(level.layout, lenses: level.lenses).optimum(level.scramble), level.par, level.id)
         }
@@ -286,15 +350,15 @@ final class LensTests: XCTestCase {
         }
     }
 
-    /// A Lens level draws the panel of its number, all 25 drawn, and anything else on the halftone the test panel. A
+    /// A Lens level draws the panel of its number, all 75 drawn, and anything else on the halftone the test panel. A
     /// panel's name keys its bake in Caches, so no two share one.
     func testEachLensLevelDrawsItsOwnPanel() {
-        XCTAssertEqual(Level.lens.map(\.panel), Array(1...25))
+        XCTAssertEqual(Level.lens.map(\.panel), Array(1...75))
         XCTAssertTrue((Tier.allCases.flatMap(\.levels) + Level.prism + Level.escapement).allSatisfy { $0.panel == 0 })
         XCTAssertEqual(Halftone.panel(0).name, "test")
         XCTAssertEqual(Halftone.panel(1).name, "keyhole")
-        XCTAssertEqual(LensArt.levels.keys.sorted(), Array(1...25))
-        XCTAssertEqual(Halftone.panel(26).name, "test")
+        XCTAssertEqual(LensArt.levels.keys.sorted(), Array(1...75))
+        XCTAssertEqual(Halftone.panel(76).name, "test")
         XCTAssertEqual(Set(Halftone.panels.map(\.name)).count, Halftone.panels.count)
         XCTAssertTrue(Halftone.panels.allSatisfy { !$0.name.contains("-") }, "a bake's file name is cut at its hyphens")
     }

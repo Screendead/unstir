@@ -76,7 +76,7 @@ LEVELS = {
     46: ("convexmirror", "Convex mirror", "hex", "2,4,5", "2:+2,4:+2,5:+2"),
     47: ("dentalmirror", "Dental mirror", "hex", "2,3,6", "2:+2,3:+2,6:+2"),
     48: ("mirrorball", "Mirror ball", "hex", "0,2,4,5", "0:+2,2:+2,4:+2,5:+2"),
-    49: ("hallofmirrors", "Hall of mirrors", "hex", "1,2,4,5", "1:+2,2:+2,4:+2,5:+2"),
+    49: ("mirrormaze", "Mirror maze", "hex", "1,2,4,5", "1:+2,2:+2,4:+2,5:+2"),
     50: ("owl", "Owl", "hex", "2,3,5,6", "2:+2,3:+2,5:+2,6:+2"),
     51: ("flyseye", "Fly's eye", "hex", "1,2,3,4,5,6", "1:+2,2:+2,3:+2,4:+2,5:+2,6:+2"),
     52: ("chameleon", "Chameleon", "hex", "0,1,3,4", "0:+2,1:+2,3:+2,4:+2"),

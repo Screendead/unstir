@@ -632,7 +632,7 @@ final class PackTests: XCTestCase {
             XCTAssertFalse(Offer.complete.holds.contains(pack.name), pack.name)
             XCTAssertFalse(Clip.complete.reels.contains { $0.level.pack == pack }, pack.name)
         }
-        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 85 levels")
+        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 135 levels")
         XCTAssertEqual(Offer.shelf(release: true, ready: { Pack.bundled.contains($0) }).last, .complete)
         XCTAssertEqual(Offer.complete.name, Offer.bundleName)
     }
@@ -660,16 +660,16 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "true"])
         XCTAssertNil(PackCard.taste([], best: best))
         XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: best),
-                       "You've played the free three. 22 more in Lens.")
+                       "You've played the free three. 72 more in Lens.")
         XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels, state: .pending, best: { _ in
             Best(over: 0, seconds: 60) }), "You've played the free three. 27 more in Escapement.")
         XCTAssertNil(PackCard.arrival(.complete, [], state: .unowned, best: best))
         // Only while it is true: before every free level has a best, that they are free (Jack's call C1A = B, round
         // 16); nothing to an owner or a refunded one, whose revocation line says it.
         XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }),
-                       "The first three are free. 22 more in Lens.")
+                       "The first three are free. 72 more in Lens.")
         XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { $0 == levels[2].id ? Best(over: 0, seconds: 60) : nil }),
-                       "The first three are free. 22 more in Lens.")
+                       "The first three are free. 72 more in Lens.")
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: { _ in nil }))
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: best))
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .owned, best: best))
