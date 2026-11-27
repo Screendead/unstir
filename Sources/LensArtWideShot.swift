@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let wideShot: [Int: Halftone.Panel] = [26: dewdrop, 27: fishbowl, 28: marble, 29: crystalball]
+    static let wideShot: [Int: Halftone.Panel] = [26: dewdrop, 27: fishbowl, 28: marble, 29: crystalball, 30: snowglobe]
 
     /// A long line cut into strokes of `n` segments each: a stroke costs every pixel in its box once a segment, so a
     /// long outline in one piece is the bake's dearest thing.
@@ -412,3 +412,118 @@ extension LensArt {
         }
     }()
 }
+
+// MARK: - 30: Snow globe
+
+/// Level 30's name: a snow globe on its wooden base, and in it a winter night: firs, a snowman, flakes falling, a
+/// frozen pond ringed with rocks and reeds over the hub and a cottage whose round window, hung with a wreath, is over
+/// the lower right core (hex's two lenses on this level). On the pond a skater, scarf flying; through the window the
+/// Christmas tree, its star on top.
+extension LensArt {
+    static let snowglobe: Halftone.Panel = {
+        let pond = P(0, 0), window = P(0.485, 0.28), dome = P(0, -0.02), glass = 0.9, base = 0.62
+        let snow = c(0.6), sky = Tone(0.28, 0.24, 0), white = Tone(0.55, 0, 0.8)
+        @Sendable func horizon(_ x: Double) -> Double { -0.2 + 0.07 * sin(3 * x + 0.5) }
+        let wall = [P(0.2, 0.04), P(0.8, 0.04)] + arc(dome, glass, 26.4, 45.3, 6) + [P(0.2, base)]
+        let roof = [P(0.12, 0.07), P(0.49, -0.25), P(0.88, 0.07)], cap = [P(0.3, -0.09), P(0.49, -0.25), P(0.69, -0.08), P(0.49, -0.17)]
+        let chimney = rect(0.62, -0.22, 0.7, -0.08)
+        /// A fir: three tiers down from its tip to `foot`, `half` wide at the bottom.
+        func fir(_ tip: P, foot: Double, half: Double) -> [P] {
+            let h = foot - tip.y
+            let right = [P(0.45, 0.36), P(0.22, 0.36), P(0.75, 0.7), P(0.45, 0.7), P(1, 1)].map { P(tip.x + half * $0.x, tip.y + h * $0.y) }
+            return [tip] + right + right.reversed().map { P(2 * tip.x - $0.x, $0.y) }
+        }
+        let firs = [fir(P(-0.56, -0.74), foot: -0.1, half: 0.22), fir(P(-0.18, -0.62), foot: -0.28, half: 0.11), fir(P(0.14, -0.8), foot: -0.36, half: 0.13)]
+        let ice = 0.25
+        let rocks: [(P, Double, Double)] = [(polar(pond, 0.27, 8), 0.075, 0.045), (polar(pond, 0.26, 52), 0.05, 0.035), (polar(pond, 0.275, 104), 0.085, 0.05),
+                                            (polar(pond, 0.28, 204), 0.06, 0.04), (polar(pond, 0.27, 240), 0.08, 0.05), (polar(pond, 0.265, 285), 0.05, 0.04),
+                                            (polar(pond, 0.275, 312), 0.045, 0.035), (polar(pond, 0.27, 340), 0.07, 0.04)]
+        let jetty = bar(polar(pond, 0.16, 158), polar(pond, 0.36, 158), 0.08)
+        let flakes: [(P, Double)] = [(P(-0.3, -0.78), 0.03), (P(0.02, -0.5), 0.025), (P(0.36, -0.66), 0.035), (P(0.66, -0.44), 0.03), (P(-0.76, -0.38), 0.025),
+                                     (P(-0.34, -0.36), 0.03), (P(0.34, -0.36), 0.025), (P(-0.06, -0.82), 0.025), (P(0.72, -0.18), 0.025), (P(-0.82, -0.1), 0.03)]
+        let man = P(-0.6, 0.34), bow = [window + P(0, 0.235), window + P(-0.08, 0.2), window + P(-0.07, 0.28), window + P(0, 0.235),
+                                         window + P(0.07, 0.28), window + P(0.08, 0.2)]
+        let berries = [200.0, 215, 290, 305, 20, 35].map { polar(window, 0.232, $0) }
+        var fills: [Fill] = berries.map { disc($0, 0.018, Tone(0, 0.8, 0.5)) } + [fill(bow, Tone(0, 0.85, 0.3)), disc(window, 0.2, y(0.85)), ring(window, 0.2, 0.265, Tone(0.6, 0, 0.55))]
+        fills += rocks.map { oval($0.0, $0.1, $0.2, Tone(0, 0.3, 0.65)) } + [fill(jetty, Tone(0, 0.55, 0.3)), disc(pond, ice, Tone(0.1, 0.32, 0))]
+        fills += [fill(rect(man.x - 0.06, man.y - 0.3, man.x + 0.06, man.y - 0.24), .zero), fill(rect(man.x - 0.08, man.y - 0.13, man.x + 0.07, man.y - 0.09), Tone(0, 0.8, 0.3)),
+                  disc(man + P(0, -0.18), 0.07, white), disc(man + P(0, 0.04), 0.12, white)]
+        fills += flakes.map { disc($0.0, $0.1, white) } + [fill(rect(0.06, 0.74, 0.4, 0.86), y(0.9))]
+        fills += [fill(chimney, Tone(0, 0.45, 0.2)), fill(cap, snow), fill(roof, Tone(0, 0.65, 0.35)), fill(wall, m(0.55))]
+        fills += firs.map { fill($0, Tone(0.6, 0, 0.5)) }
+        fills.append(fill([P(-1, base), P(1, base), P(1, 1), P(-1, 1)], Tone(0, 0.32, 0.55)))
+
+        var s: [Halftone.Stroke] = []
+        // The globe: its glass, the shine on it and the base it sits in, a brass plaque on the base.
+        s += pieces(arc(dome, glass, 135, 405, 72), bold)
+        s += pieces(arc(dome, glass - 0.05, 205, 245, 10), bold)
+        s += pieces(arc(dome, glass - 0.09, 210, 228, 5), mid)
+        s += runs(span(P(-1, base), P(1, base), 50), bold) { simd_length($0) < 1 }
+        s += runs(span(P(-1, base + 0.06), P(1, base + 0.06), 50), hair) { simd_length($0) < 1 }
+        s.append(stroke(closed(rect(0.06, 0.74, 0.4, 0.86)), mid))
+        for x in [0.08, 0.38] { s.append(stroke(circle(P(x, 0.8), 0.008, 6), hair)) }
+        // The snow's edge, the firs, the snowman.
+        s += runs((0...50).map { P(-0.9 + 0.036 * Double($0), horizon(-0.9 + 0.036 * Double($0))) }, mid) { p in
+            firs.allSatisfy { !inside(p, $0) } && simd_distance(p, pond) > 0.35 && !inside(p, wall) && !inside(p, roof)
+        }
+        for f in firs { s.append(stroke(closed(f), mid)) }
+        s.append(stroke(circle(man + P(0, 0.04), 0.12, 24), mid))
+        s.append(stroke(circle(man + P(0, -0.18), 0.07, 18), mid))
+        s.append(stroke(closed(rect(man.x - 0.06, man.y - 0.3, man.x + 0.06, man.y - 0.24)), mid))
+        s.append(stroke([man + P(-0.07, -0.24), man + P(0.07, -0.24)], bold))
+        s.append(stroke([man + P(0.03, -0.18), man + P(0.11, -0.17)], bold))
+        for y0 in [0.0, 0.06] { s.append(stroke(circle(man + P(0, y0), 0.01, 6), mid)) }
+        s.append(stroke([man + P(-0.11, -0.02), man + P(-0.22, -0.12)], mid))
+        s.append(stroke([man + P(0.11, -0.02), man + P(0.2, 0.0), man + P(0.24, -0.04)], mid))
+        // The flakes, a few more as stars.
+        for (at, r) in flakes { s.append(stroke(circle(at, r, 10), hair)) }
+        for at in [P(-0.44, -0.6), P(0.5, -0.62), P(-0.06, -0.3), P(0.82, -0.3), P(-0.84, 0.3), P(-0.3, 0.46)] { s.append(stroke(star(at, 0.03, points: 6, inner: 0.25), hair)) }
+        // The cottage: its roof and snow, chimney and smoke, the wall's boards and the wreath round its window.
+        s.append(stroke([roof[0], roof[1], roof[2]], bold))
+        s.append(stroke(closed(cap), mid))
+        s.append(stroke(closed(chimney), mid))
+        s.append(stroke(curve(P(0.66, -0.24), P(0.6, -0.34), P(0.68, -0.4), 8) + curve(P(0.68, -0.4), P(0.76, -0.46), P(0.7, -0.56), 8), mid))
+        s += runs(Array(wall.dropFirst(2)) + [wall[0], wall[1]], bold) { $0.y < base }
+        for yy in [0.14, 0.24, 0.34, 0.44, 0.54] { s += runs(span(P(0.2, yy), P(0.82, yy), 20), hair) { simd_distance($0, window) > 0.27 && inside($0, wall) } }
+        s.append(stroke(circle(window, 0.2, 40), bold))
+        s.append(stroke(circle(window, 0.265, 44), mid))
+        for k in 0..<16 where !(k >= 3 && k <= 5) { s.append(stroke([polar(window, 0.21, 22.5 * Double(k)), polar(window, 0.255, 22.5 * Double(k) + 16)], hair)) }
+        s.append(stroke(closed(bow), mid))
+        for b in berries { s.append(stroke(circle(b, 0.018, 8), hair)) }
+        // The pond: its ice, rocks round it, a jetty and reeds.
+        s.append(stroke(circle(pond, ice, 44), bold))
+        for (at, rx, ry) in rocks { s.append(stroke(ellipse(at, rx, ry, 16), mid)) }
+        s.append(stroke(closed(jetty), mid))
+        for t in [0.22, 0.29] { s.append(stroke([polar(pond, t, 158) + P(-0.03, -0.035), polar(pond, t, 158) + P(0.03, 0.035)], hair)) }
+        for (a, h) in [(45.0, 0.1), (52, 0.13), (240, 0.11), (248, 0.08), (295, 0.12)] {
+            let root = polar(pond, 0.29, a)
+            s.append(stroke(curve(root, root + P(0.01, -h / 2), root + P(0.02, -h), 4), mid))
+            s.append(stroke([root + P(0.018, -h), root + P(0.022, -h - 0.03)], 0.012))
+        }
+        s.append(stroke(arc(pond, 0.19, 200, 250, 8), mid))
+        // On the ice: a skater gliding, arms out, one leg back, scarf flying.
+        let skater = pond + P(0.018, -0.026)
+        s.append(stroke(circle(skater + P(0.004, -0.04), 0.008, 10), 0.0032))
+        s.append(stroke([skater + P(0.002, -0.031), skater + P(-0.004, 0.0)], 0.0036))
+        s.append(stroke([skater + P(-0.03, -0.03), skater + P(0, -0.024), skater + P(0.03, -0.034)], 0.003))
+        s.append(stroke([skater + P(-0.004, 0.0), skater + P(0.004, 0.028)], 0.0032))
+        s.append(stroke([skater + P(-0.004, 0.0), skater + P(-0.036, 0.012)], 0.0032))
+        s.append(stroke([skater + P(-0.008, 0.029), skater + P(0.018, 0.029)], 0.0026))
+        s.append(stroke([skater + P(-0.04, 0.006), skater + P(-0.038, 0.02)], 0.0026))
+        s.append(stroke(curve(skater + P(0.0, -0.03), skater + P(-0.02, -0.04), skater + P(-0.034, -0.05), 5) + [skater + P(-0.03, -0.042)], 0.0024))
+        s.append(stroke(curve(skater + P(-0.05, 0.036), skater + P(-0.01, 0.04), skater + P(0.03, 0.034), 6), 0.0016))
+        // Through the window: the Christmas tree, its star, baubles and tub.
+        let tree = window + P(0.016, -0.022)
+        s.append(stroke(closed([tree + P(0, -0.04), tree + P(0.014, -0.018), tree + P(0.008, -0.018), tree + P(0.024, 0.006), tree + P(0.014, 0.006),
+                                tree + P(0.032, 0.032), tree + P(-0.032, 0.032), tree + P(-0.014, 0.006), tree + P(-0.024, 0.006), tree + P(-0.008, -0.018),
+                                tree + P(-0.014, -0.018)]), 0.0032))
+        s.append(stroke(star(tree + P(0, -0.05), 0.012, degrees: -90), 0.0024))
+        for at in [P(-0.012, 0.022), P(0.01, 0.012), P(-0.004, -0.004), P(0.018, 0.026)] { s.append(stroke(circle(tree + at, 0.0035, 6), 0.0026)) }
+        s.append(stroke(closed([tree + P(-0.012, 0.032), tree + P(0.012, 0.032), tree + P(0.009, 0.048), tree + P(-0.009, 0.048)]), 0.0026))
+        return panel("snowglobe", fills: fills, strokes: s) { p in
+            guard simd_distance(p, dome) < glass else { return m(0.32) }
+            return p.y < horizon(p.x) ? sky : snow
+        }
+    }()
+}
+
