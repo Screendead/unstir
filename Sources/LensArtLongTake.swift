@@ -148,8 +148,8 @@ extension LensArt {
 
         var s: [Halftone.Stroke] = []
         // The valance's scallops and fringe, the drape's edge and folds, the tie-back and its tassel.
-        s.append(stroke(Array(valance.dropLast(3)), mid))
-        for k in 0..<24 { s.append(stroke([P(-1 + Double(k) / 12, -0.8), P(-1 + Double(k) / 12, -0.75)], hair)) }
+        s += runs(Array(valance.dropLast(3)), mid) { simd_distance($0, far) > 0.33 }
+        for k in 0..<24 where simd_distance(P(-1 + Double(k) / 12, -0.78), far) > 0.34 { s.append(stroke([P(-1 + Double(k) / 12, -0.8), P(-1 + Double(k) / 12, -0.75)], hair)) }
         s += pieces(runs(Array(drape.prefix(30)), bold) { simd_distance($0, far) > 0.33 })
         for k in 0..<6 {
             let x = -0.94 + 0.12 * Double(k)
