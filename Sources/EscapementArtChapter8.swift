@@ -507,13 +507,13 @@ extension EscapementArt {
     }
 
     /// Problem 48, Tide clock, hex, clocks 1+,2-: a tide clock's dial set off the hub between the middle rod and the
-    /// two above it, a ring of waves for its hours, tall at high water and flat at low, one bold hand an hour past
-    /// high water, and a ship's wheel behind it whose spokes and handles reach across the glass; the hand's tip in
+    /// two below it on the left, a ring of waves for its hours, tall at high water and flat at low, one bold hand
+    /// rising toward high water, and a ship's wheel behind it whose spokes and handles reach across the glass; the hand's tip in
     /// the second ink.
     static func plate48() -> Plate {
         var plate = Plate()
-        let c = P(0.16, -0.28), face = 0.6, wheel = 0.86
-        let tip = P(0.42, -0.64), toward = atan2(tip.y - c.y, tip.x - c.x), reach = simd_distance(tip, c)
+        let c = P(-0.16, 0.28), face = 0.6, wheel = 0.86
+        let tip = P(-0.4, -0.02), toward = atan2(tip.y - c.y, tip.x - c.x), reach = simd_distance(tip, c)
 
         Kit.ground(&plate, angle: 0.4, around: [arc(c, face + 0.02)])
         // The ship's wheel behind: its spokes out to turned handles, then its rim.
@@ -573,10 +573,10 @@ extension EscapementArt {
         plate.fill(arc(c, 0.03))
         plate.line(arc(c, 0.03), medium)
 
-        callout(&plate, "A", from: polar(c, 0.68 * face + 0.05, Kit.clock(0)), to: P(-0.28, -0.84))
-        callout(&plate, "B", from: tip, to: P(0.7, -0.62))
-        callout(&plate, "C", from: polar(c, wheel, Kit.clock(7.5)), to: P(-0.82, 0.18))
-        callout(&plate, "D", from: polar(c, 0.68 * face + 0.02, Kit.clock(6)), to: P(0.42, 0.62))
+        callout(&plate, "A", from: polar(c, 0.68 * face + 0.05, Kit.clock(0)), to: P(0.24, -0.04))
+        callout(&plate, "B", from: tip, to: P(-0.62, -0.62))
+        callout(&plate, "C", from: polar(c, wheel, Kit.clock(3.5)), to: P(0.8, 0.08))
+        callout(&plate, "D", from: polar(c, 0.68 * face + 0.02, Kit.clock(6)), to: P(0.26, 0.8))
         return plate
     }
 }
