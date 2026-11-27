@@ -44,6 +44,8 @@ rings-plughole.png  The rings on plughole, every level solved and three over par
 rings-today.png  The archive's ring above plughole, Lens owned so it is open: a bead for each past daily, the three before today at par and two over, today's date on the sun with the past dailies' count.
 rings-today-shut.png  The archive's ring with no pack owned: its sun down, what opens it.
 rings-endless.png  Endless's ring below maelstrom, a run saved on tank 6 at brim 3, best 9: a neon circle, continue and new run on its sun.
+rings-ax3.png  The rings at rest on whirlpool at accessibility3, the mock's accessibility size: the sun whole over a lower horizon, its words at the system's sizes and stacked, the daily's words flat under its star, a line under each cover.
+rings-ax5.png  The same at accessibility5, the largest: every word at the system's size, the level's name wrapped to the sun.
 rings-fresh.png  The rings before plughole 01 is solved: the ring alone, with no daily and no packs yet, as the old menu shows neither.
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).
