@@ -88,8 +88,95 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 32, Balance wheel, hex, clocks 1+.
-    static func plate32() -> Plate? { nil }
+    /// Problem 32, Balance wheel, hex, clocks 1+: a split bimetallic balance seen flat, off the hub to the left, its
+    /// rim brass outside and steel inside, each half fixed to one arm and cut free beside the other, timing screws
+    /// round it, the double roller and its impulse pin at the staff. One timing screw, at nine o'clock, is in the
+    /// second ink.
+    static func plate32() -> Plate {
+        var plate = Plate()
+        // The rim threads between the rods: those at the hub, eight and ten o'clock inside it, twelve and six outside.
+        let c = P(-0.3, 0), rim = 0.48, brass = 0.062, steel = 0.03
+        let outer = rim + brass / 2 + steel / 2, inner = rim - brass / 2 - steel / 2, middle = inner + steel
+        // Each half runs from its arm, clockwise, to a cut just short of the other arm.
+        let halves = [(from: -Double.pi / 2, to: Double.pi / 2 - 0.2), (from: Double.pi / 2, to: 3 * Double.pi / 2 - 0.2)]
+        func sector(_ a: Double, _ b: Double, _ r0: Double, _ r1: Double) -> [P] {
+            let o = arc(c, r1, from: a, to: b), i = arc(c, r0, from: b, to: a)
+            return o + i + [o[0]]
+        }
+        let arms = [Double.pi / 2, -Double.pi / 2].map { a -> [P] in
+            [polar(c, 0.1, a - 0.34), polar(c, inner - 0.05, a - 0.066), polar(c, outer, a - 0.11), polar(c, outer, a + 0.11),
+             polar(c, inner - 0.05, a + 0.066), polar(c, 0.1, a + 0.34), polar(c, 0.1, a - 0.34)]
+        }
+        // The screws stand off the rim wherever no rod's hub reaches.
+        let screws = stride(from: -180.0, to: 180.0, by: 20).compactMap { d -> Double? in
+            let a = d * .pi / 180
+            return [-61.8, 61.8].contains { abs(d - $0) < 25 } || [90.0, -90.0].contains(d) ? nil : a
+        }
+        Kit.ground(&plate, angle: -0.42)
+        
+        // The screws: a bold head, its slot across, its thread into the rim.
+        for a in screws {
+            let at = polar(c, outer + 0.034, a), ink: Ink = abs(a - .pi) < 0.01 || abs(a + .pi) < 0.01 ? .second : .black
+            plate.fill(Kit.band(polar(c, outer - 0.01, a), at, 0.03), ink)
+            plate.fill(arc(at, 0.036), ink)
+            plate.line(arc(at, 0.036), medium)
+            plate.line([polar(at, 0.03, a + .pi / 2), polar(at, 0.03, a - .pi / 2)], 0.012, .bone)
+        }
+        // The rim, brass outside in ink, steel inside in section, each half cut free.
+        for h in halves {
+            Kit.mass(&plate, sector(h.from, h.to, middle, outer))
+            Kit.cut(&plate, sector(h.from, h.to, inner, middle))
+            plate.line([polar(c, inner, h.to), polar(c, outer, h.to)], heavy)
+        }
+        // The rim's spare screw holes, between the screws.
+        for k in 0..<36 where k != 8 && k != 26 && k != 17 && k != 35 {
+            let at = polar(c, (middle + outer) / 2, (Double(k) + 0.5) * .pi / 18)
+            plate.fill(arc(at, 0.022))
+        }
+        // The arms and the boss they spring from, a bone line down each.
+        for arm in arms { Kit.mass(&plate, arm) }
+        Kit.mass(&plate, arc(c, 0.118))
+        for a in [Double.pi / 2, -Double.pi / 2] { plate.line([polar(c, 0.14, a), polar(c, inner - 0.04, a)], fine, .bone) }
+
+        // The double roller: the table with its impulse pin, the safety roller under it with its crescent.
+        plate.fill(arc(c, 0.098))
+        plate.line(arc(c, 0.098), heavy)
+        plate.lines(hatch([arc(c, 0.098), arc(c, 0.058)], angle: 0.4, gap: 0.016), fine)
+        plate.line(arc(c, 0.058), medium)
+        Kit.mass(&plate, arc(c, 0.028))
+        plate.fill(arc(c, 0.01))
+        let pin = polar(c, 0.075, 0)
+        Kit.mass(&plate, [pin + P(-0.016, -0.018), pin + P(0.02, -0.018), pin + P(0.02, 0.018), pin + P(-0.016, 0.018), pin + P(-0.016, -0.018)])
+        let notch = arc(polar(c, 0.098, 0), 0.03, from: .pi / 2, to: 3 * .pi / 2)
+        plate.line(notch, medium)
+
+        // The roller again, twice the size, in a ring at three o'clock.
+        let inset = P(0.775, 0), table = 0.135
+        plate.lines(dashed([polar(c, 0.1, 0), polar(inset, 0.2, .pi)], on: 0.03, off: 0.018), medium)
+        plate.fill(arc(inset, 0.2))
+        Kit.mass(&plate, arc(inset, table))
+        plate.line(arc(inset, 0.115), fine, .bone)
+        plate.fill(arc(inset, 0.074))
+        plate.lines(hatch([arc(inset, 0.074), arc(inset, 0.03)], angle: 0.4, gap: 0.016), fine)
+        plate.line(arc(inset, 0.074), medium)
+        Kit.mass(&plate, arc(inset, 0.03))
+        plate.fill(arc(inset, 0.011))
+        let jewel = polar(inset, 0.1, 0)
+        let ruby = [jewel + P(-0.024, -0.026), jewel + P(0.018, -0.026)] + arc(jewel + P(0.018, 0), 0.026, from: -.pi / 2, to: .pi / 2)
+            + [jewel + P(-0.024, 0.026), jewel + P(-0.024, -0.026)]
+        Kit.cut(&plate, ruby)
+        plate.line([jewel + P(-0.012, -0.016), jewel + P(-0.012, 0.016)], fine)
+        let crescent = arc(polar(inset, 0.074, 0), 0.034, from: .pi / 2, to: 3 * .pi / 2)
+        plate.fill(crescent + [crescent[0]], .black)
+        plate.line(arc(inset, 0.2), 0.026)
+        plate.line(arc(inset, 0.172), fine)
+
+        callout(&plate, "A", from: polar(c, outer - 0.01, 0.6), to: P(0.25, 0.72))
+        callout(&plate, "B", from: polar(c, rim, Double.pi / 2 - 0.2), to: P(-0.26, 0.82))
+        callout(&plate, "C", from: jewel + P(0.03, 0.02), to: P(0.86, 0.36))
+        callout(&plate, "D", from: polar(c, outer + 0.034, .pi), to: P(-0.6, -0.02))
+        return plate
+    }
 
     /// Problem 33, Escape wheel, pent, clocks 0+.
     static func plate33() -> Plate? { nil }
