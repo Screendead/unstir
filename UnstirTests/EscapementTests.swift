@@ -834,16 +834,14 @@ import XCTest
         for layout in Layout.allCases { assertAStepShows(plate, in: layout, "shared") }
     }
 
-    /// Jack's call (2026-11-11): each problem plays on a plate of its own, drawn as its name. The play screen alone
-    /// asks for it, by the problem's number; a problem with none drawn yet keeps the shared plate, as every miniature
-    /// does.
+    /// Jack's call (2026-11-11): each problem plays on a plate of its own, drawn as its name, all 90 drawn. The play
+    /// screen alone asks for it, by the problem's number; every miniature keeps the shared plate.
     func testEachProblemAsksForItsOwnPlate() {
         for (i, level) in Level.escapement.enumerated() {
             XCTAssertEqual(level.plate, i + 1, level.id)
             XCTAssertEqual(level.panel, 0, level.id)
         }
-        // Problems 31 to 90 keep the shared plate until theirs are drawn.
-        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...30))
+        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...90))
         for level in Pack.lens.levels + Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.plate, level.panel, level.id) }
     }
 

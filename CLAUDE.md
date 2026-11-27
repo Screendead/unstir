@@ -217,6 +217,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet.
+- Escapement's plates: `scripts/escapement-art.sh render|check <problem> ...` draws and measures one on the Mac, `deal`
+  through its scramble; `scripts/escapement-art-sheet.py plates|deals|shots <from> <to>` lays them out.
 - Prism's specimens: `scripts/prism-levels.sh table` measures every specimen in Pack.swift (depth, the solver's
   optimum, what is free under the masks and read white, blocked knobs, right moves per step, the shader's assumed cost,
   and the shares of the glass showing ghosts and three-way splits, the readability limits); `check <layout> <masks>

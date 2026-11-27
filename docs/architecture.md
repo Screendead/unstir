@@ -1613,8 +1613,19 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   in an old clockmaker's manual's hand), where one is drawn: `Level.plate`, which only TankView asks for, carries the
   problem's number through `PictureLayer`'s `panel` to `engineTurning`, which draws `EscapementArt.plate`'s marks
   (**EscapementArt.swift**: polylines and filled outlines in tank units, in ink, bone and the second ink, vermilion)
-  and falls back to the shared plate when the number has none. The table is that function's switch, a line a problem
-  in blocks of ten, the first thirty drawn (31 to 90 keep the shared plate until theirs are); the plates are in a file a block (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across files). `EscapementArt.alternate` holds plates drawn for Jack to choose between, registered for no problem: level 7 as a pause mark on a dial without hands, and Hourglass (9) with its glass ending inside the top and bottom rods; `UNSTIR_ESCALT=1` draws them in a debug build, and `scripts/escapement-art.sh` by `7alt` or `9alt`. A dock cover, a card's
+  and falls back to the shared plate when the number has none. The table is that function's switch, a line a problem,
+  every one of the 90 drawn (`testEachProblemAsksForItsOwnPlate`); the first thirty are in a file a block of ten
+  (**EscapementArtPlates.swift** holds 1 to 10 and Moon phase, 25, **EscapementArtPlates2.swift** 11 to 20 and
+  **EscapementArtPlates3.swift** 21 to 30 but 25, each with private helpers of its own, some sharing a name across
+  files), and 31 to 90 in a file a chapter (**EscapementArtChapter6.swift** to **EscapementArtChapter15.swift**, their
+  helpers private and named for their plate). Those sixty are dealt 9 to 38 entries deep, and a deep stack shears the
+  first book's fine ruling (0.034 apart) into a grey that hides every seam, so they are cut bold
+  (**EscapementArtKit.swift**, `EscapementArt.Kit`): a coarse ground ruled 0.06 apart at 0.008, masses of ink and
+  bone at least 0.05 wide, fine hatching kept to small parts. A mass of solid ink can't cover a core, where the step
+  measure below wants more than half the core's ink moved by a 30° step, so inside the cores the masses are banded,
+  streaked or broken with bone, and the heaviest ink lies in the lanes between rods and the rim. A plate's long
+  drawing is split into helpers with typed closures, so no function type-checks in over 150 ms nor any expression in
+  over 30 (CI's runner failed on untyped point arithmetic). `EscapementArt.alternate` holds plates drawn for Jack to choose between, registered for no problem: level 7 as a pause mark on a dial without hands, and Hourglass (9) with its glass ending inside the top and bottom rods; `UNSTIR_ESCALT=1` draws them in a debug build, and `scripts/escapement-art.sh` by `7alt` or `9alt`. A dock cover, a card's
   clip and the promoted-purchase image go through `LevelPicture`, which passes `Level.panel`, 0 for Escapement, so for
   now they keep the shared plate. Nothing is stored: `Level.picture` is still `engineTurned`, and the plate is baked
   like the shared one, in memory by `Picture.render` when the play screen's layer appears or changes problem (7 to
@@ -1626,8 +1637,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the second ink's marks within a circle 0.4 of the tank across and under 3% of the glass, and the step measure in
   every core of the problem's own layout, baked as an SE draws its glass at default type, 328 pt at 2x, not at the
   shared plate's 512 px at 1x, where the 2.2 px hairline is heavier than on any phone and close hatching runs solid). `scripts/escapement-art.sh` renders a plate on the Mac, with a layout
-  marking each rod's knob and hub, measures it as the tests do and times it; `scripts/escapement-art-sheet.py plates`
-  lays those renders out, `shots` the game's (`shots.sh escapement-plate-`, each problem as dealt and solved), a chapter's six a row, `solved` those solved only, and `alternate` a problem's plate beside its alternate.
+  marking each rod's knob and the hub a clock there would wear (grown for two cards), measures it as the tests do and
+  times it, and `deal` sketches it through a problem's scramble and the first moves of its line, each pixel pulled back
+  through the entries' inverses as the shader does but point-sampled, so its shear bands speckle where the game's
+  four taps draw them a softer grey; `scripts/escapement-art-sheet.py plates`
+  lays those renders out, `deals` each plate clean, dealt and a third in on the Mac, `shots` the game's (`shots.sh escapement-plate-`, each problem as dealt and solved, and from 31 a third of the way into its line), a chapter's six a row, `solved` those solved only, and `alternate` a problem's plate beside its alternate.
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,

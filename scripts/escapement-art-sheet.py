@@ -4,7 +4,8 @@
 #        (scripts/escapement-art.sh), cut to the glass, its layout's knobs and a clock's hub on every rod marked, as
 #        shots/escapement-plates-<from>-<to>.png: for composing a plate round its rods.
 #        scripts/escapement-art-sheet.py shots <from> <to>    Lays scripts/shots.sh's escapement-plate-* shots out as
-#        shots/escapement-plates-<from>-<to>-played.png, a chapter's six problems a row, each as dealt over solved.
+#        shots/escapement-plates-<from>-<to>-played.png, a chapter's six problems a row, each as dealt over solved, and
+#        from 31 a third of the way into its line between them.
 #        scripts/escapement-art-sheet.py solved <from> <to>   The same shots, solved only, as ...-solved.png.
 #        scripts/escapement-art-sheet.py deals <from> <to>    Each problem's plate on the Mac, clean, as dealt and a
 #        third of the way into its line (escapement-art.sh deal, a sketch of the shader), a problem a row, as
@@ -30,7 +31,7 @@ columns, gap, head = 6, 14, 48
 # shots play it, a wait a move on a clock's rod.
 book = {int(n): (clocks, scramble) for n, _, clocks, scramble in
         (line.rstrip("\n").split("\t") for line in open("scripts/escapement/problems.tsv"))}
-lines = dict((int(n), moves) for n, moves in re.findall(r"^(\d+) (\S+)$", open("scripts/shots/escapement.sh").read().split("<<'PLATES'")[1].split("\nPLATES")[0], re.M))
+played = dict((int(n), moves) for n, moves in re.findall(r"^(\d+) (\S+)$", open("scripts/shots/escapement.sh").read().split("<<'PLATES'")[1].split("\nPLATES")[0], re.M))
 
 
 def cards(n):
@@ -49,8 +50,8 @@ if which == "deals":
     d = ImageDraw.Draw(sheet)
     for i, (n, title, layout) in enumerate(problems):
         clocks, scramble = book[n]
-        moves = lines.get(n, "").split(",")
-        third = ",".join(moves[:(len(moves) + 2) // 3]) if n in lines else ""
+        moves = played.get(n, "").split(",")
+        third = ",".join(moves[:(len(moves) + 2) // 3]) if n in played else ""
         y = gap + i * (cell[1] + head)
         for j, (state, args) in enumerate([("clean", ["render", str(n)]), ("dealt", ["deal", str(n), layout, clocks, scramble]),
                                            ("a third in", ["deal", str(n), layout, clocks, scramble])]):
@@ -77,7 +78,10 @@ if which == "plates":
 else:
     # The play screen from above the tank to the caption on a 1320 x 2868 Pro Max, scaled to the cell.
     crop, cell, lines = (0, 760, 1320, 2200), (430, 469), 2
-states = ["solved"] if which == "solved" else ["dealt", "solved"]
+# From 31 the shots also hold each problem a third of the way into its line.
+states = ["solved"] if which == "solved" else ["dealt", "third", "solved"] if first > 30 and which == "shots" else ["dealt", "solved"]
+if len(states) == 3:
+    lines = 3
 if which == "solved":
     lines = 1
 if which == "alternate":
