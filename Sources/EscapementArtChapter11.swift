@@ -425,18 +425,18 @@ extension EscapementArt {
     }
 
     /// Problem 65, Motion work, hex, clocks 1-,2-: the motion work set out along a dashed axis from eleven to five,
-    /// the cannon pinion in the lane at eleven, the hour wheel on the centre with its rim outside the hub's reach, the
+    /// the cannon pinion in the lane at eleven, the hour wheel on the centre, its teeth inside the outer hubs' reach, the
     /// minute wheel in the lane at five; the minute wheel's pinion in the second ink.
     static func plate65() -> Plate {
         var plate = Plate()
         let o = Kit.origin, cannon = polar(o, 0.72, Kit.clock(11)), minute = polar(o, 0.72, Kit.clock(5))
-        let hourR = 0.42, minuteR = 0.205, cannonR = 0.13
-        let hour = gear(o, hourR, teeth: 48, phase: 0.02), small = gear(minute, minuteR, teeth: 30, phase: 0.1)
+        let hourR = 0.335, minuteR = 0.205, cannonR = 0.13
+        let hour = gear(o, hourR, teeth: 40, phase: 0.02), small = gear(minute, minuteR, teeth: 30, phase: 0.1)
         let leaves = gear(cannon, cannonR, teeth: 10, phase: 0.2)
 
         Kit.ground(&plate, angle: 0.3, around: [hour, small, leaves])
 
-        bold(&plate, o, hourR, outline: hour, rim: 0.09, hub: 0.07, crossings: 4, crossing: 0.034, phase: Kit.clock(0.5))
+        bold(&plate, o, hourR, outline: hour, rim: 0.045, hub: 0.07, crossings: 4, crossing: 0.034, phase: Kit.clock(0.5))
         // The hour wheel's pipe, which rides over the cannon pinion's.
         plate.line(arc(o, 0.115), heavy)
         plate.line(arc(o, 0.135), fine)
@@ -470,7 +470,7 @@ extension EscapementArt {
         }
 
         callout(&plate, "A", from: polar(cannon, 0.1, Kit.clock(2)), to: polar(o, 0.72, Kit.clock(1)) + P(-0.05, 0))
-        callout(&plate, "B", from: polar(o, 0.4, Kit.clock(8.6)), to: polar(o, 0.72, Kit.clock(9)))
+        callout(&plate, "B", from: polar(o, 0.33, Kit.clock(8.8)), to: polar(o, 0.72, Kit.clock(9)))
         callout(&plate, "C", from: polar(minute, 0.19, Kit.clock(2.5)), to: polar(o, 0.74, Kit.clock(3)))
         callout(&plate, "D", from: polar(minute, 0.04, Kit.clock(8)), to: polar(o, 0.72, Kit.clock(7)))
         return plate
