@@ -44,8 +44,13 @@ struct RatchetView: View {
     var fall = 1.0
     var still = false
     /// Cards on the hub: two on every clock of a problem with one dealt more than 9 ticks, for the whole problem, so the
-    /// hubs match each other and a count never changes width.
+    /// hubs match each other and a count never changes width (`Level.hubCards`). The caller sizes the clock for them
+    /// (`grown`).
     var digits = 1
+
+    /// How much larger a clock is drawn to give its hub `cards`: two cards as tall as one, each as narrow as its digit,
+    /// keep their rounded corners as far inside the hub's ring as one card's do, so its digits stand the same size.
+    static func grown(_ cards: Int) -> CGFloat { cards > 1 ? 1.26 : 1 }
 
     var body: some View {
         let rt = size / 2, rr = size / 2 * 0.74
@@ -92,11 +97,10 @@ struct RatchetView: View {
             .opacity(stopped ? 0.55 : 1)
             // The hub as wide as reads its card, the teeth and the index outside it.
             Circle().fill(Color.black.opacity(0.85)).frame(width: rr * 1.6, height: rr * 1.6).position(c)
-            // Unmirrored, so a wound-back clock's count reads; its corners just inside the hub's ring.
-            // Two cards side by side, each as narrow as its digit, keep their corners inside the ring too, at 0.86 of
-            // one card's height: the most two cards fit without the hub covering the index's track.
+            // Unmirrored, so a wound-back clock's count reads; its corners just inside the hub's ring. Two cards stand
+            // as tall as one on a clock without them, the clock drawn larger to hold them.
             FlipCounter(value: owed, was: was ?? owed, fall: fall, digits: digits, still: still, spent: stopped,
-                        height: rr * (digits > 1 ? 1.08 : 1.25), narrow: digits > 1)
+                        height: rr * 1.25 / Self.grown(digits), narrow: digits > 1)
                 .scaleEffect(x: back ? -1 : 1)
                 .position(c)
             Circle().stroke(stopped ? Color.amber : steel, lineWidth: 1.2).frame(width: rr * 1.6, height: rr * 1.6).position(c)
@@ -207,6 +211,11 @@ struct FlipCounter: View {
         .overlay(RoundedRectangle(cornerRadius: 3 * k).stroke((out ? Color.vermilion : Color(0x5A6272)).opacity(spent ? 0.5 : 0.8),
                                                              lineWidth: 0.75))
     }
+}
+
+extension Level {
+    /// Cards on each Escapement hub: two where any clock is dealt more than 9 ticks (`RatchetView.digits`).
+    var hubCards: Int { clocks.contains { owed($0.rod, on: scramble) > 9 } ? 2 : 1 }
 }
 
 private extension String {

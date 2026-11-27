@@ -1932,7 +1932,7 @@ struct LevelView: View {
             + (swirlLesson ? RimLesson.arc(r, .swirl) : [])
         // A clock's ratchet and its count want more room than a knob.
         let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }
-            .map { (at($0), (game.level.ratchets.contains($0) ? Self.ratchetSize(core) / 2 + 40 : core / 2) + Self.countRoom) }
+            .map { (at($0), (game.level.ratchets.contains($0) ? Self.ratchetSize(core, cards: game.level.hubCards) / 2 + 40 : core / 2) + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
             + (lensTrack.map { x in (-3...3).map { (CGPoint(x: x, y: at(rodCount!.k).y + CGFloat($0) * Self.trackPitch), Self.countRoom + 4) } } ?? [])
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
@@ -2164,9 +2164,9 @@ struct LevelView: View {
                         LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
                     }
                     .position(at(fk))
-                ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
+                ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core, cards: game.level.hubCards), r: r) }
                 if game.lost && shown == nil, let k = game.tick.last?.rod ?? game.pushedClock ?? game.lastStopped {
-                    lostMarks(at(k), size: Self.ratchetSize(core), r: r,
+                    lostMarks(at(k), size: Self.ratchetSize(core, cards: game.level.hubCards), r: r,
                               twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
                 }
                 if knobLesson && shown == nil && !touching {
@@ -2312,8 +2312,8 @@ struct LevelView: View {
         .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } } // loc: verbatim localized by Game
     }
 
-    /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
-    nonisolated static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
+    /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read, grown for two cards on its hub.
+    nonisolated static func ratchetSize(_ core: CGFloat, cards: Int = 1) -> CGFloat { 1.5 * core * RatchetView.grown(cards) }
 
     /// Clock `k`'s ratchet, `flight` of the way through its newest tick's turn, the `i`th of the move's turn at `v`. Its
     /// hub flips as the header does, as its tick starts, so the header is always the hubs' sum; it greys once that tick
@@ -2322,11 +2322,11 @@ struct LevelView: View {
                          core: CGFloat, plate: CGFloat) -> RatchetView {
         let owed = game.owed(k), started = i.map { v > Double($0) }
         return RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                           size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k || waitedOn == k,
+                           size: Self.ratchetSize(core, cards: game.level.hubCards), plate: plate, pawl: pawl, lit: pressing == k || waitedOn == k,
                            stopped: !game.canTick(k) && f >= 1 && shown == nil && !demoing, back: back,
                            owed: started == false ? owed + 1 : owed, was: started == true ? owed + 1 : nil,
                            fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion,
-                           digits: game.level.clocks.contains { game.level.owed($0.rod, on: game.level.scramble) > 9 } ? 2 : 1)
+                           digits: game.level.hubCards)
     }
 
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a

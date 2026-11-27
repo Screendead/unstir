@@ -749,9 +749,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   line (`testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine`, `testEachHubCountsItsOwnClockAndTheHeaderIsTheirSum`,
   which also checks the counts through a wrong move and its undo before every move of every line). No clock in the
   first 30 problems owes more than 9, so their hubs show one card; where a clock is dealt more than 9, from problem 31 on,
-  every hub shows two for the whole problem (`RatchetView.digits`), each as narrow as its digit (`FlipCounter.narrow`) and
-  0.86 of one card's height, the most that keeps their corners inside the hub's ring off the index's track, and none owes more
-  than 99 (`testEveryHubCountFitsItsCards`). A solve spends the budget to the
+  every hub shows two for the whole problem (`Level.hubCards`, `RatchetView.digits`), each as narrow as its digit
+  (`FlipCounter.narrow`) and as tall as one card on a one-card clock, as text never shrinks: the whole clock, wheel,
+  sub-dial, hub and the rings round it, is drawn 1.26 times larger there (`RatchetView.grown`, `LevelView.ratchetSize`),
+  which keeps two cards' rounded corners as far inside the hub's ring as one card's, off the index's track; none owes
+  more than 99 (`testEveryHubCountFitsItsCards`). A solve spends the budget to the
   last tick, so `over` is always 0 and its best stores as solved; its wave, the tank's swell, the glass easing home and
   the chime wait for that tick, `tickBeat` and more after the lift, and the result card follows the wave by its usual
   1.4 s (`LevelView.landSolve`, `solveDelay`; Jack's call tk-finish = B, round 16). One clock stopping while another runs loses nothing.
