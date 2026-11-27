@@ -31,7 +31,7 @@ const TIERS = [
   { name: 'maelstrom', from: [255, 64, 72], to: [255, 132, 64], r0: 49, r1: 77, solved: 0, next: 0, locked: true },
 ];
 const R = 176, CORE = 42, GAP = 4.5;
-const Z = 2.75;                      // the zoom into a band
+const Z = 3.1;                        // the zoom into a band: names 110 pt apart, the tightest pair 9 pt clear                      // the zoom into a band
 const GROUND = [11, 16, 27];           // dark glass is mixed with the ground, so a cell's fill and edge are one tone
 const rgb = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
 const hue = (tier, i) => tier.from.map((v, k) => mix(v, tier.to[k], i / 26));
@@ -85,10 +85,12 @@ function cell(ctx, tier, i, z, style) {
     ctx.fillStyle = g; ctx.strokeStyle = g; ctx.lineWidth = 2 * c;
     ctx.fill(); ctx.stroke();
     // enamel: a thin light along the outer edge, and at par a bright pip set into the cell
+    // (at the zoom the light sits on the edge nearer the centre, the upper one on that screen)
+    const lr = z > 1 ? tier.r0 * z + 2.4 * z : tier.r1 * z - 2.2 * z;
+    const e = (GAP * z / 2 + 3 * z) / lr;
+    ctx.beginPath(); ctx.arc(0, 0, lr, phi(th - STEP / 2 + e), phi(th + STEP / 2 - e), true);
+    ctx.lineWidth = z > 1 ? 1.4 : 0.9; ctx.lineCap = 'round'; ctx.strokeStyle = `rgba(255,255,255,${0.42 * k})`; ctx.stroke();
     if (z > 1) return;
-    const e = (GAP * z / 2 + 3 * z) / (tier.r1 * z);
-    ctx.beginPath(); ctx.arc(0, 0, tier.r1 * z - 2.2 * z, phi(th - STEP / 2 + e), phi(th + STEP / 2 - e), true);
-    ctx.lineWidth = 0.9 * z; ctx.lineCap = 'round'; ctx.strokeStyle = `rgba(255,255,255,${0.42 * k})`; ctx.stroke();
     if (style === 'par') {
       const [x, y] = at(tier.r0 + 6.5, th);
       ctx.beginPath(); ctx.arc(x, y, 1.5, 0, TAU); ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fill();
@@ -99,9 +101,9 @@ function cell(ctx, tier, i, z, style) {
     // dark glass: an edge and a fill of one outline, each mixed with the ground so they never double up
     const a = style === 'locked' ? 0.72 : 1, w = style === 'next' ? 1.3 * Math.sqrt(z) : Math.max(0.75, 0.4 * z);
     const tone = (x) => rgb(col.map((v, n) => mix(GROUND[n], v, x)));
-    ctx.fillStyle = ctx.strokeStyle = style === 'next' ? '#fff' : tone(0.36 * a); ctx.lineWidth = 2 * c;
+    ctx.fillStyle = ctx.strokeStyle = style === 'next' ? rgb(lighten(col, 0.62)) : tone(0.36 * a); ctx.lineWidth = 2 * c;
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = ctx.strokeStyle = tone(style === 'next' ? 0.16 : 0.1 * a); ctx.lineWidth = 2 * (c - w);
+    ctx.fillStyle = ctx.strokeStyle = tone(style === 'next' ? 0.2 : 0.1 * a); ctx.lineWidth = 2 * (c - w);
     ctx.fill(); ctx.stroke();
   }
 }
@@ -148,10 +150,11 @@ function build() {
     const core = c.createRadialGradient(0, 0, 0, 0, 0, CORE);
     core.addColorStop(0, '#000'); core.addColorStop(0.8, '#020305'); core.addColorStop(1, 'rgba(2,3,5,0)');
     c.fillStyle = core; c.beginPath(); c.arc(0, 0, CORE, 0, TAU); c.fill();
-    const pt = c.createRadialGradient(0, -8, 0, 0, -8, 9);
+    const py = AX ? 0 : -8;
+    const pt = c.createRadialGradient(0, py, 0, 0, py, 9);
     pt.addColorStop(0, 'rgba(255,255,255,1)'); pt.addColorStop(0.22, 'rgba(255,255,255,0.9)');
     pt.addColorStop(0.3, 'rgba(190,220,255,0.25)'); pt.addColorStop(1, 'rgba(190,220,255,0)');
-    c.fillStyle = pt; c.fillRect(-10, -18, 20, 20);
+    c.fillStyle = pt; c.fillRect(-10, py - 10, 20, 20);
     if (AX) return;                       // drawn smaller there, so the word leaves the emblem for the page below
     c.font = 'italic 300 15px NY'; c.textAlign = 'center'; c.fillStyle = 'rgba(255,255,255,0.7)';
     c.fillText('endless', 0, 17);
@@ -274,7 +277,7 @@ function build() {
       if (state) { c.font = '400 13px UMono'; c.fillStyle = 'rgba(255,255,255,0.52)'; c.fillText(state, 80, 135); }
     });
     L.lens = cover('lens', 'Lens', '', true);
-    L.escapement = cover('escapement', 'Escapement', '3 free');
+    L.escapement = cover('escapement', 'Escapement', '0/3 free');
     L.prism = cover('prism', 'Prism', '2/3 free');
     L.foot = text(W, 80, (c) => {
       c.font = '300 15px UPro'; c.fillStyle = 'rgba(255,255,255,0.55)';
@@ -317,8 +320,8 @@ function buildAX(text, tick, purple) {
     const s = 'UNSTIR', ws = [...s].map(ch => c.measureText(ch).width);
     let p = W / 2 - (ws.reduce((a, b) => a + b, 0) + 65) / 2;
     c.textAlign = 'left'; [...s].forEach((ch, i) => { c.fillText(ch, p, 108); p += ws[i] + 13; });
-    c.font = '300 46px UPro';
-    const a = '15', b = 'Waterfall', gap = 16, wa = c.measureText(a).width, wb = c.measureText(b).width;
+    c.font = '300 53px UPro';
+    const a = '15', b = 'Waterfall', gap = 18, wa = c.measureText(a).width, wb = c.measureText(b).width;
     c.fillStyle = purple; c.fillText(a, (W - wa - wb - gap) / 2, 446);
     c.fillStyle = '#fff'; c.fillText(b, (W - wa - wb - gap) / 2 + wa + gap, 446);
     c.textAlign = 'center';
