@@ -300,8 +300,12 @@ enum Fungi {
                 if cos(cm) > 0.3, bot - top > 0.05 {
                     let l = cl + 0.22 * (cr - cl), r = cr - 0.25 * (cr - cl)
                     let v0 = top + 0.25 * (bot - top), v1 = bot - 0.2 * (bot - top)
-                    s.draw((0...6).map { f(l, v1 - (v1 - v0) * Double($0) / 6) }
-                           + (1...6).map { f(l + (r - l) * Double($0) / 6, v0 + 0.01 * sin(.pi * Double($0) / 6)) }, E.fine)
+                    let down: [P] = (0...6).map { (i: Int) -> P in f(l, v1 - (v1 - v0) * Double(i) / 6) }
+                    let across: [P] = (1...6).map { (i: Int) -> P in
+                        let u: Double = Double(i) / 6
+                        return f(l + (r - l) * u, v0 + 0.01 * sin(.pi * u))
+                    }
+                    s.draw(down + across, E.fine)
                 }
                 prev = max(a, b)
             }
@@ -591,10 +595,13 @@ enum Fungi {
             var t = Double.random(in: 0.0..<0.06, using: &rng)
             while t < 1 {
                 let len = Double.random(in: 0.06..<0.16, using: &rng)
-                s.draw((0...8).map { i in
-                    let u = t + len * Double(i) / 8
-                    return end + length * u * d + r * side * n + 0.004 * sin(40 * u + Double(k)) * n
-                }.filter { simd_distance($0, end) > 0.05 }, E.fine)
+                let furrow: [P] = (0...8).map { (i: Int) -> P in
+                    let u: Double = t + len * Double(i) / 8
+                    let along: P = (length * u) * d
+                    let across: P = (r * side + 0.004 * sin(40 * u + Double(k))) * n
+                    return end + along + across
+                }
+                s.draw(furrow.filter { simd_distance($0, end) > 0.05 }, E.fine)
                 t += len + .random(in: 0.02..<0.05, using: &rng)
             }
         }
