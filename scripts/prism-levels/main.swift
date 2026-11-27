@@ -14,6 +14,7 @@ import simd
 //   sums, least read: `read`'s line, untwisting the newest removable entry each move: how many of its moves are on a rod
 //     stirred more than once, which shows the sum of its stirs, and the least share a once-stirred coloured rod's count
 //     registers (`read`), which should be well over 0.
+//   most: the most stirs any one rod holds; past 3 (the first five trays' most) a rod's moves read as guesses.
 
 func signed(_ n: Int) -> String { n > 0 ? "+\(n)" : "\(n)" }
 func string(_ stack: [Twist]) -> String { stack.map { "\($0.rod):\(signed($0.steps))" }.joined(separator: ",") }
@@ -136,13 +137,14 @@ func row(_ name: String, _ layout: Layout, _ masks: [Int: Channels], _ stack: [T
     // least: the least read share of a move on a once-stirred coloured rod, whose count must show.
     let line = reads(layout, masks, stack)
     let sums = line.filter { $0.times > 1 }.count
+    let most = Dictionary(grouping: stack, by: \.rod).values.map(\.count).max() ?? 0
     let least = line.filter { $0.times == 1 }.compactMap(\.read).min().map { String(format: "%.2f", $0) } ?? "-"
     let fair = (!solve || optimum == stack.count) && untwisting == stack.count
         && [Twist].parse(string(stack), in: layout, masks: masks) == stack
     let fields = [name, layout.rawValue, string(masks), "\(stack.count)", "\(optimum)", "\(untwisting)",
                   "\(free.count)/\(white)", "\(blocked)", String(format: "%.2f", right / Double(stack.count)),
                   String(format: "%.1f", forced), "\(cost)", String(format: "%.0f%%", 100 * ghost),
-                  String(format: "%.0f%%", 100 * triple), "\(sums)", least, string(stack)]
+                  String(format: "%.0f%%", 100 * triple), "\(sums)", least, "\(most)", string(stack)]
     return Row(line: fields.joined(separator: "\t"), fair: fair)
 }
 
@@ -169,7 +171,11 @@ func deal(_ layout: Layout, depth: Int, palette: [Channels], fixed: [Int: Channe
         tries += 1
         // Masks under which every stir merges deal nothing.
         guard tries < 200 else { return nil }
-        let t = Twist(rod: others[rng.below(others.count)], steps: steps())
+        // PRISM_ROD_CAP=n deals no rod more than n stirs: a rod stirred more often shows only their sum, and its decoys
+        // read nearly as strongly as its count, so the move becomes a guess.
+        let open = rodCap.map { cap in others.filter { r in stack.filter { $0.rod == r }.count < cap } } ?? others
+        guard !open.isEmpty else { return nil }
+        let t = Twist(rod: open[rng.below(open.count)], steps: steps())
         var next = stack
         guard next.commit(rod: t.rod, steps: t.steps, in: layout, masks: masks) == .pushed else { continue }
         stack = next
@@ -178,9 +184,10 @@ func deal(_ layout: Layout, depth: Int, palette: [Channels], fixed: [Int: Channe
     return (masks, stack)
 }
 
+let rodCap = ProcessInfo.processInfo.environment["PRISM_ROD_CAP"].flatMap(Int.init)
 let args = Array(CommandLine.arguments.dropFirst())
 let header = ["level", "layout", "masks", "entries", "optimum", "untwisting", "free", "blocked", "right/step", "forced",
-              "cost", "ghost", "triple", "sums", "least read", "scramble"]
+              "cost", "ghost", "triple", "sums", "least read", "most", "scramble"]
 switch args.first {
 case "table":
     print(header.joined(separator: "\t"))

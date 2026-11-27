@@ -5,11 +5,12 @@
 #                                                        --thin`) with the next 2n seeds, once a pool has its first n
 # Writes the pools trays 6 to 15 are picked from, one (layout, depth, palette) a file, then:
 #   scripts/prism-levels/pick.py --deep <dir>
-# Each palette deals from its own seeds, as a two-letter palette's rng draws alike whatever its letters. Four searches
+# Every deal holds at most three stirs a rod (PRISM_ROD_CAP, unless set). Each palette deals from its own seeds, as a two-letter palette's rng draws alike whatever its letters. Four searches
 # run at once at utility priority (POOL_JOBS sets how many); the mixed palettes on hex take the longest (tens of seconds a seed).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 dir=$1 n=${2:-30}
+export PRISM_ROD_CAP=${PRISM_ROD_CAP:-3}
 mkdir -p "$dir"
 scripts/prism-levels.sh check tri 0:r,1:c,2:w 2:+3,0:+4,1:-3 > /dev/null
 from() { case $1 in rc) echo 1 ;; gm) echo 1001 ;; by) echo 2001 ;; rgb) echo 3001 ;; rcgb) echo 4001 ;; cmy) echo 5001 ;; *) echo 6001 ;; esac; }

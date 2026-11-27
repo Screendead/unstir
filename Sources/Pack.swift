@@ -751,7 +751,7 @@ extension Level {
                comment: "Prism's tenth tray's rule, under the tank"),
         String(localized: "rule.prism.11", defaultValue: "Where discs miss, every colour passes.",
                comment: "Prism's eleventh tray's rule, under the tank"),
-        String(localized: "rule.prism.12", defaultValue: "A stir under another colour is not buried.",
+        String(localized: "rule.prism.12", defaultValue: "A stir is not buried under its opposite colour.",
                comment: "Prism's twelfth tray's rule, under the tank"),
         String(localized: "rule.prism.13", defaultValue: "An ink is two primaries: cyan is green and blue.",
                comment: "Prism's thirteenth tray's rule, under the tank"),
