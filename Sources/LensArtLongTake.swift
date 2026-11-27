@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses]
+    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez]
 }
 
 // MARK: Drawing
@@ -201,5 +201,114 @@ extension LensArt {
             + curve(rose + P(-0.062, 0.042), rose + P(-0.052, 0.056), rose + P(-0.036, 0.05), 6)), 0.0022))
         s.append(stroke([rose + P(-0.027, 0.046), rose + P(-0.022, 0.054)], 0.002))
         return layered("operaglasses", layers, strokes: s) { p in p.y > stage ? m(0.4) : Tone(0.1, 0.12, 0) }
+    }()
+}
+
+// MARK: - 33: Pince-nez
+
+/// Level 33's name: a whiskered gentleman in a tilted top hat, his pince-nez clipped on his nose, its two glasses over
+/// the upper left and upper right cores (hex's two lenses on this level), joined by the spring over his nose and
+/// chained to his lapel; he is a naturalist, and through the left glass is a butterfly, through the right a beetle.
+/// His hat, brows, handlebar moustache, sideburns and cravat are the broad shapes the five twisting rods turn, the
+/// moustache and the nose's shadow off the hub's centre.
+extension LensArt {
+    static let pinceNez: Halftone.Panel = {
+        let left = P(-0.485, -0.28), right = P(0.485, -0.28)
+        let skin = Tone(0, 0.32, 0.58), whisker = Tone(0, 0.62, 0.2), glass = c(0.5), gilt = y(0.95)
+        let pivot = P(0, -0.72), tilt = -8.0
+        let crown = turned([P(-0.4, -1.2), P(0.4, -1.2), P(0.38, -0.74), P(-0.38, -0.74)], about: pivot, tilt)
+        let band = turned([P(-0.385, -0.86), P(0.385, -0.86), P(0.38, -0.74), P(-0.38, -0.74)], about: pivot, tilt)
+        let brim = turned(ellipse(P(0, -0.72), 0.6, 0.065, 40), about: pivot, tilt)
+        let half: [P] = [P(0, 0.15), P(-0.1, 0.12), P(-0.22, 0.16), P(-0.33, 0.17), P(-0.42, 0.12), P(-0.47, 0.03), P(-0.44, 0.14),
+                         P(-0.38, 0.22), P(-0.26, 0.27), P(-0.12, 0.26), P(0, 0.22)]
+        // The right curl rides higher than the left, so the moustache is no mirror about the hub.
+        let other = half.reversed().map { P(-$0.x, $0.y - ($0.x < -0.3 ? 0.05 : 0)) }
+        let moustache = half + other
+        let shadow = [P(-0.04, -0.25), P(-0.07, 0.0), P(-0.12, 0.08), P(-0.05, 0.13), P(0, 0.11), P(0, -0.25)]
+        let nose = [P(-0.04, -0.25), P(-0.07, 0.0), P(-0.12, 0.08), P(-0.05, 0.13), P(0.05, 0.13), P(0.11, 0.08), P(0.07, 0.0), P(0.04, -0.25)]
+        let goatee = [P(-0.09, 0.4), P(0.08, 0.4), P(0.02, 0.66), P(-0.01, 0.66)]
+        let burns = [-1.0, 1.0].map { x in [P(0.5 * x, -0.42), P(0.6 * x, -0.42), P(0.63 * x, 0.12), P(0.5 * x, 0.2), P(0.48 * x, 0.0)] }
+        let brows = [left, right].map { turned(ellipse($0 + P(0, -0.34), 0.17, 0.045, 20), about: $0 + P(0, -0.34), $0.x < 0 ? 6 : -10) }
+        let collars = [-1.0, 1.0].map { x in [P(0.04 * x, 0.78), P(0.36 * x, 0.68), P(0.3 * x, 0.96), P(0.06 * x, 0.88)] }
+        let bow = [P(-0.2, 0.8), P(0, 0.88), P(0.2, 0.78), P(0.22, 0.98), P(0, 0.92), P(-0.18, 1.0)]
+        let chain = curve(polar(left, 0.3, 160), P(-0.95, 0.1), P(-0.34, 0.8), 30)
+
+        var layers: [Layer] = [layer(disc(left, 0.264, glass)), layer(disc(right, 0.264, glass))]
+        // Each frame a gilt wire broken in dashes, a stud on its outer side.
+        for (c, phase) in [(left, 4.0), (right, 11.0)] {
+            layers.append(segments(c, 0.264, 0.3, 30, [gilt, gilt, .zero], phase: phase))
+        }
+        layers += [layer(disc(polar(left, 0.31, 180), 0.03, gilt)), layer(disc(polar(right, 0.31, 0), 0.03, gilt))]
+        layers += stride(from: 0, to: 31, by: 3).map { layer(disc(chain[$0], 0.016, gilt)) }
+        layers += brows.map { layer(fill($0, whisker)) }
+        layers += [layer(fill(bow, m(0.85))), layer(fill(collars[0], Tone(0.4, 0.4, 0.4))), layer(fill(collars[1], Tone(0.4, 0.4, 0.4))),
+                   layer(fill(moustache, whisker)), layer(fill(shadow, Tone(0, 0.52, 0.5))), layer(fill(nose, skin)),
+                   layer(fill(goatee, whisker)), layer(fill(band, m(0.8))), layer(fill(crown, c(0.3))), layer(fill(brim, c(0.3)))]
+        layers += burns.map { layer(fill($0, whisker)) }
+        layers += [layer(oval(P(-0.62, -0.12), 0.08, 0.13, skin)), layer(oval(P(0.62, -0.12), 0.08, 0.13, skin)),
+                   layer(oval(P(0, -0.02), 0.62, 0.8, skin)), layer(fill(rect(-1, 0.78, 1, 1), .zero))]
+
+        var s: [Halftone.Stroke] = []
+        // The hat: crown, band, brim; the face, ears, brows, nose, moustache, goatee; collar and cravat.
+        s.append(stroke([crown[3], crown[0]], bold))
+        s.append(stroke([crown[1], crown[2]], bold))
+        s.append(stroke([band[0], band[1]], mid))
+        s.append(stroke(brim, bold))
+        s += runs(ellipse(P(0, -0.02), 0.62, 0.8, 96), bold) { $0.y > -0.7 && simd_distance($0, left) > 0.3 && simd_distance($0, right) > 0.3 }
+        for x in [-0.62, 0.62] { s += runs(ellipse(P(x, -0.12), 0.08, 0.13, 24), mid) { abs($0.x) > 0.58 } }
+        for b in brows {
+            for k in 0..<7 { s.append(stroke([b[2 + 2 * k], b[2 + 2 * k] + P(0.012, -0.03)], hair)) }
+        }
+        s.append(stroke(Array(nose.dropFirst().dropLast()), mid))
+        for x in [-0.06, 0.06] { s.append(stroke(circle(P(x, 0.1), 0.018, 8), hair)) }
+        s.append(stroke(closed(moustache), bold))
+        for k in 0..<6 {
+            let x = 0.04 + 0.06 * Double(k)
+            s.append(stroke([P(-x, 0.16 + 0.01 * Double(k)), P(-x - 0.05, 0.23)], hair))
+            s.append(stroke([P(x, 0.16 + 0.006 * Double(k)), P(x + 0.05, 0.22 - 0.008 * Double(k))], hair))
+        }
+        s.append(stroke(closed(goatee), mid))
+        s.append(stroke(arc(P(0, 0.36), 0.06, 20, 160, 8), mid))
+        for b in burns { s += runs(span(b[1], b[2], 30) + span(b[2], b[3], 8), mid) { simd_distance($0, left) > 0.3 && simd_distance($0, right) > 0.3 } }
+        for c in collars { s.append(stroke(closed(c), mid)) }
+        s.append(stroke(closed(bow), mid))
+        s.append(stroke(circle(P(0, 0.88), 0.035, 10), mid))
+        // The pince-nez: the frames, their studs, the spring over the nose and its pads, the chain to the lapel.
+        for c in [left, right] {
+            s += rim(c, 0.3, bold)
+            s += rim(c, 0.264, mid)
+            s.append(stroke(arc(c, 0.2, 200, 240, 10), mid))
+            s.append(stroke(arc(c, 0.15, 205, 225, 6), hair))
+        }
+        s.append(stroke(curve(polar(left, 0.3, -10), P(0, -0.5), polar(right, 0.3, 190), 20), bold))
+        s.append(stroke(curve(polar(left, 0.3, -2), P(0, -0.44), polar(right, 0.3, 182), 20), hair))
+        for x in [-0.07, 0.07] { s.append(stroke(ellipse(P(x, -0.24), 0.02, 0.035, 10), mid)) }
+        for k in stride(from: 0, to: 31, by: 3) { s.append(stroke(circle(chain[k], 0.016, 8), hair)) }
+        // Through the left glass: a butterfly, its four wings, body and feelers.
+        let fly = left + P(0.014, -0.026)
+        s.append(stroke([fly + P(0, -0.016), fly + P(0, 0.016)], 0.0042))
+        for side in [-1.0, 1.0] {
+            s.append(stroke(ellipse(fly + P(side * 0.018, -0.009), 0.017, 0.012, degrees: side * -30, 16), 0.003))
+            s.append(stroke(ellipse(fly + P(side * 0.013, 0.01), 0.01, 0.008, degrees: side * 30, 12), 0.003))
+            s.append(stroke(curve(fly + P(0, -0.016), fly + P(side * 0.004, -0.03), fly + P(side * 0.014, -0.036), 6), 0.002))
+            s.append(stroke(circle(fly + P(side * 0.017, -0.009), 0.004, 6), 0.002))
+        }
+        // Through the right glass: a beetle, its wing cases parted by a seam, its head, six legs and feelers.
+        let bug = right + P(0.012, -0.028)
+        s.append(stroke(ellipse(bug, 0.015, 0.02, 20), 0.0036))
+        s.append(stroke([bug + P(0, -0.012), bug + P(0, 0.02)], 0.002))
+        s.append(stroke([bug + P(-0.015, -0.01), bug + P(0.015, -0.01)], 0.002))
+        s.append(stroke(circle(bug + P(0, -0.027), 0.007, 10), 0.0034))
+        for side in [-1.0, 1.0] {
+            for (k, yy) in [-0.006, 0.004, 0.014].enumerated() {
+                s.append(stroke([bug + P(side * 0.014, yy), bug + P(side * 0.026, yy - 0.006 + 0.006 * Double(k)), bug + P(side * 0.03, yy + 0.004 * Double(k))], 0.0018))
+            }
+            s.append(stroke([bug + P(side * 0.004, -0.033), bug + P(side * 0.012, -0.046)], 0.0018))
+            s.append(stroke(circle(bug + P(side * 0.007, 0.006), 0.003, 6), 0.002))
+        }
+        return layered("pincenez", layers, strokes: s) { p in
+            // A dark wall papered in broad gilt stripes.
+            (p.x + 2).truncatingRemainder(dividingBy: 0.15) < 0.065 ? y(0.4) : .zero
+        }
     }()
 }
