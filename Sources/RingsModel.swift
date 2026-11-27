@@ -36,6 +36,8 @@ struct RingsModel: Equatable, Sendable {
         let lead: Spot?
         /// Endless with a run saved: the middle also offers a new one, armed by a first tap (`ResetArm`).
         var renews = false
+        /// `under` as short as it can say it, for accessibility type: "14/27 · 11 par".
+        var brief: String?
     }
 
     struct Today: Equatable, Sendable {
@@ -88,7 +90,10 @@ struct RingsModel: Equatable, Sendable {
                     String(localized: "opens with every \($0.word) level solved", comment: "A shut tier's gate. The tier below")
                 } ?? ""
             let way = !open || levels.isEmpty ? nil : frontier ?? bests.firstIndex { ($0?.over ?? 0) > 0 } ?? 0
-            return Ring(hue: .tier(tier), word: tier.word, open: open, under: under, spots: spots, way: way, lead: way.map { spots[$0] })
+            let brief = String(localized: "\(solved)/\(levels.count) \u{00B7} \(par) par",
+                               comment: "The rings' middle at accessibility type sizes, under a tier's name. Levels solved, of all, then those at par")
+            return Ring(hue: .tier(tier), word: tier.word, open: open, under: under, spots: spots, way: way, lead: way.map { spots[$0] },
+                        brief: open ? brief : nil)
         }
         // The daily and endless show once the old menu's would (`MenuView.lead`, Jack's call C4), the archive's ring
         // above plughole and endless's below maelstrom.

@@ -19,8 +19,10 @@ final class RingsLayer: CALayer {
     }
 }
 
-/// Where everything stands on a screen, from its size and insets alone. The mock is 440 by 956; a smaller screen
-/// draws the ring, the sun and the orbits in, and leaves every word and bead its size.
+/// Where everything stands on a screen, from its size, insets and type size alone. The mock is 440 by 956; a smaller
+/// screen draws the ring, the sun and the orbits in, and leaves every word and bead its size. Under accessibility type
+/// the mock's own layout for it holds (`launch-ax.png`): the ring a little higher, the sun whole over a lower horizon,
+/// the daily's words set flat under its star, and every word at the size the system gives its role, never smaller.
 struct RingsPlan: Equatable {
     /// A finger's travel from one ring to the next.
     static let pitch: CGFloat = 240
@@ -28,20 +30,30 @@ struct RingsPlan: Equatable {
     let size: CGSize
     let top, bottom: CGFloat
     let k: CGFloat
+    let type: UIContentSizeCategory
+    let large: Bool
     /// The ring's centre, and its beads' distance from it.
     let centre: CGPoint
     let radius: CGFloat
     let horizon: CGFloat
 
-    init(size: CGSize, top: CGFloat, bottom: CGFloat) {
+    init(size: CGSize, top: CGFloat, bottom: CGFloat, type: UIContentSizeCategory = .large) {
         self.size = size
         self.top = top
         self.bottom = bottom
+        self.type = type
+        large = type.isAccessibilityCategory
         let room = size.height - top - bottom
         k = min(1, size.width / 440, room / 860)
-        centre = CGPoint(x: size.width / 2, y: (top + room * 0.465).rounded())
+        centre = CGPoint(x: size.width / 2, y: (top + room * 0.465 - (large ? 34 * k : 0)).rounded())
         radius = 190 * k
-        horizon = (centre.y + RingsLook.set * k).rounded()
+        horizon = (centre.y + (large ? RingsLook.setClear : RingsLook.set) * k).rounded()
+    }
+
+    /// A word's size: the mock's, or under accessibility type the size the system gives `role` there.
+    func pt(_ size: CGFloat, _ role: UIFont.TextStyle) -> CGFloat {
+        guard large else { return size }
+        return UIFontMetrics(forTextStyle: role).scaledValue(for: size, compatibleWith: UITraitCollection(preferredContentSizeCategory: type))
     }
 
     /// Bead `i` of `n`, from the centre: the seam between the last and the first is at the top.
@@ -51,18 +63,19 @@ struct RingsPlan: Equatable {
     }
 
     /// The daily's orbit over the ring, and its star on it.
-    var orbit: CGFloat { 300 * k }
+    var orbit: CGFloat { (large ? 320 : 300) * k }
     var daily: CGPoint { CGPoint(x: centre.x, y: centre.y - orbit) }
 
     /// Cover `i` of `n`, on the orbit under the ring.
     func cover(_ i: Int, of n: Int) -> CGPoint {
         let a = CGFloat.pi / 2 + 0.41 * (CGFloat(n - 1) / 2 - CGFloat(i))
-        return CGPoint(x: centre.x + 304 * k * cos(a), y: centre.y + 304 * k * sin(a))
+        let r = (large ? 288 : 304) * k
+        return CGPoint(x: centre.x + r * cos(a), y: centre.y + r * sin(a))
     }
 
-    var packsLine: CGPoint { CGPoint(x: centre.x, y: centre.y + 422 * k) }
+    var packsLine: CGPoint { CGPoint(x: centre.x, y: centre.y + (large ? 447 : 422) * k) }
     var settings: CGPoint { CGPoint(x: centre.x, y: size.height - bottom - 10) }
-    var wordmark: CGPoint { CGPoint(x: centre.x, y: top + 24) }
+    var wordmark: CGPoint { CGPoint(x: centre.x, y: top + (large ? 10 : 24)) }
 }
 
 /// A ring at a depth from the one in front: 0 forward, positive deeper, negative passed. The one rule of the swipe,
@@ -89,6 +102,8 @@ final class RingsView: UIView, UIScrollViewDelegate {
         var store: Int
         /// Endless's saved run, as the root reads it.
         var endless: Resume?
+        /// The type size the menu is shown at.
+        var type: UIContentSizeCategory = .large
     }
 
     enum Hit: Equatable {
@@ -128,6 +143,8 @@ final class RingsView: UIView, UIScrollViewDelegate {
         /// Endless's "new run", and the same armed.
         let renew = RingsLayer(), armed = RingsLayer()
         var dim: CGFloat = 1
+        /// Where the middle's cue stands, from the centre: the play mark, or endless's new run.
+        var cueAt = CGPoint(x: 0, y: 36)
     }
 
     private let pager = UIScrollView()
@@ -214,7 +231,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
         #if PROBES || DEBUG
         Log.write("rings model read \(Int(Date.now.timeIntervalSince(began) * 1000)) ms")
         #endif
-        let plan = RingsPlan(size: bounds.size, top: inset, bottom: window?.safeAreaInsets.bottom ?? safeAreaInsets.bottom)
+        let plan = RingsPlan(size: bounds.size, top: inset, bottom: window?.safeAreaInsets.bottom ?? safeAreaInsets.bottom, type: state.type)
         guard model != self.model || plan != self.plan else { return }
         RingsCount.builds += 1
         // The ring in front stays in front when rings come or go (the daily's and endless's opening).
@@ -234,7 +251,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
         let back = RingsLayer(), suns = RingsLayer(), front = RingsLayer(), well = RingsLayer(), chrome = RingsLayer()
         for layer in [back, suns, front, well, chrome] { scene.addSublayer(layer) }
-        for g in RingsLook.ground(width: plan.size.width, height: plan.size.height, horizon: plan.horizon) {
+        for g in RingsLook.ground(width: plan.size.width, height: plan.size.height, horizon: plan.horizon, low: plan.large) {
             let layer = RingsLayer(), parent = g.front ? front : back
             if g.eye > 0 {
                 // The window's anchor is the vanishing point: the middle of its top edge.
@@ -270,7 +287,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
             made.whole.addSublayer(made.words)
             made.sun.position = plan.centre
             suns.addSublayer(made.sun)
-            seats.append(Seat(piece: .sun(ring.hue, shut: !ring.open), layer: made.sun, at: plan.centre, shrink: plan.k))
+            seats.append(Seat(piece: .sun(ring.hue, shut: !ring.open, clear: plan.large), layer: made.sun, at: plan.centre, shrink: plan.k))
             if ring.spots.isEmpty {
                 let orbit = RingsLayer()
                 made.beads.addSublayer(orbit)
@@ -293,28 +310,36 @@ final class RingsView: UIView, UIScrollViewDelegate {
             made.halo.opacity = 0
             seats.append(Seat(piece: .halo, layer: made.halo, at: .zero))
 
-            for text in Self.cues(model, i, radius: 163 * plan.k) { seat(.text(text), .zero, in: made.words) }
+            // Under accessibility type the rings a swipe away go unnamed, as the mock has it: the middle needs the room.
+            if !plan.large {
+                for text in Self.cues(model, i, radius: 163 * plan.k) { seat(.text(text), .zero, in: made.words) }
+            }
             if ring.open, let lead = ring.lead {
-                seat(.text(RingsText(ring.word, .word, 38, .deep, .medium)), CGPoint(x: 0, y: -76), in: made.words)
                 made.words.addSublayer(made.rest)
                 made.words.addSublayer(made.pick)
                 made.pick.opacity = 0
-                let named = Self.named(lead, under: ring.under)
-                seat(.text(named.under), Self.under, in: made.rest)
-                seat(.text(named.pair), Self.pair, in: made.rest)
+                let cue: RingsText? = ring.renews ? Self.renew(armed: false, plan) : nil
+                let m = Self.middle(word: ring.word, lead, under: plan.large ? ring.brief ?? ring.under : ring.under, cue: cue, plan: plan)
+                made.cueAt = m.cue
+                seat(.text(m.word.text), m.word.at, in: made.words)
+                seat(.text(m.under.text), m.under.at, in: made.rest)
+                seat(.text(m.pair.text), m.pair.at, in: made.rest)
                 if ring.renews {
                     made.rest.addSublayer(made.renew)
                     made.rest.addSublayer(made.armed)
                     made.armed.opacity = 0
-                    seats.append(Seat(piece: .text(Self.renew(armed: false)), layer: made.renew, at: Self.cue))
-                    seats.append(Seat(piece: .text(Self.renew(armed: true)), layer: made.armed, at: Self.cue))
-                } else {
-                    seat(.play, Self.cue, in: made.rest)
+                    seats.append(Seat(piece: .text(Self.renew(armed: false, plan)), layer: made.renew, at: m.cue))
+                    seats.append(Seat(piece: .text(Self.renew(armed: true, plan)), layer: made.armed, at: m.cue))
+                } else if !plan.large {
+                    seat(.play, m.cue, in: made.rest)
                 }
                 for layer in [made.under, made.pair, made.cue] { made.pick.addSublayer(layer) }
             } else {
-                seat(.text(RingsText(ring.word, .word, 38, .ink(0.2), .light, finish: .unlit(ring.hue))), CGPoint(x: 0, y: -34), in: made.words)
-                seat(.text(RingsText(ring.under, .name, 16, .ink(0.7), wrap: 230)), CGPoint(x: 0, y: 20), in: made.words)
+                let word = RingsText(ring.word, .word, plan.large ? plan.pt(28, .title1) : 38, .ink(0.2), .light, finish: .unlit(ring.hue))
+                let under = RingsText(ring.under, .name, plan.pt(16, .callout), .ink(0.7), wrap: plan.large ? 260 * plan.k : 230)
+                let tall = RingsPaint.measure(word).height
+                seat(.text(word), CGPoint(x: 0, y: plan.large ? -tall / 2 : -34), in: made.words)
+                seat(.text(under), CGPoint(x: 0, y: plan.large ? RingsPaint.measure(under).height / 2 + 4 : 20), in: made.words)
             }
             return made
         }
@@ -322,24 +347,47 @@ final class RingsView: UIView, UIScrollViewDelegate {
         seat(.wordmark, plan.wordmark, in: chrome)
         if let daily = model.daily {
             seat(.daily, plan.daily, in: chrome)
-            seat(.text(RingsText(daily.title, .name, 16, .ink(0.96), tracking: 0.3,
-                                 arc: .init(radius: plan.orbit, angle: -.pi / 2, lead: 30, side: -1))), plan.centre, in: chrome)
-            if let under = daily.under {
-                seat(.text(RingsText(under, .name, 16, .ink(0.58), tracking: 0.3,
-                                     arc: .init(radius: plan.orbit, angle: -.pi / 2, lead: 30, side: 1))), plan.centre, in: chrome)
+            if plan.large {
+                // Flat under the star, each line under the last.
+                let wide = plan.size.width - 32
+                let title = RingsText(daily.title, .name, plan.pt(17, .headline), .ink(1), finish: .shadowed, wrap: wide)
+                // Shadowed words carry 8 points of pad a side, closed up here.
+                let tall = RingsPaint.measure(title).height - 16
+                seat(.text(title), CGPoint(x: plan.daily.x, y: plan.daily.y + 14 + tall / 2), in: chrome)
+                if let under = daily.under {
+                    let line = RingsText(under, .data, plan.pt(13, .footnote), .ink(0.62), finish: .shadowed, wrap: wide)
+                    seat(.text(line), CGPoint(x: plan.daily.x, y: plan.daily.y + 14 + tall + (RingsPaint.measure(line).height - 16) / 2),
+                         in: chrome)
+                }
+            } else {
+                seat(.text(RingsText(daily.title, .name, 16, .ink(0.96), tracking: 0.3,
+                                     arc: .init(radius: plan.orbit, angle: -.pi / 2, lead: 30, side: -1))), plan.centre, in: chrome)
+                if let under = daily.under {
+                    seat(.text(RingsText(under, .name, 16, .ink(0.58), tracking: 0.3,
+                                         arc: .init(radius: plan.orbit, angle: -.pi / 2, lead: 30, side: 1))), plan.centre, in: chrome)
+                }
             }
         }
         for (i, cover) in model.covers.enumerated() {
-            let c = plan.cover(i, of: model.covers.count), foot = RingsPaint.coverWidth / 2
+            let n = model.covers.count, c = plan.cover(i, of: n), foot = RingsPaint.coverWidth / 2
             seat(.cover(cover.pack), c, in: chrome)
-            seat(.text(RingsText(cover.name, .name, 16, .ink(0.96), finish: .shadowed)), CGPoint(x: c.x, y: c.y + foot + 20), in: chrome)
-            if let line = cover.line {
-                seat(.text(RingsText(line, .data, 12, cover.lit ? .gold : .ink(0.8), finish: .shadowed)),
-                     CGPoint(x: c.x, y: c.y + foot + 39), in: chrome)
+            if plan.large {
+                // One line a cover, its name and its news; the middle one's lower, clear of its neighbours'.
+                let label = RingsText([cover.name, cover.line].compactMap { $0 }.joined(separator: " "), .name, plan.pt(15, .subheadline),
+                                      .ink(0.96), finish: .shadowed, wrap: n % 2 == 1 && i == n / 2 ? plan.size.width - 40 : plan.size.width / 2 - 10)
+                let drop: CGFloat = n % 2 == 1 && i == n / 2 ? 22 : 4
+                seat(.text(label), CGPoint(x: c.x, y: c.y + foot + drop + RingsPaint.measure(label).height / 2), in: chrome)
+            } else {
+                seat(.text(RingsText(cover.name, .name, 16, .ink(0.96), finish: .shadowed)), CGPoint(x: c.x, y: c.y + foot + 20), in: chrome)
+                if let line = cover.line {
+                    seat(.text(RingsText(line, .data, 12, cover.lit ? .gold : .ink(0.8), finish: .shadowed)),
+                         CGPoint(x: c.x, y: c.y + foot + 39), in: chrome)
+                }
             }
         }
         if let line = model.packsLine {
-            seat(.text(RingsText(line, .data, 12, .ink(0.8), tracking: 0.4, finish: .shadowed)), plan.packsLine, in: chrome)
+            seat(.text(RingsText(line, .data, plan.pt(12, .caption1), .ink(0.8), tracking: plan.large ? 0 : 0.4, finish: .shadowed,
+                                 wrap: plan.large ? plan.size.width - 16 : nil)), plan.packsLine, in: chrome)
         }
         seat(.settings, plan.settings, in: chrome)
 
@@ -402,6 +450,33 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
     private static let under = CGPoint(x: 0, y: -43), pair = CGPoint(x: 0, y: 8), cue = CGPoint(x: 0, y: 36)
 
+    /// The middle's words and where each stands from the centre: the ring's word, what stands under it, the level's
+    /// number and name, and where the cue goes. Under accessibility type each is measured and set under the last, the
+    /// number and name each on a line of its own and wrapped to the sun.
+    private static func middle(word: String, _ spot: RingsModel.Spot, under: String, cue: RingsText?, plan: RingsPlan)
+        -> (word: (text: RingsText, at: CGPoint), under: (text: RingsText, at: CGPoint), pair: (text: RingsText, at: CGPoint), cue: CGPoint) {
+        guard plan.large else {
+            let named = named(spot, under: under)
+            return ((RingsText(word, .word, 38, .deep, .medium), CGPoint(x: 0, y: -76)), (named.under, Self.under), (named.pair, Self.pair), Self.cue)
+        }
+        let wide = 270 * plan.k
+        let title = RingsText(word, .word, plan.pt(28, .title1), .deep, .medium)
+        let line = RingsText(under, .data, plan.pt(13, .footnote), .dusk, .medium, wrap: wide)
+        let name = RingsText.Run(string: spot.name, voice: .name, size: plan.pt(28, .title1), ink: .deep, weight: .regular)
+        let pair = RingsText(runs: spot.number.isEmpty ? [name]
+                                 : [.init(string: spot.number, voice: .data, size: plan.pt(20, .title1), ink: .deep, weight: .semibold), name],
+                             gap: 0, stack: true, wrap: wide)
+        // Each piece's bitmap is padded; the stack closes the pads up and stands centred a little over the sun's middle.
+        let stack = [title, line, pair] + (cue.map { [$0] } ?? []), talls = stack.map { RingsPaint.measure($0).height - 6 }
+        var y = -talls.reduce(0, +) / 2 - 10 * plan.k
+        let at = talls.map { tall -> CGPoint in
+            defer { y += tall }
+            return CGPoint(x: 0, y: y + tall / 2)
+        }
+        let cueAt = cue == nil ? CGPoint(x: 0, y: y + 12) : at[3]
+        return ((title, at[0]), (line, at[1]), (pair, at[2]), cueAt)
+    }
+
     private static func numeral(_ spot: RingsModel.Spot, _ hue: RingsHue) -> RingsText {
         switch spot.bead {
         case .dull: RingsText(spot.number, .data, 11, .ink(0.62))
@@ -420,10 +495,16 @@ final class RingsView: UIView, UIScrollViewDelegate {
     }
 
     /// Endless's new run, in the play mark's place.
-    private static func renew(armed: Bool) -> RingsText {
+    private static func renew(armed: Bool, _ plan: RingsPlan) -> RingsText {
         RingsText(armed ? String(localized: "new run? tap again", comment: "Endless's row: armed, a second tap drops the saved run")
                       : String(localized: "new run", comment: "Endless's row: drops the saved run"),
-                  .data, 15, .dusk, .medium, tracking: 0.4)
+                  .data, plan.pt(15, .subheadline), .dusk, .medium, tracking: 0.4, wrap: plan.large ? 270 * plan.k : nil)
+    }
+
+    /// The cue a picked bead shows: what opens it, or that a second tap plays it.
+    private static func pickCue(_ spot: RingsModel.Spot, _ plan: RingsPlan) -> RingsText {
+        RingsText(spot.shut ?? String(localized: "tap again to play", comment: "The rings' middle, a level picked"),
+                  .data, plan.pt(13, .footnote), .dusk, .medium, tracking: 0.4, wrap: plan.large ? 270 * plan.k : nil)
     }
 
     /// The rings a swipe away, named over the sun and under it.
@@ -520,17 +601,19 @@ final class RingsView: UIView, UIScrollViewDelegate {
         let foot = RingsPaint.coverWidth / 2
         for i in model.covers.indices {
             let c = plan.cover(i, of: model.covers.count)
-            if abs(point.x - c.x) < foot + 10, point.y > c.y - foot - 6, point.y < c.y + foot + 50 { return .cover(i) }
+            if abs(point.x - c.x) < foot + 10, point.y > c.y - foot - 6, point.y < c.y + foot + (plan.large ? 80 : 50) { return .cover(i) }
         }
         let v = CGPoint(x: point.x - plan.centre.x, y: point.y - plan.centre.y), r = hypot(v.x, v.y)
-        if model.daily != nil, abs(r - plan.orbit) < 28, v.y < 0, abs(atan2(v.x, -v.y)) < 0.72 { return .daily }
+        if model.daily != nil, plan.large ? abs(point.x - plan.daily.x) < 200 && point.y > plan.daily.y - 30 && point.y < plan.daily.y + 110
+            : abs(r - plan.orbit) < 28 && v.y < 0 && abs(atan2(v.x, -v.y)) < 0.72 { return .daily }
         guard rings.indices.contains(at) else { return .nothing }
         let n = model.rings[at].spots.count
         if n > 0, abs(r - plan.radius) < 26 {
             let turn = (atan2(v.y, v.x) + .pi / 2) / (2 * .pi) * CGFloat(n) - 0.5
             return .bead((Int(turn.rounded()) % n + n) % n)
         }
-        if model.rings[at].renews, abs(v.x - Self.cue.x) < 90, abs(v.y - Self.cue.y) < 14 { return .renew }
+        let cue = rings[at].cueAt
+        if model.rings[at].renews, abs(v.x - cue.x) < 90, abs(v.y - cue.y) < 14 { return .renew }
         return r < plan.radius - 26 ? .middle : .nothing
     }
 
@@ -608,18 +691,16 @@ final class RingsView: UIView, UIScrollViewDelegate {
         let ring = model.rings[at], spot = ring.spots[i], layers = rings[at], index = at
         Sound.shared.play(.tap)
         picked = i
-        let named = Self.named(spot, under: spot.facts)
-        let cue = RingsText(spot.shut ?? String(localized: "tap again to play", comment: "The rings' middle, a level picked"),
-                            .data, 13, .dusk, .medium, tracking: 0.4)
-        let pieces: [RingsPiece] = [.text(named.under), .text(named.pair), .text(cue)]
+        let cue = Self.pickCue(spot, plan), m = Self.middle(word: ring.word, spot, under: spot.facts, cue: cue, plan: plan)
+        let pieces: [RingsPiece] = [.text(m.under.text), .text(m.pair.text), .text(cue)]
         let scale = window?.screen.scale ?? 3
         picking?.cancel()
         picking = Task { [weak self] in
             let art = await RingsArt.shared.bake(pieces, scale: scale)
             guard let self, !Task.isCancelled, self.picked == i, self.at == index else { return }
-            self.fill(layers.under, art[pieces[0]], at: Self.under)
-            self.fill(layers.pair, art[pieces[1]], at: Self.pair)
-            self.fill(layers.cue, art[pieces[2]], at: Self.cue)
+            self.fill(layers.under, art[pieces[0]], at: m.under.at)
+            self.fill(layers.pair, art[pieces[1]], at: m.pair.at)
+            self.fill(layers.cue, art[pieces[2]], at: m.cue)
             let seat = plan.bead(i, of: ring.spots.count)
             self.fill(layers.halo, RingsArt.shared.have([.halo])[.halo], at: seat)
             self.fade(layers.rest, to: 0)
@@ -689,7 +770,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
         middle.step = { [weak self] by in self?.step(by) }
         if ring.renews {
             element(String(localized: "New run", comment: "VoiceOver: starts a new endless run"), nil,
-                    around(CGPoint(x: plan.centre.x + Self.cue.x, y: plan.centre.y + Self.cue.y), 180, 40)) { [weak self] in self?.act(.renew) }
+                    around(CGPoint(x: plan.centre.x + rings[at].cueAt.x, y: plan.centre.y + rings[at].cueAt.y), 180, 40)) { [weak self] in self?.act(.renew) }
         }
         if ring.open {
             for (j, spot) in ring.spots.enumerated() {

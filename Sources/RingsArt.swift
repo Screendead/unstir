@@ -70,6 +70,8 @@ struct RingsText: Hashable, Sendable {
     var arc: Arc?
     /// The widest a line may run before the words wrap, centred.
     var wrap: CGFloat?
+    /// Each run on a line of its own, as under accessibility type.
+    var stack = false
 
     init(_ string: String, _ voice: Voice = .data, _ size: CGFloat = 13, _ ink: RingsInk = .ink(1), _ weight: Weight = .regular,
          tracking: CGFloat = 0, finish: Finish = .plain, arc: Arc? = nil, wrap: CGFloat? = nil) {
@@ -80,9 +82,11 @@ struct RingsText: Hashable, Sendable {
         self.wrap = wrap
     }
 
-    init(runs: [Run], gap: CGFloat) {
+    init(runs: [Run], gap: CGFloat, stack: Bool = false, wrap: CGFloat? = nil) {
         self.runs = runs
         self.gap = gap
+        self.stack = stack
+        self.wrap = wrap
     }
 }
 
@@ -109,13 +113,16 @@ struct RingsGround: Hashable, Sendable {
     /// A floor's art starts this far in from its foot, and so stands that far off the screen's foot at rest less
     /// half a `wrap`.
     var lead: CGFloat = 0
+    /// The ridge's peaks, as a share of their height: low under accessibility type, so the sun's words clear them.
+    var lift: CGFloat = 1
 }
 
 /// One picture of the menu, named by everything that decides its pixels, so a bake is kept for as long as it is true.
 enum RingsPiece: Hashable, Sendable {
     case ground(RingsGround)
     /// A ring's sun, the stage its words stand on: up on an open tier, down on a shut one.
-    case sun(RingsHue, shut: Bool)
+    /// `clear`: under accessibility type, the sun stands whole over the horizon, without its bands, for its words.
+    case sun(RingsHue, shut: Bool, clear: Bool)
     case bead(RingsHue, RingsModel.Bead)
     /// The thread from one bead to the next.
     case link(RingsHue)
@@ -200,8 +207,9 @@ enum RingsLook {
         }
     }
 
-    /// The sun's width, and how far under the ring's middle the horizon cuts it, both at the mock's scale.
-    static let sun: CGFloat = 300, set: CGFloat = 100
+    /// The sun's width, and how far under the ring's middle the horizon cuts it, both at the mock's scale; under
+    /// accessibility type the horizon falls lower, under the whole sun.
+    static let sun: CGFloat = 300, set: CGFloat = 100, setClear: CGFloat = 150
     /// A shut ring's beads stand back.
     static func dim(shut: Bool) -> CGFloat { shut ? 0.72 : 1 }
 
@@ -214,14 +222,14 @@ enum RingsLook {
     static let run: CGFloat = 2
 
     /// The ground's layers for a screen, back to front. `horizon` is the height the floor meets the sky at.
-    static func ground(width: CGFloat, height: CGFloat, horizon: CGFloat) -> [RingsGround] {
+    static func ground(width: CGFloat, height: CGFloat, horizon: CGFloat, low: Bool = false) -> [RingsGround] {
         let floor = height - horizon, ridge = 160 * width / 440, length: CGFloat = 5200
         return [
             RingsGround(name: "sky", x: 0, y: 0, width: width, height: horizon, bakedWidth: 4, bakedHeight: horizon, scale: 1),
             RingsGround(name: "stars", x: 0, y: 0, width: width, height: horizon, bakedWidth: width, bakedHeight: horizon, scale: 1.5,
                         dy: -10),
             RingsGround(name: "ridge", x: 0, y: horizon - ridge, width: width, height: ridge, bakedWidth: width, bakedHeight: ridge,
-                        scale: 2, front: true),
+                        scale: 2, front: true, lift: low ? 0.4 : 1),
             RingsGround(name: "floor", x: 0, y: horizon, width: width, height: floor, bakedWidth: width, bakedHeight: floor,
                         scale: 2, front: true),
             // The lines across the floor are the only part of the grid a run moves: the lines along it lie where
@@ -241,7 +249,7 @@ enum RingsPaint {
     static func draw(_ piece: RingsPiece, scale: CGFloat) -> RingsBitmap? {
         switch piece {
         case let .ground(ground): Self.ground(ground)
-        case let .sun(hue, shut): sun(hue, shut: shut)
+        case let .sun(hue, shut, clear): sun(hue, shut: shut, clear: clear)
         case let .bead(hue, state): bead(hue, state, scale: scale)
         case let .link(hue): link(hue, scale: scale)
         case let .orbit(hue): orbit(hue)
@@ -321,7 +329,7 @@ enum RingsPaint {
                                                  (0.9, colour(0xA3267F)), (1, colour(0xFF7A4A))]),
                                        start: .zero, end: CGPoint(x: 0, y: h), options: [])
             case "stars": stars(ctx, w, h)
-            case "ridge": ridge(ctx, w, h, scale: g.scale)
+            case "ridge": ridge(ctx, w, h, scale: g.scale, lift: g.lift)
             case "floor": floor(ctx, w, h, scale: g.scale)
             case "rows": rows(ctx, w, h)
             default:
@@ -353,9 +361,10 @@ enum RingsPaint {
     }
 
     /// Wireframe mountains, low towards the middle so the sun sets between them.
-    private static func ridge(_ ctx: CGContext, _ w: CGFloat, _ h: CGFloat, scale: CGFloat) {
+    private static func ridge(_ ctx: CGContext, _ w: CGFloat, _ h: CGFloat, scale: CGFloat, lift: CGFloat) {
         let k = w / 440
         let peaks: [(CGFloat, CGFloat)] = [(0, 50), (24, 76), (48, 40), (76, 64), (102, 28), (126, 42), (148, 14), (170, 22), (198, 0)]
+            .map { ($0.0, $0.1 * lift) }
         for side in [CGFloat(1), -1] {
             ctx.saveGState()
             if side < 0 {
@@ -422,9 +431,10 @@ enum RingsPaint {
     /// The sun's bitmap is this wide, for its glow.
     static let sunSide: CGFloat = 400
 
-    static func sun(_ hue: RingsHue, shut: Bool) -> RingsBitmap? {
+    static func sun(_ hue: RingsHue, shut: Bool, clear: Bool) -> RingsBitmap? {
         // Cut off at the horizon it sets on, so no pixel is kept for what is never seen.
-        let side = sunSide, d = RingsLook.sun, r = d / 2, set = RingsLook.set, scale: CGFloat = 2, tall = side / 2 + set
+        let side = sunSide, d = RingsLook.sun, r = d / 2, set = clear ? RingsLook.setClear : RingsLook.set, scale: CGFloat = 2
+        let tall = side / 2 + set
         return raster(side, tall, scale: scale, offset: CGPoint(x: 0, y: (tall - side) / 2)) { ctx in
             let mid = CGPoint(x: side / 2, y: side / 2)
             let lit: [Int] = switch hue {
@@ -449,7 +459,7 @@ enum RingsPaint {
             ctx.addEllipse(in: disc(mid, r + 0.5))
             ctx.clip()
             ctx.setBlendMode(.clear)
-            for (at, tall) in [(0.34, 0.025), (0.44, 0.04), (0.55, 0.055)] {
+            for (at, tall) in clear ? [] : [(0.34, 0.025), (0.44, 0.04), (0.55, 0.055)] {
                 ctx.fill(CGRect(x: 0, y: mid.y + at * r, width: side, height: tall * r))
             }
             ctx.restoreGState()
@@ -690,29 +700,49 @@ enum RingsPaint {
         if text.finish == .shadowed { ctx.setShadow(offset: .zero, blur: 5 * scale, color: night) }
     }
 
-    static func words(_ text: RingsText, scale: CGFloat) -> RingsBitmap? {
-        if let arc = text.arc { return bent(text, arc, scale: scale) }
+    /// Words set into lines, each line its sets left to right, with the bitmap's size: measured without drawing.
+    private struct Laid {
+        let lines: [[Set]]
+        let widths, talls: [CGFloat]
+        let w, h, pad: CGFloat
+    }
+
+    private static func lay(_ text: RingsText) -> Laid {
         let pad: CGFloat = text.finish == .shadowed ? 8 : 3
-        // Each line is its sets, left to right.
         var lines: [[Set]] = []
-        if let wrap = text.wrap, let run = text.runs.first {
-            var line = ""
-            for word in run.string.split(separator: " ") {
-                let longer = line.isEmpty ? String(word) : line + " " + word
-                if !line.isEmpty, set(longer, run, tracking: text.tracking, finish: text.finish).width > wrap {
-                    lines.append([set(line, run, tracking: text.tracking, finish: text.finish)])
-                    line = String(word)
-                } else {
-                    line = longer
+        if text.stack || text.wrap != nil {
+            for run in text.runs {
+                let wrap = text.wrap ?? .greatestFiniteMagnitude
+                var line = ""
+                for word in run.string.split(separator: " ") {
+                    let longer = line.isEmpty ? String(word) : line + " " + word
+                    if !line.isEmpty, set(longer, run, tracking: text.tracking, finish: text.finish).width > wrap {
+                        lines.append([set(line, run, tracking: text.tracking, finish: text.finish)])
+                        line = String(word)
+                    } else {
+                        line = longer
+                    }
                 }
+                if !line.isEmpty { lines.append([set(line, run, tracking: text.tracking, finish: text.finish)]) }
             }
-            if !line.isEmpty { lines.append([set(line, run, tracking: text.tracking, finish: text.finish)]) }
         } else {
             lines = [text.runs.map { set($0.string, $0, tracking: text.tracking, finish: text.finish) }]
         }
         let widths = lines.map { $0.reduce(0) { $0 + $1.width } + text.gap * CGFloat(max($0.count - 1, 0)) }
         let talls = lines.map { ($0.map { $0.ascent + $0.descent }.max() ?? 0) * (lines.count > 1 ? 1.2 : 1.05) }
-        let w = (widths.max() ?? 0).rounded(.up) + pad * 2, h = talls.reduce(0, +).rounded(.up) + pad * 2
+        return Laid(lines: lines, widths: widths, talls: talls, w: (widths.max() ?? 0).rounded(.up) + pad * 2,
+                    h: talls.reduce(0, +).rounded(.up) + pad * 2, pad: pad)
+    }
+
+    /// The size a piece of words is baked at, so the engine can stack pieces before any is drawn.
+    static func measure(_ text: RingsText) -> CGSize {
+        let laid = lay(text)
+        return CGSize(width: laid.w, height: laid.h)
+    }
+
+    static func words(_ text: RingsText, scale: CGFloat) -> RingsBitmap? {
+        if let arc = text.arc { return bent(text, arc, scale: scale) }
+        let laid = lay(text), lines = laid.lines, widths = laid.widths, talls = laid.talls, w = laid.w, h = laid.h, pad = laid.pad
         return raster(w, h, scale: scale) { ctx in
             ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
             shade(ctx, text, scale: scale)

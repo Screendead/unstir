@@ -86,7 +86,7 @@ struct RingsMenu: View {
         let analytics = Analytics.shared
         let asking = analytics.asks && analytics.consent == .undecided
         RingsHost(state: RingsView.State(revision: revision &+ (Sync.built ? Sync.revision.count : 0), day: day ?? today, store: stored,
-                                         endless: endless),
+                                         endless: endless, type: UIContentSizeCategory(typeSize)),
                   opening: opening, onPick: onPick, onOffer: { show($0) }, onSettings: { settings = true })
             .ignoresSafeArea()
             .allowsHitTesting(card == nil && !asking)
