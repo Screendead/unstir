@@ -493,6 +493,75 @@ extension EscapementArt {
         plate.lines(hatch([arc(c, hub - 0.012)], angle: phase + 0.8, gap: 0.014), fine)
     }
 
-    /// Problem 66, Centre wheel, hex, clocks 1+,2+.
-    static func plate66() -> Plate? { nil }
+    /// Problem 66, Centre wheel, hex, clocks 1+,2+: a large four-crossed centre wheel seen from a little above, off the
+    /// hub to the lower left with the hubs at four and eight in its windows, its heavy rim and teeth in ink, its pinion
+    /// and arbor rising in the clear column left of the hub through a bridge across the top; the arbor's square end in the second ink.
+    static func plate66() -> Plate {
+        var plate = Plate()
+        let x = -0.243, c = P(x, 0.42), rx = 0.6, ry = 0.3
+        func seen(_ q: [P]) -> [P] { q.map { P(c.x + rx * $0.x, c.y + ry * $0.y) } }
+        let outline = seen(gear(Kit.origin, 1, teeth: 72, phase: 0.01))
+        let root = 1 - 2.4 / 72
+        let holes = windows(Kit.origin, hub: 0.24, rim: root - 0.13, spokes: 4, width: 0.1, phase: 0.25).map(seen)
+        let bridgeY = -0.62
+        let bridge = Kit.band(P(-1.1, bridgeY), P(x, bridgeY), 0.12)
+        let arm = Kit.ribbon(curve(P(x, bridgeY), P(-0.1, -0.7), P(0.06, -0.84), 12) + [P(0.7, -0.88)], 0.08)
+        let base = box(P(-1.1, 0.82), P(1.1, 1.1))
+
+        Kit.ground(&plate, angle: 0.4, around: [outline, bridge, arm, arc(P(x, bridgeY), 0.1), base])
+
+        // The pillar plate under the wheel, and the arbor's lower pivot standing in it.
+        Kit.mass(&plate, base)
+        plate.line([P(-1, 0.845), P(1, 0.845)], fine, .bone)
+        Kit.mass(&plate, box(P(x - 0.022, c.y + ry - 0.02), P(x + 0.022, 0.82)))
+        Kit.cut(&plate, box(P(x - 0.06, 0.8), P(x + 0.06, 0.84)), edge: heavy)
+
+        // The wheel: teeth and a heavy rim in ink, a bone line round the rim, the crossings left in ink between ruled windows.
+        Kit.mass(&plate, outline)
+        plate.line(seen(arc(Kit.origin, root - 0.04)), medium, .bone)
+        for hole in holes {
+            Kit.cut(&plate, hole)
+            plate.lines(hatch([hole], angle: 0.4, gap: Kit.groundGap), Kit.groundWidth)
+        }
+        let collet = seen(arc(Kit.origin, 0.2))
+        Kit.cut(&plate, collet, edge: heavy)
+        plate.lines(hatch([collet], angle: 0.9, gap: 0.014), fine)
+
+        // The pinion on the arbor above the wheel, its leaves upright in ink, and the arbor on up to the bridge.
+        let pinion = box(P(x - 0.05, 0.2), P(x + 0.05, c.y - 0.02))
+        Kit.mass(&plate, pinion)
+        for dx in [-0.026, 0.0, 0.026] {
+            plate.line([P(x + dx, 0.215), P(x + dx, c.y - 0.035)], medium, .bone)
+        }
+        Kit.mass(&plate, ellipse(P(x, 0.2), 0.05, 0.016))
+        Kit.mass(&plate, box(P(x - 0.022, bridgeY), P(x + 0.022, 0.2)))
+        plate.line([P(x - 0.008, bridgeY + 0.1), P(x - 0.008, 0.19)], fine, .bone)
+        Kit.mass(&plate, ellipse(P(x, c.y - 0.02), 0.07, 0.022))
+
+        // The bridge over it, screwed to the plate, a jewel where the arbor passes.
+        Kit.mass(&plate, bridge)
+        Kit.mass(&plate, arm)
+        Kit.mass(&plate, arc(P(x, bridgeY), 0.1))
+        plate.line([P(-1, bridgeY - 0.042), P(x - 0.05, bridgeY - 0.042)], fine, .bone)
+        plate.line(curve(P(-0.14, -0.71), P(-0.1, -0.73), P(0.06, -0.855), 10) + [P(0.62, -0.893)], fine, .bone)
+        for screw in [P(-0.62, bridgeY), P(0.36, -0.86)] {
+            Kit.cut(&plate, arc(screw, 0.032), edge: heavy)
+            plate.line([screw + P(-0.024, -0.016), screw + P(0.024, 0.016)], heavy)
+        }
+        Kit.cut(&plate, arc(P(x, bridgeY), 0.045), edge: heavy)
+        plate.line(arc(P(x, bridgeY), 0.026), medium)
+
+        // The arbor's top above the bridge, filed square for the key.
+        Kit.mass(&plate, box(P(x - 0.018, bridgeY - 0.13), P(x + 0.018, bridgeY - 0.045)))
+        let square = box(P(x - 0.034, bridgeY - 0.2), P(x + 0.034, bridgeY - 0.13))
+        plate.fill(square, .second)
+        plate.line(square, medium)
+        plate.line([P(x - 0.034, bridgeY - 0.2), P(x - 0.018, bridgeY - 0.185), P(x + 0.018, bridgeY - 0.185), P(x + 0.034, bridgeY - 0.2)], fine)
+
+        callout(&plate, "A", from: P(c.x + 0.97 * rx * cos(0.3), c.y + 0.97 * ry * sin(0.3)), to: P(0.4, 0.66))
+        callout(&plate, "B", from: P(x + 0.05, 0.3), to: P(0.22, 0.1))
+        callout(&plate, "C", from: P(-0.75, bridgeY + 0.05), to: P(-0.76, -0.38))
+        callout(&plate, "D", from: P(x - 0.034, bridgeY - 0.17), to: P(-0.42, -0.82))
+        return plate
+    }
 }
