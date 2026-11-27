@@ -18,7 +18,7 @@ extension LensArt {
     private static func hoop(_ c: P, _ r: Double, _ width: Double, pieces: Int = 6, from: Double = 0) -> [Halftone.Stroke] {
         (0..<pieces).map { k in
             let a = from + 360 * Double(k) / Double(pieces)
-            return stroke(arc(c, r, a, a + 360 / Double(pieces), max(4, 72 / pieces)), width)
+            return stroke(arc(c, r, a, a + 360 / Double(pieces), max(4, Int(r * 160) / pieces)), width)
         }
     }
 
@@ -194,9 +194,9 @@ extension LensArt {
         for (r0, r1, n, share) in rings {
             for j in 0..<n {
                 let a0 = 360 * (Double(j) + 0.5 - share / 2) / Double(n), a1 = 360 * (Double(j) + 0.5 + share / 2) / Double(n)
-                s += runs(closed(sector(P(0, 0), r0, r1, a0, a1)), hair) { !open($0) }
+                s += runs(closed(arc(P(0, 0), r1, a0, a1, 3) + arc(P(0, 0), r0, a1, a0, 3)), hair) { !open($0) }
                 let mid0 = r0 + 0.25 * (r1 - r0), mid1 = r1 - 0.25 * (r1 - r0), w = 0.22 * (a1 - a0)
-                s += runs(closed(sector(P(0, 0), mid0, mid1, a0 + w, a1 - w)), hair) { !open($0) }
+                s += runs(closed(arc(P(0, 0), mid1, a0 + w, a1 - w, 2) + arc(P(0, 0), mid0, a1 - w, a0 + w, 2)), hair) { !open($0) }
             }
         }
         s += hoop(P(0, 0), 0.95, bold, pieces: 12)
@@ -334,12 +334,13 @@ extension LensArt {
 
         var s: [Halftone.Stroke] = []
         // The leads: every row and column of corners, every diagonal, cut at the roundels and the border.
-        for j in 0...n { s += runs(fine(corners[j]), mid, keep: lead) }
-        for i in 0...n { s += runs(fine((0...n).map { corners[$0][i] }), mid, keep: lead) }
+        for j in 0...n { s += runs(fine(corners[j]), mid, keep: lead).flatMap { chop($0, every: 12) } }
+        for i in 0...n { s += runs(fine((0...n).map { corners[$0][i] }), mid, keep: lead).flatMap { chop($0, every: 12) } }
         for j in 0..<n {
             for i in 0..<n {
                 let a = corners[j][i], b = corners[j][i + 1], c = corners[j + 1][i + 1], d = corners[j + 1][i]
-                s += runs(fine(hash(i, j, 3) < 0.5 ? [a, c] : [b, d]), mid, keep: lead)
+                let cut = hash(i, j, 3) < 0.5 ? [a, c] : [b, d]
+                s += lead(cut[0]) && lead(cut[1]) && lead((cut[0] + cut[1]) / 2) ? [stroke(cut, mid)] : runs(fine(cut), mid, keep: lead)
             }
         }
         // The border's panes, and the sun's face of rays painted on its glass.
@@ -437,7 +438,7 @@ extension LensArt {
         func glass(_ p: P) -> Bool { holes.allSatisfy { simd_distance(p, $0) > frame + 0.006 } }
         // The shaft's inner edge and the corners' mitres.
         let edge = [shaft + P(-opening, -opening), shaft + P(opening, -opening), shaft + P(opening, opening), shaft + P(-opening, opening)]
-        s += runs(fine(closed(edge)), bold) { simd_length($0) < 1 && glass($0) }
+        s += runs(fine(closed(edge)), bold) { simd_length($0) < 1 && glass($0) }.flatMap { chop($0) }
         for k in 0..<4 { s += runs(span(edge[k], edge[k] + simd_normalize(edge[k] - shaft) * 0.6, 12), mid) { simd_length($0) < 1 } }
         // The bars' edges, cut at the beads.
         for x in [column - half, column + half] { s += runs(span(P(x, -1), P(x, 1), 60), mid, keep: glass) }
