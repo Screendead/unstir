@@ -519,6 +519,94 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 54, Equinox, hex, clocks 1+,3+,5+.
-    static func plate54() -> Plate? { nil }
+    /// Problem 54, Equinox, hex, clocks 1+,3+,5+: a balance with its pans level, the sun in the left and the moon in
+    /// the right, its beam, pillar and plinth in ink, before a ground ruled lightly for day on the left and heavily for
+    /// night on the right; the pointer at the top of the balance, above twelve's hub, in the second ink.
+    static func plate54() -> Plate {
+        var plate = Plate()
+        let pivot = P(0, -0.78), reach = 0.72, drop = 0.52, panY = 0.12, panW = 0.2
+
+        let beam = [P(-reach - 0.02, -drop - 0.02), P(-0.1, -0.78), P(0, -0.81), P(0.1, -0.78), P(reach + 0.02, -drop - 0.02),
+                    P(reach + 0.02, -drop + 0.02), P(0.1, -0.735), P(0, -0.745), P(-0.1, -0.735), P(-reach - 0.02, -drop + 0.02),
+                    P(-reach - 0.02, -drop - 0.02)]
+        let pillar = [P(-0.035, -0.72), P(0.035, -0.72), P(0.048, 0.7), P(-0.048, 0.7), P(-0.035, -0.72)]
+        let capital = [P(-0.08, -0.745), P(0.08, -0.745), P(0.05, -0.69), P(-0.05, -0.69), P(-0.08, -0.745)]
+        let plinth = [P(-0.26, 0.7), P(0.26, 0.7), P(0.26, 0.76), P(-0.26, 0.76), P(-0.26, 0.7)]
+        let steps = [P(-0.34, 0.76), P(0.34, 0.76), P(0.34, 0.84), P(0.44, 0.84), P(0.44, 1.1), P(-0.44, 1.1), P(-0.44, 0.84),
+                     P(-0.34, 0.84), P(-0.34, 0.76)]
+        func pan(_ x: Double) -> [P] {
+            ellipse(P(x, panY), panW, 0.13, from: 0, to: .pi) + [P(x - panW, panY)]
+        }
+        let sunC = P(-reach, panY - 0.12), moonC = P(reach, panY - 0.12)
+
+        // Day on the left, night on the right.
+        let day = box(P(-1.1, -1.1), P(0, 1.1)), night = box(P(0, -1.1), P(1.1, 1.1))
+        let parts = [beam, pillar, capital, plinth, steps, pan(-reach), pan(reach), arc(sunC, 0.17), arc(moonC, 0.15)]
+        plate.lines(hatch([day] + parts, angle: 0.4, gap: Kit.groundGap), Kit.groundWidth)
+        plate.lines(hatch([night] + parts, angle: -0.4, gap: Kit.groundGap), 0.02)
+        for (c, r) in [(P(0.3, -0.4), 0.03), (P(0.62, -0.68), 0.025), (P(0.3, 0.46), 0.022), (P(0.7, 0.58), 0.03), (P(0.22, -0.1), 0.02)] {
+            let st = (0...10).map { i in polar(c, i % 2 == 0 ? r : 0.4 * r, -.pi / 2 + Double(i) * .pi / 5) }
+            plate.fill(arc(c, r + 0.018))
+            Kit.mass(&plate, st)
+        }
+
+        // The chains from the beam's ends to each pan's rim.
+        for x in [-reach, reach] {
+            let hook = P(x, -drop + 0.02)
+            for dx in [-panW + 0.02, 0.0, panW - 0.02] {
+                plate.lines(dashed([hook, P(x + dx, panY)], on: 0.03, off: 0.012), 0.014)
+            }
+            Kit.mass(&plate, arc(hook + P(0, 0.03), 0.022))
+        }
+
+        // The sun in the left pan, its rays ink about a bone disc; the moon in the right, a crescent in ink.
+        for k in 0..<12 {
+            let a = Double(k) * .pi / 6
+            Kit.mass(&plate, [polar(sunC, 0.1, a - 0.18), polar(sunC, 0.17, a), polar(sunC, 0.1, a + 0.18), polar(sunC, 0.1, a - 0.18)])
+        }
+        plate.fill(arc(sunC, 0.1))
+        plate.line(arc(sunC, 0.1), heavy)
+        plate.lines(hatch([arc(sunC, 0.07)], angle: 0.8, gap: 0.022), medium)
+        plate.line(arc(sunC, 0.07), medium)
+        let limb = arc(moonC, 0.14, from: -.pi / 2 + 0.35, to: -1.5 * .pi - 0.35)
+        let moon = limb + curve(limb[limb.count - 1], moonC + P(-0.1, 0), limb[0], 16)
+        Kit.mass(&plate, moon)
+        plate.line(arc(moonC, 0.12, from: -.pi / 2 - 0.5, to: -1.5 * .pi + 0.5), 0.01, .bone)
+
+        // The pans, solid ink with a bone rim line.
+        for x in [-reach, reach] {
+            Kit.mass(&plate, pan(x))
+            plate.line(ellipse(P(x, panY), panW - 0.02, 0.1, from: 0.15, to: .pi - 0.15), medium, .bone)
+            plate.line([P(x - panW - 0.01, panY), P(x + panW + 0.01, panY)], heavy)
+        }
+
+        // The pillar, fluted in bone, its capital and stepped plinth.
+        Kit.mass(&plate, pillar)
+        plate.line([P(-0.015, -0.72), P(-0.02, 0.6)], 0.01, .bone)
+        plate.line([P(0.015, -0.72), P(0.02, 0.6)], 0.01, .bone)
+        Kit.solid(&plate, plinth, angle: .pi / 2, gap: 0.04, width: 0.016, edge: heavy)
+        Kit.solid(&plate, steps, angle: 0, gap: 0.05, width: 0.016, edge: heavy)
+        plate.line([P(-0.34, 0.84), P(0.34, 0.84)], heavy)
+        Kit.mass(&plate, capital)
+        Kit.mass(&plate, beam)
+        plate.line([P(-reach + 0.02, -drop - 0.002), P(-0.1, -0.777), P(0.1, -0.777), P(reach - 0.02, -drop - 0.002)], fine, .bone)
+
+        // The index arc above the pivot and the pointer standing upright against it.
+        plate.line(arc(pivot, 0.13, from: -.pi / 2 - 0.4, to: -.pi / 2 + 0.4), heavy)
+        for k in -3...3 {
+            let a = -.pi / 2 + Double(k) * 0.12
+            plate.line([polar(pivot, 0.13, a), polar(pivot, k == 0 ? 0.17 : 0.155, a)], k == 0 ? heavy : medium)
+        }
+        let pointer = [P(-0.02, -0.78), P(0, -0.91), P(0.02, -0.78), P(-0.02, -0.78)]
+        plate.fill(pointer, .second)
+        plate.line(pointer, medium)
+        plate.fill(arc(pivot, 0.03))
+        plate.line(arc(pivot, 0.03), heavy)
+        plate.fill(arc(pivot, 0.01), .black)
+
+        callout(&plate, "A", from: sunC + P(0.06, 0.06), to: P(-0.46, 0.0))
+        callout(&plate, "B", from: moonC + P(-0.02, 0.1), to: P(0.42, 0.06))
+        callout(&plate, "C", from: P(0.0, 0.36), to: P(-0.26, 0.5))
+        return plate
+    }
 }
