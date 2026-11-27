@@ -576,6 +576,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
         armedAt = tap.armedAt
         Sound.shared.play(.tap)
         guard tap.reset else {
+            Log.write("rings new run armed")
             fade(layers.renew, to: 0)
             fade(layers.armed, to: 1)
             UIAccessibility.post(notification: .announcement,
@@ -590,6 +591,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
             }
             return
         }
+        Log.write("rings new run")
         Resume.remove("endless")
         onPick(.endless(Run(seed: .random(in: .min ... .max))))
     }

@@ -73,11 +73,12 @@ struct RingsMenu: View {
         start ?? focus.flatMap { level in Tier.allCases.first { $0.levels.contains { $0.id == level.id } } } ?? Tier.stored()
     }
 
-    /// The ring in front as the menu opens: the one of the level just left (endless's, the archive's for a past daily),
-    /// else the tier's.
+    /// The ring in front as the menu opens: the one of the level just left (endless's; the archive's for a daily, today's
+    /// or past, while the archive is open), else the tier's.
     private var opening: RingsHue {
-        if start == nil, focus?.run != nil { return .endless }
-        if start == nil, focus?.archived == true { return .today }
+        guard start == nil, let focus else { return .tier(tier) }
+        if focus.run != nil { return .endless }
+        if focus.id.hasPrefix("daily-"), focus.archived || Store.shared.ready && Archive.open { return .today }
         return .tier(tier)
     }
 
