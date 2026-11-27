@@ -114,8 +114,9 @@ def fmt(m):
     return "\t".join(f"{m[c]:.2f}" if isinstance(m[c], float) else str(m[c]) for c in COLUMNS)
 
 
-def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, tries=4000):
-    """A random deal of `depth` entries keeping the rules, or None."""
+def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, chain=0.0, tries=4000):
+    """A random deal of `depth` entries keeping the rules, or None. `chain` is the chance that each entry must reach the
+    one before it, which leaves fewer right moves at each step and fewer stacks for the solver to prove."""
     rods = lt.LAYOUTS[layout]
     twists = [r for r in range(len(rods)) if r not in lenses]
     # Twist counts each pair allows over a lens: enough rim drag.
@@ -145,6 +146,9 @@ def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, tries=40
                     for s in range(-5, 6):
                         if s and all(s in ok[(l, r)] for l in under):
                             options.append((r, s))
+            if stack and rng.random() < chain:
+                linked = [o for o in options if lt.interacts(rods, lenses, o[0], stack[-1][0])]
+                options = linked or options
             if not options:
                 break
             r, s = rng.choice(options)
@@ -197,20 +201,21 @@ def main():
         opt = lambda k: int(args[args.index(k) + 1]) if k in args else None
         rng = random.Random(seed)
         for _ in range(count):
-            found = deal(layout, lenses, depth, rng, opt("--lens-entries"), opt("--max-whole"))
+            found = deal(layout, lenses, depth, rng, opt("--lens-entries"), opt("--max-whole"),
+                         float(args[args.index("--chain") + 1]) if "--chain" in args else 0.0)
             if found:
                 print(f"{layout}\t{args[2]}\t{fmt(found[1])}\t{text(found[0])}")
     elif mode == "time":
         layout, lenses = args[1], {int(x) for x in args[2].split(",")}
         for depth in map(int, args[3:]):
-            found = deal(layout, lenses, depth, random.Random(depth))
+            found = deal(layout, lenses, depth, random.Random(depth), chain=float(os.environ.get("CHAIN", "0")))
             if not found:
                 print(f"{depth}: no deal")
                 continue
             out, took = solve(layout, lenses, text(found[0]))
             opt = re.search(r"^optimum .*$", out, re.M)
             stacks = re.search(r"^(\d+) stacks, ([\d.]+) ms", out, re.M)
-            print(f"depth {depth}: {opt and opt.group(0)}; {stacks and stacks.group(0)}; wall {took:.1f} s", flush=True)
+            print(f"depth {depth}: right {found[1]['right']:.2f}; {opt and opt.group(0)}; {stacks and stacks.group(0)}; wall {took:.1f} s", flush=True)
     else:
         sys.exit(__doc__)
 
