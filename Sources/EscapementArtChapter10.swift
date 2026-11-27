@@ -466,8 +466,95 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 59, Time's up, hex, clocks 1-,2-.
-    static func plate59() -> Plate? { nil }
+    /// Problem 59, Time's up, hex, clocks 1-,2-: a chess clock in a solid ink case on the board's squares, its two
+    /// faces and their plungers, the left one's time run out and its flag fallen, the right one's flag still raised,
+    /// a king toppled above it and a pawn standing; the fallen flag in the second ink, in the lane at nine o'clock.
+    static func plate59() -> Plate {
+        var plate = Plate()
+        let left = P(-0.62, 0.2), right = P(0.62, 0.2), r = 0.29
+        let caseRing = box(P(-1.1, -0.16), P(1.1, 0.64))
+        let top = [P(-1.02, -0.3), P(1.02, -0.3), P(1.1, -0.16), P(-1.1, -0.16), P(-1.02, -0.3)]
+        let king = turned(lathe(0, [(0, 0.11), (-0.04, 0.11), (-0.05, 0.08), (-0.08, 0.07), (-0.1, 0.095), (-0.12, 0.05),
+                                    (-0.26, 0.04), (-0.28, 0.075), (-0.31, 0.075), (-0.33, 0.05), (-0.37, 0.07), (-0.39, 0.02)]),
+                          by: .pi / 2 + 0.06).map { $0 + P(-0.22, -0.66) }
+        let cross = [Kit.band(P(0.17, -0.63), P(0.28, -0.62), 0.03), Kit.band(P(0.235, -0.68), P(0.235, -0.57), 0.03)]
+        let pawn = lathe(0.6, [(-0.36, 0.08), (-0.4, 0.08), (-0.41, 0.06), (-0.44, 0.05), (-0.46, 0.065), (-0.48, 0.035),
+                               (-0.56, 0.03), (-0.6, 0.05), (-0.62, 0.055)])
+        let pawnHead = arc(P(0.6, -0.67), 0.055)
+        Kit.ground(&plate, angle: -0.42, around: [caseRing, top, king, pawn, pawnHead] + cross)
+
+        // The board's squares in perspective under the clock.
+        let rows = [0.62, 0.68, 0.75, 0.83, 0.92, 1.02, 1.14], vanish = -1.6
+        for (i, y0) in rows.dropLast().enumerated() {
+            let y1 = rows[i + 1]
+            for c in -12..<12 {
+                func x(_ c: Double, _ y: Double) -> Double { c * 0.12 * (y - vanish) / (0.62 - vanish) }
+                let cell = [P(x(Double(c), y0), y0), P(x(Double(c + 1), y0), y0), P(x(Double(c + 1), y1), y1),
+                            P(x(Double(c), y1), y1), P(x(Double(c), y0), y0)]
+                if (i + c) % 2 == 0 { plate.fill(cell, .black) } else { plate.fill(cell); plate.line(cell, medium) }
+            }
+        }
+
+        // The case: its top in ruled bone, its face solid ink, a cartouche between the dials.
+        Kit.cut(&plate, top, edge: 0.02)
+        plate.lines(hatch([top], angle: 0.02, gap: 0.06), 0.022)
+        Kit.mass(&plate, caseRing)
+        let cartouche = ellipse(P(0, 0.22), 0.2, 0.26)
+        plate.lines(hatch([box(P(-1.1, -0.16), P(1.1, 0.6)), arc(left, r + 0.05), arc(right, r + 0.05),
+                           ellipse(P(0, 0.22), 0.225, 0.285)], angle: .pi / 2, gap: 0.068), 0.043, .bone)
+        plate.line(box(P(-1.06, -0.12), P(1.06, 0.55)), 0.02, .bone)
+        plate.fill(box(P(-1.1, 0.6), P(1.1, 0.615)))
+        Kit.cut(&plate, cartouche, edge: 0.02)
+        plate.line(ellipse(P(0, 0.22), 0.15, 0.21), 0.02)
+        for k in 0..<8 {
+            let a = Double(k) * .pi / 4
+            Kit.mass(&plate, [P(0, 0.22), polar(P(0, 0.22), 0.08, a - 0.16), polar(P(0, 0.22), 0.12, a),
+                              polar(P(0, 0.22), 0.08, a + 0.16), P(0, 0.22)])
+        }
+        Kit.mass(&plate, arc(P(0, 0.22), 0.03))
+
+        // The plungers: the left pressed home, the right standing.
+        for (x, h) in [(-0.4, 0.07), (0.4, 0.2)] {
+            Kit.mass(&plate, box(P(x - 0.045, -0.24 - h), P(x + 0.045, -0.24)))
+            plate.fill(Kit.band(P(x - 0.015, -0.24 - h), P(x - 0.015, -0.25), 0.022))
+            let cap = ellipse(P(x, -0.24 - h), 0.09, 0.035)
+            Kit.cut(&plate, cap, edge: 0.016)
+        }
+
+        // The faces in their bezels.
+        for c in [left, right] {
+            Kit.cut(&plate, arc(c, r + 0.035))
+            Kit.dial(&plate, c, r)
+        }
+        Kit.hands(&plate, left, r, hours: 6, minutes: 0.4)
+        Kit.hands(&plate, right, r, hours: 5, minutes: 52)
+        // The flags: the right raised by its minute hand, the left fallen.
+        let rightPivot = polar(right, 0.84 * r, Kit.clock(0.35))
+        Kit.mass(&plate, [rightPivot, rightPivot + P(-0.07, -0.02), rightPivot + P(-0.075, 0.03), rightPivot])
+        let pivot = polar(left, 0.84 * r, Kit.clock(0.35))
+        let flag = [pivot, pivot + P(0.012, 0.1), pivot + P(-0.045, 0.085), pivot + P(-0.012, 0.012), pivot]
+        plate.fill(flag, .second)
+        plate.line(flag, medium)
+        plate.fill(arc(pivot, 0.014), .black)
+
+        // The king toppled, and a pawn standing.
+        Kit.mass(&plate, king)
+        plate.line([P(-0.48, -0.66), P(-0.12, -0.648)], 0.014, .bone)
+        for x in [-0.33, -0.17, -0.12] {
+            plate.line([P(x, -0.76), P(x + 0.012, -0.55)], 0.022, .bone)
+        }
+        for c in cross { Kit.mass(&plate, c) }
+        Kit.mass(&plate, pawn)
+        Kit.mass(&plate, pawnHead)
+        plate.line(arc(P(0.58, -0.685), 0.022, from: 3.4, to: 4.8), 0.012, .bone)
+        plate.line([P(0.575, -0.58), P(0.57, -0.4)], 0.014, .bone)
+
+        callout(&plate, "A", from: pivot + P(-0.02, 0.07), to: P(-0.86, -0.1))
+        callout(&plate, "B", from: P(0.42, -0.42), to: P(0.24, -0.38))
+        callout(&plate, "C", from: P(-0.3, -0.7), to: P(-0.44, -0.86))
+        callout(&plate, "D", from: right + P(0.2, 0.18), to: P(0.86, 0.48))
+        return plate
+    }
 
     /// Problem 60, Zero hour, hex, clocks 1-.
     static func plate60() -> Plate? { nil }
