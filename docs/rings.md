@@ -169,10 +169,21 @@ as the old dock's do (`Marks.line`).
 - **Reduce Motion.** The rings only cross-fade: a ring keeps its size, the ground stands still (`apply`), and the
   setting is followed live.
 
+- **Dynamic Type.** Up to xxxLarge the mock's sizes hold. At accessibility sizes the plan takes the mock's own layout
+  for them (`launch-ax.png`): the ring 34 pt higher, the sun whole over a horizon 150 pt under its middle, without
+  bands, the mountains low, the rings a swipe away unnamed and no play mark; the daily's words flat under its star;
+  one line under each cover, its name and its news; the packs' line wrapped. Every word is the size the system gives
+  its role at that setting (`RingsPlan.pt`: `UIFontMetrics` for title1, headline, footnote, subheadline, callout or
+  caption1 from the mock's size), never smaller, and the middle's words are measured (`RingsPaint.measure`, line
+  layout without drawing) and stacked centred on the sun, the count in its short form ("14/27 · 11 par"). At
+  accessibility3, the mock's, it matches `launch-ax.png` (`rings-ax3`). At accessibility5 (`rings-ax5`) it does not
+  fit: the level's name runs past the sun onto the beads and the horizon, the covers' labels run into the packs'
+  line, and the daily's second line touches the ring's top beads. How it should give way there (the ring and sun
+  drawn smaller, as the tank scales on the play screen; the packs' line dropped; the covers' news dropped) is Jack's
+  call.
+
 ## Step two, what is left
 
-Dynamic Type at accessibility sizes (`launch-ax.png`: the daily's words set flat under its star, the middle and the
-covers' words larger; every text piece carries its size, so the plan can hand larger ones, but the ring then needs
-room the plan does not yet make); the list beside play on a wide window, where `RootView` keeps `MenuView`; the level
+Fitting accessibility4 and 5 (above); the list beside play on a wide window, where `RootView` keeps `MenuView`; the level
 growing out of its bead, which the mock's film shows and this step replaces with the root's fade; First Stir's cover,
 when it ships.
