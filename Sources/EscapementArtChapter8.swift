@@ -171,7 +171,7 @@ extension EscapementArt {
 
     /// Problem 44, Recoil, hex, clocks 1+,3-: a field gun firing to the left along the nine o'clock lane, its barrel
     /// and wheel in ink on a hatched carriage, smoke billowing round the rim ahead of it and recoil lines along the three
-    /// o'clock lane behind; the muzzle flash in the second ink.
+    /// o'clock lane behind, an earthwork round the foot; the muzzle flash in the second ink.
     static func plate44() -> Plate {
         var plate = Plate()
         let o = Kit.origin, breech = -0.18, axis = -0.01, length = 0.66
@@ -326,7 +326,7 @@ extension EscapementArt {
             plate.line([c + P(-0.02, 0.02), c + P(0.02, -0.02)], heavy)
         }
 
-        // The pinion: heavy leaves, its arbor sectioned, a collet at its face.
+        // The pinion: heavy leaves, its arbor sectioned.
         Kit.mass(&plate, pinion)
         Kit.solid(&plate, arc(o, root - 0.006), angle: 0.75, gap: 0.05, width: heavy)
 
