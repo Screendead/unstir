@@ -136,7 +136,7 @@ enum Offer: Hashable, Sendable {
                                        comment: "What First Stir holds. Its levels counted")
         case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
                                   comment: "What Lens holds. Its levels counted")
-        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
+        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in fifteen chapters",
                                         comment: "What Escapement holds. Its levels counted")
         case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in fifteen trays",
                                    comment: "What Prism holds. Its levels counted")
