@@ -371,7 +371,7 @@ import XCTest
             "Lull", "Interlude", "Siesta", "Respite", "Intermission", "Hiatus",
             "Sundial", "Gnomon", "Noon mark", "Meridian", "Solar time", "Analemma",
             "Water clock", "Candle clock", "Nocturnal", "Astrolabe", "Night watch", "Small hours",
-            "Regulator", "Chronometer", "Grandfather clock", "Atomic clock", "Millennium", "Eternity",
+            "Regulator", "Chronometer", "Longcase clock", "Atomic clock", "Millennium", "Eternity",
         ])
         for (level, row) in zip(levels, Self.book) {
             XCTAssertEqual(level.layout, row.layout, level.id)

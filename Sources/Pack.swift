@@ -539,7 +539,7 @@ extension Level {
         problem(86, String(localized: "level.escapement-86.title", defaultValue: "Chronometer",
                            comment: "Escapement level title, a part of a clock or a word for time"),
                 .hex, "1:-1,6:-2,1:-5,4:-5,3:+4,4:-5,3:-2,0:-3,1:-3,4:-4,5:-3,0:-2,1:-2,3:+4,2:+4,1:-3,5:-3,4:+2,2:-3,1:-4,5:+3,4:-2,3:+4,6:-3,1:-2,5:+5,0:-2,1:-2,4:+2,0:+4,1:-1", clocks: [1], par: 23),
-        problem(87, String(localized: "level.escapement-87.title", defaultValue: "Grandfather clock",
+        problem(87, String(localized: "level.escapement-87.title", defaultValue: "Longcase clock",
                            comment: "Escapement level title, a part of a clock or a word for time"),
                 .hex, "1:-3,3:+4,4:-3,6:-4,1:-1,0:+5,1:-4,3:+5,4:+2,5:+5,0:-5,1:-1,0:+2,1:-1,0:-3,1:-2,4:-2,0:-3,1:-3,4:+5,3:+2,0:+3,1:-5,3:-5,4:-2,3:+4,4:-2,6:+3,1:-2,5:-4,6:-4,1:-2,5:+3,4:+5", clocks: [1], par: 24),
         problem(88, String(localized: "level.escapement-88.title", defaultValue: "Atomic clock",
