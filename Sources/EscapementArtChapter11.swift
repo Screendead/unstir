@@ -375,16 +375,6 @@ extension EscapementArt {
         }
         for theta in seams.dropFirst().dropLast() { plate.line(seam(theta), heavy) }
 
-        // The head, turned to the eye: its chime in ink, its boards, the tap low in it.
-        plate.fill(head, .black)
-        let boards = ellipse(P(end + 0.012, 0), 0.085, waist - 0.035)
-        Kit.cut(&plate, boards)
-        for y in stride(from: -0.27, through: 0.27, by: 0.09) {
-            let dx = 0.085 * sqrt(max(0, 1 - y * y / ((waist - 0.035) * (waist - 0.035))))
-            plate.line([P(end + 0.012 - dx, y), P(end + 0.012 + dx, y)], medium)
-        }
-        plate.line(head, heavy)
-
         // The hoops: iron bands round the belly and the chimes, each with its rivets.
         for x in [-0.745, -0.243, 0.243, 0.745] {
             let w = 0.056, h0 = half(x - w / 2), h1 = half(x + w / 2)
@@ -396,6 +386,16 @@ extension EscapementArt {
                 plate.fill(arc(P(x + 0.008, half(x) * sin(theta)), 0.011), .bone)
             }
         }
+
+        // The head, turned to the eye: its chime in ink, its boards, the tap low in it.
+        plate.fill(head, .black)
+        let boards = ellipse(P(end + 0.012, 0), 0.085, waist - 0.035)
+        Kit.cut(&plate, boards)
+        for y in stride(from: -0.27, through: 0.27, by: 0.09) {
+            let dx = 0.085 * sqrt(max(0, 1 - y * y / ((waist - 0.035) * (waist - 0.035))))
+            plate.line([P(end + 0.012 - dx, y), P(end + 0.012 + dx, y)], medium)
+        }
+        plate.line(head, heavy)
 
         // The cradle: two chocks hollowed to the belly, their grain in bone.
         for chock in chocks {
