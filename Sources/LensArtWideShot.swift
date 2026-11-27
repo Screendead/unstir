@@ -237,8 +237,8 @@ extension LensArt {
 
 /// Level 28's name: marbles on a floor of boards, each with its twist of colour, a bag spilling more, and two big clear
 /// marbles over the top and bottom cores (hex's two lenses on this level), each banded at its edge by its own twist
-/// and throwing its shadow on the boards. Through the upper the house outside, upside down, a tree beside it; through
-/// the lower the eye of the child taking aim.
+/// and throwing its shadow on the boards. Each shows the world outside upside down: through the upper the house, the
+/// sun under it; through the lower a kite, its tail flying up.
 extension LensArt {
     static let marble: Halftone.Panel = {
         let big = [(at: P(0, -0.56), glass: Tone(0.72, 0, 0.12), vane: m(0.9)), (at: P(0, 0.56), glass: Tone(0.3, 0.68, 0), vane: c(0.95))]
@@ -299,17 +299,16 @@ extension LensArt {
         s.append(stroke([house + P(-0.06, -0.034), house + P(0.06, -0.034)], 0.0024))
         s += glint(house + P(-0.044, 0.034), 0.02, 0.0024)
         s.append(stroke(circle(house + P(-0.044, 0.034), 0.007, 10), 0.003))
-        // Through the lower: an eye taking aim, its lashes, iris and the window caught in it.
-        let eye = big[1].at + P(0.016, -0.022)
-        s.append(stroke(curve(eye + P(-0.044, 0), eye + P(0, -0.036), eye + P(0.044, 0), 12) + curve(eye + P(0.044, 0), eye + P(0, 0.03), eye + P(-0.044, 0), 12), 0.0036))
-        s.append(stroke(circle(eye, 0.016, 16), 0.0032))
-        s.append(stroke(circle(eye, 0.006, 8), 0.006))
-        s.append(stroke(closed(rect(eye.x + 0.004, eye.y - 0.012, eye.x + 0.011, eye.y - 0.005)), 0.0014))
-        for k in 0..<5 {
-            let t = 0.2 + 0.15 * Double(k), root = eye + P(-0.044 + 0.088 * t, -0.072 * t * (1 - t) * 2)
-            s.append(stroke([root, root + P(-0.004 + 0.002 * Double(k), -0.012)], 0.0022))
-        }
-        s.append(stroke(curve(eye + P(-0.05, -0.03), eye + P(0, -0.06), eye + P(0.05, -0.034), 10), 0.0028))
+        // Through the lower: a kite upside down, its cross-spars, its string rising off the glass and its tail of bows.
+        let kite = big[1].at + P(0.016, -0.018)
+        let corners = [kite + P(0, 0.042), kite + P(0.026, 0.0), kite + P(0, -0.018), kite + P(-0.026, 0.0)]
+        s.append(stroke(closed(corners), 0.0036))
+        s.append(stroke([corners[0], corners[2]], 0.002))
+        s.append(stroke([corners[1], corners[3]], 0.002))
+        s.append(stroke(curve(corners[0], kite + P(0.05, 0.06), kite + P(0.07, 0.09), 8), 0.0016))
+        let tail = curve(corners[2], kite + P(-0.03, -0.04), kite + P(-0.012, -0.075), 10)
+        s.append(stroke(tail, 0.002))
+        for t in [3, 6, 9] { s.append(stroke(closed([tail[t] + P(-0.007, -0.004), tail[t] + P(0.007, 0.004), tail[t] + P(0.007, -0.004), tail[t] + P(-0.007, 0.004)]), 0.0024)) }
         return panel("marble", fills: fills, strokes: s) { p in
             for b in big {
                 let d = p - b.at, r = simd_length(d)
