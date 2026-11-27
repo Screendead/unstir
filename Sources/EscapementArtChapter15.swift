@@ -308,8 +308,66 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 88, Atomic clock, hex, clocks 1+.
-    static func plate88() -> Plate? { nil }
+    /// Problem 88, Atomic clock, hex, clocks 1+: an atom inside a seconds bezel, three bold orbits crossing about the
+    /// nucleus, set off the hub in the lane at one o'clock, each orbit's far half passing behind it and an electron
+    /// streaking along its near half; the nucleus's protons in the second ink.
+    static func plate88() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, nucleus = polar(o, 0.285, Kit.clock(1)), a = 0.7, b = 0.2, band = 0.088
+        let turns = [0.25, 0.25 + .pi / 3, 0.25 + 2 * .pi / 3]
+        func orbit(_ turn: Double, _ from: Double, _ to: Double) -> [P] { ellipse(nucleus, a, b, from: from, to: to, turned: turn) }
+        func lay(_ path: [P]) {
+            let ring = Kit.ribbon(path, band)
+            plate.fill(ring, .bone)
+            Kit.mass(&plate, Kit.ribbon(path, band - 0.026))
+            plate.line(path, fine, .bone)
+        }
+
+        Kit.ground(&plate, angle: -0.7)
+        // The bezel, its seconds cut in bone.
+        Kit.mass(&plate, arc(o, 1.06) + arc(o, 0.9).reversed() + [polar(o, 1.06, 0)])
+        for k in 0..<60 {
+            let t = Double(k) * .pi / 30
+            plate.line([polar(o, k % 5 == 0 ? 0.92 : 0.95, t), polar(o, 1.0, t)], k % 5 == 0 ? 0.026 : 0.012, .bone)
+        }
+        plate.line(arc(o, 0.885), heavy)
+
+        // The far halves of the orbits, behind the nucleus.
+        for turn in turns { lay(orbit(turn, .pi, 2 * .pi)) }
+
+        // The nucleus: protons in the second ink and neutrons in ink, packed.
+        let packed: [(Double, Double, Bool)] = [(0, 0, true), (0.042, 0.3, false), (0.042, 1.35, true), (0.042, 2.4, false),
+                                                 (0.042, 3.45, true), (0.042, 4.5, false), (0.042, 5.55, true)]
+        plate.fill(arc(nucleus, 0.088))
+        plate.line(arc(nucleus, 0.088), medium)
+        for (r, t, proton) in packed.sorted(by: { $0.0 > $1.0 }) {
+            let c = polar(nucleus, r, t)
+            Kit.mass(&plate, arc(c, 0.03), ink: proton ? .second : .black)
+            plate.line(arc(c, 0.03), medium)
+            plate.line(arc(c + P(-0.008, -0.008), 0.013, from: 3.3, to: 4.6), fine, .bone)
+        }
+
+        // The near halves, over the nucleus, each with its electron and the streak behind it.
+        for (k, turn) in turns.enumerated() {
+            lay(orbit(turn, 0, .pi))
+            let at = 0.9 + 0.75 * Double(k)
+            for i in 1...5 {
+                let back = orbit(turn, at - 0.09 * Double(i) - 0.07, at - 0.09 * Double(i))
+                plate.line(back, 0.028 - 0.004 * Double(i), .bone)
+            }
+            let e = ellipse(nucleus, a, b, from: at, to: at, turned: turn)[0]
+            plate.fill(arc(e, 0.062))
+            plate.line(arc(e, 0.062), 0.014)
+            Kit.mass(&plate, arc(e, 0.03))
+            plate.line(arc(e + P(-0.012, -0.012), 0.012, from: 3.3, to: 4.6), fine, .bone)
+        }
+
+        callout(&plate, "A", from: ellipse(nucleus, a, b, from: 2.2, to: 2.2, turned: turns[0])[0], to: polar(o, 0.6, Kit.clock(9)))
+        callout(&plate, "B", from: ellipse(nucleus, a, b, from: 0.9, to: 0.9, turned: turns[0])[0] + P(0.05, 0.03), to: polar(o, 0.62, Kit.clock(5)))
+        callout(&plate, "C", from: nucleus + P(0.07, -0.05), to: polar(o, 0.62, Kit.clock(2.8)))
+        callout(&plate, "D", from: polar(o, 0.96, Kit.clock(7.6)), to: polar(o, 0.62, Kit.clock(7)))
+        return plate
+    }
 
     /// Problem 89, Millennium, hex, clocks 1+.
     static func plate89() -> Plate? { nil }
