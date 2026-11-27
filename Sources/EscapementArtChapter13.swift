@@ -48,78 +48,108 @@ extension EscapementArt {
         return rim + [rim[0]]
     }
 
-    /// Problem 73, Sundial, pent, clocks 0+: a garden sundial on a baluster pedestal before a clipped hedge, its dial
-    /// plate seen from above with the hour lines fanned from the gnomon's root, and the gnomon's shadow lying across
-    /// to the hour, the pedestal's own shadow on the lawn; that hour's numeral in the second ink.
-    static func plate73() -> Plate {
-        var plate = Plate()
-        let c = P(0, -0.12), R = 0.33, k = 0.56
-        func on(_ p: P) -> P { level(c, R, k, p) }
-        // The dial's north, back and to the right; east a quarter turn clockwise of it.
-        let phi = 0.45, north = P(sin(phi), -cos(phi)), east = P(cos(phi), sin(phi))
-        let root = -0.4 * north
-        func hourLine(_ h: Double) -> P {
-            let a = (h - 12) * .pi / 12, t = atan2(0.78 * sin(a), cos(a))
-            return north * cos(t) + east * sin(t)
-        }
-        /// Where the ray from the root meets the circle of radius `r` about the dial's centre.
-        func reach(_ d: P, _ r: Double) -> P {
-            let b = simd_dot(root, d), q = simd_dot(root, root) - r * r
-            return root + d * (-b + sqrt(b * b - q))
-        }
-        func round(_ r: Double) -> [P] { (0...96).map { on(polar(.zero, r, 2 * .pi * Double($0) / 96)) } }
-        let dial = round(1), thickness = dial.map { $0 + P(0, 0.05) }
-        let slab = Array(dial[0...48]) + Array(thickness[0...48].reversed()) + [dial[0]]
+    private static let plate73Phi: Double = 0.45
+    private static let plate73North: P = P(sin(plate73Phi), -cos(plate73Phi))
+    private static let plate73East: P = P(cos(plate73Phi), sin(plate73Phi))
+    private static let plate73Root: P = -0.4 * plate73North
+    private static let plate73Ground: Double = 0.8
+    private static let plate73Horizon: Double = 0.25
+    private static let plate73HedgeLine: Double = 0.0
 
-        // The baluster's half-width down from under the dial to its foot on the lawn at y = 0.8.
-        let ground = 0.8
-        let profile: [(Double, Double)] = [(0.035, 0.2), (0.075, 0.2), (0.075, 0.15), (0.1, 0.15)]
-            + (0...24).map { i -> (Double, Double) in
-                let t = Double(i) / 24, y = 0.1 + 0.52 * t
-                return (y, 0.075 + 0.07 * pow(sin(.pi * pow(t, 0.8)), 1.5))
-            }
-            + [(0.62, 0.11), (0.65, 0.11), (0.65, 0.2), (0.72, 0.2), (0.72, 0.3), (ground, 0.3)]
-        let column = profile.map { P($0.1, $0.0) } + profile.reversed().map { P(-$0.1, $0.0) } + [P(profile[0].1, profile[0].0)]
-        let lit = profile.map { P(-0.3 * $0.1, $0.0) } + profile.reversed().map { P(-0.78 * $0.1, $0.0) } + [P(-0.3 * profile[0].1, profile[0].0)]
-        // Its shadow laid on the lawn by an afternoon sun from the left.
-        let shadow = column.map { p in P(p.x + 0.85 * (ground - p.y) + 0.02, ground - 0.34 * (ground - p.y)) }
+    private static func plate73On(_ p: P) -> P { level(P(0, -0.12), 0.33, 0.56, p) }
 
-        let horizon = 0.25, hedgeLine = 0.0
+    private static func plate73HourLine(_ h: Double) -> P {
+        let a: Double = (h - 12) * .pi / 12
+        let t: Double = atan2(0.78 * sin(a), cos(a))
+        return plate73North * cos(t) + plate73East * sin(t)
+    }
+
+    /// Where the ray from the root meets the circle of radius `r` about the dial's centre.
+    private static func plate73Reach(_ d: P, _ r: Double) -> P {
+        let b: Double = simd_dot(plate73Root, d)
+        let q: Double = simd_dot(plate73Root, plate73Root) - r * r
+        return plate73Root + d * (-b + sqrt(b * b - q))
+    }
+
+    private static func plate73Round(_ r: Double) -> [P] {
+        (0...96).map { (i: Int) -> P in plate73On(polar(.zero, r, 2 * .pi * Double(i) / 96)) }
+    }
+
+    /// The baluster's half-width down from under the dial to its foot on the lawn at y = 0.8.
+    private static let plate73Profile: [(Double, Double)] = plate73ProfileBuild()
+
+    private static func plate73ProfileBuild() -> [(Double, Double)] {
+        let head: [(Double, Double)] = [(0.035, 0.2), (0.075, 0.2), (0.075, 0.15), (0.1, 0.15)]
+        let belly: [(Double, Double)] = (0...24).map { (i: Int) -> (Double, Double) in
+            let t: Double = Double(i) / 24, y: Double = 0.1 + 0.52 * t
+            return (y, 0.075 + 0.07 * pow(sin(.pi * pow(t, 0.8)), 1.5))
+        }
+        let foot: [(Double, Double)] = [(0.62, 0.11), (0.65, 0.11), (0.65, 0.2), (0.72, 0.2), (0.72, 0.3), (plate73Ground, 0.3)]
+        return head + belly + foot
+    }
+
+    private static let plate73Column: [P] = {
+        let profile: [(Double, Double)] = plate73Profile
+        let right: [P] = profile.map { (e: (Double, Double)) -> P in P(e.1, e.0) }
+        let left: [P] = profile.reversed().map { (e: (Double, Double)) -> P in P(-e.1, e.0) }
+        return right + left + [P(profile[0].1, profile[0].0)]
+    }()
+
+    private static let plate73Yews: [[P]] = [-0.91, 0.91].map { (x: Double) -> [P] in
+        let side: [P] = (0...16).map { (i: Int) -> P in
+            let t: Double = Double(i) / 16
+            return P(x - 0.13 * sin(.pi / 2 * t) * (1 - 0.15 * t), -0.6 + 0.62 * t)
+        }
+        let back: [P] = side.reversed().map { (p: P) -> P in P(2 * x - p.x, p.y) }
+        return side + back + [side[0]]
+    }
+
+    private static func plate73HedgeShape() -> [P] {
         var hedgeTop: [P] = []
         for i in 0...44 {
-            let x = -1.1 + 2.2 * Double(i) / 44
-            hedgeTop.append(P(x, hedgeLine - 0.03 * abs(sin(Double(i) * .pi / 4))))
+            let x: Double = -1.1 + 2.2 * Double(i) / 44
+            hedgeTop.append(P(x, plate73HedgeLine - 0.03 * abs(sin(Double(i) * .pi / 4))))
         }
-        let hedge = hedgeTop + [P(1.1, horizon), P(-1.1, horizon), hedgeTop[0]]
+        return hedgeTop + [P(1.1, plate73Horizon), P(-1.1, plate73Horizon), hedgeTop[0]]
+    }
 
-        // Two clipped yews standing out of the hedge at either side.
-        let yews = [-0.91, 0.91].map { x -> [P] in
-            let side: [P] = (0...16).map { i in
-                let t = Double(i) / 16
-                return P(x - 0.13 * sin(.pi / 2 * t) * (1 - 0.15 * t), -0.6 + 0.62 * t)
-            }
-            return side + side.reversed().map { P(2 * x - $0.x, $0.y) } + [side[0]]
-        }
+    /// Plate 73's lawn, yews, hedge and the pedestal's shadow.
+    private static func plate73Garden(_ plate: inout Plate) {
+        let yews: [[P]] = plate73Yews
+        let hedgeLine: Double = plate73HedgeLine
         K.ground(&plate, angle: 0.35, around: [cap(below: hedgeLine - 0.035)] + yews)
         for (n, yew) in yews.enumerated() {
             K.mass(&plate, yew)
-            let x = n == 0 ? -0.91 : 0.91
+            let x: Double = n == 0 ? -0.91 : 0.91
             for row in 0..<15 {
-                let y = -0.55 + 0.04 * Double(row), half = 0.13 * sin(.pi / 2 * min(1, (y + 0.6) / 0.62)) - 0.025
+                let y: Double = -0.55 + 0.04 * Double(row)
+                let half: Double = 0.13 * sin(.pi / 2 * min(1, (y + 0.6) / 0.62)) - 0.025
                 for i in stride(from: -half, through: half, by: 0.05) {
-                    plate.line(arc(P(x + i + (row % 2 == 0 ? 0 : 0.025), y), 0.016, from: 0.2, to: .pi - 0.2), medium, .bone)
+                    let cx: Double = x + i + (row % 2 == 0 ? 0 : 0.025)
+                    plate.line(arc(P(cx, y), 0.016, from: 0.2, to: .pi - 0.2), medium, .bone)
                 }
             }
         }
+        plate73Lawn(&plate)
+    }
+
+    /// Plate 73's lawn, hedge and the pedestal's shadow.
+    private static func plate73Lawn(_ plate: inout Plate) {
+        let hedge: [P] = plate73HedgeShape()
+        let ground: Double = plate73Ground, horizon: Double = plate73Horizon, hedgeLine: Double = plate73HedgeLine
+        let column: [P] = plate73Column
+        // Its shadow laid on the lawn by an afternoon sun from the left.
+        let shadow: [P] = column.map { (p: P) -> P in P(p.x + 0.85 * (ground - p.y) + 0.02, ground - 0.34 * (ground - p.y)) }
         // The lawn ruled level, its rows closing toward the hedge.
         let rows = receding(from: horizon, to: 1.1, rows: 13).dropFirst()
         for y in rows { plate.line([P(-1.1, y), P(1.1, y)], K.groundWidth + 0.005 * y) }
         // The hedge in ink, clipped in courses of bone leaves.
         K.mass(&plate, hedge)
         for row in 0..<7 {
-            let y = hedgeLine + 0.03 + 0.034 * Double(row)
+            let y: Double = hedgeLine + 0.03 + 0.034 * Double(row)
             for i in 0..<46 {
-                let x = -1.08 + 0.048 * Double(i) + (row % 2 == 0 ? 0 : 0.024) + 0.01 * rnd(73, row * 40 + i)
+                let x0: Double = -1.08 + 0.048 * Double(i) + (row % 2 == 0 ? 0 : 0.024)
+                let x: Double = x0 + 0.01 * rnd(73, row * 40 + i)
                 plate.line(arc(P(x, y), 0.016, from: 0.2, to: .pi - 0.2), medium, .bone)
             }
         }
@@ -130,39 +160,57 @@ extension EscapementArt {
         for i in 1..<rowList.count where rowList[i] > 0.45 {
             plate.lines(across(shadow, at: (rowList[i] + rowList[i - 1]) / 2), heavy, .bone)
         }
+    }
 
-        // The pedestal in ink, lit down its left.
+    /// Plate 73's pedestal in ink, lit down its left.
+    private static func plate73Pedestal(_ plate: inout Plate) {
+        let profile: [(Double, Double)] = plate73Profile
+        let column: [P] = plate73Column
+        let litA: [P] = profile.map { (e: (Double, Double)) -> P in P(-0.3 * e.1, e.0) }
+        let litB: [P] = profile.reversed().map { (e: (Double, Double)) -> P in P(-0.78 * e.1, e.0) }
+        let lit: [P] = litA + litB + [P(-0.3 * profile[0].1, profile[0].0)]
         K.mass(&plate, column)
         plate.fill(lit)
         plate.lines(hatch([lit], angle: 1.25, gap: 0.03), fine)
         plate.line(lit, fine)
         // The flutes and reflected light down its shadowed side.
         for f in [0.22, 0.5, 0.8] {
-            plate.line(profile.filter { $0.0 > 0.11 && $0.0 < 0.61 }.map { P(f * $0.1, $0.0) }, f == 0.8 ? heavy : medium, .bone)
+            let inner: [(Double, Double)] = profile.filter { (e: (Double, Double)) -> Bool in e.0 > 0.11 && e.0 < 0.61 }
+            plate.line(inner.map { (e: (Double, Double)) -> P in P(f * e.1, e.0) }, f == 0.8 ? heavy : medium, .bone)
         }
         for (y, w) in [(0.075, 0.2), (0.1, 0.15), (0.65, 0.2), (0.72, 0.3)] {
             plate.line([P(-w, y), P(w, y)], heavy, .bone)
         }
+    }
 
-        // The dial: its edge in ink, the plate in bone, the chapter ring and hour lines.
+    /// Plate 73's dial: its edge in ink, the plate in bone, the chapter ring and hour lines, the shadow and chapters.
+    private static func plate73Dial(_ plate: inout Plate) {
+        let root: P = plate73Root, north: P = plate73North
+        let dial: [P] = plate73Round(1)
+        let thickness: [P] = dial.map { (p: P) -> P in p + P(0, 0.05) }
+        let slab: [P] = Array(dial[0...48]) + Array(thickness[0...48].reversed()) + [dial[0]]
         K.mass(&plate, slab)
-        plate.lines(hatch([slab], angle: 0, gap: 0.016).filter { $0[0].x < -0.18 }, fine, .bone)
+        plate.lines(hatch([slab], angle: 0, gap: 0.016).filter { (l: [P]) -> Bool in l[0].x < -0.18 }, fine, .bone)
         plate.fill(dial)
         plate.line(dial, 0.016)
-        plate.line(round(0.92), medium)
-        plate.line(round(0.64), medium)
+        plate.line(plate73Round(0.92), medium)
+        plate.line(plate73Round(0.64), medium)
         for h in stride(from: 6.0, through: 18.0, by: 0.5) {
-            let d = hourLine(h), whole = h == h.rounded()
-            plate.line([on(whole ? root : reach(d, 0.64)), on(reach(d, 0.92))], whole ? heavy : medium)
+            let d: P = plate73HourLine(h), whole: Bool = h == h.rounded()
+            let from: P = plate73On(whole ? root : plate73Reach(d, 0.64))
+            plate.line([from, plate73On(plate73Reach(d, 0.92))], whole ? heavy : medium)
         }
         // The gnomon's shadow from the root along the third hour after noon.
-        let shadowAt = 15, d = hourLine(Double(shadowAt)), across = P(-d.y, d.x)
-        let tip = reach(d, 0.62)
-        K.mass(&plate, [on(root + across * 0.03), on(tip + across * 0.13), on(tip - across * 0.06), on(root - across * 0.03), on(root + across * 0.03)])
+        let shadowAt = 15
+        let d: P = plate73HourLine(Double(shadowAt)), across: P = P(-d.y, d.x)
+        let tip: P = plate73Reach(d, 0.62)
+        let s0: P = plate73On(root + across * 0.03), s1: P = plate73On(tip + across * 0.13)
+        let s2: P = plate73On(tip - across * 0.06), s3: P = plate73On(root - across * 0.03)
+        K.mass(&plate, [s0, s1, s2, s3, s0])
         // The chapters on the ring, read from the root.
         for h in 6...18 {
-            let p = on(reach(hourLine(Double(h)), 0.78))
-            let n = h > 12 ? h - 12 : h
+            let p: P = plate73On(plate73Reach(plate73HourLine(Double(h)), 0.78))
+            let n: Int = h > 12 ? h - 12 : h
             if h == shadowAt {
                 plate.fill(arc(p, 0.04))
                 plate.lines(K.numeral(roman(n), at: p, height: 0.055, squeeze: 0.8), 0.014, .second)
@@ -171,14 +219,24 @@ extension EscapementArt {
             }
         }
         // The gnomon: a triangular plate standing on the noon line, its style rising north.
-        let foot = on(root + 0.04 * north), heel = on(root + 0.95 * north), top = heel + P(0, -0.16)
-        let side = P(0.024, 0.006)
+        let foot: P = plate73On(root + 0.04 * north), heel: P = plate73On(root + 0.95 * north)
+        let top: P = heel + P(0, -0.16)
+        let side: P = P(0.024, 0.006)
         K.mass(&plate, [foot, heel, heel + side, top + side, top, foot])
         plate.line([foot + P(0.006, -0.006), top + P(0.004, 0.012)], medium, .bone)
         plate.line([top + P(0.012, 0.03), heel + P(0.012, -0.012)], fine, .bone)
-
-        callout(&plate, "A", from: on(P(-0.5, 0.45)), to: P(-0.5, 0.2))
+        callout(&plate, "A", from: plate73On(P(-0.5, 0.45)), to: P(-0.5, 0.2))
         callout(&plate, "B", from: top + P(0.006, 0.04), to: P(0.22, -0.38))
+    }
+
+    /// Problem 73, Sundial, pent, clocks 0+: a garden sundial on a baluster pedestal before a clipped hedge, its dial
+    /// plate seen from above with the hour lines fanned from the gnomon's root, and the gnomon's shadow lying across
+    /// to the hour, the pedestal's own shadow on the lawn; that hour's numeral in the second ink.
+    static func plate73() -> Plate {
+        var plate = Plate()
+        plate73Garden(&plate)
+        plate73Pedestal(&plate)
+        plate73Dial(&plate)
         callout(&plate, "C", from: P(0.0, 0.4), to: P(-0.2, 0.86))
         callout(&plate, "D", from: P(0.62, 0.66), to: P(0.66, 0.36))
         return plate
@@ -186,49 +244,58 @@ extension EscapementArt {
 
     // MARK: 74 Gnomon
 
-    /// Problem 74, Gnomon, hex, clocks 1+: an obelisk standing as a great gnomon in a paved plaza before a colonnade
-    /// and a dome, its long shadow laid along an hour line of the plaza's bold fan of hour lines; the sun's spot at its
-    /// tip in the second ink.
-    static func plate74() -> Plate {
-        var plate = Plate()
-        // The plaza in perspective: a point (X, Z) of the ground, Z its depth, seen from a horizon at y = -0.12.
-        let horizon = -0.12
-        func ground(_ q: P) -> P { P(q.x / q.y, horizon + 1 / q.y) }
-        let cx = -0.243, foot = 0.4, base = 0.3, shaft = -0.66, tip = -0.82
-        let at = P(cx / (foot - horizon), 1 / (foot - horizon))
+    private static let plate74Horizon: Double = -0.12
+    private static let plate74Cx: Double = -0.243
+    private static let plate74Foot: Double = 0.4
+    private static let plate74Base: Double = 0.3
+    private static let plate74Shaft: Double = -0.66
+    private static let plate74Tip: Double = -0.82
+    private static let plate74At: P = P(plate74Cx / (plate74Foot - plate74Horizon), 1 / (plate74Foot - plate74Horizon))
+    private static let plate74Along: P = simd_normalize(P(0.78, -0.55))
 
-        // The colonnade and the dome along the horizon behind.
+    /// The plaza in perspective: a point (X, Z) of the ground, Z its depth, seen from a horizon at y = -0.12.
+    private static func plate74Ground(_ q: P) -> P { P(q.x / q.y, plate74Horizon + 1 / q.y) }
+
+    /// The colonnade and the dome along the horizon behind.
+    private static let plate74Skyline: [P] = {
+        let horizon: Double = plate74Horizon
         var skyline: [P] = [P(-1.1, horizon + 0.1), P(-1.1, horizon - 0.2)]
         for x in stride(from: -1.1, through: 1.1, by: 0.02) {
-            let dome = 0.26 * sqrt(max(0, 1 - pow((x - 0.36) / 0.21, 2)))
-            let drum = abs(x - 0.36) < 0.19 ? 0.07 : 0
-            let lantern = abs(x - 0.36) < 0.03 ? 0.08 : 0
-            skyline.append(P(x, horizon - 0.2 - max(dome + drum + lantern, 0) - (abs(x - 0.36) < 0.24 ? 0.03 : 0)))
+            let dome: Double = 0.26 * sqrt(max(0, 1 - pow((x - 0.36) / 0.21, 2)))
+            let drum: Double = abs(x - 0.36) < 0.19 ? 0.07 : 0
+            let lantern: Double = abs(x - 0.36) < 0.03 ? 0.08 : 0
+            let lift: Double = max(dome + drum + lantern, 0)
+            skyline.append(P(x, horizon - 0.2 - lift - (abs(x - 0.36) < 0.24 ? 0.03 : 0)))
         }
         skyline += [P(1.1, horizon - 0.2), P(1.1, horizon + 0.1), P(-1.1, horizon + 0.1)]
-        let plaza = { () -> [P] in
-            let a = asin((horizon + 0.1) / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
-            return rim + [rim[0]]
-        }()
+        return skyline
+    }()
 
-        // The obelisk: the lit west face, the shadowed south face, and the pyramidion.
-        let ridge = cx - 0.014
-        let lit = [P(cx - 0.05, base), P(ridge, base), P(ridge, shaft), P(cx - 0.034, shaft), P(cx - 0.05, base)]
-        let dark = [P(ridge, base), P(cx + 0.05, base), P(cx + 0.034, shaft), P(ridge, shaft), P(ridge, base)]
-        let capLit = [P(cx - 0.034, shaft), P(ridge, shaft), P(ridge + 0.002, tip), P(cx - 0.034, shaft)]
-        let capDark = [P(ridge, shaft), P(cx + 0.034, shaft), P(ridge + 0.002, tip), P(ridge, shaft)]
-        let plinth = box(P(cx - 0.08, base), P(cx + 0.08, foot - 0.03)), step = box(P(cx - 0.1, foot - 0.03), P(cx + 0.1, foot))
+    private static let plate74Plaza: [P] = {
+        let a: Double = asin((plate74Horizon + 0.1) / 1.06)
+        let rim: [P] = arc(.zero, 1.06, from: a, to: .pi - a)
+        return rim + [rim[0]]
+    }()
 
-        // Its shadow along the plaza, toward the viewer and right: the shaft's width, then the pyramidion's point.
-        let along = simd_normalize(P(0.78, -0.55)), side = P(-along.y, along.x)
-        let w = 0.1 / (foot - horizon) / 2, reach = 1.18, capLength = 0.16
-        let shadow = [at + side * w, at + along * reach + side * w * 0.72, at + along * (reach + capLength),
-                      at + along * reach - side * w * 0.72, at - side * w, at + side * w].map(ground)
+    /// Its shadow along the plaza, toward the viewer and right: the shaft's width, then the pyramidion's point.
+    private static let plate74Shadow: [P] = {
+        let at: P = plate74At, along: P = plate74Along
+        let side: P = P(-along.y, along.x)
+        let w: Double = 0.1 / (plate74Foot - plate74Horizon) / 2, reach: Double = 1.18, capLength: Double = 0.16
+        let a: P = at + side * w
+        let b: P = at + along * reach + side * w * 0.72
+        let c: P = at + along * (reach + capLength)
+        let d: P = at + along * reach - side * w * 0.72
+        let e: P = at - side * w
+        let f: P = at + side * w
+        return [a, b, c, d, e, f].map(plate74Ground)
+    }()
 
-        K.ground(&plate, angle: 0.3, around: [skyline, plaza])
-        // The colonnade: its columns standing in bone between dark intercolumns, an attic over them.
-        K.mass(&plate, skyline)
-        let dome = P(0.36, horizon - 0.3)
+    /// Plate 74's colonnade, its columns standing in bone between dark intercolumns, an attic over them.
+    private static func plate74Colonnade(_ plate: inout Plate) {
+        let horizon: Double = plate74Horizon
+        K.ground(&plate, angle: 0.3, around: [plate74Skyline, plate74Plaza])
+        K.mass(&plate, plate74Skyline)
         for x in stride(from: -1.04, through: 1.04, by: 0.05) {
             plate.line([P(x, horizon + 0.06), P(x, horizon - 0.14)], 0.03, .bone)
         }
@@ -242,9 +309,15 @@ extension EscapementArt {
         for x in stride(from: -1.0, through: 1.0, by: 0.16) where abs(x - 0.36) > 0.3 {
             plate.fill(box(P(x - 0.012, horizon - 0.25), P(x + 0.012, horizon - 0.2)), .black)
         }
-        // The dome ruled in courses, dark to the east, its ribs and the drum's windows in bone.
-        let shell = (0...40).map { i -> P in polar(dome, 1, .pi + .pi * Double(i) / 40) }.map { P(dome.x + 0.21 * ($0.x - dome.x), dome.y + 0.26 * ($0.y - dome.y)) }
-        let shellRing = shell + [shell[0]]
+    }
+
+    /// Plate 74's dome ruled in courses, dark to the east, its ribs and the drum's windows in bone.
+    private static func plate74Dome(_ plate: inout Plate) {
+        let horizon: Double = plate74Horizon
+        let dome: P = P(0.36, horizon - 0.3)
+        let unit: [P] = (0...40).map { (i: Int) -> P in polar(dome, 1, .pi + .pi * Double(i) / 40) }
+        let shell: [P] = unit.map { (p: P) -> P in P(dome.x + 0.21 * (p.x - dome.x), dome.y + 0.26 * (p.y - dome.y)) }
+        let shellRing: [P] = shell + [shell[0]]
         plate.fill(shellRing)
         for l in hatch([shellRing], angle: 0, gap: 0.036) {
             plate.line(l, 0.01)
@@ -252,44 +325,52 @@ extension EscapementArt {
         }
         plate.line(shellRing, medium)
         for k in -3...3 {
-            let x = dome.x + Double(k) * 0.05
-            let top = dome.y - 0.26 * sqrt(max(0, 1 - pow((x - dome.x) / 0.21, 2)))
-            plate.line(curve(P(x, dome.y), P(dome.x + Double(k) * 0.058, (top + dome.y) / 2), P(dome.x + Double(k) * 0.012, dome.y - 0.25)),
+            let x: Double = dome.x + Double(k) * 0.05
+            let top: Double = dome.y - 0.26 * sqrt(max(0, 1 - pow((x - dome.x) / 0.21, 2)))
+            let mid: P = P(dome.x + Double(k) * 0.058, (top + dome.y) / 2)
+            plate.line(curve(P(x, dome.y), mid, P(dome.x + Double(k) * 0.012, dome.y - 0.25)),
                        heavy, k > 0 ? .bone : .black)
         }
         // The drum in bone between dark pilasters, its windows dark.
         plate.fill(box(P(dome.x - 0.19, horizon - 0.3), P(dome.x + 0.19, horizon - 0.205)))
         for (i, x) in stride(from: dome.x - 0.18, through: dome.x + 0.18, by: 0.036).enumerated() {
             plate.line([P(x, horizon - 0.3), P(x, horizon - 0.205)], 0.012)
-            if i < 10 { plate.fill(arc(P(x + 0.018, horizon - 0.255), 0.009) + box(P(x + 0.009, horizon - 0.255), P(x + 0.027, horizon - 0.225)), .black) }
+            if i < 10 {
+                let window: [P] = arc(P(x + 0.018, horizon - 0.255), 0.009) + box(P(x + 0.009, horizon - 0.255), P(x + 0.027, horizon - 0.225))
+                plate.fill(window, .black)
+            }
         }
         plate.line(box(P(dome.x - 0.19, horizon - 0.3), P(dome.x + 0.19, horizon - 0.205)), medium)
+    }
 
-        // The plaza paved in courses closing toward the horizon, its joints running to the vanishing point.
-        plate.fill(plaza)
+    /// Plate 74's plaza paved in courses, the hour lines fanned across it and the obelisk's shadow.
+    private static func plate74Paving(_ plate: inout Plate) {
+        let horizon: Double = plate74Horizon, at: P = plate74At
+        let shadow: [P] = plate74Shadow
+        plate.fill(plate74Plaza)
         var z = 0.86
         while z < 4.5 {
-            let y = horizon + 1 / z
+            let y: Double = horizon + 1 / z
             plate.line([P(-1.1, y), P(1.1, y)], fine + 0.004 * (y - horizon))
             z *= 1.16
         }
         for X in stride(from: -2.4, through: 2.4, by: 0.16) {
-            plate.line([ground(P(X, 0.8)), ground(P(X, 4.5))], fine)
+            plate.line([plate74Ground(P(X, 0.8)), plate74Ground(P(X, 4.5))], fine)
         }
         // The hour lines fanned across the plaza from the obelisk's foot, bold, numbered at the rim.
         for h in -5...5 {
-            let dir = P(sin(Double(h) * 0.24 + 0.62), -cos(Double(h) * 0.24 + 0.62))
+            let dir: P = P(sin(Double(h) * 0.24 + 0.62), -cos(Double(h) * 0.24 + 0.62))
             var path: [P] = []
             for t in stride(from: 0.4, through: 3.0, by: 0.05) {
-                let q = at + dir * t
-                if q.y < 0.8 || simd_length(ground(q)) > 1.0 { break }
+                let q: P = at + dir * t
+                if q.y < 0.8 || simd_length(plate74Ground(q)) > 1.0 { break }
                 path.append(q)
             }
             guard path.count > 1 else { continue }
-            K.mass(&plate, K.ribbon(path.map(ground), 0.016))
-            if let end = path.last, simd_length(ground(end)) > 0.9 {
-                let p = ground(at + dir * (simd_distance(end, at) - 0.12))
-                let n = h + 6
+            K.mass(&plate, K.ribbon(path.map(plate74Ground), 0.016))
+            if let end = path.last, simd_length(plate74Ground(end)) > 0.9 {
+                let p: P = plate74Ground(at + dir * (simd_distance(end, at) - 0.12))
+                let n: Int = h + 6
                 plate.fill(arc(p, 0.04))
                 plate.lines(K.numeral(roman(n), at: p, height: 0.05, squeeze: 0.7), medium)
             }
@@ -302,17 +383,28 @@ extension EscapementArt {
             joint *= 1.077
         }
         for X in stride(from: -2.4, through: 2.4, by: 0.08) {
-            plate.lines(clipped(shadow, from: ground(P(X, 0.8)), to: ground(P(X, 8))), medium, .bone)
+            plate.lines(clipped(shadow, from: plate74Ground(P(X, 0.8)), to: plate74Ground(P(X, 8))), medium, .bone)
         }
+    }
 
-        // The obelisk over its shadow.
+    /// Plate 74's obelisk over its shadow, the sun's spot sitting on the tip.
+    private static func plate74Obelisk(_ plate: inout Plate) {
+        let cx: Double = plate74Cx, foot: Double = plate74Foot, base: Double = plate74Base
+        let shaft: Double = plate74Shaft, tip: Double = plate74Tip
+        let ridge: Double = cx - 0.014
+        let lit: [P] = [P(cx - 0.05, base), P(ridge, base), P(ridge, shaft), P(cx - 0.034, shaft), P(cx - 0.05, base)]
+        let dark: [P] = [P(ridge, base), P(cx + 0.05, base), P(cx + 0.034, shaft), P(ridge, shaft), P(ridge, base)]
+        let capLit: [P] = [P(cx - 0.034, shaft), P(ridge, shaft), P(ridge + 0.002, tip), P(cx - 0.034, shaft)]
+        let capDark: [P] = [P(ridge, shaft), P(cx + 0.034, shaft), P(ridge + 0.002, tip), P(ridge, shaft)]
+        let plinth: [P] = box(P(cx - 0.08, base), P(cx + 0.08, foot - 0.03))
+        let step: [P] = box(P(cx - 0.1, foot - 0.03), P(cx + 0.1, foot))
         K.cut(&plate, step)
         K.solid(&plate, plinth, angle: 0.8, gap: 0.02, width: fine)
         plate.fill(lit)
         plate.line(lit, medium)
         // Its glyphs cut down the lit face.
         for k in 0..<22 {
-            let y = shaft + 0.04 + Double(k) * 0.042, x0 = cx - 0.044 + 0.002 * Double(k) / 22
+            let y: Double = shaft + 0.04 + Double(k) * 0.042, x0: Double = cx - 0.044 + 0.002 * Double(k) / 22
             switch k % 4 {
             case 0: plate.line(arc(P((x0 + ridge) / 2, y), 0.009), medium)
             case 1: plate.line([P(x0 + 0.004, y), P(ridge - 0.006, y)], heavy)
@@ -322,23 +414,33 @@ extension EscapementArt {
         }
         K.mass(&plate, dark)
         for k in stride(from: 1, to: 22, by: 2) {
-            let y = shaft + 0.04 + Double(k) * 0.042
+            let y: Double = shaft + 0.04 + Double(k) * 0.042
             plate.line([P(ridge + 0.012, y), P(cx + 0.03, y)], medium, .bone)
         }
         plate.fill(capLit)
         plate.line(capLit, medium)
         K.mass(&plate, capDark)
         // The sun's spot sitting on the tip.
-        let sun = P(ridge - 0.07, tip - 0.03)
+        let sun: P = P(ridge - 0.07, tip - 0.03)
         plate.fill(arc(sun, 0.05), .second)
         for k in 0..<12 {
-            let a = Double(k) * .pi / 6
+            let a: Double = Double(k) * .pi / 6
             plate.line([polar(sun, 0.068, a), polar(sun, 0.1, a)], heavy)
         }
+    }
 
-        callout(&plate, "A", from: P(cx + 0.03, -0.55), to: P(-0.07, -0.8))
-        callout(&plate, "B", from: ground(at + along * 0.55), to: P(0.17, 0.3))
-        callout(&plate, "C", from: P(-0.7, horizon - 0.08), to: P(-0.72, -0.42))
+    /// Problem 74, Gnomon, hex, clocks 1+: an obelisk standing as a great gnomon in a paved plaza before a colonnade
+    /// and a dome, its long shadow laid along an hour line of the plaza's bold fan of hour lines; the sun's spot at its
+    /// tip in the second ink.
+    static func plate74() -> Plate {
+        var plate = Plate()
+        plate74Colonnade(&plate)
+        plate74Dome(&plate)
+        plate74Paving(&plate)
+        plate74Obelisk(&plate)
+        callout(&plate, "A", from: P(plate74Cx + 0.03, -0.55), to: P(-0.07, -0.8))
+        callout(&plate, "B", from: plate74Ground(plate74At + plate74Along * 0.55), to: P(0.17, 0.3))
+        callout(&plate, "C", from: P(-0.7, plate74Horizon - 0.08), to: P(-0.72, -0.42))
         return plate
     }
 
@@ -353,21 +455,21 @@ extension EscapementArt {
         return left + right.dropFirst()
     }
 
-    /// Problem 75, Noon mark, pent, clocks 0+: a church nave seen through a pointed arch of dark masonry, a meridian line
-    /// of brass let into its checkered floor, and the beam from a hole in the vault laying the sun's image on the line
-    /// at noon; the sun's image in the second ink.
-    static func plate75() -> Plate {
-        var plate = Plate()
-        let a = 0.78, spring = -0.15, rise = 0.8
-        let opening = pointed(a, spring: spring, rise: rise) + [P(a, 1.2), P(-a, 1.2)]
-        let openingRing = opening + [opening[0]]
-        // The floor in perspective: a point (X, Z) of it, Z its depth.
-        let horizon = -0.05, wall = 0.15
-        func floor(_ q: P) -> P { P(0.5 * q.x / q.y, horizon + 0.5 / q.y) }
-        let back = 0.5 / (wall - horizon)
+    private static let plate75A: Double = 0.78
+    private static let plate75Spring: Double = -0.15
+    private static let plate75Rise: Double = 0.8
+    private static let plate75Horizon: Double = -0.05
+    private static let plate75Wall: Double = 0.15
+    private static let plate75Back: Double = 0.5 / (plate75Wall - plate75Horizon)
 
+    /// The floor in perspective: a point (X, Z) of it, Z its depth.
+    private static func plate75Floor(_ q: P) -> P { P(0.5 * q.x / q.y, plate75Horizon + 0.5 / q.y) }
+
+    /// Plate 75's checkered floor and the meridian line along it.
+    private static func plate75Tiles(_ plate: inout Plate) {
+        let horizon: Double = plate75Horizon, wall: Double = plate75Wall, back: Double = plate75Back
         // The nave's air, ruled; the floor and the arch's masonry left out.
-        let floorRing = [P(-1.1, wall), P(1.1, wall), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, wall)]
+        let floorRing: [P] = [P(-1.1, wall), P(1.1, wall), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, wall)]
         K.ground(&plate, angle: 0.5, around: [floorRing])
 
         // The checkered floor: dark tiles inset in bone, rows closing toward the back wall.
@@ -375,58 +477,72 @@ extension EscapementArt {
         var zs: [Double] = []
         var z = back
         while z > 0.3 { zs.append(z); z /= 1.22 }
-        let tile = 0.2
+        let tile: Double = 0.2
         for (row, z0) in zs.enumerated() where row + 1 < zs.count {
-            let z1 = zs[row + 1]
+            let z1: Double = zs[row + 1]
             for col in -8...8 where (row + col) % 2 == 0 && col != 0 {
-                let x0 = Double(col) * tile - tile / 2, x1 = x0 + tile, inset = 0.03
-                let q = [P(x0 + inset, z0 - inset * z0), P(x1 - inset, z0 - inset * z0), P(x1 - inset, z1 + inset * z1), P(x0 + inset, z1 + inset * z1)]
-                plate.fill((q + [q[0]]).map(floor), .black)
+                let x0: Double = Double(col) * tile - tile / 2, x1: Double = x0 + tile, inset: Double = 0.03
+                let q: [P] = [P(x0 + inset, z0 - inset * z0), P(x1 - inset, z0 - inset * z0), P(x1 - inset, z1 + inset * z1), P(x0 + inset, z1 + inset * z1)]
+                plate.fill((q + [q[0]]).map(plate75Floor), .black)
             }
         }
         for z in zs { plate.line([P(-1.1, horizon + 0.5 / z), P(1.1, horizon + 0.5 / z)], fine) }
         for col in -9...9 {
-            let x = Double(col) * tile - tile / 2
-            plate.line([floor(P(x, back)), floor(P(x, 0.3))], fine)
+            let x: Double = Double(col) * tile - tile / 2
+            plate.line([plate75Floor(P(x, back)), plate75Floor(P(x, 0.3))], fine)
         }
+        plate75Meridian(&plate)
+    }
+
+    /// Plate 75's meridian line, then the back wall's arches.
+    private static func plate75Meridian(_ plate: inout Plate) {
+        let wall: Double = plate75Wall, back: Double = plate75Back
         // The meridian line: a brass strip along the floor's middle, ticked at each degree, its ends capped.
-        let strip = [P(-0.035, back), P(0.035, back), P(0.035, 0.3), P(-0.035, 0.3), P(-0.035, back)].map(floor)
+        let strip: [P] = [P(-0.035, back), P(0.035, back), P(0.035, 0.3), P(-0.035, 0.3), P(-0.035, back)].map(plate75Floor)
         plate.fill(strip)
         plate.line(strip, heavy)
         var tick = back
         var n = 0
         while tick > 0.32 {
-            let w = n % 5 == 0 ? 0.035 : 0.018
-            plate.line([floor(P(-w, tick)), floor(P(w, tick))], n % 5 == 0 ? heavy : medium)
+            let w: Double = n % 5 == 0 ? 0.035 : 0.018
+            plate.line([plate75Floor(P(-w, tick)), plate75Floor(P(w, tick))], n % 5 == 0 ? heavy : medium)
             tick /= 1.045
             n += 1
         }
-        plate.line([floor(P(0, back)), floor(P(0, 0.3))], fine)
+        plate.line([plate75Floor(P(0, back)), plate75Floor(P(0, 0.3))], fine)
 
         // The back wall: three dark arches, the middle one over the meridian's end.
         plate.line([P(-1.1, wall), P(1.1, wall)], heavy)
         for (x, w, h) in [(0.0, 0.13, 0.42), (-0.36, 0.09, 0.3), (0.36, 0.09, 0.3)] {
-            let arch = pointed(w, spring: wall - h + w, rise: w * 1.3, 12).map { P($0.x + x, $0.y) } + [P(x + w, wall), P(x - w, wall)]
+            let curve: [P] = pointed(w, spring: wall - h + w, rise: w * 1.3, 12).map { (p: P) -> P in P(p.x + x, p.y) }
+            let arch: [P] = curve + [P(x + w, wall), P(x - w, wall)]
             K.mass(&plate, arch + [arch[0]])
-            plate.line(arch.map { P(x + ($0.x - x) * 1.25, $0.y - 0.02) }.dropLast(2), medium)
+            plate.line(arch.map { (p: P) -> P in P(x + (p.x - x) * 1.25, p.y - 0.02) }.dropLast(2), medium)
         }
+    }
 
-        // The arch of dark masonry framing the nave: ashlar coursed in bone, its moulding ruled.
-        let masonry = [Array(glass), openingRing]
-        let foot = sqrt(1.06 * 1.06 - a * a), turn = atan2(foot, a)
-        let frame = [P(-a, foot)] + pointed(a, spring: spring, rise: rise) + [P(a, foot)] + arc(.zero, 1.06, from: turn, to: -.pi - turn).dropFirst()
+    /// Plate 75's arch of dark masonry framing the nave: ashlar coursed in bone, its moulding ruled.
+    private static func plate75Arch(_ plate: inout Plate) {
+        let a: Double = plate75A, spring: Double = plate75Spring, rise: Double = plate75Rise
+        let opening: [P] = pointed(a, spring: spring, rise: rise) + [P(a, 1.2), P(-a, 1.2)]
+        let openingRing: [P] = opening + [opening[0]]
+        let masonry: [[P]] = [Array(glass), openingRing]
+        let foot: Double = sqrt(1.06 * 1.06 - a * a), turn: Double = atan2(foot, a)
+        let rimArc: [P] = Array(arc(.zero, 1.06, from: turn, to: -.pi - turn).dropFirst())
+        let frame: [P] = [P(-a, foot)] + pointed(a, spring: spring, rise: rise) + [P(a, foot)] + rimArc
         plate.fill(frame, .black)
         plate.lines(hatch(masonry, angle: 0, gap: 0.07), medium, .bone)
         for (i, y) in stride(from: -1.085, through: 1.06, by: 0.07).enumerated() {
             for x in stride(from: -1.06 + (i % 2 == 0 ? 0 : 0.07), through: 1.06, by: 0.14) {
-                let from = P(x, y), to = P(x, y + 0.07)
+                let from: P = P(x, y), to: P = P(x, y + 0.07)
                 guard !inside(openingRing, (from + to) / 2) else { continue }
                 plate.lines(clipped(Array(glass), from: from, to: to), medium, .bone)
             }
         }
         // The arch's moulding: a bone band with its voussoirs.
-        let inner = pointed(a, spring: spring, rise: rise), outer = pointed(a + 0.07, spring: spring, rise: rise + 0.07)
-        let moulding = inner + outer.reversed() + [inner[0]]
+        let inner: [P] = pointed(a, spring: spring, rise: rise)
+        let outer: [P] = pointed(a + 0.07, spring: spring, rise: rise + 0.07)
+        let moulding: [P] = inner + outer.reversed() + [inner[0]]
         plate.fill(moulding)
         for k in stride(from: 0, to: inner.count, by: 3) {
             plate.line([inner[k], outer[min(k, outer.count - 1)]], medium)
@@ -436,11 +552,13 @@ extension EscapementArt {
         plate.line(outer, heavy)
         for x in [-a - 0.035, a + 0.035] { plate.line([P(x, spring), P(x, 1.1)], 0.07, .bone) }
         for x in [-a - 0.07, a + 0.07] { plate.line([P(x, spring), P(x, 1.1)], heavy) }
+    }
 
-        // The hole in the vault and the beam it lets down to the line.
-        let hole = P(-0.68, -0.66), image = floor(P(0, 0.62))
-        let along = simd_normalize(image - hole), side = P(-along.y, along.x)
-        let beam = [hole + side * 0.012, image + side * 0.06, image - side * 0.06, hole - side * 0.012, hole + side * 0.012]
+    /// Plate 75's hole in the vault, the beam it lets down to the line and the sun's image on the meridian.
+    private static func plate75Beam(_ plate: inout Plate) {
+        let hole: P = P(-0.68, -0.66), image: P = plate75Floor(P(0, 0.62))
+        let along: P = simd_normalize(image - hole), side: P = P(-along.y, along.x)
+        let beam: [P] = [hole + side * 0.012, image + side * 0.06, image - side * 0.06, hole - side * 0.012, hole + side * 0.012]
         plate.fill(beam)
         plate.line([hole + side * 0.012, image + side * 0.06], medium)
         plate.line([hole - side * 0.012, image - side * 0.06], medium)
@@ -450,16 +568,26 @@ extension EscapementArt {
         plate.fill(arc(hole, 0.03))
         plate.line(arc(hole, 0.03), heavy)
         for k in 0..<8 {
-            let r = Double(k) * .pi / 4
+            let r: Double = Double(k) * .pi / 4
             plate.line([polar(hole, 0.045, r), polar(hole, 0.07, r)], heavy, .bone)
         }
         // The sun's image lying on the meridian, an ellipse foreshortened along the line.
         plate.fill(ellipse(image, 0.075, 0.035), .second)
         plate.line(ellipse(image, 0.075, 0.035), medium)
 
-        callout(&plate, "A", from: floor(P(0.0, 1.3)), to: P(0.2, 0.18))
+        callout(&plate, "A", from: plate75Floor(P(0.0, 1.3)), to: P(0.2, 0.18))
         callout(&plate, "B", from: hole + P(0.02, 0.03), to: P(-0.4, -0.5))
         callout(&plate, "C", from: image + P(0.07, 0), to: P(0.17, 0.72))
+    }
+
+    /// Problem 75, Noon mark, pent, clocks 0+: a church nave seen through a pointed arch of dark masonry, a meridian line
+    /// of brass let into its checkered floor, and the beam from a hole in the vault laying the sun's image on the line
+    /// at noon; the sun's image in the second ink.
+    static func plate75() -> Plate {
+        var plate = Plate()
+        plate75Tiles(&plate)
+        plate75Arch(&plate)
+        plate75Beam(&plate)
         return plate
     }
 
@@ -475,62 +603,79 @@ extension EscapementArt {
 
     // MARK: 76 Meridian
 
-    /// Problem 76, Meridian, hex, clocks 1+: a transit telescope on its stone pier under the night sky, its tube
-    /// pointed up the meridian at a star, its axis end-on in its bearing and its counterpoise weights hung from a
-    /// beam above; inset, the field of its eyepiece with the transit wires, the star in its sight in the second ink.
-    static func plate76() -> Plate {
-        var plate = Plate()
-        // The tube lies along the lane at one o'clock, clear of every hub.
-        let up = P(sin(.pi / 6), -cos(.pi / 6)), across = P(-up.y, up.x)
-        let pivot = up * 0.52, eyepiece = up * 0.2, objective = up * 0.86
-        let floorTop = 0.08, floorBottom = 0.14, footing = 0.8
+    /// The tube lies along the lane at one o'clock, clear of every hub.
+    private static let plate76Up: P = P(sin(.pi / 6), -cos(.pi / 6))
+    private static let plate76Across: P = P(-plate76Up.y, plate76Up.x)
+    private static let plate76Pivot: P = plate76Up * 0.52
+    private static let plate76Eyepiece: P = plate76Up * 0.2
+    private static let plate76Objective: P = plate76Up * 0.86
+    private static let plate76FloorTop: Double = 0.08
+    private static let plate76FloorBottom: Double = 0.14
+    private static let plate76Footing: Double = 0.8
+    private static let plate76Top: Double = plate76Pivot.y + 0.07
+    private static let plate76Beam: P = P(plate76Pivot.x, -0.75)
+    private static let plate76Field: P = P(-0.425, -0.736)
 
-        // The night sky ruled heavy over the platform; below it, the ground in section.
-        let below = { () -> [P] in
-            let a = asin(floorTop / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
-            return rim + [rim[0]]
-        }()
+    /// Plate 76's night sky ruled heavy over the platform; below it, the ground in section.
+    private static func plate76Sky(_ plate: inout Plate) {
+        let pivot: P = plate76Pivot, floorTop: Double = plate76FloorTop
+        let a: Double = asin(floorTop / 1.06)
+        let rim: [P] = arc(.zero, 1.06, from: a, to: .pi - a)
+        let below: [P] = rim + [rim[0]]
         K.ground(&plate, angle: -0.25, around: [below], width: 0.017)
         for i in 0..<40 {
-            let p = P(-1 + 2 * rnd(76, i), -1 + 1.02 * rnd(77, i))
-            guard simd_length(p) < 0.97, simd_distance(p, pivot) > 0.25, simd_distance(p, P(-0.425, -0.736)) > 0.2 else { continue }
-            let r = 0.026 + 0.03 * rnd(78, i)
+            let p: P = P(-1 + 2 * rnd(76, i), -1 + 1.02 * rnd(77, i))
+            guard simd_length(p) < 0.97, simd_distance(p, pivot) > 0.25, simd_distance(p, plate76Field) > 0.2 else { continue }
+            let r: Double = 0.026 + 0.03 * rnd(78, i)
             plate.fill(star(p, r, turn: 6 * rnd(79, i)))
             plate.line(star(p, r, turn: 6 * rnd(79, i)), fine)
         }
         plate.fill(below)
+        plate76Earth(&plate)
+    }
+
+    /// Plate 76's earth in section, its stones, and the platform's slab.
+    private static func plate76Earth(_ plate: inout Plate) {
+        let floorTop: Double = plate76FloorTop, floorBottom: Double = plate76FloorBottom
+        let a: Double = asin(floorTop / 1.06)
+        let rim: [P] = arc(.zero, 1.06, from: a, to: .pi - a)
+        let below: [P] = rim + [rim[0]]
         // The earth in section, ruled across the sky's grain, its stones cut out of it.
         var stones: [[P]] = []
         for i in 0..<60 {
-            let p = P(-1.05 + 2.1 * rnd(80, i), floorBottom + 0.04 + 0.9 * rnd(81, i))
-            let r = 0.025 + 0.04 * rnd(82, i) * rnd(83, i)
-            guard simd_length(p) < 1.02, stones.allSatisfy({ simd_distance($0[0], p) > 0.11 }) else { continue }
+            let p: P = P(-1.05 + 2.1 * rnd(80, i), floorBottom + 0.04 + 0.9 * rnd(81, i))
+            let r: Double = 0.025 + 0.04 * rnd(82, i) * rnd(83, i)
+            guard simd_length(p) < 1.02, stones.allSatisfy({ (s: [P]) -> Bool in simd_distance(s[0], p) > 0.11 }) else { continue }
             let edge: [P] = (0..<8).map { (k: Int) -> P in
                 let reach: Double = r * (0.75 + 0.45 * rnd(85, i * 8 + k))
                 return polar(p, reach, Double(k) * .pi / 4)
             }
             stones.append([p] + edge)
         }
-        let earthRules = hatch([below] + stones.map { Array($0.dropFirst()) + [$0[1]] }, angle: 0.7, gap: 0.05)
+        let holes: [[P]] = stones.map { (s: [P]) -> [P] in Array(s.dropFirst()) + [s[1]] }
+        let earthRules: [[P]] = hatch([below] + holes, angle: 0.7, gap: 0.05)
         plate.lines(earthRules, 0.019)
         for stone in stones {
-            let ring = Array(stone.dropFirst()) + [stone[1]]
+            let ring: [P] = Array(stone.dropFirst()) + [stone[1]]
             plate.line(ring, heavy)
-            plate.line(Array(ring.prefix(4)).map { stone[0] + ($0 - stone[0]) * 0.6 }, fine)
+            plate.line(Array(ring.prefix(4)).map { (p: P) -> P in stone[0] + (p - stone[0]) * 0.6 }, fine)
         }
         // The platform's slab in section, clear of the pier all round.
-        let slab = [box(P(-1.1, floorTop), P(0.07, floorBottom)), box(P(0.44, floorTop), P(1.1, floorBottom))]
+        let slab: [[P]] = [box(P(-1.1, floorTop), P(0.07, floorBottom)), box(P(0.44, floorTop), P(1.1, floorBottom))]
         for piece in slab {
             plate.fill(piece)
             plate.lines(hatch([piece], angle: .pi / 4, gap: 0.025), medium)
             plate.line(piece, heavy)
         }
+    }
 
-        // The pier: dressed stone above the platform, lit face coarsely ruled, east face in shadow; below it, its
-        // masonry in section down to a broad footing.
-        let top = pivot.y + 0.07
-        let lit = [P(0.14, top), P(0.27, top), P(0.27, floorTop), P(0.12, floorTop), P(0.14, top)]
-        let shade = [P(0.27, top), P(0.37, top - 0.02), P(0.39, floorTop), P(0.27, floorTop), P(0.27, top)]
+    /// Plate 76's pier: dressed stone above the platform, lit face coarsely ruled, east face in shadow; below it, its
+    /// masonry in section down to a broad footing; the capital and the Y bearing.
+    private static func plate76Pier(_ plate: inout Plate) {
+        let pivot: P = plate76Pivot, floorTop: Double = plate76FloorTop, footing: Double = plate76Footing
+        let top: Double = plate76Top
+        let lit: [P] = [P(0.14, top), P(0.27, top), P(0.27, floorTop), P(0.12, floorTop), P(0.14, top)]
+        let shade: [P] = [P(0.27, top), P(0.37, top - 0.02), P(0.39, floorTop), P(0.27, floorTop), P(0.27, top)]
         plate.fill(lit)
         plate.lines(hatch([lit], angle: .pi / 2, gap: 0.04), medium)
         plate.line(lit, heavy)
@@ -541,11 +686,11 @@ extension EscapementArt {
             plate.line([P(0.13, y), P(0.27, y)], heavy)
             plate.line([P(0.27, y), P(0.38, y - 0.01)], heavy, .bone)
         }
-        let foundation = [P(0.12, floorTop), P(0.39, floorTop), P(0.42, footing - 0.08), P(0.56, footing - 0.08), P(0.56, footing),
-                          P(-0.05, footing), P(-0.05, footing - 0.08), P(0.09, footing - 0.08), P(0.12, floorTop)]
+        let foundation: [P] = [P(0.12, floorTop), P(0.39, floorTop), P(0.42, footing - 0.08), P(0.56, footing - 0.08), P(0.56, footing),
+                               P(-0.05, footing), P(-0.05, footing - 0.08), P(0.09, footing - 0.08), P(0.12, floorTop)]
         plate.fill(foundation)
         for (i, y) in stride(from: floorTop + 0.1, to: footing, by: 0.1).enumerated() {
-            plate.lines(EscapementArt.across(foundation, at: y), 0.016)
+            plate.lines(across(foundation, at: y), 0.016)
             for x in i % 2 == 0 ? [0.2, 0.33] : [0.14, 0.27, 0.4] {
                 plate.lines(clipped(foundation, from: P(x, y - 0.1), to: P(x, y)), 0.016)
             }
@@ -554,35 +699,42 @@ extension EscapementArt {
         // The capital and the Y bearing.
         K.mass(&plate, box(P(0.12, top - 0.035), P(0.39, top)))
         plate.line([P(0.12, top - 0.018), P(0.39, top - 0.018)], medium, .bone)
-        K.mass(&plate, [P(pivot.x - 0.08, top - 0.035), P(pivot.x - 0.06, pivot.y - 0.02), P(pivot.x, pivot.y + 0.03),
-                         P(pivot.x + 0.06, pivot.y - 0.02), P(pivot.x + 0.08, top - 0.035), P(pivot.x - 0.08, top - 0.035)])
+        let cradle: [P] = [P(pivot.x - 0.08, top - 0.035), P(pivot.x - 0.06, pivot.y - 0.02), P(pivot.x, pivot.y + 0.03),
+                           P(pivot.x + 0.06, pivot.y - 0.02), P(pivot.x + 0.08, top - 0.035), P(pivot.x - 0.08, top - 0.035)]
+        K.mass(&plate, cradle)
+    }
 
-        // The counterpoise: a post from the capital, a beam, and a weight hung at each end, its rods down to the axis.
-        let beam = P(pivot.x, -0.75)
+    /// Plate 76's counterpoise: a post from the capital, a beam, and a weight hung at each end, its rods down to the axis.
+    private static func plate76Counterpoise(_ plate: inout Plate) {
+        let pivot: P = plate76Pivot, top: Double = plate76Top, beam: P = plate76Beam
         K.mass(&plate, K.band(P(pivot.x + 0.1, top - 0.03), beam + P(0.02, 0), 0.03))
         for s in [-1.0, 1.0] {
-            let end = beam + P(0.13 * s, 0.01 * s)
+            let end: P = beam + P(0.13 * s, 0.01 * s)
             plate.line([end + P(0, 0.02), pivot + P(0.05 * s, -0.04)], heavy)
             plate.line([end, end + P(0, -0.07)], heavy)
-            let ball = end + P(0, -0.11)
+            let ball: P = end + P(0, -0.11)
             plate.fill(arc(ball, 0.05), .black)
-            plate.line(arc(ball, 0.05, from: 3.6, to: 4.6).map { $0 + P(0.012, 0.012) }, heavy, .bone)
+            plate.line(arc(ball, 0.05, from: 3.6, to: 4.6).map { (p: P) -> P in p + P(0.012, 0.012) }, heavy, .bone)
         }
         K.mass(&plate, K.band(beam - P(0.15, 0.015), beam + P(0.15, 0.015), 0.035))
         plate.line([beam - P(0.14, 0.015), beam + P(0.14, 0.015)], fine, .bone)
         plate.fill(arc(beam, 0.022))
         plate.line(arc(beam, 0.022), heavy)
+    }
 
-        // The tube: two cones from the centre cube, banded, lit along one side.
+    /// Plate 76's tube: two cones from the centre cube, banded, lit along one side, and the axis end-on.
+    private static func plate76Tube(_ plate: inout Plate) {
+        let up: P = plate76Up, across: P = plate76Across
+        let pivot: P = plate76Pivot, eyepiece: P = plate76Eyepiece, objective: P = plate76Objective
         func cone(_ from: P, _ to: P, _ w0: Double, _ w1: Double) -> [P] {
             [from + across * w0, to + across * w1, to - across * w1, from - across * w0, from + across * w0]
         }
         for (a, b, w0, w1) in [(pivot, objective, 0.06, 0.075), (pivot, eyepiece, 0.06, 0.04)] {
-            let body = cone(a, b, w0, w1)
+            let body: [P] = cone(a, b, w0, w1)
             K.mass(&plate, body)
             plate.line([a + across * (w0 * 0.55), b + across * (w1 * 0.55)], 0.012, .bone)
             for t in stride(from: 0.25, through: 0.95, by: 0.35) {
-                let m = a + (b - a) * t, w = w0 + (w1 - w0) * t
+                let m: P = a + (b - a) * t, w: Double = w0 + (w1 - w0) * t
                 plate.line([m + across * w, m - across * w], 0.012, .bone)
             }
         }
@@ -593,21 +745,25 @@ extension EscapementArt {
         plate.fill(arc(eyepiece - up * 0.07, 0.03))
         plate.line(arc(eyepiece - up * 0.07, 0.03), heavy)
         // The axis end-on: the cube and the pivot's disc.
-        K.mass(&plate, turned(box(P(-0.075, -0.075), P(0.075, 0.075)), by: .pi / 6).map { $0 + pivot })
+        let cube: [P] = turned(box(P(-0.075, -0.075), P(0.075, 0.075)), by: .pi / 6).map { (p: P) -> P in p + pivot }
+        K.mass(&plate, cube)
         plate.fill(arc(pivot, 0.055))
         plate.line(arc(pivot, 0.055), heavy)
         plate.lines(hatch([arc(pivot, 0.04), arc(pivot, 0.018)], angle: 0.6, gap: 0.012), fine)
         plate.line(arc(pivot, 0.04), medium)
         plate.fill(arc(pivot, 0.018), .black)
+    }
 
-        // The star the tube is aimed at, on the meridian beyond the objective.
-        let aim = up * 0.97
+    /// Plate 76's star the tube is aimed at, and the inset of the eyepiece's field with the transit wires.
+    private static func plate76Inset(_ plate: inout Plate) {
+        let up: P = plate76Up, objective: P = plate76Objective
+        let aim: P = up * 0.97
         plate.lines(dashed([objective + up * 0.09, aim - up * 0.03], on: 0.015, off: 0.012), medium)
         plate.fill(arc(aim, 0.035))
         plate.line(star(aim, 0.03, turn: -.pi / 2), medium)
 
         // Inset: the eyepiece's field, the transit wires, the star crossing the middle wire.
-        let field = P(-0.425, -0.736), fr = 0.13
+        let field: P = plate76Field, fr: Double = 0.13
         plate.fill(arc(field, fr + 0.02), .black)
         plate.fill(arc(field, fr))
         for k in -2...2 {
@@ -618,96 +774,127 @@ extension EscapementArt {
         plate.fill(star(field, 0.055, turn: -.pi / 2), .second)
         plate.line(star(field, 0.055, turn: -.pi / 2), fine)
         plate.line(arc(field, fr), heavy)
+    }
 
+    /// Problem 76, Meridian, hex, clocks 1+: a transit telescope on its stone pier under the night sky, its tube
+    /// pointed up the meridian at a star, its axis end-on in its bearing and its counterpoise weights hung from a
+    /// beam above; inset, the field of its eyepiece with the transit wires, the star in its sight in the second ink.
+    static func plate76() -> Plate {
+        var plate = Plate()
+        plate76Sky(&plate)
+        plate76Pier(&plate)
+        plate76Counterpoise(&plate)
+        plate76Tube(&plate)
+        plate76Inset(&plate)
+        let up: P = plate76Up, across: P = plate76Across, pivot: P = plate76Pivot
         callout(&plate, "A", from: pivot + up * 0.2 - across * 0.04, to: P(-0.06, -0.33))
         callout(&plate, "B", from: pivot - across * 0.05, to: P(0.08, -0.2))
-        callout(&plate, "C", from: beam + P(-0.13, -0.11), to: P(-0.08, -0.92))
+        callout(&plate, "C", from: plate76Beam + P(-0.13, -0.11), to: P(-0.08, -0.92))
         callout(&plate, "D", from: P(0.2, 0.5), to: P(-0.22, 0.4))
         return plate
     }
 
     // MARK: 77 Solar time
 
-    /// Problem 77, Solar time, pent, clocks 0+: the sun with a face in the middle, his rays alternate straight and
-    /// flaming wedges of ink, inside a dark band of the day's hours in bone; his mouth in the second ink.
-    static func plate77() -> Plate {
-        var plate = Plate()
-        let o = K.origin, face = 0.31, band = 0.87, rays = 16, spin = 0.12
+    private static let plate77Face: Double = 0.31
+    private static let plate77Band: Double = 0.87
+    private static let plate77Rays: Int = 16
+    private static let plate77Spin: Double = 0.12
 
-        // The rays, each laid from the sun's rim outward: straight wedges between flaming ones.
+    private static func plate77RayAngle(_ k: Int) -> Double { Double(k) * 2 * .pi / Double(plate77Rays) + plate77Spin }
+
+    /// The rays, each laid from the sun's rim outward: straight wedges between flaming ones.
+    private static let plate77Wedges: [[P]] = {
+        let o: P = K.origin, face: Double = plate77Face
         var wedges: [[P]] = []
-        for k in 0..<rays {
-            let a = Double(k) * 2 * .pi / Double(rays) + spin
+        for k in 0..<plate77Rays {
+            let a: Double = plate77RayAngle(k)
             if k % 2 == 0 {
-                let tip = polar(o, 0.83, a), w = 0.12
-                wedges.append([polar(o, face + 0.02, a - w), tip, polar(o, face + 0.02, a + w), polar(o, face + 0.02, a - w)])
+                let tip: P = polar(o, 0.83, a), w: Double = 0.12
+                let p0: P = polar(o, face + 0.02, a - w), p1: P = polar(o, face + 0.02, a + w)
+                wedges.append([p0, tip, p1, p0])
             } else {
                 var left: [P] = [], right: [P] = []
                 for i in 0...30 {
-                    let t = Double(i) / 30, r = face + 0.02 + (0.72 - face) * t
-                    let bend = 0.09 * sin(3 * .pi * t) * t, half = 0.13 * pow(1 - t, 0.8) + 0.006
+                    let t: Double = Double(i) / 30, r: Double = face + 0.02 + (0.72 - face) * t
+                    let bend: Double = 0.09 * sin(3 * .pi * t) * t, half: Double = 0.13 * pow(1 - t, 0.8) + 0.006
                     left.append(polar(o, r, a + bend - half))
                     right.append(polar(o, r, a + bend + half))
                 }
                 wedges.append(left + right.reversed() + [left[0]])
             }
         }
-        let rim = arc(o, band)
+        return wedges
+    }()
+
+    /// Plate 77's rays, ruled round the sun's disc, each with a bone line down its middle.
+    private static func plate77Sunrays(_ plate: inout Plate) {
+        let o: P = K.origin, face: Double = plate77Face
+        let wedges: [[P]] = plate77Wedges
         K.ground(&plate, angle: 0.4, around: [arc(o, face + 0.02)] + wedges)
         for (k, wedge) in wedges.enumerated() {
             K.mass(&plate, wedge)
             // A bone line down each ray's middle, the engraver's light.
-            let a = Double(k) * 2 * .pi / Double(rays) + spin
+            let a: Double = plate77RayAngle(k)
             if k % 2 == 0 {
                 plate.line([polar(o, face + 0.06, a - 0.03), polar(o, 0.7, a - 0.006)], heavy, .bone)
                 plate.line([polar(o, face + 0.06, a + 0.05), polar(o, 0.5, a + 0.03)], medium, .bone)
             } else {
                 for f in [-0.45, 0.45] {
-                    let spine = (0...20).map { i -> P in
-                        let t = 0.05 + 0.6 * Double(i) / 20, half = 0.13 * pow(1 - t, 0.8) + 0.006
-                        return polar(o, face + 0.02 + (0.72 - face) * t, a + 0.09 * sin(3 * .pi * t) * t + f * half)
+                    let spine: [P] = (0...20).map { (i: Int) -> P in
+                        let t: Double = 0.05 + 0.6 * Double(i) / 20, half: Double = 0.13 * pow(1 - t, 0.8) + 0.006
+                        let r: Double = face + 0.02 + (0.72 - face) * t
+                        return polar(o, r, a + 0.09 * sin(3 * .pi * t) * t + f * half)
                     }
                     plate.line(spine, medium, .bone)
                 }
             }
         }
+    }
 
-        // The band of hours round the rim, dark, its numerals and ticks in bone.
+    /// Plate 77's band of hours round the rim, dark, its numerals and ticks in bone.
+    private static func plate77Hours(_ plate: inout Plate) {
+        let o: P = K.origin, band: Double = plate77Band
+        let rim: [P] = arc(o, band)
         K.mass(&plate, Array(glass) + Array(rim.reversed()))
         plate.line(arc(o, band + 0.018), medium, .bone)
         for k in 0..<48 {
-            let a = K.clock(Double(k) / 4)
+            let a: Double = K.clock(Double(k) / 4)
             plate.line([polar(o, band + 0.025, a), polar(o, band + (k % 4 == 0 ? 0.06 : 0.04), a)], k % 4 == 0 ? heavy : medium, .bone)
         }
         for h in 1...12 {
-            let a = K.clock(Double(h) - 0.5)
+            let a: Double = K.clock(Double(h) - 0.5)
             plate.lines(K.numeral(roman(h), at: polar(o, band + 0.07, a), height: 0.07, turn: a + .pi / 2, squeeze: 0.7), heavy, .bone)
         }
+    }
 
-        // The face: a bone disc in a heavy ring of little flames.
+    /// Plate 77's face: a bone disc in a heavy ring of little flames, brows, eyes, nose and cheeks.
+    private static func plate77Features(_ plate: inout Plate) {
+        let o: P = K.origin, face: Double = plate77Face
         plate.fill(arc(o, face + 0.03))
         for k in 0..<36 {
-            let a = Double(k) * .pi / 18
-            K.mass(&plate, [polar(o, face, a - 0.07), polar(o, face + 0.045, a + 0.03), polar(o, face, a + 0.08), polar(o, face, a - 0.07)])
+            let a: Double = Double(k) * .pi / 18
+            let flame: [P] = [polar(o, face, a - 0.07), polar(o, face + 0.045, a + 0.03), polar(o, face, a + 0.08), polar(o, face, a - 0.07)]
+            K.mass(&plate, flame)
         }
         plate.line(arc(o, face), 0.016)
         // Brows, bold.
         for s in [-1.0, 1.0] {
-            let brow = (0...12).map { i -> P in
-                let t = Double(i) / 12
+            let brow: [P] = (0...12).map { (i: Int) -> P in
+                let t: Double = Double(i) / 12
                 return P(s * (0.04 + 0.17 * t), -0.13 - 0.05 * sin(.pi * t) + 0.02 * t)
             }
             K.mass(&plate, K.ribbon(brow, 0.03))
         }
         // Eyes: heavy upper lids, irises in ink with a bone glint.
         for s in [-1.0, 1.0] {
-            let c = P(s * 0.12, -0.055)
-            let upper = (0...12).map { i -> P in
-                let t = Double(i) / 12
+            let c: P = P(s * 0.12, -0.055)
+            let upper: [P] = (0...12).map { (i: Int) -> P in
+                let t: Double = Double(i) / 12
                 return c + P(-0.075 + 0.15 * t, -0.035 * sin(.pi * t))
             }
-            let lower = (0...12).map { i -> P in
-                let t = Double(i) / 12
+            let lower: [P] = (0...12).map { (i: Int) -> P in
+                let t: Double = Double(i) / 12
                 return c + P(0.075 - 0.15 * t, 0.02 * sin(.pi * t))
             }
             plate.fill(upper + lower)
@@ -715,7 +902,8 @@ extension EscapementArt {
             plate.fill(arc(c + P(-0.008, -0.012), 0.008))
             K.mass(&plate, K.ribbon(upper, 0.018))
             plate.line(lower, medium)
-            plate.line(upper.map { $0 + P(0, -0.03) }.dropFirst(3).dropLast(3).map { $0 }, fine)
+            let lid: [P] = upper.map { (p: P) -> P in p + P(0, -0.03) }
+            plate.line(lid.dropFirst(3).dropLast(3).map { (p: P) -> P in p }, fine)
         }
         // The nose.
         plate.line([P(-0.01, -0.06), P(-0.025, 0.03), P(-0.04, 0.05)], heavy)
@@ -723,26 +911,42 @@ extension EscapementArt {
         plate.line(arc(P(0.04, 0.045), 0.012, from: -1.4, to: 1.8), medium)
         // Cheeks, round and ruled.
         for s in [-1.0, 1.0] {
-            let cheek = arc(P(s * 0.19, 0.06), 0.055)
+            let cheek: [P] = arc(P(s * 0.19, 0.06), 0.055)
             plate.lines(hatch([cheek], angle: 0.7 * s, gap: 0.016), fine)
         }
-        // The mouth: lips in the second ink about a dark parting.
-        let lips = (0...20).map { i -> P in
-            let t = Double(i) / 20
+    }
+
+    /// Plate 77's mouth: lips in the second ink about a dark parting, and the chin's fold.
+    private static func plate77Mouth(_ plate: inout Plate) {
+        let upperLip: [P] = (0...20).map { (i: Int) -> P in
+            let t: Double = Double(i) / 20
             return P(-0.1 + 0.2 * t, 0.15 - 0.022 * sin(.pi * t))
-        } + (0...20).map { i -> P in
-            let t = Double(i) / 20
+        }
+        let lowerLip: [P] = (0...20).map { (i: Int) -> P in
+            let t: Double = Double(i) / 20
             return P(0.1 - 0.2 * t, 0.15 + 0.05 * sin(.pi * t))
         }
+        let lips: [P] = upperLip + lowerLip
         plate.fill(lips, .second)
         plate.line(lips + [lips[0]], medium)
-        plate.line((0...16).map { i -> P in
-            let t = Double(i) / 16
+        let parting: [P] = (0...16).map { (i: Int) -> P in
+            let t: Double = Double(i) / 16
             return P(-0.1 + 0.2 * t, 0.153 + 0.012 * sin(.pi * t))
-        }, heavy)
+        }
+        plate.line(parting, heavy)
         // The chin's fold.
         plate.line(arc(P(0, 0.17), 0.1, from: 0.55, to: .pi - 0.55), medium)
+    }
 
+    /// Problem 77, Solar time, pent, clocks 0+: the sun with a face in the middle, his rays alternate straight and
+    /// flaming wedges of ink, inside a dark band of the day's hours in bone; his mouth in the second ink.
+    static func plate77() -> Plate {
+        var plate = Plate()
+        plate77Sunrays(&plate)
+        plate77Hours(&plate)
+        plate77Features(&plate)
+        plate77Mouth(&plate)
+        let o: P = K.origin, band: Double = plate77Band, spin: Double = plate77Spin, rays: Int = plate77Rays
         callout(&plate, "A", from: polar(o, 0.6, Double(2) * 2 * .pi / Double(rays) + spin), to: polar(o, 0.66, .pi / 2))
         callout(&plate, "B", from: polar(o, 0.5, Double(5) * 2 * .pi / Double(rays) + spin + 0.08), to: polar(o, 0.72, 2.5))
         callout(&plate, "C", from: polar(o, band + 0.03, -2.2), to: polar(o, 0.72, -2.3))
@@ -751,36 +955,44 @@ extension EscapementArt {
 
     // MARK: 78 Analemma
 
-    /// Problem 78, Analemma, hex, clocks 1+: the sun's place at noon every ten days of a year, a tall figure-of-eight
-    /// of bold dots standing in the clear ground by the rim at three o'clock, over a horizon of dark hills and banded
-    /// fields, a sighting pole and its shadow on the left; the summer solstice's dot in the second ink.
-    static func plate78() -> Plate {
-        var plate = Plate()
-        // Placed and sized so every dot clears a two-card hub on every rod.
-        let tilt = -5 * Double.pi / 180, up = P(sin(tilt), -cos(tilt)), across = P(-up.y, up.x)
-        let centre = P(0.78, -0.17), scale = 0.017, wide = 0.034
-        /// The sun's place on day d: its declination up the figure, the equation of time across it, in degrees.
-        func sun(_ d: Double) -> P {
-            let b = 2 * .pi * (d - 81) / 364
-            let minutes = 9.87 * sin(2 * b) - 7.53 * cos(b) - 1.5 * sin(b)
-            let declination = 23.44 * sin(2 * .pi * (d - 80) / 365)
-            return centre + up * (scale * declination) + across * (wide * minutes / 4)
-        }
-        let horizon = 0.44
+    private static let plate78Horizon: Double = 0.44
+    private static let plate78Tilt: Double = -5 * Double.pi / 180
+    private static let plate78Up: P = P(sin(plate78Tilt), -cos(plate78Tilt))
+    private static let plate78Across: P = P(-plate78Up.y, plate78Up.x)
+    private static let plate78Centre: P = P(0.78, -0.17)
+    private static let plate78Pole: Double = -0.243
 
-        let land = { () -> [P] in
-            let a = asin(horizon / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
-            return rim + [rim[0]]
-        }()
-        // A dark range of hills along the horizon, high on the left.
-        let hills = [P(-1.1, horizon)] + (0...60).map { i -> P in
-            let x = -1.1 + 2.2 * Double(i) / 60
-            let ridge = 0.2 * pow(max(0, cos((x + 0.55) * 2.2)), 1.5) + 0.07 * pow(max(0, sin(x * 6.1)), 2)
+    /// The sun's place on day d: its declination up the figure, the equation of time across it, in degrees.
+    private static func plate78Sun(_ d: Double) -> P {
+        let scale: Double = 0.017, wide: Double = 0.034
+        let b: Double = 2 * .pi * (d - 81) / 364
+        let minutes: Double = 9.87 * sin(2 * b) - 7.53 * cos(b) - 1.5 * sin(b)
+        let declination: Double = 23.44 * sin(2 * .pi * (d - 80) / 365)
+        return plate78Centre + plate78Up * (scale * declination) + plate78Across * (wide * minutes / 4)
+    }
+
+    private static let plate78Land: [P] = {
+        let a: Double = asin(plate78Horizon / 1.06)
+        let rim: [P] = arc(.zero, 1.06, from: a, to: .pi - a)
+        return rim + [rim[0]]
+    }()
+
+    /// A dark range of hills along the horizon, high on the left.
+    private static let plate78Hills: [P] = {
+        let horizon: Double = plate78Horizon
+        let ridgeLine: [P] = (0...60).map { (i: Int) -> P in
+            let x: Double = -1.1 + 2.2 * Double(i) / 60
+            let ridge: Double = 0.2 * pow(max(0, cos((x + 0.55) * 2.2)), 1.5) + 0.07 * pow(max(0, sin(x * 6.1)), 2)
             return P(x, horizon - 0.035 - ridge)
-        } + [P(1.1, horizon), P(-1.1, horizon)]
-        // The sky ruled heavier toward the horizon.
-        for rule in hatch([Array(glass), land, hills], angle: 0.3, gap: K.groundGap) {
-            let y = (rule[0].y + rule[1].y) / 2
+        }
+        return [P(-1.1, horizon)] + ridgeLine + [P(1.1, horizon), P(-1.1, horizon)]
+    }()
+
+    /// Plate 78's sky ruled heavier toward the horizon, and the hills with a wood in ink along their foot.
+    private static func plate78Sky(_ plate: inout Plate) {
+        let horizon: Double = plate78Horizon, hills: [P] = plate78Hills
+        for rule in hatch([Array(glass), plate78Land, hills], angle: 0.3, gap: K.groundGap) {
+            let y: Double = (rule[0].y + rule[1].y) / 2
             plate.line(rule, K.groundWidth + 0.009 * min(1, max(0, (y + 0.4) / 0.85)))
         }
         // The hills ruled close and heavy across their slopes, a wood in ink along their foot.
@@ -789,13 +1001,16 @@ extension EscapementArt {
         plate.line(hills, heavy)
         K.mass(&plate, box(P(-1.1, horizon - 0.035), P(1.1, horizon)))
         for i in 0..<34 {
-            let x = -1.0 + 2 * Double(i) / 34
+            let x: Double = -1.0 + 2 * Double(i) / 34
             plate.line(arc(P(x, horizon - 0.012), 0.014, from: .pi + 0.3, to: 2 * .pi - 0.3), medium, .bone)
         }
+    }
 
-        // The fields in strips running to the horizon, every fourth dark.
-        plate.fill(land)
-        let vanish = P(0.0, horizon + 0.05)
+    /// Plate 78's fields in strips running to the horizon, every fourth dark, and the bank in the foreground.
+    private static func plate78Fields(_ plate: inout Plate) {
+        let horizon: Double = plate78Horizon
+        plate.fill(plate78Land)
+        let vanish: P = P(0.0, horizon + 0.05)
         func furrow(_ k: Int) -> (P, P) { (vanish + P(Double(k) * 0.045, 0), P(Double(k) * 0.17, 1.3)) }
         for k in -24...23 {
             let (far, near) = furrow(k), (far2, near2) = furrow(k + 1)
@@ -809,19 +1024,23 @@ extension EscapementArt {
         plate.line([P(-1.1, horizon + 0.05), P(1.1, horizon + 0.05)], medium)
         for y in [0.58, 0.76] { plate.line([P(-1.1, y), P(1.1, y)], heavy, .bone) }
         // The bank in the foreground, dark, its grass in bone.
-        let bank = [P(-1.1, 1.1)] + (0...40).map { i -> P in
-            let x = -1.1 + 2.2 * Double(i) / 40
+        let bankLine: [P] = (0...40).map { (i: Int) -> P in
+            let x: Double = -1.1 + 2.2 * Double(i) / 40
             return P(x, 0.84 - 0.03 * sin(x * 4 + 1) - 0.012 * sin(x * 13))
-        } + [P(1.1, 1.1), P(-1.1, 1.1)]
+        }
+        let bank: [P] = [P(-1.1, 1.1)] + bankLine + [P(1.1, 1.1), P(-1.1, 1.1)]
         K.mass(&plate, bank)
         for i in 0..<60 {
-            let x = -1.0 + 2 * Double(i) / 60 + 0.01 * rnd(90, i), y = 0.88 + 0.12 * rnd(91, i)
+            let x: Double = -1.0 + 2 * Double(i) / 60 + 0.01 * rnd(90, i), y: Double = 0.88 + 0.12 * rnd(91, i)
             plate.line([P(x, y), P(x + 0.012 * (rnd(92, i) - 0.5), y - 0.04)], medium, .bone)
         }
+    }
 
-        // The sighting pole, ringed, with its vane, and its shadow across the fields.
-        let pole = -0.243, top = -0.46, foot = horizon + 0.14
-        K.mass(&plate, [P(pole - 0.02, foot), P(pole + 0.02, foot), P(pole + 0.42, foot + 0.17), P(pole + 0.38, foot + 0.19), P(pole - 0.02, foot)])
+    /// Plate 78's sighting pole, ringed, with its vane, and its shadow across the fields.
+    private static func plate78PoleDraw(_ plate: inout Plate) {
+        let pole: Double = plate78Pole, top: Double = -0.46, foot: Double = plate78Horizon + 0.14
+        let shadow: [P] = [P(pole - 0.02, foot), P(pole + 0.02, foot), P(pole + 0.42, foot + 0.17), P(pole + 0.38, foot + 0.19), P(pole - 0.02, foot)]
+        K.mass(&plate, shadow)
         K.mass(&plate, K.band(P(pole, foot), P(pole, top), 0.044))
         for y in stride(from: top + 0.1, to: foot, by: 0.1) {
             plate.line([P(pole - 0.022, y), P(pole + 0.022, y)], heavy, .bone)
@@ -829,29 +1048,43 @@ extension EscapementArt {
         plate.line([P(pole - 0.012, top + 0.02), P(pole - 0.012, foot - 0.02)], fine, .bone)
         plate.fill(arc(P(pole, top - 0.03), 0.036), .black)
         plate.line(arc(P(pole - 0.01, top - 0.04), 0.014, from: 3.3, to: 4.6), medium, .bone)
-        K.mass(&plate, [P(pole, top - 0.06), P(pole + 0.12, top - 0.11), P(pole + 0.1, top - 0.065), P(pole + 0.12, top - 0.02), P(pole, top - 0.045), P(pole, top - 0.06)])
+        let vane: [P] = [P(pole, top - 0.06), P(pole + 0.12, top - 0.11), P(pole + 0.1, top - 0.065), P(pole + 0.12, top - 0.02), P(pole, top - 0.045), P(pole, top - 0.06)]
+        K.mass(&plate, vane)
         plate.line([P(pole, top - 0.06), P(pole, top - 0.12)], heavy)
+    }
 
-        // The year's path under its dots: a dot every ten days, smaller up the summer loop so it shows open.
-        plate.line((0...365).map { sun(Double($0)) }, heavy)
+    /// Plate 78's year's path under its dots: a dot every ten days, smaller up the summer loop so it shows open.
+    private static func plate78Path(_ plate: inout Plate) {
+        let centre: P = plate78Centre, up: P = plate78Up, across: P = plate78Across
+        plate.line((0...365).map { (d: Int) -> P in plate78Sun(Double(d)) }, heavy)
         for d in stride(from: 2, to: 365, by: 10) where abs(d - 172) > 6 {
-            let c = sun(Double(d)), summer = simd_dot(c - centre, up) > 0.2
-            let r = summer ? 0.021 : 0.03
+            let c: P = plate78Sun(Double(d)), summer: Bool = simd_dot(c - centre, up) > 0.2
+            let r: Double = summer ? 0.021 : 0.03
             plate.fill(arc(c, r + 0.008))
             plate.fill(arc(c, r), .black)
             plate.line(arc(c + P(-0.007, -0.007), r * 0.55, from: 3.4, to: 4.5), medium, .bone)
         }
-        let solstice = sun(172)
+        let solstice: P = plate78Sun(172)
         plate.fill(arc(solstice, 0.048))
         plate.fill(arc(solstice, 0.038), .second)
         plate.line(arc(solstice, 0.038), medium)
         // The equinoxes' crossing, ticked across the figure.
-        let equinox = sun(80)
+        let equinox: P = plate78Sun(80)
         plate.line([equinox - across * 0.11, equinox + across * 0.11], heavy)
+    }
 
-        callout(&plate, "A", from: sun(20) - across * 0.035, to: P(0.58, 0.04))
-        callout(&plate, "B", from: P(pole, 0.0), to: P(-0.62, -0.02))
-        callout(&plate, "C", from: P(-0.7, horizon - 0.12), to: P(-0.8, 0.1))
+    /// Problem 78, Analemma, hex, clocks 1+: the sun's place at noon every ten days of a year, a tall figure-of-eight
+    /// of bold dots standing in the clear ground by the rim at three o'clock, over a horizon of dark hills and banded
+    /// fields, a sighting pole and its shadow on the left; the summer solstice's dot in the second ink.
+    static func plate78() -> Plate {
+        var plate = Plate()
+        plate78Sky(&plate)
+        plate78Fields(&plate)
+        plate78PoleDraw(&plate)
+        plate78Path(&plate)
+        callout(&plate, "A", from: plate78Sun(20) - plate78Across * 0.035, to: P(0.58, 0.04))
+        callout(&plate, "B", from: P(plate78Pole, 0.0), to: P(-0.62, -0.02))
+        callout(&plate, "C", from: P(-0.7, plate78Horizon - 0.12), to: P(-0.8, 0.1))
         return plate
     }
 }

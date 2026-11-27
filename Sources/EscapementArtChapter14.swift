@@ -23,36 +23,41 @@ extension EscapementArt {
         return [c + P(0, -2.3 * r)] + belly + [c + P(0, -2.3 * r)]
     }
 
-    /// Problem 79, Water clock, hex, clocks 1-: a clepsydra. An urn hung from a beam drips through its cock into a
-    /// basin whose float lifts a pointer up a column ruled with the hours; the falling drop in the second ink.
-    static func plate79() -> Plate {
-        var plate = Plate()
-        let spoutX = -0.22, surface = 0.13, rodX = 0.04, arm = -0.23
-        let beam = box(P(-0.5, -0.89), P(0.7, -0.8))
-        let column = box(P(0.43, -0.8), P(0.63, 0.66))
-        let urn = smooth([P(-0.52, -0.79), P(0.08, -0.79), P(0.02, -0.73), P(0.08, -0.6), P(-0.04, -0.47),
-                          P(spoutX + 0.04, -0.44), P(spoutX - 0.04, -0.44), P(-0.4, -0.47), P(-0.52, -0.6), P(-0.46, -0.73)], 10)
-        let basin = box(P(-0.5, -0.12), P(0.24, 0.71))
+    private static let plate79SpoutX: Double = -0.22
+    private static let plate79Surface: Double = 0.13
+    private static let plate79RodX: Double = 0.04
+    private static let plate79Arm: Double = -0.23
+    private static let plate79Beam: [P] = box(P(-0.5, -0.89), P(0.7, -0.8))
+    private static let plate79Column: [P] = box(P(0.43, -0.8), P(0.63, 0.66))
+    private static let plate79Basin: [P] = box(P(-0.5, -0.12), P(0.24, 0.71))
+    private static let plate79Urn: [P] = {
+        let s: Double = plate79SpoutX
+        let corners: [P] = [P(-0.52, -0.79), P(0.08, -0.79), P(0.02, -0.73), P(0.08, -0.6), P(-0.04, -0.47),
+                            P(s + 0.04, -0.44), P(s - 0.04, -0.44), P(-0.4, -0.47), P(-0.52, -0.6), P(-0.46, -0.73)]
+        return smooth(corners, 10)
+    }()
 
-        Kit.ground(&plate, angle: -0.5, around: [beam, column, urn, basin])
-
-        // The column: two rails, the hours between them rising from the foot as the water fills.
-        Kit.cut(&plate, column)
+    /// Plate 79's column: two rails, the hours between them rising from the foot as the water fills.
+    private static func plate79ColumnDraw(_ plate: inout Plate) {
+        Kit.cut(&plate, plate79Column)
         for x in [0.455, 0.605] { Kit.mass(&plate, box(P(x - 0.025, -0.8), P(x + 0.025, 0.66))) }
         for k in 1...12 {
-            let y = 0.55 - Double(k - 1) * 0.112
+            let y: Double = 0.55 - Double(k - 1) * 0.112
             Kit.mass(&plate, box(P(0.48, y + 0.048), P(0.53, y + 0.062)))
             plate.lines(Kit.numeral(roman(k), at: P(0.545, y), height: 0.05, squeeze: 0.7), heavy)
         }
         Kit.mass(&plate, box(P(0.39, -0.8), P(0.67, -0.74)))
         Kit.mass(&plate, box(P(0.39, 0.62), P(0.67, 0.7)))
+    }
 
-        // The beam, the urn's straps and the urn, fluted in ink and bone.
-        Kit.mass(&plate, beam)
+    /// Plate 79's beam, the urn's straps and the urn, fluted in ink and bone, with its cock and key.
+    private static func plate79UrnDraw(_ plate: inout Plate) {
+        let spoutX: Double = plate79SpoutX, urn: [P] = plate79Urn
+        Kit.mass(&plate, plate79Beam)
         plate.line([P(-0.48, -0.85), P(0.68, -0.85)], 0.012, .bone)
         for x in [-0.42, -0.02] { Kit.mass(&plate, box(P(x - 0.02, -0.8), P(x + 0.02, -0.74))) }
         Kit.cut(&plate, urn)
-        let flutes = hatch([urn], angle: 0, gap: 0.09, shift: 0.3)
+        let flutes: [[P]] = hatch([urn], angle: 0, gap: 0.09, shift: 0.3)
         for f in flutes where f.count == 2 {
             Kit.mass(&plate, Kit.band(f[0], f[1], 0.03))
         }
@@ -62,12 +67,15 @@ extension EscapementArt {
         Kit.solid(&plate, box(P(spoutX - 0.035, -0.45), P(spoutX + 0.035, -0.38)), angle: 0.8, gap: 0.014, width: fine)
         Kit.mass(&plate, Kit.band(P(spoutX - 0.09, -0.415), P(spoutX + 0.09, -0.415), 0.022))
         Kit.mass(&plate, box(P(spoutX - 0.012, -0.38), P(spoutX + 0.012, -0.355)))
+    }
 
-        // The basin's walls, its water in bold ripples and the float riding it.
-        Kit.cut(&plate, basin)
+    /// Plate 79's basin walls, its water in bold ripples and the float riding it.
+    private static func plate79BasinDraw(_ plate: inout Plate) {
+        let spoutX: Double = plate79SpoutX, surface: Double = plate79Surface
+        Kit.cut(&plate, plate79Basin)
         for k in 0..<5 {
-            let y = surface + 0.01 + Double(k) * 0.12
-            let wave = (0...40).map { i in P(-0.43 + 0.6 * Double(i) / 40, y + 0.008 * sin(Double(i) * 0.7 + Double(k))) }
+            let y: Double = surface + 0.01 + Double(k) * 0.12
+            let wave: [P] = (0...40).map { (i: Int) -> P in P(-0.43 + 0.6 * Double(i) / 40, y + 0.008 * sin(Double(i) * 0.7 + Double(k))) }
             Kit.mass(&plate, Kit.ribbon(wave, k == 0 ? 0.04 : 0.03))
         }
         for r in [0.04, 0.075] { plate.line(ellipse(P(spoutX, surface - 0.005), r, 0.28 * r, from: .pi + 0.3, to: 2 * .pi - 0.3), medium) }
@@ -78,11 +86,18 @@ extension EscapementArt {
         Kit.mass(&plate, box(P(-0.54, -0.15), P(-0.39, -0.11)))
         Kit.mass(&plate, box(P(0.13, -0.15), P(0.28, -0.11)))
         for x in [-0.465, 0.205] {
-            Kit.mass(&plate, smooth([P(x - 0.07, 0.83), P(x - 0.04, 0.71), P(x + 0.04, 0.71), P(x + 0.07, 0.83)], 3))
+            let foot: [P] = [P(x - 0.07, 0.83), P(x - 0.04, 0.71), P(x + 0.04, 0.71), P(x + 0.07, 0.83)]
+            Kit.mass(&plate, smooth(foot, 3))
         }
+    }
+
+    /// Plate 79's float rod and pointer, and the falling drop.
+    private static func plate79Pointer(_ plate: inout Plate) {
+        let spoutX: Double = plate79SpoutX, surface: Double = plate79Surface
+        let rodX: Double = plate79RodX, arm: Double = plate79Arm
         Kit.mass(&plate, Kit.band(P(rodX, surface - 0.07), P(rodX, arm), 0.036))
-        Kit.solid(&plate, smooth([P(-0.06, surface - 0.075), P(0.14, surface - 0.075), P(0.15, surface + 0.03), P(-0.07, surface + 0.03)], 4),
-                  angle: 0.7, gap: 0.016, width: fine, edge: heavy)
+        let floatShape: [P] = smooth([P(-0.06, surface - 0.075), P(0.14, surface - 0.075), P(0.15, surface + 0.03), P(-0.07, surface + 0.03)], 4)
+        Kit.solid(&plate, floatShape, angle: 0.7, gap: 0.016, width: fine, edge: heavy)
         Kit.mass(&plate, Kit.band(P(rodX - 0.02, arm), P(0.37, arm), 0.04))
         Kit.mass(&plate, Kit.barb(P(0.47, arm), toward: 0, size: 0.1))
         plate.fill(arc(P(rodX, arm), 0.018))
@@ -91,10 +106,20 @@ extension EscapementArt {
         plate.fill(drop(P(spoutX, -0.27), 0.024), .second)
         plate.line(drop(P(spoutX, -0.27), 0.024), fine)
         plate.lines(dashed([P(spoutX, -0.22), P(spoutX, surface - 0.04)], on: 0.03, off: 0.04), fine)
+    }
 
+    /// Problem 79, Water clock, hex, clocks 1-: a clepsydra. An urn hung from a beam drips through its cock into a
+    /// basin whose float lifts a pointer up a column ruled with the hours; the falling drop in the second ink.
+    static func plate79() -> Plate {
+        var plate = Plate()
+        Kit.ground(&plate, angle: -0.5, around: [plate79Beam, plate79Column, plate79Urn, plate79Basin])
+        plate79ColumnDraw(&plate)
+        plate79UrnDraw(&plate)
+        plate79BasinDraw(&plate)
+        plate79Pointer(&plate)
         callout(&plate, "A", from: P(-0.47, -0.62), to: P(-0.68, -0.44))
         callout(&plate, "B", from: P(-0.3, 0.4), to: P(-0.7, 0.5))
-        callout(&plate, "C", from: P(0.12, surface - 0.03), to: P(0.3, 0.04))
+        callout(&plate, "C", from: P(0.12, plate79Surface - 0.03), to: P(0.3, 0.04))
         callout(&plate, "D", from: P(0.62, 0.2), to: P(0.8, 0.04))
         return plate
     }
@@ -195,27 +220,47 @@ extension EscapementArt {
     /// sky; the pole star in the second ink.
     static func plate81() -> Plate {
         var plate = Plate()
-        let c = P(-0.16, 0.16), pole = P(0.36, -0.74)
-        let outer = arc(c, 0.44)
-        let hills = [P(-1.1, 0.78), P(-0.7, 0.7), P(-0.42, 0.76), P(-0.1, 0.84), P(0.25, 0.74), P(0.55, 0.64),
-                     P(0.8, 0.7), P(1.1, 0.6), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.78)]
-        let ridge = smooth(Array(hills.dropLast()), 12)
-        let handle = smooth([P(-0.39, 0.5), P(-0.29, 0.56), P(-0.42, 0.74), P(-0.4, 0.9), P(-0.58, 0.92),
-                             P(-0.56, 0.74), P(-0.5, 0.62)], 8)
+        plate81Sky(&plate)
+        plate81Months(&plate)
+        plate81Arm(&plate)
+        let c: P = plate81C
+        let dir: P = simd_normalize(plate81Pole - c)
+        callout(&plate, "A", from: polar(c, 0.4, Kit.clock(8.6)), to: P(-0.74, -0.08))
+        callout(&plate, "B", from: polar(c, 0.24, Kit.clock(4.5)), to: P(0.4, 0.46))
+        callout(&plate, "C", from: c + dir * 0.6, to: P(-0.12, -0.6))
+        callout(&plate, "D", from: P(-0.47, 0.66), to: P(-0.78, 0.5))
+        return plate
+    }
+
+    private static let plate81C: P = P(-0.16, 0.16)
+    private static let plate81Pole: P = P(0.36, -0.74)
+    private static let plate81Outer: [P] = arc(plate81C, 0.44)
+    private static let plate81Ridge: [P] = {
+        let hills: [P] = [P(-1.1, 0.78), P(-0.7, 0.7), P(-0.42, 0.76), P(-0.1, 0.84), P(0.25, 0.74), P(0.55, 0.64),
+                          P(0.8, 0.7), P(1.1, 0.6), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.78)]
+        return smooth(Array(hills.dropLast()), 12)
+    }()
+    private static let plate81Handle: [P] = smooth([P(-0.39, 0.5), P(-0.29, 0.56), P(-0.42, 0.74), P(-0.4, 0.9), P(-0.58, 0.92),
+                                                    P(-0.56, 0.74), P(-0.5, 0.62)], 8)
+
+    /// Plate 81's stars, hills and handle.
+    private static func plate81Sky(_ plate: inout Plate) {
+        let pole: P = plate81Pole, outer: [P] = plate81Outer, ridge: [P] = plate81Ridge, handle: [P] = plate81Handle
         Kit.ground(&plate, angle: 0.25, around: [outer, ridge])
 
         // The Plough, its two guards in line with the pole star.
-        let plough = [P(0.9, -0.12), P(0.78, -0.02), P(0.66, -0.05), P(0.54, -0.13), P(0.56, -0.32), P(0.38, -0.4), P(0.42, -0.58)]
+        let plough: [P] = [P(0.9, -0.12), P(0.78, -0.02), P(0.66, -0.05), P(0.54, -0.13), P(0.56, -0.32), P(0.38, -0.4), P(0.42, -0.58)]
         plate.lines(dashed(plough, on: 0.03, off: 0.025), fine)
         plate.lines(dashed([plough[6], pole], on: 0.015, off: 0.03), fine)
         for (k, p) in plough.enumerated() {
-            let ray = star(p, k == 4 || k == 6 ? 0.05 : 0.04)
+            let ray: [P] = star(p, k == 4 || k == 6 ? 0.05 : 0.04)
             plate.line(ray, 0.03, .bone)
             Kit.mass(&plate, ray)
         }
-        for (k, p) in [P(-0.62, -0.62), P(-0.78, -0.2), P(-0.3, -0.84), P(0.08, -0.32), P(0.72, -0.56), P(0.84, 0.3),
-                       P(-0.86, 0.18), P(0.12, -0.72), P(-0.5, -0.36)].enumerated() {
-            let ray = star(p, 0.03 + 0.012 * Double(k % 3), points: 4, inner: 0.3, turn: 0.4 * Double(k))
+        let field: [P] = [P(-0.62, -0.62), P(-0.78, -0.2), P(-0.3, -0.84), P(0.08, -0.32), P(0.72, -0.56), P(0.84, 0.3),
+                          P(-0.86, 0.18), P(0.12, -0.72), P(-0.5, -0.36)]
+        for (k, p) in field.enumerated() {
+            let ray: [P] = star(p, 0.03 + 0.012 * Double(k % 3), points: 4, inner: 0.3, turn: 0.4 * Double(k))
             plate.line(ray, 0.022, .bone)
             Kit.mass(&plate, ray)
         }
@@ -230,13 +275,18 @@ extension EscapementArt {
         plate.fill(arc(P(-0.49, 0.83), 0.035))
         plate.line(arc(P(-0.49, 0.83), 0.035), medium)
         plate.line(curve(P(-0.45, 0.6), P(-0.5, 0.7), P(-0.47, 0.78)), heavy, .bone)
+    }
+
+    /// Plate 81's ring of months and hour wheel.
+    private static func plate81Months(_ plate: inout Plate) {
+        let c: P = plate81C, outer: [P] = plate81Outer
 
         // The ring of months: ink, cut with its divisions and numbered in bone.
         plate.line(outer, 0.05, .bone)
         Kit.mass(&plate, outer)
         Kit.cut(&plate, arc(c, 0.37), edge: heavy)
         for k in 0..<72 {
-            let a = 2 * .pi * Double(k) / 72
+            let a: Double = 2 * .pi * Double(k) / 72
             if k % 6 == 0 {
                 plate.line([polar(c, 0.3, a), polar(c, 0.44, a)], heavy, .bone)
                 plate.line([polar(c, 0.3, a), polar(c, 0.37, a)], heavy)
@@ -250,25 +300,29 @@ extension EscapementArt {
         }
 
         // The hour wheel, its teeth to be counted in the dark and its XII tooth long; hatched between its hours.
-        let teeth: [P] = (0..<48).map { k in
-            let a = Kit.clock(Double(k) / 4) - 0.04
-            let r = k % 2 == 0 ? (k == 0 ? 0.35 : 0.29) : 0.245
+        let teeth: [P] = (0..<48).map { (k: Int) -> P in
+            let a: Double = Kit.clock(Double(k) / 4) - 0.04
+            let r: Double = k % 2 == 0 ? (k == 0 ? 0.35 : 0.29) : 0.245
             return polar(c, r, a)
         }
         Kit.cut(&plate, teeth + [teeth[0]], edge: heavy)
         plate.line(arc(c, 0.225), 0.016)
         plate.line(arc(c, 0.155), medium)
         for k in 0..<12 {
-            let a = Kit.clock(Double(k))
-            plate.lines(hatch([arc(c, 0.225, from: a + 0.1, to: a + 0.42) + arc(c, 0.155, from: a + 0.42, to: a + 0.1)],
-                              angle: a + 0.9, gap: 0.02), fine)
+            let a: Double = Kit.clock(Double(k))
+            let sector: [P] = arc(c, 0.225, from: a + 0.1, to: a + 0.42) + arc(c, 0.155, from: a + 0.42, to: a + 0.1)
+            plate.lines(hatch([sector], angle: a + 0.9, gap: 0.02), fine)
             Kit.mass(&plate, Kit.band(polar(c, 0.155, a), polar(c, 0.225, a), 0.026))
         }
 
-        // The arm, sighted along its edge from the pivot's hole to the pole star.
-        let dir = simd_normalize(pole - c), side = P(-dir.y, dir.x)
-        let tip = c + dir * 0.84
-        let arm = [c - dir * 0.12 + side * 0.06, tip + side * 0.012, tip, c - dir * 0.12 - side * 0.06, c - dir * 0.12 + side * 0.06]
+    }
+
+    /// Plate 81's arm, sighted along its edge from the pivot's hole to the pole star, and the pole star.
+    private static func plate81Arm(_ plate: inout Plate) {
+        let c: P = plate81C, pole: P = plate81Pole
+        let dir: P = simd_normalize(pole - c), side: P = P(-dir.y, dir.x)
+        let tip: P = c + dir * 0.84
+        let arm: [P] = [c - dir * 0.12 + side * 0.06, tip + side * 0.012, tip, c - dir * 0.12 - side * 0.06, c - dir * 0.12 + side * 0.06]
         plate.line(arm, 0.04, .bone)
         Kit.mass(&plate, arm)
         plate.line([c + dir * 0.13 - side * 0.01, tip - dir * 0.04], heavy, .bone)
@@ -282,12 +336,6 @@ extension EscapementArt {
         plate.line(polaris, 0.03, .bone)
         plate.fill(polaris, .second)
         plate.line(polaris, fine)
-
-        callout(&plate, "A", from: polar(c, 0.4, Kit.clock(8.6)), to: P(-0.74, -0.08))
-        callout(&plate, "B", from: polar(c, 0.24, Kit.clock(4.5)), to: P(0.4, 0.46))
-        callout(&plate, "C", from: c + dir * 0.6, to: P(-0.12, -0.6))
-        callout(&plate, "D", from: P(-0.47, 0.66), to: P(-0.78, 0.5))
-        return plate
     }
 
     /// A star pointer's flame on an astrolabe's rete: a curved blade from `base` to its tip at `tip`.
@@ -304,9 +352,30 @@ extension EscapementArt {
     /// rete in bold ink, its ecliptic ring and star pointers, with the rule across; one star pointer in the second ink.
     static func plate82() -> Plate {
         var plate = Plate()
-        let o = Kit.origin, limb = 0.74, tropic = 0.6, cancer = 0.26, equator = 0.4
-        let throne = smooth([P(-0.2, -0.7), P(-0.17, -0.8), P(-0.08, -0.82), P(-0.05, -0.88), P(0.05, -0.88), P(0.08, -0.82),
-                             P(0.17, -0.8), P(0.2, -0.7)], 6)
+        plate82Limb(&plate)
+        plate82Plate(&plate)
+        plate82Rete(&plate)
+        plate82Rule(&plate)
+        let o: P = Kit.origin
+        callout(&plate, "A", from: polar(o, 0.7, Kit.clock(7.5)), to: P(-0.74, 0.6))
+        callout(&plate, "B", from: polar(plate82Ecliptic, plate82Er, 0.2), to: P(0.84, 0.18))
+        callout(&plate, "C", from: polar(o, 0.5, Kit.clock(4.3)), to: P(0.62, 0.72))
+        callout(&plate, "D", from: P(0.17, -0.78), to: P(0.4, -0.84))
+        return plate
+    }
+
+    private static let plate82Limb: Double = 0.74
+    private static let plate82Tropic: Double = 0.6
+    private static let plate82Cancer: Double = 0.26
+    private static let plate82Equator: Double = 0.4
+    private static let plate82Ecliptic: P = P(0, -(plate82Tropic - plate82Cancer) / 2)
+    private static let plate82Er: Double = (plate82Tropic + plate82Cancer) / 2
+
+    /// Plate 82's throne and shackle, and the limb: ink, its degrees cut and the hours twice round.
+    private static func plate82Limb(_ plate: inout Plate) {
+        let o: P = Kit.origin, limb: Double = plate82Limb
+        let throne: [P] = smooth([P(-0.2, -0.7), P(-0.17, -0.8), P(-0.08, -0.82), P(-0.05, -0.88), P(0.05, -0.88), P(0.08, -0.82),
+                                  P(0.17, -0.8), P(0.2, -0.7)], 6)
         Kit.ground(&plate, angle: 0.6, around: [arc(o, limb + 0.01), throne])
 
         // The throne and its shackle.
@@ -320,26 +389,30 @@ extension EscapementArt {
         Kit.mass(&plate, arc(o, limb))
         Kit.cut(&plate, arc(o, 0.71), edge: heavy)
         for k in 0..<72 {
-            let a = Double(k) * .pi / 36
+            let a: Double = Double(k) * .pi / 36
             plate.line([polar(o, 0.71, a), polar(o, limb, a)], k % 3 == 0 ? 0.014 : medium, .bone)
         }
         for k in 0..<24 {
-            let a = -.pi / 2 + Double(k) * .pi / 12
+            let a: Double = -.pi / 2 + Double(k) * .pi / 12
             Kit.mass(&plate, Kit.band(polar(o, 0.62, a), polar(o, 0.7, a), 0.014))
-            let b = a + .pi / 24
+            let b: Double = a + .pi / 24
             plate.lines(Kit.numeral(roman(k % 12 + 1), at: polar(o, 0.66, b), height: 0.04, turn: b + .pi / 2, squeeze: 0.66), heavy)
         }
         plate.line(arc(o, 0.62), heavy)
+    }
 
+    /// Plate 82's plate: the sky below the horizon shaded, the tropics and almucantars ruled.
+    private static func plate82Plate(_ plate: inout Plate) {
+        let o: P = Kit.origin, tropic: Double = plate82Tropic, cancer: Double = plate82Cancer, equator: Double = plate82Equator
         // The plate: the sky below the horizon shaded, the tropics and almucantars ruled.
         let alts: [(top: Double, bottom: Double)] = (0...5).map { (k: Int) -> (top: Double, bottom: Double) in
             let top: Double = -0.56 + 0.06 * Double(k), bottom: Double = 0.5 - 0.13 * Double(k)
             return (top, bottom)
         }
-        let horizon = arc(P(0, (alts[0].top + alts[0].bottom) / 2), (alts[0].bottom - alts[0].top) / 2)
+        let horizon: [P] = arc(P(0, (alts[0].top + alts[0].bottom) / 2), (alts[0].bottom - alts[0].top) / 2)
         plate.lines(hatch([arc(o, tropic), horizon], angle: 0.6, gap: Kit.groundGap), Kit.groundWidth)
         for (k, alt) in alts.enumerated() {
-            let ring = arc(P(0, (alt.top + alt.bottom) / 2), (alt.bottom - alt.top) / 2)
+            let ring: [P] = arc(P(0, (alt.top + alt.bottom) / 2), (alt.bottom - alt.top) / 2)
             var run: [P] = []
             for p in ring {
                 if simd_length(p) < tropic { run.append(p) } else if run.count > 1 { plate.line(run, k == 0 ? 0.016 : fine); run = [] } else { run = [] }
@@ -350,11 +423,14 @@ extension EscapementArt {
         plate.line(arc(o, tropic), heavy)
         plate.line([P(-tropic, 0), P(tropic, 0)], fine)
         plate.line([P(0, -tropic), P(0, tropic)], fine)
+    }
 
-        // The rete: its rim, the ecliptic ring cut with the signs, bars and star pointers.
-        let ecliptic = P(0, -(tropic - cancer) / 2), er = (tropic + cancer) / 2
+    /// Plate 82's rete: its rim, the ecliptic ring cut with the signs, bars and star pointers.
+    private static func plate82Rete(_ plate: inout Plate) {
+        let o: P = Kit.origin, tropic: Double = plate82Tropic, cancer: Double = plate82Cancer, equator: Double = plate82Equator
+        let ecliptic: P = plate82Ecliptic, er: Double = plate82Er
         // Turned a little off the meridian, as it stands at some hour of the night.
-        let turn = -Double.pi / 6
+        let turn: Double = -Double.pi / 6
         var rete = Plate()
         Kit.mass(&rete, Kit.ribbon(arc(o, tropic - 0.02, from: 0.35, to: .pi - 0.35), 0.04))
         let bars: [[P]] = [
@@ -368,7 +444,7 @@ extension EscapementArt {
         for bar in bars { Kit.mass(&rete, Kit.ribbon(bar, 0.04)) }
         Kit.mass(&rete, Kit.ribbon(arc(ecliptic, er), 0.06))
         for k in 0..<36 {
-            let a = Double(k) * .pi / 18
+            let a: Double = Double(k) * .pi / 18
             rete.line([polar(ecliptic, er - (k % 3 == 0 ? 0.028 : 0.005), a), polar(ecliptic, er + 0.028, a)], k % 3 == 0 ? heavy : medium, .bone)
         }
         let stars: [(base: P, tip: P, bend: Double)] = [
@@ -383,29 +459,26 @@ extension EscapementArt {
             rete.fill(arc(st.tip, 0.012), .bone)
             rete.line(arc(st.tip, 0.012), fine)
         }
-        plate.marks += rete.marks.map { Mark(points: turned($0.points, by: turn), width: $0.width, ink: $0.ink) }
-        let centre = turned([ecliptic], by: turn)[0], from = polar(centre, er - 0.035, -0.47)
-        let named = pointer(from, P(0.13, -0.26), width: 0.028, bend: 0.2)
+        plate.marks += rete.marks.map { (m: Mark) -> Mark in Mark(points: turned(m.points, by: turn), width: m.width, ink: m.ink) }
+        let centre: P = turned([ecliptic], by: turn)[0], from: P = polar(centre, er - 0.035, -0.47)
+        let named: [P] = pointer(from, P(0.13, -0.26), width: 0.028, bend: 0.2)
         plate.line(named, 0.026, .bone)
         plate.fill(named, .second)
         plate.line(named, fine)
         plate.fill(arc(P(0.13, -0.26), 0.012))
         plate.line(arc(P(0.13, -0.26), 0.012), fine)
+    }
 
-        // The rule across the face, and the pin.
-        let ruleA = polar(o, limb - 0.02, Kit.clock(4.3)), ruleB = polar(o, limb - 0.02, Kit.clock(10.3))
-        let rule = Kit.band(ruleA, ruleB, 0.07)
+    /// Plate 82's rule across the face, and the pin.
+    private static func plate82Rule(_ plate: inout Plate) {
+        let o: P = Kit.origin, limb: Double = plate82Limb
+        let ruleA: P = polar(o, limb - 0.02, Kit.clock(4.3)), ruleB: P = polar(o, limb - 0.02, Kit.clock(10.3))
+        let rule: [P] = Kit.band(ruleA, ruleB, 0.07)
         plate.line(rule, 0.03, .bone)
         Kit.solid(&plate, rule, angle: Kit.clock(4.3) + 0.9, gap: 0.03, edge: heavy)
         plate.line([ruleA, ruleB], 0.016)
         Kit.cut(&plate, arc(o, 0.055), edge: 0.016)
         plate.fill(arc(o, 0.02), .black)
-
-        callout(&plate, "A", from: polar(o, 0.7, Kit.clock(7.5)), to: P(-0.74, 0.6))
-        callout(&plate, "B", from: polar(ecliptic, er, 0.2), to: P(0.84, 0.18))
-        callout(&plate, "C", from: polar(o, 0.5, Kit.clock(4.3)), to: P(0.62, 0.72))
-        callout(&plate, "D", from: P(0.17, -0.78), to: P(0.4, -0.84))
-        return plate
     }
 
     /// Whether `p` lies inside the closed outline `ring`.
@@ -437,17 +510,32 @@ extension EscapementArt {
     /// branch; its eyes in the second ink, set in the lanes either side of the top rod.
     static func plate83() -> Plate {
         var plate = Plate()
-        let eyes = [P(-0.18, -0.31), P(0.18, -0.31)]
-        let head = smooth([P(-0.44, -0.4), P(-0.42, -0.66), P(-0.4, -0.9), P(-0.22, -0.72), P(0, -0.7), P(0.22, -0.72),
-                           P(0.4, -0.9), P(0.42, -0.66), P(0.44, -0.4), P(0.36, -0.1), P(0, -0.02), P(-0.36, -0.1)], 10)
-        let body = smooth([P(-0.36, -0.14), P(-0.46, 0.14), P(-0.42, 0.5), P(-0.2, 0.72), P(0.2, 0.72), P(0.42, 0.5),
-                           P(0.46, 0.14), P(0.36, -0.14)], 10)
-        let branch = Kit.ribbon(curve(P(-1.1, 0.8), P(0, 0.68), P(1.1, 0.72), 40), 0.09)
-        let tail = smooth([P(-0.12, 0.66), P(0.12, 0.66), P(0.1, 0.94), P(-0.1, 0.94)], 4)
-        Kit.ground(&plate, angle: -0.35, around: [head, body, branch, tail])
+        plate83Perch(&plate)
+        plate83Body(&plate)
+        plate83Head(&plate)
+        callout(&plate, "A", from: P(-0.36, -0.8), to: P(-0.6, -0.6))
+        callout(&plate, "B", from: P(0.38, 0.24), to: P(0.74, 0.12))
+        callout(&plate, "C", from: P(0.12, 0.66), to: P(0.42, 0.84))
+        callout(&plate, "D", from: P(0.1, 0.32), to: P(-0.68, 0.36))
+        return plate
+    }
 
-        for (k, p) in [P(-0.72, -0.5), P(0.7, -0.52), P(-0.6, -0.78), P(0.55, -0.8), P(-0.82, -0.1), P(0.84, -0.12)].enumerated() {
-            let ray = star(p, 0.035 + 0.012 * Double(k % 2), points: 4, inner: 0.3, turn: 0.3 * Double(k))
+    private static let plate83Eyes: [P] = [P(-0.18, -0.31), P(0.18, -0.31)]
+    private static let plate83HeadShape: [P] = smooth([P(-0.44, -0.4), P(-0.42, -0.66), P(-0.4, -0.9), P(-0.22, -0.72), P(0, -0.7), P(0.22, -0.72),
+                                                       P(0.4, -0.9), P(0.42, -0.66), P(0.44, -0.4), P(0.36, -0.1), P(0, -0.02), P(-0.36, -0.1)], 10)
+    private static let plate83BodyShape: [P] = smooth([P(-0.36, -0.14), P(-0.46, 0.14), P(-0.42, 0.5), P(-0.2, 0.72), P(0.2, 0.72), P(0.42, 0.5),
+                                                       P(0.46, 0.14), P(0.36, -0.14)], 10)
+    private static let plate83Branch: [P] = Kit.ribbon(curve(P(-1.1, 0.8), P(0, 0.68), P(1.1, 0.72), 40), 0.09)
+    private static let plate83Tail: [P] = smooth([P(-0.12, 0.66), P(0.12, 0.66), P(0.1, 0.94), P(-0.1, 0.94)], 4)
+
+    /// Plate 83's stars, tail and branch, the bark cut in bone.
+    private static func plate83Perch(_ plate: inout Plate) {
+        let tail: [P] = plate83Tail, branch: [P] = plate83Branch
+        Kit.ground(&plate, angle: -0.35, around: [plate83HeadShape, plate83BodyShape, branch, tail])
+
+        let field: [P] = [P(-0.72, -0.5), P(0.7, -0.52), P(-0.6, -0.78), P(0.55, -0.8), P(-0.82, -0.1), P(0.84, -0.12)]
+        for (k, p) in field.enumerated() {
+            let ray: [P] = star(p, 0.035 + 0.012 * Double(k % 2), points: 4, inner: 0.3, turn: 0.3 * Double(k))
             plate.line(ray, 0.022, .bone)
             Kit.mass(&plate, ray)
         }
@@ -457,27 +545,31 @@ extension EscapementArt {
         for y in [0.76, 0.82, 0.88] { plate.line([P(-0.1, y), P(0.1, y + 0.02)], 0.022, .bone) }
         Kit.mass(&plate, branch)
         for k in 0..<9 {
-            let x = -0.9 + 0.2 * Double(k) + 0.05 * rnd(83, k)
-            let y = 0.74 - 0.06 * x * x
+            let x: Double = -0.9 + 0.2 * Double(k) + 0.05 * rnd(83, k)
+            let y: Double = 0.74 - 0.06 * x * x
             plate.line(curve(P(x, y - 0.02), P(x + 0.06, y), P(x + 0.13, y - 0.015), 6), heavy, .bone)
         }
         Kit.mass(&plate, Kit.ribbon(curve(P(0.62, 0.7), P(0.72, 0.55), P(0.86, 0.48), 12), 0.035))
         Kit.mass(&plate, Kit.ribbon(curve(P(-0.6, 0.74), P(-0.68, 0.62), P(-0.8, 0.56), 12), 0.03))
+    }
 
+    /// Plate 83's body: the breast barred, the wings folded over its sides, the talons over the branch.
+    private static func plate83Body(_ plate: inout Plate) {
         // The body: the breast barred, the wings folded over its sides.
-        Kit.cut(&plate, body, edge: 0.02)
+        Kit.cut(&plate, plate83BodyShape, edge: 0.02)
         for (row, y) in stride(from: 0.02, through: 0.54, by: 0.1).enumerated() {
-            let shift = row % 2 == 0 ? 0.0 : 0.055
+            let shift: Double = row % 2 == 0 ? 0.0 : 0.055
             for x in stride(from: -0.3 + shift, through: 0.3, by: 0.11) {
                 Kit.mass(&plate, Kit.ribbon(curve(P(x - 0.04, y), P(x, y + 0.05), P(x + 0.04, y), 8), 0.022))
             }
         }
         for side in [-1.0, 1.0] {
-            let wing = smooth([P(0.3 * side, -0.14), P(0.48 * side, 0.08), P(0.46 * side, 0.4), P(0.28 * side, 0.78),
-                               P(0.26 * side, 0.4), P(0.3 * side, 0.1)], 10)
+            let wingPoints: [P] = [P(0.3 * side, -0.14), P(0.48 * side, 0.08), P(0.46 * side, 0.4), P(0.28 * side, 0.78),
+                                   P(0.26 * side, 0.4), P(0.3 * side, 0.1)]
+            let wing: [P] = smooth(wingPoints, 10)
             Kit.mass(&plate, wing)
             for k in 0..<10 {
-                let y = -0.02 + 0.075 * Double(k)
+                let y: Double = -0.02 + 0.075 * Double(k)
                 plate.line([P(0.47 * side, y - 0.04), P(0.28 * side, y + 0.06)], 0.026, .bone)
             }
         }
@@ -485,25 +577,29 @@ extension EscapementArt {
         // The talons over the branch.
         for x in [-0.12, 0.12] {
             for k in -1...1 {
-                let root = P(x + 0.035 * Double(k), 0.66)
+                let root: P = P(x + 0.035 * Double(k), 0.66)
                 Kit.mass(&plate, Kit.ribbon(curve(root, root + P(0.025 * Double(k), 0.06), root + P(0.012 * Double(k) - 0.01, 0.1), 8), 0.026))
             }
         }
+    }
 
+    /// Plate 83's head: ink flecked with bone, the facial discs ruled about the eyes, the brows and the beak.
+    private static func plate83Head(_ plate: inout Plate) {
+        let eyes: [P] = plate83Eyes, head: [P] = plate83HeadShape
         // The head: ink flecked with bone, the facial discs ruled about the eyes, the brows and the beak.
         Kit.mass(&plate, head)
         for e in eyes {
-            let disc = ellipse(e + P(0, 0.02), 0.17, 0.19)
+            let disc: [P] = ellipse(e + P(0, 0.02), 0.17, 0.19)
             Kit.cut(&plate, disc, edge: 0.022)
             for k in 0..<32 {
-                let a = 2 * .pi * Double(k) / 32
+                let a: Double = 2 * .pi * Double(k) / 32
                 plate.line([polar(e, 0.09, a), e + P(0.155 * cos(a), 0.02 + 0.175 * sin(a))], fine)
             }
         }
         // Its feathers raked back from the face in bone.
         for k in 0..<46 {
-            let a = -.pi - 0.7 + (.pi + 1.4) * (Double(k) + 0.5) / 46
-            let from = polar(P(0, -0.2), 0.1 + 0.06 * rnd(833, k), a), to = polar(P(0, -0.2), 0.8, a)
+            let a: Double = -.pi - 0.7 + (.pi + 1.4) * (Double(k) + 0.5) / 46
+            let from: P = polar(P(0, -0.2), 0.1 + 0.06 * rnd(833, k), a), to: P = polar(P(0, -0.2), 0.8, a)
             for run in runs(inside: head, from: from, to: to, margin: 0.03) {
                 plate.lines(dashed(run, on: 0.07 + 0.03 * rnd(834, k), off: 0.025), 0.032, .bone)
             }
@@ -511,7 +607,7 @@ extension EscapementArt {
         for side in [-1.0, 1.0] {
             Kit.mass(&plate, Kit.ribbon(curve(P(0.01 * side, -0.24), P(0.12 * side, -0.52), P(0.34 * side, -0.46), 12), 0.03))
         }
-        let beak = smooth([P(-0.04, -0.27), P(0.04, -0.27), P(0.02, -0.17), P(0, -0.13)], 5)
+        let beak: [P] = smooth([P(-0.04, -0.27), P(0.04, -0.27), P(0.02, -0.17), P(0, -0.13)], 5)
         plate.line(beak, 0.03, .bone)
         Kit.mass(&plate, beak)
         for e in eyes {
@@ -520,12 +616,6 @@ extension EscapementArt {
             plate.fill(arc(e, 0.032), .black)
             plate.fill(arc(e + P(-0.022, -0.024), 0.012))
         }
-
-        callout(&plate, "A", from: P(-0.36, -0.8), to: P(-0.6, -0.6))
-        callout(&plate, "B", from: P(0.38, 0.24), to: P(0.74, 0.12))
-        callout(&plate, "C", from: P(0.12, 0.66), to: P(0.42, 0.84))
-        callout(&plate, "D", from: P(0.1, 0.32), to: P(-0.68, 0.36))
-        return plate
     }
 
     /// A house end on under its gable: the wall shaded, the roof in ink coursed with bone tiles, and its windows.

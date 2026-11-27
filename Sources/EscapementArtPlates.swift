@@ -259,82 +259,111 @@ extension EscapementArt {
     /// and the pipe's end with its square.
     static func windingKey() -> Plate {
         var plate = Plate()
-        let end = P(-0.6, 0.6), along = P(1, -1) / 2.0.squareRoot(), across = P(1, 1) / 2.0.squareRoot()
-        func at(_ u: Double, _ v: Double) -> P { end + u * along + v * across }
-        func turning(_ u0: Double, _ u1: Double, _ w0: Double, _ w1: Double) -> [P] { [at(u0, w0), at(u1, w1), at(u1, -w1), at(u0, -w0), at(u0, w0)] }
         tint(&plate, angle: 0.15, around: [])
+        windingKeyBow(&plate)
+        windingKeyShank(&plate)
+        windingKeyTurn(&plate)
+        let ratchet: P = windingKeyRatchet(&plate)
+        let view: P = windingKeyView(&plate)
 
+        letter(&plate, "A", from: windingKeyAt(1.6, 0.3), at: P(0.86, -0.04))
+        letter(&plate, "B", from: windingKeyAt(0.25, -0.075), at: P(-0.74, 0.3))
+        letter(&plate, "C", from: ratchet + P(-0.12, 0.12), at: P(-0.74, -0.2))
+        letter(&plate, "D", from: view + P(-0.1, 0.11), at: P(0.28, 0.78))
+        return plate
+    }
+    private static let windingKeyEnd: P = P(-0.6, 0.6)
+    private static let windingKeyAlong: P = P(1, -1) / 2.0.squareRoot()
+    private static let windingKeyAcross: P = P(1, 1) / 2.0.squareRoot()
+    private static func windingKeyAt(_ u: Double, _ v: Double) -> P { windingKeyEnd + u * windingKeyAlong + v * windingKeyAcross }
+    private static func windingKeyTurning(_ u0: Double, _ u1: Double, _ w0: Double, _ w1: Double) -> [P] {
+        [windingKeyAt(u0, w0), windingKeyAt(u1, w1), windingKeyAt(u1, -w1), windingKeyAt(u0, -w0), windingKeyAt(u0, w0)]
+    }
+    private static func windingKeyBow(_ plate: inout Plate) {
+        let end = windingKeyEnd, along = windingKeyAlong
+        let at = windingKeyAt
         // The bow: one piece, a pierced wing each side of the shank.
         var bow: [P] = [], piercings: [[P]] = []
         for side in [1.0, -1.0] {
-            let wing = curve(at(1.33, side * 0.03), at(1.33, side * 0.27), at(1.5, side * 0.33), 14) + curve(at(1.5, side * 0.33), at(1.71, side * 0.38), at(1.69, side * 0.18), 14)
-                + curve(at(1.69, side * 0.18), at(1.67, side * 0.04), at(1.55, 0), 14)
+            let w0: [P] = curve(at(1.33, side * 0.03), at(1.33, side * 0.27), at(1.5, side * 0.33), 14)
+            let w1: [P] = curve(at(1.5, side * 0.33), at(1.71, side * 0.38), at(1.69, side * 0.18), 14)
+            let w2: [P] = curve(at(1.69, side * 0.18), at(1.67, side * 0.04), at(1.55, 0), 14)
+            let wing: [P] = w0 + w1 + w2
             bow += side > 0 ? wing : wing.reversed()
             piercings.append(ellipse(at(1.53, side * 0.18), 0.07, 0.085, turned: -.pi / 4 + side * 0.5))
         }
         bow.append(bow[0])
         cut(&plate, bow, holes: piercings)
         plate.lines(hatch([bow] + piercings, angle: 0.3, gap: 0.013), fine)
-        plate.lines(hatch([bow] + piercings.map { $0.map { p in p + 0.02 * along } }, angle: -0.9, gap: 0.02).filter { simd_dot($0[0] - end, along) > 1.53 }, fine)
+        let shifted: [[P]] = piercings.map { (r: [P]) -> [P] in r.map { (p: P) -> P in p + 0.02 * along } }
+        let cross: [[P]] = hatch([bow] + shifted, angle: -0.9, gap: 0.02).filter { (l: [P]) -> Bool in simd_dot(l[0] - end, along) > 1.53 }
+        plate.lines(cross, fine)
         plate.line(bow, heavy)
         plate.lines(piercings, medium)
+    }
+    private static func windingKeyShank(_ plate: inout Plate) {
+        let end = windingKeyEnd, across = windingKeyAcross
+        let at = windingKeyAt
         // The shank and its knop, the collars, then the pipe with its square hole in hidden lines.
-        let shank = turning(0.55, 1.39, 0.045, 0.034)
+        let shank: [P] = windingKeyTurning(0.55, 1.39, 0.045, 0.034)
         cut(&plate, shank)
-        plate.lines(hatch([shank], angle: -.pi / 4, gap: 0.011).filter { simd_dot($0[0] - end, across) > 0.008 }, fine)
+        plate.lines(hatch([shank], angle: -.pi / 4, gap: 0.011).filter { (l: [P]) -> Bool in simd_dot(l[0] - end, across) > 0.008 }, fine)
         plate.line(shank, medium)
-        let knop = ellipse(at(0.9, 0), 0.07, 0.068, turned: -.pi / 4)
+        let knop: [P] = ellipse(at(0.9, 0), 0.07, 0.068, turned: -.pi / 4)
         cut(&plate, knop)
         plate.lines(hatch([knop], angle: .pi / 4, gap: 0.012), fine)
         plate.line(knop, medium)
-        for (u0, u1, w) in [(0.46, 0.5, 0.098), (0.5, 0.535, 0.062), (0.535, 0.575, 0.086), (1.25, 1.29, 0.07), (0.82, 0.84, 0.056), (0.96, 0.98, 0.054)] {
-            let collar = turning(u0, u1, w, w)
+        let collars: [(Double, Double, Double)] = [(0.46, 0.5, 0.098), (0.5, 0.535, 0.062), (0.535, 0.575, 0.086), (1.25, 1.29, 0.07), (0.82, 0.84, 0.056), (0.96, 0.98, 0.054)]
+        for (u0, u1, w) in collars {
+            let collar: [P] = windingKeyTurning(u0, u1, w, w)
             cut(&plate, collar)
             plate.lines(hatch([collar], angle: .pi / 4, gap: 0.011), fine)
             plate.line(collar, medium)
         }
-        let pipe = turning(0, 0.46, 0.075, 0.075)
+        let pipe: [P] = windingKeyTurning(0, 0.46, 0.075, 0.075)
         cut(&plate, pipe)
-        plate.lines(hatch([pipe], angle: -.pi / 4, gap: 0.01).filter { simd_dot($0[0] - end, across) > 0.03 }, fine)
+        plate.lines(hatch([pipe], angle: -.pi / 4, gap: 0.01).filter { (l: [P]) -> Bool in simd_dot(l[0] - end, across) > 0.03 }, fine)
         plate.line(pipe, heavy)
         plate.lines(dashed([at(0, 0.036), at(0.33, 0.036), at(0.33, -0.036), at(0, -0.036)], on: 0.03, off: 0.018), fine)
         plate.lines(dashed([at(-0.08, 0), at(1.86, 0)], on: 0.07, off: 0.02), fine)
-
+    }
+    private static func windingKeyTurn(_ plate: inout Plate) {
         // The turn of the key, an arrow round the shank.
-        let sweep = ellipse(at(1.08, 0), 0.03, 0.12, from: deg(-150), to: deg(150), turned: -.pi / 4)
+        let sweep: [P] = ellipse(windingKeyAt(1.08, 0), 0.03, 0.12, from: deg(-150), to: deg(150), turned: -.pi / 4)
         plate.line(sweep, medium)
-        let tip = sweep[sweep.count - 1], back = simd_normalize(sweep[sweep.count - 3] - tip)
+        let tip: P = sweep[sweep.count - 1], back: P = simd_normalize(sweep[sweep.count - 3] - tip)
         plate.fill([tip, tip + 0.05 * back + 0.022 * P(-back.y, back.x), tip + 0.05 * back - 0.022 * P(-back.y, back.x)], .black)
-
+    }
+    private static func windingKeyRatchet(_ plate: inout Plate) -> P {
         // The barrel arbor's ratchet and its click, the square the key takes in the second ink.
-        let ratchet = P(-0.47, -0.47), stud = P(-0.2, -0.72), tooth = polar(ratchet, 0.2, deg(-38))
+        let ratchet = P(-0.47, -0.47), stud = P(-0.2, -0.72), tooth: P = polar(ratchet, 0.2, deg(-38))
         crossed(&plate, ratchet, 0.2, teeth: 18, spokes: 4, turn: 0.4, phase: 0.1, escape: true)
-        let square = (0...4).map { polar(ratchet, 0.062, deg(45 + 90 * Double($0)) + 0.2) }
+        let square: [P] = (0...4).map { (k: Int) -> P in polar(ratchet, 0.062, deg(45 + 90 * Double(k)) + 0.2) }
         cut(&plate, arc(ratchet, 0.075))
         plate.line(arc(ratchet, 0.075), medium)
         plate.fill(square, .second)
-        let click = curve(stud + P(0.0, -0.03), stud + P(-0.1, 0.02), tooth) + curve(tooth, stud + P(-0.05, 0.1), stud + P(0.0, 0.03)) + [stud + P(0.0, -0.03)]
+        let c0: [P] = curve(stud + P(0.0, -0.03), stud + P(-0.1, 0.02), tooth)
+        let c1: [P] = curve(tooth, stud + P(-0.05, 0.1), stud + P(0.0, 0.03))
+        let click: [P] = c0 + c1 + [stud + P(0.0, -0.03)]
         cut(&plate, click)
         plate.lines(hatch([click], angle: 0.2, gap: 0.011), fine)
         plate.line(click, medium)
         cut(&plate, arc(stud, 0.03))
         plate.line(arc(stud, 0.03), medium)
         plate.line(curve(stud + P(0.03, 0.0), P(-0.06, -0.86), P(-0.36, -0.78)), fine)
-
+        return ratchet
+    }
+    private static func windingKeyView(_ plate: inout Plate) -> P {
         // The pipe's end, enlarged.
-        let view = P(0.5, 0.5), hole = (0...4).map { polar(view, 0.085, deg(45 + 90 * Double($0)) + 0.2) }
+        let view = P(0.5, 0.5)
+        let hole: [P] = (0...4).map { (k: Int) -> P in polar(view, 0.085, deg(45 + 90 * Double(k)) + 0.2) }
         cut(&plate, arc(view, 0.16))
         plate.lines(hatch([arc(view, 0.16), hole], angle: 0.8, gap: 0.013), fine)
         plate.line(arc(view, 0.16), heavy)
         plate.line(hole, medium)
         plate.lines(dashed([view + P(-0.21, 0), view + P(0.21, 0)], on: 0.05, off: 0.02), fine)
         plate.lines(dashed([view + P(0, -0.21), view + P(0, 0.21)], on: 0.05, off: 0.02), fine)
-
-        letter(&plate, "A", from: at(1.6, 0.3), at: P(0.86, -0.04))
-        letter(&plate, "B", from: at(0.25, -0.075), at: P(-0.74, 0.3))
-        letter(&plate, "C", from: ratchet + P(-0.12, 0.12), at: P(-0.74, -0.2))
-        letter(&plate, "D", from: view + P(-0.1, 0.11), at: P(0.28, 0.78))
-        return plate
+        return view
     }
 
     /// Problem 6, hex: a going train, every arbor in a gap between three knobs: the great wheel behind, the centre

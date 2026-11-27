@@ -301,68 +301,99 @@ extension EscapementArt {
     /// balance under its cock; the side it is usually seen from is drawn small beside it.
     static func plate24() -> Plate {
         var plate = Plate(), wheels = Plate()
-        let edge = 0.9
-        func at(_ r: Double, _ h: Double) -> P { polar(origin, r, clock(h)) }
-        let ratchet = at(0.71, 1), crown = P(0.085, -0.79), balance = at(0.7, 7), escape = at(0.81, 5.72), front = at(0.745, 11)
-        let third = at(0.75, 9)
+        let balance = plate24Balance, ratchet = plate24Ratchet
+        let holes: [[P]] = plate24Gears(&wheels)
+        plate24Bridges(&plate, &wheels, holes)
+
+        // The case in section round it.
+        plate.lines(hatch([Array(glass), arc(origin, 0.93)], angle: 0.9, gap: 0.012), fine)
+        for r in [plate24Edge, 0.93] { plate.line(arc(origin, r), medium) }
+        plate24Screws(&plate)
+        plate24Balanced(&plate)
+        plate24Side(&plate)
+
+        callout(&plate, "A", from: balance + P(0.1, 0.13), to: plate24At(0.86, 6.35))
+        callout(&plate, "B", from: ratchet + P(0.12, 0.1), to: plate24At(0.8, 2.9))
+        callout(&plate, "C", from: plate24At(0.62, 4.4), to: plate24At(0.36, 7) + P(0.05, -0.03))
+        return plate
+    }
+    private static let plate24Edge: Double = 0.9
+    private static func plate24At(_ r: Double, _ h: Double) -> P { polar(origin, r, clock(h)) }
+    private static let plate24Ratchet: P = plate24At(0.71, 1)
+    private static let plate24Crown: P = P(0.085, -0.79)
+    private static let plate24Balance: P = plate24At(0.7, 7)
+    private static let plate24Escape: P = plate24At(0.81, 5.72)
+    private static let plate24Front: P = plate24At(0.745, 11)
+    private static func plate24Gears(_ wheels: inout Plate) -> [[P]] {
         var holes: [[P]] = []
-        for (c, r, teeth) in [(ratchet, 0.215, 34), (crown, 0.105, 16)] {
-            let outline = gear(c, r, teeth: teeth, phase: 0.1)
+        let pair: [(P, Double, Int)] = [(plate24Ratchet, 0.215, 34), (plate24Crown, 0.105, 16)]
+        for (c, r, teeth) in pair {
+            let outline: [P] = gear(c, r, teeth: teeth, phase: 0.1)
             holes.append(outline)
             wheels.line(outline, medium)
             wheels.line(arc(c, 0.8 * r), fine)
-            for k in 0..<(2 * teeth) { wheels.line([polar(c, (k % 2 == 0 ? 0.3 : 0.5) * r, Double(k) * .pi / Double(teeth)), polar(c, 0.8 * r, Double(k) * .pi / Double(teeth))], fine) }
+            for k in 0..<(2 * teeth) {
+                let a: Double = Double(k) * .pi / Double(teeth)
+                wheels.line([polar(c, (k % 2 == 0 ? 0.3 : 0.5) * r, a), polar(c, 0.8 * r, a)], fine)
+            }
             wheels.fill(arc(c, 0.3 * r))
             wheels.line(arc(c, 0.3 * r), heavy)
             wheels.line(band(polar(c, 0.3 * r, 0.6), polar(c, 0.3 * r, 0.6 + .pi), 0.06 * r + 0.004), fine)
         }
-
-        // The bridges, striped, over a plate hatched close.
-        let top = arc(origin, edge, from: -165 * .pi / 180, to: -12 * .pi / 180)
-            + curve(polar(origin, edge, -12 * .pi / 180), P(0.5, 0.06), P(0.13, -0.17)).dropFirst()
-            + curve(P(0.13, -0.17), P(-0.3, -0.46), polar(origin, edge, -165 * .pi / 180)).dropFirst()
-        let train = arc(origin, edge, from: 9 * .pi / 180, to: 70 * .pi / 180)
-            + curve(polar(origin, edge, 70 * .pi / 180), P(0.06, 0.44), P(0.2, 0.17)).dropFirst()
-            + curve(P(0.2, 0.17), P(0.42, -0.02), polar(origin, edge, 9 * .pi / 180)).dropFirst()
-        let cockFoot = arc(origin, 0.885, from: clock(7.75), to: clock(8.75)) + arc(origin, 0.72, from: clock(8.75), to: clock(7.75)) + [polar(origin, 0.885, clock(7.75))]
-        let arm = band(at(0.8, 8.1), balance, 0.085)
-        let thirdRings = wheel(&wheels, third, 0.17, teeth: 30, spokes: 5, phase: 0.2)
-        plate.lines(hatch([arc(origin, edge), top, train, arc(balance, 0.2), arc(escape, 0.1)] + thirdRings, angle: -1.0, gap: 0.017), fine)
+        return holes
+    }
+    // The bridges, striped, over a plate hatched close.
+    private static func plate24Bridges(_ plate: inout Plate, _ wheels: inout Plate, _ holes: [[P]]) {
+        let edge = plate24Edge, balance = plate24Balance, escape = plate24Escape, front = plate24Front
+        let topA: [P] = arc(origin, edge, from: -165 * .pi / 180, to: -12 * .pi / 180)
+        let topB: [P] = Array(curve(polar(origin, edge, -12 * .pi / 180), P(0.5, 0.06), P(0.13, -0.17)).dropFirst())
+        let topC: [P] = Array(curve(P(0.13, -0.17), P(-0.3, -0.46), polar(origin, edge, -165 * .pi / 180)).dropFirst())
+        let top: [P] = topA + topB + topC
+        let trainA: [P] = arc(origin, edge, from: 9 * .pi / 180, to: 70 * .pi / 180)
+        let trainB: [P] = Array(curve(polar(origin, edge, 70 * .pi / 180), P(0.06, 0.44), P(0.2, 0.17)).dropFirst())
+        let trainC: [P] = Array(curve(P(0.2, 0.17), P(0.42, -0.02), polar(origin, edge, 9 * .pi / 180)).dropFirst())
+        let train: [P] = trainA + trainB + trainC
+        let thirdRings: [[P]] = wheel(&wheels, plate24At(0.75, 9), 0.17, teeth: 30, spokes: 5, phase: 0.2)
+        let shapes: [[P]] = [arc(origin, edge), top, train, arc(balance, 0.2), arc(escape, 0.1)]
+        plate.lines(hatch(shapes + thirdRings, angle: -1.0, gap: 0.017), fine)
         plate.lines(hatch([top, arc(front, 0.2)] + holes, angle: 0.52, gap: 0.03), fine)
         plate.lines(hatch([train], angle: 0.52, gap: 0.03, shift: 0.5), fine)
         plate.line(top + [top[0]], heavy)
         plate.line(train + [train[0]], heavy)
         plate.marks += wheels.marks
-
-        // The case in section round it.
-        plate.lines(hatch([Array(glass), arc(origin, 0.93)], angle: 0.9, gap: 0.012), fine)
-        for r in [edge, 0.93] { plate.line(arc(origin, r), medium) }
-
+    }
+    private static func plate24Screws(_ plate: inout Plate) {
         // Jewels at the pivots and screws in the bridges.
-        for jewel in [at(0.33, 3), at(0.5, 5), at(0.33, 1), escape] {
+        let jewels: [P] = [plate24At(0.33, 3), plate24At(0.5, 5), plate24At(0.33, 1), plate24Escape]
+        for jewel in jewels {
             plate.fill(arc(jewel, 0.052))
             plate.line(arc(jewel, 0.052), medium)
             plate.line(arc(jewel, 0.03), heavy)
             plate.line(arc(jewel, 0.008), medium)
         }
-        for (k, screw) in [at(0.8, 9.9), at(0.8, 2.25), at(0.78, 3.5), at(0.33, 5), at(0.82, 4.5), at(0.5, 9)].enumerated() {
+        let screws: [P] = [plate24At(0.8, 9.9), plate24At(0.8, 2.25), plate24At(0.78, 3.5), plate24At(0.33, 5), plate24At(0.82, 4.5), plate24At(0.5, 9)]
+        for (k, screw) in screws.enumerated() {
             plate.fill(arc(screw, 0.04))
             plate.line(arc(screw, 0.04), heavy)
             plate.line(band(polar(screw, 0.04, Double(k) * 1.1), polar(screw, 0.04, Double(k) * 1.1 + .pi), 0.012), fine)
         }
-
+    }
+    private static func plate24Balanced(_ plate: inout Plate) {
+        let balance = plate24Balance
+        let cockFoot: [P] = arc(origin, 0.885, from: clock(7.75), to: clock(8.75)) + arc(origin, 0.72, from: clock(8.75), to: clock(7.75)) + [polar(origin, 0.885, clock(7.75))]
+        let arm: [P] = band(plate24At(0.8, 8.1), balance, 0.085)
         // The escape wheel and the balance: its rim and arms, the spring, then the cock over it.
-        plate.line(escapeWheel(escape, 0.09, teeth: 15), medium)
+        plate.line(escapeWheel(plate24Escape, 0.09, teeth: 15), medium)
         plate.fill(arc(balance, 0.2))
         plate.lines(hatch([arc(balance, 0.19), arc(balance, 0.158)], angle: 0.3, gap: 0.011), fine)
         for r in [0.19, 0.158] { plate.line(arc(balance, r), medium) }
         for k in 0..<3 {
-            let spoke = band(polar(balance, 0.03, 0.5 + Double(k) * 2 * .pi / 3), polar(balance, 0.158, 0.5 + Double(k) * 2 * .pi / 3), 0.028)
-            plate.line(spoke, fine)
+            let a: Double = 0.5 + Double(k) * 2 * .pi / 3
+            plate.line(band(polar(balance, 0.03, a), polar(balance, 0.158, a), 0.028), fine)
         }
         for k in 0..<14 { plate.line(arc(polar(balance, 0.2, Double(k) * .pi / 7), 0.011), medium) }
-        let spring = (0...300).map { i -> P in
-            let turns = Double(i) / 60
+        let spring: [P] = (0...300).map { (i: Int) -> P in
+            let turns: Double = Double(i) / 60
             return polar(balance, 0.028 + 0.0195 * turns, 2 * .pi * turns + 1)
         }
         plate.line(spring, medium, .second)
@@ -371,15 +402,17 @@ extension EscapementArt {
         solid(&plate, arc(balance, 0.062), angle: -0.4, gap: 0.013)
         plate.fill(arc(balance, 0.03))
         plate.line(arc(balance, 0.03), heavy)
-        for screw in [at(0.8, 7.95), at(0.8, 8.55)] {
+        for screw in [plate24At(0.8, 7.95), plate24At(0.8, 8.55)] {
             plate.fill(arc(screw, 0.034))
             plate.line(arc(screw, 0.034), heavy)
             plate.line([screw + P(-0.024, 0.024), screw + P(0.024, -0.024)], medium)
         }
-
+    }
+    private static func plate24Side(_ plate: inout Plate) {
+        let front = plate24Front
         // The side it is seen from, and the turn between.
         plate.fill(arc(front, 0.2))
-        let dial = front + P(0, 0.035)
+        let dial: P = front + P(0, 0.035)
         var small = face(dial, 0.115, numerals: false, rule: 0.02)
         hands(&small, dial, 0.115, hours: 10, minutes: 9)
         plate.line(band(dial + P(0, -0.115), dial + P(0, -0.15), 0.04), medium)
@@ -387,15 +420,10 @@ extension EscapementArt {
         plate.line(arc(dial, 0.135), medium)
         plate.marks += small.marks
         plate.line(arc(front, 0.2), heavy)
-        let turn = curve(front + P(0.075, 0.2), P(-0.31, -0.25), P(-0.17, -0.27))
+        let turn: [P] = curve(front + P(0.075, 0.2), P(-0.31, -0.25), P(-0.17, -0.27))
         plate.fill(ribbon(turn + [P(-0.1, -0.27)], 0.07))
         plate.line(turn, heavy)
         plate.fill(barb(P(-0.1, -0.272), toward: 0, size: 0.1), .black)
-
-        callout(&plate, "A", from: balance + P(0.1, 0.13), to: at(0.86, 6.35))
-        callout(&plate, "B", from: ratchet + P(0.12, 0.1), to: at(0.8, 2.9))
-        callout(&plate, "C", from: at(0.62, 4.4), to: at(0.36, 7) + P(0.05, -0.03))
-        return plate
     }
 
     // MARK: 26 Calendar

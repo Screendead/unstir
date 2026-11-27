@@ -10,16 +10,34 @@ extension EscapementArt {
     /// edge on, each pivot running in a jewel set in its chaton; the right-hand jewel in the second ink.
     static func plate61() -> Plate {
         var plate = Plate()
-        let r = 0.086, x0 = 0.2, x1 = 0.72, shaft = 0.05
-        let inner = 0.8, jewel = 0.885
+        let r: Double = 0.086, x0: Double = 0.2, x1: Double = 0.72, shaft: Double = 0.05
+        let inner: Double = 0.8, jewel: Double = 0.885, leaves: Int = 6
         // The movement's plates in section, cut by the glass, and the pillars that hold them apart.
-        let plates = [-1.0, 1.0].map { s in [P(s * inner, -1.2), P(s * 1.2, -1.2), P(s * 1.2, 1.2), P(s * inner, 1.2), P(s * inner, -1.2)] }
-        let pillars = [-1.0, 1.0].map { s in Kit.band(P(-inner, s * 0.84), P(inner, s * 0.84), 0.07) }
-        let pinion = box(P(x0, -r), P(x1, r))
-        let wheel = ellipse(P(-0.42, 0), 0.1, 0.66)
+        let plates: [[P]] = [-1.0, 1.0].map { (s: Double) -> [P] in
+            [P(s * inner, -1.2), P(s * 1.2, -1.2), P(s * 1.2, 1.2), P(s * inner, 1.2), P(s * inner, -1.2)]
+        }
+        let pillars: [[P]] = [-1.0, 1.0].map { (s: Double) -> [P] in Kit.band(P(-inner, s * 0.84), P(inner, s * 0.84), 0.07) }
+        let pinion: [P] = box(P(x0, -r), P(x1, r))
+        let wheel: [P] = ellipse(P(-0.42, 0), 0.1, 0.66)
 
-        Kit.ground(&plate, angle: 0.35, around: plates + pillars + [pinion, wheel])
+        let around: [[P]] = plates + pillars + [pinion, wheel]
+        Kit.ground(&plate, angle: 0.35, around: around)
 
+        plate61Slabs(&plate, plates, inner)
+        plate61Pillars(&plate, pillars)
+        plate61Wheel(&plate)
+        plate61Arbor(&plate, shaft, x0, x1, jewel)
+        plate61Jewels(&plate, jewel)
+        plate61Pinion(&plate, pinion, r, x0, x1, leaves)
+        plate61Face(&plate, r, x1, leaves)
+        callout(&plate, "A", from: P(0.46, -0.06), to: P(0.32, -0.52))
+        callout(&plate, "B", from: P(jewel, 0.07), to: P(0.66, 0.56))
+        callout(&plate, "C", from: P(-0.41, 0.64), to: P(-0.3, 0.74))
+        callout(&plate, "D", from: P(-jewel, -0.02), to: P(-0.68, -0.52))
+        return plate
+    }
+
+    private static func plate61Slabs(_ plate: inout Plate, _ plates: [[P]], _ inner: Double) {
         for slab in plates {
             Kit.mass(&plate, slab)
             let s = slab[0].x < 0 ? -1.0 : 1.0
@@ -31,6 +49,9 @@ extension EscapementArt {
                 plate.line([c - P(0.05, 0), c + P(0.05, 0)], heavy)
             }
         }
+    }
+
+    private static func plate61Pillars(_ plate: inout Plate, _ pillars: [[P]]) {
         for pillar in pillars {
             Kit.mass(&plate, pillar)
             plate.line([pillar[0] + P(0, 0.016), pillar[1] + P(0, 0.016)], fine, .bone)
@@ -40,7 +61,9 @@ extension EscapementArt {
                 Kit.solid(&plate, collar, angle: 0.8, gap: 0.012)
             }
         }
+    }
 
+    private static func plate61Wheel(_ plate: inout Plate) {
         // The wheel the arbor carries, turned almost edge on: a heavy rim, its teeth, four crossings.
         let rimOut = ellipse(P(-0.42, 0), 0.1, 0.66), rimIn = ellipse(P(-0.42, 0), 0.084, 0.61)
         plate.fill(rimOut, .black)
@@ -62,7 +85,9 @@ extension EscapementArt {
         // The wheel's collet on the arbor, in section.
         let collet = box(P(-0.5, -0.075), P(-0.36, 0.075))
         Kit.solid(&plate, collet, angle: 0.8, gap: 0.014)
+    }
 
+    private static func plate61Arbor(_ plate: inout Plate, _ shaft: Double, _ x0: Double, _ x1: Double, _ jewel: Double) {
         // The arbor, from jewel to jewel, its pivots drawn down to points.
         let arbor = [P(-0.76, -shaft / 2), P(x0, -shaft / 2), P(x0, shaft / 2), P(-0.76, shaft / 2), P(-0.76, -shaft / 2)]
         Kit.mass(&plate, arbor)
@@ -75,7 +100,9 @@ extension EscapementArt {
             Kit.mass(&plate, [shoulder + P(0, -shaft / 2), point + P(0, -0.009), point + P(0, 0.009), shoulder + P(0, shaft / 2),
                               shoulder + P(0, -shaft / 2)])
         }
+    }
 
+    private static func plate61Jewels(_ plate: inout Plate, _ jewel: Double) {
         // The jewels: each a stone set in a chaton cut into the plate, the arbor's pivot point in its hole.
         for s in [-1.0, 1.0] {
             let c = P(s * jewel, 0)
@@ -96,10 +123,12 @@ extension EscapementArt {
             plate.fill(arc(c, 0.012), .bone)
             plate.line(arc(c, 0.012), fine)
         }
+    }
 
+    private static func plate61Pinion(_ plate: inout Plate, _ pinion: [P], _ r: Double, _ x0: Double, _ x1: Double, _ leaves: Int) {
         // The pinion: six leaves along the arbor, each face in ink, the spaces between them bone, and the end face turned
         // a little toward the eye to show their profile.
-        let leaves = 6, tooth = 0.36
+        let tooth: Double = 0.36
         Kit.cut(&plate, pinion)
         for k in 0..<leaves {
             let a = atan2(sin(Double(k) * 2 * .pi / Double(leaves)), cos(Double(k) * 2 * .pi / Double(leaves)))
@@ -113,6 +142,9 @@ extension EscapementArt {
         plate.line([P(x0 + 0.02, -0.012), P(x1 - 0.06, -0.012)], fine, .bone)
         plate.line(pinion, medium)
         Kit.mass(&plate, box(P(x0 - 0.03, -0.06), P(x0, 0.06)))
+    }
+
+    private static func plate61Face(_ plate: inout Plate, _ r: Double, _ x1: Double, _ leaves: Int) {
         let end = P(x1, 0), rx = 0.065
         var face: [P] = []
         for i in 0...120 {
@@ -125,12 +157,6 @@ extension EscapementArt {
         Kit.cut(&plate, face, edge: heavy)
         Kit.mass(&plate, ellipse(end, 0.018, 0.026))
         plate.line(ellipse(end, rx, r, from: -.pi / 2, to: .pi / 2), medium)
-
-        callout(&plate, "A", from: P(0.46, -0.06), to: P(0.32, -0.52))
-        callout(&plate, "B", from: P(jewel, 0.07), to: P(0.66, 0.56))
-        callout(&plate, "C", from: P(-0.41, 0.64), to: P(-0.3, 0.74))
-        callout(&plate, "D", from: P(-jewel, -0.02), to: P(-0.68, -0.52))
-        return plate
     }
 
     /// Problem 62, Arbor, pent, clocks 0+,1-: a watchmaker's turns held by its tail in the bench vice, the arbor
@@ -138,23 +164,39 @@ extension EscapementArt {
     /// the arbor's right-hand pivot point in the second ink.
     static func plate62() -> Plate {
         var plate = Plate()
-        let axis = 0.0, bar = 0.33
-        let poppets = [-1.0, 1.0].map { s in
+        let axis: Double = 0.0, bar: Double = 0.33
+        let poppets: [[P]] = [-1.0, 1.0].map { (s: Double) -> [P] in
             [P(s * 0.4, bar), P(s * 0.4, -0.08), P(s * 0.45, -0.13), P(s * 0.6, -0.13), P(s * 0.62, -0.1), P(s * 0.66, bar), P(s * 0.4, bar)]
         }
-        let frame = box(P(-1.1, bar), P(1.1, bar + 0.09))
-        let tail = box(P(-0.06, bar + 0.09), P(0.06, 1.1))
-        let jaws = [-1.0, 1.0].map { s in box(P(s * 0.06, 0.58), P(s * 0.3, 1.1)) }
+        let frame: [P] = box(P(-1.1, bar), P(1.1, bar + 0.09))
+        let tail: [P] = box(P(-0.06, bar + 0.09), P(0.06, 1.1))
+        let jaws: [[P]] = [-1.0, 1.0].map { (s: Double) -> [P] in box(P(s * 0.06, 0.58), P(s * 0.3, 1.1)) }
         // The bow: a cane bent by its string, its handle pulled out to the right.
-        let tip = P(-0.86, -0.46), heel = P(0.74, -0.52)
-        let cane = curve(tip, P(-0.05, -0.98), heel, 48)
-        let stick = Kit.ribbon(cane, 0.05)
-        let handle = [heel + P(-0.02, -0.06), heel + P(0.3, -0.07), heel + P(0.34, 0), heel + P(0.3, 0.07), heel + P(-0.02, 0.06),
-                      heel + P(-0.02, -0.06)]
-        let ferrule = P(-0.15, axis), fr = 0.09
+        let tip: P = P(-0.86, -0.46), heel: P = P(0.74, -0.52)
+        let cane: [P] = curve(tip, P(-0.05, -0.98), heel, 48)
+        let stick: [P] = Kit.ribbon(cane, 0.05)
+        let handle: [P] = [heel + P(-0.02, -0.06), heel + P(0.3, -0.07), heel + P(0.34, 0), heel + P(0.3, 0.07), heel + P(-0.02, 0.06),
+                           heel + P(-0.02, -0.06)]
+        let ferrule: P = P(-0.15, axis)
+        let fr: Double = 0.09
 
-        Kit.ground(&plate, angle: -0.4, around: poppets + jaws + [frame, tail, stick, handle])
+        let shapes: [[P]] = [frame, tail, stick, handle]
+        let around: [[P]] = poppets + jaws + shapes
+        Kit.ground(&plate, angle: -0.4, around: around)
 
+        plate62Jaws(&plate, jaws, tail, bar)
+        plate62Heads(&plate, frame, poppets, bar, axis)
+        plate62Arbor(&plate, axis)
+        plate62Seat(&plate, axis, ferrule, fr)
+        plate62String(&plate, tip, ferrule, fr, heel, stick, cane, handle)
+        callout(&plate, "A", from: P(0.05, axis - 0.05), to: P(0.12, -0.21))
+        callout(&plate, "B", from: ferrule + P(0.01, 0.05), to: P(-0.07, 0.2))
+        callout(&plate, "C", from: cane[30], to: P(0.42, -0.6))
+        callout(&plate, "D", from: P(-0.9, axis), to: P(-0.86, -0.2))
+        return plate
+    }
+
+    private static func plate62Jaws(_ plate: inout Plate, _ jaws: [[P]], _ tail: [P], _ bar: Double) {
         // The vice's jaws gripping the turns' tail, their chops serrated.
         for (k, jaw) in jaws.enumerated() {
             let s = k == 0 ? -1.0 : 1.0
@@ -169,7 +211,9 @@ extension EscapementArt {
         }
         Kit.mass(&plate, tail)
         plate.line([P(-0.035, bar + 0.1), P(-0.035, 1)], fine, .bone)
+    }
 
+    private static func plate62Heads(_ plate: inout Plate, _ frame: [P], _ poppets: [[P]], _ bar: Double, _ axis: Double) {
         // The frame bar and its heads, each head's runner bored through and its binding screw on top.
         Kit.mass(&plate, frame)
         plate.line([P(-1, bar + 0.02), P(1, bar + 0.02)], fine, .bone)
@@ -193,7 +237,9 @@ extension EscapementArt {
                 Kit.solid(&plate, box(P(s * x, axis - 0.042), P(s * (x + 0.022), axis + 0.042)), angle: 0.9, gap: 0.01)
             }
         }
+    }
 
+    private static func plate62Arbor(_ plate: inout Plate, _ axis: Double) {
         // The arbor between the centres: its pivots, the ferrule the string drives, its pinion, the seat for its wheel.
         Kit.mass(&plate, box(P(-0.29, axis - 0.026), P(0.29, axis + 0.026)))
         plate.line([P(-0.28, axis - 0.01), P(0.28, axis - 0.01)], fine, .bone)
@@ -203,6 +249,9 @@ extension EscapementArt {
             Kit.cut(&plate, box(P(0.0, axis + y - 0.008), P(0.11, axis + y + 0.008)), edge: fine)
         }
         plate.line(leaves, medium)
+    }
+
+    private static func plate62Seat(_ plate: inout Plate, _ axis: Double, _ ferrule: P, _ fr: Double) {
         let seat = [P(0.17, axis - 0.1), P(0.2, axis - 0.1), P(0.2, axis - 0.05), P(0.24, axis - 0.04), P(0.24, axis + 0.04),
                     P(0.2, axis + 0.05), P(0.2, axis + 0.1), P(0.17, axis + 0.1), P(0.17, axis - 0.1)]
         Kit.solid(&plate, seat, angle: 0.8, gap: 0.012)
@@ -218,7 +267,9 @@ extension EscapementArt {
                 Kit.mass(&plate, point)
             }
         }
+    }
 
+    private static func plate62String(_ plate: inout Plate, _ tip: P, _ ferrule: P, _ fr: Double, _ heel: P, _ stick: [P], _ cane: [P], _ handle: [P]) {
         // The bow's string, from the cane's tip once round the ferrule and back to the handle.
         let over = ferrule + P(-0.035, -fr + 0.01), under = ferrule + P(0.035, fr - 0.01)
         plate.line([tip + P(0.01, 0.02), ferrule + P(-0.04, -fr + 0.004)], heavy)
@@ -231,12 +282,6 @@ extension EscapementArt {
             plate.line([heel + P(x, -0.064), heel + P(x, 0.064)], medium, .bone)
         }
         Kit.mass(&plate, Kit.band(tip + P(-0.03, -0.03), tip + P(0.04, 0.05), 0.05))
-
-        callout(&plate, "A", from: P(0.05, axis - 0.05), to: P(0.12, -0.21))
-        callout(&plate, "B", from: ferrule + P(0.01, 0.05), to: P(-0.07, 0.2))
-        callout(&plate, "C", from: cane[30], to: P(0.42, -0.6))
-        callout(&plate, "D", from: P(-0.9, axis), to: P(-0.86, -0.2))
-        return plate
     }
 
     /// Problem 63, Third wheel, hex, clocks 1-,2-: a Victorian tricycle in side view on its road, the two great
@@ -338,55 +383,95 @@ extension EscapementArt {
         Kit.mass(&plate, arc(c, max(0.045, 0.1 * r)))
     }
 
+    private static let plate64End: Double = 0.78, plate64Belly: Double = 0.5, plate64Waist: Double = 0.4
+
+    private static func plate64Half(_ x: Double) -> Double {
+        plate64Waist + (plate64Belly - plate64Waist) * (1 - (x / plate64End) * (x / plate64End))
+    }
+
+    private static let plate64Xs: [Double] = stride(from: -plate64End, through: plate64End, by: 0.02).map { (x: Double) -> Double in x }
+
+    private static func plate64Seam(_ theta: Double) -> [P] {
+        plate64Xs.map { (x: Double) -> P in P(x, plate64Half(x) * sin(theta)) }
+    }
+
+    private static func plate64Outline() -> [P] {
+        let near: [P] = plate64Seam(-.pi / 2)
+        let far: [P] = Array(plate64Seam(.pi / 2).reversed())
+        return near + far + [P(-plate64End, -plate64Waist)]
+    }
+
+    private static func plate64Chocks() -> [[P]] {
+        [-1.0, 1.0].map { (s: Double) -> [P] in
+            let a: Double = s * 0.42, w: Double = 0.17
+            let top: [P] = stride(from: a - w, through: a + w, by: 0.02).map { (x: Double) -> P in P(x, plate64Half(x) - 0.01) }
+            return top + [P(a + w + 0.03, 0.93), P(a - w - 0.03, 0.93), top[0]]
+        }
+    }
+
     /// Problem 64, Barrel, hex, clocks 1+,2-: a cask on its side on a cradle of two chocks, its staves bone between
     /// heavy seams with the one in shadow in ink, four iron hoops set in the lanes clear of every hub, its head turned
     /// to show its boards; the tap in the head in the second ink.
     static func plate64() -> Plate {
         var plate = Plate()
-        let end = 0.78, belly = 0.5, waist = 0.4
-        func half(_ x: Double) -> Double { waist + (belly - waist) * (1 - (x / end) * (x / end)) }
-        let xs = stride(from: -end, through: end, by: 0.02).map { $0 }
-        func seam(_ theta: Double) -> [P] { xs.map { P($0, half($0) * sin(theta)) } }
-        let outline = seam(-.pi / 2) + seam(.pi / 2).reversed() + [P(-end, -waist)]
-        let head = ellipse(P(end, 0), 0.11, waist)
-        let chocks = [-1.0, 1.0].map { s -> [P] in
-            let a = s * 0.42, w = 0.17
-            let top = stride(from: a - w, through: a + w, by: 0.02).map { P($0, half($0) - 0.01) }
-            return top + [P(a + w + 0.03, 0.93), P(a - w - 0.03, 0.93), top[0]]
-        }
+        let end: Double = plate64End, waist: Double = plate64Waist
+        let outline: [P] = plate64Outline()
+        let head: [P] = ellipse(P(end, 0), 0.11, waist)
+        let chocks: [[P]] = plate64Chocks()
 
-        Kit.ground(&plate, angle: -0.5, around: [outline, head] + chocks)
+        let shapes: [[P]] = [outline, head]
+        let around: [[P]] = shapes + chocks
+        Kit.ground(&plate, angle: -0.5, around: around)
 
+        plate64Staves(&plate, outline)
+        plate64Hoops(&plate)
+        plate64Head(&plate, head, end, waist)
+        plate64Cradle(&plate, chocks)
+        let spigot = plate64Tap(&plate, end)
+        callout(&plate, "A", from: P(-0.243, -0.3), to: P(-0.3, -0.62))
+        callout(&plate, "B", from: spigot + P(0.11, 0.05), to: P(0.66, 0.6))
+        callout(&plate, "C", from: P(0.1, plate64Half(0.1) * sin(-1.05)), to: P(0.3, -0.62))
+        callout(&plate, "D", from: P(-0.5, 0.75), to: P(-0.75, 0.55))
+        return plate
+    }
+
+    private static func plate64Staves(_ plate: inout Plate, _ outline: [P]) {
         // The floor under the cradle.
         Kit.mass(&plate, box(P(-1.1, 0.93), P(1.1, 0.98)))
         plate.lines(hatch([box(P(-1.1, 0.98), P(1.1, 1.1))], angle: 0, gap: 0.03), medium)
 
         // The staves: bone between heavy seams, the one in shadow underneath in ink.
-        let seams = (0...12).map { -Double.pi / 2 + Double($0) * .pi / 12 }
+        let seams: [Double] = (0...12).map { (i: Int) -> Double in -Double.pi / 2 + Double(i) * .pi / 12 }
         Kit.cut(&plate, outline, edge: heavy)
         for k in 0..<12 {
-            let ring = seam(seams[k]) + seam(seams[k + 1]).reversed() + [seam(seams[k])[0]]
+            let near: [P] = plate64Seam(seams[k])
+            let far: [P] = Array(plate64Seam(seams[k + 1]).reversed())
+            let ring: [P] = near + far + [near[0]]
             if k == 11 {
                 Kit.mass(&plate, ring)
-                plate.line(seam((seams[k] + seams[k + 1]) / 2), fine, .bone)
+                plate.line(plate64Seam((seams[k] + seams[k + 1]) / 2), fine, .bone)
             } else if k % 2 == 1 {
                 plate.lines(hatch([ring], angle: 0.08, gap: 0.036), fine)
             }
         }
-        for theta in seams.dropFirst().dropLast() { plate.line(seam(theta), heavy) }
+        for theta in seams.dropFirst().dropLast() { plate.line(plate64Seam(theta), heavy) }
+    }
 
+    private static func plate64Hoops(_ plate: inout Plate) {
         // The hoops: iron bands round the belly and the chimes, each with its rivets.
         for x in [-0.745, -0.243, 0.243, 0.745] {
-            let w = 0.056, h0 = half(x - w / 2), h1 = half(x + w / 2)
+            let w = 0.056, h0 = plate64Half(x - w / 2), h1 = plate64Half(x + w / 2)
             let hoop = [P(x - w / 2, -h0 - 0.012), P(x + w / 2, -h1 - 0.012), P(x + w / 2, h1 + 0.012), P(x - w / 2, h0 + 0.012),
                         P(x - w / 2, -h0 - 0.012)]
             Kit.mass(&plate, hoop)
             plate.line([P(x - w / 2 + 0.012, -h0 + 0.01), P(x - w / 2 + 0.012, h0 - 0.01)], fine, .bone)
             for theta in [-1.0, -0.2, 0.6] {
-                plate.fill(arc(P(x + 0.008, half(x) * sin(theta)), 0.011), .bone)
+                plate.fill(arc(P(x + 0.008, plate64Half(x) * sin(theta)), 0.011), .bone)
             }
         }
+    }
 
+    private static func plate64Head(_ plate: inout Plate, _ head: [P], _ end: Double, _ waist: Double) {
         // The head, turned to the eye: its chime in ink, its boards, the tap low in it.
         plate.fill(head, .black)
         let boards = ellipse(P(end + 0.012, 0), 0.085, waist - 0.035)
@@ -396,16 +481,20 @@ extension EscapementArt {
             plate.line([P(end + 0.012 - dx, y), P(end + 0.012 + dx, y)], medium)
         }
         plate.line(head, heavy)
+    }
 
+    private static func plate64Cradle(_ plate: inout Plate, _ chocks: [[P]]) {
         // The cradle: two chocks hollowed to the belly, their grain in bone.
         for chock in chocks {
             Kit.mass(&plate, chock)
             let a = chock[0].x + 0.17
             for dx in [-0.08, 0.0, 0.08] {
-                plate.line([P(a + dx, half(a + dx) + 0.05), P(a + dx * 1.15, 0.9)], fine, .bone)
+                plate.line([P(a + dx, plate64Half(a + dx) + 0.05), P(a + dx * 1.15, 0.9)], fine, .bone)
             }
         }
+    }
 
+    private static func plate64Tap(_ plate: inout Plate, _ end: Double) -> P {
         // The tap: a spigot through the head, its key turned across.
         let spigot = P(end + 0.04, 0.2)
         let tap = [spigot + P(-0.04, -0.03), spigot + P(0.1, -0.025), spigot + P(0.12, 0.0), spigot + P(0.12, 0.06),
@@ -416,12 +505,7 @@ extension EscapementArt {
                    spigot + P(0.05, -0.03), spigot + P(0.02, -0.03)]
         plate.fill(key, .second)
         plate.line(key, medium)
-
-        callout(&plate, "A", from: P(-0.243, -0.3), to: P(-0.3, -0.62))
-        callout(&plate, "B", from: spigot + P(0.11, 0.05), to: P(0.66, 0.6))
-        callout(&plate, "C", from: P(0.1, half(0.1) * sin(-1.05)), to: P(0.3, -0.62))
-        callout(&plate, "D", from: P(-0.5, 0.75), to: P(-0.75, 0.55))
-        return plate
+        return spigot
     }
 
     /// Problem 65, Motion work, hex, clocks 1-,2-: the motion work set out along a dashed axis from eleven to five,
