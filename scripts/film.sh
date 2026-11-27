@@ -336,11 +336,11 @@ film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNE
 # on Mineral's pictures: its first level, which shows the rule by a turn it refuses, and the hardest level
 # `scripts/solve.sh lab` proved. A refused try, and ebb and flow's undone start, cost no move.
 lab=(TIER=plughole LEVEL=14 OPEN=1 FINGER=1 REST=0.6 TURN=0.16)
-film lab-keys-1 22 "$whole" "${lab[@]}" LABEL=1 TITLE=Keys PICTURE=strata LAYOUT=quad STACK=2:+4 "LAB=keys=2:0@3" PAR=3 \
+film lab-keys-1 34 "$whole" "${lab[@]}" LABEL=1 TITLE=Keys PICTURE=strata LAYOUT=quad STACK=2:+4 "LAB=keys=2:0@3" PAR=3 \
   MOVES=2:-4,0:+3,2:-4,0:-3
 film lab-keys-hard 50 "$whole" "${lab[@]}" LABEL=9 TITLE=Keys PICTURE=columns LAYOUT=pent STACK=2:+3,0:+4,1:-3,3:+5 \
   "LAB=keys=3:1@2,1:4@-3" PAR=9 MOVES=4:-3,1:+2,4:+3,3:-5,4:-3,1:+1,4:+3,2:-3,0:-4
-film lab-keel-1 20 "$whole" "${lab[@]}" LABEL=1 TITLE=Keel PICTURE=agate LAYOUT=quad STACK=0:+4,2:-3 "LAB=keel=3" PAR=2 \
+film lab-keel-1 40 "$whole" "${lab[@]}" LABEL=1 TITLE=Keel PICTURE=agate LAYOUT=quad STACK=0:+4,2:-3 "LAB=keel=3" PAR=2 \
   MOVES=0:-4,2:+3,0:-4
 film lab-keel-hard 40 "$whole" "${lab[@]}" LABEL=9 TITLE=Keel PICTURE=agate LAYOUT=pent STACK=4:+4,1:-3,2:-5,1:-2,4:+3 \
   "LAB=keel=3" PAR=7 MOVES=1:+2,2:+1,4:-1,2:+1,4:-6,2:+3,1:+3

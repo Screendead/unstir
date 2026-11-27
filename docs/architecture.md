@@ -498,6 +498,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the tank has no limit a level shows, and `Tank.maxStack` (96) is a silent cap, a turn past it refused with the
   knob's shake and "the tank is full: undo or reset" as before. `BrimRing`, `Brim.frame` and `PlayLayout.Halo` are
   endless's alone again, so no glass sizes itself for a ring on a level, the Duo's split included.
+- **LabRules.swift** and **LabViews.swift** are the fifth chapter's candidate rules, Debug prototypes only
+  (`docs/fifth-chapter.md`): keys, the keel and ebb and flow, each a limit on which turns a level allows and never on
+  what a turn does, so the shader and `Array.commit` are untouched. `Level.lab` is empty on every level; only the
+  harness's `UNSTIR_LAB` sets it. `Game.kind(of:)` seizes a ward whose key is off its mark, `Game.labRoom` gives the
+  turns the keel and a knob's last sense allow, which the drag stops at and `commit` refuses past (`labRefusals`,
+  a knock), and `LabKnob` draws each knob's part beside it; `KeelGauge` sits across the bezel's top.
+  `UnstirTests/LabSolver.swift` proves a level under them (`scripts/solve.sh lab`).
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
   maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best, at

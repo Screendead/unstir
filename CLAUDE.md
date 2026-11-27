@@ -129,7 +129,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   out of Levels.swift, so that struct stays top-level there. `scripts/solve.sh escapement <layout> <scramble> <clocks>
   [limit]` (e.g. `escapement hex <scramble> 1+,4-`, clocks as `problems.tsv` writes them) runs the app's own prover
   (`Solver.escapement`) instead: the fewest moves with the clocks ticking after each, under the same rule, a line,
-  waits and all, and every first move that reaches it.
+  waits and all, and every first move that reaches it. `scripts/solve.sh lab <layout> <scramble> [keys=2:0@3] [keel=n] [flip] [exhaustive]` proves a
+  level under the fifth chapter's candidate rules (`LabRules`, `docs/fifth-chapter.md`).
 - Escapement's prover: `scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]` (clocks as rods in tick
   order, each `+` or `-` for wound back, e.g. `hex <scramble> 1+,4-`) plays the pack's rule on `Array.commit`: every move
   (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses, as does the last clock stopping
