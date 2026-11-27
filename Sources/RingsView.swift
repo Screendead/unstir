@@ -207,7 +207,13 @@ final class RingsView: UIView, UIScrollViewDelegate {
     /// is new. Seam for step two: the archive's and endless's rings are two more entries of `model.rings`.
     private func build() {
         RingsCount.reads += 1
+        #if PROBES || DEBUG
+        let began = Date.now
+        #endif
         let model = RingsModel(today: state.day ?? .now, endless: state.endless)
+        #if PROBES || DEBUG
+        Log.write("rings model read \(Int(Date.now.timeIntervalSince(began) * 1000)) ms")
+        #endif
         let plan = RingsPlan(size: bounds.size, top: inset, bottom: window?.safeAreaInsets.bottom ?? safeAreaInsets.bottom)
         guard model != self.model || plan != self.plan else { return }
         RingsCount.builds += 1

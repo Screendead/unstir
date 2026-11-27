@@ -94,7 +94,7 @@ struct RingsModel: Equatable, Sendable {
         // above plughole and endless's below maelstrom.
         rings = modes ? [Self.archive(today: today, store: store, unlocked: unlocked)] + tiers + [Self.endless(endless)] : tiers
         if modes {
-            let level = Level.daily(today)
+            let level = Self.dealt(today, archived: false)
             daily = Today(level: level, title: level.title, under: MenuView.dailyLines(level, run: Daily.run(today: today)).under)
         } else {
             daily = nil
@@ -119,6 +119,18 @@ struct RingsModel: Equatable, Sendable {
         }
     }
 
+    /// Each daily as dealt, by its day: the generator is frozen, and dealing thirty tanks on every read took 0.3 s of
+    /// the main thread in a Debug build.
+    @MainActor private static var dealing: [String: Level] = [:]
+
+    @MainActor private static func dealt(_ day: Date, archived: Bool) -> Level {
+        let key = Level.dailyID(day) + (archived ? " archived" : "")
+        if let level = dealing[key] { return level }
+        let level = Level.daily(day, archived: archived)
+        dealing[key] = level
+        return level
+    }
+
     /// The archive's ring: a bead for each past daily, round today's in the middle. Shut, as the archive is, until a
     /// purchase (`Archive.open`), and until the store's first read so an owner never meets the lock.
     @MainActor private static func archive(today: Date, store: Store, unlocked: Bool) -> Ring {
@@ -127,7 +139,7 @@ struct RingsModel: Equatable, Sendable {
         let locked = String(localized: "unlocked by purchasing any pack")
         var atPar = 0
         let spots = days.map { day -> Spot in
-            let level = Level.daily(day, archived: true), best = Best.load(level.id)
+            let level = dealt(day, archived: true), best = Best.load(level.id)
             if best?.over == 0 { atPar += 1 }
             let facts = best.map {
                 String(localized: "solved in \(level.par + $0.over) \u{00B7} par \(level.par)",
@@ -141,8 +153,7 @@ struct RingsModel: Equatable, Sendable {
                             comment: "The menu's archive row. Past dailies, then how many are at par")
             : String(localized: "\(days.count) past dailies \u{00B7} comes with any pack",
                      comment: "The menu's archive row, shut until a purchase. Past dailies")
-        let level = Level.daily(today)
-        let lead = Spot(level: level, number: "", name: short(today), bead: .dull, shut: nil, facts: "")
+        let lead = Spot(level: dealt(today, archived: false), number: "", name: short(today), bead: .dull, shut: nil, facts: "")
         return Ring(hue: .today, word: String(localized: "today", comment: "The rings' archive ring, round today's daily"),
                     open: open, under: under, spots: spots, way: nil, lead: open ? lead : nil)
     }
