@@ -265,8 +265,120 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 69, Siesta, hex, clocks 1+.
-    static func plate69() -> Plate? { nil }
+    /// Problem 69, Siesta, hex, clocks 1+: a black cat curled asleep on a tufted cushion, its fur's lie and sheen cut in
+    /// bone, its tail wrapped round to its chin, the window's louvred shutters closed on the afternoon above; the bell on
+    /// its collar in the second ink, in the lane between the hubs at four and six.
+    static func plate69() -> Plate {
+        var plate = Plate()
+        Kit.ground(&plate, angle: 0.6)
+        // The shutters closed on the afternoon above: the window's frame, two louvred leaves and the light between them.
+        Kit.mass(&plate, box(P(-0.44, -1.0), P(0.44, -0.3)))
+        for side in [-1.0, 1.0] {
+            let x0 = side < 0 ? -0.4 : 0.035, x1 = side < 0 ? -0.035 : 0.4
+            Kit.cut(&plate, box(P(x0, -1.0), P(x1, -0.3)), edge: heavy)
+            for k in 0..<9 {
+                let y = -0.97 + 0.074 * Double(k)
+                plate.fill(box(P(x0 + 0.035, y + 0.042), P(x1 - 0.035, y + 0.071)), .black)
+                plate.line([P(x0 + 0.035, y + 0.03), P(x1 - 0.035, y + 0.03)], fine)
+            }
+            plate.line(box(P(x0 + 0.035, -0.97), P(x1 - 0.035, -0.33)), medium)
+        }
+        Kit.cut(&plate, box(P(-0.035, -1.0), P(0.035, -0.3)), edge: medium)
+        Kit.cut(&plate, box(P(-0.5, -0.3), P(0.5, -0.25)), edge: heavy)
+
+        // The cushion: a tufted top in bone, its front a bold ticking of ink and bone, piped at the seams.
+        let topFace = ellipse(P(0, 0.38), 0.96, 0.32)
+        let front = ellipse(P(0, 0.38), 0.96, 0.32, from: 0, to: .pi) + ellipse(P(0, 0.6), 0.96, 0.32, from: .pi, to: 0)
+        plate.fill(front + [front[0]])
+        for k in -5...5 {
+            let x = 0.165 * Double(k) + 0.08
+            guard abs(x) < 0.92 else { continue }
+            let y0 = 0.38 + 0.32 * sqrt(max(0, 1 - x * x / 0.9216)), y1 = y0 + 0.22
+            plate.fill(box(P(x - 0.025, y0), P(x + 0.025, y1)), .black)
+            plate.line([P(x + 0.082, y0), P(x + 0.082, y1)], medium)
+        }
+        plate.line(front + [front[0]], heavy)
+        Kit.cut(&plate, topFace, edge: 0.016)
+        plate.lines(hatch([topFace], angle: -0.3, gap: Kit.groundGap), Kit.groundWidth)
+        for b in [P(-0.72, 0.3), P(0.64, 0.32), P(0.6, 0.56), P(-0.56, 0.58), P(-0.25, 0.62), P(0.25, 0.62)] {
+            for a in stride(from: 0.0, to: 2 * .pi, by: .pi / 2) { plate.line([polar(b, 0.02, a + 0.4), polar(b, 0.09, a + 0.4)], medium) }
+            plate.fill(arc(b, 0.024), .black)
+        }
+
+        // The cat, drawn about its head and set down where no rod's core is mostly its ink: its face in the lane between
+        // the middle hub and the hubs at two and four, its bell clear of the hubs at four and six.
+        var cat = Plate()
+        let curl = P(-0.06, 0.15), h = P(0.33, 0.07)
+        Kit.mass(&cat, ellipse(curl, 0.45, 0.21, turned: -0.06))
+        // The fur's lie in bone along the back, the sheen on it, the hind leg drawn up and the foreleg folded.
+        for k in 0..<3 {
+            let f = 0.88 - 0.13 * Double(k)
+            cat.fill(swell(ellipse(curl, 0.45 * f, 0.21 * f, from: .pi * (0.95 + 0.06 * Double(k)), to: .pi * (1.62 - 0.05 * Double(k)), turned: -0.06), 0.004, 0.024))
+        }
+        cat.fill(swell(ellipse(curl, 0.42, 0.19, from: .pi * 1.05, to: .pi * 1.78, turned: -0.06), 0.006, 0.04))
+        for k in 0..<4 {
+            let f = 0.5 + 0.13 * Double(k)
+            cat.fill(swell(ellipse(curl, 0.45 * f, 0.21 * f, from: .pi * (0.22 + 0.04 * Double(k)), to: .pi * (0.62 + 0.05 * Double(k % 2)), turned: -0.06), 0.003, 0.03))
+        }
+        for k in 0..<3 {
+            let f = 0.62 + 0.14 * Double(k)
+            cat.fill(swell(ellipse(curl, 0.45 * f, 0.21 * f, from: .pi * (0.8 + 0.03 * Double(k)), to: .pi * (1.02 + 0.02 * Double(k)), turned: -0.06), 0.003, 0.026))
+        }
+        for k in 0..<3 {
+            let f = 0.42 + 0.18 * Double(k)
+            cat.fill(swell(ellipse(curl, 0.45 * f, 0.21 * f, from: .pi * (1.62 + 0.03 * Double(k)), to: .pi * (1.98 + 0.03 * Double(k)), turned: -0.06), 0.003, 0.028))
+        }
+        cat.fill(swell(ellipse(P(-0.24, 0.2), 0.15, 0.1, from: -.pi * 0.6, to: .pi * 0.75), 0.004, 0.03))
+        cat.fill(swell(curve(P(0.02, 0.1), P(0.0, 0.26), P(0.12, 0.33), 10), 0.004, 0.024))
+        cat.fill(swell(curve(P(-0.04, 0.24), P(0.06, 0.34), P(0.14, 0.36), 10), 0.003, 0.016))
+        // The tail wrapped round the front to the chin.
+        let tailPath = curve(P(-0.44, 0.16), P(-0.42, 0.42), P(-0.05, 0.38), 16) + curve(P(-0.05, 0.38), P(0.16, 0.36), P(0.22, 0.29), 8).dropFirst()
+        Kit.mass(&cat, swell(tailPath, 0.04, 0.07))
+        cat.fill(swell(curve(P(-0.41, 0.2), P(-0.4, 0.4), P(-0.05, 0.36), 16), 0.003, 0.03))
+        cat.fill(swell(curve(P(-0.02, 0.365), P(0.14, 0.35), P(0.2, 0.3), 8), 0.003, 0.022))
+        // The head, resting on the tail.
+        let head = [h + P(-0.16, 0.02), h + P(-0.14, -0.08), h + P(-0.12, -0.2), h + P(-0.04, -0.12), h + P(0.04, -0.12),
+                    h + P(0.13, -0.19), h + P(0.13, -0.06), h + P(0.16, 0.03), h + P(0.12, 0.12), h + P(0.03, 0.16),
+                    h + P(-0.08, 0.15), h + P(-0.15, 0.1), h + P(-0.16, 0.02)]
+        Kit.mass(&cat, head)
+        Kit.solid(&cat, [h + P(-0.115, -0.15), h + P(-0.07, -0.1), h + P(-0.115, -0.085), h + P(-0.115, -0.15)], angle: 0.7, gap: 0.012)
+        Kit.solid(&cat, [h + P(0.11, -0.14), h + P(0.11, -0.07), h + P(0.06, -0.1), h + P(0.11, -0.14)], angle: 0.7, gap: 0.012)
+        cat.line(curve(h + P(-0.1, -0.01), h + P(-0.06, 0.03), h + P(-0.02, -0.005), 8), 0.018, .bone)
+        cat.line(curve(h + P(0.02, -0.005), h + P(0.06, 0.03), h + P(0.1, -0.01), 8), 0.018, .bone)
+        cat.fill([h + P(-0.02, 0.06), h + P(0.02, 0.06), h + P(0, 0.085), h + P(-0.02, 0.06)])
+        cat.line([h + P(0, 0.085), h + P(0, 0.105)], 0.008, .bone)
+        for k in 0..<3 {
+            let y = 0.08 + 0.022 * Double(k)
+            cat.line([h + P(0.05, y), h + P(0.3, y - 0.06 + 0.05 * Double(k))], medium)
+            cat.line([h + P(0.05, y), h + P(0.15, y - 0.025 + 0.02 * Double(k))], 0.008, .bone)
+            cat.line([h + P(-0.05, y), h + P(-0.15, y - 0.025 + 0.02 * Double(k))], 0.008, .bone)
+        }
+        let paw = ellipse(h + P(0.02, 0.2), 0.1, 0.045)
+        Kit.mass(&cat, paw)
+        for k in 0..<3 { cat.line([h + P(0.06 + 0.025 * Double(k), 0.185), h + P(0.065 + 0.025 * Double(k), 0.225)], 0.01, .bone) }
+        // The collar under the chin, and its bell.
+        let collar = curve(h + P(-0.15, 0.06), h + P(-0.1, 0.17), h + P(-0.01, 0.15), 12)
+        Kit.cut(&cat, Kit.ribbon(collar, 0.036), edge: medium)
+        for i in stride(from: 2, to: 12, by: 3) { cat.fill(arc(collar[i], 0.007), .black) }
+        let ring = h + P(-0.04, 0.205)
+        cat.line([collar[9], ring], medium)
+        cat.fill(arc(ring, 0.045), .second)
+        cat.line(arc(ring, 0.045), medium)
+        cat.line([ring + P(-0.043, -0.004), ring + P(0.043, -0.004)], fine)
+        cat.line([ring, ring + P(0, 0.04)], medium)
+        cat.fill(arc(ring + P(0, 0.02), 0.01), .black)
+        let seat = P(0.23, 0.23), scale = 0.86
+        for mark in cat.marks {
+            plate.marks.append(Mark(points: mark.points.map { ($0 - h) * scale + seat }, width: mark.width == 0 ? 0 : max(fine, mark.width * 0.9), ink: mark.ink))
+        }
+        let bell = (ring - h) * scale + seat
+
+        callout(&plate, "A", from: P(-0.3, 0.12), to: P(-0.72, -0.1))
+        callout(&plate, "B", from: P(-0.36, 0.5), to: P(-0.84, 0.36))
+        callout(&plate, "C", from: P(0.5, 0.78), to: P(0.66, 0.88))
+        callout(&plate, "D", from: bell + P(0.03, 0.02), to: P(0.86, 0.14))
+        return plate
+    }
 
     /// Problem 70, Respite, pent, clocks 0+.
     static func plate70() -> Plate? { nil }
