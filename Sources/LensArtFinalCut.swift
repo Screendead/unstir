@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let finalCut: [Int: Halftone.Panel] = [68: lighthouse]
+    static let finalCut: [Int: Halftone.Panel] = [68: lighthouse, 69: eclipseglasses]
 
     /// Hex's rods, the hub first.
     fileprivate static let hex = [P(0, 0), P(0, -0.56), P(0.485, -0.28), P(0.485, 0.28), P(0, 0.56), P(-0.485, 0.28), P(-0.485, -0.28)]
@@ -150,6 +150,95 @@ extension LensArt {
                 return Tone(0.1, 0.12, 0)
             }
             return c(0.6)
+        }, strokes: s)
+    }()
+}
+
+// MARK: - 69: Eclipse glasses
+
+/// Level 69's name: a total eclipse watched from a dark hillside, a woman in card eclipse glasses looking up from the
+/// lower right, and over hex's five lenses on this level the sun as her glasses show it, gold in the dark filter, each
+/// framed in the printed card: in the four ring lenses the moon biting deeper into the sun (a nick, half, a thin
+/// crescent, the diamond ring) and in the hub, where the glasses come off, totality: the black moon in its corona, two
+/// prominences at its edge.
+extension LensArt {
+    static let eclipseglasses: Halftone.Panel = {
+        let phases = [hex[5], hex[6], hex[1], hex[2]], sun = hex[0]
+        let head = P(0.6, 0.44), eye = P(0.44, 0.36)
+        let nose = [P(0.405, 0.4), P(0.35, 0.47), P(0.41, 0.49)]
+        let card = [P(0.33, 0.33), P(0.56, 0.27), P(0.7, 0.27), P(0.7, 0.35), P(0.56, 0.35), P(0.35, 0.41)]
+        let hairOval = (P(0.68, 0.38), P(0.22, 0.27))
+        let body = closed([P(0.18, 1), P(0.28, 0.78), P(0.46, 0.7), P(0.74, 0.7), P(0.9, 0.78), P(1, 1)])
+        let neck = rect(0.5, 0.6, 0.66, 0.74)
+        let hills = closed([P(-1, 0.66), P(-0.7, 0.6), P(-0.45, 0.64), P(-0.2, 0.7), P(0.1, 0.66), P(0.4, 0.72), P(1, 0.64), P(1, 1), P(-1, 1)])
+        let skin = Tone(0, 0.25, 0.55)
+        let figure = [fill(card, y(0.9)), fill(nose, skin), fill(body, Tone(0.55, 0, 0.55)), fill(neck, skin), oval(head, 0.17, 0.22, skin),
+                      oval(hairOval.0, hairOval.1.x, hairOval.1.y, Tone(0.12, 0.22, 0)), fill(hills, Tone(0.15, 0.12, 0))]
+
+        var s: [Halftone.Stroke] = []
+        // The watcher: her profile, hair, glasses and shoulders.
+        let profile = curve(P(0.5, 0.2), P(0.42, 0.24), P(0.41, 0.34), 8) + nose + curve(P(0.41, 0.49), P(0.4, 0.53), P(0.44, 0.55), 4)
+            + curve(P(0.44, 0.55), P(0.42, 0.6), P(0.48, 0.62), 4) + [P(0.5, 0.64)]
+        s.append(stroke(profile, mid))
+        s.append(stroke(curve(P(0.415, 0.53), P(0.43, 0.54), P(0.445, 0.53), 4), mid))
+        s += runs(ellipse(hairOval.0, hairOval.1.x, hairOval.1.y, degrees: 0, 48), mid) { $0.x > 0.5 }
+        for k in 0..<5 { s.append(stroke(curve(P(0.62 + 0.04 * Double(k), 0.14 + 0.01 * Double(k)), P(0.88, 0.32), P(0.7 + 0.04 * Double(k), 0.64), 10), hair)) }
+        s.append(stroke(closed(card), bold))
+        s.append(stroke(closed(ellipse(eye, 0.05, 0.026, degrees: -14, 16)), mid))
+        s.append(stroke(arc(P(0.63, 0.31), 0.02, 0, 360, 10), hair))
+        s.append(stroke(closed(body), bold))
+        s.append(stroke(closed(neck), mid))
+        s.append(stroke(curve(P(0.5, 0.74), P(0.58, 0.82), P(0.66, 0.74), 6), mid))
+        // The hills and their trees, and the stars out at totality.
+        s.append(stroke(Array(hills.dropLast(3)), mid))
+        for (x, h) in [(-0.82, 0.13), (-0.62, 0.1), (-0.36, 0.11), (0.06, 0.09)] {
+            let base = P(x, 0.65 + 0.03 * sin(x * 7))
+            s.append(stroke(closed([base + P(-0.045, 0), base + P(0, -h), base + P(0.045, 0)]), mid))
+            s.append(stroke([base, base + P(0, 0.04)], mid))
+        }
+        for at in [P(-0.85, -0.12), P(0.32, -0.86), P(-0.22, -0.3), P(0.86, -0.02), P(-0.72, -0.62), P(0.7, -0.66), P(0.26, 0.04)] { s += glint(at, 0.03, hair) }
+        // The card frames round the filters, printed with a border and their safety marks.
+        for c in phases {
+            s.append(stroke(circle(c, core, 56), bold))
+            s.append(stroke(circle(c, core + 0.05, 56), mid))
+            for k in 0..<9 { let a = 40 * Double(k) + 7; s.append(stroke([polar(c, core + 0.012, a), polar(c, core + 0.038, a + 4)], hair)) }
+        }
+        // The sun in the filters, the moon biting in deeper each time: a nick, half, a crescent, the diamond ring.
+        for (k, c) in phases.enumerated() {
+            let o = c + P(0.03, -0.022), r = 0.032, d = [0.05, 0.034, 0.014, 0.004][k], moon = o + d * simd_normalize(P(1, -0.6))
+            s += runs(circle(o, r, 40), 0.0035) { simd_distance($0, moon) > r + 0.001 }
+            if k < 3 { s += runs(circle(moon, r, 40), 0.002) { simd_distance($0, o) < r } }
+            if k == 3 {
+                s.append(stroke(circle(o, r + 0.01, 40), 0.0015))
+                s += glint(o + polar(P(0, 0), r, 210), 0.034, 0.0028)
+            }
+        }
+        // Totality: the moon's black disc, streamers of corona and prominences at its rim.
+        let o = sun + P(-0.028, 0.026)
+        s.append(stroke(circle(o, 0.03, 32), 0.0035))
+        for k in 0..<18 {
+            let a = 20 * Double(k) + 5, l = [0.04, 0.016, 0.026, 0.012, 0.034, 0.018][k % 6]
+            s.append(stroke([polar(o, 0.037, a), polar(o, 0.037 + l, a + 3)], 0.002))
+        }
+        for a in [62.0, 245] { s.append(stroke(arc(polar(o, 0.03, a), 0.008, a - 100, a + 100, 8), 0.003)) }
+        s.append(stroke(circle(sun, core, 56), mid))
+
+        let cuts = [0.0, 18, 40, 75, 96, 140, 160, 205, 226, 270, 290, 330]
+        return Halftone.Panel(name: "eclipseglasses", tones: { p in
+            for c in phases {
+                let d = simd_distance(p, c)
+                if d < core { return y(0.75) }
+                if d < core + 0.05 { return runTone(bearing(p, c), cuts, [m(0.7), m(0.7), .zero]) }
+            }
+            let d = simd_distance(p, sun)
+            if d < core { return c(0.15) }
+            if d < core + 0.09 {
+                // The corona's streamers, uneven round the rim.
+                let a = bearing(p, sun), reach = core + 0.03 + 0.06 * abs(sin(a * .pi / 180 * 2.5 + 0.7))
+                if d < reach { return y(0.85) }
+            }
+            for f in figure where f.holds(p) { return f.tone }
+            return p.y < 0.38 ? c(0.42) : m(0.5)
         }, strokes: s)
     }()
 }
