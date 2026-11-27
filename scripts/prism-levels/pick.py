@@ -40,7 +40,7 @@ DEEP = {
     "t10": [("eye", 12, "rc"), ("pent", 13, "rcgb"), ("pent", 13, "rgbcmy"), ("hex", 14, "by"), ("hex", 14, "gm"),
             ("pent", 15, "rgbcmy")],
     "t11": [("pent", 13, "gm"), ("pent", 14, "rcgb"), ("hex", 14, "rc"), ("pent", 15, "rgb"), ("hex", 15, "rc"), ("hex", 16, "gm")],
-    "t12": [("pent", 14, "by"), ("pent", 15, "rc"), ("pent", 15, "rgbcmy"), ("hex", 16, "rc"), ("hex", 16, "by"), ("hex", 17, "by")],
+    "t12": [("pent", 14, "by"), ("pent", 15, "rc"), ("pent", 15, "rgbcmy"), ("hex", 16, "rc"), ("pent", 16, "gm"), ("hex", 17, "by")],
     "t13": [("eye", 15, "rc"), ("pent", 16, "gm"), ("pent", 16, "rcgb"), ("hex", 17, "rc"), ("hex", 17, "gm"), ("hex", 18, "gm")],
     "t14": [("pent", 16, "by"), ("pent", 17, "rc"), ("pent", 17, "rgbcmy"), ("hex", 18, "by"), ("pent", 18, "gm"), ("pent", 19, "rc")],
     "t15": [("pent", 17, "gm"), ("hex", 18, "gm"), ("pent", 18, "rcgb"), ("pent", 19, "by"), ("pent", 19, "gm"), ("pent", 20, "rc")],
