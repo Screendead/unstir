@@ -563,35 +563,42 @@ enum RingsPaint {
         let w: CGFloat = 300, h: CGFloat = 60, tracking: CGFloat = 11
         let text = NSAttributedString(string: "UNSTIR", attributes: [
             NSAttributedString.Key(kCTFontAttributeName as String): UIFont.systemFont(ofSize: 23, weight: .bold),
-            NSAttributedString.Key(kCTForegroundColorAttributeName as String): colour(RingsLook.pink),
+            NSAttributedString.Key(kCTForegroundColorAttributeName as String): colour((1, 1, 1)),
             NSAttributedString.Key(kCTKernAttributeName as String): tracking,
         ])
         let line = CTLineCreateWithAttributedString(text)
-        let width = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil)) - tracking
-        // The letters as outlines, which a gradient can fill.
-        let at = CGPoint(x: (w - width) / 2, y: 38), letters = CGMutablePath()
-        for run in CTLineGetGlyphRuns(line) as? [CTRun] ?? [] {
-            let count = CTRunGetGlyphCount(run), font = UIFont.systemFont(ofSize: 23, weight: .bold) as CTFont
-            var glyphs = [CGGlyph](repeating: 0, count: count), seats = [CGPoint](repeating: .zero, count: count)
-            CTRunGetGlyphs(run, CFRange(location: 0, length: 0), &glyphs)
-            CTRunGetPositions(run, CFRange(location: 0, length: 0), &seats)
-            for (glyph, seat) in zip(glyphs, seats) {
-                guard let outline = CTFontCreatePathForGlyph(font, glyph, nil) else { continue }
-                letters.addPath(outline, transform: CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: at.x + seat.x, ty: at.y - seat.y))
-            }
+        var ascent: CGFloat = 0, descent: CGFloat = 0
+        let width = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, nil)) - tracking
+        let at = CGPoint(x: (w - width) / 2, y: h / 2 + (ascent - descent) / 2)
+        func letters(_ ctx: CGContext) {
+            ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+            ctx.textPosition = at
+            CTLineDraw(line, ctx)
         }
+        // The letters as a mask the gradient is clipped to: the mask's first row is its top, as the bitmap's is.
+        let pw = Int((w * scale).rounded(.up)), ph = Int((h * scale).rounded(.up))
+        guard let maskContext = CGContext(data: nil, width: pw, height: ph, bitsPerComponent: 8, bytesPerRow: 0,
+                                          space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return nil }
+        maskContext.translateBy(x: 0, y: CGFloat(ph))
+        maskContext.scaleBy(x: scale, y: -scale)
+        letters(maskContext)
+        guard let mask = maskContext.makeImage() else { return nil }
         return raster(w, h, scale: scale) { ctx in
             ctx.saveGState()
             ctx.setShadow(offset: .zero, blur: 9 * scale, color: colour(RingsLook.pink, 0.8))
-            ctx.setFillColor(colour(RingsLook.pink))
-            ctx.addPath(letters)
-            ctx.fillPath()
+            letters(ctx)
             ctx.restoreGState()
-            ctx.addPath(letters)
-            ctx.clip()
+            ctx.saveGState()
+            // Undo the bitmap's y-down points for the mask, which is drawn the way up an image is.
+            ctx.translateBy(x: 0, y: h)
+            ctx.scaleBy(x: 1, y: -1)
+            ctx.clip(to: CGRect(x: 0, y: 0, width: w, height: h), mask: mask)
+            ctx.translateBy(x: 0, y: h)
+            ctx.scaleBy(x: 1, y: -1)
             ctx.drawLinearGradient(gradient([(0, colour(0xFFFFFF)), (0.44, colour(0x62D4FF)), (0.5, colour(0x2A1A90)),
                                              (0.56, colour(0xFF4FD0)), (1, colour(0xFFD65A))]),
-                                   start: CGPoint(x: 0, y: 21), end: CGPoint(x: 0, y: 39), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                   start: CGPoint(x: 0, y: 19), end: CGPoint(x: 0, y: 41), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            ctx.restoreGState()
         }
     }
 
