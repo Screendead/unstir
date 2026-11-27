@@ -19,6 +19,8 @@ struct RingsModel: Equatable, Sendable {
         let facts: String
         /// Endless with no run saved: a new run is dealt as it plays, from a seed drawn then.
         var anew = false
+        /// `facts` as short as it can say them, for accessibility type: "best 5 · par 4".
+        var brief: String?
     }
 
     struct Ring: Equatable, Sendable {
@@ -80,7 +82,8 @@ struct RingsModel: Equatable, Sendable {
                            comment: "The rings' middle, a solved level picked. Its best in moves, then its par")
                 } ?? String(localized: "par \(level.par)", comment: "The rings' middle, an unsolved level picked. Its par")
                 let bead: Bead = !open ? .dull : i == frontier ? .next : best.map { $0.over == 0 ? .par : .solved } ?? .dull
-                return Spot(level: level, number: level.label, name: level.title, bead: bead, shut: shut, facts: facts)
+                return Spot(level: level, number: level.label, name: level.title, bead: bead, shut: shut, facts: facts,
+                            brief: Self.brief(level, best))
             }
             let solved = bests.filter { $0 != nil }.count, par = bests.filter { $0?.over == 0 }.count
             let under = open
@@ -151,7 +154,8 @@ struct RingsModel: Equatable, Sendable {
                        comment: "The rings' middle, a solved level picked. Its best in moves, then its par")
             } ?? String(localized: "par \(level.par)", comment: "The rings' middle, an unsolved level picked. Its par")
             let bead: Bead = !open ? .dull : best.map { $0.over == 0 ? .par : .solved } ?? .dull
-            return Spot(level: level, number: "", name: short(day), bead: bead, shut: open ? nil : locked, facts: facts)
+            return Spot(level: level, number: "", name: short(day), bead: bead, shut: open ? nil : locked, facts: facts,
+                        brief: brief(level, best))
         }
         let under = !store.ready ? String(localized: "\(days.count) past dailies", comment: "The menu's archive row. Past dailies")
             : open ? String(localized: "\(days.count) past dailies \u{00B7} \(atPar) at par",
@@ -161,6 +165,13 @@ struct RingsModel: Equatable, Sendable {
         let lead = Spot(level: dealt(today, archived: false), number: "", name: short(today), bead: .dull, shut: nil, facts: "")
         return Ring(hue: .today, word: String(localized: "today", comment: "The rings' archive ring, round today's daily"),
                     open: open, under: under, spots: spots, way: nil, lead: open ? lead : nil)
+    }
+
+    private static func brief(_ level: Level, _ best: Best?) -> String? {
+        best.map {
+            String(localized: "best \(level.par + $0.over) \u{00B7} par \(level.par)",
+                   comment: "The rings' middle at accessibility type sizes, a solved level picked. Its best in moves, then its par")
+        }
     }
 
     /// Endless's ring: no beads, its circle a neon tube; the middle continues the saved run, or deals a new one.
@@ -177,7 +188,11 @@ struct RingsModel: Equatable, Sendable {
         let name = run == nil ? String(localized: "new run", comment: "The rings' endless middle with no run saved: deals one")
             : String(localized: "continue", comment: "The rings' endless middle: plays the saved run")
         let lead = Spot(level: .endless(run ?? Run(seed: 0)), number: "", name: name, bead: .dull, shut: nil, facts: "", anew: run == nil)
+        let brief = run.map {
+            String(localized: "tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)",
+                   comment: "The rings' endless middle, a run saved: its tank, then its brim")
+        }
         return Ring(hue: .endless, word: String(localized: "endless", comment: "The rings' endless ring"), open: true, under: under,
-                    spots: [], way: nil, lead: lead, renews: run != nil)
+                    spots: [], way: nil, lead: lead, renews: run != nil, brief: brief)
     }
 }

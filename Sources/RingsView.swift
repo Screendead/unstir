@@ -466,9 +466,16 @@ final class RingsView: UIView, UIScrollViewDelegate {
         let pair = RingsText(runs: spot.number.isEmpty ? [name]
                                  : [.init(string: spot.number, voice: .data, size: plan.pt(20, .title1), ink: .deep, weight: .semibold), name],
                              gap: 0, stack: true, wrap: wide)
-        // Each piece's bitmap is padded; the stack closes the pads up and stands centred a little over the sun's middle.
-        let stack = [title, line, pair] + (cue.map { [$0] } ?? []), talls = stack.map { RingsPaint.measure($0).height - 6 }
-        var y = -talls.reduce(0, +) / 2 - 10 * plan.k
+        // Each piece's bitmap is padded; the stack closes the pads up. It starts where a stack of the word, one line, a
+        // number and a one-line name and a cue would stand centred a little over the sun's middle, so the word stays put
+        // while a picked bead's words take the rest's place.
+        func tall(_ text: RingsText) -> CGFloat { RingsPaint.measure(text).height - 6 }
+        let model = [title, RingsText("0", .data, plan.pt(13, .footnote)),
+                     RingsText(runs: [.init(string: "0", voice: .data, size: plan.pt(20, .title1)),
+                                      .init(string: "X", voice: .name, size: plan.pt(28, .title1))], gap: 0, stack: true),
+                     RingsText("0", .data, plan.pt(13, .footnote))]
+        let stack = [title, line, pair] + (cue.map { [$0] } ?? []), talls = stack.map(tall)
+        var y = -model.map(tall).reduce(0, +) / 2 - 10 * plan.k
         let at = talls.map { tall -> CGPoint in
             defer { y += tall }
             return CGPoint(x: 0, y: y + tall / 2)
@@ -503,8 +510,10 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
     /// The cue a picked bead shows: what opens it, or that a second tap plays it.
     private static func pickCue(_ spot: RingsModel.Spot, _ plan: RingsPlan) -> RingsText {
+        // One line, as two would reach the horizon; what opens a shut bead is longer, and wraps.
         RingsText(spot.shut ?? String(localized: "tap again to play", comment: "The rings' middle, a level picked"),
-                  .data, plan.pt(13, .footnote), .dusk, .medium, tracking: 0.4, wrap: plan.large ? 270 * plan.k : nil)
+                  .data, plan.pt(13, .footnote), .dusk, .medium, tracking: plan.large ? 0 : 0.4,
+                  wrap: plan.large && spot.shut != nil ? 270 * plan.k : nil)
     }
 
     /// The rings a swipe away, named over the sun and under it.
@@ -691,7 +700,8 @@ final class RingsView: UIView, UIScrollViewDelegate {
         let ring = model.rings[at], spot = ring.spots[i], layers = rings[at], index = at
         Sound.shared.play(.tap)
         picked = i
-        let cue = Self.pickCue(spot, plan), m = Self.middle(word: ring.word, spot, under: spot.facts, cue: cue, plan: plan)
+        let cue = Self.pickCue(spot, plan)
+        let m = Self.middle(word: ring.word, spot, under: plan.large ? spot.brief ?? spot.facts : spot.facts, cue: cue, plan: plan)
         let pieces: [RingsPiece] = [.text(m.under.text), .text(m.pair.text), .text(cue)]
         let scale = window?.screen.scale ?? 3
         picking?.cancel()
