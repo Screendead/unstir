@@ -327,9 +327,16 @@ enum Starfish {
         func edge(_ t: Double) -> Double {
             1 + 0.035 * cos(t - front) - 0.05 * exp(-pow(remainder(t - front - .pi, 2 * .pi) / 0.18, 2))
         }
-        let outline = (0...160).map { c + r * edge(2 * .pi * Double($0) / 160) * E.dir(2 * .pi * Double($0) / 160) }
+        let outline: [P] = (0...160).map { (i: Int) -> P in
+            let a: Double = 2 * .pi * Double(i) / 160
+            return c + r * edge(a) * E.dir(a)
+        }
         sheet.draw(outline, E.heavy)
-        sheet.draw((0...150).map { c + 0.955 * r * edge(2 * .pi * Double($0) / 150) * E.dir(2 * .pi * Double($0) / 150) }, E.fine)
+        let inner: [P] = (0...150).map { (i: Int) -> P in
+            let a: Double = 2 * .pi * Double(i) / 150
+            return c + 0.955 * r * edge(a) * E.dir(a)
+        }
+        sheet.draw(inner, E.fine)
         let apex = c + 0.08 * r * E.dir(front)
         sheet.draw(E.circle(apex, 0.05 * r, 14), E.medium)
         for k in 0..<5 {
@@ -530,7 +537,12 @@ enum Starfish {
                 let u = E.dir(h), v = side(h), long = 3.2 * size
                 func half(_ t: Double) -> Double { size * 0.45 * (1 - t) * (0.72 + 0.28 * sin(.pi * (7 * t).truncatingRemainder(dividingBy: 1))) }
                 func edge(_ sign: Double) -> [P] {
-                    (0...70).map { p + (Double($0) / 70 - 0.4) * long * u + sign * half(Double($0) / 70) * v }
+                    (0...70).map { (i: Int) -> P in
+                        let t: Double = Double(i) / 70
+                        let along: P = (t - 0.4) * long * u
+                        let across: P = sign * half(t) * v
+                        return p + along + across
+                    }
                 }
                 sheet.draw(ring(p - 0.32 * long * u + 0.05 * size * v, 0.3 * size, 0.7, h), E.medium)
                 for k in 1..<7 {

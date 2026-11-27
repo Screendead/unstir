@@ -443,10 +443,17 @@ enum Leaves {
                 return seed + 0.12 * length * cos(t) * u + 0.085 * length * sin(t) * v
             }, width: E.medium))
             func wing(_ t: Double) -> Double { 0.27 * pow(sin(.pi * pow(t, 1.6)), 0.7) + 0.06 * (1 - t) }
-            let lead = (0...30).map { seed + length * ((0.12 + 0.88 * Double($0) / 30) * u - 0.03 * sin(.pi * Double($0) / 30) * v) }
-            let trail = (0...30).map { i -> P in
-                let t = Double(i) / 30
-                return seed + length * ((0.12 + 0.88 * t) * u + wing(t) * v)
+            let lead: [P] = (0...30).map { (i: Int) -> P in
+                let t: Double = Double(i) / 30
+                let ahead: P = (0.12 + 0.88 * t) * u
+                let side: P = (0.03 * sin(.pi * t)) * v
+                return seed + length * (ahead - side)
+            }
+            let trail: [P] = (0...30).map { (i: Int) -> P in
+                let t: Double = Double(i) / 30
+                let ahead: P = (0.12 + 0.88 * t) * u
+                let side: P = wing(t) * v
+                return seed + length * (ahead + side)
             }
             out.append(Line(points: lead + trail.reversed(), width: E.medium))
             for k in 0..<7 {

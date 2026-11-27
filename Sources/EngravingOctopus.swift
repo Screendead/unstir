@@ -93,7 +93,10 @@ enum Octopus {
             let m = max(8, Int(simd_distance(p1, p2) * 300))
             for i in 1...m {
                 let t = Double(i) / Double(m), t2 = t * t, t3 = t2 * t
-                let a = 2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (3 * p1 - p0 - 3 * p2 + p3) * t3
+                let c1: P = (p2 - p0) * t
+                let c2: P = (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+                let c3: P = (3 * p1 - p0 - 3 * p2 + p3) * t3
+                let a: P = 2 * p1 + c1 + c2 + c3
                 pts.append(0.5 * a)
             }
         }
@@ -273,9 +276,15 @@ enum Octopus {
             let c = a.points, n = c.count - 1, club = Int(Double(n) * 0.85)
             let hs = (0...n).map { Self.heading(c[min($0 + 1, n)] - c[max($0 - 1, 0)]) }
             out.append(Line(points: Array(c[0...club]), width: E.medium))
-            out.append(Line(points: (club...n).map { c[$0] + 0.013 * sin(.pi * Double($0 - club) / Double(n - club)) * right(hs[$0]) }
-                            + (club...n).reversed().map { c[$0] - 0.006 * sin(.pi * Double($0 - club) / Double(n - club)) * right(hs[$0]) },
-                            width: E.medium))
+            let clubTop: [P] = (club...n).map { (i: Int) -> P in
+                let w: Double = 0.013 * sin(.pi * Double(i - club) / Double(n - club))
+                return c[i] + w * right(hs[i])
+            }
+            let clubBottom: [P] = (club...n).reversed().map { (i: Int) -> P in
+                let w: Double = 0.006 * sin(.pi * Double(i - club) / Double(n - club))
+                return c[i] - w * right(hs[i])
+            }
+            out.append(Line(points: clubTop + clubBottom, width: E.medium))
             for i in stride(from: club + 3, to: n - 2, by: 4) {
                 out.append(Line(points: E.circle(c[i] + 0.004 * right(hs[i]), 0.0028, 8), width: E.fine))
             }

@@ -190,7 +190,8 @@ enum Reef {
             let r1 = r0 * 0.7
             tube(&out, &rng, points, hs, r0, r1)
             guard depth < 3 else { return }
-            for (j, f) in (depth == 0 ? [0.45, 0.75] : [0.6]).enumerated() {
+            let forks: [Double] = depth == 0 ? [0.45, 0.75] : [0.6]
+            for (j, f) in forks.enumerated() {
                 let i = Int(f * Double(n)), side: Double = (j + depth) % 2 == 0 ? 1 : -1
                 limb(points[i], hs[i] + side * Double.random(in: 0.45..<0.8, using: &rng),
                      length * Double.random(in: 0.5..<0.7, using: &rng), r0 * 0.7, depth + 1)

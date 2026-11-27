@@ -152,10 +152,14 @@ enum Fungi {
                 let r = r0 + (length - r0) * t, hw = half * inset * (1 - pow(t, 0.8)) * (1 + 0.3 * sin(.pi * t))
                 return flat(r, phi + side * hw, lift: 0.065 * (1 - t) * (1 - t) - 0.022 * pow(t, 4))
             }
-            let edge = (0...30).map { at(Double($0) / 30, -1) } + (0...30).reversed().map { at(Double($0) / 30, 1) }
+            let edgeUp: [P] = (0...30).map { (i: Int) -> P in at(Double(i) / 30, -1) }
+            let edgeDown: [P] = (0...30).reversed().map { (i: Int) -> P in at(Double(i) / 30, 1) }
+            let edge: [P] = edgeUp + edgeDown
             rays.append(edge)
             s.draw(edge, E.medium)
-            s.draw((3...26).map { at(Double($0) / 30, -1, 0.62) } + (3...26).reversed().map { at(Double($0) / 30, 1, 0.62) }, E.fine)
+            let inner0: [P] = (3...26).map { (i: Int) -> P in at(Double(i) / 30, -1, 0.62) }
+            let inner1: [P] = (3...26).reversed().map { (i: Int) -> P in at(Double(i) / 30, 1, 0.62) }
+            s.draw(inner0 + inner1, E.fine)
             // Cracks across the inner layer.
             for t in [0.3, 0.48, 0.66].map({ $0 + .random(in: -0.04..<0.04, using: &rng) }) {
                 s.draw([at(t, -1, 0.55), at(t + 0.03, -0.1, 0.55), at(t - 0.01, 0.6, 0.55)], E.fine)
@@ -460,7 +464,11 @@ enum Fungi {
         var t = 0.32
         while t < 0.86 {
             let l = at(t, -1), r = at(t, 1)
-            s.draw((0...5).map { i in lerp(l, r, Double(i) / 5) + P(0, i % 2 == 0 ? 0 : 0.012) }, E.fine)
+            let rung: [P] = (0...5).map { (i: Int) -> P in
+                let jog: Double = i % 2 == 0 ? 0 : 0.012
+                return lerp(l, r, Double(i) / 5) + P(0, jog)
+            }
+            s.draw(rung, E.fine)
             t += Double.random(in: 0.045..<0.07, using: &rng)
         }
         // The double ring.
@@ -598,7 +606,9 @@ enum Fungi {
                 let furrow: [P] = (0...8).map { (i: Int) -> P in
                     let u: Double = t + len * Double(i) / 8
                     let along: P = (length * u) * d
-                    let across: P = (r * side + 0.004 * sin(40 * u + Double(k))) * n
+                    let wobble: Double = 0.004 * sin(40 * u + Double(k))
+                    let offset: Double = r * side + wobble
+                    let across: P = offset * n
                     return end + along + across
                 }
                 s.draw(furrow.filter { simd_distance($0, end) > 0.05 }, E.fine)

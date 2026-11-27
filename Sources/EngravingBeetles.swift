@@ -300,7 +300,8 @@ enum Beetles {
         }
         // The antennae: eleven segments sweeping out and back past the elytra's tips.
         for side in [1.0, -1.0] {
-            let lengths = [0.13, 0.05] + (0..<9).map { 0.26 * (1 - 0.03 * Double($0)) }
+            let tail: [Double] = (0..<9).map { (i: Int) -> Double in 0.26 * (1 - 0.03 * Double(i)) }
+            let lengths: [Double] = [0.13, 0.05] + tail
             let j = path(P(0.1, h1 + 0.05), heading: -1.25, bend: side > 0 ? 0.3 : 0.26, lengths)
             let m = j.map { P(side * $0.x, $0.y) }
             for k in 0..<(m.count - 1) {

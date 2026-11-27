@@ -54,8 +54,10 @@ enum Seahorses {
             let p0 = c[max(i - 1, 0)], p1 = c[i], p2 = c[i + 1], p3 = c[min(i + 2, c.count - 1)]
             for k in 1...per {
                 let t = Double(k) / Double(per), t2 = t * t, t3 = t2 * t
-                let a = 2 * p1 + (p2 - p0) * t
-                let b = (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (3 * p1 - p0 - 3 * p2 + p3) * t3
+                let a: P = 2 * p1 + (p2 - p0) * t
+                let b2: P = (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+                let b3: P = (3 * p1 - p0 - 3 * p2 + p3) * t3
+                let b: P = b2 + b3
                 out.append(0.5 * (a + b))
             }
         }
@@ -262,8 +264,10 @@ enum Seahorses {
             local.append(Line(points: [a, g + 0.15 * (eye - g)], width: E.fine))
         }
         // The pectoral fin behind the gill.
-        fin(&local, (0..<8).map { SIMD2(-0.075, 0.05) + Double($0) * SIMD2(0.001, 0.005) },
-            (0..<8).map { E.dir(5.0 - 0.13 * Double($0)) }, (0..<8).map { 0.022 + 0.016 * sin(.pi * (Double($0) + 0.5) / 8) })
+        let finBases: [P] = (0..<8).map { (i: Int) -> P in P(-0.075, 0.05) + Double(i) * P(0.001, 0.005) }
+        let finDirs: [P] = (0..<8).map { (i: Int) -> P in E.dir(5.0 - 0.13 * Double(i)) }
+        let finLengths: [Double] = (0..<8).map { (i: Int) -> Double in 0.022 + 0.016 * sin(.pi * (Double(i) + 0.5) / 8) }
+        fin(&local, finBases, finDirs, finLengths)
     }
 
     /// A leafy appendage: a stalk forking into leaflets.
