@@ -413,8 +413,82 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 41, Flyback, hex, clocks 1+,2+.
-    static func plate41() -> Plate? { nil }
+    /// Problem 41, Flyback, hex, clocks 1+,2+: the heart cam of a chronograph's reset, a big solid heart upright on
+    /// the arbor, struck flat on its flank by the hammer driven in along the lane at three
+    /// on its spring, with the strokes of the blow and the heart's snap, over the chronograph wheel; the hammer's face in
+    /// the second ink. Heart and hammer keep inside the hubs' clear ring and lanes.
+    static func plate41() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, point = Kit.clock(6)
+        // The heart, upright, its arbor at its middle, inside the ring hubs' reach.
+        let heart = (0...240).map { i -> P in
+            let t = 2 * .pi * Double(i) / 240, k = 0.0222
+            let x = 16 * pow(sin(t), 3), y = 13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t) + 1.5
+            return turned([P(x * k, -y * k)], by: point - .pi / 2)[0]
+        }
+        let face = heart.filter { abs($0.y) < 0.012 && $0.x > 0 }.map(\.x).max() ?? 0.3
+        let wheel = gear(o, 0.835, teeth: 60, phase: 0.02)
+
+        Kit.ground(&plate, angle: 0.9, around: [wheel])
+        // The chronograph wheel: rim and spokes in ink, its windows ruled.
+        Kit.mass(&plate, wheel)
+        plate.line(arc(o, 0.775), 0.012, .bone)
+        let holes = windows(o, hub: 0.15, rim: 0.745, spokes: 5, width: 0.03, phase: Kit.clock(0.4))
+        for hole in holes {
+            plate.fill(hole)
+            plate.lines(hatch([hole], angle: 0.9, gap: Kit.groundGap), Kit.groundWidth)
+            plate.line(hole, medium)
+        }
+        for k in 0..<5 {
+            let t = Kit.clock(0.4) + 0.3 + 2 * .pi * Double(k) / 5
+            plate.line([polar(o, 0.38, t), polar(o, 0.73, t)], 0.012, .bone)
+        }
+
+        // The heart: solid, a bone line round its edge, its face cut in bone.
+        plate.line(heart, 0.03, .bone)
+        Kit.mass(&plate, heart)
+        plate.line(heart.map { $0 * 0.87 }, 0.014, .bone)
+        plate.lines(hatch([heart.map { $0 * 0.82 }], angle: 0.5, gap: 0.04), 0.022, .bone)
+        plate.line(arc(o, 0.1), 0.016, .bone)
+        // Its snap back to the notch, in bone across its face.
+        for r in [0.2, 0.245] {
+            let from = point + 0.5, to = point + 2.0
+            plate.line(arc(o, r, from: from, to: to), 0.016, .bone)
+            plate.fill(Kit.barb(polar(o, r, to), toward: to + .pi / 2, size: 0.04), .bone)
+        }
+
+        // The hammer: face, head and arm along the lane, on its pivot near the rim, its spring under it.
+        let pivot = P(0.82, 0)
+        Kit.mass(&plate, Kit.ribbon(curve(P(0.94, 0.17), P(0.82, 0.1), P(0.6, 0.065), 16), 0.03))
+        let arm = Kit.band(P(0.42, 0), pivot, 0.07)
+        plate.line(arm, 0.024, .bone)
+        Kit.mass(&plate, arm)
+        Kit.mass(&plate, arc(pivot, 0.07))
+        plate.fill(arc(pivot, 0.04))
+        plate.line(arc(pivot, 0.04), medium)
+        plate.line([pivot + P(-0.03, 0.02), pivot + P(0.03, -0.02)], medium)
+        let head = box(P(face + 0.025, -0.08), P(face + 0.14, 0.08))
+        plate.line(head, 0.024, .bone)
+        Kit.mass(&plate, head)
+        plate.lines(hatch([box(P(face + 0.05, -0.06), P(face + 0.115, 0.06))], angle: 0.8, gap: 0.022), medium, .bone)
+        let strike = box(P(face, -0.08), P(face + 0.025, 0.08))
+        plate.fill(strike, .second)
+        plate.line(strike, medium)
+        // The blow: strokes off the face, and the hammer's rush.
+        for d in [-1.0, 1.0] {
+            plate.line([P(face - 0.01, d * 0.1), P(face - 0.05, d * 0.15)], heavy)
+            plate.line([P(face + 0.02, d * 0.105), P(face + 0.01, d * 0.16)], medium)
+            for (k, y) in [0.05, 0.075].enumerated() {
+                plate.line([P(face + 0.17 + 0.04 * Double(k), d * y), P(0.7, d * y)], medium)
+            }
+        }
+
+        callout(&plate, "A", from: polar(o, 0.31, Kit.clock(9)), to: polar(o, 0.7, Kit.clock(9)))
+        callout(&plate, "B", from: P(face + 0.012, -0.06), to: polar(o, 0.72, Kit.clock(1)))
+        callout(&plate, "C", from: pivot + P(0.03, 0.05), to: polar(o, 0.92, Kit.clock(3.7)))
+        callout(&plate, "D", from: polar(o, 0.78, Kit.clock(6.3)), to: polar(o, 0.72, Kit.clock(7)))
+        return plate
+    }
 
     /// Problem 42, Tachymeter, hex, clocks 1+,3+.
     static func plate42() -> Plate? { nil }
