@@ -2128,7 +2128,7 @@ struct LevelView: View {
                             let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
                             KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                                 ratchet(k, back: c.dir < 0, at: v, of: i, flight: f, pawl: ride, shake: s, core: core,
-                                        plate: Self.ratchetReach * r)
+                                        plate: Self.ratchetReach(cards: game.level.hubCards) * r)
                             } keyframes: { _ in Self.jolt }
                         } keyframes: { _ in Self.tickKeys }
                         .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
@@ -2366,7 +2366,7 @@ struct LevelView: View {
                 }
                 .position(c)
             // A tap off the plate: a ring through the finger closes on the plate's edge, which flares.
-            let plate = Self.ratchetReach * r, from = missed?.k == k ? (missed?.by ?? 0) * r : plate
+            let plate = Self.ratchetReach(cards: game.level.hubCards) * r, from = missed?.k == k ? (missed?.by ?? 0) * r : plate
             Circle().stroke(page.live, lineWidth: 1.5)
                 .keyframeAnimator(initialValue: 2.0, trigger: misses) { v, t in
                     v.frame(width: 2 * (from + (plate - from) * min(t, 1)), height: 2 * (from + (plate - from) * min(t, 1)))
@@ -2728,19 +2728,20 @@ struct LevelView: View {
         }
     }
 
-    /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack.
-    nonisolated static let ratchetReach = 0.16
+    /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack, the
+    /// dark plate it sits on drawn as far, both grown with a clock grown for two cards.
+    nonisolated static func ratchetReach(cards: Int = 1) -> Double { 0.16 * Double(RatchetView.grown(cards)) }
 
     /// Escapement: a touch on the disc of the clock centred at `centre`, landing at `start` and lifting at `end`, waits.
-    nonisolated static func waits(from start: SIMD2<Double>, to end: SIMD2<Double>, centre: SIMD2<Double>) -> Bool {
-        simd_distance(start, end) < 0.06 && simd_distance(start, centre) < ratchetReach
+    nonisolated static func waits(from start: SIMD2<Double>, to end: SIMD2<Double>, centre: SIMD2<Double>, cards: Int = 1) -> Bool {
+        simd_distance(start, end) < 0.06 && simd_distance(start, centre) < ratchetReach(cards: cards)
     }
 
     /// A touch on clock `k`'s disc let go: a tap on the ratchet's plate waits, a tap elsewhere on the disc points the
     /// finger to the plate, and a drag is refused.
     private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
         pressing = nil
-        if Self.waits(from: start, to: end, centre: centre(k)) {
+        if Self.waits(from: start, to: end, centre: centre(k), cards: game.level.hubCards) {
             waitMove(on: k)
         } else if simd_distance(start, end) < 0.06 {
             missed = (k, simd_distance(start, centre(k))); misses += 1

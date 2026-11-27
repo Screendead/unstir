@@ -50,7 +50,7 @@ struct RatchetView: View {
 
     /// How much larger a clock is drawn to give its hub `cards`: two cards as tall as one, each as narrow as its digit,
     /// keep their rounded corners as far inside the hub's ring as one card's do, so its digits stand the same size.
-    static func grown(_ cards: Int) -> CGFloat { cards > 1 ? 1.26 : 1 }
+    nonisolated static func grown(_ cards: Int) -> CGFloat { cards > 1 ? 1.26 : 1 }
 
     var body: some View {
         let rt = size / 2, rr = size / 2 * 0.74

@@ -605,7 +605,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `Game.turnTank`), drawing the picture through the `Unstirred` shader modifier, and shows the result card. `LevelView.grab`, a pure function, decides what
   a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
-  ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
+  ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit, grown with a two-card clock)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
   it with a thud. The plate stays a shortcut (Jack's call ET1 = B) beside the play row's labelled "wait" control
   (`LevelView.waitControl`, a secondary `UnstirButton`), shown on every level with clocks: between undo and reset where
@@ -751,7 +751,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   first 30 problems owes more than 9, so their hubs show one card; where a clock is dealt more than 9, from problem 31 on,
   every hub shows two for the whole problem (`Level.hubCards`, `RatchetView.digits`), each as narrow as its digit
   (`FlipCounter.narrow`) and as tall as one card on a one-card clock, as text never shrinks: the whole clock, wheel,
-  sub-dial, hub and the rings round it, is drawn 1.26 times larger there (`RatchetView.grown`, `LevelView.ratchetSize`),
+  sub-dial, hub, its dark plate, the tap that waits on it and the rings round it, is drawn 1.26 times larger there
+  (`RatchetView.grown`, `LevelView.ratchetSize`, `ratchetReach(cards:)`),
   which keeps two cards' rounded corners as far inside the hub's ring as one card's, off the index's track; none owes
   more than 99 (`testEveryHubCountFitsItsCards`). A solve spends the budget to the
   last tick, so `over` is always 0 and its best stores as solved; its wave, the tank's swell, the glass easing home and

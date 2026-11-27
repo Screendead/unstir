@@ -385,7 +385,7 @@ struct PackTank: View {
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
                 if k == level.clocks.first?.rod {
                     ClockHint(radius: min(rods[k].z * r, r - 4)).position(at(k))
-                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core, cards: level.hubCards), plate: LevelView.ratchetReach * r,
+                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core, cards: level.hubCards), plate: LevelView.ratchetReach(cards: level.hubCards) * r,
                                 pawl: 0, lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true,
                                 digits: level.hubCards)
                         .position(at(k))

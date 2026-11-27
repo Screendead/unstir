@@ -416,7 +416,7 @@ struct ClipTank: View {
                     // The stack stands as the move left it until its tick lands, so the card flips off what it owed then.
                     let owed = level.owed(k, on: f.stack)
                     RatchetView(angle: (Double(f.ticks) - (1 - f.ratchetTurn)) * Tank.step,
-                                size: ratchet, plate: LevelView.ratchetReach * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns,
+                                size: ratchet, plate: LevelView.ratchetReach(cards: level.hubCards) * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns,
                                 owed: f.flip == nil ? owed : owed - 1, was: f.flip.map { _ in owed }, fall: f.flip ?? 1,
                                 digits: level.hubCards)
                         .position(at(k))
