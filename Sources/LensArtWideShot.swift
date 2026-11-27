@@ -530,73 +530,80 @@ extension LensArt {
 
 // MARK: - 31: Burning glass
 
-/// Level 31's name: a burning glass held to the summer sun, its banded brass rim over the right core and its long
-/// handle out to the left, the sunlight pouring into it and gathered down to a point on a sheet of paper in the grass,
-/// where a scorch ring smoulders over the bottom core (eye's two lenses on this level). In the glass the sun itself,
-/// spotted and flaring; at the scorch a flame catching, smoke curling off it.
+/// Level 31's name: a great burning glass in its wooden ring, swung in a yoke on a post and turned to the summer sun,
+/// over the right core, and the heap of straw it is setting alight, a scorch ring smouldering where the light is
+/// gathered, over the bottom core (eye's two lenses on this level); the sun pouring in from above, a woodpile on the
+/// left. In the glass two matches crossed; at the scorch a flame catching, smoke curling off it.
 extension LensArt {
     static let burningglass: Halftone.Panel = {
-        let lens = P(0.4, 0), spot = P(0, 0.56), sun = P(0.16, -0.64), glass = 0.3, rim = 0.36
+        let lens = P(0.4, 0), spot = P(0, 0.56), sun = P(0.16, -0.64), glass = 0.3, rim = 0.37
         @Sendable func hill(_ x: Double) -> Double { -0.06 + 0.08 * sin(2.4 * x + 1.2) }
-        let toSpot = simd_normalize(spot - lens), across = P(-toSpot.y, toSpot.x)
-        let gathered = [lens + across * glass, spot, lens - across * glass]
         let toLens = simd_normalize(lens - sun), side = P(-toLens.y, toLens.x)
         let pouring = [sun + side * 0.1, lens + side * glass, lens - side * glass, sun - side * 0.1]
-        let collar = polar(lens, rim, 200), grip = polar(lens, 1.4, 200)
-        let handle = bar(collar, grip, 0.1), ferrule = bar(collar, polar(lens, rim + 0.1, 200), 0.13)
-        let paper = [P(-0.56, 0.3), P(0.5, 0.2), P(0.6, 0.98), P(-0.44, 1.04)]
+        // The yoke: a fork from under the ring up to a pivot either side, on its post.
+        let yoke = arc(lens, rim + 0.07, 0, 180, 24) + arc(lens, rim + 0.01, 180, 0, 24)
+        let post = rect(0.35, 0.43, 0.45, 1.1), pivots = [lens + P(rim + 0.04, 0), lens - P(rim + 0.04, 0)]
+        let clamps = [90.0, 270].map { bar(polar(lens, glass - 0.01, $0), polar(lens, rim + 0.01, $0), 0.1) }
+        let heap = curve(P(-0.62, 0.92), P(-0.4, 0.2), P(0.1, 0.24), 16) + curve(P(0.1, 0.24), P(0.5, 0.3), P(0.62, 0.92), 16)
+        let logs: [(P, Double)] = [(P(-0.7, 0.18), 0.1), (P(-0.5, 0.2), 0.1), (P(-0.6, 0.02), 0.095), (P(-0.82, 0.02), 0.08)]
         let rays = (0..<10).map { k -> [P] in
             let a = 36 * Double(k) + 10
             return [polar(sun, 0.17, a - 7), polar(sun, k % 2 == 0 ? 0.36 : 0.27, a), polar(sun, 0.17, a + 7)]
         }
-        var fills = [fill(ferrule, y(0.85)), fill(handle, Tone(0, 0.62, 0.3)), disc(sun, 0.15, Tone(0, 0.2, 1))]
-        fills += rays.map { fill($0, Tone(0, 0.1, 0.75)) }
+        var fills = clamps.map { fill($0, y(0.85)) } + pivots.map { disc($0, 0.045, y(0.85)) }
+        fills += [disc(sun, 0.15, Tone(0, 0.2, 1))] + rays.map { fill($0, Tone(0, 0.1, 0.75)) }
         fills += [oval(P(-0.42, -0.62), 0.2, 0.07, Tone(0.15, 0.3, 0.3)), oval(P(-0.3, -0.68), 0.12, 0.07, Tone(0.15, 0.3, 0.3))]
+        fills += logs.map { disc($0.0, $0.1 * 0.45, Tone(0, 0.2, 0.85)) } + logs.map { disc($0.0, $0.1, Tone(0, 0.55, 0.45)) }
 
         var s: [Halftone.Stroke] = []
         // The sky's sun and a cloud; the hills and the grass.
         s.append(stroke(circle(sun, 0.15, 32), bold))
         for r in rays { s.append(stroke(r, hair)) }
         s.append(stroke(arc(P(-0.42, -0.62), 0.2, 0, 180, 16) + [P(-0.62, -0.62)], hair))
-        s += runs((0...50).map { P(-1 + 0.04 * Double($0), hill(-1 + 0.04 * Double($0))) }, mid) { simd_distance($0, lens) > rim + 0.02 && !inside($0, pouring) && !inside($0, handle) }
-        for (k, x) in [-0.86, -0.7, -0.52, -0.3, 0.72, 0.86, -0.8, 0.8].enumerated() {
-            let foot = P(x, 0.4 + 0.12 * Double(k % 3))
+        s += runs((0...50).map { P(-1 + 0.04 * Double($0), hill(-1 + 0.04 * Double($0))) }, mid) { p in
+            simd_distance(p, lens) > rim + 0.08 && !inside(p, pouring) && logs.allSatisfy { simd_distance(p, $0.0) > $0.1 }
+        }.flatMap { pieces($0.points, mid) }
+        for (k, x) in [-0.86, -0.3, 0.72, 0.86, -0.8, 0.8].enumerated() {
+            let foot = P(x, 0.42 + 0.12 * Double(k % 3))
             for t in [-110.0, -90, -68] { s.append(stroke([foot, polar(foot, 0.06, t)], hair)) }
         }
-        // The paper: its edge and the lines of print on it, broken where the scorch is.
-        s.append(stroke(closed(paper), mid))
-        for k in 0..<9 {
-            let a = P(-0.46 + 0.012 * Double(k), 0.34 + 0.07 * Double(k)), b = P(0.44 + 0.01 * Double(k), 0.27 + 0.07 * Double(k))
-            s += runs(span(a, b, 30), hair) { simd_distance($0, spot) > 0.33 && !inside($0, gathered) }
+        // The woodpile: each log's end, its rings and a split.
+        for (k, (at, r)) in logs.enumerated() {
+            s.append(stroke(circle(at, r, 24), bold))
+            s.append(stroke(circle(at, r * 0.45, 14), hair))
+            s.append(stroke(circle(at, r * 0.72, 18), hair))
+            s.append(stroke([polar(at, r * 0.2, 40 + 70 * Double(k)), polar(at, r, 40 + 70 * Double(k))], mid))
         }
-        // The light: the edges of the beam pouring in and of the cone gathered to the point.
-        s += runs(span(pouring[0], pouring[1], 30), hair) { simd_distance($0, lens) > rim }
-        s += runs(span(pouring[3], pouring[2], 30), hair) { simd_distance($0, lens) > rim }
-        s += runs(span(gathered[0], gathered[1], 30), mid) { simd_distance($0, lens) > rim && simd_distance($0, spot) > 0.3 }
-        s += runs(span(gathered[2], gathered[1], 30), mid) { simd_distance($0, lens) > rim && simd_distance($0, spot) > 0.3 }
-        // The glass: its brass rim, banded, the handle and its ferrule, a glint.
-        s += pieces(circle(lens, rim, 60), bold, 10)
-        s += pieces(circle(lens, glass, 56), bold, 8)
-        for k in 0..<16 { s.append(stroke([polar(lens, glass + 0.005, 22.5 * Double(k)), polar(lens, rim - 0.005, 22.5 * Double(k))], hair)) }
-        s.append(stroke(closed(handle), bold))
-        s.append(stroke(closed(ferrule), mid))
-        for t in [0.7, 0.78] { s.append(stroke(closed(bar(polar(lens, t, 200), polar(lens, t + 0.03, 200), 0.1)), mid)) }
-        s.append(stroke(arc(lens, glass - 0.04, 200, 250, 10), bold))
-        s.append(stroke(circle(polar(lens, glass - 0.08, 232), 0.006, 6), 0.012))
-        // The scorch: its charred edge and the smoke off it.
+        // The heap of straw, its stalks, and the scorch's charred edge and smoke.
+        s += pieces(heap, bold, 8)
+        for k in 0..<14 {
+            let x = -0.5 + 0.075 * Double(k), y0 = 0.5 + 0.04 * Double(k % 4)
+            s += runs(span(P(x, y0), P(x + (k % 2 == 0 ? 0.08 : -0.06), y0 + 0.3), 8), hair) { simd_distance($0, spot) > 0.33 && inside($0, heap) }
+        }
         s.append(stroke(closed((0..<48).map { k in let a = Double(k) * 7.5 * .pi / 180
             return spot + (0.255 + 0.02 * sin(7 * a) + 0.012 * sin(3 * a + 1)) * P(cos(a), sin(a)) }), mid))
         s.append(stroke(curve(spot + P(-0.12, -0.24), spot + P(-0.24, -0.34), spot + P(-0.16, -0.46), 10) + curve(spot + P(-0.16, -0.46), spot + P(-0.08, -0.56), spot + P(-0.2, -0.66), 10), mid))
         s.append(stroke(curve(spot + P(-0.2, -0.22), spot + P(-0.34, -0.3), spot + P(-0.3, -0.42), 10), hair))
-        // In the glass: the sun, its spots, a flare looping off its limb, and its rays.
-        let disk = lens + P(0.018, -0.024)
-        s.append(stroke(circle(disk, 0.028, 24), 0.0036))
-        for (at, r) in [(P(-0.009, 0.008), 0.0075), (P(0.008, 0.012), 0.0045)] {
-            s.append(stroke(circle(disk + at, r, 10), 0.0022))
-            s.append(stroke(circle(disk + at, r * 0.3, 6), 0.004))
+        // The light pouring in: the beam's edges.
+        s += runs(span(pouring[0], pouring[1], 30), hair) { simd_distance($0, lens) > rim }
+        s += runs(span(pouring[3], pouring[2], 30), hair) { simd_distance($0, lens) > rim }
+        // The glass: its wooden ring, the brass clamps on it, the yoke, its pivots and post, and a glint.
+        s += pieces(circle(lens, rim, 60), bold, 10)
+        s += pieces(circle(lens, glass, 56), bold, 8)
+        for c in clamps { s.append(stroke(closed(c), mid)) }
+        s += pieces(closed(yoke), mid, 8)
+        for p in pivots { s.append(stroke(circle(p, 0.045, 12), mid)); s.append(stroke(circle(p, 0.012, 6), mid)) }
+        s.append(stroke([post[0], post[3]], bold))
+        s.append(stroke([post[1], post[2]], bold))
+        s.append(stroke(arc(lens, glass - 0.04, 200, 250, 10), bold))
+        s.append(stroke(circle(polar(lens, glass - 0.08, 232), 0.006, 6), 0.012))
+        // In the glass: two matches crossed, each a stick and its head.
+        let match = lens + P(0.016, -0.024)
+        for (from, to) in [(P(-0.04, 0.03), P(0.03, -0.032)), (P(-0.036, -0.024), P(0.04, 0.022))] {
+            let u = simd_normalize(to - from)
+            s.append(stroke(closed(bar(match + from, match + to - u * 0.008, 0.008)), 0.0024))
+            s.append(stroke(ellipse(match + to, 0.011, 0.0075, degrees: atan2(u.y, u.x) * 180 / .pi, 12), 0.0036))
         }
-        s.append(stroke(arc(disk + P(0.026, -0.016), 0.012, 150, 380, 12), 0.0026))
-        for k in 0..<12 where k != 11 { s.append(stroke([polar(disk, 0.036, 30 * Double(k)), polar(disk, k % 2 == 0 ? 0.052 : 0.045, 30 * Double(k))], 0.0024)) }
         // At the scorch: a flame catching, its tongue and its heart, a wisp of smoke above.
         let flame = spot + P(0.016, -0.02)
         s.append(stroke(curve(flame + P(0, 0.03), flame + P(-0.036, 0.02), flame + P(-0.01, -0.02), 8) + curve(flame + P(-0.01, -0.02), flame + P(0.0, -0.034), flame + P(-0.006, -0.05), 6)
@@ -606,10 +613,7 @@ extension LensArt {
         s.append(stroke([flame + P(-0.05, 0.034), flame + P(0.05, 0.034)], 0.0022))
         return panel("burningglass", fills: fills, strokes: s) { p in
             let dl = p - lens, rl = simd_length(dl)
-            if rl < rim {
-                guard rl > glass else { return Tone(0.3, 0.42, 0) }
-                return Int(((atan2(dl.y, dl.x) * 180 / .pi + 360) / 22.5).rounded(.down)) % 2 == 0 ? y(0.95) : Tone(0, 0.75, 0.15)
-            }
+            if rl < rim { return rl < glass ? Tone(0.3, 0.42, 0) : Tone(0, 0.6, 0.3) }
             let ds = p - spot, rs = simd_length(ds)
             if rs < 0.33 {
                 let a = atan2(ds.y, ds.x), edge = 0.255 + 0.02 * sin(7 * a) + 0.012 * sin(3 * a + 1)
@@ -617,9 +621,9 @@ extension LensArt {
                 if rs < edge { return .zero }
                 if rs < edge + 0.05 { return Tone(0, 0.6, 0.6) }
             }
-            if inside(p, gathered) { return y(0.85) }
+            if (p.y > lens.y && rl < rim + 0.07) || (p.x > 0.35 && p.x < 0.45 && p.y > 0.43) { return Tone(0, 0.3, 0.85) }
             if inside(p, pouring) { return Tone(0.8, 0, 0.2) }
-            if inside(p, paper) { return Tone(0, 0.35, 0.2) }
+            if p.y > 0.22, p.x > -0.62, p.x < 0.62, inside(p, heap) { return y(0.62) }
             return p.y < hill(p.x) ? c(0.42) : Tone(0.65, 0, 0.38)
         }
     }()
