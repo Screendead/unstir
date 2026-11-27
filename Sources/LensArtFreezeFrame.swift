@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror, 47: dentalmirror]
+    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror, 47: dentalmirror, 48: mirrorball, 49: hallofmirrors]
 
     /// A hex rod's core, which a lens magnifies and a twist turns rigidly.
     fileprivate static let core = 0.264
@@ -467,4 +467,166 @@ extension LensArt {
         s.append(stroke(star(molar + P(-0.03, -0.034), 0.01, points: 4, inner: 0.3), 0.0018))
         return framed("dentalmirror", rims: rims, fills: fills, strokes: s) { _ in c(0.15) }
     }()
+}
+
+// MARK: - 48: Mirror ball
+
+/// Level 48's name: a mirror ball turning over the hub on its chain, throwing beams across a dark club and spots of
+/// light on the wall and the lit dance floor, over the upper right, bottom and lower left cores (hex's four lenses on
+/// this level), each spot ringed with flecks. In the ball's tiles a couple dances; in the spots a dancer points
+/// skywards, a platform boot stamps, and a record spins.
+extension LensArt {
+    static let mirrorball: Halftone.Panel = {
+        let ball = P(0, 0), spots = [P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)], floor = 0.38
+        let beams = [-128.0, -62, -8, 185].map { a in [polar(ball, 0.3, a - 3), polar(ball, 1.5, a - 6), polar(ball, 1.5, a + 6), polar(ball, 0.3, a + 3)] }
+        let stack = rect(0.74, -0.06, 0.98, floor + 0.12), cones = [(P(0.86, 0.06), 0.08), (P(0.86, 0.3), 0.1)]
+        let truss = rect(-1, -0.9, 1, -0.84), cans = [-0.62, -0.3, 0.3, 0.62].map { rect($0 - 0.04, -0.84, $0 + 0.04, -0.74) }
+
+        let fleck = Tone(0.7, 0.7, 0.8), night = Tone(0.12, 0.3, 0)
+        let rims = [rim(ball, glass: c(0.45), outer: 0.33, turns(16, [fleck, c(0.2)], from: 4))]
+            + zip(spots, [m(0.85), c(0.85), m(0.85)]).map { rim($0, glass: y(0.85), outer: 0.32, turns(10, [fleck, $1], from: 12)) }
+        var fills = cones.map { disc($0.0, $0.1, c(0.35)) } + [fill(stack, .zero), fill(truss, .zero)] + cans.map { fill($0, m(0.5)) }
+        fills += beams.map { fill($0, Tone(0.3, 0.3, 0.3)) }
+
+        var s: [Halftone.Stroke] = []
+        // The truss and its cans, the speakers, and the floor's edge and joints running back.
+        s.append(stroke([P(-1, -0.9), P(1, -0.9)], mid))
+        s.append(stroke([P(-1, -0.84), P(1, -0.84)], mid))
+        for k in 0..<20 { let x = -1 + 0.1 * Double(k); s.append(stroke([P(x, -0.9), P(x + 0.1, -0.84)], hair)) }
+        for q in cans { s.append(stroke(closed(q), mid)) }
+        s.append(stroke(closed(stack), mid))
+        for (at, r) in cones { s += pieces(circle(at, r, 24), mid); s.append(stroke(circle(at, r * 0.3, 10), hair)) }
+        let clear: @Sendable (P) -> Bool = { p in spots.allSatisfy { simd_distance(p, $0) > 0.32 } && simd_length(p) > 0.33 }
+        for b in beams { s += runs(span(b[1], b[0], 40), hair, keep: clear) }
+        s += runs(span(P(-1, floor), P(1, floor), 60), mid, keep: clear)
+        for k in -6...6 { s += runs(span(P(0.1875 * Double(k), floor), P(0.58 * Double(k), 1.05), 24), hair, keep: clear) }
+        for k in 3...5 { let yy = floor - 0.3 + 1.8 / Double(k); s += runs(span(P(-1, yy), P(1, yy), 60), hair, keep: clear) }
+        // Glints the ball throws about the room.
+        for (k, at) in [P(-0.8, -0.6), P(-0.36, -0.62), P(0.4, -0.7), P(0.74, -0.52), P(-0.86, 0.02), P(0.62, 0.66), P(-0.6, 0.72), P(0.3, 0.02)].enumerated() {
+            s += glint(at, k % 2 == 0 ? 0.05 : 0.035, k % 2 == 0 ? mid : hair)
+        }
+        // The chain, and the ball: its tiles' edge, rows and columns, and in them the couple dancing.
+        for k in 0..<12 { s.append(stroke(ellipse(P(0, -0.36 - 0.055 * Double(k)), 0.012, 0.026, 10), mid)) }
+        s += pieces(circle(ball, core, 64), mid)
+        s += pieces(circle(ball, 0.33, 64), bold)
+        let couple = ball + P(0.0, -0.034)
+        let tiled: @Sendable (P) -> Bool = { p in simd_distance(p, couple) > 0.07 && simd_length(p) < core - 0.005 }
+        for yy in stride(from: -0.22, through: 0.22, by: 0.055) { s += runs(span(P(-core, yy), P(core, yy), 40), hair, keep: tiled) }
+        for rx in [0.06, 0.13, 0.2] { s += runs(ellipse(ball, rx, core, 40), hair, keep: tiled) }
+        for a in [-150.0, -20, 70] { s += glint(polar(ball, 0.3, a), 0.07, mid) }
+        for (k, x) in [-0.022, 0.022].enumerated() {
+            let f = couple + P(x, 0)
+            s.append(stroke(circle(f + P(0, -0.03), 0.007, 8), 0.0032))
+            s.append(stroke([f + P(0, -0.022), f + P(0, 0.006)], 0.0032))
+            if k == 0 {
+                s.append(stroke([f + P(0, 0.006), f + P(-0.008, 0.03)], 0.0028))
+                s.append(stroke([f + P(0, 0.006), f + P(0.006, 0.03)], 0.0028))
+                s.append(stroke([f + P(0, -0.016), f + P(-0.016, -0.03)], 0.0024))
+            } else {
+                s.append(stroke(closed([f + P(0, -0.004), f + P(0.014, 0.026), f + P(-0.012, 0.026)]), 0.0028))
+                s.append(stroke([f + P(0, -0.016), f + P(0.016, -0.04)], 0.0024))
+            }
+        }
+        s.append(stroke([couple + P(-0.022, -0.016), couple + P(0.022, -0.016)], 0.0024))
+        // The spots: their rings, and in them a dancer pointing up, a platform boot and a record.
+        for c in spots {
+            s += pieces(circle(c, core, 64), mid)
+            s += pieces(circle(c, 0.32, 64), bold)
+        }
+        let dancer = spots[0] + P(0.02, -0.01)
+        s.append(stroke(circle(dancer + P(0.004, -0.05), 0.0075, 10), 0.0034))
+        s.append(stroke([dancer + P(0.002, -0.042), dancer + P(-0.004, -0.004)], 0.0036))
+        s.append(stroke([dancer + P(0.0, -0.034), dancer + P(0.02, -0.052), dancer + P(0.032, -0.074)], 0.003))
+        s.append(stroke([dancer + P(0.0, -0.034), dancer + P(-0.018, -0.02), dancer + P(-0.01, -0.006)], 0.003))
+        s.append(stroke([dancer + P(-0.004, -0.004), dancer + P(-0.012, 0.036)], 0.003))
+        s.append(stroke([dancer + P(-0.004, -0.004), dancer + P(0.018, 0.014), dancer + P(0.016, 0.036)], 0.003))
+        for f in [P(-0.012, 0.036), P(0.016, 0.036)] { s.append(stroke(closed([dancer + f + P(-0.008, 0.004), dancer + f + P(0.008, 0.004), dancer + f + P(0, -0.008)]), 0.002)) }
+        let boot = spots[1] + P(-0.018, -0.03)
+        s.append(stroke([boot + P(-0.014, -0.034), boot + P(-0.012, 0.012), boot + P(-0.02, 0.02), boot + P(-0.02, 0.034), boot + P(0.04, 0.034),
+                         boot + P(0.04, 0.02), boot + P(0.034, 0.012), boot + P(0.014, 0.008), boot + P(0.012, -0.034)], 0.0036))
+        s.append(stroke(closed([boot + P(-0.016, -0.034), boot + P(0.014, -0.034), boot + P(0.014, -0.03), boot + P(-0.016, -0.03)]), 0.002))
+        s.append(stroke([boot + P(-0.02, 0.022), boot + P(0.04, 0.022)], 0.002))
+        s.append(stroke(star(boot + P(0.0, -0.012), 0.008), 0.0018))
+        let record = spots[2] + P(0.022, -0.026)
+        s.append(stroke(circle(record, 0.036, 28), 0.0036))
+        s.append(stroke(circle(record, 0.012, 12), 0.003))
+        s.append(stroke(circle(record, 0.002, 4), 0.003))
+        for r in [0.02, 0.028] { s.append(stroke(arc(record, r, 200, 320, 8), 0.0014)) }
+        s.append(stroke([record + P(0.05, -0.04), record + P(0.044, 0.0), record + P(0.024, 0.016)], 0.003))
+        return framed("mirrorball", rims: rims, fills: fills, strokes: s) { p in
+            guard p.y > floor else { return night }
+            let d = p.y - floor + 0.3, u = Int(((p.x / d) * 1.6 + 30).rounded(.down)), v = Int((1.8 / d).rounded(.down))
+            return [m(0.7), c(0.55), .zero][(u + 2 * v) % 3]
+        }
+    }()
+}
+
+// MARK: - 49: Hall of mirrors
+
+/// Level 49's name: a funfair's hall of mirrors under a striped tent, four warped mirrors in frames of marquee bulbs
+/// over the top, upper right, bottom and lower left cores (hex's four lenses on this level), and between them, over
+/// the hub, two mirrors facing each other, their arches running back for ever. In each warped mirror the same child
+/// with a lollipop: stretched tall, squashed wide, wobbling, and all head.
+extension LensArt {
+    static let hallofmirrors: Halftone.Panel = {
+        let mirrors = [P(0, -0.56), P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)], floor = 0.42, apex = P(0.07, -1.7)
+        let vanish = P(0.05, -0.04)
+        /// An arch about `vanish`, `k` reflections back.
+        func arch(_ k: Int) -> [P] {
+            let f = pow(0.76, Double(k)), w = 0.3 * f, foot = vanish + P(0, 0.34 * f), spring = vanish + P(0, -0.04 * f)
+            return [foot + P(-w, 0), foot + P(w, 0)] + arc(spring, w, 0, -180, 16)
+        }
+        let arches = (0..<7).map(arch)
+
+        let bulbs = [(y(0.95), m(0.6), 12), (y(0.95), c(0.7), 14), (y(0.95), m(0.6), 10), (y(0.95), c(0.7), 12)]
+        let glass = [c(0.6), m(0.45), c(0.6), m(0.45)]
+        let rims = mirrors.indices.map { k in rim(mirrors[k], glass: glass[k], outer: 0.32, turns(bulbs[k].2, [bulbs[k].0, bulbs[k].1], from: 7 * Double(k))) }
+        // The arches running back, nearest last, each paler or darker in turn.
+        let fills = arches.indices.reversed().map { fill(arches[$0], $0 % 2 == 0 ? y(0.85) : Tone(0.1, 0.1, 0.15)) }
+
+        var s: [Halftone.Stroke] = []
+        let clear: @Sendable (P) -> Bool = { p in mirrors.allSatisfy { simd_distance(p, $0) > 0.32 } }
+        // The tent's seams, and the floor's edge and boards.
+        for k in -9...9 {
+            let a = 90 + 3.2 * Double(k)
+            s += runs((0...30).map { polar(apex, 0.8 + 0.06 * Double($0), a) }.filter { $0.y < floor }, hair, keep: clear)
+        }
+        s += runs(span(P(-1, floor), P(1, floor), 60), bold, keep: clear)
+        for x in stride(from: -0.9, through: 0.9, by: 0.18) { s += runs(span(P(x, floor), P(x * 1.6, 1.05), 20), hair, keep: clear) }
+        // The facing mirrors: each arch's edge.
+        for q in arches { s += pieces(q + [q[0]], mid) }
+        // The warped mirrors: their rims, a bulb on each lit length, and the child in each.
+        for (k, c) in mirrors.enumerated() {
+            s += pieces(circle(c, core, 64), mid)
+            s += pieces(circle(c, 0.32, 64), bold)
+            let n = bulbs[k].2
+            for j in stride(from: 0, to: n, by: 2) { s.append(stroke(circle(polar(c, 0.292, 7 * Double(k) + 360 / Double(n) * (Double(j) + 0.5)), 0.012, 8), hair)) }
+        }
+        s += child(mirrors[0] + P(0.026, 0.0), sx: 0.6, sy: 1.5)
+        s += child(mirrors[1] + P(0.028, -0.03), sx: 1.7, sy: 0.6)
+        s += child(mirrors[2] + P(0.026, -0.016), sx: 1, sy: 1, wave: 0.009)
+        s += child(mirrors[3] + P(0.024, -0.008), sx: 1, sy: 1, head: 2.2)
+        return framed("hallofmirrors", rims: rims, fills: fills, strokes: s) { p in
+            if p.y > floor { return c(0.3) }
+            let a = atan2(p.x - apex.x, p.y - apex.y) * 180 / .pi
+            return Int((a / 3.2 + 50).rounded(.down)) % 2 == 0 ? m(0.65) : Tone(0.08, 0.08, 0.3)
+        }
+    }()
+
+    /// A child with a lollipop, about 0.07 tall, warped: stretched by `sx` and `sy` about its waist, its head grown by
+    /// `head`, and swayed side to side by `wave`.
+    fileprivate static func child(_ at: P, sx: Double, sy: Double, wave: Double = 0, head: Double = 1) -> [Halftone.Stroke] {
+        func w(_ p: P) -> P { at + P(p.x * sx + wave * sin(p.y * 160), p.y * sy) }
+        let crown = P(0, -0.024 - 0.012 * head)
+        let face = (0...16).map { w(crown + 0.012 * head * P(cos(Double($0) * .pi / 8), sin(Double($0) * .pi / 8))) }
+        return [stroke(face, 0.0034),
+                stroke((0...8).map { w(P(0, -0.024 + 0.0035 * Double($0))) }, 0.0036),
+                stroke([w(P(-0.018, 0.0)), w(P(-0.008, -0.012)), w(P(0, -0.018)), w(P(0.01, -0.012)), w(P(0.018, -0.006))], 0.003),
+                stroke((0...6).map { w(P(-0.012 * Double($0) / 6, 0.004 + 0.026 * Double($0) / 6)) }, 0.003),
+                stroke((0...6).map { w(P(0.012 * Double($0) / 6, 0.004 + 0.026 * Double($0) / 6)) }, 0.003),
+                stroke([w(P(0.018, -0.006)), w(P(0.02, -0.03))], 0.0024),
+                stroke((0...10).map { w(P(0.02, -0.038) + 0.008 * P(cos(Double($0) * .pi / 5), sin(Double($0) * .pi / 5))) }, 0.003),
+                stroke([w(crown + P(-0.004, 0.006 * head)), w(crown + P(-0.004, 0.006 * head) + P(0.001, 0.001))], 0.004),
+                stroke([w(crown + P(0.004, 0.006 * head)), w(crown + P(0.004, 0.006 * head) + P(0.001, 0.001))], 0.004)]
+    }
 }
