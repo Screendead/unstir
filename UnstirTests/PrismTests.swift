@@ -588,11 +588,23 @@ final class PrismTests: XCTestCase {
         XCTAssertTrue(Offer.shelf(release: true).contains(.pack(.prism)), "Prism ships in v1 (PK1)")
     }
 
-    /// Every specimen's par, its depth, is the solver's optimum: no detour beats untwisting. Slow, as Lens's is.
+    /// Every specimen's par, its depth, is the solver's optimum: no detour beats untwisting. Slow, as Lens's is: the first
+    /// five trays about 4 minutes.
     func testPrismParIsTheOptimum() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
                           "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
-        for level in Level.prism {
+        for level in Level.prism.prefix(30) {
+            XCTAssertEqual(Solver(level.layout, masks: level.masks).optimum(level.scramble), level.par, level.id)
+        }
+    }
+
+    /// The same for the ten trays the treble added, depth 8 to 20. Far slower than the first five's: their proofs take
+    /// about an hour on the Mac with `-O` (`scripts/prism-levels.sh table`, which proves them as this does, is the one
+    /// to run), many times that unoptimised here.
+    func testPrismTrebleParIsTheOptimum() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
+                          "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
+        for level in Level.prism.dropFirst(30) {
             XCTAssertEqual(Solver(level.layout, masks: level.masks).optimum(level.scramble), level.par, level.id)
         }
     }
