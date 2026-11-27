@@ -23,7 +23,9 @@ extension LensArt {
 /// leaf's tip on the twisting rod. Each drop holds the garden upside down: through the upper a daisy hanging from its
 /// stem, through the lower a bee flying belly up.
 extension LensArt {
-    static let dewdrop: Halftone.Panel = {
+    static let dewdrop: Halftone.Panel = drawDewdrop()
+
+    private static func drawDewdrop() -> Halftone.Panel {
         let drops = [P(0, -0.42), P(-0.3637, 0.21)], body = 0.3, glass = 0.25
         // The leaf's midrib, from its stem off the glass at the left to its tip on the right rod.
         let rib = P(-0.182, -0.105), along = P(cos(22 * .pi / 180), sin(22 * .pi / 180)), across = P(-along.y, along.x)
@@ -114,7 +116,7 @@ extension LensArt {
             if abs(v) < 0.03 { return Tone(0.1, 0, 0.8) }
             return v < 0 ? Tone(0.55, 0, 0.45) : Tone(0.36, 0, 0.7)
         }
-    }()
+    }
 }
 
 // MARK: - 27: Fishbowl
@@ -123,7 +125,9 @@ extension LensArt {
 /// air bubble at the top core and a coin in the gravel at the bottom (eye's two lenses on this level). Through the
 /// bubble the cat that is looking down into the bowl; on the coin, seen through the water, a crown.
 extension LensArt {
-    static let fishbowl: Halftone.Panel = {
+    static let fishbowl: Halftone.Panel = drawFishbowl()
+
+    private static func drawFishbowl() -> Halftone.Panel {
         let bubble = P(0, -0.56), coin = P(0, 0.56), bowl = P(0, 0.05), wall = 0.86, surface = -0.72
         let fish = [(at: P(0.48, -0.14), size: 0.21, faces: -1.0), (at: P(-0.5, 0.2), size: 0.17, faces: 1.0)]
         let tower = rect(0.34, 0.24, 0.52, 0.62), crenels = [0.34, 0.4, 0.46].map { rect($0, 0.2, $0 + 0.04, 0.24) }
@@ -152,7 +156,12 @@ extension LensArt {
         // The bowl: its glass, the lip, the waterline and the table it stands on.
         s += pieces(arc(bowl, wall, -62, 242, 72), bold)
         s += pieces(ellipse(P(0, -0.76), 0.41, 0.06, 36), bold)
-        s += pieces((0...40).map { P(-0.8 + 0.04 * Double($0), surface + 0.012 * sin(Double($0) * 1.3)) }, mid)
+        let waterline: [P] = (0...40).map { (k: Int) -> P in
+            let x: Double = -0.8 + 0.04 * Double(k)
+            let y: Double = surface + 0.012 * sin(Double(k) * 1.3)
+            return P(x, y)
+        }
+        s += pieces(waterline, mid)
         s += pieces(arc(bowl, wall - 0.07, 150, 215, 16), bold, 8)
         s += runs(span(P(-1, 0.86), P(1, 0.86), 40), mid) { abs($0.x) > 0.4 }
         // The gravel's top, the weed and the castle with its door and window.
@@ -209,7 +218,8 @@ extension LensArt {
             let dc = p - coin, rc = simd_length(dc)
             if rc < 0.25 {
                 guard rc > 0.205 else { return y(0.82) }
-                return Int(((atan2(dc.y, dc.x) / .pi + 1) * 18).rounded(.down)) % 2 == 0 ? y(0.95) : Tone(0, 0.3, 0.35)
+                let sector: Int = Int(((atan2(dc.y, dc.x) / .pi + 1) * 18).rounded(.down)) % 2
+                return sector == 0 ? y(0.95) : Tone(0, 0.3, 0.35)
             }
             let db = p - bubble, rb = simd_length(db)
             if rb < 0.25 {
@@ -231,7 +241,7 @@ extension LensArt {
             default: return Tone(0.3, 0.35, 0)
             }
         }
-    }()
+    }
 }
 
 // MARK: - 28: Glass marble
@@ -241,7 +251,9 @@ extension LensArt {
 /// and throwing its shadow on the boards. Each shows the world outside upside down: through the upper the house, the
 /// sun under it; through the lower a kite, its tail flying up.
 extension LensArt {
-    static let marble: Halftone.Panel = {
+    static let marble: Halftone.Panel = drawMarble()
+
+    private static func drawMarble() -> Halftone.Panel {
         let big = [(at: P(0, -0.56), glass: Tone(0.72, 0, 0.12), vane: m(0.9)), (at: P(0, 0.56), glass: Tone(0.3, 0.68, 0), vane: c(0.95))]
         let rim = 0.25, band = 0.19
         // The small marbles: where, how big, the glass and the twist of colour in it.
@@ -322,7 +334,7 @@ extension LensArt {
             let board = Int((simd_dot(p, across) / width + 10).rounded(.down)) % 3
             return board == 0 ? Tone(0, 0.22, 0.6) : board == 1 ? Tone(0, 0.36, 0.42) : Tone(0, 0.12, 0.75)
         }
-    }()
+    }
 }
 
 // MARK: - 29: Crystal ball
@@ -332,7 +344,9 @@ extension LensArt {
 /// her black cat sitting on the table on the right rod, her cards and a candle on the bottom rod. In the ball a tall
 /// dark stranger in his top hat, with his cane; across the moon a witch on her broomstick.
 extension LensArt {
-    static let crystalball: Halftone.Panel = {
+    static let crystalball: Halftone.Panel = drawCrystalball()
+
+    private static func drawCrystalball() -> Halftone.Panel {
         let ball = P(-0.4, 0), moon = P(0, -0.56), glass = 0.33, window = 0.25, table = 0.27
         let stand = [P(-0.56, 0.42), P(-0.24, 0.42), P(-0.3, 0.3), P(-0.34, 0.24), P(-0.46, 0.24), P(-0.5, 0.3)]
         // The cat: head, ears, body and tail, in silhouette.
@@ -423,7 +437,7 @@ extension LensArt {
             guard p.y < table else { return p.y < 0.9 ? Tone(0.5, 0, 0.12) : Tone(0.25, 0, 0.6) }
             return Int(((p.x + 1) / 0.16).rounded(.down)) % 2 == 0 ? m(0.55) : Tone(0.1, 0.22, 0)
         }
-    }()
+    }
 }
 
 // MARK: - 30: Snow globe
@@ -433,7 +447,9 @@ extension LensArt {
 /// the lower right core (hex's two lenses on this level). On the pond a skater, scarf flying; through the window the
 /// Christmas tree, its star on top.
 extension LensArt {
-    static let snowglobe: Halftone.Panel = {
+    static let snowglobe: Halftone.Panel = drawSnowglobe()
+
+    private static func drawSnowglobe() -> Halftone.Panel {
         let pond = P(0, 0), window = P(0.485, 0.28), dome = P(0, -0.02), glass = 0.9, base = 0.62
         let snow = c(0.6), sky = Tone(0.28, 0.24, 0), white = Tone(0.55, 0, 0.8)
         @Sendable func horizon(_ x: Double) -> Double { -0.2 + 0.07 * sin(3 * x + 0.5) }
@@ -541,7 +557,7 @@ extension LensArt {
             guard simd_distance(p, dome) < glass else { return m(0.32) }
             return p.y < horizon(p.x) ? sky : snow
         }
-    }()
+    }
 }
 
 // MARK: - 31: Burning glass
@@ -551,7 +567,9 @@ extension LensArt {
 /// gathered, over the bottom core (eye's two lenses on this level); the sun pouring in from above, a woodpile on the
 /// left. In the glass two matches crossed; at the scorch a flame catching, smoke curling off it.
 extension LensArt {
-    static let burningglass: Halftone.Panel = {
+    static let burningglass: Halftone.Panel = drawBurningglass()
+
+    private static func drawBurningglass() -> Halftone.Panel {
         let lens = P(0.4, 0), spot = P(0, 0.56), sun = P(0.16, -0.64), glass = 0.3, rim = 0.37
         @Sendable func hill(_ x: Double) -> Double { -0.06 + 0.08 * sin(2.4 * x + 1.2) }
         let toLens = simd_normalize(lens - sun), side = P(-toLens.y, toLens.x)
@@ -646,5 +664,5 @@ extension LensArt {
             if p.y > 0.22, p.x > -0.62, p.x < 0.62, inside(p, heap) { return y(0.62) }
             return p.y < hill(p.x) ? c(0.42) : Tone(0.65, 0, 0.38)
         }
-    }()
+    }
 }

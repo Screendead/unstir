@@ -11,7 +11,14 @@ extension LensArt {
                                                     61: bullseye]
 
     /// Hex's rods' centres, by rod.
-    private static let hexes: [P] = [P(0, 0)] + (0..<6).map { (k: Int) -> P in polar(P(0, 0), 0.56, -90 + 60 * Double(k)) }
+    private static let hexes: [P] = {
+        let ring: [P] = (0..<6).map { (k: Int) -> P in
+            let bearing: Double = -90 + 60 * Double(k)
+            return polar(P(0, 0), 0.56, bearing)
+        }
+        let hub: P = P(0, 0)
+        return [hub] + ring
+    }()
 
     /// A circle as `pieces` strokes: a whole circle's box covers its disc, and the bake tests every stroke whose box
     /// holds a pixel.
@@ -72,7 +79,9 @@ extension LensArt {
 /// chalice at the foot and a fleur-de-lis in the upper left. The other three roundels, which twist, hold the sun, the
 /// moon and a star, and a rose, each set off its centre.
 extension LensArt {
-    static let rosewindow: Halftone.Panel = {
+    static let rosewindow: Halftone.Panel = drawRosewindow()
+
+    private static func drawRosewindow() -> Halftone.Panel {
         let rods = hexes, core = 0.236, frame = 0.292
         let glass: [Tone?] = [y(0.85), nil, nil, m(0.85), c(0.7), nil, m(0.85)]
         let stone = Tone(0.05, 0.04, 0.08), gold = y(0.9), ruby = m(0.8), blue = c(0.8), night = c(0.42)
@@ -195,7 +204,7 @@ extension LensArt {
             return stone
         }
         return Halftone.Panel(name: "rosewindow", tones: tones, strokes: s)
-    }()
+    }
 }
 
 // MARK: - 57: Oculus
@@ -208,7 +217,9 @@ extension LensArt {
 /// left and a butterfly in the upper left. The coffers nearest the middle are ten, so a quarter turn of the hub, half a
 /// coffer out of step, sets rib where coffer was round each oculus's inner side.
 extension LensArt {
-    static let oculus: Halftone.Panel = {
+    static let oculus: Halftone.Panel = drawOculus()
+
+    private static func drawOculus() -> Halftone.Panel {
         let rods = hexes, lenses = [1, 2, 4, 5, 6], glass = 0.15, frame = 0.264
         let sky = c(0.85), dark = Tone(0.06, 0.04, 0.1)
         let eye = P(0.04, -0.05), opening = 0.2, rim = 0.235, sun = eye + P(-0.09, -0.08)
@@ -331,7 +342,7 @@ extension LensArt {
             return tone.y > 0 ? y(0.95) : Tone(0.4, 0.35, 1)
         }
         return Halftone.Panel(name: "oculus", tones: tones, strokes: s)
-    }()
+    }
 }
 
 // MARK: - 58: Stained glass
@@ -342,7 +353,9 @@ extension LensArt {
 /// ringed with coloured jewels, and through each the world outside: a bell in its tower at the top, a church's spire in
 /// the upper right, an umbrella in the lower right and a bicycle at the foot.
 extension LensArt {
-    static let stainedglass: Halftone.Panel = {
+    static let stainedglass: Halftone.Panel = drawStainedglass()
+
+    private static func drawStainedglass() -> Halftone.Panel {
         let rods = hexes, lenses = [1, 2, 3, 4], clear = 0.2, frame = 0.264
         let holes = lenses.map { rods[$0] }, jewels = [m(0.9), y(0.95), c(0.9), y(0.95), m(0.9), c(0.9), y(0.95), m(0.9), c(0.9), y(0.95)]
         // The panes: a grid of corners, each nudged, each cell cut into two panes along one diagonal or the other.
@@ -355,17 +368,24 @@ extension LensArt {
             (0...n).map { i in P(origin + size * Double(i), origin + size * Double(j)) + 0.042 * P(hash(i, j, 1) * 2 - 1, hash(i, j, 2) * 2 - 1) }
         }
         func scene(_ q: P, _ v: Double) -> Tone {
-            let sun = P(-0.5, -0.45), ds = simd_distance(q, sun)
+            let sun: P = P(-0.5, -0.45)
+            let ds: Double = simd_distance(q, sun)
             if ds < 0.2 { return y(0.95) }
-            let horizon = 0.05 + 0.12 * sin(q.x * 2.2 + 0.6)
+            let horizon: Double = 0.05 + 0.12 * sin(q.x * 2.2 + 0.6)
             if q.y < horizon {
-                if ds < 0.4 { return v < 0.5 ? y(0.6) : Tone(0, 0.45, 0.85) }
+                if ds < 0.4 {
+                    if v < 0.5 { return y(0.6) }
+                    return Tone(0.0, 0.45, 0.85)
+                }
                 return c(0.4 + 0.45 * v)
             }
-            let depth = q.y - horizon, centre = 0.12 - 0.4 * depth + 0.1 * sin(q.y * 5), width = 0.05 + 0.16 * depth
+            let depth: Double = q.y - horizon
+            let centre: Double = 0.12 - 0.4 * depth + 0.1 * sin(q.y * 5)
+            let width: Double = 0.05 + 0.16 * depth
             if abs(q.x - centre) < width { return c(0.92) }
             if depth < 0.24 { return m(0.5 + 0.4 * v) }
-            return v < 0.5 ? Tone(0.55, 0, 0.6) : y(0.5 + 0.35 * v)
+            if v < 0.5 { return Tone(0.55, 0.0, 0.6) }
+            return y(0.5 + 0.35 * v)
         }
         // Each cell's two panes as triangles, and each pane's tone.
         let panes: [(P, P, P, Tone)] = (0..<n * n).flatMap { cell -> [(P, P, P, Tone)] in
@@ -465,7 +485,7 @@ extension LensArt {
             return Tone.zero
         }
         return Halftone.Panel(name: "stainedglass", tones: tones, strokes: s)
-    }()
+    }
 }
 
 // MARK: - 59: Skylight
@@ -477,7 +497,9 @@ extension LensArt {
 /// edge at the top, a bat in the lower right, Cassiopeia's W at the foot, a chimney pot smoking in the lower left and
 /// a falling leaf in the upper left.
 extension LensArt {
-    static let skylight: Halftone.Panel = {
+    static let skylight: Halftone.Panel = drawSkylight()
+
+    private static func drawSkylight() -> Halftone.Panel {
         let rods = hexes, lenses = [1, 3, 4, 5, 6], bead = 0.2, frame = 0.264
         let holes = lenses.map { rods[$0] }
         let sky = c(0.4), cloud = Tone(0.3, 0.26, 0.3), bar = Tone(0.04, 0.03, 0.06)
@@ -582,7 +604,7 @@ extension LensArt {
             return sky
         }
         return Halftone.Panel(name: "skylight", tones: tones, strokes: s)
-    }()
+    }
 }
 
 // MARK: - 60: Frosted glass
@@ -593,7 +615,9 @@ extension LensArt {
 /// frost and wet streaks by turns, and through each the snowy dusk outside: a snowman at the middle, a street lamp at
 /// the top, a fir tree with its star in the upper right and a snowflake at the foot.
 extension LensArt {
-    static let frostedglass: Halftone.Panel = {
+    static let frostedglass: Halftone.Panel = drawFrostedglass()
+
+    private static func drawFrostedglass() -> Halftone.Panel {
         let rods = hexes, lenses = [0, 1, 2, 4], wiped = 0.205, frame = 0.264
         let holes = lenses.map { rods[$0] }
         let night = m(0.7), frost = c(0.35), thick = c(0.62), thin = c(0.14), wet = y(0.6)
@@ -723,7 +747,7 @@ extension LensArt {
             return frost
         }
         return Halftone.Panel(name: "frostedglass", tones: tones, strokes: s)
-    }()
+    }
 }
 
 // MARK: - 61: Bullseye pane
@@ -734,7 +758,9 @@ extension LensArt {
 /// inside: a candle in the upper right, a tankard in the lower right, a clay pipe smoking in the lower left and the
 /// ace of hearts in the upper left.
 extension LensArt {
-    static let bullseye: Halftone.Panel = {
+    static let bullseye: Halftone.Panel = drawBullseye()
+
+    private static func drawBullseye() -> Halftone.Panel {
         let rods = hexes, lenses = [2, 3, 5, 6], glass = 0.2, frame = 0.264
         let holes = lenses.map { rods[$0] }
         let amber = y(0.75), swirl = [y(0.95), Tone(0.04, 0.04, 0.08), Tone(0, 0.6, 0.9), Tone(0.04, 0.04, 0.08)]
@@ -822,5 +848,5 @@ extension LensArt {
             return quarries[hash(i, j)]
         }
         return Halftone.Panel(name: "bullseye", tones: tones, strokes: s)
-    }()
+    }
 }

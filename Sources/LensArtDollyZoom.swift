@@ -56,7 +56,11 @@ extension LensArt {
     /// A polygon's edges, stepped every 0.01 so `keep` can cut them where a glass lies over them.
     fileprivate static func edges(_ polygon: [P], _ width: Double, keep: (P) -> Bool) -> [Halftone.Stroke] {
         let q = closed(polygon)
-        let line = (1..<q.count).flatMap { j in span(q[j - 1], q[j], max(Int(simd_distance(q[j - 1], q[j]) / 0.01), 1)).dropLast() } + [q[0]]
+        let sides: [[P]] = (1..<q.count).map { (j: Int) -> [P] in
+            let steps: Int = max(Int(simd_distance(q[j - 1], q[j]) / 0.01), 1)
+            return Array(span(q[j - 1], q[j], steps).dropLast())
+        }
+        let line: [P] = Array(sides.joined()) + [q[0]]
         return runs(line, width, keep: keep)
     }
 
@@ -75,7 +79,9 @@ extension LensArt {
 /// is looking for: a feather of a flaw in a brilliant's table, the anchor of the assay office in its shield, a step-cut
 /// emerald and its garden, and 750 struck in its oval inside a band.
 extension LensArt {
-    static let loupe: Halftone.Panel = {
+    static let loupe: Halftone.Panel = drawLoupe()
+
+    private static func drawLoupe() -> Halftone.Panel {
         let flaw = P(0, -0.56), anchor = P(0.485, -0.28), emerald = P(0.485, 0.28), fineness = P(-0.485, 0.28)
         let chrome = Tone(0.45, 0.45, 0.45), dark = Tone.zero, velvet = c(0.16)
         let glasses = [
@@ -149,7 +155,7 @@ extension LensArt {
         s.append(stroke([P(x0 + d + 0.016, f.y - h), P(x0 + d, f.y - h), P(x0 + d, f.y - 0.002)] + arc(P(x0 + d + 0.007, f.y + 0.004), 0.008, 220, 500, 10).dropFirst(), 0.003))
         s.append(stroke(ellipse(P(x0 + 2 * d + 0.008, f.y), 0.008, h, 12), 0.003))
         return drawn("loupe", glasses: glasses, fills: fills, strokes: s) { _ in velvet }
-    }()
+    }
 }
 
 // MARK: - 63: Stereoscope
@@ -161,7 +167,9 @@ extension LensArt {
 /// under sail on the Nile; on the card the pyramid in the sun and a camel; and on the spare the Eiffel
 /// tower.
 extension LensArt {
-    static let stereoscope: Halftone.Panel = {
+    static let stereoscope: Halftone.Panel = drawStereoscope()
+
+    private static func drawStereoscope() -> Halftone.Panel {
         let left = P(-0.485, -0.28), right = P(0, -0.56), paris = P(0.485, -0.28), camel = P(0.485, 0.28), pyramid = P(0, 0.56)
         let along = P(0.866, -0.5), across = P(0.5, 0.866), dark = Tone.zero, wood = y(0.65), brass = Tone(0, 0.35, 0.8), paper = Tone(0.4, 0.4, 0.4)
         let hood = (left + right) / 2, card = (camel + pyramid) / 2
@@ -235,7 +243,7 @@ extension LensArt {
         }
         s.append(stroke([cm + P(-0.034, 0.004), cm + P(-0.042, 0.026)], 0.002))
         return drawn("stereoscope", glasses: glasses, fills: fills, strokes: s) { _ in c(0.22) }
-    }()
+    }
 }
 
 // MARK: - 64: Ophthalmoscope
@@ -247,7 +255,9 @@ extension LensArt {
 /// lashes at the lid's edge, the spokes of a cataract in the eye's lens, and floaters drifting in the vitreous. Over the
 /// upper right, which twists, the lamp's window: its bulb lit off to one side and the green filter swung half across.
 extension LensArt {
-    static let ophthalmoscope: Halftone.Panel = {
+    static let ophthalmoscope: Halftone.Panel = drawOphthalmoscope()
+
+    private static func drawOphthalmoscope() -> Halftone.Panel {
         let hole = P(0, 0), lashes = P(0, -0.56), lamp = P(0.485, -0.28), cataract = P(0.485, 0.28), floaters = P(-0.485, -0.28)
         let silver = Tone(0.42, 0.42, 0.42), dark = Tone.zero, wheel = 0.86, neck = (0.3, 0.68)
         let glasses = [
@@ -332,7 +342,7 @@ extension LensArt {
             }
             return m(0.28)
         }
-    }()
+    }
 }
 
 // MARK: - 65: Sextant
@@ -344,7 +354,9 @@ extension LensArt {
 /// glass over the scale at the bottom, the vernier on forty degrees; and two holes in the cast frame low on each side,
 /// the new moon and a star through the right and an island with its palm through the left.
 extension LensArt {
-    static let sextant: Halftone.Panel = {
+    static let sextant: Halftone.Panel = drawSextant()
+
+    private static func drawSextant() -> Halftone.Panel {
         let pivot = P(0.06, -0.78), spread = 38.0, limb = (1.18, 1.4), sea = -0.05
         let eyepiece = P(0.485, -0.28), horizon = P(-0.485, -0.28), reader = P(0, 0.56), moonHole = P(0.485, 0.28), isleHole = P(-0.485, 0.28)
         let brass = y(0.72), dark = Tone.zero, silver = Tone(0.4, 0.4, 0.4)
@@ -437,7 +449,7 @@ extension LensArt {
             if r < limb.1, abs(atan2(q.x, q.y)) < spread * .pi / 180 { return r < limb.0 ? brass : silver }
             return p.y < sea ? m(0.3) : c(0.42)
         }
-    }()
+    }
 }
 
 // MARK: - 66: Theodolite
@@ -449,7 +461,9 @@ extension LensArt {
 /// the view down the telescope, the staff on the cross hairs; over the bottom, down the plummet, the nail in its peg
 /// that marks the station; and over the lower left the next station, a trig pillar on its hill.
 extension LensArt {
-    static let theodolite: Halftone.Panel = {
+    static let theodolite: Halftone.Panel = drawTheodolite()
+
+    private static func drawTheodolite() -> Halftone.Panel {
         let base = P(0, 0), view = P(0.485, -0.28), compass = P(0.485, 0.28), plummet = P(0, 0.56), pillar = P(-0.485, 0.28)
         let body = m(0.7), dark = Tone.zero, silver = Tone(0.4, 0.4, 0.4), wood = dark, field = y(0.55)
         let glasses = [
@@ -531,7 +545,7 @@ extension LensArt {
         s.append(stroke([tp + P(0.004, -0.034), tp + P(0.004, -0.08)], 0.0026))
         s.append(stroke(closed([tp + P(0.004, -0.08), tp + P(0.036, -0.07), tp + P(0.004, -0.058)]), 0.0026))
         return drawn("theodolite", glasses: glasses, fills: fills, strokes: s) { _ in c(0.3) }
-    }()
+    }
 }
 
 // MARK: - 67: Spectroscope
@@ -543,7 +557,9 @@ extension LensArt {
 /// corona and a flame of its edge, where helium was first seen; over the lower left the eyepiece, sodium's two lines
 /// and its name; and over the bottom the scale's tube, hydrogen's four lines and its letter.
 extension LensArt {
-    static let spectroscope: Halftone.Panel = {
+    static let spectroscope: Halftone.Panel = drawSpectroscope()
+
+    private static func drawSpectroscope() -> Halftone.Panel {
         let drum = P(0, 0), sun = P(0, -0.56), eye = P(-0.485, 0.28), scale = P(0, 0.56)
         let brass = y(0.65), dark = Tone.zero, flame = P(-0.62, -0.38), head = P(-0.4, -0.23)
         let bands = [Tone(0, 0.75, 0.55), y(0.9), Tone(0.55, 0, 0.75), c(0.85), Tone(0.7, 0.5, 0), m(0.75)]
@@ -620,5 +636,5 @@ extension LensArt {
             }
             return c(0.14)
         }
-    }()
+    }
 }

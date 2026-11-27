@@ -79,7 +79,9 @@ extension LensArt {
 /// three lenses on this level); a scent bottle, a lipstick, a comb and a string of pearls about them. In the hand
 /// mirror an eye looks back, in the compact a pair of lips, and in the pocket mirror a ribbon's bow.
 extension LensArt {
-    static let handmirror: Halftone.Panel = {
+    static let handmirror: Halftone.Panel = drawHandmirror()
+
+    private static func drawHandmirror() -> Halftone.Panel {
         let glass = P(0, -0.56), lid = P(0.485, -0.28), pocket = P(0, 0.56)
         let along = polar(P(0, 0), 1, 115), across = P(-along.y, along.x)
         let neck = glass + along * 0.3, end = glass + along * 1.0
@@ -96,10 +98,13 @@ extension LensArt {
         // Each lens's frame: the hand mirror's gilt in lobes of uneven length, the compact's gold and red enamel, the
         // pocket mirror's enamel in stripes.
         let lobes = [0.0, 20, 52, 70, 104, 128, 150, 181, 200, 236, 255, 290, 312, 340]
-        let rims = [
-            Rim(centre: glass, glass: Tone(0.32, 0.32, 0), outer: 0.335, at: lobes, tones: lobes.indices.map { $0 % 2 == 0 ? gold : deep }),
+        let lobeTones: [Tone] = lobes.indices.map { (k: Int) -> Tone in k % 2 == 0 ? gold : deep }
+        let pocketTones: [Tone] = [c(0.95), Tone(0.45, 0.45, 0.45)]
+        let lobeGlass: Tone = Tone(0.32, 0.32, 0)
+        let rims: [Rim] = [
+            Rim(centre: glass, glass: lobeGlass, outer: 0.335, at: lobes, tones: lobeTones),
             rim(lid, glass: y(0.42), outer: 0.31, turns(12, [m(0.85), y(0.9)], from: 2)),
-            rim(pocket, glass: m(0.32), outer: 0.32, turns(10, [c(0.95), Tone(0.45, 0.45, 0.45)], from: 5)),
+            rim(pocket, glass: m(0.32), outer: 0.32, turns(10, pocketTones, from: 5)),
         ]
         let knuckles = bar(polar(hinge, 0.07, -28), polar(hinge, 0.07, 152), 0.05)
         let over = [fill(knuckles, deep)]
@@ -181,7 +186,7 @@ extension LensArt {
         }
         s.append(stroke(circle(bow, 0.007, 8), 0.004))
         return framed("handmirror", rims: rims, over: over, fills: fills, strokes: s) { _ in cloth }
-    }()
+    }
 }
 
 // MARK: - 45: Rear-view mirror
@@ -191,7 +196,9 @@ extension LensArt {
 /// over the hub (hex's three lenses on this level). In the rear-view mirror a car follows, its headlamps glaring; in
 /// the wing mirror a cyclist keeps up; under the compass's glass its needle points north.
 extension LensArt {
-    static let rearview: Halftone.Panel = {
+    static let rearview: Halftone.Panel = drawRearview()
+
+    private static func drawRearview() -> Halftone.Panel {
         let back = P(0, -0.56), wing = P(0.485, 0.28), ball = P(0, 0), horizon = -0.05, sun = P(-0.3, horizon)
         let wheel = P(-0.45, 0.95)
         let right = bar(P(0.66, -1.05), P(0.2, 0.34), 0.12), left = bar(P(-0.6, -1.05), P(-0.95, 0.34), 0.12)
@@ -292,7 +299,7 @@ extension LensArt {
         return framed("rearview", rims: rims, fills: fills, strokes: s) { p in
             p.y < horizon ? Tone(0, 0.35, 0.55) : p.y < dash(p.x) ? c(0.32) : m(0.45)
         }
-    }()
+    }
 }
 
 // MARK: - 46: Convex mirror
@@ -302,7 +309,9 @@ extension LensArt {
 /// orange and red with its hood over the top. Each shows what is coming round its bend, bowed by the glass, the road
 /// curving round it: a bus, a hiker with her stick, and a goat.
 extension LensArt {
-    static let convexmirror: Halftone.Panel = {
+    static let convexmirror: Halftone.Panel = drawConvexmirror()
+
+    private static func drawConvexmirror() -> Halftone.Panel {
         let mirrors = [P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)]
         let bends = [P(-1.05, -0.45), P(0.12, -0.36), P(-0.18, -0.02), P(0.66, 0.38), P(0.3, 0.98)]
         let road = zip(bends, bends.dropFirst()).map { bar($0, $1, 0.11) }
@@ -379,7 +388,7 @@ extension LensArt {
         s.append(stroke([goat + P(0.044, -0.022), goat + P(0.046, -0.01)], 0.002))
         s.append(stroke([goat + P(-0.028, -0.002), goat + P(-0.036, -0.012)], 0.0024))
         return framed("convexmirror", rims: rims, fills: fills, strokes: s) { p in p.y < -0.4 ? c(0.35) : grass }
-    }()
+    }
 }
 
 // MARK: - 47: Dental mirror
@@ -389,7 +398,9 @@ extension LensArt {
 /// over the upper left (hex's three lenses on this level). In the mouth mirror a molar, a cavity in it; in the head
 /// mirror the patient's face, eyes wide; in the lamp its bulb alight.
 extension LensArt {
-    static let dentalmirror: Halftone.Panel = {
+    static let dentalmirror: Halftone.Panel = drawDentalmirror()
+
+    private static func drawDentalmirror() -> Halftone.Panel {
         let lamp = P(-0.485, -0.28), brow = P(0.485, -0.28), mouth = P(0.485, 0.28)
         let face = P(-0.1, 0.14), handle = bar(polar(mouth, 0.3, 128), P(-0.02, 0.92), 0.055)
         let glove = [P(-0.2, 0.74), P(0.0, 0.66), P(0.16, 0.72), P(0.2, 0.84), P(0.08, 1.0), P(-0.24, 1.0)]
@@ -480,7 +491,7 @@ extension LensArt {
         s.append(stroke(circle(molar + P(0.008, -0.01), 0.005, 8), 0.0034))
         s.append(stroke(star(molar + P(-0.03, -0.034), 0.01, points: 4, inner: 0.3), 0.0018))
         return framed("dentalmirror", rims: rims, fills: fills, strokes: s) { _ in c(0.15) }
-    }()
+    }
 }
 
 // MARK: - 48: Mirror ball
@@ -490,7 +501,9 @@ extension LensArt {
 /// this level), each spot ringed with flecks. In the ball's tiles a couple dances; in the spots a dancer points
 /// skywards, a platform boot stamps, and a record spins.
 extension LensArt {
-    static let mirrorball: Halftone.Panel = {
+    static let mirrorball: Halftone.Panel = drawMirrorball()
+
+    private static func drawMirrorball() -> Halftone.Panel {
         let ball = P(0, 0), spots = [P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)], floor = 0.38
         let beams = [-128.0, -62, -8, 185].map { a in [polar(ball, 0.3, a - 3), polar(ball, 1.5, a - 6), polar(ball, 1.5, a + 6), polar(ball, 0.3, a + 3)] }
         let stack = rect(0.74, -0.06, 0.98, floor + 0.12), cones = [(P(0.86, 0.06), 0.08), (P(0.86, 0.3), 0.1)]
@@ -571,7 +584,7 @@ extension LensArt {
             let d = p.y - floor + 0.3, u = Int(((p.x / d) * 1.6 + 30).rounded(.down)), v = Int((1.8 / d).rounded(.down))
             return [m(0.7), c(0.55), .zero][(u + 2 * v) % 3]
         }
-    }()
+    }
 }
 
 // MARK: - 49: Mirror maze
@@ -581,7 +594,9 @@ extension LensArt {
 /// the hub, two mirrors facing each other, their arches running back for ever. In each warped mirror the same child
 /// with a lollipop: stretched tall, squashed wide, wobbling, and all head.
 extension LensArt {
-    static let mirrorMaze: Halftone.Panel = {
+    static let mirrorMaze: Halftone.Panel = drawMirrorMaze()
+
+    private static func drawMirrorMaze() -> Halftone.Panel {
         let mirrors = [P(0, -0.56), P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)], floor = 0.42, apex = P(0.07, -1.7)
         let vanish = P(0.05, -0.04)
         /// An arch about `vanish`, `k` reflections back.
@@ -624,7 +639,7 @@ extension LensArt {
             let a = atan2(p.x - apex.x, p.y - apex.y) * 180 / .pi
             return Int((a / 3.2 + 50).rounded(.down)) % 2 == 0 ? m(0.65) : Tone(0.08, 0.08, 0.3)
         }
-    }()
+    }
 
     /// A child with a lollipop, about 0.07 tall, warped: stretched by `sx` and `sy` about its waist, its head grown by
     /// `head`, and swayed side to side by `wave`.
@@ -638,14 +653,24 @@ extension LensArt {
         let left: [P] = (0...6).map { (k: Int) -> P in w(P(-0.012 * Double(k) / 6, 0.004 + 0.026 * Double(k) / 6)) }
         let right: [P] = (0...6).map { (k: Int) -> P in w(P(0.012 * Double(k) / 6, 0.004 + 0.026 * Double(k) / 6)) }
         let nose: [P] = (0...8).map { (k: Int) -> P in w(P(0, -0.024 + 0.0035 * Double(k))) }
+        let brow: [P] = [w(P(-0.018, 0.0)), w(P(-0.008, -0.012)), w(P(0, -0.018)), w(P(0.01, -0.012)), w(P(0.018, -0.006))]
+        let stick: [P] = [w(P(0.018, -0.006)), w(P(0.03, -0.016))]
+        let candy: [P] = (0...10).map { (k: Int) -> P in
+            let t: Double = Double(k) * .pi / 5
+            return w(P(0.035, -0.022) + 0.007 * P(cos(t), sin(t)))
+        }
+        let leftEye: P = crown + P(-0.004, 0.006 * head)
+        let rightEye: P = crown + P(0.004, 0.006 * head)
+        let leftDot: [P] = [w(leftEye), w(leftEye + P(0.001, 0.001))]
+        let rightDot: [P] = [w(rightEye), w(rightEye + P(0.001, 0.001))]
         return [stroke(face, 0.0034),
                 stroke(nose, 0.0036),
-                stroke([w(P(-0.018, 0.0)), w(P(-0.008, -0.012)), w(P(0, -0.018)), w(P(0.01, -0.012)), w(P(0.018, -0.006))], 0.003),
+                stroke(brow, 0.003),
                 stroke(left, 0.003),
                 stroke(right, 0.003),
-                stroke([w(P(0.018, -0.006)), w(P(0.03, -0.016))], 0.0024),
-                stroke((0...10).map { w(P(0.035, -0.022) + 0.007 * P(cos(Double($0) * .pi / 5), sin(Double($0) * .pi / 5))) }, 0.003),
-                stroke([w(crown + P(-0.004, 0.006 * head)), w(crown + P(-0.004, 0.006 * head) + P(0.001, 0.001))], 0.004),
-                stroke([w(crown + P(0.004, 0.006 * head)), w(crown + P(0.004, 0.006 * head) + P(0.001, 0.001))], 0.004)]
+                stroke(stick, 0.0024),
+                stroke(candy, 0.003),
+                stroke(leftDot, 0.004),
+                stroke(rightDot, 0.004)]
     }
 }

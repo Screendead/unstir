@@ -58,7 +58,10 @@ extension LensArt {
 
     /// A circle as four quarter arcs, so each stroke's box stays small and the bake tests fewer segments a pixel.
     fileprivate static func rim(_ c: P, _ r: Double, _ width: Double = mid, _ n: Int = 12) -> [Halftone.Stroke] {
-        (0..<4).map { stroke(arc(c, r, 90 * Double($0), 90 * Double($0) + 90, n), width) }
+        (0..<4).map { (k: Int) -> Halftone.Stroke in
+            let from: Double = 90 * Double(k)
+            return stroke(arc(c, r, from, from + 90, n), width)
+        }
     }
 
     /// Strokes cut into pieces of n segments, so a long curve's box does not cover the whole of what it bends round,
@@ -99,7 +102,9 @@ extension LensArt {
 /// air; through the far one a masked dancer's domino mask on its stick; in the spot, a rose thrown to the stage. The
 /// velvet curtain swagged across the left rod, its folds broad stripes, is what that rod's twist turns.
 extension LensArt {
-    static let operaGlasses: Halftone.Panel = {
+    static let operaGlasses: Halftone.Panel = drawOperaGlasses()
+
+    private static func drawOperaGlasses() -> Halftone.Panel {
         let near = P(0.4, 0), far = P(0, -0.56), spot = P(0, 0.56), stage = 0.36
         let glass = c(0.55), gilt = y(0.85), pearl = Tone(0.32, 0.28, 0.42), shell = Tone(0.18, 0.42, 0.3)
         let wheel = (near + far) / 2 + P(0.28, -0.14)
@@ -223,7 +228,7 @@ extension LensArt {
             + curve(rose + P(-0.062, 0.042), rose + P(-0.052, 0.056), rose + P(-0.036, 0.05), 6)), 0.0022))
         s.append(stroke([rose + P(-0.027, 0.046), rose + P(-0.022, 0.054)], 0.002))
         return layered("operaglasses", layers, strokes: s) { p in p.y > stage ? m(0.4) : Tone(0.1, 0.12, 0) }
-    }()
+    }
 }
 
 // MARK: - 33: Pince-nez
@@ -234,7 +239,9 @@ extension LensArt {
 /// His hat, brows, handlebar moustache, sideburns and cravat are the broad shapes the five twisting rods turn, the
 /// moustache and the nose's shadow off the hub's centre.
 extension LensArt {
-    static let pinceNez: Halftone.Panel = {
+    static let pinceNez: Halftone.Panel = drawPinceNez()
+
+    private static func drawPinceNez() -> Halftone.Panel {
         let left = P(-0.485, -0.28), right = P(0.485, -0.28)
         let skin = Tone(0, 0.32, 0.58), whisker = Tone(0, 0.62, 0.2), glass = c(0.5), gilt = y(0.95)
         let pivot = P(0, -0.72), tilt = -8.0
@@ -332,7 +339,7 @@ extension LensArt {
             // A dark wall papered in broad gilt stripes.
             (p.x + 2).truncatingRemainder(dividingBy: 0.15) < 0.065 ? y(0.4) : .zero
         }
-    }()
+    }
 }
 
 // MARK: - 34: Lorgnette
@@ -343,7 +350,9 @@ extension LensArt {
 /// through the one and its wedge of cheese through the other. The glove, the handle and the fan's pleats are the broad
 /// shapes the two twisting rods turn.
 extension LensArt {
-    static let lorgnette: Halftone.Panel = {
+    static let lorgnette: Halftone.Panel = drawLorgnette()
+
+    private static func drawLorgnette() -> Halftone.Panel {
         let a = P(-0.4, 0), b = P(0, 0.56), knot = a + (b - a) * 0.594
         let glass = c(0.5), gilt = y(0.9), satin = c(0.6)
         let hinge = polar(a, 0.41, -40), end = P(0.74, -0.54), grip = hinge + (end - hinge) * 0.55
@@ -433,7 +442,7 @@ extension LensArt {
             // Rose silk on the wall in broad stripes of two tones.
             (p.x + 2.04).truncatingRemainder(dividingBy: 0.28) < 0.14 ? m(0.42) : m(0.24)
         }
-    }()
+    }
 }
 
 // MARK: - 35: Reading glasses
@@ -444,7 +453,9 @@ extension LensArt {
 /// the title, "Once", through the right the castle stamped on the cover. The lamp, the clock, the glass, the book's
 /// edges, its gilt title plate and its marker are the broad shapes the five twisting rods turn.
 extension LensArt {
-    static let readingGlasses: Halftone.Panel = {
+    static let readingGlasses: Halftone.Panel = drawReadingGlasses()
+
+    private static func drawReadingGlasses() -> Halftone.Panel {
         let left = P(-0.485, 0.28), right = P(0.485, 0.28)
         let glass = c(0.5), cloth = m(0.72), gilt = y(0.88), wood = y(0.34), table = -0.3
         let book = turned(rect(-0.9, -0.12, 0.9, 0.8), about: P(0, 0.34), -3)
@@ -541,7 +552,7 @@ extension LensArt {
         s.append(stroke(closed([keep + P(-0.024, -0.054), keep + P(-0.008, -0.049), keep + P(-0.024, -0.044)]), 0.002))
         s.append(stroke(curve(keep + P(-0.05, 0.01), keep + P(0, -0.0), keep + P(0.05, 0.012), 10), 0.002))
         return layered("readingglasses", layers, strokes: s) { p in p.y > table ? wood : c(0.14) }
-    }()
+    }
 }
 
 // MARK: - 36: Diving mask
@@ -552,7 +563,9 @@ extension LensArt {
 /// Her arms, the kelp, a shoal of yellow fish and the octopus's arms reaching out are the broad shapes the two
 /// twisting rods turn, over the light's bands.
 extension LensArt {
-    static let divingMask: Halftone.Panel = {
+    static let divingMask: Halftone.Panel = drawDivingMask()
+
+    private static func drawDivingMask() -> Halftone.Panel {
         let top = P(0, -0.56), low = P(0, 0.56)
         let skin = m(0.4), skirt = y(0.85)
         let sand = curve(P(-1.05, 0.62), P(0, 0.46), P(1.05, 0.66), 24) + [P(1.05, 1.05), P(-1.05, 1.05)]
@@ -656,7 +669,7 @@ extension LensArt {
             // Shafts of light slanting down through the water.
             Int((simd_dot(p, P(0.94, 0.34)) + 3) / 0.2) % 2 == 0 ? c(0.55) : c(0.36)
         }
-    }()
+    }
 }
 
 // MARK: - 37: Contact lens
@@ -667,7 +680,9 @@ extension LensArt {
 /// well, the top of an eye chart; in the R well, an eye. The finger, the case's edges, its caps and the soap, over pink
 /// tiles in two tones, are the broad shapes the four twisting rods turn.
 extension LensArt {
-    static let contactLens: Halftone.Panel = {
+    static let contactLens: Halftone.Panel = drawContactLens()
+
+    private static func drawContactLens() -> Halftone.Panel {
         let tip = P(0, -0.56), l = P(-0.485, 0.28), r = P(0.485, 0.28)
         let skin = Tone(0, 0.32, 0.56), tint = c(0.55), plastic = y(0.75)
         let finger = bar(tip, P(1.15, -0.98), 0.62), middle = bar(P(0.6, -0.36), P(1.2, -0.62), 0.3)
@@ -756,5 +771,5 @@ extension LensArt {
             let i = Int((p.x + 2.05) / 0.24), j = Int((p.y + 2.01) / 0.24)
             return (i + j) % 2 == 0 ? m(0.36) : m(0.2)
         }
-    }()
+    }
 }

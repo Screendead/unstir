@@ -11,10 +11,13 @@ import simd
 /// (hex's two lenses on this level): through the upper a lighthouse on its rock, through the lower, under the
 /// waterline, a fish. Level 13 deals the upper lens +2 and the lower +3.
 extension LensArt {
-    static let porthole: Halftone.Panel = {
-        let top = P(0, -0.56), low = P(0, 0.56), gauge = P(0.07, -0.05), lamp = P(0.56, -0.3)
+    static let porthole: Halftone.Panel = drawPorthole()
+
+    private static func drawPorthole() -> Halftone.Panel {
+        let top: P = P(0, -0.56), low: P = P(0, 0.56)
+        let gauge: P = P(0.07, -0.05), lamp: P = P(0.56, -0.3)
         // The gauge's feed: off the centre, as is the gauge, so that a quarter turn of the hub shows.
-        let feed = [P(-0.58, 0.1), P(0.11, 0.1), P(0.11, 0.0), P(0.03, 0.0), P(0.03, 0.18), P(-0.58, 0.18)]
+        let feed: [P] = [P(-0.58, 0.1), P(0.11, 0.1), P(0.11, 0.0), P(0.03, 0.0), P(0.03, 0.18), P(-0.58, 0.18)]
         var fills = [fill(rect(-0.17, top.y + 0.05, 0.17, top.y + 0.17), c(0.65)), disc(top, 0.19, c(0.22)), disc(top, 0.245, y(0.85)),
                      disc(low, 0.19, c(0.65)), disc(low, 0.245, y(0.85)), disc(gauge, 0.15, y(0.3)), fill(feed, c(0.55)), oval(lamp, 0.075, 0.1, y(0.9)),
                      fill(rect(-0.7, -1, -0.58, 1), c(0.55)), fill(rect(0.48, 0.2, 0.64, 0.42), c(0.55))]
@@ -74,7 +77,7 @@ extension LensArt {
             s.append(stroke(curve(low + P(x, 0.16), low + P(x - 0.03, 0.1), low + P(x, 0.06), 6) + curve(low + P(x, 0.06), low + P(x + 0.03, 0.02), low + P(x, -0.03), 6), hair))
         }
         return panel("porthole", fills: fills, strokes: s) { _ in m(0.3) }
-    }()
+    }
 }
 
 // MARK: - 14: Periscope
@@ -83,7 +86,9 @@ extension LensArt {
 /// on the skyline over the upper right (hex's two lenses on this level): in the periscope's glass the steamer again,
 /// on the cross hairs, and on her deck a sailor waving. Level 14 deals each lens +3 in all.
 extension LensArt {
-    static let periscope: Halftone.Panel = {
+    static let periscope: Halftone.Panel = drawPeriscope()
+
+    private static func drawPeriscope() -> Halftone.Panel {
         let eye = P(-0.485, 0.26), ship = P(0.485, -0.28), horizon = -0.2
         let mast = rect(-0.56, 0.3, -0.41, 1.1), head = squircle(P(-0.485, 0.24), 0.14, 0.16)
         let hull = [ship + P(-0.2, 0.05), ship + P(0.22, 0.05), ship + P(0.17, 0.11), ship + P(-0.16, 0.11)]
@@ -151,7 +156,7 @@ extension LensArt {
         for x in [-0.008, 0.004] { s.append(stroke([seen + P(x, -0.002), seen + P(x, -0.016)], 0.0036)) }
         s.append(stroke(curve(seen + P(-0.008, -0.02), seen + P(-0.02, -0.03), seen + P(-0.034, -0.028), 5), 0.0016))
         return panel("periscope", fills: fills, strokes: s) { _ in c(0.18) }
-    }()
+    }
 }
 
 // MARK: - 15: Telescope
@@ -160,7 +165,9 @@ extension LensArt {
 /// level), where the star it has found turns out to be a ringed planet, a moon beside it. Level 15 deals the lens +1
 /// then +2.
 extension LensArt {
-    static let telescope: Halftone.Panel = {
+    static let telescope: Halftone.Panel = drawTelescope()
+
+    private static func drawTelescope() -> Halftone.Panel {
         let planet = P(0.014, -0.585), foot = P(-0.44, 0.5), tip = P(-0.15, -0.2), aim = simd_normalize(tip - foot)
         let tube = bar(foot, tip, 0.15), cap = bar(tip, tip + aim * 0.13, 0.2), ocular = bar(foot - aim * 0.12, foot, 0.07)
         let finder = bar(foot + aim * 0.2 + P(-0.1, -0.04), foot + aim * 0.48 + P(-0.1, -0.04), 0.045)
@@ -207,7 +214,7 @@ extension LensArt {
         s += runs(ellipse(planet, 0.048, 0.013, degrees: -18, 40), 0.003) { simd_distance($0, planet) > 0.024 || $0.y > planet.y + 0.2 * ($0.x - planet.x) }
         s.append(stroke(circle(planet + P(-0.052, -0.03), 0.005, 8), 0.003))
         return panel("telescope", fills: fills, strokes: s) { _ in c(0.15) }
-    }()
+    }
 }
 
 // MARK: - 16: Eyepiece
@@ -215,7 +222,9 @@ extension LensArt {
 /// Level 16's name: a watchmaker's eyepiece set down on an open watch, over the top core (tri's lens on this level),
 /// and under it a jewel in its setting and the maker's star cut beside it. Level 16 deals the lens +1 three times.
 extension LensArt {
-    static let eyepiece: Halftone.Panel = {
+    static let eyepiece: Halftone.Panel = drawEyepiece()
+
+    private static func drawEyepiece() -> Halftone.Panel {
         let loupe = P(0, -0.42), watch = P(0, 0.06), balance = P(0.3637, 0.25), barrel = P(-0.3637, 0.25)
         let jewel = loupe + P(-0.022, -0.02), mark = loupe + P(0.03, 0.016)
         let bridge = [P(-0.1, -0.02), P(0.28, -0.12), P(0.62, 0.1), P(0.56, 0.2), P(0.26, 0.02), P(-0.06, 0.12)]
@@ -267,7 +276,7 @@ extension LensArt {
         s.append(stroke(curve(loupe + P(-0.2, 0.1), loupe + P(-0.02, 0.07), loupe + P(0.2, 0.14), 12), hair))
         s.append(stroke(curve(loupe + P(-0.16, -0.14), loupe + P(0.04, -0.09), loupe + P(0.2, -0.12), 12), hair))
         return panel("eyepiece", fills: fills, strokes: s) { _ in m(0.24) }
-    }()
+    }
 }
 
 // MARK: - 17: Microscope
@@ -276,7 +285,9 @@ extension LensArt {
 /// three lenses on this level), three views down it: an amoeba, a diatom and a slipper animalcule. Level 17 deals the
 /// lenses +3, +2 and +3.
 extension LensArt {
-    static let microscope: Halftone.Panel = {
+    static let microscope: Halftone.Panel = drawMicroscope()
+
+    private static func drawMicroscope() -> Halftone.Panel {
         let views = [P(0, -0.56), P(0.485, 0.28), P(-0.485, 0.28)], slide = P(0.03, 0.2)
         let eyeEnd = P(-0.3, -0.36), nose = P(0.02, 0.02), along = simd_normalize(nose - eyeEnd)
         let tube = bar(eyeEnd, nose, 0.13), ocular = bar(eyeEnd - along * 0.09, eyeEnd, 0.09), lensEnd = bar(nose, nose + P(0.006, 0.13), 0.06)
@@ -340,7 +351,7 @@ extension LensArt {
         for x in [-0.024, 0.026] { s.append(stroke(star(slipper + lie * x, 0.006, points: 6, inner: 0.4), 0.0014)) }
         for (at, r) in [(P(0.1, 0.08), 0.022), (P(-0.1, 0.1), 0.016), (P(0.1, -0.08), 0.02)] { s.append(stroke(circle(views[2] + at, r, 12), hair)) }
         return panel("microscope", fills: fills, strokes: s) { _ in c(0.18) }
-    }()
+    }
 }
 
 // MARK: - 18: Night vision
@@ -352,7 +363,9 @@ extension LensArt {
 /// broad moon, so its twist turns black and bright shapes against the green that read without the linework, and pulls
 /// each yellow field out into the dark. Level 18 deals the top lens +3 in all and the other three entries of +1.
 extension LensArt {
-    static let nightVision: Halftone.Panel = {
+    static let nightVision: Halftone.Panel = drawNightVision()
+
+    private static func drawNightVision() -> Halftone.Panel {
         let a = P(0, -0.42), b = P(-0.3637, 0.21), core = 0.348
         let lit = Tone(0.55, 0, 0.55), bright = Tone(0.85, 0, 0.85), seen = Tone(0.2, 0, 0.9)
         let owl = a + P(0.0, -0.01), hog = b + P(0.004, -0.024), moon = P(-0.62, -0.56)
@@ -436,5 +449,5 @@ extension LensArt {
         s.append(stroke(circle(hog + P(0.059, 0.006), 0.003, 6), 0.003))
         for x in [-0.03, -0.008, 0.016] { s.append(stroke([hog + P(x, 0.014), hog + P(x + 0.004, 0.024)], 0.0024)) }
         return panel("nightvision", fills: fills, strokes: s) { _ in Tone(0.26, 0, 0.3) }
-    }()
+    }
 }

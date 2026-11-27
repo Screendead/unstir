@@ -192,7 +192,9 @@ extension LensArt {
 /// and on it a ghost painted upside down, as slides go in; over the upper right core the picture on the sheet, the
 /// ghost the right way up.
 extension LensArt {
-    static let magicLantern: Halftone.Panel = {
+    static let magicLantern: Halftone.Panel = drawMagicLantern()
+
+    private static func drawMagicLantern() -> Halftone.Panel {
         let hub = P(0, 0), peep = P(-0.485, 0.28), shown = P(0.485, -0.28)
         let u = P(cos(-.pi / 6), sin(-.pi / 6)), n = P(-u.y, u.x)
         let back = hub - u * 0.36, front = hub + u * 0.3
@@ -273,7 +275,7 @@ extension LensArt {
         for line in place(ghost, at: hub + P(0.036, 0.032), 0.06, degrees: 180) { s.append(stroke(line, 0.0032)) }
         for line in place(ghost, at: shown + P(0.036, -0.034), 0.064) { s.append(stroke(line, 0.0034)) }
         return panel("magiclantern", fills: fills, strokes: s) { _ in m(0.24) }
-    }()
+    }
 }
 
 // MARK: - 40: Zoetrope

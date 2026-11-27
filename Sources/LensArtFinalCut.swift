@@ -10,7 +10,7 @@ extension LensArt {
     static let finalCut: [Int: Halftone.Panel] = [68: lighthouse, 69: eclipseglasses, 70: searchlight, 71: planetarium, 72: observatory, 73: radiotelescope, 74: spacetelescope, 75: mindseye]
 
     /// Hex's rods, the hub first.
-    fileprivate static let hex = [P(0, 0), P(0, -0.56), P(0.485, -0.28), P(0.485, 0.28), P(0, 0.56), P(-0.485, 0.28), P(-0.485, -0.28)]
+    fileprivate static let hex: [P] = [P(0, 0), P(0, -0.56), P(0.485, -0.28), P(0.485, 0.28), P(0, 0.56), P(-0.485, 0.28), P(-0.485, -0.28)]
     /// A hex core's radius.
     fileprivate static let core = 0.264
 
@@ -61,7 +61,9 @@ extension LensArt {
 /// bulb lit on its screw base; in the pools, what the light finds: a steamer at sea (upper right), a shark's fin
 /// (lower right), a rowing boat (bottom) and a lifebuoy (lower left).
 extension LensArt {
-    static let lighthouse: Halftone.Panel = {
+    static let lighthouse: Halftone.Panel = drawLighthouse()
+
+    private static func drawLighthouse() -> Halftone.Panel {
         let lamp = hex[1], horizon = -0.12
         let pools = [hex[2], hex[3], hex[4], hex[5]]
         let tower = [P(-0.13, -0.3), P(0.13, -0.3), P(0.19, 0.2), P(-0.19, 0.2)]
@@ -175,7 +177,7 @@ extension LensArt {
             return c(0.6)
         }
         return Halftone.Panel(name: "lighthouse", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 69: Eclipse glasses
@@ -186,7 +188,9 @@ extension LensArt {
 /// diamond ring) and in the hub, where the glasses come off, totality: the black moon in its corona, two prominences at
 /// its edge. Over the upper left, a twist rod, clouds lit gold underneath and Venus out in the darkened sky.
 extension LensArt {
-    static let eclipseglasses: Halftone.Panel = {
+    static let eclipseglasses: Halftone.Panel = drawEclipseglasses()
+
+    private static func drawEclipseglasses() -> Halftone.Panel {
         let phases = [hex[5], hex[1], hex[2]], sun = hex[0]
         let venus = hex[6] + P(-0.1, 0.1)
         let clouds = [(hex[6] + P(0.05, 0.03), P(0.2, 0.065), m(0.55)), (hex[6] + P(-0.06, -0.12), P(0.14, 0.045), y(0.6))]
@@ -278,7 +282,7 @@ extension LensArt {
             return p.y < 0.38 ? c(0.42) : m(0.5)
         }
         return Halftone.Panel(name: "eclipseglasses", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 70: Searchlight
@@ -289,7 +293,9 @@ extension LensArt {
 /// below. In each glass, the thing its beam has found: in the big lamp at the hub the arc itself, spitting between its
 /// two carbons; in the others a biplane (upper left), an airship (lower left) and a balloon (lower right).
 extension LensArt {
-    static let searchlight: Halftone.Panel = {
+    static let searchlight: Halftone.Panel = drawSearchlight()
+
+    private static func drawSearchlight() -> Halftone.Panel {
         let lamps = [hex[0], hex[6], hex[5], hex[3]], back = P(-0.05, 0.08)
         // Each beam: its lamp, its heading (degrees, -90 straight up) and its half-spread.
         let beams: [(P, Double, Double)] = [(hex[0], -62, 9), (hex[6], -72, 8), (hex[5], -100, 7), (hex[3], -96, 8)]
@@ -401,7 +407,7 @@ extension LensArt {
             return lit == 0 ? m(0.35) : lit == 1 ? c(0.4) : c(0.75)
         }
         return Halftone.Panel(name: "searchlight", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 71: Planetarium
@@ -412,7 +418,9 @@ extension LensArt {
 /// band. In each disc a constellation: the Plough (top), Orion (upper right), Scorpius (lower right), the Southern Cross
 /// (lower left) and Cassiopeia (upper left).
 extension LensArt {
-    static let planetarium: Halftone.Panel = {
+    static let planetarium: Halftone.Panel = drawPlanetarium()
+
+    private static func drawPlanetarium() -> Halftone.Panel {
         let discs = [hex[1], hex[2], hex[3], hex[5], hex[6]]
         let globes = [(P(-0.05, -0.1), 0.15), (P(0.13, 0.2), 0.1)]
         let truss = bar(globes[0].0, globes[1].0, 0.09)
@@ -430,7 +438,9 @@ extension LensArt {
         for (c, r) in globes {
             s.append(stroke(circle(c, r, 40), bold))
             for k in 0..<3 { let rr = r * (0.35 + 0.3 * Double(k)); for j in 0..<(4 + 4 * k) {
-                s.append(stroke(circle(polar(c, rr, 360 / Double(4 + 4 * k) * Double(j) + 20 * Double(k)), 0.012 - 0.002 * Double(k), 8), hair))
+                let bearing: Double = 360 / Double(4 + 4 * k) * Double(j) + 20 * Double(k)
+                let radius: Double = 0.012 - 0.002 * Double(k)
+                s.append(stroke(circle(polar(c, rr, bearing), radius, 8), hair))
             } }
         }
         s += runs(closed(truss), mid) { p in globes.allSatisfy { simd_distance(p, $0.0) > $0.1 } }
@@ -503,7 +513,7 @@ extension LensArt {
             return p.y < 0.45 && simd_distance(p, P(0, 1.1)) > 1.25 && simd_distance(p, P(0, 1.1)) < 1.6 ? c(0.35) : c(0.2)
         }
         return Halftone.Panel(name: "planetarium", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 72: Observatory
@@ -513,7 +523,9 @@ extension LensArt {
 /// on this level what the telescope sees, each through an eyepiece's knurled barrel: the cratered moon (top), a double star
 /// (upper right), a comet (bottom), the Pleiades (lower left) and a spiral galaxy (upper left).
 extension LensArt {
-    static let observatory: Halftone.Panel = {
+    static let observatory: Halftone.Panel = drawObservatory()
+
+    private static func drawObservatory() -> Halftone.Panel {
         let views = [hex[1], hex[2], hex[4], hex[5], hex[6]]
         let dome = P(0.32, 0.22), domeR = 0.18, slit = (0.3, 0.38)
         let tube = bar(P(0.34, 0.14), P(0.14, -0.06), 0.09)
@@ -595,7 +607,7 @@ extension LensArt {
             return p.y > 0.05 ? m(0.5) * min((p.y - 0.05) / 0.3, 1) : .zero
         }
         return Halftone.Panel(name: "observatory", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 73: Radio telescope
@@ -607,7 +619,9 @@ extension LensArt {
 /// the first pulsar was nicknamed (top), a radio galaxy's jets and lobes (lower right), a black hole's ring (bottom), a
 /// signal's trace, one spike ringed (lower left), and a satellite, antennas trailing (upper left).
 extension LensArt {
-    static let radiotelescope: Halftone.Panel = {
+    static let radiotelescope: Halftone.Panel = drawRadiotelescope()
+
+    private static func drawRadiotelescope() -> Halftone.Panel {
         let dishes = [hex[1], hex[3], hex[4], hex[5], hex[6]]
         let centre = P(0.02, 0.04), arms = [-90.0, 30, 150]
         let source = P(1.15, -0.85)
@@ -700,7 +714,7 @@ extension LensArt {
             return y(0.6)
         }
         return Halftone.Panel(name: "radiotelescope", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 74: Space telescope
@@ -712,7 +726,9 @@ extension LensArt {
 /// on Jupiter its great red spot, on Saturn the hexagon storm at its pole, and on Earth a hurricane. Over the lower
 /// right, a twist rod, the moon half in shadow, cratered, a lander on its legs at the edge of the dark.
 extension LensArt {
-    static let spacetelescope: Halftone.Panel = {
+    static let spacetelescope: Halftone.Panel = drawSpacetelescope()
+
+    private static func drawSpacetelescope() -> Halftone.Panel {
         let worlds = [hex[1], hex[2], hex[4]]
         let moon = hex[3] + P(0.05, 0.02), shadow = moon + P(-0.09, -0.07)
         let craters = [(moon + P(0.07, 0.05), 0.04), (moon + P(0.02, 0.12), 0.03), (moon + P(0.11, -0.05), 0.025)]
@@ -814,7 +830,7 @@ extension LensArt {
             return .zero
         }
         return Halftone.Panel(name: "spacetelescope", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 75: Mind's eye
@@ -824,7 +840,9 @@ extension LensArt {
 /// each what the mind's eye sees again from the pack: the keyhole it began with (top), a pair of spectacles (upper
 /// right), a magnifying glass (lower right), a telescope (bottom) and the moon and a star it dreams by (upper left).
 extension LensArt {
-    static let mindseye: Halftone.Panel = {
+    static let mindseye: Halftone.Panel = drawMindseye()
+
+    private static func drawMindseye() -> Halftone.Panel {
         let thoughts = [hex[1], hex[2], hex[3], hex[4], hex[6]]
         let head = closed([P(0.0, -0.26)] + curve(P(0.0, -0.26), P(0.16, -0.25), P(0.2, -0.12), 8)
             + [P(0.21, -0.08), P(0.28, 0.0), P(0.21, 0.03), P(0.23, 0.07), P(0.2, 0.09), P(0.22, 0.12), P(0.2, 0.16)]
@@ -892,5 +910,5 @@ extension LensArt {
             return .zero
         }
         return Halftone.Panel(name: "mindseye", tones: toneAt, strokes: pieces(s))
-    }()
+    }
 }
