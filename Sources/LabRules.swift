@@ -51,10 +51,11 @@ struct LabRules: Hashable, Sendable {
         stack.reduce(0) { $0 + $1.steps } - dealt.reduce(0) { $0 + $1.steps }
     }
 
-    /// Whether knob `rod` may be taken up at all: a ward only while its key stands on the mark.
+    /// Whether knob `rod` may be taken up at all: a ward only while its key stands on the mark, a whole turn either way
+    /// being the same place on the dial.
     func opens(_ rod: Int, stack: [Twist], dealt: [Twist]) -> Bool {
         guard let w = keys[rod] else { return true }
-        return Self.pointer(w.key, stack: stack, dealt: dealt) == w.mark
+        return (Self.pointer(w.key, stack: stack, dealt: dealt) - w.mark) % 12 == 0
     }
 
     /// The turns of `rod` allowed, in steps, from a stack: the keel's room either way, and under ebb and flow only the

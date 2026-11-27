@@ -18,6 +18,11 @@ final class LabSolver {
     let rules: LabRules
     let dealt: [Twist]
     var exhaustive = false
+    /// Deep levels: only turns that take a whole entry off and the rules' own turns (a key to a mark; under the keel a
+    /// part of the entry a turn lands on, under ebb and flow an overshoot of it by one to three steps), never a detour
+    /// pushed for its own sake: a bounded search, as maelstrom's par is. Within
+    /// those every entry needs a turn of its own, so the heuristic counts entries and reaches maelstrom's depths.
+    var deep = false
     private(set) var expanded = 0
     private var commuting: [[Twist]: Bool] = [:]
 
@@ -74,13 +79,36 @@ final class LabSolver {
         for t in s.stack { net[t.rod, default: 0] += t.steps }
         let marks = Set(rules.keys.filter { w, k in
             net[w, default: 0] != 0 && net[k.key, default: 0] == 0
-                && LabRules.pointer(k.key, stack: s.stack, dealt: dealt) != k.mark
+                && (LabRules.pointer(k.key, stack: s.stack, dealt: dealt) - k.mark) % 12 != 0
         }.values)
-        return net.values.filter { $0 != 0 }.count + marks.count
+        let loose = net.values.filter { $0 != 0 }.count + marks.count
+        guard deep else { return loose }
+        // A key with no entry, off a mark a ward still needs, pushes one that a later turn takes off.
+        let pushes = Set(rules.keys.filter { w, k in
+            s.stack.contains { $0.rod == w } && !s.stack.contains { $0.rod == k.key }
+                && (LabRules.pointer(k.key, stack: s.stack, dealt: dealt) - k.mark) % 12 != 0
+        }.values)
+        return max(loose, s.stack.count + 2 * pushes.count)
     }
 
     /// The counts tried on `rod` from stack `s`.
     func counts(_ rod: Int, _ stack: [Twist], sense: Int) -> [Int] {
+        if deep {
+            var out: Set<Int> = []
+            for i in stack.indices where stack[i].rod == rod && landing(stack, rod: rod, steps: -stack[i].steps) == i {
+                out.insert(-stack[i].steps)
+            }
+            // The keel splits the entry a turn lands on (a part of it, the rest left for later); ebb and flow
+            // overshoots it by one to three steps, so the turn that takes the overshoot off goes the other way.
+            if rules.keel != nil || rules.flip, let i = landing(stack, rod: rod, steps: 1) {
+                let e = stack[i].steps, sign = e > 0 ? 1 : -1
+                if rules.keel != nil { for part in 1..<abs(e) { out.insert(-sign * part) } }
+                if rules.flip { for over in 1...3 { out.insert(-e - sign * over) } }
+            }
+            let p = LabRules.pointer(rod, stack: stack, dealt: dealt)
+            for k in rules.keys.values where k.key == rod { for whole in -1...1 { out.insert(k.mark - p + 12 * whole) } }
+            return out.filter { $0 != 0 && abs($0) <= 12 && allowed(rod, $0, stack, sense) }.sorted()
+        }
         // The keel and ebb and flow are won by splitting a turn at the right count, which no short list names, and their
         // room keeps every count cheap to try.
         if exhaustive || rules.keel != nil || rules.flip { return (-12...12).filter { $0 != 0 && allowed(rod, $0, stack, sense) } }
@@ -96,7 +124,7 @@ final class LabSolver {
             for w in want { out.insert(w - base) }
         }
         let p = LabRules.pointer(rod, stack: stack, dealt: dealt)
-        for k in rules.keys.values where k.key == rod { out.insert(k.mark - p) }
+        for k in rules.keys.values where k.key == rod { for whole in -1...1 { out.insert(k.mark - p + 12 * whole) } }
         out.insert(-dealt.filter { $0.rod == rod }.reduce(0) { $0 + $1.steps } - p)
         for d in [1, -1] { out.insert(d) }
         return out.filter { $0 != 0 && abs($0) <= 12 && allowed(rod, $0, stack, sense) }.sorted()
@@ -184,8 +212,21 @@ final class LabSolver {
         return moves(start).compactMap { t, n in
             let after = LabSolver(layout, rules: rules, dealt: dealt)
             after.exhaustive = exhaustive
+            after.deep = deep
             return after.solve(from: n, limit: par - 1) != nil ? t : nil
         }
+    }
+
+    /// Along `line`, at each step the moves tried and those that still reach its length: a step where one move of
+    /// several keeps par is forced.
+    func choices(along line: [Twist]) -> [(tried: Int, keep: Int)] {
+        var at = start, out: [(Int, Int)] = []
+        for (i, t) in line.enumerated() {
+            let next = moves(at)
+            out.append((next.count, next.filter { solve(from: $0.1, limit: line.count - i - 1) != nil }.count))
+            at = next.first { $0.0 == t }!.1
+        }
+        return out
     }
 
     func solve(from start: State, limit: Int) -> [Twist]? {

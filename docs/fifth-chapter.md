@@ -87,6 +87,26 @@ count there too, which agrees on every keys level it finished.
 - **Hardest proved.** Pent on lamellae, `1:+4,0:-3,1:+2,2:-5,4:+3`: 6 moves for 5 entries, proved over every count
   (no line of 5), untwisting alone stranded.
 
+### At maelstrom's depth
+
+A chapter past maelstrom deals 20 to 26 entries, so each rule was dealt that deep (`scripts/lab-deep.py`, its own seeded
+deals, never the frozen generator's) and proved with `scripts/solve.sh lab ... deep`: A* over the turns that take a
+whole entry off plus the rule's own turns (a key to its mark, a whole turn round counting as the mark; an overshoot of
+one to three steps under ebb and flow; a part of an entry under the keel), never a detour pushed for its own sake,
+with the entry count as its heuristic. That is a bounded search, maelstrom's standard; on every small level proved over
+every count that needs no detour it gives the same optimum (keys 3, 6 and 9, ebb and flow 5 and 6, keel 5).
+
+- **Keys scale.** Hex, 24 entries, `6:-5,2:-2,1:+8,6:+4,0:+5,2:+6,5:-3,4:+7,5:-8,3:+2,2:+8,3:+7,0:-7,6:+2,0:-8,6:+5,1:-7,3:-6,4:+4,5:-2,4:-2,5:+4,6:-5,3:-3`,
+  ward 2 keyed by knob 4 at +3 and ward 5 by knob 1 at -2 (each pair clear of the other's disc): 29 moves against 24
+  without the rule; along the line 20 of 29 steps have one move of several that keeps par, and 76 moves tried there
+  lose it, against none without the rule (this deal untwists one way only). 44 ms.
+- **Ebb and flow scales.** Hex, 20 entries, `2:-5,6:-2,4:-4,5:-6,1:-2,4:+2,1:-6,4:-8,5:-3,6:-6,4:+2,1:-6,2:+5,1:-6,3:-2,5:-4,0:-6,1:-5,6:+8,2:+6,4:+4,1:-7`:
+  30 against 20, 16 steps forced; 0.8 s. On pent, 19 entries: 30 against 19.
+- **The keel doesn't.** Its final list is fixed by the deal, so a deep deal must balance; balanced deals of 20 to 26
+  entries on pent and hex came out at par or one over (40 deals, keel 8 to 14), and a tighter keel left them with no
+  line but detours pushed for their own sake, which neither the player can read nor the deep search proves. The keel
+  is out of the pitch.
+
 ### Tried and dropped
 
 Each was run through the same solver before any UI was built.
