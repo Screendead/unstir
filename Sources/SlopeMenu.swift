@@ -311,7 +311,15 @@ struct SlopeMenu: View {
 
     /// The overview where its words outgrow the screen, at the largest type sizes: it scrolls, opening at its top.
     private func wade(_ plan: SlopeMenuPlan) -> some View {
-        SlopeDive(column: plan.column, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false, eggs: eggs,
+        var aim: SlopeAim?
+        #if DEBUG
+        // UNSTIR_SLOPEWADE: the scrolling overview opened that many screens down, the harness's.
+        if let down = ProcessInfo.processInfo.environment["UNSTIR_SLOPEWADE"].flatMap(Double.init) {
+            let h = plan.size.height, top = plan.wide.travel(height: h).lowerBound + CGFloat(down) * h
+            aim = SlopeAim(ledge: 0, share: (plan.wide.tops[0] - top) / h)
+        }
+        #endif
+        return SlopeDive(column: plan.column, aim: aim, z: 0, held: still, look: SlopeLook(light: light), clock: clock, near: false, eggs: eggs,
                   onMove: { scroll.wide = $0 }) { view in
             world(view, plan, cull: false)
         }
@@ -712,6 +720,14 @@ struct SlopeMenuPlan {
         return travel.upperBound > travel.lowerBound + 1
     }
 
+    /// How many times its share of the screen each tier has at the overview: UNSTIR_SLOPEROOM in Debug builds.
+    static let roominess: CGFloat = {
+        #if DEBUG
+        if let room = ProcessInfo.processInfo.environment["UNSTIR_SLOPEROOM"].flatMap(Double.init), room >= 1 { return CGFloat(room) }
+        #endif
+        return 1
+    }()
+
     /// From a header's foot to its stretch's first ledge, and from a stretch's top at the overview to its words.
     static let headerFoot: CGFloat = 48
     static let bandLead: CGFloat = -8
@@ -787,6 +803,13 @@ struct SlopeMenuPlan {
         }
         // Each tier first takes what its words need; what is left of the tiers' share of the screen is shared out
         // evenly (1.6). Where the needs alone pass it, each has its need and the overview scrolls.
+        // A roomier overview scrolls: each tier's share grows. Its terraces' ledges part until a terrace leans about
+        // 30 degrees, steeper reads as a ramp, not a shelf; the rest is water between terraces.
+        let roominess = Self.roominess
+        for t in model.tiers.indices { column.stretches[t + 1].height = (column.stretches[t + 1].height ?? 0) * roominess }
+        column.grain = min(1 + (roominess - 1) / 10, 1.5)
+        column.spread = min(column.spread * column.grain, 13.5)
+        column.fine = min(column.fine + 0.125 * size.height / 3 * (roominess - 1) / CGFloat(SlopeColumn.full), 0.6 * column.spread)
         let share = column.stretches.dropFirst().reduce(0) { $0 + ($1.height ?? 0) }
         let spare = max(share - needs.reduce(0, +), 0) / CGFloat(max(needs.count, 1))
         for (t, need) in needs.enumerated() { column.stretches[t + 1].height = need + spare }
@@ -1361,7 +1384,7 @@ private struct SlopeMenuWorld: View, Equatable {
             }
             .slopePlace(CGPoint(x: x, y: y), anchor: UnitPoint(x: 0.5, y: 0))
             // At the overview the word stands as much higher as keeps its line and "new run" clear of the home bar.
-            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large ? 0 : lift(from: y, continues: continues) * (1 - lay.e)))
+            .offset(y: -SlopeMeasure.line(.title, at: plan.type) / 2 - (large || plan.scrolls ? 0 : lift(from: y, continues: continues) * (1 - lay.e)))
         }
         if model.sandbox, near > 0, shown(y, 400) {
             // Debug's sandbox, out of v1: a plain row under the brink.
