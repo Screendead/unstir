@@ -481,8 +481,91 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 71, Intermission, hex, clocks 1+.
-    static func plate71() -> Plate? { nil }
+    /// Problem 71, Intermission, hex, clocks 1+: a gramophone on its cabinet, its morning-glory horn flaring in panels
+    /// of ink and bone, the tone arm lifted off the record, the winding crank at its side; the record's label in the
+    /// second ink, centred in the lane between the middle hub and the hubs at six and eight.
+    static func plate71() -> Plate {
+        var plate = Plate()
+        Kit.ground(&plate, angle: -0.5)
+        // The floor.
+        plate.fill([P(-1.1, 0.84), P(1.1, 0.84), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.84)])
+        plate.lines(hatch([[P(-1.1, 0.84), P(1.1, 0.84), P(1.1, 1.1), P(-1.1, 1.1), P(-1.1, 0.84)]], angle: 0, gap: 0.04), medium)
+
+        // The cabinet: its top in perspective, its front panelled, on short feet.
+        let top = [P(-0.62, 0.36), P(-0.42, 0.22), P(0.5, 0.22), P(0.3, 0.36), P(-0.62, 0.36)]
+        let front = box(P(-0.62, 0.36), P(0.3, 0.8))
+        let side = [P(0.3, 0.36), P(0.5, 0.22), P(0.5, 0.66), P(0.3, 0.8), P(0.3, 0.36)]
+        Kit.solid(&plate, side, angle: 1.2, gap: 0.03)
+        Kit.cut(&plate, front, edge: heavy)
+        plate.line([P(-0.62, 0.4), P(0.3, 0.4)], heavy)
+        let panel = box(P(-0.54, 0.47), P(0.22, 0.73))
+        Kit.mass(&plate, panel)
+        Kit.cut(&plate, box(P(-0.49, 0.52), P(0.17, 0.68)), edge: medium)
+        plate.lines(hatch([box(P(-0.49, 0.52), P(0.17, 0.68))], angle: 0.9, gap: 0.05), fine)
+        for x in [-0.56, 0.24] { Kit.mass(&plate, [P(x, 0.8), P(x + 0.06, 0.8), P(x + 0.05, 0.86), P(x + 0.01, 0.86), P(x, 0.8)]) }
+        Kit.cut(&plate, top, edge: heavy)
+        // The crank on the cabinet's side.
+        let boss = P(0.41, 0.48)
+        plate.fill(arc(boss, 0.028), .black)
+        Kit.mass(&plate, Kit.band(boss, boss + P(0.14, 0.12), 0.026))
+        Kit.mass(&plate, Kit.band(boss + P(0.14, 0.12), boss + P(0.2, 0.12), 0.034))
+
+        // The turntable and the record, centred in a lane so its grooves are no rod's rings.
+        let disc = P(-0.15, 0.29)
+        Kit.mass(&plate, ellipse(disc + P(0, 0.012), 0.36, 0.085))
+        for k in 0..<4 {
+            plate.line(ellipse(disc, 0.33 - 0.055 * Double(k), 0.075 - 0.0125 * Double(k)), 0.008, .bone)
+        }
+        plate.fill(ellipse(disc, 0.1, 0.026), .second)
+        plate.line(ellipse(disc, 0.1, 0.026), fine)
+        plate.fill(ellipse(disc, 0.012, 0.005), .black)
+
+        // The horn: a flared bell of panels, ink and bone by turns, from its elbow behind the record to its mouth.
+        let mouth = P(-0.2, -0.38), rx = 0.44, ry = 0.3, tilt = -0.32
+        let throat = P(0.38, 0.12)
+        func rim(_ a: Double) -> P { mouth + P(rx * cos(a) * cos(tilt) - ry * sin(a) * sin(tilt), rx * cos(a) * sin(tilt) + ry * sin(a) * cos(tilt)) }
+        let bellOut = (0...40).map { rim(-0.25 + 1.95 * Double($0) / 40) }
+        let neck = curve(rim(1.7), P(0.08, 0.02), throat + P(-0.025, 0.025), 16) + curve(throat + P(0.025, -0.025), P(0.24, -0.14), rim(-0.25), 16)
+        let body = bellOut + neck + [bellOut[0]]
+        Kit.mass(&plate, body)
+        for k in 0..<7 {
+            let t = 0.12 + 0.13 * Double(k)
+            let a = rim(-0.25 + 1.95 * t)
+            plate.fill(swell(curve(a, (a + throat) / 2 + P(0.02, 0.03), throat, 14), 0.004, 0.04))
+        }
+        // The pipe down to the arm's elbow.
+        Kit.mass(&plate, Kit.band(throat, P(0.36, 0.25), 0.05))
+        let mouthRing = ellipse(mouth, rx, ry, turned: tilt)
+        plate.fill(mouthRing, .black)
+        let well = mouth + P(0.13, 0.07)
+        for k in 0..<7 {
+            let a0 = 2 * .pi * Double(k) / 7, a1 = a0 + 2 * .pi / 7 * 0.7
+            let gore = [well] + (0...10).map { rim(a0 + (a1 - a0) * Double($0) / 10) } + [well]
+            plate.fill(gore)
+        }
+        plate.fill(ellipse(well, 0.05, 0.035, turned: tilt), .black)
+        plate.line(mouthRing, 0.03)
+        plate.line(ellipse(mouth, rx - 0.025, ry - 0.022, turned: tilt), 0.012, .bone)
+
+        // The tone arm from its pillar, lifted clear of the record, the soundbox at its end.
+        let pillar = P(0.32, 0.27)
+        Kit.mass(&plate, box(pillar + P(-0.03, -0.02), pillar + P(0.03, 0.06)))
+        let elbow = pillar + P(-0.02, -0.07), head = P(-0.04, 0.1)
+        Kit.mass(&plate, swell([pillar + P(0, -0.02), elbow, (elbow + head) / 2 + P(0, -0.04), head], 0.04, 0.045))
+        let box1 = head + P(-0.02, 0.03)
+        Kit.mass(&plate, ellipse(box1, 0.06, 0.055))
+        Kit.cut(&plate, ellipse(box1, 0.038, 0.034), edge: medium)
+        plate.lines(hatch([ellipse(box1, 0.038, 0.034)], angle: 0.7, gap: 0.012), fine)
+        plate.line([box1 + P(0, 0.055), box1 + P(-0.01, 0.1)], 0.012)
+        // The gap under the needle, the intermission.
+        plate.lines(dashed([box1 + P(-0.01, 0.11), box1 + P(-0.012, 0.16)], on: 0.012, off: 0.01), fine)
+
+        callout(&plate, "A", from: P(-0.44, -0.52), to: P(-0.74, -0.62))
+        callout(&plate, "B", from: P(0.2, 0.04), to: P(0.74, -0.04))
+        callout(&plate, "C", from: P(-0.36, 0.3), to: P(-0.82, 0.3))
+        callout(&plate, "D", from: boss + P(0.19, 0.12), to: P(0.72, 0.5))
+        return plate
+    }
 
     /// Problem 72, Hiatus, hex, clocks 1+.
     static func plate72() -> Plate? { nil }
