@@ -700,21 +700,23 @@ extension LensArt {
 // MARK: - 74: Space telescope
 
 /// Level 74's name: a space telescope in orbit, its steel-blue tube banded in gold foil running in from the left with
-/// a solar wing up and a solar wing down, its open end over the hub, and round it, over the other four of hex's five
+/// a solar wing up and a solar wing down, its open end over the hub, and round it, over the other three of hex's four
 /// lenses on this level, the worlds it turns to, each limb ringed with its own weather: banded Jupiter (top), ringed
-/// Saturn (upper right), the moon (lower right) and the blue Earth below (bottom). In the hub, down the tube, a
-/// deep field of faint galaxies; on Jupiter its great red spot, on Saturn the hexagon storm at its pole, on the moon a
-/// lander on its legs, and on Earth a hurricane.
+/// Saturn (upper right) and the blue Earth below (bottom). In the hub, down the tube, a deep field of faint galaxies;
+/// on Jupiter its great red spot, on Saturn the hexagon storm at its pole, and on Earth a hurricane. Over the lower
+/// right, a twist rod, the moon half in shadow, cratered, a lander on its legs at the edge of the dark.
 extension LensArt {
     static let spacetelescope: Halftone.Panel = {
-        let worlds = [hex[1], hex[2], hex[3], hex[4]]
+        let worlds = [hex[1], hex[2], hex[4]]
+        let moon = hex[3] + P(0.05, 0.02), shadow = moon + P(-0.09, -0.07)
+        let craters = [(moon + P(0.07, 0.05), 0.04), (moon + P(0.02, 0.12), 0.03), (moon + P(0.11, -0.05), 0.025)]
         let tube = rect(-1, -0.25, 0, 0.25)
         let wings = [bar(P(-0.5, -0.26), P(-0.62, -0.96), 0.24), bar(P(-0.5, 0.26), P(-0.4, 0.96), 0.24)]
         let foil = [rect(-0.8, -0.25, -0.62, 0.25), rect(-0.38, -0.25, -0.3, 0.25)]
         let craft = foil.map { fill($0, y(0.75)) } + [fill(tube, c(0.3))] + wings.map { fill($0, c(0.65)) }
         // Saturn's rings' own frame, tipped 10 degrees.
         let ringFrame: @Sendable (P) -> P = { q in P(q.x * 0.985 + q.y * 0.174, -q.x * 0.174 + q.y * 0.985) }
-        let globes = [Tone(0, 0.3, 0.55), y(0.7), m(0.35), c(0.6)]
+        let globes = [Tone(0, 0.3, 0.55), y(0.7), c(0.6)]
 
         var s: [Halftone.Stroke] = []
         // The craft: the tube and its foil, the handrails, the solar wings, their cells and booms.
@@ -759,15 +761,16 @@ extension LensArt {
         let hexagon = worlds[1] + P(-0.024, -0.028)
         s.append(stroke(closed((0..<6).map { polar(hexagon, 0.03, 60 * Double($0) + 10) }), 0.003))
         s.append(stroke((0...12).map { i in polar(hexagon, 0.003 + 0.0015 * Double(i), 30 * Double(i)) }, 0.002))
-        // A lander on the moon, on its four legs, by a crater.
-        let lander = worlds[2] + P(0.02, 0.02)
-        s.append(stroke(closed([lander + P(-0.018, -0.006), lander + P(0.018, -0.006), lander + P(0.022, 0.008), lander + P(-0.022, 0.008)]), 0.003))
-        s.append(stroke(closed([lander + P(-0.012, -0.006), lander + P(-0.008, -0.024), lander + P(0.01, -0.024), lander + P(0.014, -0.006)]), 0.0025))
-        for e in [-1.0, 1.0] { s.append(stroke([lander + P(e * 0.018, 0.008), lander + P(e * 0.034, 0.03), lander + P(e * 0.04, 0.03)], 0.0025)) }
-        s.append(stroke([lander + P(0.01, -0.024), lander + P(0.016, -0.038)], 0.002))
-        s.append(stroke(closed(ellipse(lander + P(-0.05, -0.04), 0.014, 0.007, 12)), 0.002))
+        // The moon: its limb, the shadow's edge, its craters and a lander at the edge of the dark.
+        s.append(stroke(circle(moon, 0.18, 48), mid))
+        s += runs(circle(shadow, 0.17, 48), mid) { simd_distance($0, moon) < 0.18 }
+        for (c, r) in craters { s.append(stroke(circle(c, r, 16), hair)) }
+        let lander = moon + P(-0.03, 0.06)
+        s.append(stroke(closed([lander + P(-0.036, -0.012), lander + P(0.036, -0.012), lander + P(0.044, 0.016), lander + P(-0.044, 0.016)]), mid))
+        s.append(stroke(closed([lander + P(-0.024, -0.012), lander + P(-0.016, -0.048), lander + P(0.02, -0.048), lander + P(0.028, -0.012)]), mid))
+        for e in [-1.0, 1.0] { s.append(stroke([lander + P(e * 0.036, 0.016), lander + P(e * 0.068, 0.06), lander + P(e * 0.08, 0.06)], mid)) }
         // A hurricane on Earth, its eye and arms.
-        let storm = worlds[3] + P(-0.026, 0.022)
+        let storm = worlds[2] + P(-0.026, 0.022)
         s.append(stroke(circle(storm, 0.006, 8), 0.0025))
         for k in 0..<3 {
             s.append(stroke((0...14).map { i in polar(storm, 0.008 + 0.0028 * Double(i), 120 * Double(k) + 22 * Double(i)) }, 0.0025))
@@ -782,15 +785,19 @@ extension LensArt {
                 let d = simd_distance(p, w)
                 if d < core { return globes[k] }
                 if d < core + 0.04 {
-                    // Each limb's weather: Jupiter's belts, Saturn's ring shadow, the moon's dark rim, Earth's clouds.
+                    // Each limb's weather: Jupiter's belts, Saturn's ring shadow, Earth's clouds.
                     let q = p - w
                     switch k {
                     case 0: return Int(((q.y + 0.4) / 0.07).rounded(.down)) % 2 == 0 ? m(0.6) : y(0.75)
                     case 1: return abs(ringFrame(q).y) < 0.07 ? .zero : y(0.4)
-                    case 2: return bearing(p, w) < 180 ? m(0.12) : m(0.6)
                     default: return sin(bearing(p, w) * .pi / 30) > 0.2 ? y(0.8) : m(0.5)
                     }
                 }
+            }
+            if simd_distance(p, moon) < 0.18 {
+                if simd_distance(p, shadow) < 0.17 { return m(0.12) }
+                for (c, r) in craters where simd_distance(p, c) < r { return m(0.3) }
+                return y(0.55)
             }
             let rings = simd_length_squared(ringFrame(p - hex[2]) / P(0.34, 0.085))
             if rings < 1, rings > 0.6 { return y(0.45) }
