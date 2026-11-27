@@ -5,9 +5,9 @@ import simd
 
 /// Chapter 6, Long Count: problems 31 to 36's plates, drawn with `Kit`.
 extension EscapementArt {
-    /// Problem 31, Hairspring, pent, clocks 0+: a hairspring lifted from the movement in watchmaker's tweezers, its
-    /// coils hanging below as a cone seen from above, the near half of each turn heavy over the far, its collet a ring
-    /// at the bottom; the bridge plate it came out of in the corner, striped. The stud pin at the spring's outer end,
+    /// Problem 31, Hairspring, pent, clocks 0+: a hairspring lifted from the movement in watchmaker's tweezers, seen
+    /// flat as it hangs, its turns crowding downward round the collet, a ring at its middle; the bridge it came out of
+    /// in the corner, striped. The stud pin at the spring's outer end,
     /// in the tweezers' tips, is in the second ink.
     static func plate31() -> Plate {
         var plate = Plate()
@@ -24,9 +24,9 @@ extension EscapementArt {
         }
         let blades = [blade(1), blade(-1)]
 
-        // The spring seen flat as it hangs from its outer end: three and a half turns, each turn's middle a little
+        // The spring seen flat as it hangs from its outer end: three turns, each turn's middle a little
         // lower than the last, so the turns crowd under the stud and open out below.
-        let centre = P(0, 0.055), outer = 0.335, inner = 0.1, turns = 3.5, sag = 0.07, n = 700
+        let centre = P(0, 0.055), outer = 0.335, inner = 0.1, turns = 3.0, sag = 0.045, n = 700
         let coil = (0...n).map { i -> P in
             let t = Double(i) / Double(n)
             return polar(centre + P(0, sag * t), outer - (outer - inner) * t, -.pi / 2 + 2 * .pi * turns * t)
@@ -53,8 +53,8 @@ extension EscapementArt {
         }
 
         // The spring on a margin of bone, so it stands off the ground and crosses nothing.
-        plate.fill(Kit.ribbon(coil, 0.07))
-        plate.fill(Kit.ribbon(coil, 0.042), .black)
+        plate.fill(Kit.ribbon(coil, 0.074))
+        plate.fill(Kit.ribbon(coil, 0.05), .black)
         // The collet: a ring on the arbor, split where the spring's inner end is pinned.
         Kit.mass(&plate, arc(collet, 0.072))
         plate.fill(arc(collet, 0.036))
@@ -89,7 +89,7 @@ extension EscapementArt {
     }
 
     /// Problem 32, Balance wheel, hex, clocks 1+: a split bimetallic balance seen flat, off the hub to the left, its
-    /// rim brass outside and steel inside, each half fixed to one arm and cut free beside the other, timing screws
+    /// rim brass outside in ink and steel inside in bone, each half fixed to one arm and cut free beside the other, timing screws
     /// round it, the double roller and its impulse pin at the staff. One timing screw, at nine o'clock, is in the
     /// second ink.
     static func plate32() -> Plate {
@@ -122,7 +122,7 @@ extension EscapementArt {
             plate.line(arc(at, 0.036), medium)
             plate.line([polar(at, 0.03, a + .pi / 2), polar(at, 0.03, a - .pi / 2)], 0.012, .bone)
         }
-        // The rim, brass outside in ink, steel inside in section, each half cut free.
+        // The rim, brass outside in ink, steel inside in bone, each half cut free.
         for h in halves {
             Kit.mass(&plate, sector(h.from, h.to, middle, outer))
             Kit.cut(&plate, sector(h.from, h.to, inner, middle))
@@ -179,7 +179,7 @@ extension EscapementArt {
     }
 
     /// Problem 33, Escape wheel, pent, clocks 0+: a Swiss club-tooth escape wheel of fifteen teeth, so large its arbor
-    /// low on the left and its raked teeth sweep across the middle in solid ink, the ground
+    /// sits low on the left and its raked teeth sweep across the middle in solid ink, the ground
     /// showing through its spokes' windows; the pallet stone resting on the one locking tooth, whose face is in the
     /// second ink.
     static func plate33() -> Plate {
