@@ -87,10 +87,12 @@ final class RingsView: UIView, UIScrollViewDelegate {
         var day: Date?
         /// The store's settled state, as one number.
         var store: Int
+        /// Endless's saved run, as the root reads it.
+        var endless: Resume?
     }
 
     enum Hit: Equatable {
-        case settings, daily, cover(Int), bead(Int), middle, nothing
+        case settings, daily, cover(Int), bead(Int), middle, renew, nothing
     }
 
     var onPick: (Level) -> Void = { _ in }
@@ -123,6 +125,8 @@ final class RingsView: UIView, UIScrollViewDelegate {
         let whole = RingsLayer(), beads = RingsLayer(), words = RingsLayer(), rest = RingsLayer(), pick = RingsLayer()
         let sun = RingsLayer(), halo = RingsLayer()
         let under = RingsLayer(), pair = RingsLayer(), cue = RingsLayer()
+        /// Endless's "new run", and the same armed.
+        let renew = RingsLayer(), armed = RingsLayer()
         var dim: CGFloat = 1
     }
 
@@ -134,13 +138,18 @@ final class RingsView: UIView, UIScrollViewDelegate {
     private var baking: Task<Void, Never>?
     private var picking: Task<Void, Never>?
     private var inset: CGFloat = -1
+    /// The ring a launch opens on, until the first build finds its index.
+    private let opening: RingsHue
+    /// When a first tap armed endless's new run (`ResetArm`).
+    private var armedAt: Date?
 
     /// The display's fastest: Core Animation otherwise gives an animation 60 frames a second on a phone.
     static let fast = CAFrameRateRange(minimum: 80, maximum: 120, preferred: 120)
 
-    init(state: State, opening: Int) {
+    init(state: State, opening: RingsHue) {
         self.state = state
-        at = opening
+        self.opening = opening
+        at = 0
         super.init(frame: .zero)
         backgroundColor = RingsLook.backdrop
         scene.opacity = 0
@@ -198,10 +207,13 @@ final class RingsView: UIView, UIScrollViewDelegate {
     /// is new. Seam for step two: the archive's and endless's rings are two more entries of `model.rings`.
     private func build() {
         RingsCount.reads += 1
-        let model = RingsModel(today: state.day ?? .now)
+        let model = RingsModel(today: state.day ?? .now, endless: state.endless)
         let plan = RingsPlan(size: bounds.size, top: inset, bottom: window?.safeAreaInsets.bottom ?? safeAreaInsets.bottom)
         guard model != self.model || plan != self.plan else { return }
         RingsCount.builds += 1
+        // The ring in front stays in front when rings come or go (the daily's and endless's opening).
+        let ahead = self.model.flatMap { $0.rings.indices.contains(at) ? $0.rings[at].hue : nil } ?? opening
+        armedAt = nil
         self.model = model
         self.plan = plan
         spoken = nil
@@ -252,35 +264,50 @@ final class RingsView: UIView, UIScrollViewDelegate {
             made.whole.addSublayer(made.words)
             made.sun.position = plan.centre
             suns.addSublayer(made.sun)
-            seats.append(Seat(piece: .sun(ring.tier, shut: !ring.open), layer: made.sun, at: plan.centre, shrink: plan.k))
+            seats.append(Seat(piece: .sun(ring.hue, shut: !ring.open), layer: made.sun, at: plan.centre, shrink: plan.k))
+            if ring.spots.isEmpty {
+                let orbit = RingsLayer()
+                made.beads.addSublayer(orbit)
+                seats.append(Seat(piece: .orbit(ring.hue), layer: orbit, at: .zero, shrink: plan.k))
+            }
 
             let n = ring.spots.count, spots = (0 ..< n).map { plan.bead($0, of: n) }
             for j in 0 ..< n where n > 1 {
                 let a = spots[j], b = spots[(j + 1) % n]
-                seat(.link(ring.tier), CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2), in: made.beads,
+                seat(.link(ring.hue), CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2), in: made.beads,
                      size: CGSize(width: hypot(b.x - a.x, b.y - a.y), height: 3), turn: atan2(b.y - a.y, b.x - a.x))
             }
             for (j, spot) in ring.spots.enumerated() {
-                seat(.bead(ring.tier, spot.bead), spots[j], in: made.beads)
-                seat(.text(Self.numeral(spot, ring.tier)), CGPoint(x: spots[j].x, y: spots[j].y + 0.5), in: made.beads)
+                seat(.bead(ring.hue, spot.bead), spots[j], in: made.beads)
+                if !spot.number.isEmpty {
+                    seat(.text(Self.numeral(spot, ring.hue)), CGPoint(x: spots[j].x, y: spots[j].y + 0.5), in: made.beads)
+                }
             }
             made.beads.addSublayer(made.halo)
             made.halo.opacity = 0
             seats.append(Seat(piece: .halo, layer: made.halo, at: .zero))
 
             for text in Self.cues(model, i, radius: 163 * plan.k) { seat(.text(text), .zero, in: made.words) }
-            if ring.open, let way = ring.way {
+            if ring.open, let lead = ring.lead {
                 seat(.text(RingsText(ring.word, .word, 38, .deep, .medium)), CGPoint(x: 0, y: -76), in: made.words)
                 made.words.addSublayer(made.rest)
                 made.words.addSublayer(made.pick)
                 made.pick.opacity = 0
-                let named = Self.named(ring.spots[way], under: ring.under)
+                let named = Self.named(lead, under: ring.under)
                 seat(.text(named.under), Self.under, in: made.rest)
                 seat(.text(named.pair), Self.pair, in: made.rest)
-                seat(.play, Self.cue, in: made.rest)
+                if ring.renews {
+                    made.rest.addSublayer(made.renew)
+                    made.rest.addSublayer(made.armed)
+                    made.armed.opacity = 0
+                    seats.append(Seat(piece: .text(Self.renew(armed: false)), layer: made.renew, at: Self.cue))
+                    seats.append(Seat(piece: .text(Self.renew(armed: true)), layer: made.armed, at: Self.cue))
+                } else {
+                    seat(.play, Self.cue, in: made.rest)
+                }
                 for layer in [made.under, made.pair, made.cue] { made.pick.addSublayer(layer) }
             } else {
-                seat(.text(RingsText(ring.word, .word, 38, .ink(0.2), .light, finish: .unlit(ring.tier))), CGPoint(x: 0, y: -34), in: made.words)
+                seat(.text(RingsText(ring.word, .word, 38, .ink(0.2), .light, finish: .unlit(ring.hue))), CGPoint(x: 0, y: -34), in: made.words)
                 seat(.text(RingsText(ring.under, .name, 16, .ink(0.7), wrap: 230)), CGPoint(x: 0, y: 20), in: made.words)
             }
             return made
@@ -311,7 +338,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
         seat(.settings, plan.settings, in: chrome)
 
         // A menu built again mid-swipe (a purchase landing, the store's first read) stays where the finger has it.
-        let place = was == rings.count ? pager.contentOffset.y / RingsPlan.pitch : CGFloat(min(max(at, 0), max(rings.count - 1, 0)))
+        let place = was == rings.count ? pager.contentOffset.y / RingsPlan.pitch : CGFloat(model.rings.firstIndex { $0.hue == ahead } ?? 0)
         pager.delegate = nil
         pager.frame = CGRect(x: 0, y: 0, width: bounds.width, height: RingsPlan.pitch)
         pager.contentSize = CGSize(width: bounds.width, height: RingsPlan.pitch * CGFloat(rings.count))
@@ -369,10 +396,10 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
     private static let under = CGPoint(x: 0, y: -43), pair = CGPoint(x: 0, y: 8), cue = CGPoint(x: 0, y: 36)
 
-    private static func numeral(_ spot: RingsModel.Spot, _ tier: Tier) -> RingsText {
+    private static func numeral(_ spot: RingsModel.Spot, _ hue: RingsHue) -> RingsText {
         switch spot.bead {
         case .dull: RingsText(spot.number, .data, 11, .ink(0.62))
-        case .solved: RingsText(spot.number, .data, 11, .tier(tier), .semibold)
+        case .solved: RingsText(spot.number, .data, 11, .hue(hue), .semibold)
         case .par: RingsText(spot.number, .data, 11, .dark, .semibold)
         case .next: RingsText(spot.number, .data, 15, .dark, .semibold)
         }
@@ -380,9 +407,17 @@ final class RingsView: UIView, UIScrollViewDelegate {
 
     /// The middle's two lines for a level: what stands under the tier's name, and the level's number and name.
     private static func named(_ spot: RingsModel.Spot, under: String) -> (under: RingsText, pair: RingsText) {
-        (RingsText(under, .data, 13, .dusk, .medium, tracking: 0.4),
-         RingsText(runs: [.init(string: spot.number, voice: .data, size: 20, ink: .deep, weight: .semibold),
-                          .init(string: spot.name, voice: .name, size: 30, ink: .deep, weight: .regular)], gap: 10))
+        let name = RingsText.Run(string: spot.name, voice: .name, size: 30, ink: .deep, weight: .regular)
+        return (RingsText(under, .data, 13, .dusk, .medium, tracking: 0.4),
+                RingsText(runs: spot.number.isEmpty ? [name]
+                              : [.init(string: spot.number, voice: .data, size: 20, ink: .deep, weight: .semibold), name], gap: 10))
+    }
+
+    /// Endless's new run, in the play mark's place.
+    private static func renew(armed: Bool) -> RingsText {
+        RingsText(armed ? String(localized: "new run? tap again", comment: "Endless's row: armed, a second tap drops the saved run")
+                      : String(localized: "new run", comment: "Endless's row: drops the saved run"),
+                  .data, 15, .dusk, .medium, tracking: 0.4)
     }
 
     /// The rings a swipe away, named over the sun and under it.
@@ -390,12 +425,12 @@ final class RingsView: UIView, UIScrollViewDelegate {
         var out: [RingsText] = []
         if i > 0 {
             let up = model.rings[i - 1]
-            out.append(RingsText("\u{2191} " + up.word, .data, 11, .tier(up.tier), .medium, tracking: 1, finish: .shadowed,
+            out.append(RingsText("\u{2191} " + up.word, .data, 11, .hue(up.hue), .medium, tracking: 1, finish: .shadowed,
                                  arc: .init(radius: radius, angle: -.pi / 2)))
         }
         if i + 1 < model.rings.count {
             let down = model.rings[i + 1]
-            out.append(RingsText("\u{2193} " + down.word, .data, 11, .tier(down.tier), .medium, tracking: 1, finish: .shadowed,
+            out.append(RingsText("\u{2193} " + down.word, .data, 11, .hue(down.hue), .medium, tracking: 1, finish: .shadowed,
                                  arc: .init(radius: radius, angle: .pi / 2, inward: false)))
         }
         return out
@@ -489,6 +524,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
             let turn = (atan2(v.y, v.x) + .pi / 2) / (2 * .pi) * CGFloat(n) - 0.5
             return .bead((Int(turn.rounded()) % n + n) % n)
         }
+        if model.rings[at].renews, abs(v.x - Self.cue.x) < 90, abs(v.y - Self.cue.y) < 14 { return .renew }
         return r < plan.radius - 26 ? .middle : .nothing
     }
 
@@ -517,8 +553,10 @@ final class RingsView: UIView, UIScrollViewDelegate {
             guard ring.open else { return Sound.shared.play(.seized) }
             if i == picked ?? ring.way { open(ring.spots[i]) } else { pick(i) }
         case .middle:
-            guard ring.open, let i = picked ?? ring.way else { return }
-            open(ring.spots[i])
+            guard ring.open else { return }
+            if let i = picked { open(ring.spots[i]) } else if let lead = ring.lead { open(lead) }
+        case .renew:
+            renew()
         case .nothing:
             unpick()
         }
@@ -527,7 +565,33 @@ final class RingsView: UIView, UIScrollViewDelegate {
     private func open(_ spot: RingsModel.Spot) {
         guard spot.shut == nil else { return Sound.shared.play(.seized) }
         Sound.shared.play(.tap)
-        onPick(spot.level)
+        onPick(spot.anew ? .endless(Run(seed: .random(in: .min ... .max))) : spot.level)
+    }
+
+    /// Endless's new run: a first tap arms it for `ResetArm.window` (under VoiceOver until a second), and a second
+    /// drops the saved run and deals another, so a slip never loses one.
+    private func renew() {
+        guard rings.indices.contains(at) else { return }
+        let layers = rings[at], tap = ResetArm.tap(now: .now, armedAt: armedAt, played: true, held: UIAccessibility.isVoiceOverRunning)
+        armedAt = tap.armedAt
+        Sound.shared.play(.tap)
+        guard tap.reset else {
+            fade(layers.renew, to: 0)
+            fade(layers.armed, to: 1)
+            UIAccessibility.post(notification: .announcement,
+                                 argument: String(localized: "Tap again for a new run", comment: "VoiceOver: endless's new run, armed"))
+            let armed = tap.armedAt
+            Task { [weak self] in
+                try? await Task.sleep(for: .seconds(ResetArm.window))
+                guard let self, self.armedAt == armed, !UIAccessibility.isVoiceOverRunning else { return }
+                self.armedAt = nil
+                self.fade(layers.renew, to: 1)
+                self.fade(layers.armed, to: 0)
+            }
+            return
+        }
+        Resume.remove("endless")
+        onPick(.endless(Run(seed: .random(in: .min ... .max))))
     }
 
     /// Names bead `i` in the middle: its words are baked off the main thread and shown as they land.
@@ -604,16 +668,21 @@ final class RingsView: UIView, UIScrollViewDelegate {
         if let daily = model.daily {
             element(daily.title, daily.under, around(plan.daily, 320, 64)) { [weak self] in self?.act(.daily) }
         }
-        let way = ring.way.map { ring.spots[$0] }
-        let value = way.map {
-            String(localized: "\(ring.under), next \($0.number) \($0.name)",
-                   comment: "VoiceOver: the rings' middle. The tier's count, then the number and name of the level it plays")
+        let lead = ring.open ? ring.lead : nil
+        let value = lead.map {
+            $0.number.isEmpty ? [ring.under, $0.name].filter { !$0.isEmpty }.joined(separator: ", ")
+                : String(localized: "\(ring.under), next \($0.number) \($0.name)",
+                         comment: "VoiceOver: the rings' middle. The tier's count, then the number and name of the level it plays")
         } ?? ring.under
         let side = 2 * (plan.radius - 26)
-        let middle = element(ring.word, value, around(plan.centre, side, side), way == nil ? .adjustable : [.button, .adjustable]) {
+        let middle = element(ring.word, value, around(plan.centre, side, side), lead == nil ? .adjustable : [.button, .adjustable]) {
             [weak self] in self?.act(.middle)
         }
         middle.step = { [weak self] by in self?.step(by) }
+        if ring.renews {
+            element(String(localized: "New run", comment: "VoiceOver: starts a new endless run"), nil,
+                    around(CGPoint(x: plan.centre.x + Self.cue.x, y: plan.centre.y + Self.cue.y), 180, 40)) { [weak self] in self?.act(.renew) }
+        }
         if ring.open {
             for (j, spot) in ring.spots.enumerated() {
                 let p = plan.bead(j, of: ring.spots.count)
@@ -621,7 +690,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
                     ? String(localized: "next, \(spot.facts)", comment: "VoiceOver: the rings' bead of the level the middle plays. Its best and par")
                     : spot.facts)
                 // loc: verbatim a level's number, then its title, localized by Levels
-                element("\(spot.number) \(spot.name)", state, around(CGPoint(x: plan.centre.x + p.x, y: plan.centre.y + p.y), 44, 44),
+                element(spot.number.isEmpty ? spot.name : "\(spot.number) \(spot.name)", state, around(CGPoint(x: plan.centre.x + p.x, y: plan.centre.y + p.y), 44, 44),
                         spot.shut == nil ? .button : [.button, .notEnabled]) { [weak self] in self?.open(spot) }
             }
         }

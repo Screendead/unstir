@@ -761,7 +761,8 @@ struct RootView: View {
                     // The list stays the menu beside play, until the rings have a layout for it.
                     RingsMenu(start: level == nil ? harness?.menuTier ?? look : nil, focus: focus, settings: $settings, card: $card,
                               clock: harness?.clock, day: harness?.day, placeholders: placeholders,
-                              cardScroll: harness?.cardScroll ?? false, arrived: arrived, revision: revision) {
+                              cardScroll: harness?.cardScroll ?? false, arrived: arrived, revision: revision,
+                              endless: Self.save("endless", harnessed: harnessed, harnessSave)) {
                         show($0)
                     }
                     .allowsHitTesting(level == nil)

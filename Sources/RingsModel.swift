@@ -17,18 +17,25 @@ struct RingsModel: Equatable, Sendable {
         let shut: String?
         /// The middle's line once the bead is picked.
         let facts: String
+        /// Endless with no run saved: a new run is dealt as it plays, from a seed drawn then.
+        var anew = false
     }
 
     struct Ring: Equatable, Sendable {
-        let tier: Tier
+        let hue: RingsHue
         let word: String
         let open: Bool
         /// "14/27 · 11 at par", or what opens a shut tier.
         let under: String
         let spots: [Spot]
-        /// The spot the middle names and plays: the first level without a best, else the first short of par, else
-        /// the first. Nil on a shut tier.
+        /// On a tier's ring, the bead the middle names and plays: the first level without a best, else the first short
+        /// of par, else the first. Nil on a shut tier and the rings that aren't tiers.
         let way: Int?
+        /// What the middle names and plays at rest: the way's level, today's daily on the archive's ring, endless's
+        /// run. Nil on a shut ring.
+        let lead: Spot?
+        /// Endless with a run saved: the middle also offers a new one, armed by a first tap (`ResetArm`).
+        var renews = false
     }
 
     struct Today: Equatable, Sendable {
@@ -53,9 +60,10 @@ struct RingsModel: Equatable, Sendable {
     let covers: [Cover]
     let packsLine: String?
 
-    @MainActor init(today: Date) {
-        let unlocked = Best.unlocked
-        rings = Tier.allCases.map { tier in
+    /// `endless`: its saved run, as the root reads it for the menu.
+    @MainActor init(today: Date, endless: Resume?) {
+        let unlocked = Best.unlocked, modes = MenuView.lead(unlocked: unlocked).modes, store = Store.shared
+        let tiers = Tier.allCases.map { tier in
             let open = tier.isOpen(), levels = tier.levels, bests = levels.map { Best.load($0.id) }
             let frontier = open ? bests.firstIndex { $0 == nil } : nil
             let spots = levels.indices.map { i -> Spot in
@@ -80,15 +88,17 @@ struct RingsModel: Equatable, Sendable {
                     String(localized: "opens with every \($0.word) level solved", comment: "A shut tier's gate. The tier below")
                 } ?? ""
             let way = !open || levels.isEmpty ? nil : frontier ?? bests.firstIndex { ($0?.over ?? 0) > 0 } ?? 0
-            return Ring(tier: tier, word: tier.word, open: open, under: under, spots: spots, way: way)
+            return Ring(hue: .tier(tier), word: tier.word, open: open, under: under, spots: spots, way: way, lead: way.map { spots[$0] })
         }
-        if MenuView.lead(unlocked: unlocked).modes {
+        // The daily and endless show once the old menu's would (`MenuView.lead`, Jack's call C4), the archive's ring
+        // above plughole and endless's below maelstrom.
+        rings = modes ? [Self.archive(today: today, store: store, unlocked: unlocked)] + tiers + [Self.endless(endless)] : tiers
+        if modes {
             let level = Level.daily(today)
             daily = Today(level: level, title: level.title, under: MenuView.dailyLines(level, run: Daily.run(today: today)).under)
         } else {
             daily = nil
         }
-        let store = Store.shared
         if PackDock.shown(), store.shelved {
             covers = Offer.shelf().compactMap { offer in
                 // Each pack that ships, as each has its cover; the bundle is a card's to offer.
@@ -107,5 +117,51 @@ struct RingsModel: Equatable, Sendable {
             covers = []
             packsLine = nil
         }
+    }
+
+    /// The archive's ring: a bead for each past daily, round today's in the middle. Shut, as the archive is, until a
+    /// purchase (`Archive.open`), and until the store's first read so an owner never meets the lock.
+    @MainActor private static func archive(today: Date, store: Store, unlocked: Bool) -> Ring {
+        let days = Archive.days(today: today), open = store.ready && Archive.open
+        func short(_ date: Date) -> String { date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
+        let locked = String(localized: "unlocked by purchasing any pack")
+        var atPar = 0
+        let spots = days.map { day -> Spot in
+            let level = Level.daily(day, archived: true), best = Best.load(level.id)
+            if best?.over == 0 { atPar += 1 }
+            let facts = best.map {
+                String(localized: "solved in \(level.par + $0.over) \u{00B7} par \(level.par)",
+                       comment: "The rings' middle, a solved level picked. Its best in moves, then its par")
+            } ?? String(localized: "par \(level.par)", comment: "The rings' middle, an unsolved level picked. Its par")
+            let bead: Bead = !open ? .dull : best.map { $0.over == 0 ? .par : .solved } ?? .dull
+            return Spot(level: level, number: "", name: short(day), bead: bead, shut: open ? nil : locked, facts: facts)
+        }
+        let under = !store.ready ? String(localized: "\(days.count) past dailies", comment: "The menu's archive row. Past dailies")
+            : open ? String(localized: "\(days.count) past dailies \u{00B7} \(atPar) at par",
+                            comment: "The menu's archive row. Past dailies, then how many are at par")
+            : String(localized: "\(days.count) past dailies \u{00B7} comes with any pack",
+                     comment: "The menu's archive row, shut until a purchase. Past dailies")
+        let level = Level.daily(today)
+        let lead = Spot(level: level, number: "", name: short(today), bead: .dull, shut: nil, facts: "")
+        return Ring(hue: .today, word: String(localized: "today", comment: "The rings' archive ring, round today's daily"),
+                    open: open, under: under, spots: spots, way: nil, lead: open ? lead : nil)
+    }
+
+    /// Endless's ring: no beads, its circle a neon tube; the middle continues the saved run, or deals a new one.
+    @MainActor private static func endless(_ saved: Resume?) -> Ring {
+        let run = saved?.run, best = Best.tanks
+        let under: String = run.map {
+            let tank = $0.tank + 1, brim = saved?.brim ?? $0.brim
+            return best > 0
+                ? String(localized: "tank \(tank) \u{00B7} brim \(brim) \u{00B7} best \(best)",
+                         comment: "The rings' endless middle, a run saved: its tank, its brim, then the best run's tanks")
+                : String(localized: "tank \(tank) \u{00B7} brim \(brim)", comment: "The rings' endless middle, a run saved: its tank, then its brim")
+        } ?? (best > 0 ? String(localized: "best \(best)", comment: "Endless's row: the best run's tanks") : "")
+        // A run's level, or a placeholder for one dealt as it plays: a seed drawn here would make every read new.
+        let name = run == nil ? String(localized: "new run", comment: "The rings' endless middle with no run saved: deals one")
+            : String(localized: "continue", comment: "The rings' endless middle: plays the saved run")
+        let lead = Spot(level: .endless(run ?? Run(seed: 0)), number: "", name: name, bead: .dull, shut: nil, facts: "", anew: run == nil)
+        return Ring(hue: .endless, word: String(localized: "endless", comment: "The rings' endless ring"), open: true, under: under,
+                    spots: [], way: nil, lead: lead, renews: run != nil)
     }
 }

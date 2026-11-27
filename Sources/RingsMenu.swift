@@ -47,6 +47,8 @@ struct RingsMenu: View {
     var cardScroll = false
     var arrived: Pack?
     var revision = 0
+    /// Endless's saved run, as the root reads it for the menu.
+    var endless: Resume?
     let onPick: (Level) -> Void
 
     @State private var today = Date.now
@@ -67,21 +69,29 @@ struct RingsMenu: View {
         return hasher.finalize()
     }
 
-    private var opening: Int {
-        let tier = start ?? focus.flatMap { level in Tier.allCases.first { $0.levels.contains { $0.id == level.id } } } ?? Tier.stored()
-        return Tier.allCases.firstIndex(of: tier) ?? 0
+    private var tier: Tier {
+        start ?? focus.flatMap { level in Tier.allCases.first { $0.levels.contains { $0.id == level.id } } } ?? Tier.stored()
+    }
+
+    /// The ring in front as the menu opens: the one of the level just left (endless's, the archive's for a past daily),
+    /// else the tier's.
+    private var opening: RingsHue {
+        if start == nil, focus?.run != nil { return .endless }
+        if start == nil, focus?.archived == true { return .today }
+        return .tier(tier)
     }
 
     var body: some View {
         let analytics = Analytics.shared
         let asking = analytics.asks && analytics.consent == .undecided
-        RingsHost(state: RingsView.State(revision: revision &+ (Sync.built ? Sync.revision.count : 0), day: day ?? today, store: stored),
+        RingsHost(state: RingsView.State(revision: revision &+ (Sync.built ? Sync.revision.count : 0), day: day ?? today, store: stored,
+                                         endless: endless),
                   opening: opening, onPick: onPick, onOffer: { show($0) }, onSettings: { settings = true })
             .ignoresSafeArea()
             .allowsHitTesting(card == nil && !asking)
             .accessibilityHidden(card != nil || asking)
             .overlay { cardView }
-            .overlay { if asking { ConsentCard(tier: Tier.allCases[opening]).transition(.opacity) } }
+            .overlay { if asking { ConsentCard(tier: tier).transition(.opacity) } }
             .animation(.easeOut(duration: 0.25), value: asking)
             .onChange(of: card) { cameFrom = cameFrom?.kept(as: card) }
             .onChange(of: phase) { if phase == .active { today = .now } }
@@ -121,7 +131,7 @@ struct RingsMenu: View {
 
 private struct RingsHost: UIViewRepresentable {
     let state: RingsView.State
-    let opening: Int
+    let opening: RingsHue
     let onPick: (Level) -> Void
     let onOffer: (Offer) -> Void
     let onSettings: () -> Void

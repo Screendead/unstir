@@ -10,11 +10,16 @@ import UIKit
 // either side, a grid floor running to the horizon under a sky of stars. The grid's straight lines, the sun's bands,
 // the horizon and the mountains are his references, which override the redesign's "no hard straight lines" here.
 
+/// Whose colours a ring wears: a tier's, the archive's (today) or endless's.
+enum RingsHue: Hashable, Sendable {
+    case tier(Tier), today, endless
+}
+
 /// A colour of the look by its role, so no caller holds an RGB.
 enum RingsInk: Hashable, Sendable {
     /// The words' white, at a strength.
     case ink(Double)
-    case tier(Tier)
+    case hue(RingsHue)
     /// On a filled bead.
     case dark
     case gold
@@ -53,8 +58,8 @@ struct RingsText: Hashable, Sendable {
         case plain
         /// Over the scene: a dark shadow under them.
         case shadowed
-        /// A tube not lit: a faint fill and the tier's outline.
-        case unlit(Tier)
+        /// A tube not lit: a faint fill and the ring's outline.
+        case unlit(RingsHue)
     }
 
     var runs: [Run]
@@ -110,10 +115,12 @@ struct RingsGround: Hashable, Sendable {
 enum RingsPiece: Hashable, Sendable {
     case ground(RingsGround)
     /// A ring's sun, the stage its words stand on: up on an open tier, down on a shut one.
-    case sun(Tier, shut: Bool)
-    case bead(Tier, RingsModel.Bead)
+    case sun(RingsHue, shut: Bool)
+    case bead(RingsHue, RingsModel.Bead)
     /// The thread from one bead to the next.
-    case link(Tier)
+    case link(RingsHue)
+    /// A ring with no beads, endless's: its circle as one neon tube.
+    case orbit(RingsHue)
     /// Round a picked bead.
     case halo
     /// The daily's evening star.
@@ -182,12 +189,14 @@ enum RingsLook {
 
     static let cyan: RGB = (40 / 255, 236 / 255, 1), pink: RGB = (1, 52 / 255, 200 / 255)
 
-    static func rgb(_ tier: Tier) -> RGB {
-        switch tier {
-        case .plughole: (40 / 255, 240 / 255, 220 / 255)
-        case .whirlpool: (198 / 255, 96 / 255, 1)
-        case .vortex: (64 / 255, 132 / 255, 1)
-        case .maelstrom: (1, 56 / 255, 96 / 255)
+    static func rgb(_ hue: RingsHue) -> RGB {
+        switch hue {
+        case .tier(.plughole): (40 / 255, 240 / 255, 220 / 255)
+        case .tier(.whirlpool): (198 / 255, 96 / 255, 1)
+        case .tier(.vortex): (64 / 255, 132 / 255, 1)
+        case .tier(.maelstrom): (1, 56 / 255, 96 / 255)
+        case .today: (1, 214 / 255, 64 / 255)
+        case .endless: (1, 72 / 255, 208 / 255)
         }
     }
 
@@ -232,9 +241,10 @@ enum RingsPaint {
     static func draw(_ piece: RingsPiece, scale: CGFloat) -> RingsBitmap? {
         switch piece {
         case let .ground(ground): Self.ground(ground)
-        case let .sun(tier, shut): sun(tier, shut: shut)
-        case let .bead(tier, state): bead(tier, state, scale: scale)
-        case let .link(tier): link(tier, scale: scale)
+        case let .sun(hue, shut): sun(hue, shut: shut)
+        case let .bead(hue, state): bead(hue, state, scale: scale)
+        case let .link(hue): link(hue, scale: scale)
+        case let .orbit(hue): orbit(hue)
         case .halo: halo(scale: scale)
         case .daily: daily(scale: scale)
         case let .cover(pack): cover(pack, scale: scale)
@@ -256,7 +266,7 @@ enum RingsPaint {
     static func colour(_ ink: RingsInk) -> CGColor {
         switch ink {
         case let .ink(a): colour((243 / 255, 240 / 255, 236 / 255), a)
-        case let .tier(tier): colour(RingsLook.rgb(tier))
+        case let .hue(hue): colour(RingsLook.rgb(hue))
         case .dark: colour((14 / 255, 6 / 255, 30 / 255), 0.92)
         case .gold: colour((1, 232 / 255, 72 / 255))
         case .deep: colour(0x1B0440)
@@ -412,12 +422,17 @@ enum RingsPaint {
     /// The sun's bitmap is this wide, for its glow.
     static let sunSide: CGFloat = 400
 
-    static func sun(_ tier: Tier, shut: Bool) -> RingsBitmap? {
+    static func sun(_ hue: RingsHue, shut: Bool) -> RingsBitmap? {
         // Cut off at the horizon it sets on, so no pixel is kept for what is never seen.
         let side = sunSide, d = RingsLook.sun, r = d / 2, set = RingsLook.set, scale: CGFloat = 2, tall = side / 2 + set
         return raster(side, tall, scale: scale, offset: CGPoint(x: 0, y: (tall - side) / 2)) { ctx in
             let mid = CGPoint(x: side / 2, y: side / 2)
-            let stops: [Int] = shut ? [0x2A1060, 0x3C1272, 0x5A1A7A] : tier == .plughole ? [0xF6FFA0, 0x7AF0C0, 0x22C4E0] : [0xFFF27A, 0xFFB347, 0xFF3D9A]
+            let lit: [Int] = switch hue {
+            case .tier(.plughole): [0xF6FFA0, 0x7AF0C0, 0x22C4E0]
+            case .endless: [0xFFD6F2, 0xF070D8, 0xA048F0]
+            default: [0xFFF27A, 0xFFB347, 0xFF3D9A]
+            }
+            let stops = shut ? [0x2A1060, 0x3C1272, 0x5A1A7A] : lit
             ctx.saveGState()
             if !shut { ctx.setShadow(offset: .zero, blur: 26 * scale, color: colour((1, 90 / 255, 150 / 255), 0.9)) }
             ctx.setFillColor(colour(stops[1]))
@@ -438,7 +453,7 @@ enum RingsPaint {
                 ctx.fill(CGRect(x: 0, y: mid.y + at * r, width: side, height: tall * r))
             }
             ctx.restoreGState()
-            if shut { tube(ctx, mid, r - 1, RingsLook.rgb(tier), width: 1.4, glow: 6, scale: scale) }
+            if shut { tube(ctx, mid, r - 1, RingsLook.rgb(hue), width: 1.4, glow: 6, scale: scale) }
         }
     }
 
@@ -447,8 +462,8 @@ enum RingsPaint {
     /// A bead's width in points, without its rim.
     static func width(_ state: RingsModel.Bead) -> CGFloat { state == .next ? 37 : 27 }
 
-    static func bead(_ tier: Tier, _ state: RingsModel.Bead, scale: CGFloat) -> RingsBitmap? {
-        let c = RingsLook.rgb(tier), r = width(state) / 2, side: CGFloat = state == .next ? 108 : state == .par ? 60 : 48
+    static func bead(_ hue: RingsHue, _ state: RingsModel.Bead, scale: CGFloat) -> RingsBitmap? {
+        let c = RingsLook.rgb(hue), r = width(state) / 2, side: CGFloat = state == .next ? 108 : state == .par ? 60 : 48
         return raster(side, side, scale: scale) { ctx in
             let mid = CGPoint(x: side / 2, y: side / 2)
             switch state {
@@ -489,10 +504,23 @@ enum RingsPaint {
     /// The thread's length as baked; the engine stretches it from one bead to the next.
     static let linkLength: CGFloat = 44
 
-    static func link(_ tier: Tier, scale: CGFloat) -> RingsBitmap? {
+    static func link(_ hue: RingsHue, scale: CGFloat) -> RingsBitmap? {
         raster(linkLength, 3, scale: scale) { ctx in
-            ctx.setFillColor(colour(RingsLook.rgb(tier), 0.3))
+            ctx.setFillColor(colour(RingsLook.rgb(hue), 0.3))
             ctx.fill(CGRect(x: 0, y: 1, width: linkLength, height: 1))
+        }
+    }
+
+    /// The orbit's radius at the mock's scale, the beads' circle.
+    static let orbitRadius: CGFloat = 190
+
+    /// A neon circle on the beads' orbit, baked under the screen's scale as its glow is soft.
+    static func orbit(_ hue: RingsHue) -> RingsBitmap? {
+        let side = 2 * orbitRadius + 40, scale: CGFloat = 2
+        return raster(side, side, scale: scale) { ctx in
+            let mid = CGPoint(x: side / 2, y: side / 2)
+            tube(ctx, mid, orbitRadius, RingsLook.rgb(hue), width: 3, glow: 10, scale: scale)
+            ring(ctx, mid, orbitRadius, colour((1, 1, 1), 0.5), width: 1)
         }
     }
 
@@ -646,9 +674,9 @@ enum RingsPaint {
             NSAttributedString.Key(kCTForegroundColorAttributeName as String): colour(run.ink),
             NSAttributedString.Key(kCTKernAttributeName as String): tracking,
         ]
-        if case let .unlit(tier) = finish {
+        if case let .unlit(hue) = finish {
             attributes[NSAttributedString.Key(kCTForegroundColorAttributeName as String)] = colour(.ink(0.2))
-            attributes[NSAttributedString.Key(kCTStrokeColorAttributeName as String)] = colour(RingsLook.rgb(tier), 0.9)
+            attributes[NSAttributedString.Key(kCTStrokeColorAttributeName as String)] = colour(RingsLook.rgb(hue), 0.9)
             // Negative strokes and fills; a percentage of the size.
             attributes[NSAttributedString.Key(kCTStrokeWidthAttributeName as String)] = -0.9 / run.size * 100
         }
