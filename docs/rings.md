@@ -94,7 +94,9 @@ at rest.
   for the menu (layouts, SwiftUI updates, model reads, builds, bakes, scroll callbacks), and the tour's `rest`
   prints them over six seconds: all zero on the simulator (2026-11-27). Its `swipe`, down through every ring and back,
   costs scroll callbacks alone (112 at the simulator's 60 Hz over four rings, 184 over six), with no layout, build or
-  bake.
+  bake. On the 13 Pro Max (2026-11-27) the screen drew at 60 Hz, slowing to 48, through three of the swipe's rests
+  and for about a second after launch: each time the trace's commits were GameOverlayUI's alone (Game Center's
+  overlay, which shows its welcome banner after sign-in), none the app's.
 - **A named bead** bakes its three lines on a tap, off the main thread, and shows them as they land.
 - **The model's read** runs on the main thread at launch and on each return from a level. The archive's ring deals
   thirty past dailies, which took 0.3 s in a Debug build on the simulator, so `RingsModel` keeps each daily as dealt
