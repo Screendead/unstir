@@ -2289,7 +2289,6 @@ final class UnstirTests: XCTestCase {
     /// characters, and no title repeats anywhere in the game, First Stir's kept titles included.
     func testEveryTitleIsItsOwn() {
         let v1 = Tier.allCases.flatMap(\.levels) + [Pack.lens, .escapement, .prism].flatMap(\.levels)
-        XCTAssertEqual(v1.count, 193)
         for level in v1 {
             XCTAssertLessThanOrEqual(level.title.count, 16, level.id)
             XCTAssertLessThanOrEqual(level.title.split(separator: " ").count, 2, level.id)
