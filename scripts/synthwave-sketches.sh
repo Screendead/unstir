@@ -1,14 +1,14 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/synthwave-sketches.sh <dir>   Renders round four of the synthwave menu's sketches
-# (sound-src/synthwave-sketches.csd) for Jack's ear: round two's hybrid bed note for note through round four's
-# played voices and desk, a hybrid in sevenths with a new hook, night drive (dark's third take's kit, night's bass line
-# and dark lead), and two lower, darker pairs of the combined swipe, each a rising "back up" and a falling "deeper",
-# with round two's swipe to measure them against. Each bed as one seamless loop of its 16 bars at -16 LUFS, and each
-# swipe, louder, as m4a in <dir>; then measures each bed's seam, each file's loudness, each bed's onsets against its
-# beat grid, how much of each bed's bass a phone's speaker keeps, each bed's share of energy in the bands where a top
-# line turns harsh against round two's hybrid, and each swipe's brightness against round two's. Rounds one to three
-# are this script's earlier commits. Needs Homebrew's csound and ffmpeg, and numpy.
+# Usage: scripts/synthwave-sketches.sh <dir>   Renders round five of the synthwave menu's sketches
+# (sound-src/synthwave-sketches.csd) for Jack's ear: night drive's two takes (A louder on a phone through the bass's
+# and lead's harmonics, B with delay throws too) beside round four's night drive and hybrid produced, and the warm
+# swipe pair without its landing tom and with it folded in, beside round four's. Each bed as one seamless loop of its
+# 16 bars at -16 LUFS, and each swipe, louder, as m4a in <dir>; then measures each bed's seam, each file's loudness,
+# also through a phone speaker's model, each bed's onsets against its beat grid, how much of each bed's bass a phone's
+# speaker keeps, each bed's share of energy in the bands where a top line turns harsh against round four's night
+# drive, and each swipe's brightness and level over time. Rounds one to four are this script's earlier commits.
+# Needs Homebrew's csound and ffmpeg, and numpy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -27,20 +27,22 @@ BED_I=-16
 FX_M=-11
 # name, instrument, tempo, and the bed it is measured against.
 BEDS="
-hybrid-produced hybridProduced 100 hybrid
-hybrid-sevenths hybridSevenths 100 hybrid
-night-drive nightDrive 100 hybrid
+night-drive-a nightDriveA 100 nightDrive
+night-drive-b nightDriveB 100 nightDrive
+night-drive nightDrive 100 nightDrive
+hybrid-produced hybridProduced 100 nightDrive
 "
 REFS="
-hybrid 100
+nightDrive 100
 "
 # name, instrument, and the tempo of the bed it plays over, so its echo falls on that bed's grid.
 SWIPES="
-both-swipe-e-r2 swipeBothE 100
-swipe-low-up swipeLowUp 100
-swipe-low-down swipeLowDown 100
 swipe-warm-up swipeWarmUp 100
 swipe-warm-down swipeWarmDown 100
+swipe-warm-smooth-up swipeWarmSmoothUp 100
+swipe-warm-smooth-down swipeWarmSmoothDown 100
+swipe-warm-fold-up swipeWarmFoldUp 100
+swipe-warm-fold-down swipeWarmFoldDown 100
 "
 
 # An 8th-order Butterworth highpass at 250 Hz, as four biquads: roughly what an iPhone's speaker keeps (sounds.sh's).
@@ -176,8 +178,8 @@ while read -r name _ bpm _; do
 done <<<"$BEDS"
 
 echo
-echo "each bed's bass against round two's hybrid's, both before the level is set, and each bed's share of energy in"
-echo "the bands where a top line turns harsh, round two's hybrid's in brackets"
+echo "each bed's bass against round four's night drive's, both before the level is set, and each bed's share of energy"
+echo "in the bands where a top line turns harsh, round four's night drive's in brackets"
 while read -r name _ _ ref; do
     [ -z "$name" ] && continue
     python3 -I scripts/synthwave-sketches/against.py "$B/$name-bass-raw.wav" "$B/ref-$ref-bass-raw.wav" \
@@ -192,4 +194,7 @@ while read -r name _ _; do
     swipes+=("$B/$name.wav")
 done <<<"$SWIPES"
 python3 -I scripts/synthwave-sketches/bright.py "${swipes[@]}"
+echo
+echo "each swipe's level over time (40 ms windows, dB), and its loudest window against the run's (its first 0.4 s)"
+python3 -I scripts/synthwave-sketches/profile.py "${swipes[@]}"
 ls "$D"

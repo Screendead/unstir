@@ -127,6 +127,16 @@ giPadLFO init 0.18
 giPlkOct init 12
 giPlkAmp init 1
 giPadAmp init 0.1
+; Round five: giTomLevel scales a swipe's landing tom (0 leaves it out) and giTomAt sets when it strikes; giBassSat
+; adds the bass's own harmonics, saturated and banded into what a phone's speaker plays; giThrowLen, when set, sends
+; each line note held that many beats or longer to the delay at giThrowDl.
+giTomLevel init 1
+giTomAt init 0.5
+giBassSat init 0
+giThrowLen init 0
+giThrowDl init 0.85
+giLeadDriveND init 1.1
+giTomHz init 73
 
 opcode Hz, i, i
   im xin
@@ -1157,6 +1167,12 @@ instr bass4
   af moogladder a1 + a2 + a3, kcut * kshut, giBassRes
   af = tanh(giBassDrive * af)
   aenv linsegr 0, 0.003, 1, giBassRel, 0
+  if giBassSat > 0 then
+    ah = tanh(5 * af)
+    ah butterhp ah, 220
+    ah butterlp ah, 1100
+    af = af + giBassSat * ah
+  endif
   kpm = 1 - giBassPump * (1 - gkPump)
   ab = af * aenv * p5 * kpm
   gaBass += ab
@@ -1231,7 +1247,8 @@ instr lead4
   af moogladder a1 + a2 + a3 + a4, kcut, giLeadRes
   af = tanh(giLeadDrive * af)
   aenv linsegr 0, 0.012, 1, giLeadRel, 0
-  Out af * aenv * p5, 0.5, giLeadRv, giLeadDl
+  idl = p6 > 0 ? p6 : giLeadDl
+  Out af * aenv * p5, 0.5, giLeadRv, idl
 endin
 
 ; sweep with p10 the filter's resonance.
@@ -1258,7 +1275,9 @@ opcode Notes4, 0, Si[]iiii
     while ii < lenarray(iev) do
       ilen = iev[ii + 1] < 2.5 ? iev[ii + 1] : 2.5
       ivar = 0.88 + 0.08 * sin(ii * 1.37) + 0.04 * ilen
-      schedule Sins, (iev[ii] + ir * giBars * 4) * giB, iev[ii + 1] * giB * igate, iev[ii + 2] + itrans, iamp * ivar
+      ithrow = (giThrowLen > 0 && iev[ii + 1] >= giThrowLen) ? giThrowDl : 0
+      schedule Sins, (iev[ii] + ir * giBars * 4) * giB, iev[ii + 1] * giB * igate, iev[ii + 2] + itrans, iamp * ivar, \
+        ithrow
       ii += 3
     od
     ir += 1
@@ -1411,14 +1430,13 @@ endin
 ; Round four, night drive: dark's third take's light four on the floor, night's bass line (a held root, a push on the
 ; and of 3, the fifth or octave) on dark's roots, the pad's top dropped under night's third take's dark, soft lead,
 ; which sings the hybrid's motif, and the pluck quieter and darker behind it.
-instr nightDrive
-  NightPatch
+opcode NightDriveSong, 0, 0
   giR4 = 1
   giLeadDet = 4
   giLeadSub = 0
   giLeadRes = 0.15
   giLeadAtk = 0.04
-  giLeadDrive = 1.1
+  giLeadDrive = giLeadDriveND
   giLeadGlide = 0.03
   giLeadCut = 2100
   giLeadRv = 0.4
@@ -1515,8 +1533,38 @@ instr nightDrive
     50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
     58.5, 0.5, 71, 59, 1.5, 75, 60.5, 3, 78
   if giLeadOn == 1 then
-    Notes4 "lead4", imotif, 0, 0.34, 0.92, ireps
+    Notes4 "lead4", imotif, 0, giTopAmp, 0.92, ireps
   endif
+endop
+
+instr nightDrive
+  NightPatch
+  giTopAmp = 0.34
+  NightDriveSong
+  turnoff
+endin
+
+; Round five, take A: night drive louder on a phone, no brighter. The bass's own harmonics, saturated and kept
+; between 220 Hz and 1.1 kHz, ride under its fundamental, and the lead is driven harder into the filter it had, so
+; its harmonics thicken under 2.1 kHz.
+opcode NightDriveA, 0, 0
+  NightPatch
+  giTopAmp = 0.34
+  giBassSat = 0.85
+  giLeadDriveND = 2.2
+endop
+instr nightDriveA
+  NightDriveA
+  NightDriveSong
+  turnoff
+endin
+
+; Round five, take B: take A with hybrid produced's delay throws, on the lead's two longest notes, the ends of each
+; half (bars 8 and 16).
+instr nightDriveB
+  NightDriveA
+  giThrowLen = 3
+  NightDriveSong
   turnoff
 endin
 
@@ -1547,7 +1595,7 @@ opcode DarkRun4, 0, i[]iiiiiiii
     ii += 1
   od
   schedule "sweep4", 0.02, 0.5, isw0, isw1, iamp * 0.5, ic0, ic1, idown, ires
-  schedule "tom", 0.5, 0.4, iamp * 0.45, itom, 0.4
+  schedule "tom", giTomAt, 0.4, iamp * 0.45 * giTomLevel, itom, 0.4 * giTomLevel
 endop
 opcode NightRun4, 0, i[]i
   irun[], iamp xin
@@ -1605,7 +1653,7 @@ opcode WarmSwipe, 0, i[]iiiiiii
     schedule "pad4", 0.02, 0.4, ichord[ii], 0.11
     ii += 1
   od
-  DarkRun4 irun, isw0, isw1, ic0, ic1, 0.45, 73, 0.8, idown
+  DarkRun4 irun, isw0, isw1, ic0, ic1, 0.45, giTomHz, 0.8, idown
   schedule "tine4", 0.45, 0.5, it1, 0.3
   schedule "tine4", 0.51, 0.6, it2, 0.32
 endop
@@ -1615,6 +1663,37 @@ instr swipeWarmUp
   turnoff
 endin
 instr swipeWarmDown
+  irun[] fillarray 64, 59, 55, 52, 47, 40
+  WarmSwipe irun, 40, 28, 1200, 150, 1, 71, 64
+  turnoff
+endin
+; Round five: round four's warm pair struck its tom at 73 Hz (a D under E minor) 0.5 s in, 5 to 6 dB over the run.
+; Smooth leaves the tom out, so the run's rise or fall goes straight into the tine's landing. Folded keeps it, tuned to
+; E2, struck with the tine's landing and down at the run's level.
+instr swipeWarmSmoothUp
+  giTomLevel = 0
+  irun[] fillarray 40, 47, 52, 55, 59, 64
+  WarmSwipe irun, 28, 40, 150, 1200, 0, 64, 71
+  turnoff
+endin
+instr swipeWarmSmoothDown
+  giTomLevel = 0
+  irun[] fillarray 64, 59, 55, 52, 47, 40
+  WarmSwipe irun, 40, 28, 1200, 150, 1, 71, 64
+  turnoff
+endin
+instr swipeWarmFoldUp
+  giTomLevel = 0.3
+  giTomAt = 0.45
+  giTomHz = 82.4
+  irun[] fillarray 40, 47, 52, 55, 59, 64
+  WarmSwipe irun, 28, 40, 150, 1200, 0, 64, 71
+  turnoff
+endin
+instr swipeWarmFoldDown
+  giTomLevel = 0.3
+  giTomAt = 0.45
+  giTomHz = 82.4
   irun[] fillarray 64, 59, 55, 52, 47, 40
   WarmSwipe irun, 40, 28, 1200, 150, 1, 71, 64
   turnoff
