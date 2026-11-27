@@ -477,7 +477,7 @@ extension LensArt {
         for sx in [-1.0, 1.0] { s.append(stroke(circle(dog + P(sx * 0.008, 0.002), 0.002, 4), 0.0026)) }
         s.append(stroke(closed([dog + P(-0.011, -0.01), dog + P(0.004, -0.044), dog + P(0.013, -0.008)]), 0.003))
         s.append(stroke(circle(dog + P(0.004, -0.048), 0.004, 6), 0.0024))
-        let face = mirror + P(-0.036, 0.03)
+        let face = mirror + P(-0.03, 0.026)
         s.append(stroke(circle(face, 0.022, 14), 0.0034))
         s.append(stroke(arc(face + P(0, 0.002), 0.012, 20, 160, 8), 0.0026))
         for sx in [-1.0, 1.0] { s.append(stroke(circle(face + P(sx * 0.008, -0.006), 0.0022, 4), 0.0026)) }
