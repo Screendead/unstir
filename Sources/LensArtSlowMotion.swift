@@ -709,11 +709,12 @@ extension LensArt {
         for x in [-0.008, 0.0, 0.008] { s.append(stroke([mug + P(x, -0.01), mug + P(x, 0.018)], 0.0014)) }
         s.append(stroke(curve(mug + P(-0.016, -0.016), mug + P(-0.02, -0.024), mug + P(-0.012, -0.024), 5), 0.0024))
         // In the lower left: a clay pipe and its smoke.
-        let pipe = rods[5] + P(0.03, -0.022)
-        s.append(stroke(closed([pipe + P(0.006, -0.016), pipe + P(0.02, -0.016), pipe + P(0.018, 0.006), pipe + P(0.008, 0.006)]), 0.0034))
-        s.append(stroke(curve(pipe + P(0.008, 0.002), pipe + P(-0.02, 0.012), pipe + P(-0.048, 0.006), 10), 0.003))
-        s.append(stroke(curve(pipe + P(0.013, -0.02), pipe + P(0.0, -0.034), pipe + P(0.014, -0.044), 8)
-            + curve(pipe + P(0.014, -0.044), pipe + P(0.028, -0.054), pipe + P(0.012, -0.064), 8).dropFirst(), 0.0024))
+        let pipe = rods[5] + P(0.022, -0.026)
+        s.append(stroke(closed([pipe + P(0.004, -0.018), pipe + P(0.028, -0.018), pipe + P(0.024, 0.008), pipe + P(0.016, 0.012), pipe + P(0.008, 0.008)]), 0.004))
+        s.append(stroke([pipe + P(0.006, -0.012), pipe + P(0.026, -0.012)], 0.0016))
+        s.append(stroke(curve(pipe + P(0.008, 0.004), pipe + P(-0.02, 0.014), pipe + P(-0.05, 0.004), 10), 0.0036))
+        s.append(stroke(curve(pipe + P(0.016, -0.022), pipe + P(0.004, -0.032), pipe + P(0.016, -0.04), 8)
+            + curve(pipe + P(0.016, -0.04), pipe + P(0.028, -0.048), pipe + P(0.016, -0.056), 8).dropFirst(), 0.0026))
         // In the upper left: the ace of hearts.
         let card = rods[6] + P(0.03, -0.03)
         s.append(stroke(closed(squircle(card, 0.018, 0.026, 32)), 0.003))
