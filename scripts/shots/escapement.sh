@@ -61,6 +61,14 @@ shot escapement-hubs-16-out "Escapement 16, the wrong 6:-4 then three waits: bot
   PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,6:-4,4:1,4:1,4:1
 shot escapement-hubs-22-dealt "Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11." \
   PACK=escapement OWNED=escapement LEVEL=22
+# A clock dealt more than 9 ticks shows two cards on its hub for the whole problem: 41 (clocks 1 and 2, owing 11 and 9)
+# as dealt, after 4:-3, 5:-3 and 4:+5, and 90 (one clock owing 27) after the first five moves of its line.
+shot escapement-hubs-41-dealt "Escapement 41 as dealt: two cards on each hub, 11 and 09, header 20." \
+  PACK=escapement OWNED=escapement LEVEL=41
+shot escapement-hubs-41-mid "Escapement 41 after 4:-3, 5:-3 and 4:+5: hubs 08 and 06, header 14." \
+  PACK=escapement OWNED=escapement LEVEL=41 PLAYED=4:-3,5:-3,4:5
+shot escapement-hubs-90-mid "Escapement 90 after 0:-4, 3:-3, 2:+5, 3:-5 and 4:+3: its hub at 22, header 22." \
+  PACK=escapement OWNED=escapement LEVEL=90 PLAYED=0:-4,3:-3,2:5,3:-5,4:3
 # Out of ticks as the clocks stop with twists left, each of the three looks (UNSTIR_STOPLOOK): on 3, the book's decoy, a
 # tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
 for look in stamp left rings; do
