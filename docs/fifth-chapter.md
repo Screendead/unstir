@@ -63,8 +63,9 @@ a proof to that range, which agrees on every level checked with it.
   knocks; the other one first brings the bead the other way, and then the first goes all the way.
 - **The skill.** Keeping a running sum within bounds: choosing the order of the free choices, and turning a knob the
   wrong way for a while to make room. Every turn on the tank matters to every other.
-- **Hardest proved.** Quad on agate, `0:+5,1:+4,2:-3,3:-6`, keel 4: optimum 6 for 4 entries, one first move of 10
-  reaches it (`1:-4`), untwisting alone stranded.
+- **Hardest proved.** Pent on agate, `4:+4,1:-3,2:-5,1:-2,4:+3` (knob 4's two merge as dealt), keel 3: optimum 7 for
+  4 entries, one first move of 12 reaches it (`1:+2`), untwisting alone stranded; the line splits knob 2's turn in
+  three to keep the bead on the scale. Quad on agate, `0:+5,1:+4,2:-3,3:-6`, keel 4, takes 6 for 4.
 
 ### Ebb and flow
 

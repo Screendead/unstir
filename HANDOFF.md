@@ -59,7 +59,9 @@ session on `packs/treble`; its draft PR is the claim.
 - **Fifth chapter.** Mineral's four pictures (`slope/art`, `Mineral.metal`, self-contained) move to master unchanged
   and go on a new tier after maelstrom. Its mechanic (Debug prototypes, filmed), name (a stored raw value and prefix)
   and length go to Jack as one pitch before its levels are built. It must not give away a paid pack's mechanic or touch
-  the frozen generator.
+  the frozen generator. Groundwork built on `chapter5/mineral` (2026-11-27; `docs/fifth-chapter.md`): Mineral on master's
+  code, three candidate rules (keys, the keel, ebb and flow) as Debug prototypes with films and proved levels, names
+  and length; recommended keys. Waits on the pitch to Jack; charybdis's standing calls (orbits, the swirling rim) go in it.
 - Measured 2026-11-27: today's pars run Lens 1 to 12, Escapement 2 to 9, Prism 3 to 8, maelstrom up to 26. At par the
   solvers deal Prism depth 11 on hex and Escapement 12 with two clocks.
 
