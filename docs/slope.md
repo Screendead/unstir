@@ -203,7 +203,9 @@ Announcements made today are made at the same moments. The words in `Spoken.swif
 
 ## 2. The menu
 
-The menu is the main column. It rests at two zooms: the **overview**, the whole column on one screen, and the
+The menu is the main column. It rests at two zooms: the **overview**, the whole column from far off, about 2.5
+screens long and scrolling (Jack's call, 2026-11-27: it need not fit one screen; the heights below are as first
+built, each tier's now four times its share), and the
 **dive**, the slope at full size, which scrolls from the surface to the drop-off.
 
 ### 2.1 The overview
@@ -386,8 +388,8 @@ opens (2.9). VoiceOver: "Endless", value "best 9" or the continue line, with tod
 
 From a ledge in the dive: its pebble grows into the tank (`open`), travelling to the tank's place; the slope draws
 aside 280 pt to the leading edge; one terrace rises under the tank (4.1); the play chrome fades in over the last
-0.8 s. From the overview (the way on, the daily, endless): the camera first sinks to that ledge at `z = 1` (1.1 s),
-then the same. The level's own opening (its wind-in or replay) starts as the tank reaches full size, as today it
+0.8 s. From the overview (the way on, the daily, endless) it opens the same way, at once, out of its pebble where
+that lies (Jack's call, 2026-11-27: a tap never waits on the camera). The level's own opening (its wind-in or replay) starts as the tank reaches full size, as today it
 starts as the level appears. A tap during the travel skips to its end.
 
 ### 2.10 Messages on the menu
