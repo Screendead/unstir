@@ -28,6 +28,16 @@ extension LensArt {
         return runs(fine, width) { p in centres.allSatisfy { simd_distance(p, $0) > r } }
     }
 
+    /// Strokes with long reaches cut into pieces of at most `n` segments, as the bake tests every segment of a stroke
+    /// at each pixel in its box.
+    fileprivate static func pieces(_ strokes: [Halftone.Stroke], _ n: Int = 12) -> [Halftone.Stroke] {
+        strokes.flatMap { s -> [Halftone.Stroke] in
+            let lo = s.points.reduce(s.points[0], simd_min), hi = s.points.reduce(s.points[0], simd_max)
+            guard s.points.count > n + 1, simd_distance(lo, hi) > 0.12 else { return [s] }
+            return stride(from: 0, to: s.points.count - 1, by: n).map { stroke(Array(s.points[$0...min($0 + n, s.points.count - 1)]), s.width) }
+        }
+    }
+
     /// The tone of a frame cut into runs: `cuts` are the bearings where each run starts, in order, and `tones` the run
     /// each starts, the last run wrapping to the first cut.
     fileprivate static func runTone(_ a: Double, _ cuts: [Double], _ tones: [Tone]) -> Tone {
@@ -158,7 +168,7 @@ extension LensArt {
                 return Tone(0.1, 0.12, 0)
             }
             return c(0.6)
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -247,7 +257,7 @@ extension LensArt {
             }
             for f in figure where f.holds(p) { return f.tone }
             return p.y < 0.38 ? c(0.42) : m(0.5)
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -263,6 +273,7 @@ extension LensArt {
         let lamps = [hex[0], hex[6], hex[5], hex[4], hex[3]], back = P(-0.05, 0.08)
         // Each beam: its lamp, its heading (degrees, -90 straight up) and its half-spread.
         let beams: [(P, Double, Double)] = [(hex[0], -62, 9), (hex[6], -72, 8), (hex[5], -100, 7), (hex[3], -96, 8), (hex[4], -80, 6)]
+        let wedges = beams.map { ($0.0, polar(P(0, 0), 1, $0.1), cos($0.2 * .pi / 180)) }
         let towers = [rect(-0.82, -0.02, -0.18, 1), rect(0.2, 0.2, 0.9, 1), rect(-0.3, 0.42, 0.34, 1)]
         let plane = P(0.18, -0.62)
         let planeShape = [plane + P(-0.13, 0.0), plane + P(-0.02, -0.03), plane + P(0.06, -0.12), plane + P(0.1, -0.12), plane + P(0.06, -0.02),
@@ -363,13 +374,12 @@ extension LensArt {
             }
             for f in blocks where f.holds(p) { return f.tone }
             var lit = 0
-            for (c, a, w) in beams {
-                let q = p - c
-                guard simd_length(q) > core else { continue }
-                if abs(remainder(atan2(q.y, q.x) * 180 / .pi - a, 360)) < w { lit += 1 }
+            for (c, u, cw) in wedges {
+                let q = p - c, l = simd_length(q)
+                if l > core, simd_dot(q, u) > l * cw { lit += 1 }
             }
             return lit == 0 ? m(0.35) : lit == 1 ? c(0.4) : c(0.75)
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -469,7 +479,7 @@ extension LensArt {
             if p.y > 0.48, inside(p, skyline) { return Tone(0.12, 0.1, 0) }
             for (yy, h) in seats where abs(p.y - yy - 0.02) < h && abs(p.x) < 0.62 { return m(0.6) }
             return p.y < 0.45 && simd_distance(p, P(0, 1.1)) > 1.25 && simd_distance(p, P(0, 1.1)) < 1.6 ? c(0.35) : c(0.2)
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -558,7 +568,7 @@ extension LensArt {
             }
             if p.y > 0.36, inside(p, mountain) { return Tone(0.3, 0.3, 0) }
             return p.y > 0.05 ? m(0.5) * min((p.y - 0.05) / 0.3, 1) : .zero
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -661,7 +671,7 @@ extension LensArt {
             let r = simd_distance(p, source)
             if p.x > 0.0, p.y < 0.2, r > 0.55, (r - 0.55).truncatingRemainder(dividingBy: 0.14) < 0.07 { return Tone(0.3, 0, 0.55) }
             return y(0.6)
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -763,7 +773,7 @@ extension LensArt {
             if rings < 1, rings > 0.6 { return y(0.45) }
             for f in craft where f.holds(p) { return f.tone }
             return .zero
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
 
@@ -780,6 +790,7 @@ extension LensArt {
             + [P(0.21, -0.08), P(0.28, 0.0), P(0.21, 0.03), P(0.23, 0.07), P(0.2, 0.09), P(0.22, 0.12), P(0.2, 0.16)]
             + curve(P(0.2, 0.16), P(0.2, 0.22), P(0.08, 0.23), 6) + [P(0.06, 0.32), P(-0.12, 0.62), P(-0.5, 0.92), P(-0.95, 0.4)]
             + curve(P(-0.62, 0.26), P(-0.4, 0.2), P(-0.34, 0.02), 6) + curve(P(-0.34, 0.02), P(-0.3, -0.24), P(0.0, -0.26), 10))
+        let face = fill(head, m(0.7))
         let brow = P(0.08, -0.15)
         let trail = [(P(0.2, -0.3), 0.02), (P(0.25, -0.36), 0.014), (P(-0.2, -0.3), 0.018), (P(-0.24, -0.38), 0.012), (P(0.27, 0.2), 0.018), (P(0.3, 0.27), 0.012)]
         let blobs = trail.map { disc($0.0, $0.1, m(0.35)) } + [oval(brow, 0.07, 0.035, y(0.85))]
@@ -836,8 +847,8 @@ extension LensArt {
                 if d < core + 0.05, d < cloud(bearing(p, t)) { return k % 2 == 0 ? c(0.5) : y(0.55) }
             }
             for f in blobs where f.holds(p) { return f.tone }
-            if p.y > -0.3, inside(p, head) { return m(0.7) }
+            if face.holds(p) { return m(0.7) }
             return .zero
-        }, strokes: s)
+        }, strokes: pieces(s))
     }()
 }
