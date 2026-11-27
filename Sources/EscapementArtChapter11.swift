@@ -6,12 +6,12 @@ import simd
 /// Chapter 11, Gear Train: problems 61 to 66's plates, drawn with `Kit`.
 extension EscapementArt {
     /// Problem 61, Pinion, hex, clocks 1+,2+: a long pinion in elevation between the movement's two plates cut in
-    /// section, its leaves fluted in bold ink along the lane at three o'clock, its arbor carrying a wheel seen nearly
+    /// section, its six leaves in bold ink along the lane at three o'clock and its end face turned to show them, its arbor carrying a wheel seen nearly
     /// edge on, each pivot running in a jewel set in its chaton; the right-hand jewel in the second ink.
     static func plate61() -> Plate {
         var plate = Plate()
-        let r = 0.084, x0 = 0.205, x1 = 0.665, shaft = 0.046
-        let inner = 0.775
+        let r = 0.086, x0 = 0.2, x1 = 0.72, shaft = 0.05
+        let inner = 0.8, jewel = 0.885
         // The movement's plates in section, cut by the glass, and the pillars that hold them apart.
         let plates = [-1.0, 1.0].map { s in [P(s * inner, -1.2), P(s * 1.2, -1.2), P(s * 1.2, 1.2), P(s * inner, 1.2), P(s * inner, -1.2)] }
         let pillars = [-1.0, 1.0].map { s in Kit.band(P(-inner, s * 0.84), P(inner, s * 0.84), 0.07) }
@@ -26,10 +26,9 @@ extension EscapementArt {
             plate.line([P(s * (inner + 0.022), -1), P(s * (inner + 0.022), 1)], fine, .bone)
             // A screw through each plate into its pillar's end.
             for y in [-0.47, 0.47] {
-                let c = P(s * 0.86, y)
-                Kit.cut(&plate, box(c - P(0.05, 0.028), c + P(0.05, 0.028)))
-                plate.lines(hatch([box(c - P(0.05, 0.028), c + P(0.05, 0.028))], angle: 0.8, gap: 0.012), fine)
-                plate.line([c - P(0.05, 0), c + P(0.05, 0)], medium)
+                let c = P(s * 0.9, y)
+                Kit.cut(&plate, box(c - P(0.05, 0.028), c + P(0.05, 0.028)), edge: heavy)
+                plate.line([c - P(0.05, 0), c + P(0.05, 0)], heavy)
             }
         }
         for pillar in pillars {
@@ -43,45 +42,47 @@ extension EscapementArt {
         }
 
         // The wheel the arbor carries, turned almost edge on: a heavy rim, its teeth, four crossings.
-        let rimOut = ellipse(P(-0.42, 0), 0.1, 0.66), rimIn = ellipse(P(-0.42, 0), 0.082, 0.58)
+        let rimOut = ellipse(P(-0.42, 0), 0.1, 0.66), rimIn = ellipse(P(-0.42, 0), 0.084, 0.61)
         plate.fill(rimOut, .black)
         plate.fill(rimIn)
         plate.lines(hatch([rimIn], angle: 0.35, gap: Kit.groundGap), Kit.groundWidth)
         for k in 0..<4 {
             let a = Double(k) * .pi / 2 + .pi / 4
-            let tip = P(-0.42 + 0.082 * cos(a), 0.58 * sin(a))
-            Kit.mass(&plate, Kit.band(P(-0.42, 0), tip, 0.036))
+            let tip = P(-0.42 + 0.084 * cos(a), 0.61 * sin(a))
+            Kit.mass(&plate, Kit.band(P(-0.42, 0), tip, 0.026))
         }
         for k in 0..<40 {
             let a = Double(k) * 2 * .pi / 40
             guard cos(a) < 0.2 else { continue }
             let foot = P(-0.42 + 0.1 * cos(a), 0.66 * sin(a)), d = simd_normalize(P(0.1 * cos(a) / 0.01, 0.66 * sin(a) / 0.4356))
-            Kit.mass(&plate, Kit.band(foot - d * 0.005, foot + d * 0.028, 0.024))
+            Kit.mass(&plate, Kit.band(foot - d * 0.005, foot + d * 0.024, 0.02))
         }
         plate.line(rimOut, medium)
-        plate.line(ellipse(P(-0.42, 0), 0.093, 0.62, from: .pi / 2, to: 1.5 * .pi), fine, .bone)
+        
         // The wheel's collet on the arbor, in section.
         let collet = box(P(-0.5, -0.075), P(-0.36, 0.075))
         Kit.solid(&plate, collet, angle: 0.8, gap: 0.014)
 
         // The arbor, from jewel to jewel, its pivots drawn down to points.
-        let arbor = [P(-0.73, -shaft / 2), P(x0, -shaft / 2), P(x0, shaft / 2), P(-0.73, shaft / 2), P(-0.73, -shaft / 2)]
+        let arbor = [P(-0.76, -shaft / 2), P(x0, -shaft / 2), P(x0, shaft / 2), P(-0.76, shaft / 2), P(-0.76, -shaft / 2)]
         Kit.mass(&plate, arbor)
-        Kit.mass(&plate, box(P(x1, -shaft / 2), P(0.73, shaft / 2)))
-        plate.line([P(-0.72, -0.009), P(x0 - 0.01, -0.009)], fine, .bone)
-        plate.line([P(x1 + 0.01, -0.009), P(0.72, -0.009)], fine, .bone)
+        Kit.mass(&plate, box(P(x1, -shaft / 2), P(0.76, shaft / 2)))
+        plate.line([P(-0.75, -0.01), P(x0 - 0.01, -0.01)], fine, .bone)
+        plate.line([P(x1 + 0.01, -0.01), P(0.75, -0.01)], fine, .bone)
         Kit.mass(&plate, box(P(-0.36, -0.04), P(-0.33, 0.04)))
         for s in [-1.0, 1.0] {
-            let shoulder = P(s * 0.73, 0), point = P(s * 0.865, 0)
+            let shoulder = P(s * 0.76, 0), point = P(s * jewel, 0)
             Kit.mass(&plate, [shoulder + P(0, -shaft / 2), point + P(0, -0.009), point + P(0, 0.009), shoulder + P(0, shaft / 2),
                               shoulder + P(0, -shaft / 2)])
         }
 
         // The jewels: each a stone set in a chaton cut into the plate, the arbor's pivot point in its hole.
         for s in [-1.0, 1.0] {
-            let c = P(s * 0.865, 0)
-            let chaton = box(c - P(0.07, 0.13), c + P(0.07, 0.13))
-            Kit.solid(&plate, chaton, angle: -0.8, gap: 0.012)
+            let c = P(s * jewel, 0)
+            let chaton = [c + P(-0.075, -0.13), c + P(0.075, -0.13), c + P(0.075, 0.13), c + P(-0.075, 0.13), c + P(-0.075, -0.13)]
+            Kit.cut(&plate, chaton, edge: heavy)
+            plate.line(Array(chaton[0...1]).map { $0 + P(0, 0.018) }, medium)
+            plate.line(Array(chaton[2...3]).map { $0 - P(0, 0.018) }, medium)
             let stone = [c + P(-0.035, -0.085), c + P(0.035, -0.085), c + P(0.05, 0), c + P(0.035, 0.085), c + P(-0.035, 0.085),
                          c + P(-0.05, 0), c + P(-0.035, -0.085)]
             if s > 0 {
@@ -96,40 +97,39 @@ extension EscapementArt {
             plate.line(arc(c, 0.012), fine)
         }
 
-        // The pinion: its leaves fluted along the arbor, the spaces between them in ink, an end face showing their profile.
-        plate.fill(pinion, .black)
-        let leaves = 8, tooth = 0.2
+        // The pinion: six leaves along the arbor, each face in ink, the spaces between them bone, and the end face turned
+        // a little toward the eye to show their profile.
+        let leaves = 6, tooth = 0.36
+        Kit.cut(&plate, pinion)
         for k in 0..<leaves {
-            let phi = 0.18 + Double(k) * 2 * .pi / Double(leaves)
-            let a = atan2(sin(phi), cos(phi))
+            let a = atan2(sin(Double(k) * 2 * .pi / Double(leaves)), cos(Double(k) * 2 * .pi / Double(leaves)))
             guard cos(a) > 0 else { continue }
             let y0 = r * sin(max(a - tooth, -.pi / 2)), y1 = r * sin(min(a + tooth, .pi / 2))
-            let face = box(P(x0 + 0.018, min(y0, y1)), P(x1 - 0.018, max(y0, y1)))
-            Kit.cut(&plate, face)
-            if sin(a) > 0.2 {
-                plate.lines(hatch([face], angle: 0, gap: 0.011), fine)
-            }
+            Kit.mass(&plate, box(P(x0, min(y0, y1)), P(x1, max(y0, y1))))
         }
+        for s in [-1.0, 1.0] {
+            Kit.mass(&plate, box(P(x0, s * r - 0.012), P(x1, s * r)))
+        }
+        plate.line([P(x0 + 0.02, -0.012), P(x1 - 0.06, -0.012)], fine, .bone)
         plate.line(pinion, medium)
-        // The end face, turned a little toward the eye: the leaves' profile, the spaces between them in ink.
-        Kit.cut(&plate, ellipse(P(x0, 0), 0.02, r))
-        let end = P(x1, 0)
-        plate.fill(ellipse(end, 0.048, r + 0.004), .black)
+        Kit.mass(&plate, box(P(x0 - 0.03, -0.06), P(x0, 0.06)))
+        let end = P(x1, 0), rx = 0.065
         var face: [P] = []
-        for i in 0...96 {
-            let a = Double(i) * 2 * .pi / 96
-            let lobe = 0.5 + 0.5 * cos(Double(leaves) * (a - 0.18))
-            let rad = 0.58 + 0.42 * pow(lobe, 0.45)
-            face.append(end + P(0.048 * rad * cos(a), r * rad * sin(a)))
+        for i in 0...120 {
+            let a = Double(i) * 2 * .pi / 120
+            let lobe = 0.5 + 0.5 * cos(Double(leaves) * a)
+            let rad = 0.5 + 0.5 * pow(lobe, 0.35)
+            face.append(end + P(rx * rad * cos(a), r * rad * sin(a)))
         }
-        Kit.cut(&plate, face)
-        plate.lines(hatch([face, ellipse(end, 0.016, 0.03)], angle: 1.2, gap: 0.01), fine)
-        Kit.mass(&plate, ellipse(end, 0.012, 0.024))
+        plate.fill(ellipse(end, rx, r), .black)
+        Kit.cut(&plate, face, edge: heavy)
+        Kit.mass(&plate, ellipse(end, 0.018, 0.026))
+        plate.line(ellipse(end, rx, r, from: -.pi / 2, to: .pi / 2), medium)
 
-        callout(&plate, "A", from: P(0.44, -0.05), to: P(0.31, -0.5))
-        callout(&plate, "B", from: P(0.865, 0.06), to: P(0.66, 0.62))
-        callout(&plate, "C", from: P(-0.43, 0.62), to: P(-0.22, 0.86))
-        callout(&plate, "D", from: P(-0.81, 0), to: P(-0.62, -0.66))
+        callout(&plate, "A", from: P(0.46, -0.06), to: P(0.32, -0.52))
+        callout(&plate, "B", from: P(jewel, 0.07), to: P(0.66, 0.56))
+        callout(&plate, "C", from: P(-0.41, 0.64), to: P(-0.3, 0.74))
+        callout(&plate, "D", from: P(-jewel, -0.02), to: P(-0.68, -0.52))
         return plate
     }
 
@@ -161,12 +161,14 @@ extension EscapementArt {
             Kit.cut(&plate, jaw, edge: heavy)
             plate.lines(hatch([jaw], angle: .pi / 2, gap: 0.03), medium)
             Kit.mass(&plate, box(P(s * 0.24, 0.58), P(s * 0.3, 1.1)))
-            Kit.solid(&plate, box(P(s * 0.3, 0.5), P(s * 0.06, 0.58)), angle: 0.8, gap: 0.012)
+            Kit.mass(&plate, box(P(s * 0.3, 0.5), P(s * 0.06, 0.58)))
+            plate.line([P(s * 0.08, 0.52), P(s * 0.28, 0.52)], fine, .bone)
             var chops: [P] = []
             for y in stride(from: 0.6, to: 1.08, by: 0.04) { chops += [P(s * 0.06, y), P(s * 0.095, y + 0.02)] }
             Kit.mass(&plate, [P(s * 0.06, 0.58)] + chops + [P(s * 0.06, 1.1), P(s * 0.06, 0.58)])
         }
-        Kit.solid(&plate, tail, angle: 0.8, gap: 0.016)
+        Kit.mass(&plate, tail)
+        plate.line([P(-0.035, bar + 0.1), P(-0.035, 1)], fine, .bone)
 
         // The frame bar and its heads, each head's runner bored through and its binding screw on top.
         Kit.mass(&plate, frame)
@@ -230,10 +232,10 @@ extension EscapementArt {
         }
         Kit.mass(&plate, Kit.band(tip + P(-0.03, -0.03), tip + P(0.04, 0.05), 0.05))
 
-        callout(&plate, "A", from: P(0.05, axis + 0.05), to: P(0.27, 0.22))
-        callout(&plate, "B", from: ferrule + P(0, -0.03), to: P(-0.25, 0.2))
+        callout(&plate, "A", from: P(0.05, axis - 0.05), to: P(0.12, -0.21))
+        callout(&plate, "B", from: ferrule + P(0.01, 0.05), to: P(-0.07, 0.2))
         callout(&plate, "C", from: cane[30], to: P(0.42, -0.6))
-        callout(&plate, "D", from: P(-0.8, axis), to: P(-0.72, 0.62))
+        callout(&plate, "D", from: P(-0.9, axis), to: P(-0.86, -0.2))
         return plate
     }
 
