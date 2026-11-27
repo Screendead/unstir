@@ -410,6 +410,7 @@ struct LevelView: View {
          onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }, besideMenu: Bool = false,
          switching: Level? = nil, onSwitch: @escaping (Level) -> Void = { _ in }, onMenu: @escaping (CGRect) -> Void = { _ in },
          onFinish: @escaping () -> Void = {}, onCover: @escaping (Bool) -> Void = { _ in }) {
+        OpenProbe.mark("init")
         self.besideMenu = besideMenu
         self.switching = switching
         self.onSwitch = onSwitch
@@ -531,10 +532,12 @@ struct LevelView: View {
         heldSwipe = harness?.backSwipe
         playsSwipe = harness?.backSwipeRun ?? false
         exitsBySwipe = harness?.exit == "swipe"
+        OpenProbe.mark("inited")
     }
 
     var body: some View {
         let _ = DragProbe.count(.level)
+        let _ = OpenProbe.bodyRan()
         let _ = Hand.broad ? hand.readAll() : ()
         screen
             .dynamicTypeSize(...PlayLayout.typeCap)
@@ -972,6 +975,7 @@ struct LevelView: View {
 
     private var screen: some View {
         GeometryReader { geo in
+            let _ = OpenProbe.mark("geo")
             let layout = playLayout(geo)
             let ground = SlopeTerrace.Ground(height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom,
                                              top: geo.safeAreaInsets.top, space: Self.column)
@@ -1259,6 +1263,10 @@ struct LevelView: View {
                 " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "")"
             } ?? ""
             Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
+            OpenProbe.appeared()
+            #if DEBUG
+            OpenProbe.leave = { leave() }
+            #endif
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if knocks { Knock.warm() }
             if let today { game.refill(today: today) } else { game.refill() }

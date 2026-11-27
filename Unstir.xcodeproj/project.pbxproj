@@ -30,6 +30,7 @@
 		30C53B2E5E74BD66185048B9 /* EscapementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440714978B35CD68A9F562DA /* EscapementViews.swift */; };
 		346EECEE0574652612E6DB3B /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799D669DC17401F34FBEB5D2 /* Page.swift */; };
 		357A4E83B9062002FD1BDA54 /* PayoffViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80EE66DF325957EFE55650C3 /* PayoffViews.swift */; };
+		3597F88334860E06CDFCDD3C /* OpenProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45BEC8B147E94102B61EE94B /* OpenProbe.swift */; };
 		375857065A573691A7DF10DF /* SlopeEggs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F4B9776FE203CA19661F4 /* SlopeEggs.swift */; };
 		3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F14A8BD3536DD66979D13A /* Clip.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
@@ -193,6 +194,7 @@
 		42AC3DE97359E1AB3D8F6FAF /* Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taps.swift; sourceTree = "<group>"; };
 		43FF2E81528BF804B347B9DA /* SlopePlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopePlay.swift; sourceTree = "<group>"; };
 		440714978B35CD68A9F562DA /* EscapementViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementViews.swift; sourceTree = "<group>"; };
+		45BEC8B147E94102B61EE94B /* OpenProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenProbe.swift; sourceTree = "<group>"; };
 		492677BE451A3DA88096CDF8 /* DragProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragProbe.swift; sourceTree = "<group>"; };
 		497F4B9776FE203CA19661F4 /* SlopeEggs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlopeEggs.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
@@ -434,6 +436,7 @@
 				69949920C5700A3E061FCC8A /* MenuModel.swift */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				A0460623160F696DF3D9BE7A /* Offer.swift */,
+				45BEC8B147E94102B61EE94B /* OpenProbe.swift */,
 				18BFB7C893FE494190410F59 /* OracleBench.swift */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
 				0E37729C86487F2610D39A24 /* PackCovers.swift */,
@@ -648,6 +651,7 @@
 				E0F1BF6E95D31DC3772A0ADF /* MenuModel.swift in Sources */,
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				5954A6B34343F08E62CBB202 /* Offer.swift in Sources */,
+				3597F88334860E06CDFCDD3C /* OpenProbe.swift in Sources */,
 				6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
 				45C8D987D38470DFF8CFA955 /* PackCovers.swift in Sources */,

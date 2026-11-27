@@ -593,7 +593,12 @@ extension SlopeMenu {
     /// `only` names one of them (tour:scroll), reached the short way, so each can be traced from a cool phone. The
     /// pull and the edge swipe step their state with no animation, as a drag's events do; the dive scrolls to one aim
     /// after another. Each motion is marked in the log with how many times the ground has been drawn.
+    /// The menu appears again each time a level leaves; the tour runs once.
+    private static var toured = false
+
     fileprivate func tour(_ only: String, _ plan: SlopeMenuPlan) {
+        guard !Self.toured else { return }
+        Self.toured = true
         func mark(_ motion: String) {
             Log.write("tour \(motion), ground drawn \(SlopeGround.draws)")
             Power.shared.touched()
@@ -615,7 +620,7 @@ extension SlopeMenu {
                 await step(3) { drawn = 200 * sin(2 * .pi * $0) }
                 await rest(1)
             }
-            if !wants("rest") || only.isEmpty, only != "pull", only != "open" {
+            if !wants("rest") || only.isEmpty, only != "pull", only != "open", only != "reopen" {
                 mark("zoom")
                 enter(.plughole, plan)
                 await rest(2.5)
@@ -649,6 +654,16 @@ extension SlopeMenu {
                 await rest(4.5)
                 mark("played")
                 await rest(4)
+            }
+            if only == "reopen" {
+                // The daily twice, then another level, each back to the menu between (`OpenProbe`).
+                for (level, ledge) in [(Level.daily(.now), SlopeColumn.today), (.daily(.now), SlopeColumn.today), (Level.plughole[0], nil)] {
+                    mark("open \(level.id)")
+                    pick(level, ledge: ledge, plan)
+                    await rest(3)
+                    OpenProbe.leave?()
+                    await rest(3)
+                }
             }
             if wants("rest") {
                 mark("rest")

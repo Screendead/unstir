@@ -951,6 +951,7 @@ struct RootView: View {
     }
 
     var body: some View {
+        let _ = OpenProbe.mark("root")
         // The outgoing screen is black before the incoming one starts, so the two never show at once.
         let dip = AnyTransition.asymmetric(insertion: .opacity.animation(.easeOut(duration: 0.15).delay(0.12)),
                                            removal: .opacity.animation(.easeIn(duration: 0.12)))
@@ -1221,6 +1222,7 @@ struct RootView: View {
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     /// `look`: the tier the menu opens on in place of the stored one, locked or not. `solved`: the level left is.
     private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
+        if next != nil { OpenProbe.picked() }
         // Beside play, another level leaves the playing one through its own way out, which saves its try and lets go of
         // a finger, and then opens; the playing level itself opens nothing.
         if beside, let next, let level {
@@ -1324,6 +1326,7 @@ struct RootView: View {
         covering = nil
         if next != nil { swipeLeft = 0 }
         // Together, so a menu a back swipe uncovered stays up as the level goes.
+        OpenProbe.mark("show")
         withAnimation(.easeInOut(duration: slope && !reduceMotion ? Self.slopeTravel : 0.25)) {
             level = gate == nil && opens ? next : nil
             peeking = false
