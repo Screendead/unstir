@@ -5,7 +5,7 @@
 while IFS=$'\t' read -r n layout clocks scramble; do
   shot "escapement-book-$(printf %02d "$n")" "Escapement $n as dealt: $layout, clocks $clocks, scramble $scramble." PACK=escapement OWNED=escapement LEVEL="$n"
 done < scripts/escapement/problems.tsv
-shot escapement-card "Escapement's card, owned, scrolled to its levels under the book's five chapter headings." \
+shot escapement-card "Escapement's card, owned, scrolled to its levels under the book's fifteen chapter headings." \
   CARD=escapement OWNED=escapement CARDSCROLL=1 CLOCK=5.4
 # Escapement 2, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
