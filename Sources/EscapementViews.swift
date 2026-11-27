@@ -43,6 +43,8 @@ struct RatchetView: View {
     var was: Int?
     var fall = 1.0
     var still = false
+    /// Cards on the hub: two for a clock dealt more than 9 ticks, for the whole problem, so a count never changes width.
+    var digits = 1
 
     var body: some View {
         let rt = size / 2, rr = size / 2 * 0.74
@@ -90,7 +92,9 @@ struct RatchetView: View {
             // The hub as wide as reads its card, the teeth and the index outside it.
             Circle().fill(Color.black.opacity(0.85)).frame(width: rr * 1.6, height: rr * 1.6).position(c)
             // Unmirrored, so a wound-back clock's count reads; its corners just inside the hub's ring.
-            FlipCounter(value: owed, was: was ?? owed, fall: fall, digits: 1, still: still, spent: stopped, height: rr * 1.25)
+            // Two cards side by side keep their corners inside the ring too, so they stand lower.
+            FlipCounter(value: owed, was: was ?? owed, fall: fall, digits: digits, still: still, spent: stopped,
+                        height: rr * (digits > 1 ? 0.86 : 1.25))
                 .scaleEffect(x: back ? -1 : 1)
                 .position(c)
             Circle().stroke(stopped ? Color.amber : steel, lineWidth: 1.2).frame(width: rr * 1.6, height: rr * 1.6).position(c)
