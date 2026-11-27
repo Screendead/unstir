@@ -554,10 +554,11 @@ final class PlayLayoutTests: XCTestCase {
                                        "UNSTIR_TRIED": Level.dailyID(Date())], {}),
             ("the daily with undos", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
             ("the daily clean", ["UNSTIR_SCREEN": "clean", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], {}),
+            // Lens 25, whose panel is the pack's face and stays baked in Caches, so no bake runs on into later tests.
             ("Lens 25 completing Lens on a replay", ["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "25", "UNSTIR_SCREEN": "clean",
                                                      "UNSTIR_OWNED": "first-stir,lens", "UNSTIR_CLOCK": "0",
-                                                     "UNSTIR_TRIED": Pack.lens.levels.last!.id],
-             { for level in Pack.lens.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) } }),
+                                                     "UNSTIR_TRIED": Level.lensFace.id],
+             { for level in Pack.lens.levels where level != Level.lensFace { Best(over: 0, seconds: 60).save(level.id) } }),
             ("maelstrom 27 unstirring every tier on a replay", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom",
                                                                 "UNSTIR_LEVEL": "27", "UNSTIR_OWNED": "first-stir",
                                                                 "UNSTIR_CLOCK": "0", "UNSTIR_TRIED": maelstrom27],

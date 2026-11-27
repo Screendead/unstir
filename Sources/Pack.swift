@@ -88,7 +88,8 @@ enum Pack: String, CaseIterable, Sendable {
     /// How many levels its design plans; until it has them all, its card says more arrive in an update.
     var planned: Int {
         switch self {
-        case .firstStir, .lens: 25
+        case .firstStir: 25
+        case .lens: 75
         case .escapement: 90
         case .prism: 90
         }
@@ -148,11 +149,12 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    /// Lens's 25 panels, each on its own halftone panel (`panel`, `LensArt.levels`). A rod is a lens or a twist for the
-    /// whole level; every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3. No entry merges as
-    /// it is dealt, and par is the depth (`testLensLevels`), the solver's optimum (`testLensParIsTheOptimum`).
-    static let lens: [Level] = [
-        (Layout.tri, [0], "0:+2",
+    /// Each Lens level's layout, lens slots, deal and title, in order, in four typed lists, so each type-checks quickly.
+    private static let lensRows: [(Layout, [Int], String, String)] =
+        lensRowsFirst + lensRowsCloser + lensRowsDeeper + lensRowsDeepest
+
+    private static let lensRowsFirst: [(Layout, [Int], String, String)] = [
+        (.tri, [0], "0:+2",
          String(localized: "level.lens-1.title", defaultValue: "Keyhole",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.tri, [0], "0:+1,1:+3",
@@ -227,12 +229,177 @@ extension Level {
         (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1",
          String(localized: "level.lens-25.title", defaultValue: "Kaleidoscope",
                 comment: "Lens level title, a lens or a way of seeing")),
-    ].enumerated().map { i, row in
-        let (layout, slots, scramble, title): (Layout, [Int], String, String) = row
+    ]
+
+    private static let lensRowsCloser: [(Layout, [Int], String, String)] = [
+        (.tri, [0, 2], "1:+3,2:+1,1:+4,2:+1,1:-3,2:+1,1:-2,0:+1,1:-5,0:+1,1:+1,0:+1,1:-5",
+         String(localized: "level.lens-26.title", defaultValue: "Dewdrop",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [2, 3], "0:-4,2:+1,0:-5,1:+2,3:+2,1:+4,0:+4,2:+2,1:+3,3:+1,0:-3,1:+2,0:+3,1:-4",
+         String(localized: "level.lens-27.title", defaultValue: "Fishbowl",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 4], "0:-5,4:+1,3:+3,2:-4,0:+3,3:+2,0:+4,1:+1,6:-5,5:+2,4:+2,3:-4,2:+5,1:+2,0:-2",
+         String(localized: "level.lens-28.title", defaultValue: "Glass marble",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [0, 2], "3:-3,1:-5,2:+1,3:-2,0:+1,1:+5,3:+5,1:+4,2:+2,1:-3,3:+3,1:+5,3:+2,1:+3,0:+2,3:+2",
+         String(localized: "level.lens-29.title", defaultValue: "Crystal ball",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 3], "2:+5,1:-2,0:+1,1:+3,0:+1,1:-4,6:-1,5:-5,4:+5,3:+1,4:+5,3:+2,2:+5,1:-5,0:+1,6:-5,5:-5",
+         String(localized: "level.lens-30.title", defaultValue: "Snow globe",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [1, 3], "3:+1,0:-4,2:-3,0:-3,1:+1,2:+5,0:-2,3:+2,0:-1,2:+5,1:+1,2:+3,0:-3,2:-4,0:+2,2:-4,1:+1,0:+3",
+         String(localized: "level.lens-31.title", defaultValue: "Burning glass",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [1, 2, 3], "0:-5,1:+1,0:-4,2:+1,0:+5,2:+1,0:+4,1:+1,0:+5,3:+1,0:+1,3:+1,0:-4,3:+1,0:+5,2:+1,0:+1,1:+1,0:+1",
+         String(localized: "level.lens-32.title", defaultValue: "Opera glasses",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 6], "2:+2,0:-2,2:+1,0:-4,1:-5,0:-3,5:+5,6:+1,1:-3,0:+2,5:+3,4:-1,5:-2,0:+2,6:+1,1:+3,6:+1,5:+5,0:-5,5:+4",
+         String(localized: "level.lens-33.title", defaultValue: "Pince-nez",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [0, 3], "2:-5,1:-3,3:+1,1:+1,2:-3,1:-2,3:+2,1:-2,2:+4,0:+1,2:-4,0:+1,1:-2,0:+1,1:-5,2:+2,1:+2,2:+2,1:+1,2:+5,1:+2",
+         String(localized: "level.lens-34.title", defaultValue: "Lorgnette",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [3, 5], "3:+1,2:+1,1:-2,2:+3,0:+1,2:-3,1:-5,4:-5,5:+1,4:+5,3:+1,2:+4,3:+1,4:+2,0:-1,4:-4,5:+2,6:-2,0:-3,1:+2,2:-2,0:-4",
+         String(localized: "level.lens-35.title", defaultValue: "Reading glasses",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [2, 3], "0:-3,1:+4,0:-5,2:+1,1:-3,0:-2,1:+5,0:-4,2:+2,0:+3,1:+1,3:+1,1:+2,0:-1,3:+1,0:+1,1:+3,0:-4,1:-1,3:+1,1:+2,0:+4,1:+1",
+         String(localized: "level.lens-36.title", defaultValue: "Diving mask",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 3, 5], "1:+1,0:-4,6:+2,4:+3,0:-3,2:-4,1:+2,2:-5,3:+1,0:-1,6:-3,5:+2,4:-3,0:-1,4:+3,0:+5,2:+4,0:+5,6:-1,5:+1,0:-2,2:+1,3:+2,4:+3",
+         String(localized: "level.lens-37.title", defaultValue: "Contact lens",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.eye, [1, 2], "3:-4,1:+1,0:+2,3:+5,1:+1,3:+5,0:-4,3:+5,0:+1,1:+1,3:-4,0:-1,3:-4,0:+3,2:+2,0:+1,3:+4,0:+2,3:-4,0:+1,2:+1,0:-3,3:+2,0:-4",
+         String(localized: "level.lens-38.title", defaultValue: "Camera obscura",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 2, 5], "5:+1,4:-5,5:+2,4:+2,3:+4,4:-5,3:-4,4:-4,3:+1,4:+2,3:-2,4:+4,3:+1,4:+1,3:+5,2:+1,1:-5,0:+2,3:-4,0:+1,1:+5,6:-5,1:-1,2:+1,1:+3,2:+1",
+         String(localized: "level.lens-39.title", defaultValue: "Magic lantern",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 4], "0:+1,3:+3,2:+3,3:+1,2:-1,3:+4,2:-2,3:-4,0:+2,5:+4,6:-2,5:+4,4:+1,3:+5,2:+5,1:+1,2:+3,3:+3,4:+1,5:-2,4:+1,5:+5,6:-2,5:+3,6:+1,1:+2,6:+2",
+         String(localized: "level.lens-40.title", defaultValue: "Zoetrope",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 4, 6], "4:+2,3:+1,0:-3,1:-3,0:-1,2:+1,3:+3,2:+1,3:+5,0:-1,2:+1,3:+3,0:-4,1:+5,6:+1,1:-5,0:+3,3:+4,0:-3,4:+1,3:-4,0:-2,3:-2,0:-1,6:+2,1:-3,0:-1,5:+3",
+         String(localized: "level.lens-41.title", defaultValue: "Projector",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 3, 6], "5:+1,0:+4,3:+1,0:+5,2:-1,1:+1,2:+3,0:+1,5:-2,6:+1,5:+2,4:-1,0:-4,5:-4,0:+3,2:+3,0:+5,5:+3,6:+2,0:-1,5:-5,4:-4,3:+2,0:+3,1:+1,2:+4,1:+1,2:+4",
+         String(localized: "level.lens-42.title", defaultValue: "Instant camera",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 3, 6], "5:+5,4:-5,5:+3,4:+2,5:-3,4:-5,5:+4,4:-5,5:-4,4:-1,3:+1,4:-1,3:+2,4:-1,0:+2,5:+1,6:+1,5:+3,0:+1,5:-4,4:+3,5:+4,6:+1,1:-3,2:-2,1:+4,2:-5,1:-2,6:+1",
+         String(localized: "level.lens-43.title", defaultValue: "Zoom lens",
+                comment: "Lens level title, a lens or a way of seeing")),
+    ]
+
+    private static let lensRowsDeeper: [(Layout, [Int], String, String)] = [
+        (.hex, [1, 2, 4], "2:+1,3:+4,4:+1,3:+3,2:+1,0:+5,6:+4,5:+5,6:+2,5:-5,0:-2,1:+1,6:-1,0:+4,3:-5,0:-1,3:-3,2:+1,3:+4,0:+3,4:+2,0:-1,3:-4,0:-2,3:+3,0:-1,1:+1,6:-5,0:-4,1:+1",
+         String(localized: "level.lens-44.title", defaultValue: "Hand mirror",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 3], "6:+2,5:-3,0:+1,5:+5,4:-2,3:+1,4:+1,3:+1,4:+5,5:-1,4:+3,0:+1,5:-1,6:+2,5:-1,4:-5,5:-4,6:-1,5:-4,4:+3,5:+3,6:-4,5:+4,0:+1,2:-4,1:+1,2:-3,1:+1,6:+3,1:+1,6:+5",
+         String(localized: "level.lens-45.title", defaultValue: "Rear-view mirror",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 4, 5], "3:-1,0:-3,6:-1,0:+5,4:+2,3:+1,0:+1,5:+1,6:+1,5:+1,6:-4,5:+1,6:-4,1:+2,2:+1,1:+4,6:-4,0:+1,3:-5,2:+1,0:-2,2:+1,0:-5,6:-2,1:-4,0:+2,3:+3,0:+1,3:+2,0:+4,4:+1,0:+4",
+         String(localized: "level.lens-46.title", defaultValue: "Convex mirror",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 3, 6], "4:+5,3:+1,0:-4,2:+1,1:-2,0:-1,5:+3,4:-1,5:+2,4:-5,5:-3,0:+1,4:-1,5:-4,6:+1,0:+1,1:+1,0:-2,1:-4,2:+1,1:+5,0:-1,3:+1,0:-3,6:+1,1:-1,0:+4,2:+1,1:+2,6:+1,1:+4,0:-2,5:-1",
+         String(localized: "level.lens-47.title", defaultValue: "Dental mirror",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 2, 4, 5], "6:-4,1:+1,6:+1,1:-3,6:+4,0:+1,3:+4,4:+2,3:-3,4:+1,3:+5,2:+1,3:-1,2:+1,3:+4,0:+1,6:+5,1:+2,6:+5,1:-5,6:+4,5:+1,6:-2,1:+1,0:+1,1:-5,6:+4,5:+2,6:-1",
+         String(localized: "level.lens-48.title", defaultValue: "Mirror ball",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 4, 5], "5:+1,6:+1,0:-2,6:-3,1:+1,6:+3,5:+1,0:+2,6:-3,0:-1,4:+1,3:+5,0:-1,5:+1,0:+5,3:-1,4:+1,3:-1,2:+1,3:+4,0:+5,6:+2,0:+3,3:+5,0:+1,1:+1,0:-2,2:+1,3:-5,0:-2,3:-2,0:-1,6:-5,0:+2",
+         String(localized: "level.lens-49.title", defaultValue: "Mirror maze",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 3, 5, 6], "1:-3,0:-2,6:+1,1:+1,6:+1,0:-2,4:+5,0:-3,5:+2,4:-2,5:+1,0:+5,4:-3,0:-1,2:+1,1:+3,2:+1,0:-5,4:-3,3:+1,0:+3,1:-3,0:-1,1:-1,0:+1,1:+4,0:+1,3:+1,0:+5,4:+2,0:-4,2:+1,1:-1,0:+2",
+         String(localized: "level.lens-50.title", defaultValue: "Owl",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 4, 5, 6], "0:+5,5:+1,0:-4,5:+2,0:+2,1:+1,0:+1,6:+1,0:+4,1:+1,0:+4,1:+1,0:+1,3:+1,0:-5,2:+1,0:-5,4:+1,0:+1,3:+1,0:+3,2:+1,0:-5,6:+1,0:-5,3:+1,0:-5,6:+1,0:-2,2:+1,0:-1,4:+1,0:-2,4:+1,0:+4",
+         String(localized: "level.lens-51.title", defaultValue: "Fly's eye",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 3, 4], "5:-1,6:+1,5:+2,6:+2,5:-4,4:+2,5:+5,0:+1,6:+1,0:+1,6:-1,5:+4,4:+1,5:-1,6:-4,5:-3,6:+1,5:-1,6:+4,5:-1,6:-3,1:+1,2:-4,1:+1,6:-1,1:+1,2:-1,3:+1,2:-3,3:+1,2:-3",
+         String(localized: "level.lens-52.title", defaultValue: "Chameleon",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 3, 4, 6], "5:-4,6:+1,5:-1,0:-3,2:+5,0:-3,1:+1,0:+3,1:+1,2:-1,1:+1,0:+4,2:-4,0:+1,5:-3,6:+1,0:+2,2:+4,0:-4,4:+1,5:+3,0:-3,2:+1,0:-1,5:+5,0:-1,2:+4,0:+3,4:+1,0:-1,3:+1,2:+5,0:+4,2:-4,3:+1,2:-3",
+         String(localized: "level.lens-53.title", defaultValue: "Cat's eye",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 2, 4], "5:+3,0:+1,6:-1,5:-1,0:+1,5:-2,6:+3,1:+2,6:-1,5:+3,4:+1,5:+4,6:+2,5:-3,6:+3,5:+5,6:+1,1:+1,6:+4,5:+4,6:-5,5:+3,4:+1,3:+1,2:+1,3:-4,2:+1,3:-1,2:+1,3:-1",
+         String(localized: "level.lens-54.title", defaultValue: "Eagle eye",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 5, 6], "1:+1,0:+3,4:+4,3:+1,0:-2,4:-5,0:-2,2:+2,0:-4,6:+2,0:+3,4:-4,0:-4,6:+1,0:-1,4:+3,0:+3,3:+2,0:+2,1:+2,0:+3,4:+1,0:+4,4:-2,0:+1,5:+1,0:-5,2:+1,0:-1,5:+1,0:-1,4:+3,0:+1,5:+1,0:+2,4:+4",
+         String(localized: "level.lens-55.title", defaultValue: "Peacock",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 3, 4, 6], "1:-2,2:-2,3:+2,2:-4,1:+2,2:+3,1:+1,0:+1,5:+4,4:+1,5:+5,0:+1,1:-5,2:-1,1:-1,2:-1,3:+1,2:+2,1:+1,6:+2,5:+4,0:+1,2:-4,1:-3,2:-1,1:-5,6:+1,5:+1,4:+1,5:+3",
+         String(localized: "level.lens-56.title", defaultValue: "Rose window",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 4, 5, 6], "3:-1,0:-1,6:+1,0:+5,6:+2,0:-2,2:+1,3:-1,0:-4,3:-5,0:-2,3:+1,0:-3,1:+1,0:-2,3:+5,0:+3,5:+1,0:-2,3:-5,4:+1,0:-5,3:+1,4:+2,3:-5,2:+1,0:+2,5:+2,0:-1,1:+1,0:-5,3:-2,0:+4,1:+1",
+         String(localized: "level.lens-57.title", defaultValue: "Oculus",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 4], "6:-4,5:+4,6:+2,0:-3,5:+1,6:+1,0:+5,5:+2,4:+1,0:-3,3:+1,0:-5,5:-5,0:-4,5:-5,4:+1,5:+1,6:+5,5:+1,6:+5,0:+1,2:+1,0:+5,5:-1,4:+1,0:+3,6:+5,1:+1,0:+3,2:+1,0:+3,3:+1,0:+1,1:+1,6:-3",
+         String(localized: "level.lens-58.title", defaultValue: "Stained glass",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 3, 4, 5, 6], "0:+2,3:+1,2:-1,1:+1,0:+5,2:+1,1:+1,0:-5,2:-1,0:+4,3:+1,2:+5,3:+1,2:-2,0:-1,4:+1,0:+4,2:+1,0:-1,6:+1,0:+3,4:+1,0:+1,2:+3,0:-5,6:+1,0:-1,5:+1,0:+3,2:-1,0:-1,2:+3,0:+1,2:+1,0:+1,5:+1",
+         String(localized: "level.lens-59.title", defaultValue: "Skylight",
+                comment: "Lens level title, a lens or a way of seeing")),
+    ]
+
+    private static let lensRowsDeepest: [(Layout, [Int], String, String)] = [
+        (.hex, [0, 1, 2, 4], "6:-1,1:+1,6:+2,5:-1,0:+1,6:-2,5:+1,6:-1,5:+1,6:+1,5:+1,4:+1,5:+5,6:+5,5:+4,0:+1,5:+2,6:-3,1:+1,6:-1,5:-1,6:-5,1:+1,6:-3,5:-5,4:+1,3:-1,2:+1,3:-1,2:+1,3:-3",
+         String(localized: "level.lens-60.title", defaultValue: "Frosted glass",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 3, 5, 6], "4:+1,0:-3,3:+1,4:-3,0:+5,1:-1,2:+1,0:-5,1:-1,0:-5,1:+5,0:-1,3:+1,0:-1,2:+2,0:+5,1:+5,6:+2,1:-1,0:-1,4:+4,0:+5,1:-2,0:+2,4:-4,3:+1,0:-1,5:+1,0:-5,1:+5,0:-1,1:-5,6:+1,1:-4,0:-3,5:+2",
+         String(localized: "level.lens-61.title", defaultValue: "Bullseye pane",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 5], "5:+1,4:-1,0:-5,2:+1,0:+5,4:+3,0:-2,2:+1,0:+1,4:+4,3:+1,4:-1,0:+1,3:+1,4:+2,0:+1,6:+1,0:-5,4:+4,0:+3,4:+5,5:+1,6:-5,0:-1,6:+3,0:+1,6:+1,1:+1,0:+5,4:+1,5:+1,6:+1,1:+2,6:+2",
+         String(localized: "level.lens-62.title", defaultValue: "Loupe",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 4, 6], "4:+1,0:+1,5:-5,6:+1,0:-3,5:+5,0:+1,5:+2,0:+5,1:+1,0:+2,1:+1,0:-1,5:+3,6:+2,5:+1,4:+1,0:+5,3:+1,0:+1,2:+1,0:-3,2:+1,0:+5,3:+1,0:+1,5:-5,0:+5,5:+1,0:+1,5:+4,0:+2,3:+1,0:-1,5:-5",
+         String(localized: "level.lens-63.title", defaultValue: "Stereoscope",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 3, 6], "6:+1,5:-1,4:+2,5:-1,4:-3,5:+5,4:+1,5:-1,0:+1,2:-1,1:+1,2:+3,1:+1,2:+3,3:+1,4:+4,3:+1,2:-5,0:+2,5:+5,6:+1,5:-1,4:+1,5:+2,6:+1,5:-5,4:-1,5:-2,4:-5,5:-1,4:+5,5:-3",
+         String(localized: "level.lens-64.title", defaultValue: "Ophthalmoscope",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [2, 3, 4, 5, 6], "0:-1,1:-4,2:+1,0:-5,1:-1,0:+4,1:+3,0:-5,6:+1,0:-2,1:+1,2:+1,0:-4,1:-1,0:+1,5:+1,0:+5,2:+1,1:+5,6:+1,0:-2,3:+1,0:+1,1:+1,0:+5,4:+2,0:+1,4:+1,0:-3,3:+1,0:-3,1:+1,0:+1,5:+1",
+         String(localized: "level.lens-65.title", defaultValue: "Sextant",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 2, 4, 5], "5:+2,6:+3,1:-1,0:+1,1:-2,6:-1,1:+1,6:+5,1:-2,6:+1,1:+1,6:-2,0:+1,3:-5,4:+1,3:-3,4:+1,3:+1,2:+1,1:+3,6:+5,5:+1,6:+1,1:+1,6:+1,1:-4,2:+2,1:-3,0:+1,6:+4,1:-2",
+         String(localized: "level.lens-66.title", defaultValue: "Theodolite",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 4, 5], "3:+5,0:+1,3:+2,0:+2,3:+4,2:+4,1:+1,2:-3,3:-3,2:+1,3:-3,2:-4,3:-3,2:-1,3:+2,4:+1,3:+4,2:+1,3:-1,4:+1,3:-4,2:-4,3:-2,4:+1,3:-1,2:+1,1:+1,6:+2,5:+1,6:+3,5:+1,6:+3",
+         String(localized: "level.lens-67.title", defaultValue: "Spectroscope",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 4, 5], "0:-5,1:+2,0:-2,6:+4,0:-1,1:+1,6:+3,0:+5,5:+2,6:+3,0:-1,3:+1,0:+3,4:+1,0:-5,6:+1,0:-4,2:+1,0:-1,6:-1,5:+1,0:+5,3:+1,0:+3,3:+1,0:+4,6:+1,0:-3,4:+1,0:+1,6:+5,0:+3,2:+1,0:+1",
+         String(localized: "level.lens-68.title", defaultValue: "Lighthouse",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 2, 5], "6:-2,0:+1,6:+4,5:+1,4:+1,3:-4,4:+4,3:+1,2:+2,3:+1,4:+3,3:-3,4:+1,3:-1,4:-1,3:-1,4:-4,5:+1,6:+3,5:+1,4:+2,3:+3,2:+1,3:+4,4:-1,3:-3,0:+1,6:-3,1:+1,6:+1,1:+1",
+         String(localized: "level.lens-69.title", defaultValue: "Eclipse glasses",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 3, 5, 6], "2:+1,3:+1,4:-2,5:+2,4:-5,0:+1,1:+4,2:+3,1:-5,2:-4,1:+2,2:+1,1:+1,2:+2,3:+2,4:-5,5:+1,4:-1,0:+1,1:-2,2:+3,1:-2,2:+1,1:+1,2:+5,0:+1,2:-1,1:-3,6:+2,1:-3,6:+1,1:+1",
+         String(localized: "level.lens-70.title", defaultValue: "Searchlight",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 5, 6], "5:+1,0:-1,4:-2,0:-5,4:-1,0:+1,6:+1,0:+3,4:+2,3:+1,4:+1,0:+3,4:-1,0:-4,4:-1,5:+1,0:-5,6:+2,0:+1,3:+1,4:-3,0:+5,4:-5,0:+1,2:+1,0:-4,2:+1,0:+1,1:+2,0:-3,2:+1,0:+1,1:+1,0:+1,4:+1",
+         String(localized: "level.lens-71.title", defaultValue: "Planetarium",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 4, 5, 6], "5:+1,0:+4,3:+2,2:+1,0:-1,5:+1,0:+3,2:+1,0:+3,3:+4,0:-3,1:+1,0:+1,3:+1,0:+1,3:-1,4:+1,0:+5,6:+1,0:+4,6:+1,0:-1,3:+1,0:+5,1:+2,0:+3,3:-1,0:+5,3:+1,4:+2,0:-1,3:-4,0:+1,3:-5,0:+1,6:+1",
+         String(localized: "level.lens-72.title", defaultValue: "Observatory",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 3, 4, 5, 6], "5:+1,0:-5,2:+2,0:+5,2:+1,0:+1,2:-1,0:-1,2:+1,1:+1,0:-3,5:+2,0:-1,2:-3,0:-5,2:-3,3:+1,2:-2,3:+1,0:+2,4:+1,0:-1,4:+1,0:-2,1:+1,0:-5,2:+1,0:-1,6:+1,0:-2,3:+1,2:-2,0:+4,2:-4,0:-4,6:+1",
+         String(localized: "level.lens-73.title", defaultValue: "Radio telescope",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [0, 1, 2, 4], "4:+1,5:+5,6:-5,5:+4,6:-1,5:+3,6:+1,5:+5,6:+4,5:-1,6:-1,1:+2,6:-1,0:+1,5:-5,6:-5,1:+1,6:-1,0:+1,6:-3,0:+1,5:-4,6:-1,5:-1,6:+1,5:-5,4:+1,3:+1,2:+2,3:-3,2:+1",
+         String(localized: "level.lens-74.title", defaultValue: "Space telescope",
+                comment: "Lens level title, a lens or a way of seeing")),
+        (.hex, [1, 2, 3, 4, 6], "2:+1,0:-1,5:+1,0:+2,1:+2,0:-1,5:-3,4:+1,0:-5,3:+2,0:+2,5:+5,6:+1,0:+1,5:-2,0:-3,5:+3,4:+1,0:-1,5:-1,4:+1,5:+4,0:-1,5:-3,6:+2,5:-5,0:-2,1:+1,0:+5,5:+5,0:+3,5:-1,0:+3,3:+1,0:-1,2:+2",
+         String(localized: "level.lens-75.title", defaultValue: "Mind's eye",
+                comment: "Lens level title, a lens or a way of seeing")),
+    ]
+
+    /// Lens's 75 panels, each on its own halftone panel (`panel`, `LensArt.levels`). A rod is a lens or a twist for the
+    /// whole level; every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3. No entry merges as
+    /// it is dealt, and par is the depth (`testLensLevels`), the solver's optimum (`testLensParIsTheOptimum`).
+    static let lens: [Level] = lensRows.enumerated().map { (i: Int, row: (Layout, [Int], String, String)) -> Level in
+        let (layout, slots, scramble, title) = row
         let lenses = Set(slots)
         return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: title,
                      picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses),
-                     chapter: lensChapters[min(i / 6, 3)], lenses: lenses)
+                     chapter: lensChapters[lensChapterSizes.indices.first { lensChapterSizes[...$0].reduce(0, +) > i }!],
+                     lenses: lenses)
     }
 
     /// Lens's face (Jack, 2026-11-11): Kaleidoscope, which the pack's dock cover, its card's clip, its promoted-purchase
@@ -247,7 +414,11 @@ extension Level {
     /// draw `panel`, so for now they keep Escapement's shared plate.
     var plate: Int { pack == .escapement ? Int(label) ?? 0 : panel }
 
-    /// Lens's chapters (Jack's call N1b, round 13): six levels each, the last seven.
+    /// How many levels each of Lens's chapters holds: the first 25's six, six, six and seven (Jack's call N1b, round
+    /// 13), then six each and eight to end the pack, the shape again with the remainder in the last.
+    static let lensChapterSizes = [6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 8]
+
+    /// Lens's chapters, each a film-making word.
     static let lensChapters = [
         String(localized: "chapter.lens.1", defaultValue: "Close-up",
                comment: "Lens chapter, a film-making word: the first six panels"),
@@ -256,7 +427,23 @@ extension Level {
         String(localized: "chapter.lens.3", defaultValue: "Double-take",
                comment: "Lens chapter, a film-making word: panels 13 to 18"),
         String(localized: "chapter.lens.4", defaultValue: "Big Picture",
-               comment: "Lens chapter, a film-making word: the last seven panels"),
+               comment: "Lens chapter, a film-making word: panels 19 to 25"),
+        String(localized: "chapter.lens.5", defaultValue: "Wide shot",
+               comment: "Lens chapter, a film-making word: panels 26 to 31"),
+        String(localized: "chapter.lens.6", defaultValue: "Long take",
+               comment: "Lens chapter, a film-making word: panels 32 to 37"),
+        String(localized: "chapter.lens.7", defaultValue: "Jump cut",
+               comment: "Lens chapter, a film-making word: panels 38 to 43"),
+        String(localized: "chapter.lens.8", defaultValue: "Freeze frame",
+               comment: "Lens chapter, a film-making word: panels 44 to 49"),
+        String(localized: "chapter.lens.9", defaultValue: "Split screen",
+               comment: "Lens chapter, a film-making word: panels 50 to 55"),
+        String(localized: "chapter.lens.10", defaultValue: "Slow motion",
+               comment: "Lens chapter, a film-making word: panels 56 to 61"),
+        String(localized: "chapter.lens.11", defaultValue: "Dolly zoom",
+               comment: "Lens chapter, a film-making word: panels 62 to 67"),
+        String(localized: "chapter.lens.12", defaultValue: "Final cut",
+               comment: "Lens chapter, a film-making word: the last eight panels"),
     ]
 
     /// The problem book (docs/escapement-problems.md, scripts/escapement/problems.tsv) in its order: fifteen chapters

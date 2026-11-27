@@ -134,7 +134,7 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): String(localized: "\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
                                        comment: "What First Stir holds. Its levels counted")
-        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
+        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in twelve issues",
                                   comment: "What Lens holds. Its levels counted")
         case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in fifteen chapters",
                                         comment: "What Escapement holds. Its levels counted")

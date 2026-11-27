@@ -15,13 +15,15 @@ enum LensArt {
     typealias P = SIMD2<Double>
     typealias Tone = SIMD3<Double>
 
-    /// The drawn panels by their level's number. A level without one draws the test panel (`Halftone.panel`).
+    /// The drawn panels by their level's number. A level without one draws the test panel (`Halftone.panel`). Levels
+    /// 26 on are each chapter's own table, in its file, so the chapters are drawn apart.
     static let levels: [Int: Halftone.Panel] = [1: keyhole, 2: peephole, 3: magnifier, 4: monocle, 5: goggles, 6: spyglass,
                                                7: binoculars, 8: spectacles, 9: sunglasses,
                                                10: pinhole, 11: bifocals, 12: glasses3d, 13: porthole, 14: periscope,
                                                15: telescope, 16: eyepiece, 17: microscope, 18: nightVision, 19: camera,
                                                20: shutter, 21: viewfinder, 22: wideAngle, 23: fisheye, 24: telephoto,
                                                25: kaleidoscope]
+        .merging([wideShot, longTake, jumpCut, freezeFrame, splitScreen, slowMotion, dollyZoom, finalCut].joined().map { ($0.key, $0.value) }) { $1 }
 
     static let bold = 0.008, mid = 0.005, hair = 0.0025
 

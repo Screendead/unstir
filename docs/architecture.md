@@ -94,8 +94,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the shader's draw to the bake's, and `testALensAtX8DrawsItsPanelAtTheScreensPitch` measures Keyhole at x8 over a
   twist against the panel's geometry sampled nine times a pixel (mean error 30 levels before, 1.6 after; its
   steepest edges 16 levels a pixel before, 211 after, of 216). In the simulator (2026-11-11, the Mac's GPU, 1284 px)
-  the GPU bench put it at 1.6 plain entries' work on Lens 01 and 3.8 on Lens 25, the deepest (12 entries, four
-  lenses); unmeasured on a phone, and not counted against the four-tap limit, which Lens's stacks stay far inside.
+  the GPU bench put it at 1.6 plain entries' work on Lens 01 and 3.8 on Lens 25 (12 entries, four lenses); on
+  2026-11-27, after the pack trebled, Lens 55, the deepest with the most lenses (36 entries, five), took 1.10 ms a
+  frame through `unstirLens` as dealt, 37.8 plain entries' work, and 0.81 ms with its lenses at x8, against 0.45 and
+  0.37 for Lens 25; unmeasured on a phone, and not counted against the four-tap limit, as a Lens glass draws from its
+  map once stirred to `least`.
   The shader's tap count and the `Tank.fourTaps` (40) limit, with `Tank.maxStack` as it then stood (36), are tuned against 120 Hz on an
   iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 the most the game allows, a full stack of 36
   on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
@@ -124,11 +127,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
   (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
   two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Then, at 1284,
-  Lens 01 and Lens 25 (the deepest, and the only one with four lenses) on their own panels, as dealt and with every
+  Lens 01, Lens 25 (the first 25's deepest, four lenses) and the pack's deepest with the most lenses, since a lens's inset
+  runs the chain and pays for every entry, on their own panels, as dealt and with every
   lens at x8 over the level's twists, each through `unstir` and through `unstirLens` with the panel's detail, in ms
   and in plain entries' work. Last, on the CPU,
   it bakes Lens's panels cold at the play screen's glass for a Lens level (`PlayLayout.of` in `GPUBenchView`) straight
-  through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
+  through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 75 at an eighth of the side to
   rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
   Caches, for the call on capping that cache, and Lens 01's and 25's details, which every open bakes. In the simulator that is the Mac's CPU running unoptimised Debug code.
 - **OracleBench.swift** and `scripts/twist-oracle.sh` are the twist oracle:
@@ -243,8 +247,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   MB) draws through the chain past a size; it is unset.
   A Lens level's map holds its lenses' flow, and is asked for as any level's is, from `least` entries (Jack's call,
   2026-11-13, the map's memory for the frame's saving: "32mb out of 6gb seems like a reasonable trade-off for 10-20%
-  savings and thus better battery life"): Lens 22 to 25 as dealt (10, 10, 10 and 12 entries), and the 21 before
-  them, dealt 1 to 9, only once a player has stirred to 10. `UNSTIR_MAPLENS=0`, a probe, draws Lens through its
+  savings and thus better battery life"): Lens 22 to 75 as dealt (10 to 36 entries), and the 21 before them, dealt
+  1 to 9, only once a player has stirred to 10. Lens 51's, six lenses at 35 entries, is 45.6 MB at 2274 px in the
+  simulator (2026-11-27). `UNSTIR_MAPLENS=0`, a probe, draws Lens through its
   chain as before (`StirMap.lensMaps`), for holding the two against each other on a phone. Its glass draws through `unstirLensMapped` once the detail is in, which reads the map
   but runs `unstirLensBody` whole for any pixel whose point on the panel may lie in a lens's inset: the detail is
   drawn from the taps' differences, finer at x8 than the stored step, so wherever it might be drawn the glass is the
@@ -277,8 +282,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   what the wider image costs one (32.2 MB for Lens 25's at 1172 px against 22.0 for the map alone, and the
   atlas's own image, 7.8 MB, stays for the frames without a map). The gain is small, as
   the cores a lens magnifies, where the detail is drawn, run the chain. On
-  the Mac, from one image, Lens 25 took 0.89 of its frame as dealt (12 entries, the deepest dealt; Lens 22 to 24 are
-  10), 0.81 six twists deeper, 0.90 with a lens in hand past x8 and 0.98 with a plain rod in hand (1.08 by
+  the Mac, from one image, Lens 25 took 0.89 of its frame as dealt (12 entries, then the deepest dealt; Lens 22 to 24
+  are 10), 0.81 six twists deeper, 0.90 with a lens in hand past x8 and 0.98 with a plain rod in hand (1.08 by
   `chain`), against today's body in a kernel of its own (medians of three launches; from two images the same cases
   read 0.87, 0.80, 0.88 and 0.95, within the clock's wander of these).
   With the map on by default a level under `least` asks for none and draws as before: Lens 1 as dealt (one entry)
@@ -844,7 +849,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`PayoffTests`).
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 90 in its order and fifteen chapters of six, `Level.chapter`, which the
+  25, five chapters; Lens 75 in twelve chapters, the first 25 in six, six, six and seven (Jack's call N1b), then seven of six and a last of eight (`Level.lensChapterSizes`, `Level.lensChapters`); Escapement the problem book's 90 in its order and fifteen chapters of six, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow, and run on the first 30 alone, as past par 9 it outgrows any run; Prism 90 in fifteen trays, First Stir's replacement in v1, PK1, trebled 2026-11-27):
@@ -907,11 +912,17 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   fail offline, as the runner's test session served the products under a simulated `.loadProducts` error) at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
   has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
-  `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
+  `Level.lens` holds the pack's 75 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
-  netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
-  solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
-  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
+  netting at most +3 and reached by a twist, no entry merging as it is dealt, and par the depth (`testLensLevels`, which
+  pins the table), the solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md
+  --solve` checks a table's rules and optima before it goes in). Levels 26 to 75 (Jack, 2026-11-27: treble the pack,
+  ramp faster to a much higher top) climb from depth 13 to 36 by level 53 and hold at 33 to 36 (29 to 32 where the
+  hub is a lens, whose proofs run long), where a level stops being a harder puzzle and becomes a longer one; past
+  that they get harder to crack instead, by `scripts/lens-levels.py`'s measures: every deal from 39 a chain (one
+  right move at each step), faint twists rising to two in five, lens entries a quarter of the depth or so, a lens of
+  one or two entries netting +3 so some still zoom by two or three steps. `scripts/lens-levels/plan.tsv` is the plan
+  and `picked.tsv` the deals `lens-levels.py pick` proved against it. A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
   colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
   ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
   Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
@@ -1537,14 +1548,14 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
   the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
   strokes of their own widths, keyed in Caches by its name). Each Lens level draws its own (Jack's call LENSART = B:
-  25 standalone panels, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
+  standalone panels, 75 now, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
   stays `.halftone` on all 25, so nothing stored changes, and `Level.panel`, a Lens level's number and 0 anywhere else,
   goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
   and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Kaleidoscope's panel
   is also the pack's dock cover, its card's clip and its promoted-purchase image. Caches keeps the bakes of the four
   panels opened last (`PanelCache.kept`; Jack, 2026-11-11), at every size, a read counting as an open; the cover's
   panel is kept whatever its turn, as the menu draws it at launch, and counts as one of the four. A panel is 5.2 MB
-  at a Pro Max's tank, 129 MB for all 25, against a cold bake of 70 to 227 ms on a 13 Pro Max; only the cover's and
+  at a Pro Max's tank, 129 MB for the first 25 and 387 for all 75, against a cold bake of 70 to 227 ms on a 13 Pro Max; only the cover's and
   the open level's are ever in sight together, so none on screen loses its bake
   (`testCachesKeepsTheFourPanelsOpenedLast`). The GPU bench times the first-open bake on the device (below). A panel's
   `detail` (`Halftone.Detail`) is what `unstirLens` draws finer than the bake: one grey RGBA8 atlas holding each
@@ -1555,7 +1566,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   in memory only (no cache: 7 ms for Keyhole and 17 for Lens 25's four lenses on an M2 Max, optimised, against 80
   for Keyhole's panel; 3.3 MB and 7.8 MB at a Pro Max's glass), and logs each bake. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons,
   ovals and rings, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
-  panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
+  panels, a chapter a file, each of the eight from 26 on with its own table (`LensArt.wideShot` and on) that
+  `LensArt.levels` merges. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
   enough to read at x8 from the bake alone, as every draw but the level's glass shows it; every rod's core on its level holds tone and linework that each step
   moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
   on the Mac). A twist must also read without the linework, which is too fine for weak eyes (Jack, from the phone,
