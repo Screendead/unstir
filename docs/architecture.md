@@ -911,12 +911,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   netting at most +3 and reached by a twist, no entry merging as it is dealt, and par the depth (`testLensLevels`, which
   pins the table), the solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md
   --solve` checks a table's rules and optima before it goes in). Levels 26 to 75 (Jack, 2026-11-27: treble the pack,
-  ramp faster to a much higher top) climb from depth 13 to 36 by level 53 and hold at 33 to 36 (29 to 32 where the hub is a lens, whose proofs
-  run long), where a level stops
-  being a harder puzzle and becomes a longer one; past that they get harder to crack instead, by
-  `scripts/lens-levels.py`'s measures: every deal from 44 a chain (one right move at each step), faint twists rising
-  to over half, every lens holding its three entries. `scripts/lens-levels/plan.tsv` is the plan and `picked.tsv` the
-  deals `lens-levels.py pick` proved against it. A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
+  ramp faster to a much higher top) climb from depth 13 to 36 by level 53 and hold at 33 to 36 (29 to 32 where the
+  hub is a lens, whose proofs run long), where a level stops being a harder puzzle and becomes a longer one; past
+  that they get harder to crack instead, by `scripts/lens-levels.py`'s measures: every deal from 39 a chain (one
+  right move at each step), faint twists rising to two in five, lens entries a quarter of the depth or so, a lens of
+  one or two entries netting +3 so some still zoom by two or three steps. `scripts/lens-levels/plan.tsv` is the plan
+  and `picked.tsv` the deals `lens-levels.py pick` proved against it. A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
   colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
   ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
   Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
