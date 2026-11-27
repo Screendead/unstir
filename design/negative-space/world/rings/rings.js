@@ -33,7 +33,7 @@ const WHIRLPOOL = ['Spring', 'Headwaters', 'Creek', 'Brook', 'Stream', 'Shallows
 
 // The rings, shallowest first. solved: levels 1...solved are solved; over: those solved but not at par.
 const RINGS = [
-  { id: 'today', word: 'today', rgb: '255, 226, 170', n: 30, solved: 30, over: [2, 3, 5, 6, 8, 9, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], missed: [4, 10, 14, 18, 22, 27] },
+  { id: 'today', word: 'today', rgb: '255, 226, 170', n: 30, solved: 30, over: [1, 2, 3, 5, 6, 8, 9, 11, 12, 13, 15, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30], missed: [4, 10, 14, 18, 22, 27] },
   { id: 'plughole', word: 'plughole', rgb: '120, 226, 204', n: 27, solved: 27, over: [8, 19, 23] },
   { id: 'whirlpool', word: 'whirlpool', rgb: '190, 132, 255', n: 27, solved: 14, over: [5, 9, 12], next: 15 },
   { id: 'vortex', word: 'vortex', rgb: '98, 150, 255', n: 27, solved: 0, over: [], locked: 'whirlpool' },
@@ -139,7 +139,7 @@ function stages() {
   const w = RINGS[2], tint = (ring, a) => `rgba(${ring.rgb}, ${a})`;
   const level = (g, ring, k, name, sub, cue) => {
     if (AX) {
-      say(g, ring.word, 0, -80, F.word(pt(31, 'title')), ink(0.96));
+      say(g, ring.word, 0, -78, F.word(pt(28, 'title')), ink(0.96));
       say(g, sub, 0, -38, F.data(pt(13, 'detail')), ink(0.62));
       say(g, String(k).padStart(2, '0'), 0, 8, F.data(pt(20, 'title'), 500), tint(ring, 1));
       say(g, name, 0, 60, F.name(pt(28, 'title')), ink(1));
@@ -160,10 +160,9 @@ function stages() {
   });
   stage('today-stage', (g) => {
     say(g, 'today', 0, -62, F.word(36), ink(0.96));
-    say(g, '4 days running', 0, -29, F.data(13), ink(0.58), { track: 0.4 });
+    say(g, '30 past dailies · 3 at par', 0, -29, F.data(13), ink(0.58), { track: 0.4 });
     say(g, 'Fri 27 Nov', 0, 22, F.name(30), ink(1));
     playMark(g, 64, RINGS[0].rgb);
-    say(g, '30 past dailies', 0, 104, F.data(12), ink(0.45), { track: 0.4 });
   });
   stage('endless-stage', (g) => {
     say(g, 'endless', 0, -62, F.word(36), ink(0.96));
@@ -226,8 +225,8 @@ function chrome() {
       }
     }
     if (AX) {
-      say(g, 'packs · first 3 levels', 220, 258, F.data(pt(12, 'detail')), ink(0.55));
-      say(g, 'of each free', 220, 292, F.data(pt(12, 'detail')), ink(0.55));
+      say(g, 'packs · first 3 levels', 220, 250, F.data(pt(12, 'detail')), ink(0.55));
+      say(g, 'of each free', 220, 282, F.data(pt(12, 'detail')), ink(0.55));
     } else say(g, 'packs · first 3 levels of each free', 220, 232, F.data(12), ink(0.46), { track: 0.4 });
   });
   L.packs.top = top;
@@ -293,13 +292,13 @@ const glide = (x) => x * x * (3 - 2 * x);
 function place(t) {   // which ring is forward, as a ring index that may sit between two
   if (t >= 21000) return 5;
   if (t >= 20000) return 0;
-  return HOME + glide(ramp(t, 1550, 2450)) - glide(ramp(t, 3850, 4750));
+  return HOME + glide(ramp(t, 1650, 2500)) - glide(ramp(t, 3850, 4750));
 }
 const picked = (t) => t >= 20000 ? 0 : ease(ramp(t, 5850, 6150)) * (1 - ease(ramp(t, 7650, 7850)));
 const open = (t) => t >= 20000 ? 0 : ease(ramp(t, 7700, 9000));
 function touch(t) {
   const press = (a, b) => ease(ramp(t, a, a + 120)) * (1 - ease(ramp(t, b, b + 180)));
-  if (t < 3000) return { x: 318, y: mix(650, 430, glide(ramp(t, 1500, 2100))), a: press(1380, 2100) };
+  if (t < 3000) return { x: 318, y: mix(650, 430, glide(ramp(t, 1620, 2200))), a: press(1500, 2200) };
   if (t < 5400) return { x: 318, y: mix(430, 650, glide(ramp(t, 3800, 4400))), a: press(3680, 4400) };
   if (t < 7200) return { ...beadAt(PICK), a: press(5700, 5880) };
   return { ...beadAt(15), a: press(7500, 7680) };
@@ -307,7 +306,7 @@ function touch(t) {
 
 function draw(g, t) {
   ctx = g;
-  const p = place(t), o = open(t), menu = 1 - ease(ramp(o, 0, 0.45)), dive = 1 + 0.5 * o;
+  const p = place(t), o = open(t), menu = 1 - ease(ramp(o, 0, 0.7)), dive = 1 + 0.5 * o;
   RINGS.forEach((ring, i) => {
     const d = i - p;                                   // depth: 0 forward, + deeper, - passed
     const s = (d >= 0 ? Math.pow(0.78, d) : Math.pow(1.5, -d)) * dive;
