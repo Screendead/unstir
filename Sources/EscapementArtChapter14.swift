@@ -405,8 +405,125 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 83, Night watch, hex, clocks 1-.
-    static func plate83() -> Plate? { nil }
+    /// Whether `p` lies inside the closed outline `ring`.
+    private static func contains(_ ring: [P], _ p: P) -> Bool {
+        var inside = false
+        for i in 0..<(ring.count - 1) {
+            let a = ring[i], b = ring[i + 1]
+            if (a.y > p.y) != (b.y > p.y), p.x < a.x + (p.y - a.y) / (b.y - a.y) * (b.x - a.x) { inside.toggle() }
+        }
+        return inside
+    }
+
+    /// The stretches of the segment from a to b that lie inside `ring`, at least `margin` in from its edge.
+    private static func runs(inside ring: [P], from a: P, to b: P, margin: Double) -> [[P]] {
+        let n = 80, normal = simd_normalize(P(-(b - a).y, (b - a).x)) * margin
+        var out: [[P]] = [], run: [P] = []
+        for i in 0...n {
+            let p = a + (b - a) * (Double(i) / Double(n))
+            let ok = contains(ring, p) && contains(ring, p + normal) && contains(ring, p - normal)
+                && contains(ring, p + simd_normalize(b - a) * margin)
+            if ok { run.append(p) } else if run.count > 1 { out.append(run); run = [] } else { run = [] }
+        }
+        if run.count > 1 { out.append(run) }
+        return out
+    }
+
+    /// Problem 83, Night watch, hex, clocks 1-: an owl on a bare branch at night, face on, its head and wings in ink
+    /// flecked with bone, its breast barred in ink on bone, its facial discs ruled round its eyes, talons over the
+    /// branch; its eyes in the second ink, set in the lanes either side of the top rod.
+    static func plate83() -> Plate {
+        var plate = Plate()
+        let eyes = [P(-0.18, -0.31), P(0.18, -0.31)]
+        let head = smooth([P(-0.44, -0.4), P(-0.42, -0.66), P(-0.4, -0.9), P(-0.22, -0.72), P(0, -0.7), P(0.22, -0.72),
+                           P(0.4, -0.9), P(0.42, -0.66), P(0.44, -0.4), P(0.36, -0.1), P(0, -0.02), P(-0.36, -0.1)], 10)
+        let body = smooth([P(-0.36, -0.14), P(-0.46, 0.14), P(-0.42, 0.5), P(-0.2, 0.72), P(0.2, 0.72), P(0.42, 0.5),
+                           P(0.46, 0.14), P(0.36, -0.14)], 10)
+        let branch = Kit.ribbon(curve(P(-1.1, 0.8), P(0, 0.68), P(1.1, 0.72), 40), 0.09)
+        let tail = smooth([P(-0.12, 0.66), P(0.12, 0.66), P(0.1, 0.94), P(-0.1, 0.94)], 4)
+        Kit.ground(&plate, angle: -0.35, around: [head, body, branch, tail])
+
+        for (k, p) in [P(-0.72, -0.5), P(0.7, -0.52), P(-0.6, -0.78), P(0.55, -0.8), P(-0.82, -0.1), P(0.84, -0.12)].enumerated() {
+            let ray = star(p, 0.035 + 0.012 * Double(k % 2), points: 4, inner: 0.3, turn: 0.3 * Double(k))
+            plate.line(ray, 0.022, .bone)
+            Kit.mass(&plate, ray)
+        }
+
+        // The tail and the branch, the bark cut in bone.
+        Kit.mass(&plate, tail)
+        for y in [0.76, 0.82, 0.88] { plate.line([P(-0.1, y), P(0.1, y + 0.02)], 0.022, .bone) }
+        Kit.mass(&plate, branch)
+        for k in 0..<9 {
+            let x = -0.9 + 0.2 * Double(k) + 0.05 * rnd(83, k)
+            let y = 0.74 - 0.06 * x * x
+            plate.line(curve(P(x, y - 0.02), P(x + 0.06, y), P(x + 0.13, y - 0.015), 6), heavy, .bone)
+        }
+        Kit.mass(&plate, Kit.ribbon(curve(P(0.62, 0.7), P(0.72, 0.55), P(0.86, 0.48), 12), 0.035))
+        Kit.mass(&plate, Kit.ribbon(curve(P(-0.6, 0.74), P(-0.68, 0.62), P(-0.8, 0.56), 12), 0.03))
+
+        // The body: the breast barred, the wings folded over its sides.
+        Kit.cut(&plate, body, edge: 0.02)
+        for (row, y) in stride(from: 0.02, through: 0.54, by: 0.1).enumerated() {
+            let shift = row % 2 == 0 ? 0.0 : 0.055
+            for x in stride(from: -0.3 + shift, through: 0.3, by: 0.11) {
+                Kit.mass(&plate, Kit.ribbon(curve(P(x - 0.04, y), P(x, y + 0.05), P(x + 0.04, y), 8), 0.022))
+            }
+        }
+        for side in [-1.0, 1.0] {
+            let wing = smooth([P(0.3 * side, -0.14), P(0.48 * side, 0.08), P(0.46 * side, 0.4), P(0.28 * side, 0.78),
+                               P(0.26 * side, 0.4), P(0.3 * side, 0.1)], 10)
+            Kit.mass(&plate, wing)
+            for k in 0..<10 {
+                let y = -0.02 + 0.075 * Double(k)
+                plate.line([P(0.47 * side, y - 0.04), P(0.28 * side, y + 0.06)], 0.026, .bone)
+            }
+        }
+
+        // The talons over the branch.
+        for x in [-0.12, 0.12] {
+            for k in -1...1 {
+                let root = P(x + 0.035 * Double(k), 0.66)
+                Kit.mass(&plate, Kit.ribbon(curve(root, root + P(0.025 * Double(k), 0.06), root + P(0.012 * Double(k) - 0.01, 0.1), 8), 0.026))
+            }
+        }
+
+        // The head: ink flecked with bone, the facial discs ruled about the eyes, the brows and the beak.
+        Kit.mass(&plate, head)
+        for e in eyes {
+            let disc = ellipse(e + P(0, 0.02), 0.17, 0.19)
+            Kit.cut(&plate, disc, edge: 0.022)
+            for k in 0..<32 {
+                let a = 2 * .pi * Double(k) / 32
+                plate.line([polar(e, 0.09, a), e + P(0.155 * cos(a), 0.02 + 0.175 * sin(a))], fine)
+            }
+        }
+        // Its feathers raked back from the face in bone.
+        for k in 0..<46 {
+            let a = -.pi - 0.7 + (.pi + 1.4) * (Double(k) + 0.5) / 46
+            let from = polar(P(0, -0.2), 0.1 + 0.06 * rnd(833, k), a), to = polar(P(0, -0.2), 0.8, a)
+            for run in runs(inside: head, from: from, to: to, margin: 0.03) {
+                plate.lines(dashed(run, on: 0.07 + 0.03 * rnd(834, k), off: 0.025), 0.032, .bone)
+            }
+        }
+        for side in [-1.0, 1.0] {
+            Kit.mass(&plate, Kit.ribbon(curve(P(0.01 * side, -0.24), P(0.12 * side, -0.52), P(0.34 * side, -0.46), 12), 0.03))
+        }
+        let beak = smooth([P(-0.04, -0.27), P(0.04, -0.27), P(0.02, -0.17), P(0, -0.13)], 5)
+        plate.line(beak, 0.03, .bone)
+        Kit.mass(&plate, beak)
+        for e in eyes {
+            Kit.mass(&plate, arc(e, 0.08))
+            plate.fill(arc(e, 0.065), .second)
+            plate.fill(arc(e, 0.032), .black)
+            plate.fill(arc(e + P(-0.022, -0.024), 0.012))
+        }
+
+        callout(&plate, "A", from: P(-0.36, -0.8), to: P(-0.6, -0.6))
+        callout(&plate, "B", from: P(0.38, 0.24), to: P(0.74, 0.12))
+        callout(&plate, "C", from: P(0.12, 0.66), to: P(0.42, 0.84))
+        callout(&plate, "D", from: P(0.1, 0.32), to: P(-0.68, 0.36))
+        return plate
+    }
 
     /// Problem 84, Small hours, hex, clocks 1-.
     static func plate84() -> Plate? { nil }
