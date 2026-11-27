@@ -35,6 +35,25 @@ extension LensArt {
         }
     }
 
+    /// Draws the strokes from `start` on, one lens's clue, a little smaller about their middle and then straight out
+    /// from or in towards the lens's centre `c` until the nearest stroke's edge is `knob` from it: the lens's knob covers
+    /// the centre, and the nearer the clue the more of it a lens at x8 still shows.
+    private static func clearKnob(_ s: inout [Halftone.Stroke], from start: Int, _ c: P, knob: Double = 0.022, scale: Double = 0.82) {
+        let points = s[start...].flatMap(\.points)
+        let middle = (points.reduce(points[0], simd_min) + points.reduce(points[0], simd_max)) / 2
+        let clue = s[start...].map { stroke($0.points.map { middle + ($0 - middle) * scale }, $0.width) }
+        let out = simd_normalize(middle - c)
+        func edge(_ t: Double) -> Double {
+            clue.map { distance(c - out * t, $0.points.count > 1 ? $0.points : $0.points + $0.points) - $0.width / 2 }.min()!
+        }
+        var lo = -simd_distance(middle, c), hi = 0.2
+        for _ in 0..<40 {
+            let t = (lo + hi) / 2
+            if edge(t) < knob { lo = t } else { hi = t }
+        }
+        s.replaceSubrange(start..., with: clue.map { stroke($0.points.map { $0 + out * hi }, $0.width) })
+    }
+
     /// The angle of p about c in degrees, 0 at three o'clock and clockwise on screen, from 0 to 360.
     private static func bearing(_ p: P, _ c: P) -> Double {
         let a = atan2(p.y - c.y, p.x - c.x) * 180 / .pi
@@ -105,6 +124,7 @@ extension LensArt {
         s.append(stroke(ellipse(leaf, 0.06, 0.03, 20), mid))
         for a in [20.0, 200, 250] { s.append(stroke([polar(rods[5], 0.18, a), polar(rods[5], core, a)], hair)) }
 
+        var mark = s.count
         // The emblems on the plain roundels. At the hub, a dove with a sprig in its beak.
         let dove = rods[0] + P(0.024, -0.03), dq = 0.8
         s.append(stroke(ellipse(dove, 0.024, 0.0104, degrees: -12, 20), 0.0036))
@@ -114,12 +134,16 @@ extension LensArt {
         s.append(stroke([dove + dq * P(-0.028, 0.004), dove + dq * P(-0.06, 0.018), dove + dq * P(-0.056, -0.004), dove + dq * P(-0.03, -0.004)], 0.003))
         s.append(stroke([dove + dq * P(0.052, -0.012), dove + dq * P(0.07, 0.004)], 0.002))
         for t in [0.3, 0.65, 1.0] { s.append(stroke(ellipse(dove + dq * P(0.052 + 0.018 * t, -0.012 + 0.016 * t + 0.004), 0.005, 0.0022, degrees: 40, 8), 0.0018)) }
+        clearKnob(&s, from: mark, rods[0])
+        mark = s.count
         // A key, its bow, shaft and wards.
         let key = rods[3] + P(-0.004, -0.03)
         s.append(stroke(circle(key + P(-0.04, 0), 0.014, 14), 0.004))
         s.append(stroke(circle(key + P(-0.04, 0), 0.005, 8), 0.002))
         s.append(stroke([key + P(-0.026, 0), key + P(0.05, 0)], 0.004))
         s.append(stroke([key + P(0.05, 0), key + P(0.05, 0.022), key + P(0.04, 0.022), key + P(0.04, 0.012), key + P(0.03, 0.012), key + P(0.03, 0.02)], 0.003))
+        clearKnob(&s, from: mark, rods[3])
+        mark = s.count
         // A chalice, a host over it.
         let cup = rods[4] + P(0.04, -0.024)
         s.append(stroke([cup + P(-0.03, -0.02)] + arc(cup + P(0, -0.02), 0.03, 180, 0, 12).dropFirst() + [cup + P(-0.03, -0.02)], 0.0036))
@@ -129,6 +153,8 @@ extension LensArt {
         s.append(stroke(circle(cup + P(0, -0.034), 0.009, 12), 0.003))
         s.append(stroke([cup + P(0, -0.04), cup + P(0, -0.028)], 0.0016))
         s.append(stroke([cup + P(-0.006, -0.034), cup + P(0.006, -0.034)], 0.0016))
+        clearKnob(&s, from: mark, rods[4])
+        mark = s.count
         // A fleur-de-lis.
         let lily = rods[6] + P(0.036, -0.02), lq = 0.75
         s.append(stroke(closed([lily + lq * P(0, -0.05)] + curve(lily + lq * P(0, -0.05), lily + lq * P(0.024, -0.022), lily + lq * P(0.004, 0.004), 8).dropFirst()
@@ -140,6 +166,7 @@ extension LensArt {
         }
         s.append(stroke(closed(rect(lily.x - 0.015, lily.y + 0.003, lily.x + 0.015, lily.y + 0.0105)), 0.003))
 
+        clearKnob(&s, from: mark, rods[6])
         return Halftone.Panel(name: "rosewindow", tones: { p in
             // The roundels: glass or a picture inside, their frames' cusps round it, the first that holds the point.
             for k in 0..<7 {
@@ -209,6 +236,7 @@ extension LensArt {
             for j in 0..<12 { s.append(stroke([polar(c, glass, 30 * Double(j) + 15), polar(c, frame, 30 * Double(j) + 15)], hair)) }
         }
 
+        var mark = s.count
         // Through the top: a swallow, wings swept and tail forked.
         let swallow = rods[1] + P(0.026, -0.034)
         let bird: [P] = [P(0, -0.024), P(0.006, -0.014), P(0.03, -0.012), P(0.052, 0.006), P(0.026, 0.0), P(0.008, 0.006), P(0.006, 0.018),
@@ -216,6 +244,8 @@ extension LensArt {
                          P(-0.03, -0.012), P(-0.006, -0.014)]
         s.append(stroke(closed(bird.map { swallow + $0 }), 0.0034))
         s.append(stroke(circle(swallow + P(0, -0.014), 0.003, 6), 0.002))
+        clearKnob(&s, from: mark, rods[1])
+        mark = s.count
         // In the upper right: a kite, its spars, its tail of bows and its string.
         let kite = rods[2] + P(0.024, -0.034)
         let corners = [kite + P(0, -0.03), kite + P(0.02, -0.006), kite + P(0, 0.034), kite + P(-0.02, -0.006)]
@@ -228,6 +258,8 @@ extension LensArt {
             s.append(stroke([b + P(-0.006, -0.004), b + P(0.006, 0.004), b + P(0.006, -0.004), b + P(-0.006, 0.004), b + P(-0.006, -0.004)], 0.0018))
         }
         s.append(stroke(curve(corners[1], kite + P(-0.04, 0.02), kite + P(-0.06, 0.07), 10), 0.0014))
+        clearKnob(&s, from: mark, rods[2])
+        mark = s.count
         // At the foot: a hot-air balloon, its gores, the basket hung under.
         let balloon = rods[4] + P(-0.028, -0.034)
         s.append(stroke(closed(arc(balloon, 0.026, 150, 390, 18) + [balloon + P(0.008, 0.036), balloon + P(-0.008, 0.036)]), 0.0036))
@@ -235,6 +267,8 @@ extension LensArt {
         s.append(stroke(curve(balloon + P(0, -0.026), balloon + P(0.014, 0.0), balloon + P(0.006, 0.036), 8), 0.0018))
         s.append(stroke(closed(rect(balloon.x - 0.007, balloon.y + 0.046, balloon.x + 0.007, balloon.y + 0.056)), 0.003))
         for x in [-0.007, 0.007] { s.append(stroke([balloon + P(x * 1.1, 0.036), balloon + P(x, 0.046)], 0.0014)) }
+        clearKnob(&s, from: mark, rods[4])
+        mark = s.count
         // In the lower left: an aeroplane seen from below, heading up and right, and its trail.
         let plane = rods[5] + P(0.036, -0.036), heading = -30.0 * .pi / 180
         let half: [P] = [P(0.035, 0), P(0.03, 0.004), P(0.008, 0.004), P(-0.006, 0.032), P(-0.012, 0.032), P(-0.012, 0.004),
@@ -249,6 +283,8 @@ extension LensArt {
             let off = P(-back.y, back.x) * (0.006 * side)
             s += dashes(tail + off + back * 0.004, tail + off + back * 0.05, 3, 0.002)
         }
+        clearKnob(&s, from: mark, rods[5])
+        mark = s.count
         // In the upper left: a butterfly, four wings, body and feelers.
         let fly = rods[6] + P(0.028, -0.028)
         for side in [-1.0, 1.0] {
@@ -258,6 +294,7 @@ extension LensArt {
         }
         s.append(stroke([fly + P(0, -0.018), fly + P(0, 0.022)], 0.004))
 
+        clearKnob(&s, from: mark, rods[6])
         return Halftone.Panel(name: "oculus", tones: { p in
             for (k, c) in holes.enumerated() {
                 let d = simd_distance(p, c)
@@ -343,7 +380,7 @@ extension LensArt {
                 s += lead(cut[0]) && lead(cut[1]) && lead((cut[0] + cut[1]) / 2) ? [stroke(cut, mid)] : runs(fine(cut), mid, keep: lead)
             }
         }
-        // The border's panes, and the sun's face of rays painted on its glass.
+        // The border's panes.
         s += hoop(P(0, 0), 0.925, bold, pieces: 12)
         for k in 0..<36 { s.append(stroke([polar(P(0, 0), 0.925, 10 * Double(k)), polar(P(0, 0), 1, 10 * Double(k))], mid)) }
         // The roundels: their rims and the leads between the jewels.
@@ -352,6 +389,7 @@ extension LensArt {
             for k in 0..<10 { s.append(stroke([polar(c, clear, 36 * Double(k) + 18), polar(c, frame, 36 * Double(k) + 18)], hair)) }
         }
 
+        var mark = s.count
         // Through the top: a bell hung in its tower's arch, its rope down.
         let bell = rods[1] + P(0.026, -0.032)
         let side: [P] = [P(0.024, 0.014), P(0.016, 0.006), P(0.014, -0.012), P(0.01, -0.02), P(0, -0.024)]
@@ -361,6 +399,8 @@ extension LensArt {
         s.append(stroke([bell + P(-0.036, -0.012), bell + P(-0.036, 0.03)], 0.003))
         s.append(stroke([bell + P(0.036, -0.012), bell + P(0.036, 0.03)], 0.003))
         s.append(stroke([bell + P(-0.012, 0.014), bell + P(-0.018, 0.04)], 0.0018))
+        clearKnob(&s, from: mark, rods[1])
+        mark = s.count
         // In the upper right: a church's spire, a cross on it and a clock on its tower.
         let spire = rods[2] + P(0.03, -0.024)
         s.append(stroke(closed(rect(spire.x - 0.012, spire.y - 0.004, spire.x + 0.012, spire.y + 0.04)), 0.0034))
@@ -370,6 +410,8 @@ extension LensArt {
         s.append(stroke(circle(spire + P(0, 0.01), 0.006, 10), 0.0024))
         s.append(stroke([spire + P(0, 0.01), spire + P(0.003, 0.006)], 0.0014))
         s.append(stroke(arc(spire + P(0, 0.04), 0.006, 180, 360, 6), 0.0024))
+        clearKnob(&s, from: mark, rods[2])
+        mark = s.count
         // In the lower right: an umbrella, its ribs scalloped.
         let brolly = rods[3] + P(0.03, -0.03)
         s.append(stroke(arc(brolly, 0.032, 180, 360, 16), 0.0036))
@@ -377,6 +419,8 @@ extension LensArt {
         s.append(stroke([brolly + P(0, -0.032), brolly + P(0, 0.03)], 0.003))
         s.append(stroke(arc(brolly + P(0.006, 0.03), 0.006, 180, 0, 6), 0.003))
         s.append(stroke([brolly + P(0, -0.032), brolly + P(0, -0.04)], 0.003))
+        clearKnob(&s, from: mark, rods[3])
+        mark = s.count
         // At the foot: a bicycle.
         let bike = rods[4] + P(0.002, -0.044)
         for x in [-0.024, 0.024] { s.append(stroke(circle(bike + P(x, 0), 0.016, 16), 0.003)) }
@@ -385,6 +429,7 @@ extension LensArt {
         s.append(stroke([bike + P(0.024, 0), bike + P(0.012, -0.03), bike + P(0.02, -0.032)], 0.0026))
         s.append(stroke([bike + P(-0.02, -0.03), bike + P(-0.008, -0.03)], 0.003))
 
+        clearKnob(&s, from: mark, rods[4])
         return Halftone.Panel(name: "stainedglass", tones: { p in
             for h in holes {
                 let d = simd_distance(p, h)
@@ -452,12 +497,13 @@ extension LensArt {
         for at in [P(-0.2, -0.3), P(0.2, -0.1), P(-0.7, 0.0), P(0.7, 0.5), P(0.3, 0.62), P(-0.3, 0.74), P(0.1, -0.86), P(-0.12, 0.0)] {
             s += glint(at, 0.035, hair)
         }
-        // The beads: their rims, a highlight in each, and the run each has left below it.
+        // The beads: their rims and a highlight in each.
         for c in holes {
             s += hoop(c, frame, bold, pieces: 4) + hoop(c, bead, hair, pieces: 4)
             s.append(stroke(arc(c, 0.17, 200, 250, 10), mid))
         }
 
+        var mark = s.count
         // Through the top: a cat peering down over the edge, ears up, eyes slit.
         let cat = rods[1] + P(0.024, -0.034)
         s.append(stroke(closed(arc(cat, 0.024, -20, 200, 18) + [cat + P(-0.02, -0.02), cat + P(-0.016, -0.04), cat + P(-0.006, -0.024),
@@ -467,23 +513,31 @@ extension LensArt {
         for side in [-1.0, 1.0] {
             for dy in [0.006, 0.012] { s.append(stroke([cat + P(side * 0.008, 0.01), cat + P(side * 0.038, dy)], 0.0014)) }
         }
+        clearKnob(&s, from: mark, rods[1])
+        mark = s.count
         // In the lower right: a bat.
         let bat = rods[3] + P(0.026, -0.03)
         let wing: [P] = [P(0.004, -0.004), P(0.02, -0.014), P(0.046, -0.012), P(0.038, 0.0), P(0.03, 0.002), P(0.024, 0.012), P(0.014, 0.006), P(0.004, 0.01)]
         s.append(stroke(closed(wing.map { bat + $0 } + wing.reversed().map { bat + P(-$0.x, $0.y) }), 0.003))
         s.append(stroke(ellipse(bat + P(0, 0.004), 0.006, 0.01, 10), 0.003))
         for x in [-0.004, 0.004] { s.append(stroke([bat + P(x, -0.004), bat + P(x * 1.6, -0.012)], 0.002)) }
+        clearKnob(&s, from: mark, rods[3])
+        mark = s.count
         // At the foot: Cassiopeia's W.
         let w = rods[4] + P(0.0, -0.04)
         let stars = [P(-0.04, -0.012), P(-0.02, 0.012), P(0.0, -0.004), P(0.022, 0.014), P(0.042, -0.014)].map { w + $0 }
         s.append(stroke(stars, 0.0016))
         for (k, at) in stars.enumerated() { s += glint(at, k == 2 ? 0.012 : 0.009, 0.002) }
+        clearKnob(&s, from: mark, rods[4])
+        mark = s.count
         // In the lower left: a chimney pot and its smoke.
         let pot = rods[5] + P(0.03, -0.02)
         s.append(stroke(closed([pot + P(-0.012, 0.02), pot + P(-0.008, -0.01), pot + P(0.008, -0.01), pot + P(0.012, 0.02)]), 0.0034))
         s.append(stroke(closed(rect(pot.x - 0.012, pot.y - 0.016, pot.x + 0.012, pot.y - 0.01)), 0.003))
         s.append(stroke([pot + P(-0.03, 0.02), pot + P(0.03, 0.02)], 0.003))
         s.append(stroke(curve(pot + P(0, -0.02), pot + P(-0.02, -0.03), pot + P(-0.006, -0.04), 8) + curve(pot + P(-0.006, -0.04), pot + P(0.01, -0.05), pot + P(-0.012, -0.062), 8).dropFirst(), 0.003))
+        clearKnob(&s, from: mark, rods[5])
+        mark = s.count
         // In the upper left: a falling leaf, its veins and stalk.
         let leaf = rods[6] + P(0.026, -0.03), lie = P(cos(-0.6), sin(-0.6)), cross = P(-lie.y, lie.x)
         let blade = (0...20).map { k -> P in
@@ -496,6 +550,7 @@ extension LensArt {
             for side in [-1.0, 1.0] { s.append(stroke([leaf + lie * t, leaf + lie * (t + 0.01) + cross * (side * 0.012)], 0.0014)) }
         }
 
+        clearKnob(&s, from: mark, rods[6])
         return Halftone.Panel(name: "skylight", tones: { p in
             for h in holes {
                 let d = simd_distance(p, h)
@@ -586,6 +641,7 @@ extension LensArt {
             s.append(stroke([polar(c, frame, 100), polar(c, frame + 0.12, 100)], mid))
         }
 
+        var mark = s.count
         // At the middle: a snowman, hat and scarf, arms of twigs.
         let man = rods[0] + P(0.034, -0.034)
         s.append(stroke(circle(man + P(0, 0.018), 0.014, 16), 0.0034))
@@ -595,6 +651,8 @@ extension LensArt {
         s.append(stroke([man + P(0.002, -0.006), man + P(0.012, -0.004)], 0.0024))
         s.append(stroke([man + P(-0.012, 0.01), man + P(-0.032, -0.004), man + P(-0.038, -0.002)], 0.002))
         s.append(stroke([man + P(0.012, 0.01), man + P(0.03, -0.006), man + P(0.034, -0.012)], 0.002))
+        clearKnob(&s, from: mark, rods[0])
+        mark = s.count
         // At the top: a street lamp, its glass lit and the snow falling through its light.
         let lamp = rods[1] + P(0.03, -0.036)
         s.append(stroke([lamp + P(0, 0.006), lamp + P(0, 0.06)], 0.0034))
@@ -604,6 +662,8 @@ extension LensArt {
         for at in [P(-0.03, -0.02), P(-0.024, 0.01), P(0.026, -0.024), P(0.03, 0.012), P(-0.034, 0.034), P(0.022, 0.04)] {
             s.append(stroke(circle(lamp + at, 0.0025, 6), 0.0024))
         }
+        clearKnob(&s, from: mark, rods[1])
+        mark = s.count
         // In the upper right: a fir tree in three tiers, a star on top.
         let fir = rods[2] + P(0.026, -0.036)
         var outline: [P] = []
@@ -614,12 +674,16 @@ extension LensArt {
             + outline.dropLast().reversed().map { fir + P(-($0 - fir).x, ($0 - fir).y) }), 0.003))
         s.append(stroke(closed(rect(fir.x - 0.004, fir.y + 0.026, fir.x + 0.004, fir.y + 0.036)), 0.0026))
         s.append(stroke(star(fir + P(0, -0.04), 0.008), 0.0018))
+        clearKnob(&s, from: mark, rods[2])
+        mark = s.count
         // In the lower right: a sledge, its runners curled up in front, and its rope.
         let sled = rods[3] + P(0.004, -0.04)
         s.append(stroke([sled + P(-0.036, 0.012), sled + P(0.03, 0.012)] + arc(sled + P(0.03, 0.002), 0.01, 90, -90, 8).dropFirst(), 0.0032))
         s.append(stroke(closed(rect(sled.x - 0.032, sled.y - 0.008, sled.x + 0.026, sled.y - 0.002)), 0.003))
         for x in [-0.024, 0.0, 0.02] { s.append(stroke([sled + P(x, -0.002), sled + P(x, 0.012)], 0.0024)) }
         s.append(stroke(curve(sled + P(0.03, -0.008), sled + P(0.05, -0.02), sled + P(0.044, -0.04), 8), 0.0016))
+        clearKnob(&s, from: mark, rods[3])
+        mark = s.count
         // At the foot: a snowflake, six arms and their branches.
         let flake = rods[4] + P(0.03, -0.03)
         for k in 0..<6 {
@@ -631,6 +695,7 @@ extension LensArt {
             }
         }
 
+        clearKnob(&s, from: mark, rods[4])
         return Halftone.Panel(name: "frostedglass", tones: { p in
             for c in holes {
                 let d = simd_distance(p, c)
@@ -693,6 +758,7 @@ extension LensArt {
             for r in [0.115, 0.16] { s += hoop(c, r, hair, pieces: 4, from: 20) }
         }
 
+        var mark = s.count
         // In the upper right: a candle in its stick, lit.
         let candle = rods[2] + P(0.028, -0.026)
         s.append(stroke(closed(rect(candle.x - 0.006, candle.y - 0.01, candle.x + 0.006, candle.y + 0.026)), 0.003))
@@ -701,6 +767,8 @@ extension LensArt {
         s.append(stroke(ellipse(candle + P(0, 0.028), 0.018, 0.005, 14), 0.003))
         s.append(stroke(arc(candle + P(0.024, 0.02), 0.008, -90, 90, 8), 0.0024))
         for a in [-150.0, -90, -30] { s.append(stroke([polar(candle + P(0, -0.026), 0.016, a), polar(candle + P(0, -0.026), 0.024, a)], 0.0016)) }
+        clearKnob(&s, from: mark, rods[2])
+        mark = s.count
         // In the lower right: a tankard, its lid up and its handle.
         let mug = rods[3] + P(0.026, -0.03)
         s.append(stroke(closed(rect(mug.x - 0.016, mug.y - 0.016, mug.x + 0.016, mug.y + 0.024)), 0.0034))
@@ -708,6 +776,8 @@ extension LensArt {
         s.append(stroke([mug + P(-0.016, -0.016), mug + P(-0.006, -0.034), mug + P(0.016, -0.03)], 0.003))
         for x in [-0.008, 0.0, 0.008] { s.append(stroke([mug + P(x, -0.01), mug + P(x, 0.018)], 0.0014)) }
         s.append(stroke(curve(mug + P(-0.016, -0.016), mug + P(-0.02, -0.024), mug + P(-0.012, -0.024), 5), 0.0024))
+        clearKnob(&s, from: mark, rods[3])
+        mark = s.count
         // In the lower left: a clay pipe and its smoke.
         let pipe = rods[5] + P(0.022, -0.026)
         s.append(stroke(closed([pipe + P(0.004, -0.018), pipe + P(0.028, -0.018), pipe + P(0.024, 0.008), pipe + P(0.016, 0.012), pipe + P(0.008, 0.008)]), 0.004))
@@ -715,6 +785,8 @@ extension LensArt {
         s.append(stroke(curve(pipe + P(0.008, 0.004), pipe + P(-0.02, 0.014), pipe + P(-0.05, 0.004), 10), 0.0036))
         s.append(stroke(curve(pipe + P(0.016, -0.022), pipe + P(0.004, -0.032), pipe + P(0.016, -0.04), 8)
             + curve(pipe + P(0.016, -0.04), pipe + P(0.028, -0.048), pipe + P(0.016, -0.056), 8).dropFirst(), 0.0026))
+        clearKnob(&s, from: mark, rods[5])
+        mark = s.count
         // In the upper left: the ace of hearts.
         let card = rods[6] + P(0.03, -0.03)
         s.append(stroke(closed(squircle(card, 0.018, 0.026, 32)), 0.003))
@@ -722,6 +794,7 @@ extension LensArt {
         s.append(stroke([card + P(-0.012, -0.018), card + P(-0.009, -0.024), card + P(-0.006, -0.018)], 0.0016))
         s.append(stroke([card + P(0.006, 0.018), card + P(0.009, 0.024), card + P(0.012, 0.018)], 0.0016))
 
+        clearKnob(&s, from: mark, rods[6])
         return Halftone.Panel(name: "bullseye", tones: { p in
             for c in holes {
                 let d = simd_distance(p, c)
