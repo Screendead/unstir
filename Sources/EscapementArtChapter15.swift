@@ -369,8 +369,87 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 89, Millennium, hex, clocks 1+.
-    static func plate89() -> Plate? { nil }
+    /// Problem 89, Millennium, hex, clocks 1+: a great Roman M cut in the round, each stroke's shadowed face in ink and
+    /// its lit face ruled, standing over the roofs of a town while fireworks burst behind it in bold rays and their
+    /// rockets' trails climb; the spark of the one rocket still rising in the second ink.
+    static func plate89() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin
+        /// One burst: tapered rays, each ending in a star, about `c`.
+        func burst(_ c: P, _ r: Double, rays: Int, turn: Double, seed: Int) {
+            for k in 0..<rays {
+                let t = turn + 2 * .pi * Double(k) / Double(rays) + 0.08 * (rnd(seed, k) - 0.5)
+                let reach = r * (0.8 + 0.2 * rnd(seed, k + 50)), w = 0.046 * r / 0.35
+                Kit.mass(&plate, [polar(c, 0.22 * r, t), polar(c, reach, t - w / reach / 2), polar(c, reach + 0.03, t),
+                                  polar(c, reach, t + w / reach / 2), polar(c, 0.22 * r, t)])
+                Kit.mass(&plate, arc(polar(c, reach + 0.075 * r / 0.35, t), 0.018 * r / 0.35 + 0.006))
+            }
+            Kit.mass(&plate, arc(c, 0.09 * r))
+            plate.fill(arc(c, 0.04 * r))
+        }
+        /// A stroke of the letter from its head to its foot, cut to a ridge: the face away from the light in ink, the lit
+        /// face ruled along the stroke.
+        func stroke(_ head: P, _ foot: P, _ wHead: Double, _ wFoot: Double) {
+            let d = simd_normalize(foot - head), n = P(-d.y, d.x)
+            let l0 = head + n * (wHead / 2), r0 = head - n * (wHead / 2), l1 = foot + n * (wFoot / 2), r1 = foot - n * (wFoot / 2)
+            let shade = [r0, head, foot, r1, r0], lit = [head, l0, l1, foot, head]
+            plate.fill(lit)
+            plate.lines(hatch([lit], angle: atan2(d.y, d.x), gap: 0.022), fine)
+            plate.fill(shade, .black)
+            plate.line([l0, l1, r1, r0, l0], medium)
+        }
+
+        Kit.ground(&plate, angle: 0.3)
+        // The rockets' trails, climbing to their bursts.
+        for (from, bend, to) in [(P(-0.55, 0.95), P(-0.6, 0.0), P(-0.42, -0.5)), (P(0.35, 0.95), P(0.6, 0.1), P(0.5, -0.52)),
+                                 (P(-0.1, 0.95), P(0.15, -0.2), P(0.02, -0.74))] {
+            plate.lines(dashed(curve(from, bend, to, 40), on: 0.05, off: 0.035), 0.016)
+        }
+        burst(P(-0.44, -0.56), 0.33, rays: 13, turn: 0.1, seed: 3)
+        burst(P(0.5, -0.52), 0.3, rays: 12, turn: 0.3, seed: 4)
+        burst(P(0.02, -0.76), 0.24, rays: 11, turn: 0.0, seed: 5)
+        burst(P(-0.8, 0.12), 0.17, rays: 9, turn: 0.2, seed: 6)
+
+        // The rocket still rising, its trail and its spark.
+        let spark = P(0.72, 0.0)
+        plate.lines(dashed(curve(P(0.9, 0.75), P(0.82, 0.3), spark + P(0.02, 0.06), 24), on: 0.04, off: 0.03), 0.016)
+        Kit.mass(&plate, Kit.band(spark + P(0.015, 0.1), spark + P(0.004, 0.04), 0.03))
+        let star = (0..<16).map { k in polar(spark, k % 2 == 0 ? 0.075 : 0.03, Double(k) * .pi / 8 - .pi / 2) }
+        Kit.mass(&plate, star + [star[0]], ink: .second)
+        plate.fill(arc(spark, 0.014))
+
+        // The town's roofs along the foot of the glass.
+        var roofs: [P] = [P(-1.1, 1.1), P(-1.1, 0.8)]
+        for (x, y) in [(-0.86, 0.8), (-0.86, 0.72), (-0.76, 0.64), (-0.66, 0.72), (-0.66, 0.76), (-0.3, 0.76), (-0.3, 0.84),
+                       (0.3, 0.84), (0.3, 0.76), (0.62, 0.76), (0.62, 0.7), (0.7, 0.7), (0.7, 0.6), (0.74, 0.6), (0.74, 0.7),
+                       (0.86, 0.7), (0.86, 0.8)] { roofs.append(P(x, y)) }
+        roofs += [P(1.1, 0.8), P(1.1, 1.1), P(-1.1, 1.1)]
+        Kit.mass(&plate, roofs)
+        for (x, y) in [(-0.76, 0.72), (-0.5, 0.82), (0.45, 0.82), (0.72, 0.68), (0.8, 0.78), (-0.8, 0.88), (0.2, 0.92), (-0.2, 0.94)] {
+            plate.fill(box(P(x - 0.018, y - 0.025), P(x + 0.018, y + 0.025)))
+        }
+
+        // The M, its plinth under it.
+        let top = -0.36, foot = 0.6
+        Kit.solid(&plate, box(P(-0.68, foot), P(0.68, foot + 0.08)), angle: 0, gap: 0.022, width: fine)
+        Kit.mass(&plate, box(P(-0.68, foot + 0.065), P(0.68, foot + 0.08)))
+        stroke(P(-0.47, top), P(-0.52, foot), 0.07, 0.075)
+        stroke(P(-0.45, top), P(0.0, foot), 0.17, 0.17)
+        stroke(P(0.45, top), P(0.0, foot), 0.075, 0.075)
+        stroke(P(0.47, top), P(0.52, foot), 0.17, 0.17)
+        for (x, w) in [(-0.52, 0.27), (0.52, 0.36)] {
+            Kit.mass(&plate, box(P(x - w / 2, foot - 0.045), P(x + w / 2, foot)))
+        }
+        for (x, w) in [(-0.5, 0.24), (0.5, 0.28)] {
+            Kit.solid(&plate, box(P(x - w / 2, top), P(x + w / 2, top + 0.045)), angle: 0, gap: 0.016, width: fine)
+            Kit.mass(&plate, box(P(x - w / 2, top + 0.03), P(x + w / 2, top + 0.045)))
+        }
+
+        callout(&plate, "A", from: P(-0.2, 0.2), to: polar(o, 0.3, Kit.clock(5.5)))
+        callout(&plate, "B", from: P(-0.44, -0.56) + P(0.19, 0.17), to: polar(o, 0.62, Kit.clock(11)))
+        callout(&plate, "C", from: spark + P(0.0, 0.05), to: polar(o, 0.86, Kit.clock(4)))
+        return plate
+    }
 
     /// Problem 90, Eternity, hex, clocks 1+: the serpent that eats its tail, round the rim past every hub, about a
     /// Moebius band, the strip with one side and no end, its face in ink and its back ruled; the serpent's eye in the
