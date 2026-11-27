@@ -138,7 +138,9 @@ def deal(layout, lenses, depth, rng, lens_entries=None, max_whole=None, chain=0.
         counts = {l: n_lens // len(lenses) + (k < n_lens % len(lenses)) for k, l in enumerate(order)}
         steps = {}
         for l, k in counts.items():
-            net = rng.randint(k, 3)
+            # A lens of one or two entries nets +3 where it can, so some entry zooms by two steps or three and the
+            # player counts the zoom; three entries can only be +1 each.
+            net = 3 if k == 2 else rng.randint(max(k, 2), 3) if k == 1 else rng.randint(k, 3)
             split = [1] * k
             for _ in range(net - k):
                 split[rng.randrange(k)] += 1
