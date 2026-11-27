@@ -764,6 +764,66 @@ prism-specimen-27.png  Prism specimen 27 as dealt (docs/prism-design.md), on its
 prism-specimen-28.png  Prism specimen 28 as dealt (docs/prism-design.md), on its tray's plate.
 prism-specimen-29.png  Prism specimen 29 as dealt (docs/prism-design.md), on its tray's plate.
 prism-specimen-30.png  Prism specimen 30 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-31.png  Prism specimen 31 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-32.png  Prism specimen 32 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-33.png  Prism specimen 33 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-34.png  Prism specimen 34 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-35.png  Prism specimen 35 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-36.png  Prism specimen 36 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-37.png  Prism specimen 37 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-38.png  Prism specimen 38 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-39.png  Prism specimen 39 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-40.png  Prism specimen 40 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-41.png  Prism specimen 41 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-42.png  Prism specimen 42 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-43.png  Prism specimen 43 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-44.png  Prism specimen 44 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-45.png  Prism specimen 45 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-46.png  Prism specimen 46 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-47.png  Prism specimen 47 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-48.png  Prism specimen 48 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-49.png  Prism specimen 49 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-50.png  Prism specimen 50 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-51.png  Prism specimen 51 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-52.png  Prism specimen 52 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-53.png  Prism specimen 53 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-54.png  Prism specimen 54 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-55.png  Prism specimen 55 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-56.png  Prism specimen 56 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-57.png  Prism specimen 57 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-58.png  Prism specimen 58 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-59.png  Prism specimen 59 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-60.png  Prism specimen 60 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-61.png  Prism specimen 61 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-62.png  Prism specimen 62 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-63.png  Prism specimen 63 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-64.png  Prism specimen 64 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-65.png  Prism specimen 65 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-66.png  Prism specimen 66 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-67.png  Prism specimen 67 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-68.png  Prism specimen 68 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-69.png  Prism specimen 69 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-70.png  Prism specimen 70 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-71.png  Prism specimen 71 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-72.png  Prism specimen 72 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-73.png  Prism specimen 73 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-74.png  Prism specimen 74 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-75.png  Prism specimen 75 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-76.png  Prism specimen 76 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-77.png  Prism specimen 77 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-78.png  Prism specimen 78 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-79.png  Prism specimen 79 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-80.png  Prism specimen 80 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-81.png  Prism specimen 81 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-82.png  Prism specimen 82 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-83.png  Prism specimen 83 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-84.png  Prism specimen 84 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-85.png  Prism specimen 85 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-86.png  Prism specimen 86 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-87.png  Prism specimen 87 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-88.png  Prism specimen 88 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-89.png  Prism specimen 89 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-90.png  Prism specimen 90 as dealt (docs/prism-design.md), on its tray's plate.
 prism-bare-quad.png  Prism's fern under quad's knobs, unstirred: some line in every core.
 prism-bare-eye.png  Prism's fern under eye's knobs, unstirred: some line in every core.
 prism-bare-pent.png  Prism's fern under pent's knobs, unstirred: some line in every core.
@@ -780,6 +840,16 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+prism-plate-leaves.png  Prism's leaves plate under pent's knobs, unstirred.
+prism-plate-moths.png  Prism's moths plate under pent's knobs, unstirred.
+prism-plate-reef.png  Prism's reef plate under pent's knobs, unstirred.
+prism-plate-diatoms.png  Prism's diatoms plate under pent's knobs, unstirred.
+prism-plate-fungi.png  Prism's fungi plate under pent's knobs, unstirred.
+prism-plate-feathers.png  Prism's feathers plate under pent's knobs, unstirred.
+prism-plate-starfish.png  Prism's starfish plate under pent's knobs, unstirred.
+prism-plate-beetles.png  Prism's beetles plate under pent's knobs, unstirred.
+prism-plate-seahorses.png  Prism's seahorses plate under pent's knobs, unstirred.
+prism-plate-octopus.png  Prism's octopus plate under pent's knobs, unstirred.
 prism-read-01-cyan-rest.png  Prism's read: Frond's cyan rod, its first move, held at 0 of +3.
 prism-read-01-cyan-short10.png  Prism's read: Frond's cyan rod, its first move, held at +2.0 of +3.
 prism-read-01-cyan-short5.png  Prism's read: Frond's cyan rod, its first move, held at +2.5 of +3.
@@ -816,6 +886,8 @@ prism-read-15-magenta-short5.png  Prism's read: Sea nettle's magenta rod, stirre
 prism-read-15-magenta-on.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.0 of -5.
 prism-read-15-magenta-past5.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.5 of -5.
 prism-read-15-magenta-past10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
+prism-idea-white-mid.png  Rule idea: Spore with a white stir mid-stack (4:-2): a sheared white disc with no colour, the red and cyan over it.
+prism-idea-white-mid-before.png  Rule idea's control: Spore as dealt, the same stirs without the white one.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
