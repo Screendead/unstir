@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let dollyZoom: [Int: Halftone.Panel] = [65: sextant]
+    static let dollyZoom: [Int: Halftone.Panel] = [65: sextant, 67: spectroscope]
 
     /// A frame's tone from its last band's end, in degrees clockwise from three o'clock, up to `end`.
     fileprivate struct Band: Sendable {
@@ -169,6 +169,100 @@ extension LensArt {
             let q = p - pivot, r = simd_length(q)
             if r < limb.1, abs(atan2(q.x, q.y)) < spread * .pi / 180 { return r < limb.0 ? brass : silver }
             return p.y < sea ? m(0.3) : c(0.42)
+        }
+    }()
+}
+
+// MARK: - 67: Spectroscope
+
+/// Level 67's name: Kirchhoff and Bunsen's spectroscope, a prism under its drum over the hub with brass tubes out to
+/// the lower ring, a burner's flame at the end of the slit's tube, and the light it splits fanned out across the right
+/// of the glass in six broad bands of colour. The five lenses: over the hub, the prism under the drum bending a ray
+/// into a fan; over the top core the sun in eclipse, its corona and a flame of its edge, where helium was first seen;
+/// over the upper left the slit, the flame between its jaws; over the lower left the eyepiece, sodium's two lines and
+/// its name; and over the bottom the scale's tube, hydrogen's four lines and its letter.
+extension LensArt {
+    static let spectroscope: Halftone.Panel = {
+        let drum = P(0, 0), sun = P(0, -0.56), slit = P(-0.485, -0.28), eye = P(-0.485, 0.28), scale = P(0, 0.56)
+        let brass = y(0.65), dark = Tone.zero, flame = P(-0.78, -0.47)
+        let bands = [Tone(0, 0.75, 0.55), y(0.9), Tone(0.55, 0, 0.75), c(0.85), Tone(0.7, 0.5, 0), m(0.75)]
+        let fan = (-45.0, 45.0)
+        let glasses = [
+            glass(drum, c(0.5), frame: [(25, brass), (60, dark), (150, brass), (170, dark), (290, brass), (325, m(0.7)), (360, brass)]),
+            glass(sun, m(0.5), frame: [(60, dark), (100, y(0.85)), (200, dark), (220, y(0.85)), (330, dark), (360, y(0.85))]),
+            glass(slit, y(0.75), frame: [(30, brass), (140, dark), (175, brass), (250, dark), (360, brass)]),
+            glass(eye, m(0.7), frame: [(80, dark), (110, brass), (230, dark), (265, c(0.7)), (360, dark)]),
+            glass(scale, c(0.65), frame: [(50, brass), (75, dark), (200, brass), (235, dark), (300, brass), (330, dark), (360, brass)]),
+        ]
+        let tubes = [slit, eye, scale].map { bar(drum, $0, 0.13) }
+        var fills = [oval(flame, 0.05, 0.085, y(0.9)), oval(flame + P(0, 0.03), 0.026, 0.04, c(0.8)), fill(rect(flame.x - 0.025, flame.y + 0.09, flame.x + 0.025, flame.y + 0.3), brass)]
+        fills += tubes.map { fill($0, brass) }
+
+        var s: [Halftone.Stroke] = []
+        let clear = { (p: P) in glasses.allSatisfy { simd_distance(p, $0.centre) > $0.rim } }
+        // The fan's bands and the card they fall on.
+        for k in 0...6 {
+            let a = fan.0 + (fan.1 - fan.0) * Double(k) / 6
+            s += runs(span(polar(drum, 0.26, a), polar(drum, 0.97, a), 40), k == 0 || k == 6 ? mid : hair, keep: clear)
+        }
+        s += pieces(arc(drum, 0.93, fan.0 - 4, fan.1 + 4, 32), bold)
+        // The tubes, banded where they join their glasses, the burner and its flame.
+        for t in tubes {
+            s += runs(span(t[0], t[1], 30), mid, keep: clear) + runs(span(t[3], t[2], 30), mid, keep: clear)
+        }
+        s.append(stroke(ellipse(flame, 0.05, 0.085, 20), mid))
+        s.append(stroke(ellipse(flame + P(0, 0.03), 0.026, 0.04, 14), hair))
+        s.append(stroke(closed(rect(flame.x - 0.025, flame.y + 0.09, flame.x + 0.025, flame.y + 0.3)), mid))
+        s.append(stroke(closed(rect(flame.x - 0.07, flame.y + 0.3, flame.x + 0.07, flame.y + 0.34)), mid))
+        for g in glasses {
+            s += hoop(g.centre, g.rim, bold)
+            s += hoop(g.centre, g.glass, mid)
+        }
+        // Under the drum: the prism, a ray into it and its fan out.
+        let pr = drum + P(0.012, -0.026)
+        s.append(stroke(closed([pr + P(0, -0.03), pr + P(0.028, 0.018), pr + P(-0.028, 0.018)]), 0.004))
+        s.append(stroke([pr + P(-0.09, 0.02), pr + P(-0.016, -0.002)], 0.0034))
+        for k in 0..<3 { s.append(stroke([pr + P(0.016, -0.002), pr + P(0.09, -0.02 + 0.026 * Double(k))], 0.0026)) }
+        // The sun in eclipse: the moon's disc, the corona's streamers and a prominence.
+        let ec = sun + P(-0.02, -0.022)
+        s += hoop(ec, 0.026, 0.005, pieces: 2)
+        for (a, l) in [(-80.0, 0.064), (-30, 0.044), (20, 0.058), (80, 0.04), (150, 0.062), (200, 0.042), (250, 0.054)] {
+            s.append(stroke([polar(ec, 0.034, a), polar(ec, l, a + 8)], 0.003))
+        }
+        s.append(stroke(arc(polar(ec, 0.03, 120), 0.01, 120, 330, 8), 0.0036))
+        // Through the slit's tube: its two jaws, and the flame standing between them.
+        let sl = slit + P(0.03, -0.004)
+        for x in [-0.02, 0.02] { s.append(stroke([sl + P(x, -0.07), sl + P(x, 0.07)], 0.004)) }
+        let wick = sl + P(0, 0.024)
+        s.append(stroke(arc(wick, 0.02, 0, 180, 10) + curve(wick + P(-0.02, 0), wick + P(-0.02, -0.04), wick + P(0.006, -0.078), 10)
+            + curve(wick + P(0.006, -0.078), wick + P(0.024, -0.036), wick + P(0.02, 0), 10), 0.0036))
+        s.append(stroke(arc(wick, 0.008, 0, 180, 6) + [wick + P(0.002, -0.03), wick + P(0.008, 0)], 0.0024))
+        /// A strip of spectrum `w` long under its element's name, with its lines at `lines` (shares of the strip).
+        func spectrum(_ at: P, _ lines: [Double]) {
+            for dy in [-0.014, 0.014] { s.append(stroke([at + P(-0.06, dy), at + P(0.06, dy)], 0.0024)) }
+            for x in lines { s.append(stroke([at + P(-0.06 + 0.12 * x, -0.014), at + P(-0.06 + 0.12 * x, 0.014)], 0.004)) }
+        }
+        // Through the eyepiece: sodium, its two lines close together, and its name.
+        let na = eye + P(0.008, 0.026)
+        spectrum(na, [0.55, 0.6])
+        let n = na + P(-0.036, -0.05)
+        s.append(stroke([n + P(0, 0.016), n + P(0, -0.016), n + P(0.02, 0.016), n + P(0.02, -0.016)], 0.0036))
+        s.append(stroke(arc(n + P(0.038, 0.006), 0.009, 0, 360, 12) + [n + P(0.047, 0.016)], 0.0036))
+        // Down the scale's tube: hydrogen, its four lines, and its letter.
+        let hy = scale + P(-0.006, 0.026)
+        spectrum(hy, [0.9, 0.5, 0.3, 0.18])
+        let hh = hy + P(0.03, -0.048)
+        s.append(stroke([hh + P(-0.011, -0.016), hh + P(-0.011, 0.016)], 0.0036))
+        s.append(stroke([hh + P(0.011, -0.016), hh + P(0.011, 0.016)], 0.0036))
+        s.append(stroke([hh + P(-0.011, 0), hh + P(0.011, 0)], 0.0036))
+        return drawn("spectroscope", glasses: glasses, fills: fills, strokes: s) { p in
+            // The fan of the split light, a band of colour for every fifteen degrees.
+            let r2 = simd_length_squared(p)
+            if p.x > 0, r2 < 0.93 * 0.93 {
+                let a = atan2(p.y, p.x) * 180 / .pi
+                if a > fan.0, a < fan.1 { return bands[min(Int((a - fan.0) / 15), 5)] }
+            }
+            return c(0.14)
         }
     }()
 }
