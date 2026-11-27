@@ -332,7 +332,10 @@ extension EscapementArt {
         plate.line(arc(o, 0.62), heavy)
 
         // The plate: the sky below the horizon shaded, the tropics and almucantars ruled.
-        let alts: [(top: Double, bottom: Double)] = (0...5).map { k in (-0.56 + 0.06 * Double(k), 0.5 - 0.13 * Double(k)) }
+        let alts: [(top: Double, bottom: Double)] = (0...5).map { (k: Int) -> (top: Double, bottom: Double) in
+            let top: Double = -0.56 + 0.06 * Double(k), bottom: Double = 0.5 - 0.13 * Double(k)
+            return (top, bottom)
+        }
         let horizon = arc(P(0, (alts[0].top + alts[0].bottom) / 2), (alts[0].bottom - alts[0].top) / 2)
         plate.lines(hatch([arc(o, tropic), horizon], angle: 0.6, gap: Kit.groundGap), Kit.groundWidth)
         for (k, alt) in alts.enumerated() {

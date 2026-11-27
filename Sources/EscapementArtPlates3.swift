@@ -172,9 +172,13 @@ extension EscapementArt {
         var plate = Plate()
         let from = clock(5), to = clock(9.35) - 2 * .pi
         let head = to - 0.2
-        let arrow = arc(origin, 0.925, from: from, to: to) + [polar(origin, 0.975, to), polar(origin, 0.895, head), polar(origin, 0.815, to)]
-            + arc(origin, 0.865, from: to, to: from) + [polar(origin, 0.925, from)]
-        let batons = (0..<12).map { k in band(polar(origin, 0.755, clock(Double(k))), polar(origin, 0.84, clock(Double(k))), k % 3 == 0 ? 0.05 : 0.03) }
+        let tip: [P] = [polar(origin, 0.975, to), polar(origin, 0.895, head), polar(origin, 0.815, to)]
+        let back: [P] = arc(origin, 0.865, from: to, to: from)
+        let arrow: [P] = arc(origin, 0.925, from: from, to: to) + tip + back + [polar(origin, 0.925, from)]
+        let batons: [[P]] = (0..<12).map { (k: Int) -> [P] in
+            let a: Double = clock(Double(k)), width: Double = k % 3 == 0 ? 0.05 : 0.03
+            return band(polar(origin, 0.755, a), polar(origin, 0.84, a), width)
+        }
         let now = hand(origin, toward: clock(9), length: 0.7, width: 0.05, spade: true, tail: 0.24)
         let ghosts = [1.0, 11.0].map { hand(origin, toward: clock($0), length: 0.7, width: 0.05, spade: true, tail: 0.24) }
         ruling(&plate, angle: 0.3, around: [arrow, now] + batons)
@@ -643,7 +647,10 @@ extension EscapementArt {
     // MARK: 30 Midnight
 
     private static func spark(_ c: P, _ r: Double, turn: Double) -> [P] {
-        (0...10).map { polar(c, $0 % 2 == 0 ? r : 0.42 * r, turn + .pi * Double($0) / 5) }
+        (0...10).map { (k: Int) -> P in
+            let reach: Double = k % 2 == 0 ? r : 0.42 * r
+            return polar(c, reach, turn + .pi * Double(k) / 5)
+        }
     }
 
     /// Problem 30, hex, the last: both hands on twelve, on the one line up the glass that no rod stands on. The dial's

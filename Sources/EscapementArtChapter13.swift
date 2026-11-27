@@ -505,7 +505,11 @@ extension EscapementArt {
             let p = P(-1.05 + 2.1 * rnd(80, i), floorBottom + 0.04 + 0.9 * rnd(81, i))
             let r = 0.025 + 0.04 * rnd(82, i) * rnd(83, i)
             guard simd_length(p) < 1.02, stones.allSatisfy({ simd_distance($0[0], p) > 0.11 }) else { continue }
-            stones.append([p] + (0..<8).map { k in polar(p, r * (0.75 + 0.45 * rnd(85, i * 8 + k)), Double(k) * .pi / 4) })
+            let edge: [P] = (0..<8).map { (k: Int) -> P in
+                let reach: Double = r * (0.75 + 0.45 * rnd(85, i * 8 + k))
+                return polar(p, reach, Double(k) * .pi / 4)
+            }
+            stones.append([p] + edge)
         }
         let earthRules = hatch([below] + stones.map { Array($0.dropFirst()) + [$0[1]] }, angle: 0.7, gap: 0.05)
         plate.lines(earthRules, 0.019)

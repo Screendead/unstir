@@ -37,8 +37,15 @@ extension EscapementArt {
             let u = u0 + 0.08 * (rnd(seed, k) - 0.5)
             let top = P(yard.x + u * half, yard.y + 0.015), low = P(yard.x + u * half * 0.82, yard.y + drop - 0.01)
             let fold = curve(top, P(top.x + 0.025, (top.y + low.y) / 2), low, 12)
-            let ring = fold.enumerated().map { $0.element + P(-(0.012 + 0.016 * Double($0.offset) / 12), 0) }
-                + fold.enumerated().reversed().map { $0.element + P(0.012 + 0.016 * Double($0.offset) / 12, 0) }
+            let near: [P] = fold.enumerated().map { (i: Int, p: P) -> P in
+                let w: Double = 0.012 + 0.016 * Double(i) / 12
+                return p - P(w, 0)
+            }
+            let far: [P] = fold.enumerated().reversed().map { (i: Int, p: P) -> P in
+                let w: Double = 0.012 + 0.016 * Double(i) / 12
+                return p + P(w, 0)
+            }
+            let ring: [P] = near + far
             plate.fill(ring + [ring[0]], .black)
             plate.line(fold.map { $0 + P(0.04, 0) }.dropLast(3), medium)
         }
@@ -196,11 +203,14 @@ extension EscapementArt {
                     let y = top + (stage - 0.02 - top) * Double(i) / 24, t = max(0, y + 0.1) / (stage + 0.1)
                     return P(x0 + 0.014 * sin(7 * y + Double(k)) + side * 0.05 * t * t * (1 - abs(x0) / opening), y)
                 }
-                let width = (0...24).map { 0.04 + 0.024 * Double($0) / 24 }
-                let ring = path.indices.map { path[$0] - P(width[$0] / 2, 0) } + path.indices.reversed().map { path[$0] + P(width[$0] / 2, 0) }
+                let width: [Double] = (0...24).map { (i: Int) -> Double in 0.04 + 0.024 * Double(i) / 24 }
+                let left: [P] = path.indices.map { (i: Int) -> P in path[i] - P(width[i] / 2, 0) }
+                let right: [P] = path.indices.reversed().map { (i: Int) -> P in path[i] + P(width[i] / 2, 0) }
+                let ring: [P] = left + right
                 plate.fill(ring + [ring[0]], .black)
                 // The light side of each fold, shaded toward its shadow.
-                let shade = path.indices.map { path[$0] + P(width[$0] / 2, 0) } + path.indices.reversed().map { path[$0] + P(width[$0] / 2 + 0.026, 0) }
+                let lit: [P] = path.indices.reversed().map { (i: Int) -> P in path[i] + P(width[i] / 2 + 0.026, 0) }
+                let shade: [P] = right.reversed() + lit
                 plate.lines(hatch([shade + [shade[0]]], angle: 0.2, gap: 0.02), fine)
             }
         }
@@ -424,8 +434,8 @@ extension EscapementArt {
         let sheer = curve(P(-0.62, -0.0), P(-0.05, 0.12), P(0.5, -0.1), 30)
         let far = curve(P(-0.58, -0.05), P(-0.05, 0.03), P(0.46, -0.14), 30)
         let keel = curve(P(0.36, 0.2), P(-0.08, 0.3), P(-0.52, 0.19), 24)
-        let hull = sheer + [P(0.54, -0.13)] + curve(P(0.54, -0.13), P(0.5, 0.12), P(0.36, 0.2), 10).dropFirst()
-            + keel.dropFirst() + [P(-0.64, -0.01), sheer[0]]
+        let stem: [P] = Array(curve(P(0.54, -0.13), P(0.5, 0.12), P(0.36, 0.2), 10).dropFirst())
+        let hull: [P] = sheer + [P(0.54, -0.13)] + stem + Array(keel.dropFirst()) + [P(-0.64, -0.01), sheer[0]]
         // Its shadow on the stones.
         Kit.mass(&plate, ellipse(P(-0.08, 0.29), 0.46, 0.03, turned: -0.02))
         // Inside, seen over the near gunwale: the far side's planking, the thwarts.
@@ -540,7 +550,8 @@ extension EscapementArt {
         let well = mouth + P(0.13, 0.07)
         for k in 0..<7 {
             let a0 = 2 * .pi * Double(k) / 7, a1 = a0 + 2 * .pi / 7 * 0.7
-            let gore = [well] + (0...10).map { rim(a0 + (a1 - a0) * Double($0) / 10) } + [well]
+            let edge: [P] = (0...10).map { (i: Int) -> P in rim(a0 + (a1 - a0) * Double(i) / 10) }
+            let gore: [P] = [well] + edge + [well]
             plate.fill(gore)
         }
         plate.fill(ellipse(well, 0.05, 0.035, turned: tilt), .black)

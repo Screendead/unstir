@@ -209,7 +209,10 @@ extension EscapementArt {
         // Fourteen notches in two bundles of seven, either side of the hub, each a V cut through the top face into the
         // side; every seventh cut deeper.
         let pitch = 0.09
-        let notches = (0..<14).map { i -> Double in i < 7 ? -0.88 + Double(i) * pitch : 0.25 + Double(i - 7) * pitch }
+        let notches: [Double] = (0..<14).map { (i: Int) -> Double in
+            let from: Double = i < 7 ? -0.88 : 0.25
+            return from + Double(i < 7 ? i : i - 7) * pitch
+        }
         for (i, x) in notches.enumerated() {
             let ink: Ink = i == 13 ? .second : .black, w = 0.034
             let face = [P(x - w, top), P(x + w, top), P(x + 0.01, mid), P(x - 0.01, mid), P(x - w, top)]
@@ -290,7 +293,10 @@ extension EscapementArt {
         let stars = [P(0.72, -0.72), P(-0.74, 0.7), P(0.72, 0.72), P(-0.72, -0.74), P(0.5, -0.4), P(0.52, 0.36),
                      P(0.2, -0.24), P(0.24, 0.2)]
         func star(_ c: P, _ r: Double) -> [P] {
-            (0...10).map { i in polar(c, i % 2 == 0 ? r : 0.4 * r, -.pi / 2 + Double(i) * .pi / 5) }
+            (0...10).map { (i: Int) -> P in
+                let reach: Double = i % 2 == 0 ? r : 0.4 * r
+                return polar(c, reach, -.pi / 2 + Double(i) * .pi / 5)
+            }
         }
 
         Kit.ground(&plate, angle: -0.45, around: [moon] + (0..<29).map { arc(day($0), disc + 0.012) }
@@ -399,7 +405,11 @@ extension EscapementArt {
             plate.line(q(figure), medium)
             for (i, p) in figure.enumerated() where i == 0 || p != figure[0] {
                 let r = i % 2 == 0 ? 0.03 : 0.022
-                Kit.mass(&plate, q((0...8).map { j in polar(p, j % 2 == 0 ? r : 0.35 * r, -.pi / 2 + Double(j) * .pi / 4) }))
+                let points: [P] = (0...8).map { (j: Int) -> P in
+                    let reach: Double = j % 2 == 0 ? r : 0.35 * r
+                    return polar(p, reach, -.pi / 2 + Double(j) * .pi / 4)
+                }
+                Kit.mass(&plate, q(points))
             }
         }
         Kit.mass(&plate, q(arc(sc, 0.022)))
@@ -545,7 +555,10 @@ extension EscapementArt {
         plate.lines(hatch([day] + parts, angle: 0.4, gap: Kit.groundGap), Kit.groundWidth)
         plate.lines(hatch([night] + parts, angle: -0.4, gap: Kit.groundGap), 0.02)
         for (c, r) in [(P(0.3, -0.4), 0.03), (P(0.62, -0.68), 0.025), (P(0.3, 0.46), 0.022), (P(0.7, 0.58), 0.03), (P(0.22, -0.1), 0.02)] {
-            let st = (0...10).map { i in polar(c, i % 2 == 0 ? r : 0.4 * r, -.pi / 2 + Double(i) * .pi / 5) }
+            let st: [P] = (0...10).map { (i: Int) -> P in
+                let reach: Double = i % 2 == 0 ? r : 0.4 * r
+                return polar(c, reach, -.pi / 2 + Double(i) * .pi / 5)
+            }
             plate.fill(arc(c, r + 0.018))
             Kit.mass(&plate, st)
         }

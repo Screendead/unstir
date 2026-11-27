@@ -528,8 +528,9 @@ extension EscapementArt {
     /// dished, below zero).
     private static func sand(top: Double, floor: Double, peak: Double, _ half: (Double) -> Double) -> [P] {
         let ys = stride(from: top, through: floor, by: 0.01).map { $0 }
-        let surface = stride(from: -1.0, through: 1.0, by: 0.05).map { u in
-            P(u * half(top), top - peak * (1 + cos(.pi * min(abs(u) / 0.7, 1))) / 2)
+        let surface: [P] = stride(from: -1.0, through: 1.0, by: 0.05).map { (u: Double) -> P in
+            let rise: Double = (1 + cos(.pi * min(abs(u) / 0.7, 1))) / 2
+            return P(u * half(top), top - peak * rise)
         }
         return surface + ys.map { P(half($0), $0) } + ys.reversed().map { P(-half($0), $0) }
     }
@@ -662,14 +663,18 @@ extension EscapementArt {
     /// A moon's dark side, the share `lit` of its disc lit from the right.
     static func darkSide(_ c: P, _ r: Double, lit: Double) -> [P] {
         let limb = arc(c, r, from: -.pi / 2, to: -3 * .pi / 2)
-        let terminator = stride(from: 90.0, through: -90.0, by: -5).map { u in
-            c + P(r * (1 - 2 * lit) * cos(u * .pi / 180), r * sin(u * .pi / 180))
+        let terminator: [P] = stride(from: 90.0, through: -90.0, by: -5).map { (u: Double) -> P in
+            let a: Double = u * .pi / 180
+            return c + P(r * (1 - 2 * lit) * cos(a), r * sin(a))
         }
         return limb + terminator
     }
 
     static func star(_ c: P, _ r: Double, turn: Double) -> [P] {
-        (0...10).map { polar(c, $0 % 2 == 0 ? r : 0.42 * r, turn + .pi * Double($0) / 5) }
+        (0...10).map { (k: Int) -> P in
+            let reach: Double = k % 2 == 0 ? r : 0.42 * r
+            return polar(c, reach, turn + .pi * Double(k) / 5)
+        }
     }
 
     /// Problem 25, hex: the moon through five phases over a night sky, the lunation's scale above and the waxing moon
@@ -677,7 +682,10 @@ extension EscapementArt {
     static func moonPhase() -> Plate {
         var plate = Plate()
         let sweep = P(0, 0), moon = P(-0.06, 0.4), radius = 0.43
-        let phases = (-2...2).map { k in (c: polar(sweep, 0.82, -.pi / 2 + Double(k) * 20 * .pi / 180), lit: Double(k + 2) / 4) }
+        let phases: [(c: P, lit: Double)] = (-2...2).map { (k: Int) -> (c: P, lit: Double) in
+            let a: Double = -.pi / 2 + Double(k) * 20 * .pi / 180
+            return (polar(sweep, 0.82, a), Double(k + 2) / 4)
+        }
         let stars = (0..<70).compactMap { k -> [P]? in
             let c = P(1.9 * rnd(25, 2 * k) - 0.95, 1.9 * rnd(25, 2 * k + 1) - 0.95)
             guard simd_distance(c, moon) > radius + 0.07, simd_length(c) < 0.67 || c.y > -0.3, simd_length(c) < 0.93 else { return nil }

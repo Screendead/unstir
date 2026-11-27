@@ -13,7 +13,10 @@ extension EscapementArt {
             let p0 = points[(i + n - 1) % n], p1 = points[i], p2 = points[(i + 1) % n], p3 = points[(i + 2) % n]
             for s in 0..<steps {
                 let t = Double(s) / Double(steps), t2 = t * t, t3 = t2 * t
-                out.append(0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (3 * p1 - p0 - 3 * p2 + p3) * t3))
+                let a: P = 2 * p1, b: P = (p2 - p0) * t
+                let c: P = (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+                let d: P = (3 * p1 - p0 - 3 * p2 + p3) * t3
+                out.append(0.5 * (a + b + c + d))
             }
         }
         return out + [out[0]]
@@ -27,7 +30,10 @@ extension EscapementArt {
             let p0 = ends[i - 1], p1 = ends[i], p2 = ends[i + 1], p3 = ends[i + 2]
             for s in 0..<steps {
                 let t = Double(s) / Double(steps), t2 = t * t, t3 = t2 * t
-                out.append(0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (3 * p1 - p0 - 3 * p2 + p3) * t3))
+                let a: P = 2 * p1, b: P = (p2 - p0) * t
+                let c: P = (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2
+                let d: P = (3 * p1 - p0 - 3 * p2 + p3) * t3
+                out.append(0.5 * (a + b + c + d))
             }
         }
         return out + [points[points.count - 1]]

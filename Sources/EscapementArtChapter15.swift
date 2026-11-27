@@ -210,9 +210,12 @@ extension EscapementArt {
         func grain(_ x0: Double, _ x1: Double, _ y0: Double, _ y1: Double, gap: Double, seed: Int, ink: Ink = .bone) {
             var x = x0 + gap / 2, k = 0
             while x < x1 - gap / 3 {
-                plate.line((0...10).map { i in
-                    P(x + 0.01 * sin(Double(i) * 0.9 + 6 * rnd(seed, k)), y0 + (y1 - y0) * Double(i) / 10)
-                }, 0.012, ink)
+                let wander: Double = 6 * rnd(seed, k)
+                let rule: [P] = (0...10).map { (i: Int) -> P in
+                    let t: Double = Double(i)
+                    return P(x + 0.01 * sin(t * 0.9 + wander), y0 + (y1 - y0) * t / 10)
+                }
+                plate.line(rule, 0.012, ink)
                 x += gap
                 k += 1
             }
@@ -313,7 +316,8 @@ extension EscapementArt {
     static func plate88() -> Plate {
         var plate = Plate()
         let o = Kit.origin, nucleus = polar(o, 0.285, Kit.clock(1)), a = 0.7, b = 0.2, band = 0.088
-        let turns = [0.25, 0.25 + .pi / 3, 0.25 + 2 * .pi / 3]
+        let third: Double = .pi / 3
+        let turns: [Double] = [0.25, 0.25 + third, 0.25 + 2 * third]
         func orbit(_ turn: Double, _ from: Double, _ to: Double) -> [P] { ellipse(nucleus, a, b, from: from, to: to, turned: turn) }
         func lay(_ path: [P]) {
             let ring = Kit.ribbon(path, band)
@@ -413,7 +417,10 @@ extension EscapementArt {
         let spark = P(0.72, 0.0)
         plate.lines(dashed(curve(P(0.9, 0.75), P(0.82, 0.3), spark + P(0.02, 0.06), 24), on: 0.04, off: 0.03), 0.016)
         Kit.mass(&plate, Kit.band(spark + P(0.015, 0.1), spark + P(0.004, 0.04), 0.03))
-        let star = (0..<16).map { k in polar(spark, k % 2 == 0 ? 0.075 : 0.03, Double(k) * .pi / 8 - .pi / 2) }
+        let star: [P] = (0..<16).map { (k: Int) -> P in
+            let reach: Double = k % 2 == 0 ? 0.075 : 0.03
+            return polar(spark, reach, Double(k) * .pi / 8 - .pi / 2)
+        }
         Kit.mass(&plate, star + [star[0]], ink: .second)
         plate.fill(arc(spark, 0.014))
 
