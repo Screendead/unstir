@@ -356,8 +356,15 @@ extension LensArt {
                 return clear && offCat && simd_length(q) < 1
             }
         }
-        s += runs(span(P(-1, table), P(1, table), 50), bold) { !inside($0, stand) && simd_length(($0 - body) / P(0.17, 0.2)) > 1 && !inside($0, tail) }
-        s += runs((0...60).map { P(-1 + Double($0) / 30, 0.9 + ($0 % 2 == 0 ? 0 : 0.04)) }, mid) { simd_length($0) < 1 }
+        s += runs(span(P(-1, table), P(1, table), 50), bold) { (q: P) -> Bool in
+            let offCat: Bool = simd_length((q - body) / P(0.17, 0.2)) > 1
+            return !inside(q, stand) && offCat && !inside(q, tail)
+        }
+        let fringe: [P] = (0...60).map { (k: Int) -> P in
+            let drop: Double = k % 2 == 0 ? 0 : 0.04
+            return P(-1 + Double(k) / 30, 0.9 + drop)
+        }
+        s += runs(fringe, mid) { (q: P) -> Bool in simd_length(q) < 1 }
         // The ball on its stand, its glass, a glint and the sparkle round it.
         s.append(stroke(closed(stand), bold))
         for x in [-0.5, -0.4, -0.3] { s.append(stroke([P(x, 0.42), P(x + 0.015, 0.47)], mid)) }

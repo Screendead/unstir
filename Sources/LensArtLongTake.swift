@@ -728,7 +728,9 @@ extension LensArt {
         let print = tip + P(0.012, -0.03)
         for k in 0..<4 {
             let rr = 0.006 + 0.0075 * Double(k)
-            s.append(stroke(arc(print, rr, 150, 390, 12) + [print + P(rr * cos(30 * .pi / 180) + 0.014, rr * 0.5 + 0.026)], 0.0022))
+            let reach: Double = rr * cos(Double.pi / 6) + 0.014
+            let tail: P = print + P(reach, rr * 0.5 + 0.026)
+            s.append(stroke(arc(print, rr, 150, 390, 12) + [tail], 0.0022))
         }
         // In the L well: an eye chart's E, and F and P under it.
         let chart = l + P(0.004, -0.024)
