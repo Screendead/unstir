@@ -431,6 +431,100 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 36, Crown wheel, hex, clocks 1+.
-    static func plate36() -> Plate? { nil }
+    /// Problem 36, Crown wheel, hex, clocks 1+: a contrate wheel seen from above and in front, its teeth standing up
+    /// off the rim like a crown's points round a face of spokes and windows, its staff going down; a lantern pinion,
+    /// seen end on over the back teeth, is driven by them, its arbor running out toward the eye. The pinion's pivot is
+    /// in the second ink.
+    static func plate36() -> Plate {
+        var plate = Plate()
+        let centre = P(-0.24, 0.12), radius = 0.72, rim = 0.04, crown = 0.2, elevation = 25.0 * .pi / 180
+        // The wheel's own frame: x across, y toward the eye, z up its axis.
+        func seen(_ x: Double, _ y: Double, _ z: Double) -> P { centre + P(x, y * sin(elevation) - z * cos(elevation)) }
+        func round(_ r: Double, _ z: Double, from a: Double = 0, to b: Double = 2 * .pi, steps: Int = 120) -> [P] {
+            (0...steps).map { i in
+                let t = a + (b - a) * Double(i) / Double(steps)
+                return seen(r * cos(t), r * sin(t), z)
+            }
+        }
+        let teeth = 18, tau = 2 * Double.pi / Double(teeth)
+        func tooth(_ k: Int) -> (ring: [P], depth: Double) {
+            let a = 0.12 + Double(k) * tau, w = 0.3 * tau
+            let foot = [seen(radius * cos(a - w), radius * sin(a - w), rim), seen(radius * cos(a + w), radius * sin(a + w), rim)]
+            let point = [seen(radius * cos(a + 0.2 * w), radius * sin(a + 0.2 * w), crown),
+                         seen(radius * cos(a - 0.2 * w), radius * sin(a - 0.2 * w), crown)]
+            return (foot + [point[0], point[1], foot[0]], sin(a))
+        }
+        let face = round(radius, rim)
+        let band = round(radius, rim, from: 0, to: .pi) + round(radius, 0, from: .pi, to: 0)
+        let well = round(0.9 * radius, rim)
+        // The windows between four spokes, laid out flat on the face and seen.
+        let spokes = (0..<4).map { k -> [P] in
+            let a = 0.94 + Double(k) * .pi / 2, b = a + .pi / 2, gap = 0.036
+            let outer = (0...30).map { i -> P in
+                let t = a + gap / 0.62 + (b - a - 2 * gap / 0.62) * Double(i) / 30
+                return seen(0.62 * cos(t), 0.62 * sin(t), rim)
+            }
+            let inner = (0...10).map { i -> P in
+                let t = b - gap / 0.16 - (b - a - 2 * gap / 0.16) * Double(i) / 10
+                return seen(0.16 * cos(t), 0.16 * sin(t), rim)
+            }
+            return outer + inner + [outer[0]]
+        }
+
+        // The lantern pinion over the back teeth, its axis running toward the wheel's middle and on to the eye.
+        let azimuth = -93.0 * .pi / 180, rp = 0.125, height = crown + rp - 0.045
+        func onAxis(_ r: Double) -> P { seen(r * cos(azimuth), r * sin(azimuth), height) }
+        let rear = onAxis(radius + 0.075), front = onAxis(radius - 0.075), pivot = onAxis(radius - 0.36)
+        func endPlate(_ c: P) -> [P] { ellipse(c, rp, rp * cos(elevation) + 0.012) }
+
+        Kit.ground(&plate, angle: -0.3)
+        // The staff below the wheel, then the rim's outside and the face.
+        Kit.mass(&plate, Kit.band(seen(0, 0, -0.05), seen(0, 0, -1.0), 0.07))
+        Kit.mass(&plate, band)
+        Kit.mass(&plate, face)
+        for hole in spokes {
+            plate.fill(hole)
+            plate.lines(hatch([hole], angle: -0.3, gap: Kit.groundGap), Kit.groundWidth)
+            plate.line(hole, heavy)
+        }
+        plate.line(well, medium, .bone)
+        plate.fill(round(0.09, rim))
+        plate.lines(hatch([round(0.09, rim)], angle: 0.6, gap: 0.016), fine)
+        plate.line(round(0.09, rim), heavy)
+        Kit.mass(&plate, round(0.035, rim))
+        // The teeth, back to front, each edged in bone so it stands off the ones behind.
+        for t in (0..<teeth).map(tooth).sorted(by: { $0.depth < $1.depth }) {
+            plate.line(t.ring, 0.016, .bone)
+            Kit.mass(&plate, t.ring)
+            if t.depth > 0 { plate.line([t.ring[0], t.ring[1]], fine, .bone) }
+        }
+        plate.line(round(radius, 0, from: 0, to: .pi), 0.014)
+
+        // The pinion: its rear plate, the trundles between, the front plate, the arbor out to its pivot.
+        Kit.mass(&plate, Kit.band(onAxis(radius + 0.16), pivot, 0.034))
+        Kit.cut(&plate, endPlate(rear), edge: heavy)
+        plate.line(ellipse(rear, 0.07, 0.07 * cos(elevation)), medium)
+        for k in 0..<8 {
+            let a = Double(k) * .pi / 4 + 0.2, off = P(0.094 * cos(a), 0.094 * sin(a) * cos(elevation))
+            Kit.mass(&plate, Kit.band(rear + off, front + off, 0.024))
+        }
+        plate.fill(endPlate(front))
+        plate.lines(hatch([endPlate(front), ellipse(front, 0.07, 0.07 * cos(elevation))], angle: 0.9, gap: 0.02), fine)
+        plate.line(endPlate(front), heavy)
+        plate.line(ellipse(front, 0.07, 0.07 * cos(elevation)), medium)
+        for k in 0..<8 {
+            let a = Double(k) * .pi / 4 + 0.2
+            Kit.mass(&plate, arc(front + P(0.094 * cos(a), 0.094 * sin(a) * cos(elevation)), 0.016))
+        }
+        Kit.mass(&plate, Kit.band(front, pivot, 0.034))
+        let cone = [pivot + P(-0.03, -0.02), pivot + P(0.03, -0.02), pivot + P(0, 0.065), pivot + P(-0.03, -0.02)]
+        plate.fill(cone, .second)
+        plate.line(cone, medium)
+
+        callout(&plate, "A", from: tooth(5).ring[2], to: P(0.2, 0.86))
+        callout(&plate, "B", from: seen(0.4 * cos(0.94 + .pi / 4), 0.4 * sin(0.94 + .pi / 4), rim), to: P(0.86, 0.0))
+        callout(&plate, "C", from: rear + P(0.08, -0.04), to: P(0.2, -0.86))
+        callout(&plate, "D", from: pivot + P(0, 0.04), to: P(-0.82, -0.52))
+        return plate
+    }
 }
