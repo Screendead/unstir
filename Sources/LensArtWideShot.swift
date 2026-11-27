@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let wideShot: [Int: Halftone.Panel] = [26: dewdrop, 27: fishbowl, 28: marble]
+    static let wideShot: [Int: Halftone.Panel] = [26: dewdrop, 27: fishbowl, 28: marble, 29: crystalball]
 
     /// A long line cut into strokes of `n` segments each: a stroke costs every pixel in its box once a segment, so a
     /// long outline in one piece is the bake's dearest thing.
@@ -319,6 +319,96 @@ extension LensArt {
             for b in big where simd_length((p - b.at - P(0.4, 0.32) * rim) / P(1.05, 0.85)) < rim { return .zero }
             let board = Int((simd_dot(p, across) / width + 10).rounded(.down)) % 3
             return board == 0 ? Tone(0, 0.22, 0.6) : board == 1 ? Tone(0, 0.36, 0.42) : Tone(0, 0.12, 0.75)
+        }
+    }()
+}
+
+// MARK: - 29: Crystal ball
+
+/// Level 29's name: a fortune teller's tent at night, her crystal ball glowing on its claw stand over the left core and
+/// the full moon in the tent's round window over the top (eye's two lenses on this level), its rope tie-back round it;
+/// her black cat sitting on the table on the right rod, her cards and a candle on the bottom rod. In the ball a tall
+/// dark stranger in his top hat, with his cane; across the moon a witch on her broomstick.
+extension LensArt {
+    static let crystalball: Halftone.Panel = {
+        let ball = P(-0.4, 0), moon = P(0, -0.56), glass = 0.33, window = 0.25, table = 0.27
+        let stand = [P(-0.56, 0.42), P(-0.24, 0.42), P(-0.3, 0.3), P(-0.34, 0.24), P(-0.46, 0.24), P(-0.5, 0.3)]
+        // The cat: head, ears, body and tail, in silhouette.
+        let head = P(0.47, -0.2), body = P(0.56, 0.08)
+        let ears = [[head + P(-0.09, -0.03), head + P(-0.08, -0.15), head + P(-0.01, -0.08)], [head + P(0.02, -0.09), head + P(0.09, -0.15), head + P(0.1, -0.02)]]
+        let tail = curve(P(0.66, 0.24), P(0.94, 0.26), P(0.86, 0.02), 10) + curve(P(0.82, 0.0), P(0.88, 0.2), P(0.66, 0.18), 10)
+        let cards = [(-24.0, P(0.02, 0.6)), (-4, P(0.13, 0.56)), (16, P(0.24, 0.6))].map { squircle($0.1, 0.08, 0.13, degrees: $0.0, 24) }
+        let flame = curve(P(-0.2, 0.4), P(-0.27, 0.34), P(-0.21, 0.22), 8) + curve(P(-0.21, 0.22), P(-0.14, 0.34), P(-0.2, 0.4), 8)
+        let candle = rect(-0.26, 0.4, -0.14, 0.72)
+        var fills = [fill(stand, y(0.75)), fill(flame, y(0.95)), fill(candle, Tone(0.1, 0.12, 0.7))]
+        fills += [oval(head + P(-0.045, -0.01), 0.025, 0.016, y(0.95)), oval(head + P(0.035, -0.01), 0.025, 0.016, y(0.95))]
+        fills += ears.map { fill($0, .zero) } + [disc(head, 0.1, .zero), oval(body, 0.17, 0.2, .zero), fill(tail, .zero)]
+        fills += cards.reversed().map { fill($0, Tone(0, 0.25, 0.9)) }
+
+        var s: [Halftone.Stroke] = []
+        // The tent: its stripes' seams, the table's edge and the fringe of its cloth.
+        for k in -6...6 {
+            let x = Double(k) * 0.16 + 0.08
+            s += runs(span(P(x, -1), P(x, table), 40), hair) { simd_distance($0, ball) > 0.47 && simd_distance($0, moon) > window + 0.06 && simd_distance($0, head) > 0.11 && simd_length(($0 - body) / P(0.17, 0.2)) > 1.05 && simd_length($0) < 1 }
+        }
+        s += runs(span(P(-1, table), P(1, table), 50), bold) { !inside($0, stand) && simd_length(($0 - body) / P(0.17, 0.2)) > 1 && !inside($0, tail) }
+        s += runs((0...60).map { P(-1 + Double($0) / 30, 0.9 + ($0 % 2 == 0 ? 0 : 0.04)) }, mid) { simd_length($0) < 1 }
+        // The ball on its stand, its glass, a glint and the sparkle round it.
+        s.append(stroke(closed(stand), bold))
+        for x in [-0.5, -0.4, -0.3] { s.append(stroke([P(x, 0.42), P(x + 0.015, 0.47)], mid)) }
+        s += pieces(circle(ball, glass, 60), bold, 10)
+        s.append(stroke(arc(ball, glass - 0.04, 195, 250, 10), bold))
+        for (at, r) in [(P(-0.8, -0.3), 0.06), (P(-0.1, -0.28), 0.045), (P(-0.78, 0.16), 0.04), (P(-0.02, 0.12), 0.035)] { s += glint(at, r, mid) }
+        // The window, the rope round it.
+        s += pieces(circle(moon, window, 48), bold, 8)
+        s += pieces(circle(moon, window + 0.05, 52), mid, 8)
+        for k in 0..<18 { s.append(stroke([polar(moon, window + 0.005, 20 * Double(k)), polar(moon, window + 0.045, 20 * Double(k) + 14)], hair)) }
+        // The cat: outline, eyes slit, whiskers.
+        s.append(stroke(arc(head, 0.1, 0, 360, 28), mid))
+        for e in ears { s.append(stroke(e, mid)) }
+        s.append(stroke(ellipse(body, 0.17, 0.2, 32), mid))
+        s.append(stroke(closed(tail), mid))
+        for x in [-0.045, 0.035] { s.append(stroke([head + P(x, -0.024), head + P(x, 0.004)], mid)) }
+        for side in [-1.0, 1.0] { for t in [-0.02, 0.0, 0.02] { s.append(stroke([head + P(side * 0.04 - 0.005, 0.035), head + P(side * 0.14, 0.03 + 2 * t)], hair)) } }
+        // The cards, a star on the top one, and the candle.
+        for c in cards { s.append(stroke(closed(c), mid)) }
+        s.append(stroke(star(P(0.24, 0.6), 0.045, degrees: -74), mid))
+        s.append(stroke(circle(P(0.02, 0.6) + P(-0.01, -0.02), 0.03, 14), hair))
+        s.append(stroke(closed(flame), mid))
+        s.append(stroke(closed(candle), mid))
+        s.append(stroke(curve(P(-0.26, 0.46), P(-0.28, 0.54), P(-0.27, 0.58), 4), mid))
+        // In the ball: a tall dark stranger, his top hat, coat and cane.
+        let man = ball + P(0.018, -0.026)
+        s.append(stroke(closed(rect(man.x - 0.009, man.y - 0.05, man.x + 0.009, man.y - 0.03)), 0.003))
+        s.append(stroke([man + P(-0.018, -0.03), man + P(0.018, -0.03)], 0.0034))
+        s.append(stroke(circle(man + P(0, -0.019), 0.009, 10), 0.003))
+        s.append(stroke(closed([man + P(-0.014, -0.008), man + P(0.014, -0.008), man + P(0.022, 0.05), man + P(-0.022, 0.05)]), 0.0032))
+        s.append(stroke([man + P(0, -0.008), man + P(0, 0.02)], 0.002))
+        s.append(stroke([man + P(0.036, 0.054), man + P(0.036, 0.0)] + arc(man + P(0.028, 0.0), 0.008, 0, -180, 6), 0.0026))
+        s.append(stroke([man + P(0.014, 0.0), man + P(0.03, 0.006)], 0.0024))
+        // Across the moon: a witch on her broomstick, her pointed hat, cape flying and the broom's bristles.
+        let witch = moon + P(0.016, -0.022)
+        s.append(stroke([witch + P(-0.05, 0.026), witch + P(0.056, -0.004)], 0.0036))
+        for t in [-0.014, -0.005, 0.005, 0.014] { s.append(stroke([witch + P(-0.046, 0.025), witch + P(-0.08, 0.03 + t)], 0.0026)) }
+        s.append(stroke(closed([witch + P(-0.024, 0.02), witch + P(0.02, 0.008), witch + P(0.008, -0.022), witch + P(-0.008, -0.022)]), 0.0034))
+        s.append(stroke(circle(witch + P(0.002, -0.03), 0.008, 10), 0.0032))
+        s.append(stroke([witch + P(-0.018, -0.034), witch + P(0.02, -0.038)], 0.0034))
+        s.append(stroke([witch + P(-0.008, -0.036), witch + P(-0.014, -0.074), witch + P(0.01, -0.037)], 0.0034))
+        s.append(stroke(curve(witch + P(-0.006, -0.02), witch + P(-0.036, -0.026), witch + P(-0.05, -0.004), 6) + [witch + P(-0.016, 0.014)], 0.0026))
+        s.append(stroke([witch + P(0.012, 0.012), witch + P(0.024, 0.03)], 0.0026))
+        return panel("crystalball", fills: fills, strokes: s) { p in
+            let db = p - ball, rb = simd_length(db)
+            if rb < glass {
+                let a = atan2(db.y, db.x)
+                return rb < 0.25 + 0.04 * sin(5 * a + 1) ? Tone(0.55, 0.12, 0.12) : Tone(0.5, 0.5, 0.6)
+            }
+            let dm = p - moon, rm = simd_length(dm)
+            if rm < window + 0.05 {
+                guard rm > window else { return rm < window - 0.04 ? y(0.85) : Tone(0.25, 0.1, 0) }
+                return Int(((atan2(dm.y, dm.x) * 180 / .pi + 360) / 20).rounded(.down)) % 2 == 0 ? y(0.75) : Tone(0, 0.5, 0.35)
+            }
+            guard p.y < table else { return p.y < 0.9 ? Tone(0.5, 0, 0.12) : Tone(0.25, 0, 0.6) }
+            return Int(((p.x + 1) / 0.16).rounded(.down)) % 2 == 0 ? m(0.55) : Tone(0.1, 0.22, 0)
         }
     }()
 }
