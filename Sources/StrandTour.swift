@@ -82,6 +82,11 @@ extension StrandView {
                     done.resume()
                 }
                 column.setContentOffset(CGPoint(x: 0, y: y), animated: true)
+                // A hop UIKit never reports as ended still lets the tour end.
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    self.scrolled?()
+                }
             }
         }
     }

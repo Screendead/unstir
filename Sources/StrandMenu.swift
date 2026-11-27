@@ -96,6 +96,8 @@ final class StrandView: UIView, UIScrollViewDelegate {
     private let surfaceWords = StrandLayer()
     private var built = CGSize.zero
     private var inset: CGFloat = -1
+    /// The top inset the plan was laid out under.
+    private var planned: CGFloat = -1
     private var baking: Task<Void, Never>?
     private var travels = 0
     var scrolled: (() -> Void)?
@@ -136,6 +138,11 @@ final class StrandView: UIView, UIScrollViewDelegate {
         build()
     }
 
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        setNeedsLayout()
+    }
+
     override func safeAreaInsetsDidChange() {
         super.safeAreaInsetsDidChange()
         setNeedsLayout()
@@ -153,8 +160,9 @@ final class StrandView: UIView, UIScrollViewDelegate {
     func build() {
         StrandCount.reads += 1
         let model = StrandModel(today: state.day ?? .now, saved: run)
-        guard model != self.model || plan?.size != built else { return }
+        guard model != self.model || plan?.size != built || planned != inset else { return }
         self.model = model
+        planned = inset
         let scale = window?.screen.scale ?? traitCollection.displayScale
         let plan = StrandPlan(model, size: built, top: inset, bottom: window?.safeAreaInsets.bottom ?? 0)
         let was = (overview?.contentOffset.y, dive?.contentOffset.y)
