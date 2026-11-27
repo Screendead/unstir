@@ -51,9 +51,9 @@ extension LensArt {
 
 /// Level 68's name: a striped lighthouse on its rock at night, its lantern's great round lens over the top core, its
 /// beams thrown left across the moonlit sky and right to the horizon, and the pools its light lays on the sea over the
-/// other four of hex's five lenses on this level, each pool's rim broken by glitter. In the lantern's lens the lamp:
-/// its flame on the wick in a glass chimney; in the pools, what the light finds: a steamer on the horizon (upper
-/// right), a seal on a rock (lower right), a rowing boat (bottom) and a bell buoy (lower left).
+/// other four of hex's five lenses on this level, each pool's rim broken by glitter. In the lantern's lens the lamp, a
+/// bulb lit on its screw base; in the pools, what the light finds: a steamer at sea (upper right), a whale's tail
+/// (lower right), a rowing boat (bottom) and a lifebuoy (lower left).
 extension LensArt {
     static let lighthouse: Halftone.Panel = {
         let lamp = hex[1], horizon = -0.12
