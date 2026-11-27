@@ -444,8 +444,80 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 53, Solstice, hex, clocks 1+,2+,3+.
-    static func plate53() -> Plate? { nil }
+    /// Problem 53, Solstice, hex, clocks 1+,2+,3+: a stone circle's trilithons against the dawn in solid ink, the
+    /// midsummer sun half risen on the horizon through the central arch, its rays across the sky and the stones' long
+    /// shadows thrown across the ground toward the eye; the sun's disc, between the hub and twelve, in the second ink.
+    static func plate53() -> Plate {
+        var plate = Plate()
+        let horizon = -0.2, sun = P(0, -0.2), disc = 0.085
+
+        // A standing stone from its foot's corners up to its head, a little tapered and leaning.
+        func stone(_ x0: Double, _ x1: Double, _ base: Double, _ head: Double, lean: Double = 0) -> [P] {
+            [P(x0, base), P(x1, base), P(x1 - 0.008 + lean, head + 0.01), P((x0 + x1) / 2 + lean, head),
+             P(x0 + 0.01 + lean, head + 0.012), P(x0, base)]
+        }
+        func lintel(_ x0: Double, _ x1: Double, _ low: Double, _ high: Double) -> [P] {
+            [P(x0, low), P(x1, low - 0.005), P(x1 + 0.01, high + 0.01), P((x0 + x1) / 2, high - 0.006), P(x0 - 0.008, high + 0.008),
+             P(x0, low)]
+        }
+        var uprights: [[P]] = [stone(-0.22, -0.14, 0.2, -0.4, lean: 0.005), stone(0.14, 0.22, 0.2, -0.4, lean: -0.005)]
+        var lintels: [[P]] = [lintel(-0.26, 0.26, -0.4, -0.48)]
+        for side in [-1.0, 1.0] {
+            uprights.append(stone(side * 0.63, side * 0.56, 0.08, -0.26))
+            uprights.append(stone(side * 0.42, side * 0.35, 0.08, -0.26))
+            lintels.append(lintel(min(side * 0.65, side * 0.33), max(side * 0.65, side * 0.33), -0.26, -0.315))
+            uprights.append(stone(side * 0.86, side * 0.8, -0.06, -0.3))
+        }
+
+        // The sky: the sun's rays, ink and bone in turn, above the horizon.
+        for k in 0..<16 {
+            let a = .pi + (Double(k) + 0.5) * .pi / 16, n = P(-sin(a), cos(a))
+            let near = polar(sun, k % 2 == 0 ? 0.2 : 0.14, a), far = polar(sun, 1.3, a)
+            plate.fill([near - 0.004 * n, far - 0.024 * n, far + 0.024 * n, near + 0.004 * n, near - 0.004 * n], .black)
+        }
+        // The ground, ruled level, and the stones' shadows running from the sun toward the eye.
+        let land = box(P(-1.1, horizon), P(1.1, 1.1))
+        plate.fill(land)
+        var shadows: [[P]] = []
+        for u in uprights {
+            let a = u[0], b = u[1]
+            let da = simd_normalize(a - sun), db = simd_normalize(b - sun)
+            shadows.append([a, b, b + 1.4 * db, a + 1.4 * da, a])
+        }
+        plate.lines(hatch([land] + shadows, angle: 0, gap: Kit.groundGap), Kit.groundWidth)
+        for sh in shadows { plate.fill(sh, .black) }
+        plate.line([P(-1.1, horizon), P(1.1, horizon)], heavy)
+        // Far hills along the horizon.
+        for hill in [curve(P(-1.1, horizon), P(-0.7, horizon - 0.07), P(-0.32, horizon), 16),
+                     curve(P(0.36, horizon), P(0.75, horizon - 0.06), P(1.1, horizon), 16)] {
+            plate.fill(hill + [hill[0]])
+            plate.lines(hatch([hill + [hill[0]]], angle: 0, gap: 0.02), medium)
+            plate.line(hill, heavy)
+        }
+
+        // The sun, half risen in the arch.
+        let half = arc(sun, disc, from: .pi, to: 2 * .pi) + [P(-disc, horizon)]
+        plate.fill(half, .second)
+        plate.line(half, medium)
+        plate.line(arc(sun, disc + 0.025, from: .pi + 0.1, to: 2 * .pi - 0.1), medium)
+
+        // The stones, black against the dawn, a bone line where the light catches each edge and their cracks.
+        for st in uprights + lintels {
+            Kit.mass(&plate, st)
+        }
+        for st in uprights {
+            let top = st[3], foot = st[0]
+            plate.line([foot + P(0.014, -0.03), top + P(0.012, 0.03)], 0.011, .bone)
+            plate.line([st[1] + P(-0.014, -0.03), st[2] + P(-0.006, 0.03)], 0.011, .bone)
+            let mid = (top + foot) / 2
+            plate.line([mid + P(-0.015, -0.02), mid + P(0.005, 0.0), mid + P(-0.01, 0.04)], medium, .bone)
+        }
+        for l in lintels { plate.line([l[4] + P(0.02, 0.012), l[3] + P(0, 0.014), l[2] + P(-0.02, 0.012)], fine, .bone) }
+
+        callout(&plate, "A", from: P(-0.2, -0.46), to: P(-0.44, -0.62))
+        callout(&plate, "B", from: P(0.4, 0.5), to: P(0.62, 0.34))
+        return plate
+    }
 
     /// Problem 54, Equinox, hex, clocks 1+,3+,5+.
     static func plate54() -> Plate? { nil }
