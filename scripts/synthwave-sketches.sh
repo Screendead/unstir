@@ -1,11 +1,13 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/synthwave-sketches.sh <dir>   Renders round two of the synthwave menu's sketches
-# (sound-src/synthwave-sketches.csd) for Jack's ear: each bed as one seamless loop of its 16 bars at -16 LUFS, and each
+# Usage: scripts/synthwave-sketches.sh <dir>   Renders round three of the synthwave menu's sketches
+# (sound-src/synthwave-sketches.csd) for Jack's ear: round two's hybrid bed as the reference, three variants of it,
+# night's and dark's third takes again with the pad re-voiced under the lead, and the combined swipe in E minor with its
+# partner for the other direction. Each bed as one seamless loop of its 16 bars at -16 LUFS, and each
 # swipe, louder, as m4a in <dir>; then measures each bed's seam, each file's loudness, each bed's onsets against its
 # beat grid, how much of each bed's bass a phone's speaker keeps, its bass against its round-one bed's, and its share
 # of energy in the bands where a top line turns harsh. Round one (outrun, night and dark with four effects each) is
-# this script's first commit. Needs Homebrew's csound and ffmpeg, and numpy.
+# this script's first commit, round two its second. Needs Homebrew's csound and ffmpeg, and numpy.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -24,11 +26,12 @@ BED_I=-16
 FX_M=-11
 # name, instrument, tempo, and the round-one bed whose bass line it keeps.
 BEDS="
-night-bed-2 night2 96 night
-night-bed-3 night3 96 night
-dark-bed-2 dark2 100 dark
-dark-bed-3 dark3 100 dark
 hybrid-bed hybrid 100 dark
+hybrid-voiced hybridVoiced 100 dark
+hybrid-melody hybridMelody 100 dark
+hybrid-turn hybridTurn 100 dark
+night-bed-4 night4 96 night
+dark-bed-4 dark4 100 dark
 "
 REFS="
 night 96
@@ -36,10 +39,8 @@ dark 100
 "
 # name, instrument, and the tempo of the bed it plays over, so its echo falls on that bed's grid.
 SWIPES="
-night-swipe-e nightSwipeE 100
-dark-swipe-d darkSwipeD 96
 both-swipe-e swipeBothE 100
-both-swipe-d swipeBothD 96
+both-swipe-e-down swipeBothEDown 100
 "
 
 # An 8th-order Butterworth highpass at 250 Hz, as four biquads: roughly what an iPhone's speaker keeps (sounds.sh's).

@@ -2,7 +2,9 @@
 ; Sketches for the synthwave menu, for Jack's ear: three directions (outrun, night, dark), each a menu bed of 16 bars
 ; and four menu effects (a bead's tap, the tier swipe, a level opening, a locked bead's tap). Round two adds two takes
 ; each of night's and dark's beds, a hybrid bed (dark's bass and harmony in night's groove and pads) and swipes: each
-; direction's in the other's key, and one of both.
+; direction's in the other's key, and one of both. Round three adds three variants of the hybrid (its chords
+; re-voiced, its melody reshaped, its turnaround made deceptive), night's and dark's third takes with the pad
+; re-voiced, and the combined swipe's partner for the other direction.
 ; scripts/synthwave-sketches.sh passes the sketch (SKETCH), its tempo (BPM), the seconds to render (DUR) and the
 ; output (OUT); NOLEAD leaves a bed's top line out, and BASSONLY renders the bass alone, dry, to measure it. Stereo, 48 kHz, 32-bit float; the script sets the level and cuts
 ; a bed's loop from its second period.
@@ -101,6 +103,11 @@ giRvCut init 7000
 giRvMix init 0.5
 giGateMix init 1.1
 giTape init 1.1
+; Round three: night's pad plays its lowest giPadVoices; giPadVoicing 1 plays dark's pad as inversions; giSweepDown 1
+; turns dark's swipe sweep down in pitch and filter.
+giPadVoices init 4
+giPadVoicing init 0
+giSweepDown init 0
 
 opcode Hz, i, i
   im xin
@@ -476,7 +483,7 @@ opcode NightSong, 0, 0
         schedule "bass", it + 2.5 * giB, 0.9 * giB, iroot[ibar % 8], 0.5
         schedule "bass", it + 3.5 * giB, 0.45 * giB, iroot[ibar % 8] + 7, 0.5
         ip = 0
-        while ip < 4 do
+        while ip < giPadVoices do
           schedule "pad", it, 8 * giB - 0.2, ichord[ic + ip], 0.1
           ip += 1
         od
@@ -544,6 +551,26 @@ instr night3
   giTopVoice = 1
   giTopTrans = -12
   giTopAmp = 0.34
+  NightSong
+  turnoff
+endin
+
+; Round three: take 3 with the pad's top voice dropped, so the lead sings over the chords instead of inside them.
+instr night4
+  NightPatch
+  giLeadDet = 4
+  giLeadSub = 0
+  giLeadCut = 1700
+  giLeadRes = 0.15
+  giLeadAtk = 0.04
+  giLeadDrive = 1.1
+  giLeadGlide = 0.03
+  giLeadRv = 0.4
+  giLeadDl = 0.4
+  giTopVoice = 1
+  giTopTrans = -12
+  giTopAmp = 0.34
+  giPadVoices = 3
   NightSong
   turnoff
 endin
@@ -643,6 +670,7 @@ endop
 opcode DarkSong, 0, 0
   iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
   ichord[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ivoiced[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 54, 57, 62, 66, 55, 59, 64, 67, 55, 60, 64, 67, 54, 59, 63, 66
   icbar[] fillarray 0, 4, 6, 8, 12, 14
   iclen[] fillarray 4, 2, 2, 4, 2, 2
   ioct[] fillarray 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 12, 0, 0
@@ -691,7 +719,7 @@ opcode DarkSong, 0, 0
       it = (ir * 16 + icbar[ic]) * 4 * giB
       ip = 0
       while ip < 4 do
-        schedule "pad", it, iclen[ic] * 4 * giB - 0.1, ichord[ic * 4 + ip], 0.12
+        schedule "pad", it, iclen[ic] * 4 * giB - 0.1, (giPadVoicing == 1 ? ivoiced[ic * 4 + ip] : ichord[ic * 4 + ip]), 0.12
         ip += 1
       od
       ic += 1
@@ -759,6 +787,20 @@ instr dark3
   turnoff
 endin
 
+; Round three: take 3 with the pad as inversions, each chord moving to the next by the smallest steps.
+instr dark4
+  DarkPatch
+  DarkSofter
+  giKickAmp = 0.7
+  giSnAmp = 0.38
+  giSnSend = 0.3
+  giSnHold = 0.12
+  giHatHalf = 1
+  giPadVoicing = 1
+  DarkSong
+  turnoff
+endin
+
 instr darkTap
   DarkPatch
   giPlkDec = 0.2
@@ -775,7 +817,11 @@ opcode DarkRun, 0, i[]iiii
     schedule "pluck", 0.02 + ii * 0.075, 0.25, irun[ii], iamp * (0.35 + 0.04 * ii)
     ii += 1
   od
-  schedule "sweep", 0.02, 0.5, isw0, isw1, iamp * 0.5, 180, 3200, 0
+  if giSweepDown == 1 then
+    schedule "sweep", 0.02, 0.5, isw0, isw1, iamp * 0.5, 3200, 180, 1
+  else
+    schedule "sweep", 0.02, 0.5, isw0, isw1, iamp * 0.5, 180, 3200, 0
+  endif
   schedule "tom", 0.5, 0.4, iamp * 0.5, itom, 0.5
 endop
 instr darkSwipe
@@ -802,6 +848,16 @@ instr swipeBothE
   ilow[] fillarray 40, 47, 52, 55, 59, 64
   ihigh[] fillarray 64, 67, 71, 74, 76, 79, 83, 88
   DarkRun ilow, 28, 52, 82, 0.8
+  NightRun ihigh, 0.7
+  turnoff
+endin
+; Round three: swipeBothE's partner for the other direction: the same voices, both runs falling, the sweep falling.
+instr swipeBothEDown
+  BothPatch
+  giSweepDown = 1
+  ilow[] fillarray 64, 59, 55, 52, 47, 40
+  ihigh[] fillarray 88, 83, 79, 76, 74, 71, 67, 64
+  DarkRun ilow, 52, 28, 82, 0.8
   NightRun ihigh, 0.7
   turnoff
 endin
@@ -836,7 +892,7 @@ endin
 ; ------------------------------------------------------------------ hybrid: dark's bass line and harmony, E minor at 100,
 ; in night's groove and pad world. Kicks at level 0 on every beat keep dark's pump on the bass; night's own kicks
 ; sound without pumping.
-instr hybrid
+opcode HybridPatch, 0, 0
   NightPatch
   NightTineSoft
   giBassDet = 9
@@ -845,11 +901,13 @@ instr hybrid
   giBassRes = 0.4
   giBassDrive = 3.6
   giBassPump = 0.8
-  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
-  ichord[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
-  icbar[] fillarray 0, 4, 6, 8, 12, 14
-  iclen[] fillarray 4, 2, 2, 4, 2, 2
-  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+endop
+
+; The hybrid's 16 bars: iroot the bass's root per bar; ipad four notes per pad chord, each struck at the beat in ipadat
+; for ipadlen beats; ibarch each bar's chord in ichord, which the pluck arpeggiates; imotif the tine's line; and iskip
+; the beats in the loop where the pluck rests.
+opcode HybridSong, 0, i[]i[]i[]i[]i[]i[]i[]i[]
+  iroot[], ipad[], ipadat[], ipadlen[], ibarch[], ichord[], imotif[], iskip[] xin
   ioct[] fillarray 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 12, 0, 0
   iacc[] fillarray 1, 0.6, 0.8, 0.6
   ipat[] fillarray 0, 1, 2, 3, -1, 2, 3, 1
@@ -880,7 +938,15 @@ instr hybrid
       od
       ih = 0
       while ih < 8 do
-        if ipat[ih] >= 0 then
+        irest = 0
+        is = 0
+        while is < lenarray(iskip) do
+          if iskip[is] == ibar * 4 + ih * 0.5 then
+            irest = 1
+          endif
+          is += 1
+        od
+        if ipat[ih] >= 0 && irest == 0 then
           schedule "pluck", it + ih * 0.5 * giB, 0.45 * giB, ichord[ic + ipat[ih]] + 12, (ih % 4 == 1 ? 0.2 : 0.14), \
             (ih % 2 == 0 ? 0.4 : 0.6)
         endif
@@ -889,17 +955,30 @@ instr hybrid
       ibar += 1
     od
     ic = 0
-    while ic < 6 do
-      it = (ir * 16 + icbar[ic]) * 4 * giB
+    while ic < lenarray(ipadat) do
+      it = (ir * 64 + ipadat[ic]) * giB
       ip = 0
       while ip < 4 do
-        schedule "pad", it, iclen[ic] * 4 * giB - 0.2, ichord[ic * 4 + ip], 0.1
+        schedule "pad", it, ipadlen[ic] * giB - 0.2, ipad[ic * 4 + ip], 0.1
         ip += 1
       od
       ic += 1
     od
     ir += 1
   od
+  if giLeadOn == 1 then
+    Notes "tine", imotif, 0, 0.36, 1, ireps
+  endif
+endop
+
+; Round two's hybrid, round three's reference.
+instr hybrid
+  HybridPatch
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ipad[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 8
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
   imotif[] fillarray 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
     10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
     18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
@@ -908,9 +987,78 @@ instr hybrid
     42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
     50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
     58.5, 0.5, 71, 59, 1.5, 75, 60.5, 3, 78
-  if giLeadOn == 1 then
-    Notes "tine", imotif, 0, 0.36, 1, ireps
-  endif
+  iskip[] fillarray -1
+  HybridSong iroot, ipad, ipadat, ipadlen, ibarch, ipad, imotif, iskip
+  turnoff
+endin
+
+; Round three, the chords: the pad as inversions (D/F#, Em/G, B/F#), each change moving its voices by the fewest
+; semitones and the pad's top kept under the tine. The pluck keeps the root-position chords.
+instr hybridVoiced
+  HybridPatch
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ichord[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ipad[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 54, 57, 62, 66, 55, 59, 64, 67, 55, 60, 64, 67, 54, 59, 63, 66
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 8
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+  imotif[] fillarray 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
+    10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
+    18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
+    26.5, 0.5, 66, 27, 1.5, 69, 28.5, 3, 74, \
+    33.5, 0.5, 71, 34, 1.5, 76, 35.5, 2.5, 74, 38, 1, 71, 39, 0.5, 69, 39.5, 2.5, 67, \
+    42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
+    50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
+    58.5, 0.5, 71, 59, 1.5, 75, 60.5, 3, 78
+  iskip[] fillarray -1
+  HybridSong iroot, ipad, ipadat, ipadlen, ibarch, ichord, imotif, iskip
+  turnoff
+endin
+
+; Round three, the melody: one peak (the second G5 now D5), the first half ending on E5 held into bar 9 as a question,
+; and the line resolving F#5, D#5 to E5 on the loop's downbeat. The pluck rests where it struck a semitone against it.
+instr hybridMelody
+  HybridPatch
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ipad[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 8
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+  ; The seam's E5 is struck on the loop's first beat: struck just before the cut, its reverb differs period to period.
+  imotif[] fillarray 0, 2.5, 76, 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
+    10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
+    18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
+    26.5, 0.5, 66, 27, 1.5, 69, 28.5, 1.5, 74, 30, 2.5, 76, \
+    33.5, 0.5, 71, 34, 1.5, 76, 35.5, 2.5, 74, 38, 1, 71, 39, 0.5, 69, 39.5, 2.5, 67, \
+    42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
+    50.5, 0.5, 74, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
+    58.5, 0.5, 71, 59, 1.5, 75, 60.5, 1.5, 78, 62, 2, 75
+  iskip[] fillarray 45.5
+  HybridSong iroot, ipad, ipadat, ipadlen, ibarch, ipad, imotif, iskip
+  turnoff
+endin
+
+; Round three, the turnaround: bar 15's B holds a 4-3 suspension (Bsus4 to B), and bar 16 moves to C, bass and all,
+; so the loop returns to Em from bVI instead of closing on V. The tine turns E5, D#5, E5 over it.
+instr hybridTurn
+  HybridPatch
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 36
+  ipad[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, \
+    59, 64, 66, 71, 59, 63, 66, 71, 55, 60, 64, 67
+  ipadat[] fillarray 0, 16, 24, 32, 48, 56, 58, 60
+  ipadlen[] fillarray 16, 8, 8, 16, 8, 2, 2, 4
+  ichord[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 1
+  imotif[] fillarray 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
+    10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
+    18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
+    26.5, 0.5, 66, 27, 1.5, 69, 28.5, 3, 74, \
+    33.5, 0.5, 71, 34, 1.5, 76, 35.5, 2.5, 74, 38, 1, 71, 39, 0.5, 69, 39.5, 2.5, 67, \
+    42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
+    50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 76, \
+    58.5, 0.5, 71, 59, 1, 75, 60.5, 3, 76
+  iskip[] fillarray 56.5
+  HybridSong iroot, ipad, ipadat, ipadlen, ibarch, ichord, imotif, iskip
   turnoff
 endin
 
