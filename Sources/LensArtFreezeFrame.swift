@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror]
+    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview]
 
     /// A hex rod's core, which a lens magnifies and a twist turns rigidly.
     fileprivate static let core = 0.264
@@ -42,6 +42,12 @@ extension LensArt {
 
     fileprivate static func rim(_ c: P, glass: Tone, outer: Double, _ frame: (at: [Double], tones: [Tone])) -> Rim {
         Rim(centre: c, glass: glass, outer: outer, at: frame.at, tones: frame.tones)
+    }
+
+    /// A long line as strokes of `n` segments each, so each stroke's box stays tight and the bake tests few segments a
+    /// pixel.
+    fileprivate static func pieces(_ line: [P], _ width: Double, every n: Int = 6) -> [Halftone.Stroke] {
+        stride(from: 0, to: line.count - 1, by: n).map { stroke(Array(line[$0...min($0 + n, line.count - 1)]), width) }
     }
 
     /// A panel whose `over` fills lie on top of its lenses' rims, and its `fills` under them, over `ground`.
@@ -101,8 +107,8 @@ extension LensArt {
         }
         // The hand mirror: its frame's edges, a bead at each join of the lobes, a crest at the top, the handle and its ribs,
         // the finial and its tassel, and two streaks of light on the glass.
-        s.append(stroke(circle(glass, core, 64), mid))
-        s.append(stroke(circle(glass, 0.335, 64), bold))
+        s += pieces(circle(glass, core, 64), mid)
+        s += pieces(circle(glass, 0.335, 64), bold)
         for a in lobes { s.append(stroke(circle(polar(glass, 0.3, a), 0.011, 6), hair)) }
         let crest = polar(glass, 0.36, -90)
         s.append(stroke(curve(crest + P(-0.1, 0.03), crest + P(-0.06, -0.06), crest, 8) + curve(crest, crest + P(0.06, -0.06), crest + P(0.1, 0.03), 8), mid))
@@ -125,15 +131,15 @@ extension LensArt {
         s.append(stroke(curve(eye + P(-0.038, -0.024), eye + P(0, -0.048), eye + P(0.042, -0.026), 10), 0.003))
         // The compact: the lid's edges, its clasp, the hinge's knuckle, the pan's case and its powder's pressed rose, the
         // puff, and the lips in the lid's mirror.
-        s.append(stroke(circle(lid, core, 64), mid))
-        s.append(stroke(circle(lid, 0.31, 64), bold))
-        s.append(stroke(circle(pan, 0.29, 56), bold))
-        s.append(stroke(circle(pan, 0.24, 48), mid))
+        s += pieces(circle(lid, core, 64), mid)
+        s += pieces(circle(lid, 0.31, 64), bold)
+        s += pieces(circle(pan, 0.29, 56), bold)
+        s += pieces(circle(pan, 0.24, 48), mid)
         s.append(stroke(closed(knuckles), mid))
         for t in [-0.025, 0.025] { s.append(stroke([polar(hinge, t, -28) + polar(P(0, 0), 0.025, 62), polar(hinge, t, -28) - polar(P(0, 0), 0.025, 62)], hair)) }
         s.append(stroke(closed(rect(clasp.x - 0.03, clasp.y - 0.03, clasp.x + 0.03, clasp.y + 0.01)), mid))
         for k in 0..<5 { s.append(stroke(arc(pan + P(-0.07, -0.02), 0.03 + 0.022 * Double(k), 200 + 15 * Double(k), 330 + 20 * Double(k), 10), hair)) }
-        s.append(stroke(ellipse(puff, 0.11, 0.085, 28), bold))
+        s += pieces(ellipse(puff, 0.11, 0.085, 28), bold)
         s.append(stroke(closed(bar(puff + P(-0.03, -0.02), puff + P(0.04, -0.03), 0.025)), mid))
         let lips = lid + P(0.026, -0.022)
         s.append(stroke(curve(lips + P(-0.036, 0.004), lips + P(-0.02, -0.022), lips + P(0, -0.008), 8)
@@ -156,8 +162,8 @@ extension LensArt {
         // The pearls, dropped across the handle.
         for q in curve(P(0.02, 0.2), P(-0.2, 0.32), P(-0.26, 0.06), 14).dropLast() { s.append(stroke(circle(q, 0.017, 8), mid)) }
         // The pocket mirror: its enamel band's edges, a loop for its chain, and the bow in its glass.
-        s.append(stroke(circle(pocket, core, 64), mid))
-        s.append(stroke(circle(pocket, 0.32, 64), bold))
+        s += pieces(circle(pocket, core, 64), mid)
+        s += pieces(circle(pocket, 0.32, 64), bold)
         s.append(stroke(circle(polar(pocket, 0.36, 300), 0.04, 12), mid))
         let bow = pocket + P(-0.022, -0.028)
         for side in [-1.0, 1.0] {
@@ -166,5 +172,112 @@ extension LensArt {
         }
         s.append(stroke(circle(bow, 0.007, 8), 0.004))
         return framed("handmirror", rims: rims, over: over, fills: fills, strokes: s) { _ in cloth }
+    }()
+}
+
+// MARK: - 45: Rear-view mirror
+
+/// Level 45's name: the road at dusk from behind the wheel of an old car, its rear-view mirror on its stem over the top
+/// core, its wing mirror out past the windscreen's pillar over the lower right, and a compass ball on the leather dash
+/// over the hub (hex's three lenses on this level). In the rear-view mirror a car follows, its headlamps glaring; in
+/// the wing mirror a cyclist keeps up; under the compass's glass its needle points north.
+extension LensArt {
+    static let rearview: Halftone.Panel = {
+        let back = P(0, -0.56), wing = P(0.485, 0.28), ball = P(0, 0), horizon = -0.05, sun = P(-0.3, horizon)
+        let wheel = P(-0.45, 0.95)
+        let right = bar(P(0.66, -1.05), P(0.2, 0.34), 0.12), left = bar(P(-0.6, -1.05), P(-0.95, 0.34), 0.12)
+        let road = [P(-0.14, horizon), P(0.3, 0.4), P(-0.95, 0.4)], housing = squircle(back, 0.46, 0.3)
+        let foot = [P(-0.12, 0.3), P(0.12, 0.3), P(0.17, 0.4), P(-0.17, 0.4)]
+        let stem = bar(P(0, -1.02), P(0, -0.86), 0.06), arm = bar(polar(wing, 0.3, 160), P(0.18, 0.42), 0.07)
+        let spokes = [-50.0, -140].map { bar(wheel, polar(wheel, 0.47, $0), 0.06) }
+        let gauges = [(P(0.2, 0.5), 0.075), (P(0.11, 0.7), 0.055)]
+        let dash: @Sendable (Double) -> Double = { x in 0.3 + 0.05 * x * x }
+
+        let chrome = Tone(0.55, 0.55, 0.6), shade = Tone(0.06, 0.04, 0.16), paint = c(0.85)
+        // The frames: the rear-view mirror's chrome catching the light in uneven lengths, the wing mirror's paint with
+        // the arm's dark root and an amber lamp, the compass's bezel in eighths.
+        let shine = [0.0, 35, 60, 110, 140, 200, 230, 290, 320]
+        let rims = [
+            Rim(centre: back, glass: c(0.5), outer: 0.33, at: shine, tones: shine.indices.map { $0 % 2 == 0 ? chrome : shade }),
+            Rim(centre: wing, glass: m(0.4), outer: 0.33, at: [0, 140, 215, 285, 350], tones: [paint, shade, paint, y(0.95), paint]),
+            rim(ball, glass: y(0.45), outer: 0.32, turns(8, [c(0.75), shade], from: 22.5)),
+        ]
+        var fills = [fill(stem, shade), fill(arm, shade), fill(foot, shade), fill(housing, Tone(0.12, 0.08, 0.3))]
+        fills += gauges.map { disc($0.0, $0.1, c(0.65)) }
+        fills += spokes.map { fill($0, y(0.8)) } + [ring(wheel, 0.46, 0.55, y(0.8))]
+        fills += [fill(right, .zero), fill(left, .zero), disc(sun, 0.13, y(0.95)), fill(road, .zero)]
+
+        var s: [Halftone.Stroke] = []
+        // The land: the horizon either side of the sun, a far line of poles, the road and its centre line, and birds.
+        let clear: @Sendable (P) -> Bool = { p in
+            simd_distance(p, back) > 0.33 && !inside(p, housing) && simd_distance(p, wing) > 0.33 && simd_distance(p, ball) > 0.32
+        }
+        s += runs(span(P(-1, horizon), P(1, horizon), 80), mid) { clear($0) && simd_distance($0, sun) > 0.13 }
+        s.append(stroke(arc(sun, 0.13, 180, 360, 20), mid))
+        for k in 0..<3 { s.append(stroke([sun + P(-0.2 + 0.06 * Double(k), 0.04 + 0.03 * Double(k)), sun + P(0.2 - 0.05 * Double(k), 0.04 + 0.03 * Double(k))], hair)) }
+        for x in [0.62, 0.72, 0.8, 0.86] {
+            let h = 0.03 + 0.1 * (x - 0.6)
+            s.append(stroke([P(x, horizon), P(x, horizon - h)], hair))
+            s.append(stroke([P(x - 0.012, horizon - h + 0.008), P(x + 0.012, horizon - h + 0.008)], hair))
+        }
+        s += runs(span(road[0], road[1], 30), mid) { clear($0) }
+        s += runs(span(road[0], road[2], 30), mid) { clear($0) }
+        for at in [P(-0.38, -0.36), P(0.3, -0.24), P(0.52, -0.5)] {
+            s.append(stroke(curve(at + P(-0.05, 0), at + P(-0.025, -0.035), at, 5) + curve(at, at + P(0.025, -0.035), at + P(0.05, 0), 5), mid))
+        }
+        // The car: the pillars' edges, the dash and its two gauges, the wheel's rim and spokes.
+        for b in [right, left] { s.append(stroke([b[0], b[1]], mid)); s.append(stroke([b[3], b[2]], mid)) }
+        s += runs((0...40).map { P(-1 + 0.05 * Double($0), dash(-1 + 0.05 * Double($0))) }, bold) { clear($0) }
+        for (at, r) in gauges {
+            s.append(stroke(circle(at, r, 20), mid))
+            for k in 0..<7 { s.append(stroke([polar(at, r * 0.7, 150 + 40 * Double(k)), polar(at, r * 0.92, 150 + 40 * Double(k))], hair)) }
+            s.append(stroke([at, polar(at, r * 0.8, 200 + 160 * r)], mid))
+        }
+        s += pieces(arc(wheel, 0.55, 180, 360, 40), bold)
+        s += pieces(arc(wheel, 0.46, 180, 360, 36), mid)
+        for b in spokes { s.append(stroke(closed(b), mid)) }
+        // The rear-view mirror: its frame's edges, stem and mount, and in its glass the car behind, lamps glaring, on the
+        // road that falls away behind.
+        s += pieces(circle(back, core, 64), mid)
+        s += pieces(circle(back, 0.33, 64), bold)
+        s.append(stroke(closed(stem), mid))
+        s += pieces(closed(housing), bold)
+        s.append(stroke(closed(foot), mid))
+        s.append(stroke(closed(rect(-0.07, -0.99, 0.07, -0.94)), mid))
+        let car = back + P(0.024, -0.026)
+        s.append(stroke(closed([car + P(-0.018, -0.026), car + P(0.018, -0.026), car + P(0.03, -0.006), car + P(0.035, 0.018), car + P(-0.035, 0.018), car + P(-0.03, -0.006)]), 0.0036))
+        s.append(stroke([car + P(-0.03, -0.006), car + P(0.03, -0.006)], 0.0024))
+        for side in [-1.0, 1.0] {
+            let lamp = car + P(side * 0.021, 0.007)
+            s.append(stroke(circle(lamp, 0.006, 8), 0.004))
+            for t in [-30.0, 0, 30] { s.append(stroke([lamp + P(side * 0.009, 0), polar(lamp, 0.022, side > 0 ? t : 180 - t)], 0.0018)) }
+        }
+        s.append(stroke([car + P(-0.008, 0.012), car + P(0.008, 0.012)], 0.002))
+        s.append(stroke([car + P(-0.03, 0.018), back + P(-0.09, 0.12)], 0.0024))
+        s.append(stroke([car + P(0.03, 0.018), back + P(0.14, 0.11)], 0.0024))
+        // The wing mirror: its frame's edges and arm, and in its glass a cyclist.
+        s += pieces(circle(wing, core, 64), mid)
+        s += pieces(circle(wing, 0.33, 64), bold)
+        s.append(stroke(closed(arm), mid))
+        let bike = wing + P(-0.02, -0.018)
+        for x in [-0.024, 0.024] { s.append(stroke(circle(bike + P(x, 0.012), 0.014, 14), 0.003)) }
+        s.append(stroke([bike + P(-0.024, 0.012), bike + P(-0.004, -0.012), bike + P(0.016, -0.012), bike + P(0.024, 0.012)], 0.0024))
+        s.append(stroke([bike + P(-0.004, -0.012), bike + P(0.002, 0.012), bike + P(-0.024, 0.012)], 0.0024))
+        s.append(stroke([bike + P(-0.004, -0.018), bike + P(0.01, -0.038), bike + P(0.018, -0.016)], 0.003))
+        s.append(stroke(circle(bike + P(0.016, -0.048), 0.007, 8), 0.003))
+        s.append(stroke([bike + P(-0.004, -0.018), bike + P(0.012, -0.002), bike + P(0.002, 0.012)], 0.0024))
+        // The compass ball: its bezel's edges, the card's degrees, and its needle and north.
+        s += pieces(circle(ball, core, 64), mid)
+        s += pieces(circle(ball, 0.32, 64), bold)
+        for k in 0..<24 { s.append(stroke([polar(ball, k % 6 == 0 ? 0.17 : 0.2, 15 * Double(k) + 7), polar(ball, 0.235, 15 * Double(k) + 7)], k % 6 == 0 ? mid : hair)) }
+        let pivot = ball + P(0.026, -0.012)
+        s.append(stroke(closed([pivot + P(-0.012, -0.056), pivot + P(0.009, 0.0), pivot + P(0.012, 0.05), pivot + P(-0.009, 0.0)]), 0.0036))
+        s.append(stroke([pivot + P(-0.012, -0.056), pivot + P(0.0, 0.0)], 0.0024))
+        s.append(stroke(circle(pivot, 0.005, 8), 0.003))
+        let north = pivot + P(-0.018, -0.082)
+        s.append(stroke([north + P(-0.008, 0.01), north + P(-0.008, -0.01), north + P(0.008, 0.01), north + P(0.008, -0.01)], 0.003))
+        return framed("rearview", rims: rims, fills: fills, strokes: s) { p in
+            p.y < horizon ? Tone(0, 0.35, 0.55) : p.y < dash(p.x) ? c(0.32) : m(0.45)
+        }
     }()
 }
