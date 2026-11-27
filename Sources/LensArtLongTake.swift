@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette]
+    static let longTake: [Int: Halftone.Panel] = [32: operaGlasses, 33: pinceNez, 34: lorgnette, 35: readingGlasses]
 }
 
 // MARK: Drawing
@@ -408,5 +408,123 @@ extension LensArt {
             // Rose silk on the wall in broad stripes of two tones.
             (p.x + 2.04).truncatingRemainder(dividingBy: 0.28) < 0.14 ? m(0.42) : m(0.24)
         }
+    }()
+}
+
+// MARK: - 35: Reading glasses
+
+/// Level 35's name: a pair of browline reading glasses set down on an open storybook, their glasses over the lower
+/// left and lower right cores (hex's two lenses on this level), on a desk with a cup of tea, a pencil and the glasses'
+/// case: through the left glass the book's first word, "Once", through the right its picture of a castle. The cup, the
+/// pencil, the case, the ribbon and the page's two plates are the broad shapes the five twisting rods turn.
+extension LensArt {
+    static let readingGlasses: Halftone.Panel = {
+        let left = P(-0.485, 0.28), right = P(0.485, 0.28)
+        let glass = c(0.45), page = y(0.28), shell = m(0.8), brown = Tone(0, 0.62, 0.45)
+        let leftPage = [P(-0.02, -0.16), P(-0.5, -0.22), P(-0.93, -0.12), P(-0.9, 0.86), P(-0.5, 0.8), P(-0.02, 0.9)]
+        let rightPage = [P(0.02, -0.16), P(0.5, -0.24), P(0.94, -0.14), P(0.9, 0.84), P(0.5, 0.78), P(0.02, 0.9)]
+        let cover = [P(0, -0.12), P(-0.5, -0.27), P(-0.98, -0.16), P(-0.95, 0.92), P(-0.5, 0.86), P(0, 0.96), P(0.5, 0.84),
+                     P(0.98, 0.9), P(0.99, -0.18), P(0.5, -0.29)]
+        let marker = bar(P(0.03, -0.62), P(0.09, 0.2), 0.05)
+        let plate = rect(0.08, 0.6, 0.3, 0.8), initial = rect(-0.3, 0.62, -0.14, 0.78)
+        let bridge = curve(polar(left, 0.3, -20), P(0, 0.1), polar(right, 0.3, 200), 12)
+        let temples = [bar(polar(left, 0.33, 195), P(-0.86, -0.34), 0.035), bar(polar(right, 0.33, -15), P(0.86, -0.36), 0.035)]
+        let pencil = bar(P(0.2, -0.64), P(0.8, -0.38), 0.07), lead = [P(0.2, -0.64) + P(-0.01, -0.03), P(0.2, -0.64) + P(0.016, 0.034), P(0.1, -0.68)]
+        let eraser = bar(P(0.8, -0.38), P(0.88, -0.345), 0.07)
+        let caseShell = turned(ellipse(P(-0.56, -0.48), 0.3, 0.12, 32), about: P(-0.56, -0.48), 14)
+        let lining = turned(ellipse(P(-0.56, -0.48), 0.24, 0.07, 28), about: P(-0.56, -0.48), 14)
+        let cup = P(-0.14, -0.7)
+
+        var layers: [Layer] = [layer(disc(left, 0.264, glass)), layer(disc(right, 0.264, glass))]
+        // Browline frames: a thick brow of tortoiseshell over the top of each glass, a thin wire below.
+        for c in [left, right] {
+            layers.append { p in
+                let d = p - c, l = simd_length(d)
+                guard l >= 0.264, l < 0.345 else { return nil }
+                if d.y > 0.02 { return l < 0.288 ? y(0.9) : nil }
+                let k = Int((atan2(d.y, d.x) * 180 / .pi + 400) / 11)
+                return k % 3 == 0 ? Tone(0, 0.55, 0.6) : shell
+            }
+        }
+        layers.append(layer(fill(ribbon(bridge, 0.04, 0.04), shell)))
+        layers += temples.map { layer(fill($0, shell)) }
+        layers += [layer(fill(marker, y(0.9))), layer(fill(plate, c(0.5))), layer(fill(initial, m(0.65))),
+                   layer(fill(lead, y(0.2))), layer(fill(eraser, m(0.7))), layer(fill(pencil, y(0.85))),
+                   layer(fill(lining, m(0.85))), layer(fill(caseShell, c(0.45))),
+                   layer(oval(cup + P(0, -0.07), 0.12, 0.035, brown)), layer(oval(cup + P(0, -0.02), 0.13, 0.1, c(0.55))),
+                   layer(oval(cup + P(0, 0.06), 0.22, 0.06, c(0.3))),
+                   layer(fill(rect(-0.04, -0.2, 0.04, 0.92), y(0.12))), layer(fill(leftPage, page)), layer(fill(rightPage, page)),
+                   layer(fill(cover, c(0.55)))]
+
+        var s: [Halftone.Stroke] = []
+        // The desk's grain.
+        for k in 0..<7 {
+            let yy = -0.95 + 0.11 * Double(k)
+            s += runs(curve(P(-1, yy), P(0, yy + 0.05), P(1, yy - 0.02), 40), hair) { p in
+                !inside(p, cover) && !inside(p, pencil) && !inside(p, caseShell) && simd_distance(p, cup) > 0.24
+            }
+        }
+        // The book: covers, pages, its lines of print kept off the glasses and the plates, the plates' frames.
+        s.append(stroke(closed(cover), mid))
+        s.append(stroke(closed(leftPage), mid))
+        s.append(stroke(closed(rightPage), mid))
+        for k in 0..<15 {
+            let yy = -0.08 + 0.065 * Double(k)
+            for (x0, x1) in [(-0.86, -0.08), (0.08, 0.86)] {
+                s += runs(span(P(x0, yy), P(x1, yy), 48), hair) { p in
+                    let k = Int((p.x + 2) * 30 + yy * 7) % 9
+                    return k != 0 && simd_distance(p, left) > 0.37 && simd_distance(p, right) > 0.37 && !inside(p, plate)
+                        && !inside(p, initial) && !inside(p, marker)
+                }
+            }
+        }
+        s.append(stroke(closed(plate), mid))
+        s.append(stroke(closed(initial), mid))
+        s.append(stroke([P(-0.27, 0.66), P(-0.17, 0.66)], bold))
+        s.append(stroke([P(-0.22, 0.66), P(-0.22, 0.75)], bold))
+        s.append(stroke([P(0.1, 0.76), P(0.16, 0.68), P(0.2, 0.72), P(0.26, 0.64), P(0.28, 0.78)], mid))
+        s += rim(P(0.13, 0.65), 0.025, hair, 3)
+        s.append(stroke(closed(marker), hair))
+        // The cup, its saucer and steam; the pencil sharpened; the case and its lining.
+        s.append(stroke(ellipse(cup + P(0, 0.06), 0.22, 0.06, 28), mid))
+        s.append(stroke(ellipse(cup + P(0, -0.02), 0.13, 0.1, 28), bold))
+        s.append(stroke(ellipse(cup + P(0, -0.07), 0.12, 0.035, 20), mid))
+        s.append(stroke(arc(cup + P(0.16, -0.02), 0.045, -80, 90, 8), mid))
+        for x in [-0.06, 0.02] { s.append(stroke(curve(cup + P(x, -0.14), cup + P(x - 0.05, -0.2), cup + P(x + 0.01, -0.27), 8), hair)) }
+        s.append(stroke(closed(pencil), mid))
+        s.append(stroke(closed(lead), hair))
+        s.append(stroke([P(0.22, -0.64), P(0.8, -0.38)], hair))
+        s.append(stroke(closed(caseShell), bold))
+        s.append(stroke(closed(lining), hair))
+        // The glasses: the frames, the bridge, the temples and their hinges, a glint on each glass.
+        for c in [left, right] {
+            s += runs(circle(c, 0.345, 48), bold) { $0.y < c.y + 0.02 }
+            s += rim(c, 0.264, mid)
+            s.append(stroke(arc(c, 0.2, 200, 240, 10), mid))
+            s.append(stroke(arc(c, 0.15, 205, 225, 6), hair))
+        }
+        s += runs(circle(left, 0.288, 40), mid) { $0.y > left.y + 0.02 }
+        s += runs(circle(right, 0.288, 40), mid) { $0.y > right.y + 0.02 }
+        s.append(stroke(closed(ribbon(bridge, 0.04, 0.04)), hair))
+        for t in temples { s.append(stroke(closed(t), hair)) }
+        // Through the left glass: "Once", the story's first word.
+        let word = left + P(-0.002, -0.026)
+        s.append(stroke(ellipse(word + P(-0.03, -0.012), 0.009, 0.013, 14), 0.0034))
+        s.append(stroke([word + P(-0.014, 0), word + P(-0.014, -0.016)] + arc(word + P(-0.007, -0.01), 0.007, 180, 360, 6) + [word + P(0, 0)], 0.003))
+        s.append(stroke(arc(word + P(0.013, -0.007), 0.007, 40, 320, 10), 0.003))
+        s.append(stroke([word + P(0.024, -0.007), word + P(0.038, -0.007)] + arc(word + P(0.031, -0.007), 0.007, 0, -320, 10), 0.003))
+        for x in [-0.03, 0.0, 0.03] { s.append(stroke([word + P(x - 0.012, -0.036), word + P(x + 0.008, -0.036)], 0.0016)) }
+        // Through the right glass: the plate's castle, two towers and a flag, the gate and the hill.
+        let keep = right + P(0.006, -0.028)
+        s.append(stroke(closed([keep + P(-0.018, 0.006), keep + P(-0.018, -0.016), keep + P(0.022, -0.016), keep + P(0.022, 0.006)]), 0.003))
+        for x in [-0.03, 0.022] {
+            s.append(stroke([keep + P(x, 0.006), keep + P(x, -0.036), keep + P(x + 0.004, -0.036), keep + P(x + 0.004, -0.032),
+                             keep + P(x + 0.008, -0.032), keep + P(x + 0.008, -0.036), keep + P(x + 0.012, -0.036), keep + P(x + 0.012, 0.006)], 0.0026))
+        }
+        s.append(stroke(arc(keep + P(0.002, 0.006), 0.007, 180, 360, 6), 0.0026))
+        s.append(stroke([keep + P(-0.024, -0.036), keep + P(-0.024, -0.054)], 0.002))
+        s.append(stroke(closed([keep + P(-0.024, -0.054), keep + P(-0.008, -0.049), keep + P(-0.024, -0.044)]), 0.002))
+        s.append(stroke(curve(keep + P(-0.05, 0.01), keep + P(0, -0.0), keep + P(0.05, 0.012), 10), 0.002))
+        return layered("readingglasses", layers, strokes: s) { _ in m(0.36) }
     }()
 }
