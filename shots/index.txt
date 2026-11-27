@@ -637,7 +637,67 @@ escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-3,3
 escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4.
 escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
 escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
-escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
+escapement-book-31.png  Escapement 31 as dealt: pent, clocks 0+, scramble 0:-1,1:-4,0:-1,1:-2,0:-1,4:+5,0:-2,3:+2,1:+5,0:-1,1:+2.
+escapement-book-32.png  Escapement 32 as dealt: hex, clocks 1+, scramble 1:-1,0:-4,1:-3,3:+2,4:+4,6:+5,1:-3,3:-2,4:+4,3:-5.
+escapement-book-33.png  Escapement 33 as dealt: pent, clocks 0+, scramble 0:-5,2:+5,3:+5,2:-5,3:+2,4:+2,0:-2,2:+5,3:+4.
+escapement-book-34.png  Escapement 34 as dealt: hex, clocks 1+, scramble 1:-2,3:-3,6:+3,1:-2,5:-2,2:-2,1:-4,4:-5,3:+5,4:+2,3:+5.
+escapement-book-35.png  Escapement 35 as dealt: pent, clocks 0+, scramble 0:-3,3:+3,2:-4,1:-3,0:-5,3:-4,2:-5,3:+3,2:-3,3:-4.
+escapement-book-36.png  Escapement 36 as dealt: hex, clocks 1+, scramble 1:-5,4:-4,3:+5,4:+5,3:-3,6:+4,1:-4,4:+5,3:+4,4:+3,3:+5.
+escapement-book-37.png  Escapement 37 as dealt: pent, clocks 0+,2+, scramble 2:-1,3:+3,2:-2,0:-3,3:+2,2:-3,4:-2,0:-2,3:+2,2:-1,1:-2,2:-1,0:-1,1:-3.
+escapement-book-38.png  Escapement 38 as dealt: hex, clocks 1+,3+, scramble 3:-5,6:-3,5:-2,6:+5,5:-3,1:-1,0:-3,3:-3,1:-2,5:+4,6:+5,1:-1,2:+2,3:-1,1:-1,5:-5.
+escapement-book-39.png  Escapement 39 as dealt: hex, clocks 1+,2+, scramble 2:-1,1:-1,5:+3,2:-1,1:-1,4:-5,2:-1,1:-1,5:-5,2:-1,1:-1,4:+5,2:-1,1:-1,5:-2,2:-1,1:-1,4:+3,2:-1,1:-1,5:+2,2:-1,1:-1,4:-2,2:-1,1:-1,5:-5.
+escapement-book-40.png  Escapement 40 as dealt: hex, clocks 1+,3+, scramble 3:-1,4:-2,3:-1,2:+3,3:-1,4:-4,3:-3,6:+4,5:+4,1:-3,4:-2,3:-3,5:+4,6:+3,1:-1,0:+4,3:-1,1:-1,5:+3.
+escapement-book-41.png  Escapement 41 as dealt: hex, clocks 1+,2+, scramble 1:-2,5:-4,4:+4,2:-1,1:-1,5:+5,2:-1,1:-1,4:+2,2:-1,1:-1,5:-2,2:-1,1:-1,4:+5,2:-1,1:-1,3:+5,2:-1,1:-1,5:-2,2:-1,1:-1,4:-5,2:-1,1:-1,5:+3,2:-1,1:-1,4:+3.
+escapement-book-42.png  Escapement 42 as dealt: hex, clocks 1+,3+, scramble 1:-2,5:-4,2:-5,1:-2,4:-3,6:+2,3:-2,1:-3,5:+5,4:-4,3:-5,6:-2,1:-2,5:-2,6:-3,1:-1,6:-5,1:-1,5:-3.
+escapement-book-43.png  Escapement 43 as dealt: pent, clocks 0+,1-, scramble 1:+2,3:+4,2:+4,1:+1,2:-5,1:+1,0:-1,2:+3,1:+1,0:-1,2:-2,1:+1,0:-1,1:+1,0:-1,2:+4,1:+1,0:-1,4:+3,1:+1,0:-1,2:+5.
+escapement-book-44.png  Escapement 44 as dealt: hex, clocks 1+,3-, scramble 3:+1,4:-3,3:+1,4:-4,3:+4,6:-2,5:-3,6:-5,1:-2,4:-3,3:+3,6:+2,1:-1,6:-2,1:-2,4:+5,3:+1,5:+5.
+escapement-book-45.png  Escapement 45 as dealt: hex, clocks 1+,2-, scramble 2:+2,4:+5,1:-1,5:+5,2:+1,1:-1,4:-5,2:+1,1:-1,5:+5,2:+1,1:-1,4:+4,2:+1,1:-1,5:+3,2:+1,1:-1,4:+4,2:+1,1:-1,5:-4,2:+1,1:-1,3:-5,2:+1,1:-1,4:+2,2:+1,1:-1,5:+2.
+escapement-book-46.png  Escapement 46 as dealt: pent, clocks 0+,1-, scramble 1:+3,4:-4,3:+2,2:-5,1:+4,3:-3,4:+4,3:+4,0:-1,4:+4,1:+1,0:-1,3:+4,1:+1,0:-1,4:+2,1:+1,0:-1,3:-3,1:+1,0:-1,2:-2,1:+1,0:-1.
+escapement-book-47.png  Escapement 47 as dealt: hex, clocks 1+,3-, scramble 3:+2,5:+2,0:+5,3:+2,5:-4,1:-1,0:-4,3:+3,1:-1,6:-3,1:-2,5:+4,0:-2,3:+4,1:-2,5:-3,6:-5,1:-2,5:-5,0:+2,3:+1,1:-1,5:+2.
+escapement-book-48.png  Escapement 48 as dealt: hex, clocks 1+,2-, scramble 2:+4,5:+2,4:-4,5:-3,1:-1,4:-3,2:+1,1:-1,3:-4,2:+1,1:-1,5:-5,2:+1,1:-1,6:-4,2:+1,1:-1,4:+4,2:+1,1:-1,5:-4,2:+1,1:-1,4:+3,2:+1,1:-1,5:+4,2:+1,1:-1,6:+2,2:+1,1:-1,4:+3.
+escapement-book-49.png  Escapement 49 as dealt: hex, clocks 1+,3+,5+, scramble 3:-1,1:-3,4:-2,3:-1,4:+5,5:-2,3:-1,2:+2,3:-1,1:-3,4:-5,5:-5,3:-2,2:-3,3:-1,1:-1,2:+4,3:-1,1:-1,2:+2,3:-1,1:-1,2:+4.
+escapement-book-50.png  Escapement 50 as dealt: hex, clocks 1+,2+,3+, scramble 3:-1,0:-3,3:-5,5:-2,6:-5,5:+5,6:+5,2:-1,1:-1,5:-3,3:-1,2:-1,1:-1,6:+4,3:-1,2:-1,1:-1,5:+3,3:-1,2:-1,1:-1,6:+3,3:-1,2:-1,1:-1,0:-2.
+escapement-book-51.png  Escapement 51 as dealt: hex, clocks 1+,2-,3+, scramble 2:+1,0:-2,3:-1,2:+1,5:+5,3:-1,2:+1,4:+2,3:-1,2:+1,5:+3,3:-1,2:+1,6:-2,3:-1,2:+1,1:-1,5:+5,3:-1,2:+1,1:-1,0:-4,3:-1,2:+1,1:-1,5:+4,3:-1,2:+1,1:-1,4:-5,3:-1,2:+1,1:-1,5:-2.
+escapement-book-52.png  Escapement 52 as dealt: hex, clocks 1+,3+,5+, scramble 1:-1,0:-4,1:-2,4:-4,6:+4,1:-1,0:-3,1:-2,4:-4,5:-1,3:-1,0:-3,5:-1,3:-1,1:-1,0:+5,5:-1,3:-1,1:-2,4:+2,5:-1,3:-1,0:+3,5:-1,3:-1,1:-2,4:-3,5:-1,3:-1,0:+4.
+escapement-book-53.png  Escapement 53 as dealt: hex, clocks 1+,2+,3+, scramble 1:-4,5:-3,4:+5,5:+4,0:+2,1:-2,5:-4,3:-1,4:-5,3:-1,2:-1,1:-1,6:+4,3:-1,2:-1,1:-1,6:-4,3:-1,2:-1,1:-1,5:-4,3:-1,2:-1,1:-1,4:-3,3:-1,2:-1,1:-1,6:+2,3:-1,2:-1,1:-1,5:+5.
+escapement-book-54.png  Escapement 54 as dealt: hex, clocks 1+,3+,5+, scramble 1:-2,4:+4,0:+2,1:-1,6:-4,1:-1,2:+4,1:-2,4:-5,3:-1,0:+4,5:-1,3:-1,1:-1,0:-4,5:-1,3:-1,1:-2,4:-4,5:-1,3:-1,0:-3,5:-2,3:-3,1:-2,6:-4,5:-2,1:-1,2:+4,3:-1,1:-1.
+escapement-book-55.png  Escapement 55 as dealt: hex, clocks 1-, scramble 1:+2,4:+3,2:+4,1:+1,6:+5,1:+1,6:+4,1:+1,2:+4,1:+1,0:+4,1:+1,2:+3,1:+1,6:+5,1:+1,6:+4,1:+1,6:-2,1:+1.
+escapement-book-56.png  Escapement 56 as dealt: hex, clocks 1-,2-, scramble 1:+1,6:+5,1:+5,4:-5,5:+4,4:-2,5:+2,0:-3,2:+1,1:+1,4:-3,2:+1,1:+1,5:+2,2:+1,1:+1,4:-2,2:+1,1:+1,3:+3,2:+1,1:+1,5:-4,2:+1,1:+1,4:+3.
+escapement-book-57.png  Escapement 57 as dealt: hex, clocks 1-,3-, scramble 3:+3,4:+5,3:+4,5:+2,6:-5,5:-5,1:+1,0:+5,3:+2,1:+3,5:+5,4:-3,3:+1,0:+4,3:+1,1:+1,2:+5,3:+1,1:+2,4:-2,3:+1,5:+2.
+escapement-book-58.png  Escapement 58 as dealt: hex, clocks 1-, scramble 1:+2,3:+2,0:-2,1:+4,3:-3,4:-5,5:-4,6:-4,1:+1,6:+4,1:+5,4:+5,3:+2,4:-3,5:-4,2:-4,1:+2,4:-5,5:+3.
+escapement-book-59.png  Escapement 59 as dealt: hex, clocks 1-,2-, scramble 2:+2,5:+5,3:-5,2:+3,4:-4,5:+2,3:-3,2:+2,4:+3,3:-4,2:+1,1:+1,5:-2,2:+1,1:+1,4:-3,2:+1,1:+1,5:+4,2:+1,1:+1,4:-4,2:+1,1:+1,3:+3,2:+1,1:+1,4:-4,2:+1,1:+1,5:+2.
+escapement-book-60.png  Escapement 60 as dealt: hex, clocks 1-, scramble 1:+1,0:+5,1:+4,5:-4,4:+2,3:+2,2:-3,1:+1,2:+4,1:+5,5:+4,4:-4,5:+3,4:+3,6:+2,1:+4,5:+2,4:+4,3:-2,2:-5.
+escapement-book-61.png  Escapement 61 as dealt: hex, clocks 1+,2+, scramble 1:-1,0:-4,1:-1,3:+2,2:-1,1:-1,6:-3,2:-1,1:-1,3:+3,2:-1,1:-1,3:+5,2:-1,1:-1,0:-5,2:-1,1:-1,0:+5,2:-1,1:-1,6:+4,2:-1,1:-1,6:-2,2:-1,1:-1,2:-1,1:-1,2:-1,1:-1,0:-3.
+escapement-book-62.png  Escapement 62 as dealt: pent, clocks 0+,1-, scramble 0:-2,3:-2,4:+4,0:-3,3:-3,2:-2,4:-4,0:-1,3:-5,1:+1,0:-1,2:-5,1:+1,0:-1,2:+4,1:+1,0:-1,3:-5,1:+1,0:-1,4:+5,1:+1,0:-1,3:+5,1:+1,0:-1,4:+2,1:+1,0:-1,4:+2.
+escapement-book-63.png  Escapement 63 as dealt: hex, clocks 1-,2-, scramble 2:+4,5:+2,4:+4,5:-2,3:+3,2:+2,4:-2,3:+5,2:+1,1:+1,5:-4,2:+1,1:+1,4:-3,2:+1,1:+1,5:-5,2:+1,1:+1,0:-3,2:+1,1:+1,0:+2,2:+1,1:+1,5:-5,2:+1,1:+1,3:+3,2:+1,1:+1,4:-2.
+escapement-book-64.png  Escapement 64 as dealt: hex, clocks 1+,2-, scramble 1:-4,4:+4,5:+2,4:+5,6:+4,1:-2,3:-4,0:-4,1:-1,0:+4,2:+1,1:-1,3:-4,2:+1,1:-1,4:-4,2:+1,1:-1,5:-5,2:+1,1:-1,0:+3,2:+1,1:-1,5:+2,2:+1,1:-1,4:+4,2:+1,1:-1,0:+2,2:+1,1:-1,6:-3.
+escapement-book-65.png  Escapement 65 as dealt: hex, clocks 1-,2-, scramble 1:+3,4:-4,5:+5,0:-3,1:+2,5:+3,0:-3,1:+2,4:-3,5:-5,2:+1,1:+1,4:-5,2:+1,1:+1,6:-2,2:+1,1:+1,3:-3,2:+1,1:+1,6:-4,2:+1,1:+1,5:-3,2:+1,1:+1,4:-5,2:+1,1:+1,3:-5,2:+1,1:+1,0:-3.
+escapement-book-66.png  Escapement 66 as dealt: hex, clocks 1+,2+, scramble 2:-3,0:+4,2:-2,5:+4,3:-5,2:-4,4:+5,5:-5,4:+5,1:-1,3:+2,2:-1,1:-1,3:-3,2:-1,1:-1,6:+4,2:-1,1:-1,5:+5,2:-1,1:-1,6:-5,2:-1,1:-1,6:+4,2:-1,1:-1,6:-2,2:-1,1:-1,4:+5.
+escapement-book-67.png  Escapement 67 as dealt: hex, clocks 1+, scramble 1:-1,0:-4,1:-1,2:+2,1:-1,6:-3,1:-2,2:+3,1:-1,2:+5,1:-1,0:-5,1:-1,0:+5,1:-1,6:+4,1:-1,6:-2,1:-3,0:-3.
+escapement-book-68.png  Escapement 68 as dealt: pent, clocks 0+, scramble 0:-5,4:-5,0:-5,3:-3,2:-4,3:-2,2:-3,1:+3,0:-4,2:+2,3:+3,2:-3,4:-2.
+escapement-book-69.png  Escapement 69 as dealt: hex, clocks 1+, scramble 1:-3,2:-2,1:-1,2:+4,1:-1,0:+3,1:-2,5:-5,6:-3,1:-1,2:-2,1:-3,4:-5,3:+2,2:+4,1:-4,5:+2,4:-4,3:-3,4:+5.
+escapement-book-70.png  Escapement 70 as dealt: pent, clocks 0+, scramble 0:-3,1:-5,0:-2,2:-3,4:+5,0:-2,3:-5,4:+5,0:-2,3:-4,1:-5,0:-1,4:-5,0:-2,3:-2,4:-4,0:-4,2:+2,3:-3,2:+2,3:-2.
+escapement-book-71.png  Escapement 71 as dealt: hex, clocks 1+, scramble 1:-2,0:-2,1:-2,0:+2,1:-4,3:+2,4:+2,5:-2,0:+3,1:-2,5:-3,2:+3,1:-1,6:-3,1:-2,2:-3,1:-1,0:+3,1:-3,4:+5,3:-5,4:+4.
+escapement-book-72.png  Escapement 72 as dealt: hex, clocks 1+, scramble 1:-2,4:-4,0:-4,1:-2,4:-3,2:+2,1:-2,5:-4,2:+2,1:-5,4:-2,5:-5,4:-5,3:-4,2:+3,1:-2,5:+4,0:-4,1:-2,5:+5,6:+2,1:-3,0:+4.
+escapement-book-73.png  Escapement 73 as dealt: pent, clocks 0+, scramble 0:-2,2:-3,1:+3,0:-1,4:+5,0:-1,4:+3,0:-1,4:+2,0:-1,1:-3,0:-3,1:-4,0:-1,1:+4,0:-1,4:-3,0:-1,4:+2,0:-1,1:-2,0:-3,3:+4,2:+3,1:-2,0:-1,1:-4.
+escapement-book-74.png  Escapement 74 as dealt: hex, clocks 1+, scramble 1:-2,3:+2,2:-2,1:-1,6:-3,1:-2,5:-5,0:+4,1:-5,4:+2,5:+2,4:-2,3:+4,6:-4,1:-2,5:+5,6:-3,1:-4,5:-2,4:-4,5:+2,2:-4,1:-2,4:+4,5:+3.
+escapement-book-75.png  Escapement 75 as dealt: pent, clocks 0+, scramble 0:-4,3:+5,2:+4,3:-4,1:-2,0:-2,2:+3,1:+4,0:-1,1:-3,0:-3,2:+4,3:-5,4:+5,0:-1,1:-4,0:-5,3:-4,2:-5,3:-5,2:-3,1:-3,0:-3,3:+2,2:+5,1:-4.
+escapement-book-76.png  Escapement 76 as dealt: hex, clocks 1+, scramble 1:-5,3:-3,4:-5,3:+2,4:-3,6:-2,1:-2,3:+4,2:-4,1:-2,5:-4,6:+2,1:-1,0:-4,1:-3,4:+4,3:-5,2:+4,1:-2,4:+4,2:-5,1:-5,3:-5,4:+5,3:+2,4:+4,5:+2.
+escapement-book-77.png  Escapement 77 as dealt: pent, clocks 0+, scramble 0:-4,2:-4,3:-3,2:+2,4:-3,0:-1,4:+2,0:-4,3:-4,2:-4,3:+2,4:+2,0:-3,2:+2,3:-4,1:+2,0:-1,4:-3,0:-4,2:-5,3:-5,2:+2,4:+3,0:-2,3:+5,1:-4,0:-2,2:-3,3:-5.
+escapement-book-78.png  Escapement 78 as dealt: hex, clocks 1+, scramble 1:-3,4:+2,5:-3,0:+5,1:-2,5:-2,0:+5,1:-2,3:+3,0:+4,1:-3,4:-2,3:-5,2:+4,1:-2,5:-2,6:+3,1:-2,3:-4,2:-2,1:-2,3:-2,2:-3,1:-4,5:-2,4:-5,5:+2,2:-5,1:-1,2:-5,1:-1,3:-5.
+escapement-book-79.png  Escapement 79 as dealt: hex, clocks 1-, scramble 1:+2,3:-3,0:+3,1:+1,6:+5,1:+1,6:+3,1:+1,6:+2,1:+1,0:-3,1:+2,0:-4,1:+2,0:+4,1:+1,6:-3,1:+1,6:+2,1:+1,0:-2,1:+3,4:+4,3:+3,0:-2,1:+1,0:-4,1:+2,5:+5,4:+2.
+escapement-book-80.png  Escapement 80 as dealt: hex, clocks 1-, scramble 1:+2,5:+3,0:-4,1:+5,4:+3,5:+3,4:+4,3:+2,0:-3,1:+1,6:+5,1:+4,4:+4,5:-3,4:+2,0:+3,1:+2,4:-3,0:+4,1:+5,3:-4,4:+2,3:-3,4:+3,5:+3.
+escapement-book-81.png  Escapement 81 as dealt: hex, clocks 1-, scramble 1:+1,0:-2,1:+1,0:+2,1:+1,0:+5,1:+1,0:-2,1:+4,3:-3,4:+5,3:-5,2:+2,1:+1,2:+3,1:+3,4:+4,3:+5,6:+3,1:+3,4:-2,3:+4,2:+3,1:+1,2:-3,1:+3,4:-2,3:-4,0:+2,1:+1,4:+3.
+escapement-book-82.png  Escapement 82 as dealt: hex, clocks 1-, scramble 1:+1,2:+4,1:+2,3:-3,2:-3,1:+2,4:+4,6:-3,1:+2,5:-4,0:+5,1:+2,5:+2,6:-3,1:+4,3:-3,4:-2,3:+3,0:+4,1:+2,4:+4,0:-4,1:+3,5:+3,4:-5,2:-3,1:+2,5:-3,0:-5,1:+1,0:-2,1:+1,5:+3.
+escapement-book-83.png  Escapement 83 as dealt: hex, clocks 1-, scramble 1:+1,0:+5,1:+2,3:+4,0:+3,1:+3,4:+2,5:-5,2:+3,1:+3,4:+5,5:+3,6:-2,1:+5,4:+3,5:+4,4:-3,3:-5,0:+4,1:+2,3:-5,2:-2,1:+4,3:+2,4:+5,3:+5,0:-2,1:+2,4:+4,0:-4,1:+1,3:-5.
+escapement-book-84.png  Escapement 84 as dealt: hex, clocks 1-, scramble 1:+2,3:-2,6:+3,1:+2,4:-4,2:-5,1:+4,5:-3,4:+3,3:-3,6:+2,1:+3,4:+4,3:-5,2:-3,1:+5,4:+2,3:+5,4:+3,5:+4,0:-5,1:+2,4:-5,6:+5,1:+2,3:+3,2:+4,1:+1,2:-2,1:+2,4:+2,6:+5,1:+1,5:+3.
+escapement-book-85.png  Escapement 85 as dealt: hex, clocks 1+, scramble 1:-3,4:-5,3:+3,2:+3,1:-3,3:+5,4:-4,2:+2,1:-1,0:-2,1:-2,3:-4,6:+4,1:-1,2:+3,1:-2,5:+5,6:+2,1:-1,0:-4,1:-4,5:+3,4:+3,3:+3,0:+5,1:-1,6:+2,1:-1,0:+5,1:-2,4:-5,0:+4,1:-1.
+escapement-book-86.png  Escapement 86 as dealt: hex, clocks 1+, scramble 1:-1,6:-2,1:-5,4:-5,3:+4,4:-5,3:-2,0:-3,1:-3,4:-4,5:-3,0:-2,1:-2,3:+4,2:+4,1:-3,5:-3,4:+2,2:-3,1:-4,5:+3,4:-2,3:+4,6:-3,1:-2,5:+5,0:-2,1:-2,4:+2,0:+4,1:-1.
+escapement-book-87.png  Escapement 87 as dealt: hex, clocks 1+, scramble 1:-3,3:+4,4:-3,6:-4,1:-1,0:+5,1:-4,3:+5,4:+2,5:+5,0:-5,1:-1,0:+2,1:-1,0:-3,1:-2,4:-2,0:-3,1:-3,4:+5,3:+2,0:+3,1:-5,3:-5,4:-2,3:+4,4:-2,6:+3,1:-2,5:-4,6:-4,1:-2,5:+3,4:+5.
+escapement-book-88.png  Escapement 88 as dealt: hex, clocks 1+, scramble 1:-1,0:-3,1:-2,3:-4,2:-4,1:-3,3:+4,4:+4,0:+4,1:-2,5:-5,0:+4,1:-2,5:-3,0:+3,1:-2,3:-2,6:-5,1:-2,4:+3,6:-3,1:-5,3:+5,4:+4,3:-3,4:+4,0:-5,1:-4,3:+3,4:+4,3:-3,6:+2,1:-2,4:-5,5:-5.
+escapement-book-89.png  Escapement 89 as dealt: hex, clocks 1+, scramble 1:-1,2:+2,1:-3,3:-5,4:+5,2:-2,1:-4,3:+4,4:+2,3:+2,2:+4,1:-1,0:-4,1:-3,4:+4,3:-4,2:-3,1:-4,4:-5,3:+5,4:-3,2:+4,1:-2,5:+4,0:+2,1:-3,5:+5,4:+2,6:-4,1:-2,5:-2,6:-3,1:-2,4:+5,6:-4,1:-1,6:+5.
+escapement-book-90.png  Escapement 90 as dealt: hex, clocks 1+, scramble 1:-3,4:+4,5:+3,0:-3,1:-2,5:+2,0:-4,1:-5,4:+3,3:+5,4:-2,5:-2,2:+4,1:-1,2:+5,1:-1,6:-4,1:-1,6:-4,1:-3,3:+5,4:+3,0:-2,1:-3,4:+2,5:+2,2:-2,1:-2,4:-4,6:+4,1:-4,5:-2,4:-3,3:+5,2:-5,1:-2,3:+3,0:+4.
+escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's fifteen chapter headings.
 escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
 escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
@@ -660,6 +720,9 @@ escapement-hubs-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 r
 escapement-hubs-16-wrong.png  Escapement 16 after 3:-2, 5:-2 and a wrong 6:-4: clock 1's last tick pushed, grey at 0 over its +1; clock 4 at 3; header 03.
 escapement-hubs-16-out.png  Escapement 16, the wrong 6:-4 then three waits: both hubs grey at 0, header 00, out of ticks.
 escapement-hubs-22-dealt.png  Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11.
+escapement-hubs-41-dealt.png  Escapement 41 as dealt: two cards on each hub, 11 and 09, header 20.
+escapement-hubs-41-mid.png  Escapement 41 after 4:-3, 5:-3 and 4:+5: hubs 08 and 06, header 14.
+escapement-hubs-90-mid.png  Escapement 90 after 0:-4, 3:-3, 2:+5, 3:-5 and 4:+3: its hub at 22, header 22.
 escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
 escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
 escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
