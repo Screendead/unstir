@@ -51,6 +51,9 @@ struct SlopeColumn: Equatable, Sendable {
     /// The largest type sizes draw both in, so the words beside them start at 96.
     var wall: CGFloat = 40
     var spread: CGFloat = 11.4
+    /// A ledge's pitch inside a terrace at the overview, and how large its pebbles are there against 1.
+    var fine: CGFloat = 1.3
+    var grain: CGFloat = 1
     /// How far the foot's words reach under their middle (`SlopeLay.endless`), where that is more than the overview
     /// leaves under them: its travel then runs on to show them whole.
     var under: CGFloat = 0
@@ -59,8 +62,6 @@ struct SlopeColumn: Equatable, Sendable {
     /// the ripples down its face.
     static let shapes: [(thick: CGFloat, under: CGFloat, nose: CGFloat, ripple: CGFloat)] =
         [(56, 42, 1.7, 0), (64, 46, 1.9, 3), (28, 60, 1.2, 0), (80, 40, 2.4, 0), (48, 40, 1.6, 0)]
-    /// A ledge's pitch inside a terrace at the overview.
-    static let fine: CGFloat = 1.3
     static let full = 9
     /// How far a ledge's top runs back from its lip in the dive, at the least: room for the largest pebble clear of the
     /// wall, which still stands wide enough of the leading edge to hold a hollow.
@@ -128,7 +129,7 @@ struct SlopeLay: Sendable {
         self.z = z
         let z = min(max(z, 0), 1), e = z * z * (3 - 2 * z)
         self.e = e
-        let within = SlopeColumn.fine * pow(column.pitch / SlopeColumn.fine, e)
+        let within = column.fine * pow(column.pitch / column.fine, e)
         pitch = within
         var tops: [CGFloat] = [], tips: [CGFloat] = [], pebbles: [CGFloat] = [], drops: [CGFloat] = []
         var rocks: [SlopeColumn.Rock] = [], places: [(Int, Int, Int)] = [], headers: [CGFloat] = []
@@ -151,18 +152,18 @@ struct SlopeLay: Sendable {
                     let near = column.lip - 23 + column.step * CGFloat(i) + 4 * sin(2.4 * CGFloat(n) + 1)
                     let x = far + (near - far) * e
                     let own = row < stretch.rows.count ? max(stretch.rows[row], column.pitch) : column.pitch
-                    let drop = SlopeColumn.fine * pow(own / SlopeColumn.fine, e)
+                    let drop = column.fine * pow(own / column.fine, e)
                     tops.append(depth)
                     pebbles.append(x)
                     tips.append(x + 6 + 17 * e)
                     rocks.append(stretch.rock)
                     places.append((s, t, i))
                     // The terrace keeps its overview height under its last ledge, a gap that closes as the depth opens.
-                    let gap = i == seats - 1 ? (wide - used - SlopeColumn.fine) * (1 - e) : 0
+                    let gap = i == seats - 1 ? (wide - used - column.fine) * (1 - e) : 0
                     drops.append(drop + max(gap, 0) + (i == seats - 1 && t == stretch.terraces.count - 1 && s + 1 < column.stretches.count
                                                        ? column.stretches[s + 1].header * e : 0))
                     depth += drop + max(gap, 0)
-                    used += SlopeColumn.fine
+                    used += column.fine
                     row += 1
                 }
                 terrace += 1
@@ -248,9 +249,9 @@ struct SlopeLay: Sendable {
     enum Size { case lit, dull, next }
     func half(_ size: Size) -> CGFloat {
         switch size {
-        case .lit: 3.9 + 4.5 * e
-        case .dull: 3.3 + 3.5 * e
-        case .next: 4.6 + 7.9 * e
+        case .lit: 3.9 * column.grain + (8.4 - 3.9 * column.grain) * e
+        case .dull: 3.3 * column.grain + (6.8 - 3.3 * column.grain) * e
+        case .next: 4.6 * column.grain + (12.5 - 4.6 * column.grain) * e
         }
     }
 
