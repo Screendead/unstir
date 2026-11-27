@@ -94,8 +94,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the shader's draw to the bake's, and `testALensAtX8DrawsItsPanelAtTheScreensPitch` measures Keyhole at x8 over a
   twist against the panel's geometry sampled nine times a pixel (mean error 30 levels before, 1.6 after; its
   steepest edges 16 levels a pixel before, 211 after, of 216). In the simulator (2026-11-11, the Mac's GPU, 1284 px)
-  the GPU bench put it at 1.6 plain entries' work on Lens 01 and 3.8 on Lens 25, the deepest (12 entries, four
-  lenses); unmeasured on a phone, and not counted against the four-tap limit, which Lens's stacks stay far inside.
+  the GPU bench put it at 1.6 plain entries' work on Lens 01 and 3.8 on Lens 25 (12 entries, four lenses); on
+  2026-11-27, after the pack trebled, Lens 55, the deepest with the most lenses (36 entries, five), took 1.10 ms a
+  frame through `unstirLens` as dealt, 37.8 plain entries' work, and 0.81 ms with its lenses at x8, against 0.45 and
+  0.37 for Lens 25; unmeasured on a phone, and not counted against the four-tap limit, as a Lens glass draws from its
+  map once stirred to `least`.
   The shader's tap count and the `Tank.fourTaps` (40) limit, with `Tank.maxStack` as it then stood (36), are tuned against 120 Hz on an
   iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 the most the game allows, a full stack of 36
   on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
@@ -244,8 +247,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   MB) draws through the chain past a size; it is unset.
   A Lens level's map holds its lenses' flow, and is asked for as any level's is, from `least` entries (Jack's call,
   2026-11-13, the map's memory for the frame's saving: "32mb out of 6gb seems like a reasonable trade-off for 10-20%
-  savings and thus better battery life"): Lens 22 to 25 as dealt (10, 10, 10 and 12 entries), and the 21 before
-  them, dealt 1 to 9, only once a player has stirred to 10. `UNSTIR_MAPLENS=0`, a probe, draws Lens through its
+  savings and thus better battery life"): Lens 22 to 75 as dealt (10 to 36 entries), and the 21 before them, dealt
+  1 to 9, only once a player has stirred to 10. Lens 51's, six lenses at 35 entries, is 45.6 MB at 2274 px in the
+  simulator (2026-11-27). `UNSTIR_MAPLENS=0`, a probe, draws Lens through its
   chain as before (`StirMap.lensMaps`), for holding the two against each other on a phone. Its glass draws through `unstirLensMapped` once the detail is in, which reads the map
   but runs `unstirLensBody` whole for any pixel whose point on the panel may lie in a lens's inset: the detail is
   drawn from the taps' differences, finer at x8 than the stored step, so wherever it might be drawn the glass is the
@@ -278,8 +282,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   what the wider image costs one (32.2 MB for Lens 25's at 1172 px against 22.0 for the map alone, and the
   atlas's own image, 7.8 MB, stays for the frames without a map). The gain is small, as
   the cores a lens magnifies, where the detail is drawn, run the chain. On
-  the Mac, from one image, Lens 25 took 0.89 of its frame as dealt (12 entries, the deepest dealt; Lens 22 to 24 are
-  10), 0.81 six twists deeper, 0.90 with a lens in hand past x8 and 0.98 with a plain rod in hand (1.08 by
+  the Mac, from one image, Lens 25 took 0.89 of its frame as dealt (12 entries, then the deepest dealt; Lens 22 to 24
+  are 10), 0.81 six twists deeper, 0.90 with a lens in hand past x8 and 0.98 with a plain rod in hand (1.08 by
   `chain`), against today's body in a kernel of its own (medians of three launches; from two images the same cases
   read 0.87, 0.80, 0.88 and 0.95, within the clock's wander of these).
   With the map on by default a level under `least` asks for none and draws as before: Lens 1 as dealt (one entry)

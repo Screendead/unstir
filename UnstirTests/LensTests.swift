@@ -270,8 +270,9 @@ final class LensTests: XCTestCase {
     }
 
     /// Every Lens level's par, its depth, is the solver's optimum: no detour beats untwisting; and untwisting levels 26
-    /// on on a real game reaches it. Hours unoptimised, as a level whose hub is a lens takes the optimised solver twenty
-    /// minutes, so slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks the optima optimised.
+    /// on on a real game reaches it. A level whose hub is a lens takes the optimised solver up to fifty minutes, so this
+    /// runs for hours unoptimised (an estimate, never run whole); `scripts/lens-table.py docs/lens-tables.md --solve`
+    /// checks the optima optimised.
     @MainActor func testLensParIsTheOptimum() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
                           "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
