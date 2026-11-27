@@ -293,8 +293,8 @@ extension EscapementArt {
         return plate
     }
 
-    private static let plate87Dial: P = P(0, -0.53)
-    private static let plate87Face: Double = 0.175
+    private static let plate87Dial: P = P(0, -0.835)
+    private static let plate87Face: Double = 0.115
     private static let plate87Lenticle: P = P(0, 0.28)
     private static let plate87Waist: Double = -0.3
 
@@ -368,10 +368,10 @@ extension EscapementArt {
     /// Plate 87's hood: its pillars, the arched dial, and the cornice under the finials.
     private static func plate87Hood(_ plate: inout Plate) {
         let dial: P = plate87Dial, waist: Double = plate87Waist
-        let hood: Double = 0.34, square: Double = 0.2, arch: P = P(0, dial.y - square)
+        let hood: Double = 0.31, square: Double = plate87Face + 0.035
         Kit.mass(&plate, box(P(-hood, waist - 0.035), P(hood, -0.93)))
         for side in [-1.0, 1.0] {
-            let x: Double = 0.27 * side
+            let x: Double = 0.268 * side
             Kit.cut(&plate, box(P(x - 0.02, -0.86), P(x + 0.02, waist - 0.06)), edge: medium)
             for y in [-0.85, waist - 0.07] { Kit.mass(&plate, box(P(x - 0.033, y - 0.018), P(x + 0.033, y + 0.018))) }
             plate.line([P(x - 0.007, -0.83), P(x - 0.007, waist - 0.09)], medium)
@@ -380,18 +380,23 @@ extension EscapementArt {
         Kit.mass(&plate, box(P(-0.39, -0.94), P(0.39, -0.9)))
         plate.line([P(-0.38, -0.92), P(0.38, -0.92)], medium, .bone)
         Kit.mass(&plate, arc(P(0, -1.0), 0.05))
-        let sill: [P] = [P(-square - 0.04, waist - 0.05), P(square + 0.04, waist - 0.05), P(square + 0.04, arch.y)]
-        let opening: [P] = sill + arc(arch, square + 0.04, from: 0, to: -.pi) + [P(-square - 0.04, waist - 0.05)]
+        // The dial sits in the hood's top, above the hub a clock at twelve wears; under it a fretted panel, banded so
+        // the hub's core still shows a step.
+        let opening: [P] = box(P(-square, dial.y - square), P(square, dial.y + square))
         Kit.cut(&plate, opening, edge: heavy)
-        // The arch's boss, the moon riding over its hills, and the spandrels' scrolls in the dial's corners.
-        plate.line(arc(arch, 0.15, from: .pi, to: 2 * .pi) + [arch + P(0.15, 0), arch + P(-0.15, 0)], heavy)
-        Kit.solid(&plate, arc(arch, 0.1, from: .pi, to: 2 * .pi) + [arch + P(-0.1, 0)], angle: 0, gap: 0.016)
-        Kit.mass(&plate, arc(arch + P(0.02, -0.06), 0.03))
+        let fret: [P] = box(P(-0.245, dial.y + square + 0.03), P(0.245, waist - 0.07))
+        Kit.solid(&plate, fret, angle: 0.6, gap: 0.05, width: 0.012, edge: medium)
+        Kit.solid(&plate, box(P(-0.3, dial.y - square), P(-square - 0.03, dial.y + square)), angle: -0.6, gap: 0.05, width: 0.012)
+        Kit.solid(&plate, box(P(square + 0.03, dial.y - square), P(0.3, dial.y + square)), angle: -0.6, gap: 0.05, width: 0.012)
+        plate.line(box(P(-0.215, dial.y + square + 0.06), P(0.215, waist - 0.1)), medium)
+        // The hood's base moulding, its dentils cut in bone.
+        for k in 0..<12 {
+            let x: Double = -0.29 + 0.05 * Double(k)
+            Kit.cut(&plate, box(P(x, waist - 0.062), P(x + 0.028, waist - 0.04)), edge: fine)
+        }
         for (sx, sy) in [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)] {
-            let corner: P = P(0.19 * sx, dial.y + 0.19 * sy)
-            let scroll: [P] = [corner + P(0.02 * sx, 0.01 * sy), corner + P(-0.01 * sx, 0.025 * sy), corner + P(-0.045 * sx, -0.01 * sy),
-                               corner + P(-0.01 * sx, -0.045 * sy), corner + P(0.01 * sx, 0.005 * sy), corner + P(0.02 * sx, 0.01 * sy)]
-            Kit.solid(&plate, scroll, angle: 0.8 * sx * sy, gap: 0.012, width: fine)
+            let corner: P = P((square - 0.03) * sx, dial.y + (square - 0.03) * sy)
+            Kit.mass(&plate, arc(corner, 0.018))
         }
     }
 
