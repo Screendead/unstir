@@ -23,9 +23,15 @@ extension LensArt {
     /// A line cut where it passes within `r` of any of `centres`, its segments split finely enough for the cut to fall
     /// close to the circle.
     fileprivate static func outside(_ line: [P], _ width: Double, of centres: [P], by r: Double) -> [Halftone.Stroke] {
+        guard centres.contains(where: { distance($0, line) <= r }) else { return [stroke(line, width)] }
         var fine = [line[0]]
         for j in 1..<line.count { fine += span(line[j - 1], line[j], max(1, Int((simd_distance(line[j - 1], line[j]) / 0.008).rounded(.up)))).dropFirst() }
         return runs(fine, width) { p in centres.allSatisfy { simd_distance(p, $0) > r } }
+    }
+
+    /// The scene's strokes cut clear of the lens cores, so only a lens's own clue and frame show magnified in it.
+    fileprivate static func clear(_ strokes: [Halftone.Stroke], of centres: [P], by r: Double = core + 0.004) -> [Halftone.Stroke] {
+        strokes.flatMap { outside($0.points, $0.width, of: centres, by: r) }
     }
 
     /// Strokes with long reaches cut into pieces of at most `n` segments, as the bake tests every segment of a stroke
@@ -52,7 +58,7 @@ extension LensArt {
 /// Level 68's name: a striped lighthouse on its rock at night, its lantern's great round lens over the top core, its
 /// beams thrown left across the moonlit sky and right to the horizon, and the pools its light lays on the sea over the
 /// other four of hex's five lenses on this level, each pool's rim broken by glitter. In the lantern's lens the lamp, a
-/// bulb lit on its screw base; in the pools, what the light finds: a steamer at sea (upper right), a whale's tail
+/// bulb lit on its screw base; in the pools, what the light finds: a steamer at sea (upper right), a shark's fin
 /// (lower right), a rowing boat (bottom) and a lifebuoy (lower left).
 extension LensArt {
     static let lighthouse: Halftone.Panel = {
@@ -77,17 +83,6 @@ extension LensArt {
         for x in stride(from: -0.32, through: 0.33, by: 0.08) { s.append(stroke([P(x, -0.3), P(x, -0.26)], hair)) }
         s.append(stroke([P(-0.36, -0.26), P(0.36, -0.26)], mid))
         s.append(stroke(ellipse(P(0, -0.84), 0.3, 0.13, 32).filter { $0.y <= -0.84 }, bold))
-        // The great lens: its rim, a hinge on the right, and its prism rings round the lamp.
-        s.append(stroke(circle(lamp, core, 56), bold))
-        s.append(stroke(closed(rect(lamp.x + 0.25, lamp.y - 0.05, lamp.x + 0.29, lamp.y + 0.05)), mid))
-        for r in [0.2, 0.225, 0.25] { s.append(stroke(circle(lamp, r, 48), hair)) }
-        for k in 0..<8 { s.append(stroke([polar(lamp, 0.2, 22.5 + 45 * Double(k)), polar(lamp, 0.25, 22.5 + 45 * Double(k))], mid)) }
-        // The lamp: a bulb on its screw base, its filament lit, and its glow.
-        let f = lamp + P(0.028, -0.006)
-        s.append(stroke(closed(arc(f, 0.03, 140, 400, 20) + [f + P(0.012, 0.042), f + P(-0.012, 0.042)]), 0.0035))
-        for k in 0..<3 { s.append(stroke([f + P(-0.012, 0.047 + 0.007 * Double(k)), f + P(0.012, 0.05 + 0.007 * Double(k))], 0.0025)) }
-        s.append(stroke([f + P(-0.008, 0.024), f + P(-0.008, 0.004), f + P(-0.004, -0.008), f + P(0, 0.0), f + P(0.004, -0.008), f + P(0.008, 0.004), f + P(0.008, 0.024)], 0.002))
-        for a in [200.0, 240, 290, 330, 10] { s.append(stroke([polar(f, 0.042, a), polar(f, 0.06, a)], 0.0025)) }
         // The tower: outline, bands, door, windows, and the rock under it.
         s.append(stroke(closed(tower), bold))
         for b in bands { for yy in [b.lowerBound, b.upperBound] { let w = 0.13 + 0.06 * (yy + 0.3) / 0.5; s.append(stroke([P(-w, yy), P(w, yy)], mid)) } }
@@ -106,6 +101,18 @@ extension LensArt {
             s += runs(span(a, b, 40), hair) { p in simd_distance(p, hex[2]) > core + 0.03 && simd_distance(p, moon) > 0.12 && p.y < horizon }
         }
         for at in [P(-0.2, -0.9), P(0.62, -0.62), P(-0.86, -0.36), P(0.4, -0.88), P(-0.5, -0.8)] { s += glint(at, 0.035, hair) }
+        s = clear(s, of: [lamp] + pools)
+        // The great lens: its rim, a hinge on the right, and its prism rings round the lamp.
+        s.append(stroke(circle(lamp, core, 56), bold))
+        s.append(stroke(closed(rect(lamp.x + 0.25, lamp.y - 0.05, lamp.x + 0.29, lamp.y + 0.05)), mid))
+        for r in [0.2, 0.225, 0.25] { s.append(stroke(circle(lamp, r, 48), hair)) }
+        for k in 0..<8 { s.append(stroke([polar(lamp, 0.2, 22.5 + 45 * Double(k)), polar(lamp, 0.25, 22.5 + 45 * Double(k))], mid)) }
+        // The lamp: a bulb on its screw base, its filament lit, and its glow.
+        let f = lamp + P(0.028, -0.006)
+        s.append(stroke(closed(arc(f, 0.03, 140, 400, 20) + [f + P(0.012, 0.042), f + P(-0.012, 0.042)]), 0.0035))
+        for k in 0..<3 { s.append(stroke([f + P(-0.012, 0.047 + 0.007 * Double(k)), f + P(0.012, 0.05 + 0.007 * Double(k))], 0.0025)) }
+        s.append(stroke([f + P(-0.008, 0.024), f + P(-0.008, 0.004), f + P(-0.004, -0.008), f + P(0, 0.0), f + P(0.004, -0.008), f + P(0.008, 0.004), f + P(0.008, 0.024)], 0.002))
+        for a in [200.0, 240, 290, 330, 10] { s.append(stroke([polar(f, 0.042, a), polar(f, 0.06, a)], 0.0025)) }
         // The pools' rims and their glitter.
         for (k, c) in pools.enumerated() {
             for j in 0..<7 {
@@ -121,13 +128,11 @@ extension LensArt {
         s.append(stroke(closed(rect(ship.x + 0.0, ship.y - 0.055, ship.x + 0.014, ship.y - 0.03)), 0.0025))
         s.append(stroke(curve(ship + P(0.007, -0.06), ship + P(-0.02, -0.08), ship + P(-0.06, -0.07), 6), 0.002))
         for x in [-0.02, -0.006, 0.008] { s.append(stroke(circle(ship + P(x, -0.002), 0.0035, 6), 0.0018)) }
-        // A whale's tail up out of the water, and the splash it throws.
-        let whale = hex[3] + P(0.018, 0.012)
-        s.append(stroke([whale + P(-0.006, 0.03), whale + P(-0.0045, -0.003)] + curve(whale + P(-0.0045, -0.003), whale + P(-0.0225, -0.003), whale + P(-0.039, -0.0255), 6)
-            + curve(whale + P(-0.039, -0.0255), whale + P(-0.0165, -0.024), whale + P(0.0015, -0.0135), 6) + curve(whale + P(0.0015, -0.0135), whale + P(0.0195, -0.024), whale + P(0.042, -0.0255), 6)
-            + curve(whale + P(0.042, -0.0255), whale + P(0.027, -0.003), whale + P(0.009, -0.003), 6) + [whale + P(0.009, 0.03)], 0.003))
-        s += runs(span(whale + P(-0.0525, 0.03), whale + P(0.0525, 0.03), 20), 0.0025) { abs($0.x - whale.x - 0.002) > 0.011 }
-        for (a, b) in [(P(-0.0338, -0.015), P(-0.045, -0.0375)), (P(0.0375, -0.009), P(0.051, -0.03)), (P(-0.0225, 0), P(-0.0413, -0.0045))] { s.append(stroke([whale + a, whale + b], 0.0022)) }
+        // A shark's fin cutting the water, its wake behind it.
+        let fin = hex[3] + P(0.022, 0.02)
+        s.append(stroke([fin + P(-0.03, 0.02)] + curve(fin + P(-0.03, 0.02), fin + P(-0.006, -0.01), fin + P(-0.004, -0.05), 8) + curve(fin + P(-0.004, -0.05), fin + P(0.006, -0.012), fin + P(0.026, 0.02), 8), 0.0035))
+        s += runs(span(fin + P(-0.075, 0.02), fin + P(0.06, 0.02), 24), 0.0028) { abs($0.x - fin.x + 0.002) > 0.03 }
+        for k in 0..<2 { s.append(stroke(curve(fin + P(0.035 + 0.02 * Double(k), 0.032 + 0.012 * Double(k)), fin + P(0.05 + 0.02 * Double(k), 0.024), fin + P(0.065 + 0.02 * Double(k), 0.032 + 0.012 * Double(k)), 6), 0.002)) }
         // A rowing boat, its rower and oars.
         let boat = hex[4] + P(-0.02, 0.03)
         s.append(stroke(closed(curve(boat + P(-0.07, -0.01), boat + P(0, 0.05), boat + P(0.07, -0.01), 10)), 0.003))
@@ -215,6 +220,7 @@ extension LensArt {
             s.append(stroke([base, base + P(0, 0.04)], mid))
         }
         for at in [P(-0.85, -0.12), P(0.32, -0.86), P(-0.22, -0.3), P(0.86, -0.02), P(-0.72, -0.62), P(0.7, -0.66), P(0.26, 0.04)] { s += glint(at, 0.03, hair) }
+        s = clear(s, of: phases + [sun])
         // The card frames round the filters, printed with a border and their safety marks.
         for c in phases {
             s.append(stroke(circle(c, core, 56), bold))
@@ -308,6 +314,7 @@ extension LensArt {
         s.append(stroke([plane + P(-0.06, 0.0), plane + P(0.12, 0.0)], hair))
         for (c, r) in cloud { s += runs(ellipse(c, r.x, r.y, 36), mid) { p in cloud.allSatisfy { $0.0 == c || simd_length_squared((p - $0.0) / $0.1) > 1 } } }
         for at in [P(-0.7, -0.5), P(0.82, -0.12), P(-0.1, -0.9), P(0.42, -0.84)] { s += glint(at, 0.03, hair) }
+        s = clear(s, of: lamps)
         // The lamps: each drum's barrel behind it, its bolts, the clamp and the yoke's arms.
         for (k, c) in lamps.enumerated() {
             let big = k == 0
@@ -363,10 +370,10 @@ extension LensArt {
         let glass = [y(0.85), y(0.7), y(0.85), y(0.7), y(0.85)]
         let cuts: [Double] = [0, 30, 54, 90, 120, 160, 196, 230, 262, 300, 330]
         return Halftone.Panel(name: "searchlight", tones: { p in
-            for (k, c) in lamps.enumerated() {
-                let d = simd_distance(p, c)
+            for (k, lamp) in lamps.enumerated() {
+                let d = simd_distance(p, lamp)
                 if d < core { return glass[k] }
-                if d < core + 0.055 { return runTone((bearing(p, c) + 29 * Double(k)).truncatingRemainder(dividingBy: 360), cuts, [m(0.75), m(0.75), .zero, y(0.6)]) }
+                if d < core + 0.055 { return runTone((bearing(p, lamp) + 29 * Double(k)).truncatingRemainder(dividingBy: 360), cuts, [c(0.8), c(0.8), .zero, y(0.6)]) }
             }
             for lc in lamps where simd_distance(p, lc) < 0.44 {
                 let q = p - lc, h = min(max(simd_dot(q, back) / simd_length_squared(back), 0), 1)
@@ -393,8 +400,8 @@ extension LensArt {
 extension LensArt {
     static let planetarium: Halftone.Panel = {
         let discs = [hex[1], hex[2], hex[3], hex[5], hex[6]]
-        let globes = [(P(-0.15, -0.14), 0.17), (P(0.2, 0.1), 0.13)]
-        let truss = bar(P(-0.15, -0.14), P(0.2, 0.1), 0.1)
+        let globes = [(P(-0.05, -0.1), 0.15), (P(0.13, 0.2), 0.1)]
+        let truss = bar(globes[0].0, globes[1].0, 0.09)
         let pillar = [P(0.0, -0.02), P(0.08, -0.02), P(0.12, 0.62), P(-0.04, 0.62)]
         let seats = [(0.62, 0.05), (0.78, 0.06)]
         let heads = [P(-0.3, 0.56), P(-0.16, 0.55), P(0.26, 0.55), P(0.4, 0.56), P(-0.24, 0.72), P(-0.08, 0.71), P(0.2, 0.71), P(0.36, 0.72)]
@@ -438,6 +445,7 @@ extension LensArt {
         s += runs(Array(skyline.dropLast(3)), mid) { simd_length($0) < 1 }
         for at in [P(-0.88, 0.56), P(-0.8, 0.6), P(-0.7, 0.7), P(0.68, 0.7), P(0.8, 0.56), P(0.92, 0.66)] { s.append(stroke(closed(rect(at.x, at.y, at.x + 0.025, at.y + 0.03)), hair)) }
         for at in [P(-0.18, -0.86), P(0.22, -0.9), P(-0.78, -0.02), P(0.8, -0.02), P(0.02, -0.34), P(-0.6, 0.38), P(0.66, -0.66), P(-0.62, -0.66)] { s += glint(at, 0.028, hair) }
+        s = clear(s, of: discs)
         // Each disc's zodiac band: its rim and a tick at each sign.
         for c in discs {
             s.append(stroke(circle(c, core, 56), mid))
@@ -453,7 +461,7 @@ extension LensArt {
             [[P(0.0, -0.05), P(0.004, 0.05)], [P(-0.034, 0.002), P(0.036, -0.008)]],
             [[P(-0.055, -0.006), P(-0.028, 0.024), P(-0.002, -0.004), P(0.024, 0.026), P(0.054, -0.014)]],
         ]
-        let offsets = [P(0.008, 0.022), P(0.022, 0.006), P(-0.004, -0.006), P(0.03, 0.0), P(0.0, 0.03)]
+        let offsets = [P(0.008, 0.022), P(0.046, 0.0), P(-0.004, -0.006), P(0.03, 0.03), P(0.0, 0.03)]
         for (k, c) in discs.enumerated() {
             let o = c + offsets[k]
             var stars: [P] = []
@@ -485,40 +493,42 @@ extension LensArt {
 
 // MARK: - 72: Observatory
 
-/// Level 72's name: an observatory on a mountain top at night, its gold dome over the hub with the shutter open and
-/// the telescope's tube out of the slit, pines and the road up the slope at the lower right, and over hex's five lenses
+/// Level 72's name: an observatory on a mountain top at night, its gold dome on the summit at the right, the shutter
+/// open and the telescope's tube out of the slit over the hub, pines and the road down the slope at the lower right, and over hex's five lenses
 /// on this level what the telescope sees, each through an eyepiece's knurled barrel: the cratered moon (top), a double star
 /// (upper right), a comet (bottom), the Pleiades (lower left) and a spiral galaxy (upper left).
 extension LensArt {
     static let observatory: Halftone.Panel = {
         let views = [hex[1], hex[2], hex[4], hex[5], hex[6]]
-        let dome = P(-0.02, 0.2), domeR = 0.3
-        let tube = bar(P(0.02, 0.06), P(0.3, -0.24), 0.11)
-        let drum = rect(-0.34, 0.2, 0.3, 0.42)
-        let door = rect(-0.24, 0.28, -0.14, 0.42)
-        let mountain = closed([P(-1, 0.6), P(-0.6, 0.48), P(-0.4, 0.38), P(-0.3, 0.42), P(0.36, 0.42), P(0.5, 0.36), P(0.7, 0.5), P(1, 0.62), P(1, 1), P(-1, 1)])
-        let pines = [P(0.42, 0.52), P(0.56, 0.48), P(0.66, 0.6), P(0.36, 0.66), P(0.8, 0.66)].map { closed([$0 + P(-0.05, 0.12), $0, $0 + P(0.05, 0.12)]) }
-        let road = [P(0.32, 0.42), P(0.62, 0.62), P(0.3, 0.8), P(0.62, 1.0)]
+        let dome = P(0.32, 0.22), domeR = 0.18, slit = (0.3, 0.38)
+        let tube = bar(P(0.34, 0.14), P(0.14, -0.06), 0.09)
+        let drum = rect(0.14, 0.22, 0.5, 0.32)
+        let door = rect(0.2, 0.24, 0.26, 0.32)
+        let mountain = closed([P(-1, 0.62), P(-0.6, 0.52), P(-0.3, 0.48), P(0.1, 0.36), P(0.14, 0.32), P(0.5, 0.32), P(0.62, 0.4), P(0.8, 0.5),
+                               P(1, 0.56), P(1, 1), P(-1, 1)])
+        let pines = [P(0.62, 0.46), P(0.74, 0.52), P(0.88, 0.6), P(0.7, 0.66), P(0.84, 0.76)].map { closed([$0 + P(-0.05, 0.12), $0, $0 + P(0.05, 0.12)]) }
+        let road = [P(0.42, 0.32), P(0.58, 0.46), P(0.42, 0.6), P(0.6, 0.76), P(0.5, 0.94)]
         let built = pines.map { fill($0, c(0.7)) } + [fill(tube, m(0.75)), fill(door, c(0.6)), fill(drum, m(0.55))]
 
         var s: [Halftone.Stroke] = []
         // The dome, its ribs and open shutter, the tube out of the slit, the drum and its lit door.
         s.append(stroke(arc(dome, domeR, 180, 360, 40) + [dome + P(-domeR, 0)], bold))
-        for x in [-0.2, -0.1] { s.append(stroke([P(x, dome.y), P(x, dome.y - (domeR * domeR - (x - dome.x) * (x - dome.x)).squareRoot())], hair)) }
-        for x in [0.02, 0.12] { s.append(stroke([P(x, dome.y), P(x, dome.y - (domeR * domeR - (x - dome.x) * (x - dome.x)).squareRoot())], mid)) }
+        for x in [0.2, 0.25] { s.append(stroke([P(x, dome.y), P(x, dome.y - (domeR * domeR - (x - dome.x) * (x - dome.x)).squareRoot())], hair)) }
+        for x in [slit.0, slit.1] { s.append(stroke([P(x, dome.y), P(x, dome.y - (domeR * domeR - (x - dome.x) * (x - dome.x)).squareRoot())], mid)) }
         s.append(stroke(closed(tube), mid))
-        s.append(stroke(closed(bar(P(0.27, -0.21), P(0.33, -0.27), 0.14)), mid))
+        s.append(stroke(closed(bar(P(0.16, -0.04), P(0.12, -0.08), 0.12)), mid))
         s += outside(closed(drum), mid, of: views, by: core + 0.055)
         s += outside(closed(door), mid, of: views, by: core + 0.055)
-        for k in 0..<3 { let x = 0.0 + 0.09 * Double(k); s += outside(closed(rect(x, 0.27, x + 0.05, 0.32)), hair, of: views, by: core + 0.055) }
+        for x in [0.32, 0.42] { s.append(stroke(closed(rect(x, 0.25, x + 0.04, 0.29)), hair)) }
         // The mountain, its pines, the road up and a car's lights on it.
         s += outside(Array(mountain.dropLast(3)), mid, of: views, by: core + 0.055)
         for pine in pines { s.append(stroke(pine, mid)); s.append(stroke([pine[1] + P(0, 0.12), pine[1] + P(0, 0.16)], mid)) }
         s += outside(road, mid, of: views, by: core + 0.055)
         s += outside(road.map { $0 + P(0.04, 0) }, hair, of: views, by: core + 0.055)
-        s.append(stroke(circle(P(0.5, 0.71), 0.012, 8), mid))
+        s.append(stroke(circle(P(0.52, 0.69), 0.012, 8), mid))
         // Stars coming out, and the eyepieces' knurled barrels round the views.
-        for at in [P(-0.24, -0.92), P(0.3, -0.84), P(-0.84, 0.04), P(0.86, 0.06), P(-0.22, -0.2), P(0.74, -0.66), P(-0.72, -0.66)] { s += glint(at, 0.03, hair) }
+        for at in [P(-0.24, -0.92), P(0.3, -0.84), P(-0.84, 0.04), P(0.86, 0.06), P(-0.14, -0.18), P(0.74, -0.66), P(-0.72, -0.66)] { s += glint(at, 0.03, hair) }
+        s = clear(s, of: views)
         for c in views {
             s.append(stroke(circle(c, core, 56), bold))
             s.append(stroke(circle(c, core + 0.05, 56), mid))
@@ -564,9 +574,9 @@ extension LensArt {
             }
             for f in built where f.holds(p) { return f.tone }
             if p.y < dome.y, simd_distance(p, dome) < domeR {
-                return p.x > 0.02 && p.x < 0.12 ? .zero : y(0.8)
+                return p.x > slit.0 && p.x < slit.1 ? .zero : y(0.8)
             }
-            if p.y > 0.36, inside(p, mountain) { return Tone(0.3, 0.3, 0) }
+            if p.y > 0.3, inside(p, mountain) { return Tone(0.3, 0.3, 0) }
             return p.y > 0.05 ? m(0.5) * min((p.y - 0.05) / 0.3, 1) : .zero
         }, strokes: pieces(s))
     }()
@@ -576,10 +586,10 @@ extension LensArt {
 
 /// Level 73's name: a radio telescope array seen from the air, its dishes on the three arms of a Y of rails laid over
 /// the desert, the control hut and the transporter at the hub, a mesa's broken edge at the upper right where the radio
-/// waves come rolling in, and each dish face up over one of hex's five lenses on this level, cyan with the sky in it,
-/// its rim shadowed where the feed's three legs stand and its shadow cast on the sand. In each dish what it hears: a pulsar's beams (top), a radio
-/// galaxy's jets and lobes (lower right), a black hole's ring (bottom), a signal's trace, one spike ringed (lower left),
-/// and a satellite, antennas trailing (upper left).
+/// waves come rolling in, and each dish face up over one of hex's five lenses on this level, magenta, its rim broken
+/// where the feed's three legs stand, its shadow cast on the sand. In each dish what it hears: a little green man, as
+/// the first pulsar was nicknamed (top), a radio galaxy's jets and lobes (lower right), a black hole's ring (bottom), a
+/// signal's trace, one spike ringed (lower left), and a satellite, antennas trailing (upper left).
 extension LensArt {
     static let radiotelescope: Halftone.Panel = {
         let dishes = [hex[1], hex[3], hex[4], hex[5], hex[6]]
@@ -587,17 +597,17 @@ extension LensArt {
         let source = P(1.15, -0.85)
         let hut = rect(-0.2, -0.2, -0.06, -0.08), van = [P(0.1, 0.12), P(0.22, 0.06), P(0.25, 0.12), P(0.13, 0.18)]
         let mesa = closed([P(0.3, -1), P(0.36, -0.82), P(0.5, -0.78), P(0.56, -0.62), P(0.78, -0.58), P(0.86, -0.4), P(1, -0.36), P(1, -1)])
-        let things = [fill(hut, m(0.7)), fill(van, c(0.6)), fill(mesa, Tone(0, 0.5, 0.2))]
+        let things = [fill(hut, m(0.7)), fill(van, m(0.7)), fill(mesa, Tone(0.2, 0.6, 0))]
 
         var s: [Halftone.Stroke] = []
         // The Y of rails: each arm's two rails, cut where a dish stands, a spur to each dish off the arms.
-        let clear: (P) -> Bool = { p in dishes.allSatisfy { simd_distance(p, $0) > core + 0.07 } && simd_length(p) < 1 }
+        let open: (P) -> Bool = { p in dishes.allSatisfy { simd_distance(p, $0) > core + 0.07 } && simd_length(p) < 1 }
         for a in arms {
             let u = polar(P(0, 0), 1, a), n = P(-u.y, u.x)
-            for e in [-0.03, 0.03] { s += runs(span(centre + e * n, centre + 1.2 * u + e * n, 80), mid, keep: clear) }
-            for k in 1..<24 { let at = centre + 0.05 * Double(k) * u; if clear(at) { s.append(stroke([at - 0.04 * n, at + 0.04 * n], hair)) } }
+            for e in [-0.03, 0.03] { s += runs(span(centre + e * n, centre + 1.2 * u + e * n, 80), mid, keep: open) }
+            for k in 1..<24 { let at = centre + 0.05 * Double(k) * u; if open(at) { s.append(stroke([at - 0.04 * n, at + 0.04 * n], hair)) } }
         }
-        for (a, b) in [(P(0.02, 0.3), hex[4]), (P(-0.22, -0.3), hex[6])] { s += runs(span(a, b, 30), hair, keep: clear) }
+        for (a, b) in [(P(0.02, 0.3), hex[4]), (P(-0.22, -0.3), hex[6])] { s += runs(span(a, b, 30), hair, keep: open) }
         // The hut, the transporter, and the mesa's edge with its gullies.
         s.append(stroke(closed(hut), mid))
         s.append(stroke([P(-0.2, -0.14), P(-0.06, -0.14)], hair))
@@ -608,8 +618,9 @@ extension LensArt {
         // The radio waves rolling in from the upper right.
         for k in 0..<5 {
             let r = 0.62 + 0.14 * Double(k)
-            s += runs(arc(source, r, 100, 190, 30), hair) { p in clear(p) && !inside(p, mesa) }
+            s += runs(arc(source, r, 100, 190, 30), hair) { p in open(p) && !inside(p, mesa) }
         }
+        s = clear(s, of: dishes)
         // The dishes: rim, panel rings, and the feed's three legs.
         for c in dishes {
             s.append(stroke(circle(c, core, 56), bold))
@@ -618,14 +629,14 @@ extension LensArt {
             for k in 0..<3 { let a = 120 * Double(k) + 60; s.append(stroke([polar(c, core + 0.04, a), polar(c, 0.2, a)], mid)) }
             for k in 0..<12 { s.append(stroke([polar(c, 0.2, 30 * Double(k) + 15), polar(c, core, 30 * Double(k) + 15)], hair)) }
         }
-        // A pulsar: the star, its two beams sweeping out.
-        let pulsar = dishes[0] + P(0.026, 0.02)
-        s.append(stroke(circle(pulsar, 0.01, 10), 0.003))
+        // A little green man, the first pulsar's nickname: his head, eyes and antennae.
+        let man = dishes[0] + P(0.026, 0.024)
+        s.append(stroke(closed(arc(man, 0.03, 180, 360, 16) + curve(man + P(0.03, 0), man + P(0.02, 0.04), man, 8) + curve(man, man + P(-0.02, 0.04), man + P(-0.03, 0), 8).dropFirst()), 0.0035))
         for e in [-1.0, 1.0] {
-            s.append(stroke(closed([pulsar + e * P(0.008, -0.008), pulsar + e * P(0.05, -0.04), pulsar + e * P(0.035, -0.055)]), 0.0025))
+            s.append(stroke(closed(ellipse(man + P(e * 0.013, 0.002), 0.009, 0.005, degrees: e * 25, 10)), 0.0028))
+            s.append(stroke([man + P(e * 0.012, -0.028), man + P(e * 0.024, -0.052)], 0.0025))
+            s.append(stroke(circle(man + P(e * 0.026, -0.058), 0.005, 8), 0.0025))
         }
-        s.append(stroke(arc(pulsar, 0.024, 120, 200, 8), 0.002))
-        s.append(stroke(arc(pulsar, 0.024, 300, 380, 8), 0.002))
         // A radio galaxy: the nucleus, its jets and two lobes.
         let galaxy = dishes[1] + P(-0.016, 0.026)
         s.append(stroke(circle(galaxy, 0.006, 8), 0.003))
@@ -652,11 +663,11 @@ extension LensArt {
         for a in [150.0, 165, 195, 210] { s.append(stroke([polar(sat, 0.014, a), polar(sat, 0.065, a)], 0.002)) }
         s.append(stroke(arc(sat, 0.024, -60, 60, 6), 0.0018))
 
-        let cuts: [Double] = [0, 50, 70, 170, 190, 290, 310], rim = Tone(0.3, 0.3, 0.35)
+        let cuts: [Double] = [0, 50, 70, 170, 190, 290, 310], rim = c(0.85)
         return Halftone.Panel(name: "radiotelescope", tones: { p in
             for dc in dishes {
                 let d = simd_distance(p, dc)
-                if d < core { return c(0.5) }
+                if d < core { return m(0.55) }
                 if d < core + 0.045 { return runTone(bearing(p, dc), cuts, [rim, .zero, rim, .zero, rim, .zero, rim]) }
             }
             for f in things where f.holds(p) { return f.tone }
@@ -665,7 +676,7 @@ extension LensArt {
             let q = p - centre
             for a in arms {
                 let u = polar(P(0, 0), 1, a), t = simd_dot(q, u)
-                if t > -0.06, abs(q.x * u.y - q.y * u.x) < 0.06 { return m(0.6) }
+                if t > -0.06, abs(q.x * u.y - q.y * u.x) < 0.06 { return c(0.6) }
             }
             // The waves: bands of tone round their source.
             let r = simd_distance(p, source)
@@ -710,13 +721,14 @@ extension LensArt {
         }
         for at in [P(-0.2, -0.82), P(0.8, -0.72), P(0.86, 0.66), P(-0.84, 0.48), P(0.3, -0.12), P(-0.15, 0.8), P(0.2, 0.36)] { s += glint(at, 0.03, hair) }
         // The tube's open end round the hub, its latches.
+        // Saturn's rings, either side of the planet.
+        s.append(stroke(ellipse(hex[2], 0.34, 0.085, degrees: 10, 64), mid))
+        s.append(stroke(ellipse(hex[2], 0.29, 0.065, degrees: 10, 64), hair))
+        s = clear(s, of: [hex[0]] + worlds)
         s.append(stroke(circle(hex[0], core, 56), bold))
         s.append(stroke(circle(hex[0], core + 0.05, 56), mid))
         // The worlds' limbs.
         for c in worlds { s.append(stroke(circle(c, core, 56), mid)) }
-        let front: (P) -> Bool = { p in simd_distance(p, hex[2]) > core + 0.004 || ringFrame(p - hex[2]).y > 0 }
-        s += runs(ellipse(hex[2], 0.34, 0.085, degrees: 10, 64), mid, keep: front)
-        s += runs(ellipse(hex[2], 0.29, 0.065, degrees: 10, 64), hair, keep: front)
         // Down the tube, a deep field: a spiral, ellipticals, a star with spikes.
         let field = hex[0]
         let spiral = field + P(0.03, -0.03)
@@ -792,7 +804,7 @@ extension LensArt {
             + curve(P(-0.62, 0.26), P(-0.4, 0.2), P(-0.34, 0.02), 6) + curve(P(-0.34, 0.02), P(-0.3, -0.24), P(0.0, -0.26), 10))
         let face = fill(head, m(0.7))
         let brow = P(0.08, -0.15)
-        let trail = [(P(0.2, -0.3), 0.02), (P(0.25, -0.36), 0.014), (P(-0.2, -0.3), 0.018), (P(-0.24, -0.38), 0.012), (P(0.27, 0.2), 0.018), (P(0.3, 0.27), 0.012)]
+        let trail = [(P(0.12, -0.26), 0.02), (P(0.17, -0.315), 0.013), (P(-0.16, -0.26), 0.018), (P(-0.2, -0.33), 0.012)]
         let blobs = trail.map { disc($0.0, $0.1, m(0.35)) } + [oval(brow, 0.07, 0.035, y(0.85))]
         let cloud: @Sendable (Double) -> Double = { a in core + 0.022 + 0.026 * abs(sin(a * .pi / 180 * 4.5)) }
 
@@ -811,6 +823,7 @@ extension LensArt {
         // The trail of bubbles up to the thoughts, and stars round them.
         for (c, r) in trail { s.append(stroke(circle(c, r, 12), mid)) }
         for at in [P(-0.8, -0.3), P(0.84, 0.0), P(-0.3, -0.86), P(0.3, -0.88), P(0.7, 0.68), P(-0.88, 0.2)] { s += glint(at, 0.03, hair) }
+        s = clear(s, of: thoughts)
         // The thought clouds' scalloped edges.
         for c in thoughts {
             s.append(stroke(closed((0..<120).map { polar(c, cloud(3 * Double($0)), 3 * Double($0)) }), mid))
