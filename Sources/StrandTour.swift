@@ -85,7 +85,7 @@ extension StrandView {
                 // A hop UIKit never reports as ended still lets the tour end.
                 Task {
                     try? await Task.sleep(for: .seconds(1.5))
-                    self.scrolled?()
+                    if column.contentOffset.y == y { self.scrolled?() }
                 }
             }
         }
