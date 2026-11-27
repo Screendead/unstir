@@ -265,12 +265,6 @@ struct LevelView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
-    /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
-    /// SwiftUI reruns the init after the flag is stored, and the line stays the visit out.
-    @State private var pointing: Bool
-    @State private var pointed = false
-    /// Only a plain launch stores that it has; under the harness UNSTIR_FRESH shows it.
-    private let storesPointing: Bool
     /// A line the caption shows for a few seconds in place of its own, saying why a control or a turn did nothing.
     @State private var notice: String?
     @State private var notices = 0
@@ -504,10 +498,6 @@ struct LevelView: View {
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
-        let harnessed = harness?.harnessed == true
-        _pointing = State(initialValue: Self.points(at: level, harnessed: harnessed, fresh: harness?.fresh == true,
-                                                    pointed: Best.pointedAtSettings))
-        storesPointing = !harnessed
         // A resumed try opens where it was left, with no opening.
         _shown = State(initialValue: still || level.sandbox || self.resumed ? nil : 0)
         self.onExit = onExit
@@ -744,26 +734,11 @@ struct LevelView: View {
     /// is an overlay, so the solved tank stays exactly where it was played.
     private func caption(_ layout: PlayLayout) -> some View {
         let toSkip = String(localized: "tap to skip", comment: "The caption over an opening's stir")
-        let practice = game.level.archived
-            ? String(localized: "Practice: this day's best was set on its day.", comment: "The caption of an archive day replayed")
-            : String(localized: "Practice: only the first try counts.", comment: "The caption of a daily replayed")
+        let practice = String(localized: "practice", comment: "The caption of a daily or archive day replayed: its best is not saved")
         let opening = game.level.replay
             ? String(localized: "watch the stir \u{00B7} tap to skip", comment: "The caption over a replay's opening stir") : toSkip
         return Text(notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening)) // loc: verbatim localized here, by Game and by say
             .font(page.caption).opacity(captionOpacity)
-            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does. Beside the
-            // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
-            .overlay(alignment: .bottom) {
-                if pointing && !beside {
-                    Self.pointer.font(.ui(.detail)).fixedSize()
-                        .opacity(showResult || ending || shown != nil ? 0 : page.tone(.text3).alpha)
-                        .animation(.easeOut(duration: 0.4), value: shown == nil)
-                        .accessibilityLabel(Self.pointerSpoken) // loc: verbatim localized by pointerSpoken
-                        .accessibilityHidden(showResult || ending || shown != nil)
-                        // A gap below the note's last line.
-                        .offset(y: TypeRole.detail.line(at: playType).height + 7)
-                }
-            }
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity, minHeight: Self.captionLines(paper: page.paper, type: playType), alignment: .top)
             .padding(.top, 14)
@@ -1035,11 +1010,6 @@ struct LevelView: View {
                 game.startClock()
                 badge = game.badge
                 noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && !game.level.isStory
-                if pointing && !pointed {
-                    pointed = true
-                    if storesPointing { Best.pointedAtSettings = true }
-                    if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() } // loc: verbatim localized by pointerSpoken
-                }
             } else {
                 lifted = false
             }
@@ -1431,18 +1401,6 @@ struct LevelView: View {
 
     nonisolated static var refills: String {
         String(localized: "undos refill +2 each day you play", comment: "Said when undo is tapped with none left")
-    }
-
-    /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
-    static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
-    nonisolated static var pointerSpoken: String {
-        String(localized: "Sound, haptics and colour letters are in settings, the gear on the menu.",
-               comment: "VoiceOver: plughole 01's pointer to the settings")
-    }
-
-    /// Whether this level opens pointing at the settings: plughole 01 until it has, or under the harness UNSTIR_FRESH.
-    nonisolated static func points(at level: Level, harnessed: Bool, fresh: Bool, pointed: Bool) -> Bool {
-        level.id == Tier.plughole.levels.first?.id && (harnessed ? fresh : !pointed)
     }
 
     /// A notice, or Escapement's dead tick, reads above the resting caption.

@@ -340,7 +340,7 @@ import XCTest
             XCTAssertEqual(level.layout, row.layout, level.id)
             XCTAssertEqual(clocks(level), row.clocks, level.id)
             XCTAssertEqual(level.par, row.par, level.id)
-            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks." + (rules[Int(level.label)!] ?? ""), level.id)
+            XCTAssertEqual(level.note, rules[Int(level.label)!].map { "Unstir in \(level.budget) ticks." + $0 } ?? "", level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty, level.id)
             XCTAssertTrue(level.ratchets.allSatisfy { level.kind(of: $0) == .ratchet }, level.id)

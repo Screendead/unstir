@@ -400,8 +400,7 @@ extension Level {
         level.note = (n - 1) % 6 == 0 ? escapementOpener((n - 1) / 6, budget: level.budget)
             : n == 2 ? String(localized: "rule.escapement.wait", defaultValue: "Unstir in \(level.budget) ticks. Tap wait: the clock ticks, nothing turns.",
                               comment: "Escapement's note under the tank on problem 2, the first that needs a wait: the tick budget, then what the wait control does")
-            : String(localized: "Unstir in \(level.budget) ticks.",
-                     comment: "Escapement's stipulation under the tank: the tick budget")
+            : ""
         return level
     }
 

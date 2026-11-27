@@ -191,9 +191,7 @@ struct ArchiveView: View {
                         .foregroundStyle(Tier.plughole.sweep).shadow(color: Color.amber.opacity(0.55), radius: 10)
                         .padding(.top, 6)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Every daily as it was dealt. A best here is its own: only a daily solved on its day adds to the days running.")
-                        .font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4).fixedSize(horizontal: false, vertical: true)
-                    Text("done \(marks.filter { $0 == .clean || $0 == .par }.count)/\(days.count) at par")
+                    Text("\(marks.filter { $0 == .clean || $0 == .par }.count)/\(days.count) at par")
                         .font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 14)
                     ForEach(months, id: \.self) { month in
                         block(month, marks: marks).padding(.top, 30)
