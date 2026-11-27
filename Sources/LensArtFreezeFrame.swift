@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror, 47: dentalmirror, 48: mirrorball, 49: hallofmirrors]
+    static let freezeFrame: [Int: Halftone.Panel] = [44: handmirror, 45: rearview, 46: convexmirror, 47: dentalmirror, 48: mirrorball, 49: mirrorMaze]
 
     /// A hex rod's core, which a lens magnifies and a twist turns rigidly.
     fileprivate static let core = 0.264
@@ -574,14 +574,14 @@ extension LensArt {
     }()
 }
 
-// MARK: - 49: Hall of mirrors
+// MARK: - 49: Mirror maze
 
-/// Level 49's name: a funfair's hall of mirrors under a striped tent, four warped mirrors in frames of marquee bulbs
+/// Level 49's name: a funfair's mirror maze under a striped tent, four warped mirrors in frames of marquee bulbs
 /// over the top, upper right, bottom and lower left cores (hex's four lenses on this level), and between them, over
 /// the hub, two mirrors facing each other, their arches running back for ever. In each warped mirror the same child
 /// with a lollipop: stretched tall, squashed wide, wobbling, and all head.
 extension LensArt {
-    static let hallofmirrors: Halftone.Panel = {
+    static let mirrorMaze: Halftone.Panel = {
         let mirrors = [P(0, -0.56), P(0.485, -0.28), P(0, 0.56), P(-0.485, 0.28)], floor = 0.42, apex = P(0.07, -1.7)
         let vanish = P(0.05, -0.04)
         /// An arch about `vanish`, `k` reflections back.
@@ -619,7 +619,7 @@ extension LensArt {
         s += child(mirrors[1] + P(0.028, -0.03), sx: 1.7, sy: 0.6)
         s += child(mirrors[2] + P(0.022, -0.016), sx: 1, sy: 1, wave: 0.008)
         s += child(mirrors[3] + P(0.024, -0.008), sx: 1, sy: 1, head: 2.2)
-        return framed("hallofmirrors", rims: rims, fills: fills, strokes: s) { p in
+        return framed("mirrormaze", rims: rims, fills: fills, strokes: s) { p in
             if p.y > floor { return c(0.3) }
             let a = atan2(p.x - apex.x, p.y - apex.y) * 180 / .pi
             return Int((a / 3.2 + 50).rounded(.down)) % 2 == 0 ? m(0.65) : Tone(0.08, 0.08, 0.3)

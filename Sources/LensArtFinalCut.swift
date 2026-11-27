@@ -147,7 +147,7 @@ extension LensArt {
         s += runs(span(buoy + P(-0.08, 0.03), buoy + P(0.08, 0.03), 24), 0.0022) { simd_distance($0, buoy) > 0.044 }
         let poolTones = [y(0.75), Tone(0.25, 0, 0.45), Tone(0.25, 0, 0.45), Tone(0.25, 0, 0.45)]
         let cuts: [Double] = [0, 24, 50, 90, 118, 150, 196, 230, 262, 300, 330]
-        return Halftone.Panel(name: "lighthouse", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             if p.y > -0.56 {
                 for (k, pc) in pools.enumerated() {
                     let d = simd_distance(p, pc)
@@ -173,7 +173,8 @@ extension LensArt {
                 return Tone(0.1, 0.12, 0)
             }
             return c(0.6)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "lighthouse", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -256,7 +257,7 @@ extension LensArt {
         s.append(stroke(circle(sun, core, 56), mid))
 
         let cuts: [Double] = [0, 18, 40, 75, 96, 140, 160, 205, 226, 270, 290, 330]
-        return Halftone.Panel(name: "eclipseglasses", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for c in phases {
                 let d = simd_distance(p, c)
                 if d < core { return y(0.75) }
@@ -275,7 +276,8 @@ extension LensArt {
                 for (cc, r, t) in clouds where simd_length_squared((p - cc) / r) < 1 { return t }
             }
             return p.y < 0.38 ? c(0.42) : m(0.5)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "eclipseglasses", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -380,7 +382,7 @@ extension LensArt {
 
         let glass = [y(0.85), y(0.7), y(0.85), y(0.7)]
         let cuts: [Double] = [0, 30, 54, 90, 120, 160, 196, 230, 262, 300, 330]
-        return Halftone.Panel(name: "searchlight", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for (k, lamp) in lamps.enumerated() {
                 let d = simd_distance(p, lamp)
                 if d < core { return glass[k] }
@@ -397,7 +399,8 @@ extension LensArt {
                 if l > core, simd_dot(q, u) > l * cw { lit += 1 }
             }
             return lit == 0 ? m(0.35) : lit == 1 ? c(0.4) : c(0.75)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "searchlight", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -487,7 +490,7 @@ extension LensArt {
 
         let skies = [y(0.6), m(0.55), Tone(0.3, 0, 0.5), m(0.55), y(0.6)]
         let cuts = (0..<12).map { 30 * Double($0) }
-        return Halftone.Panel(name: "planetarium", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for (k, c) in discs.enumerated() {
                 let d = simd_distance(p, c)
                 if d < core { return skies[k] }
@@ -498,7 +501,8 @@ extension LensArt {
             if p.y > 0.48, inside(p, skyline) { return Tone(0.12, 0.1, 0) }
             for (yy, h) in seats where abs(p.y - yy - 0.02) < h && abs(p.x) < 0.62 { return m(0.6) }
             return p.y < 0.45 && simd_distance(p, P(0, 1.1)) > 1.25 && simd_distance(p, P(0, 1.1)) < 1.6 ? c(0.35) : c(0.2)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "planetarium", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -577,7 +581,7 @@ extension LensArt {
         s.append(stroke(circle(galaxy, 0.007, 8), 0.003))
 
         let cuts: [Double] = [0, 40, 80, 130, 170, 220, 260, 310]
-        return Halftone.Panel(name: "observatory", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for (k, v) in views.enumerated() {
                 let d = simd_distance(p, v)
                 if d < core { return c(0.6) }
@@ -589,7 +593,8 @@ extension LensArt {
             }
             if p.y > 0.3, inside(p, mountain) { return Tone(0.3, 0.3, 0) }
             return p.y > 0.05 ? m(0.5) * min((p.y - 0.05) / 0.3, 1) : .zero
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "observatory", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -675,7 +680,7 @@ extension LensArt {
         s.append(stroke(arc(sat, 0.024, -60, 60, 6), 0.0018))
 
         let cuts: [Double] = [0, 50, 70, 170, 190, 290, 310], rim = c(0.85)
-        return Halftone.Panel(name: "radiotelescope", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for dc in dishes {
                 let d = simd_distance(p, dc)
                 if d < core { return m(0.55) }
@@ -693,7 +698,8 @@ extension LensArt {
             let r = simd_distance(p, source)
             if p.x > 0.0, p.y < 0.2, r > 0.55, (r - 0.55).truncatingRemainder(dividingBy: 0.14) < 0.07 { return Tone(0.3, 0, 0.55) }
             return y(0.6)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "radiotelescope", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -774,11 +780,12 @@ extension LensArt {
         let storm = worlds[2] + P(-0.026, 0.022)
         s.append(stroke(circle(storm, 0.006, 8), 0.0025))
         for k in 0..<3 {
-            s.append(stroke((0...14).map { i in polar(storm, 0.008 + 0.0028 * Double(i), 120 * Double(k) + 22 * Double(i)) }, 0.0025))
+            let arm: [P] = (0...14).map { (i: Int) -> P in polar(storm, 0.008 + 0.0028 * Double(i), 120 * Double(k) + 22 * Double(i)) }
+            s.append(stroke(arm, 0.0025))
         }
 
         let cuts: [Double] = [0, 30, 46, 120, 136, 210, 226, 300, 316]
-        return Halftone.Panel(name: "spacetelescope", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             let d0 = simd_distance(p, hex[0])
             if d0 < core { return Tone(0.15, 0.25, 0) }
             if d0 < core + 0.05 { return runTone(bearing(p, hex[0]), cuts, [c(0.45), .zero, c(0.45), y(0.8)]) }
@@ -804,7 +811,8 @@ extension LensArt {
             if rings < 1, rings > 0.6 { return y(0.45) }
             for f in craft where f.holds(p) { return f.tone }
             return .zero
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "spacetelescope", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -872,7 +880,7 @@ extension LensArt {
         s.append(stroke(star(moon + P(0.03, -0.034), 0.014, degrees: -80), 0.0025))
 
         let tones = [y(0.75), c(0.6), y(0.75), c(0.6), y(0.75)]
-        return Halftone.Panel(name: "mindseye", tones: { (p: P) -> Tone in
+        let toneAt: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for (k, t) in thoughts.enumerated() {
                 let d = simd_distance(p, t)
                 if d < core { return tones[k] }
@@ -881,6 +889,7 @@ extension LensArt {
             for f in blobs where f.holds(p) { return f.tone }
             if face.holds(p) { return m(0.7) }
             return .zero
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "mindseye", tones: toneAt, strokes: pieces(s))
     }()
 }

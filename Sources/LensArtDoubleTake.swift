@@ -366,7 +366,10 @@ extension LensArt {
         // The far treeline: a black band across the middle, firs standing out of it, as (x, height, half width).
         let line = 0.1, far = [(-0.82, 0.14, 0.07), (-0.6, 0.2, 0.08), (-0.34, 0.26, 0.09), (-0.12, 0.12, 0.06), (0.2, 0.16, 0.07),
                                (0.38, 0.27, 0.09), (0.56, 0.14, 0.07), (0.92, 0.18, 0.07)]
-        let treeline = [P(-1, 0.24), P(-1, line)] + far.flatMap { [P($0.0 - $0.2, line), P($0.0, line - $0.1), P($0.0 + $0.2, line)] } + [P(1, line), P(1, 0.24)]
+        let peaks: [P] = far.flatMap { (t: (Double, Double, Double)) -> [P] in
+            [P(t.0 - t.2, line), P(t.0, line - t.1), P(t.0 + t.2, line)]
+        }
+        let treeline: [P] = [P(-1, 0.24), P(-1, line)] + peaks + [P(1, line), P(1, 0.24)]
         let firs = [fir(P(0.44, -0.62), base: 0.14, half: 0.2), fir(P(-0.74, -0.2), base: 0.6, half: 0.15)]
         let rock = curve(P(0.2, 0.7), P(0.4, 0.42), P(0.58, 0.7), 12)
         // The sight's mark round each find: a ring of bright dashes, which a twist that slides the lens's rim along itself

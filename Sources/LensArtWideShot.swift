@@ -576,7 +576,11 @@ extension LensArt {
         s.append(stroke(circle(sun, 0.15, 32), bold))
         for r in rays { s.append(stroke(r, hair)) }
         s.append(stroke(arc(P(-0.42, -0.62), 0.2, 0, 180, 16) + [P(-0.62, -0.62)], hair))
-        s += runs((0...50).map { P(-1 + 0.04 * Double($0), hill(-1 + 0.04 * Double($0))) }, mid) { p in
+        let ridge: [P] = (0...50).map { (k: Int) -> P in
+            let x: Double = -1 + 0.04 * Double(k)
+            return P(x, hill(x))
+        }
+        s += runs(ridge, mid) { (p: P) -> Bool in
             simd_distance(p, lens) > rim + 0.08 && !inside(p, pouring) && logs.allSatisfy { simd_distance(p, $0.0) > $0.1 }
         }.flatMap { pieces($0.points, mid) }
         for (k, x) in [-0.86, -0.3, 0.72, 0.86, -0.8, 0.8].enumerated() {

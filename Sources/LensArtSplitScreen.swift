@@ -200,13 +200,14 @@ extension LensArt {
             s.append(stroke(ellipse(polar(root, w / 2, t - 30), w / 2, 0.008, degrees: t - 30, 14), 0.0024))
         }
         fit(&s, from: mark, core: P(0.485, 0.28))
-        return Halftone.Panel(name: "owl", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             guard p.y > water else { return above(p) }
             for f in pads where f.holds(p) { return f.tone }
             // Under the waterline, the owl again, mirrored, shaken sideways by the ripples, and gone cool.
             let q = P(p.x + 0.01 * sin(p.y * 2 * .pi / 0.09), 2 * water - p.y), t = above(q)
             return Tone(min(0.3 * t.x + 0.35 * t.y + 0.9 * t.z, 1), 0.6 * t.y, 0)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "owl", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -358,7 +359,7 @@ extension LensArt {
         s.append(stroke([lamp + P(0, -0.024), lamp + P(0, -0.09)], 0.0016))
 
         fit(&s, from: mark, core: facets[5])
-        return Halftone.Panel(name: "flyseye", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             if simd_length_squared(p) < 0.0841, let t = fly(p) { return t }
             let k = Int(((bearing(p) + 90) / 60).rounded()) % 6, d = p - facets[k]
             if simd_length_squared(d) < 0.069696 { return cores[k] }
@@ -372,9 +373,11 @@ extension LensArt {
             let centre = P(size * root3 * (a + b / 2), size * 1.5 * b), e = w - centre
             let ri = size * root3 / 2, edge = max(abs(e.x), abs(e.x * 0.5 + e.y * root3 / 2), abs(e.x * 0.5 - e.y * root3 / 2))
             if edge > ri - 0.02 { return .zero }
-            let h = scatter(Int(a), Int(b))
-            return m(0.3 + 0.5 * h)
-        }, strokes: pieces(s))
+            let h: Double = scatter(Int(a), Int(b))
+            let tone: Tone = m(0.3 + 0.5 * h)
+            return tone
+        }
+        return Halftone.Panel(name: "flyseye", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -616,7 +619,7 @@ extension LensArt {
         s.append(stroke(circle(look, 0.018, 12), 0.0016))
 
         fit(&s, from: mark, core: marbles[1])
-        return Halftone.Panel(name: "catseye", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for (k, e) in eyes.enumerated() {
                 let d = p - e, r2 = simd_length_squared(d)
                 guard r2 < 0.09 else { continue }
@@ -636,9 +639,12 @@ extension LensArt {
             for f in early where f.holds(p) { return f.tone }
             for f in shadows where f.holds(p) { return f.tone }
             // The floor: boards along a diagonal, each its own blue.
-            let dir = P(cos(0.35), sin(0.35)), plank = Int((simd_dot(p, P(-dir.y, dir.x)) / 0.22 + 10).rounded(.down))
+            let dir: P = P(cos(0.35), sin(0.35))
+            let across: Double = simd_dot(p, P(-dir.y, dir.x)) / 0.22 + 10
+            let plank: Int = Int(across.rounded(.down))
             return plank % 2 == 0 ? m(0.3) : m(0.18)
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "catseye", tones: tones, strokes: pieces(s))
     }()
 }
 
@@ -858,7 +864,7 @@ extension LensArt {
         s.append(stroke([crownMark + P(-0.03, 0.008), crownMark + P(0.03, 0.008)], 0.0016))
 
         fit(&s, from: mark, core: spots[4])
-        return Halftone.Panel(name: "peacock", tones: { (p: P) -> Tone in
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for f in bird where f.holds(p) { return f.tone }
             var best = 0, near = Double.infinity
             for (k, c) in spots.enumerated() {
@@ -877,6 +883,7 @@ extension LensArt {
                 }
             }
             return barbs[Int((bearing(p - base) / 6.5).rounded(.down)) % 2]
-        }, strokes: pieces(s))
+        }
+        return Halftone.Panel(name: "peacock", tones: tones, strokes: pieces(s))
     }()
 }
