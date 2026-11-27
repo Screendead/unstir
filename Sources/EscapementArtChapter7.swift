@@ -490,6 +490,155 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 42, Tachymeter, hex, clocks 1+,3+.
-    static func plate42() -> Plate? { nil }
+    /// Problem 42, Tachymeter, hex, clocks 1+,3+: a steam locomotive at speed in bold silhouette, running left, its
+    /// smoke streaming back in billows and speed lines under it, beneath the arc of a tachymeter bezel graduated from
+    /// a hundred and fifty to five hundred, read in Roman, past every hub; the headlamp's glass in the second ink.
+    static func plate42() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin
+        // The bezel's scale: a speed v reads at 3600 / v seconds; a hundred and fifty to five hundred, centred over twelve.
+        let span = (lo: 3600.0 / 500, hi: 3600.0 / 150)
+        func at(_ v: Double) -> Double { Kit.clock((3600 / v - (span.lo + span.hi) / 2) / 5) }
+        let bezel = (inner: 0.81, outer: 0.97), ends = (at(500) - 0.05, at(150) + 0.05)
+
+        Kit.ground(&plate, angle: 0.62, around: [])
+        // The bezel arc in ink, graduated and numbered in bone.
+        Kit.mass(&plate, annulus(o, bezel.inner, bezel.outer, from: min(ends.0, ends.1), to: max(ends.0, ends.1)))
+        let speeds = Array(stride(from: 150.0, through: 200, by: 5)) + Array(stride(from: 210.0, through: 300, by: 10))
+            + Array(stride(from: 325.0, through: 500, by: 25))
+        for v in speeds {
+            let major = [150.0, 200, 250, 300, 400, 500].contains(v), mid = v.truncatingRemainder(dividingBy: 50) == 0
+            let from = major ? 0.88 : mid ? 0.91 : 0.935
+            plate.line([polar(o, from, at(v)), polar(o, bezel.outer - 0.01, at(v))], major ? 0.02 : 0.011, .bone)
+        }
+        for (v, n) in [(150.0, "CL"), (200, "CC"), (250, "CCL"), (300, "CCC"), (400, "CD"), (500, "D")] {
+            plate.lines(Kit.numeral(n, at: polar(o, 0.845, at(v)), height: 0.05, turn: at(v) + .pi / 2, squeeze: 0.8), 0.011, .bone)
+        }
+        plate.line(arc(o, bezel.outer + 0.02), heavy)
+
+        // The engine and all that goes with it, drawn on its own and set down a little right of and above the middle.
+        var engine = Plate()
+        // The smoke, billowing back from the chimney, bone cut from the ground with an ink edge and curls.
+        let billows: [(P, Double)] = [(P(-0.53, -0.36), 0.055), (P(-0.43, -0.42), 0.07), (P(-0.3, -0.45), 0.08),
+                                      (P(-0.14, -0.46), 0.088), (P(0.03, -0.47), 0.092), (P(0.2, -0.46), 0.095),
+                                      (P(0.37, -0.45), 0.092), (P(0.52, -0.4), 0.085), (P(0.64, -0.33), 0.075),
+                                      (P(0.74, -0.27), 0.062)]
+        for (k, b) in billows.enumerated() {
+            engine.fill(arc(b.0, b.1))
+            engine.line(arc(b.0, b.1, from: 2.2, to: 2 * .pi + 1.2), k % 2 == 0 ? 0.02 : heavy)
+            engine.line(arc(b.0 + P(0.01, 0.01), b.1 * 0.55, from: 3.4, to: 5.6), medium)
+        }
+        // Speed lines streaming back above and under the engine.
+        for (y, x0, x1) in [(-0.24, 0.42, 0.98), (-0.3, -0.1, 0.38), (0.56, 0.3, 0.95), (0.62, -0.95, -0.55), (0.62, -0.2, 0.2),
+                            (0.68, 0.0, 0.7), (0.74, -0.45, 0.05)] {
+            engine.line([P(x0, y), P(x1, y)], 0.022)
+        }
+        // The rail and its sleepers.
+        engine.line([P(-1.06, 0.475), P(1.06, 0.475)], 0.022)
+        for x in stride(from: -1.0, through: 1.0, by: 0.09) {
+            engine.fill(box(P(x, 0.49), P(x + 0.035, 0.51)), .black)
+        }
+
+        // The engine in silhouette: tender, cab, boiler, smokebox, chimney and domes, cut clear by a bone halo.
+        let tender = box(P(0.69, -0.2), P(1.06, 0.38))
+        let cab = [P(0.36, 0.17), P(0.36, -0.33), P(0.33, -0.36), P(0.71, -0.36), P(0.68, -0.33), P(0.68, 0.17), P(0.36, 0.17)]
+        let boiler = box(P(-0.62, -0.13), P(0.38, 0.15))
+        let smokebox = [P(-0.6, -0.15), P(-0.72, -0.15), P(-0.76, -0.1), P(-0.76, 0.12), P(-0.72, 0.16), P(-0.6, 0.16),
+                        P(-0.6, -0.15)]
+        let chimney = [P(-0.6, -0.13), P(-0.59, -0.28), P(-0.61, -0.31), P(-0.48, -0.31), P(-0.5, -0.28), P(-0.49, -0.13),
+                       P(-0.6, -0.13)]
+        let dome = arc(P(-0.15, -0.13), 0.075, from: .pi, to: 2 * .pi) + [P(-0.15, -0.13)]
+        let sand = arc(P(0.13, -0.13), 0.06, from: .pi, to: 2 * .pi) + [P(0.13, -0.13)]
+        let cylinder = box(P(-0.6, 0.17), P(-0.4, 0.31))
+        let pilot = [P(-0.72, 0.2), P(-0.9, 0.44), P(-0.62, 0.44), P(-0.62, 0.2), P(-0.72, 0.2)]
+        let body = [tender, cab, boiler, smokebox, chimney, dome, sand]
+        for part in body { engine.line(part, 0.03, .bone) }
+        for part in body { engine.fill(part, .black) }
+        engine.fill(box(P(-0.78, 0.17), P(-0.72, 0.26)), .black)
+        // Boiler bands, the running board, the cab's window, the tender's coal, the pilot's bars, the smokebox door.
+        for x in stride(from: -0.5, through: 0.3, by: 0.115) { engine.line([P(x, -0.12), P(x, 0.16)], 0.016, .bone) }
+        engine.line([P(-0.6, -0.1), P(0.36, -0.1)], 0.01, .bone)
+        engine.line([P(-0.58, -0.035), P(0.34, -0.035)], 0.014, .bone)
+        for x in stride(from: -0.55, through: 0.3, by: 0.115) { engine.fill(arc(P(x, -0.035), 0.014), .bone) }
+        engine.line([P(-0.6, 0.115), P(0.36, 0.115)], 0.02, .bone)
+        engine.line([P(0.36, -0.33), P(0.68, -0.33)], 0.012, .bone)
+        engine.line([P(0.4, -0.08), P(0.4, 0.15)], 0.012, .bone)
+        engine.line([P(0.64, -0.08), P(0.64, 0.15)], 0.012, .bone)
+        for y in stride(from: 0.0, through: 0.3, by: 0.075) { engine.line([P(0.72, y), P(1.06, y)], 0.014, .bone) }
+        engine.line(cylinder, 0.03, .bone)
+        Kit.cut(&engine, cylinder, edge: heavy)
+        for x in [-0.6, -0.43] { engine.fill(box(P(x, 0.17), P(x + 0.03, 0.31)), .black) }
+        engine.lines(hatch([box(P(-0.57, 0.17), P(-0.43, 0.31))], angle: 0, gap: 0.035), medium)
+        engine.line([P(-0.62, -0.075), P(0.36, -0.075)], 0.036, .bone)
+        engine.line([P(-0.6, 0.07), P(0.36, 0.07)], 0.026, .bone)
+        engine.line([P(-0.755, 0.04), P(-0.62, 0.04)], 0.02, .bone)
+        engine.line([P(-0.755, 0.1), P(-0.62, 0.1)], 0.02, .bone)
+        engine.line([P(-0.705, -0.12), P(-0.705, 0.15)], 0.012, .bone)
+        engine.line([P(-0.735, -0.08), P(-0.735, 0.12)], 0.012, .bone)
+        for y in [-0.26, -0.2] { engine.line([P(-0.597, y), P(-0.493, y)], 0.014, .bone) }
+        engine.line([P(-0.575, -0.16), P(-0.57, -0.27)], 0.01, .bone)
+        engine.line(arc(P(-0.15, -0.13), 0.045, from: 3.5, to: 4.6), 0.012, .bone)
+        engine.line(arc(P(0.13, -0.13), 0.035, from: 3.5, to: 4.6), 0.012, .bone)
+        for y in stride(from: -0.1, through: 0.14, by: 0.06) { engine.fill(arc(P(-0.665, y), 0.012), .bone) }
+        engine.line([P(-0.72, 0.165), P(0.68, 0.165)], 0.014, .bone)
+        Kit.cut(&engine, box(P(0.42, -0.28), P(0.62, -0.12)), edge: medium)
+        engine.line([P(0.52, -0.28), P(0.52, -0.12)], heavy)
+        engine.line([P(0.72, -0.1), P(1.06, -0.1)], 0.014, .bone)
+        engine.line(pilot, 0.03, .bone)
+        Kit.cut(&engine, pilot, edge: heavy)
+        for k in 0..<6 { engine.line([P(-0.705 + 0.016 * Double(k), 0.22), P(-0.85 + 0.042 * Double(k), 0.43)], 0.014) }
+        engine.line([P(-0.745, -0.08), P(-0.745, 0.1)], 0.012, .bone)
+
+        // The rush of air through the engine, thinning toward its front.
+        for (k, y) in stride(from: -0.31, through: 0.16, by: 0.042).enumerated() {
+            let start = k % 2 == 0 ? -0.62 + 0.3 * rnd(42, k) : 0.05 + 0.22 * rnd(42, k)
+            engine.line([P(start, y), P(1.06, y)], 0.016, .bone)
+        }
+
+        // The wheels: the bogie's, three drivers with their counterweights, the tender's, and the rods between.
+        func wheel(_ c: P, _ r: Double, spokes: Int) {
+            engine.fill(arc(c, r + 0.015))
+            Kit.mass(&engine, annulus(c, r - (r > 0.1 ? 0.021 : 0.013), r))
+            for k in 0..<spokes {
+                let t = 2 * .pi * Double(k) / Double(spokes)
+                engine.line([polar(c, 0.02, t), polar(c, r - 0.02, t)], r > 0.1 ? 0.012 : 0.009)
+            }
+            Kit.mass(&engine, arc(c, r > 0.1 ? 0.026 : 0.015))
+            engine.fill(arc(c, 0.008))
+        }
+        for x in [-0.66, -0.5] { wheel(P(x, 0.39), 0.075, spokes: 6) }
+        for x in [0.8, 0.98] { wheel(P(x, 0.39), 0.075, spokes: 6) }
+        let drivers = [-0.27, 0.03, 0.33].map { P($0, 0.33) }
+        for d in drivers {
+            wheel(d, 0.135, spokes: 12)
+            let weight = arc(d, 0.1, from: -2.0, to: -1.1) + arc(d, 0.06, from: -1.1, to: -2.0)
+            Kit.mass(&engine, weight + [weight[0]])
+        }
+        let pins = drivers.map { $0 + P(-0.06, 0.04) }
+        engine.line([pins[0], pins[2]], 0.032, .bone)
+        Kit.mass(&engine, Kit.band(pins[0], pins[2], 0.026))
+        Kit.mass(&engine, Kit.band(P(-0.45, 0.24), pins[1], 0.028))
+        for pin in pins { engine.fill(arc(pin, 0.016)) }
+
+        // The headlamp on the smokebox, its glass forward, its beam on the ground ahead.
+        let lamp = box(P(-0.8, -0.24), P(-0.7, -0.14))
+        engine.line(lamp, 0.024, .bone)
+        Kit.mass(&engine, lamp)
+        engine.fill([P(-0.79, -0.24), P(-0.75, -0.28), P(-0.71, -0.24), P(-0.79, -0.24)], .black)
+        let glass = arc(P(-0.8, -0.19), 0.034)
+        engine.fill(glass, .second)
+        engine.line(glass, medium)
+        for a in [-0.16, 0.0, 0.16] {
+            engine.line([polar(P(-0.8, -0.19), 0.06, .pi + a), polar(P(-0.8, -0.19), 0.2, .pi + a * 1.3)], heavy)
+        }
+
+        let shift = P(0.09, -0.02)
+        plate.marks += engine.marks.map { Mark(points: $0.points.map { $0 + shift }, width: $0.width, ink: $0.ink) }
+
+        callout(&plate, "A", from: polar(o, 0.89, at(250)), to: polar(o, 0.68, Kit.clock(1)))
+        callout(&plate, "B", from: P(-0.73, -0.19), to: P(-0.9, 0.1))
+        callout(&plate, "C", from: billows[2].0 + P(0.04, -0.1), to: polar(o, 0.66, Kit.clock(10.6)))
+        callout(&plate, "D", from: drivers[0] + P(0.04, 0.05), to: P(-0.3, 0.72))
+        return plate
+    }
 }
