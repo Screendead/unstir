@@ -56,6 +56,16 @@ Jack accepted every recommendation of the slope's design (#306, 2026-11-23; the 
 `docs/decisions.md`): the easter eggs come after the screens. Jack answered the call on the game's words (#308): the 27 cuts and 10 trims are applied, his rewrite's two consent
 lines taken, and every call item kept as it was (`docs/copy-cut.md` on `slope/copy`).
 
+**The menu is rewritten for speed (Jack, 2026-11-27).** On the phone the Shelf's menu hitched: 1.6 s from a tap on
+the overview to a level's opening (0.04 s on the old menu), the zoom into a tier near 46 fps, and a ground pass of
+6 to 11 ms a frame. Jack's calls that day, rows in `docs/decisions.md`: the overview scrolls, about 2.5 screens
+long; a tap opens a level at once; and the menu is rewritten from scratch, performance first: 120 fps whenever it
+moves, nothing drawn at rest, looks only where they cost no frames. Branches: `slope/open-path` (the performance
+work, the tap, the roomier overview, on the phone as an optimised Debug build), `slope/strand` (the new menu's
+core: baked art moved by the render server, no per-frame work in the app) and `slope/open-freeze` (the 0.3 to 0.4 s
+the level screen takes to build at the tap). Every motion is traced on the phone before Jack is handed a build;
+the easter eggs (#306) wait behind the rewrite, deferred and not dropped.
+
 ### Open work (2026-11-15)
 
 The merges, the store media's retake and Jack's five answers of 2026-11-15 are closed: moved word for word to
@@ -65,33 +75,8 @@ The merges, the store media's retake and Jack's five answers of 2026-11-15 are c
 
 - Still his own: the account night (not started, Jack 2026-11-15), ICO registration,
   hosting the privacy policy, the policy's remaining tokens, a trademark search, a launch date.
-- Answered on his Calls page (2026-11-21, row in `docs/decisions.md`): whether the store media on the App Store page
-  is final (#263): "**Jack's answer:** B · Change some
-
-  the one thing i don't like is the search results page's image. it renders in the preview with the tank not in the
-  centre, instead touching the bottom side only and being cut off." Everything else on the page stays as uploaded.
-  Which image he means is not certain from here: a search result shows the app preview first, as its poster frame
-  (App Store Connect's default is said to be about 5 s in, which is whirlpool 03's play screen), else the first
-  screenshots. The Mac's look (#270, closed 2026-11-21) found no other match: in the preview's frames at 0 to 8 s
-  (the 5 s frame is whirlpool 03, its tank whole from 28% to 71% of the height), screenshots 01 to 03 plain and
-  captioned and the Duo shots, the tank is whole and centred. That left the 3:2 search results asset, which
-  `scripts/store-header.py` composed on 2026-11-18. A disc fit for its measure of the tank was written (#272) on the
-  guess that its scan down the shot's middle began inside the disc, but the Mac's render on the real shot (#273,
-  2026-11-21) disproved it: the old measure gave (47, 816, 1272, 2041), the fit (47, 815, 1273, 2041), and in the
-  search, header and universal art the whole bezel shows, round and centred in the safe area, as it did on 18 Nov.
-  So the script was kept as it was (#272 merged only this record), and the fault is downstream of its file: App
-  Store Connect's own crop or preview of the asset, or an older file than the 18 Nov render being the one uploaded.
-  The re-rendered art is in the tools folder outside the repo (`store-header-272`), the same as 18 Nov's.
-- Answered on his Calls page (2026-11-21, rows in `docs/decisions.md`): the clips with sound (#261): "**Jack's
-  answer:** A · Film them with sound. Make sure the other stuff running on the mac doesn't make the sound crackly etc.
-  That's happened before from CPU throttling." Claude's two picks (#262): "**Jack's answer:** A · Keep both": the open
-  tank's cap of 96 and the 30% floor the glass shrinks to under a card stay as built. The clips with sound are asked
-  of the Mac (#268), with nothing else rendering or building beside the takes.
-- Rendered on the Mac (2026-11-21, #260, closed): the packs' layers in play on master, Escapement 29 on its restored
-  deal, in the tools folder outside the repo (`layers-260`). The Escapement line runs to its solve at 196 s with the
-  reed at each move and the resolution after; `escapement.mp3` I -27.1 LUFS. How it sounds waits for Jack's ear. The
-  first try stopped on Homebrew's Csound 7, whose log no longer says "0 errors in performance": the fix to
-  `scripts/sounds.sh`'s check is #265, opened from the Mac.
+- The three items answered or rendered on 2026-11-21 (the store media's one change, the clips with sound and the
+  two picks, the layers in play on the Mac): moved word for word to `docs/history.md`.
 
 **Next:**
 
