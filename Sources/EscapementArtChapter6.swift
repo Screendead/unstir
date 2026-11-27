@@ -178,8 +178,65 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 33, Escape wheel, pent, clocks 0+.
-    static func plate33() -> Plate? { nil }
+    /// Problem 33, Escape wheel, pent, clocks 0+: a Swiss club-tooth escape wheel of fifteen teeth, so large its arbor
+    /// low on the left and its raked teeth sweep across the middle in solid ink, the ground
+    /// showing through its spokes' windows; the pallet stone resting on the one locking tooth, whose face is in the
+    /// second ink.
+    static func plate33() -> Plate {
+        var plate = Plate()
+        let w = P(-0.7, 0.4), r = 1.25, teeth = 15, tau = 2 * Double.pi / Double(teeth)
+        // The phase puts one tooth's locking corner a little right of the glass's middle.
+        let phase = atan2(-0.39 - w.y, 0.28 - w.x) - 0.2 * tau
+        func tooth(_ k: Int) -> [P] {
+            let a = phase + Double(k) * tau
+            let face = [polar(w, 0.7 * r, a), polar(w, 0.86 * r, a + 0.1 * tau), polar(w, r, a + 0.2 * tau)]
+            let club = [polar(w, 0.985 * r, a + 0.02 * tau), polar(w, 0.95 * r, a - 0.06 * tau)]
+            let back = curve(polar(w, 0.95 * r, a - 0.06 * tau), polar(w, 0.8 * r, a - 0.02 * tau), polar(w, 0.7 * r, a - 0.28 * tau), 8)
+            return face + club + Array(back.dropFirst())
+        }
+        // Round the wheel against the turn, so each tooth's back runs down to the next one's face.
+        var outline = stride(from: teeth, to: 0, by: -1).flatMap { tooth($0) }
+        outline.append(outline[0])
+        let rimInner = 0.645 * r, hub = 0.12
+        let holes = windows(w, hub: hub + 0.03, rim: rimInner, spokes: 4, width: 0.05, phase: phase + 0.9)
+
+        Kit.ground(&plate, angle: 0.3)
+        Kit.mass(&plate, outline)
+        for hole in holes {
+            plate.fill(hole)
+            plate.lines(hatch([hole], angle: 0.3, gap: Kit.groundGap), Kit.groundWidth)
+            plate.line(hole, heavy)
+        }
+        // The rim's chamfer and the spokes' crossing in bone, the collet in section, the arbor.
+        plate.line(arc(w, rimInner + 0.02), medium, .bone)
+        plate.fill(arc(w, hub))
+        plate.lines(hatch([arc(w, hub), arc(w, 0.06)], angle: -0.8, gap: 0.024), fine)
+        plate.line(arc(w, hub), heavy)
+        Kit.mass(&plate, arc(w, 0.06))
+        // Each tooth's club cut off from its neck by a bone line.
+        for k in 0..<teeth {
+            let a = phase + Double(k) * tau
+            plate.line([polar(w, 0.925 * r, a + 0.15 * tau), polar(w, 0.92 * r, a - 0.04 * tau)], medium, .bone)
+        }
+
+        // The locking tooth: its face, and the pallet stone resting on it.
+        let a = phase
+        let face = [polar(w, 0.88 * r, a + 0.11 * tau), polar(w, r, a + 0.2 * tau)]
+        let along = simd_normalize(face[1] - face[0]), out = P(along.y, -along.x)
+        let lit = [face[0], face[1], face[1] + out * 0.024, face[0] + out * 0.024, face[0]]
+        plate.fill(lit, .second)
+        plate.line(lit, medium)
+        let stone = [face[1] + out * 0.024 - along * 0.07, face[1] + out * 0.024 + along * 0.11,
+                     face[1] + out * 0.1 + along * 0.11, face[1] + out * 0.1 - along * 0.07]
+        Kit.cut(&plate, stone + [stone[0]], edge: heavy)
+        plate.lines(hatch([stone + [stone[0]]], angle: atan2(along.y, along.x) + 0.8, gap: 0.016), fine)
+
+        callout(&plate, "A", from: polar(w, 0.9 * r, phase + 1.05 * tau), to: P(0.8, 0.04))
+        callout(&plate, "B", from: lit[2], to: P(0.42, -0.64))
+        callout(&plate, "C", from: polar(w, 0.45, phase + 0.9 - 0.5 * .pi / 2), to: P(-0.84, -0.3))
+        callout(&plate, "D", from: polar(w, hub - 0.025, 0.6), to: P(-0.34, 0.8))
+        return plate
+    }
 
     /// Problem 34, Pallet fork, hex, clocks 1+.
     static func plate34() -> Plate? { nil }
