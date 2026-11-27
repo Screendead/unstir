@@ -928,14 +928,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `chapter` the card heads, on its own plate, `Level.prismPlates`, its opener's note saying the rule it adds): Two
   Colours (red and cyan), Three Colours (the primaries), Colour Order (the inks), Overprint (both) and Spectrum (any),
   then the ten the treble added (Jack, 2026-11-27: "at least treble the number of levels... to a much higher maximum
-  difficulty"), each a step deeper than the last, depth 8 to 20: Complements, Second Pass, One Ink, Trapping,
-  Registration, Misregister, Chromatic, Separations, Interference and Full Spectrum.
-  Every rod is dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, the first
-  five trays no deeper than 8 (Jack's call PK1: deeper reads too busy) and the ten after no deeper than 20, par the
-  depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under `channelCost`), the
-  solver's optimum (`testPrismParIsTheOptimum`, slow, behind `UNSTIR_SLOW_TESTS`). Past depth 13 hex keeps to a
-  primary and its ink (red and cyan, green and magenta, blue and yellow), two channels' words, so it never splits three
-  ways; the deepest are dealt past `StirMap.prismLeast` (20 maps), so they draw through the map from the deal.
+  difficulty"), depth 8 to 16: Complements, Second Pass, One Ink, Trapping, Registration, Misregister, Chromatic,
+  Separations, Interference and Full Spectrum.
+  Every rod is dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, no rod
+  stirred more than three times (a rod stirred more often shows only the sum of its stirs, its decoys nearly as strong
+  as its count), the first five trays no deeper than 8 (Jack's call PK1: deeper reads too busy) and the ten after no
+  deeper than 16, par the depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under
+  `channelCost`), the solver's optimum (`testPrismParIsTheOptimum` and `testPrismTrebleParIsTheOptimum`, slow, behind
+  `UNSTIR_SLOW_TESTS`). The three-stir cap holds pent to 13, so the deepest are on hex, and past depth 13 hex keeps to
+  a primary and its ink (red and cyan, green and magenta, blue and yellow), two channels' words, so it never splits
+  three ways.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. It, the other `FirstStir*.swift`,
   `StoryScene.swift` and `FirstStirTests.swift` compile only under `FIRST_STIR` (Debug), as does `Level.story`; the
   shared code reads `Level.isStory` (false without it) and keeps its story branches behind the same condition. A level with a `story` draws it in

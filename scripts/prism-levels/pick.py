@@ -88,7 +88,10 @@ def deep_readable(r):
     # split three ways, cost within the four-tap budget the search keeps, and every once-stirred coloured rod's count
     # showing over at least half its core (today's 30 read 0.58 at least).
     least = r.get("least read", "-")
-    return (pct(r["ghost"]) <= 75 and pct(r["triple"]) <= 25 and int(r["cost"]) <= 30 and least != "-"
+    # A pair's deal (no three-way split) shows one colour and its opposite, whose ghosts read across the whole glass (a
+    # hex 14 of red and cyan at 86% ghosts still shows every animal of the octopus plate), so only mixed deals keep 75%.
+    ghosts = 75 if pct(r["triple"]) > 0 else 90
+    return (pct(r["ghost"]) <= ghosts and pct(r["triple"]) <= 25 and int(r["cost"]) <= 30 and least != "-"
             and float(least) >= 0.5 and int(r.get("most", 99)) <= 3)
 
 
@@ -101,28 +104,29 @@ def hardness(r):
 def deep(pool):
     used, seen = set(), set()
     for tray, slots in DEEP.items():
+        tray_seen = set()
         for k, (layout, depth, palette) in enumerate(slots):
             # The slot's own pool, or when nothing in it reads, every pool of its depth. Two specimens on the same rods
-            # and masks read as one dealt deeper, so each takes rods and masks no earlier one has, unless no pool of its
-            # depth has any.
+            # and masks read as one dealt deeper, so each takes rods and masks no earlier one has, or failing that none
+            # of its tray's: a pair on hex has few ways to colour six rods.
             own = [p for p in [f"{pool}/{layout}-{depth}-{palette}.tsv"] if glob.glob(p)]
             every = sorted(glob.glob(f"{pool}/*-{depth}-*.tsv"))
-            for paths, fresh in ((own, True), (every, True), (own, False), (every, False)):
+            for paths, avoid in ((own, seen), (every, seen), (own, tray_seen), (every, tray_seen), (own, set()),
+                                 (every, set())):
                 rows = [r for path in paths for r in csv.DictReader(open(path), delimiter="\t") if deep_readable(r)]
-                rows = [r for r in rows if r["scramble"] not in used]
-                if fresh:
-                    rows = [r for r in rows if (r["layout"], r["masks"]) not in seen]
+                rows = [r for r in rows if r["scramble"] not in used and (r["layout"], r["masks"]) not in avoid]
                 if rows:
                     break
             if not rows:
                 print(f"{tray} {layout} {depth} {palette}: nothing readable")
                 continue
             rows.sort(key=hardness)
-            # Every slot from the harder half; slot k of six k/5 of the way from its middle to the hardest.
-            share = 0.5 + 0.5 * k / (len(slots) - 1)
+            # Every slot from the hardest third; slot k of six k/5 of the way from 70% hard to the hardest.
+            share = 0.7 + 0.3 * k / (len(slots) - 1)
             r = rows[round(share * (len(rows) - 1))]
             used.add(r["scramble"])
             seen.add((r["layout"], r["masks"]))
+            tray_seen.add((r["layout"], r["masks"]))
             print("\t".join([tray, r["layout"], r["masks"], r["scramble"], r["free"], r["blocked"], r["right/step"],
                              r["forced"], r["sums"], r["least read"], r["ghost"], r["triple"], r["cost"]]))
 

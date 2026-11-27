@@ -13,9 +13,9 @@ the later trays are harder by colour order, not depth. Specimens 1 to 3 are the 
 
 Jack trebled the pack on 2026-11-27: "At least treble the number of levels, and make them ramp up slightly faster in
 difficulty, to a much higher maximum difficulty." Specimens 31 to 90 are ten more trays of six, each on its own new
-plate, each a step deeper than the last: depth 8 to 11 in tray 6, 17 to 20 in tray 15, a tray's mean rising one a
-tray against the first five's half (twice the slope). Past depth 8 lifts PK1's cap for those trays only, which goes
-back to Jack with the shots. The section "The treble: trays 6 to 15" below has their rules, measures and tables.
+plate, deeper tray by tray: depth 8 to 11 in tray 6, 15 to 16 in tray 15, a tray's mean rising 0.7 a tray against the
+first five's half, to twice the old maximum. Past depth 8 lifts PK1's cap for those trays only, which goes back to
+Jack with the shots. The section "The treble: trays 6 to 15" below has their rules, measures and tables.
 
 ## Rules every row keeps
 
@@ -105,28 +105,29 @@ Any mask on any rod: the finale, every rule at once at depth 6 to 8.
 
 ## The treble: trays 6 to 15
 
-Specimens 31 to 90 (Jack, 2026-11-27). Every rule above holds, but two: depth climbs past PK1's 8, a step a tray to 20,
-and the readability limits are the deep trays' own.
+Specimens 31 to 90 (Jack, 2026-11-27). Every rule above holds, but two: depth climbs past PK1's 8, to 16, and the
+readability limits are the deep trays' own.
 
-- **Depth.** Tray k (6 to 15) deals depths k+2, k+3, k+3, k+4, k+4, k+5: 8 to 11 in tray 6, 17 to 20 in tray 15. A
-  tray's mean rises one a tray, where the first five's rose about half: twice the slope, to a maximum two and a half
-  times the old one. The solver proves every one at par (`scripts/prism-levels.sh check`, seconds to a minute each with
-  `-O` on the Mac; `testPrismParIsTheOptimum` runs them all, behind `UNSTIR_SLOW_TESTS`).
-- **Readable.** At most 75% of the glass shows ghosts and at most 25% splits three ways, against 72% and 8% for the
-  first five: the ten new plates keep their shapes through deeper ghosts (a tri deal of two inks at 23% still shows
-  every diatom), and past depth 13 hex keeps to a primary and its ink (red and cyan, green and magenta, blue and
-  yellow), whose two channels' words never split three ways. Hex's seven discs cover nearly all the glass, so most of
-  the deepest specimens are on pent. Every once-stirred coloured rod's count shows over at least half its core
-  (`least read`, `scripts/prism-levels.sh read`); a rod stirred more than once shows the sum of its stirs, the
-  deduction tray 7 names.
-- **Cost.** Each stack keeps four taps at `channelCost` 30 or under (the search's cap; `Tank.fourTaps` is 40). The
-  deepest (cost 23 and up, 20 maps) are dealt past `StirMap.prismLeast`, so they draw through the stored map from the
-  deal, as any Prism glass does once a player stirs that deep.
+- **Three stirs a rod.** A rod stirred more than once shows only the sum of its stirs (`read`: its count reads 0 and
+  a wrong turn registers 0.8 to 0.97 of its core), so each of its moves but the last is read by deduction. The first
+  five trays hold at most three stirs on a rod, and so does every new specimen (`PRISM_ROD_CAP=3` in the search,
+  `testPrismLevels`). A first pick without the cap ran pent to depth 20 with seven stirs on one rod and 14 of its 20
+  moves unreadable: long, not hard, and a guess at every step. The cap holds pent to 13 (four coloured rods) and hex
+  to 19; hex proofs past 16 take the solver many minutes each, so the treble stops at 16.
+- **Depth.** Tray 6 deals 8 to 11 and tray 15 15 to 16; a tray's mean rises 0.7 a tray, where the first five's rose
+  about half, to twice the old maximum. Most of the deepest are on hex, the only layout the cap lets past 13.
+- **Readable.** A deal with a three-way split shows at most 75% ghosts and splits at most 25% three ways; a pair's deal
+  (a primary and its ink: red and cyan, green and magenta, blue and yellow), which never splits three ways, up to 90%
+  ghosts, as across the whole glass one colour and its opposite still read (a hex 14 of red and cyan at 86% shows every
+  animal of the octopus plate). The first five kept 72% (70% on hex) and 8%: the ten new plates keep their shapes
+  through deeper ghosts (an ink deal on tri splitting 23% three ways still shows every diatom). Every once-stirred
+  coloured rod's count shows over at least half its core (`least read`).
+- **Cost.** Each stack keeps four taps at `channelCost` 30 or under (the search's cap; `Tank.fourTaps` is 40).
 - **Hard to crack, not only deep.** Each slot names a layout, depth and palette (`scripts/prism-levels/pick.py`,
-  `DEEP`), and takes the readable row of its pool (`scripts/prism-levels/pools.sh`) from the harder half, by fewer right
-  moves a step, more blocked knobs (0.35 each), more moves read as a sum (0.15 each) and more forced steps (0.1 each),
-  slot k of six k/5 of the way from the pool's middle to its hardest. No two of the sixty share rods and masks, as a
-  deeper deal on the same knobs reads as a repeat.
+  `DEEP`) and takes the readable row of its pool (`scripts/prism-levels/pools.sh <dir> 20`, 37 minutes on a loaded Mac)
+  from the hardest third: fewer right moves a step, more blocked knobs (0.35 each), more forced steps (0.1 each). Moves
+  read as a sum are the depth less the rods, the same through a pool, so they don't rank. Each specimen takes rods and
+  masks no earlier one has where its depth's pools allow (a pair on hex has few ways to colour six rods).
 
 Per tray, the means against the first five's (right moves a step, blocked knobs, forced steps over the untwist, moves
 read as a sum, ghost and triple shares):
@@ -138,152 +139,148 @@ read as a sum, ghost and triple shares):
 | 3 | 4-7 | 1.18 | 3.2 | 4.2 | 1.0 | 56% | 6% |
 | 4 | 6-8 | 1.44 | 2.7 | 3.9 | 2.5 | 59% | 6% |
 | 5 | 6-8 | 1.28 | 2.5 | 5.3 | 3.2 | 51% | 6% |
-| 6 | 8-11 | 1.41 | 3.2 | 5.9 | 4.2 | 65% | 0% |
-| 7 | 9-12 | 1.60 | 2.7 | 5.8 | 5.0 | 70% | 5% |
-| 8 | 10-13 | 1.55 | 3.3 | 6.2 | 5.7 | 66% | 0% |
-| 9 | 11-14 | 1.28 | 2.8 | 8.9 | 8.2 | 59% | 14% |
-| 10 | 12-15 | 1.36 | 2.7 | 9.3 | 8.3 | 64% | 4% |
-| 11 | 13-16 | 1.66 | 3.2 | 6.9 | 8.5 | 68% | 3% |
-| 12 | 14-17 | 1.63 | 2.8 | 7.8 | 9.8 | 68% | 2% |
-| 13 | 15-18 | 1.38 | 2.7 | 11.1 | 11.3 | 65% | 0% |
-| 14 | 16-19 | 1.32 | 2.0 | 13.5 | 12.5 | 67% | 0% |
-| 15 | 17-20 | 1.35 | 2.3 | 13.1 | 13.5 | 66% | 0% |
+| 6 | 8-11 | 1.43 | 3.5 | 5.4 | 4.0 | 65% | 0% |
+| 7 | 9-12 | 1.69 | 3.5 | 5.2 | 4.2 | 73% | 5% |
+| 8 | 10-12 | 1.65 | 3.7 | 5.4 | 5.0 | 71% | 0% |
+| 9 | 11-13 | 1.46 | 3.5 | 6.5 | 6.5 | 65% | 12% |
+| 10 | 12-13 | 1.84 | 4.5 | 4.4 | 5.7 | 77% | 0% |
+| 11 | 13-14 | 1.90 | 3.8 | 4.2 | 6.8 | 76% | 3% |
+| 12 | 13-15 | 1.91 | 3.8 | 4.0 | 7.3 | 78% | 0% |
+| 13 | 13-16 | 2.04 | 3.7 | 3.3 | 8.0 | 76% | 0% |
+| 14 | 14-16 | 1.85 | 4.3 | 5.8 | 8.3 | 80% | 0% |
+| 15 | 15-16 | 1.81 | 4.5 | 5.1 | 8.8 | 79% | 0% |
 
-So the treble is harder by length and by reading, not by scarcer moves: right moves a step stay near the first five's
-(1.3 to 1.7 against 1.2 to 1.9), while forced steps over the untwist climb from 6 to 13 (the first five's 3 to 5) and
-the moves read as a sum, where the glass shows a rod's total and not the move, from 4 to 13 (1 to 3). Hex's seven
-discs give the most blocked knobs (4 to 5) but read worst, so the last trays lean on pent pairs.
-
-The proofs take 35 minutes on the Mac with `-O` under load (`scripts/prism-levels.sh table`), against 16 seconds for
-the first five; the deepest pent pairs take seconds each, mixed palettes on pent and pairs on hex up to four minutes.
+So the treble is harder by depth and by traps more than by scarcer moves: blocked knobs rise from 2.5 to 4.5, depth
+and the moves read as a sum (4 to 9 against 1 to 3) with it, while right moves a step stay at the first five's 1.4 to
+1.9 and reach 2 in the hex trays, whose seven discs leave more of the stack free at once.
 
 ### Tray 6: Complements, on the leaves
 
-Green with magenta and blue with yellow, the pairs tray 1 taught with red and cyan: a primary and its ink share no channel, so they always pass, and two words untwist side by side. Rods of one colour block each other where they meet. Depth 8 to 11.
+Green with magenta and blue with yellow, the pairs tray 1 taught with red and cyan: a primary and its ink share no channel, so they always pass, and two words untwist side by side; rods of one colour block each other where they meet. Depth 8 to 11.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 31 | quad | 0 g, 1 m, 2 w, 3 g | `2:-5,0:+5,1:-3,3:+4,0:+5,3:+4,0:-3,3:+2` | 8 | 2 / 1 | 2 | 1.37 | 5.0 | 4 | 0.96 | 14 | 61% | 0% |
-| 32 | eye | 0 w, 1 b, 2 b, 3 y | `0:+4,2:-4,3:-4,1:+3,2:+2,1:+4,2:-5,1:+2,2:-5` | 9 | 2 / 1 | 2 | 1.22 | 7.0 | 5 | 0.88 | 15 | 57% | 0% |
-| 33 | pent | 0 w, 1 m, 2 g, 3 m, 4 m | `0:-3,2:+2,1:+4,4:+5,3:-3,4:-3,3:-3,4:+5,3:+2` | 9 | 3 / 2 | 2 | 1.55 | 5.5 | 4 | 0.95 | 21 | 67% | 0% |
-| 34 | pent | 0 y, 1 w, 2 b, 3 b, 4 b | `1:-4,0:+2,4:-3,2:-4,3:-5,4:-2,3:+3,2:-4,3:+5,2:+3` | 10 | 2 / 1 | 3 | 1.35 | 6.5 | 5 | 0.95 | 16 | 67% | 0% |
-| 35 | hex | 0 m, 1 g, 2 w, 3 m, 4 m, 5 m, 6 g | `2:-5,4:+2,0:+5,5:+2,1:+2,0:+2,3:+3,4:-2,0:-4,6:+5` | 10 | 2 / 1 | 5 | 1.49 | 5.1 | 3 | 0.59 | 22 | 70% | 0% |
-| 36 | hex | 0 y, 1 y, 2 y, 3 y, 4 b, 5 w, 6 y | `5:-4,0:-5,6:-5,3:+5,2:+3,1:+3,3:+2,6:+5,4:+3,0:-5,2:-4` | 11 | 2 / 1 | 5 | 1.48 | 6.1 | 4 | 0.58 | 25 | 67% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 31 | quad | 0 m, 1 w, 2 g, 3 m | `1:-4,2:+4,0:-5,3:-5,0:-3,3:-4,0:+2,3:-2` | 8 | 2 / 1 | 2 | 1.25 | 6.0 | 4 | 0.92 | 3 | 19 | 61% | 0% |
+| 32 | pent | 0 y, 1 y, 2 y, 3 b, 4 w | `4:+4,1:+3,2:+4,3:+2,0:-5,1:-2,0:+5,1:-5,2:-2` | 9 | 2 / 1 | 3 | 1.47 | 4.8 | 4 | 0.97 | 3 | 21 | 53% | 0% |
+| 33 | pent | 0 w, 1 g, 2 m, 3 m, 4 m | `0:-5,1:+5,3:-4,2:+2,4:+4,3:-2,2:+2,3:-2,4:-3` | 9 | 2 / 1 | 3 | 1.47 | 4.8 | 4 | 0.95 | 3 | 21 | 67% | 0% |
+| 34 | pent | 0 y, 1 b, 2 b, 3 b, 4 w | `4:+2,0:-5,3:+3,2:+5,1:-5,3:+2,2:+4,1:+4,2:+4,3:-3` | 10 | 2 / 1 | 3 | 1.30 | 7.0 | 5 | 0.94 | 3 | 16 | 67% | 0% |
+| 35 | hex | 0 m, 1 g, 2 g, 3 m, 4 w, 5 m, 6 m | `4:-3,6:+2,1:-5,2:+3,0:-4,5:-3,6:+3,0:+4,1:-5,3:-5` | 10 | 2 / 2 | 5 | 1.68 | 3.4 | 3 | 0.59 | 2 | 21 | 74% | 0% |
+| 36 | hex | 0 b, 1 b, 2 b, 3 b, 4 b, 5 y, 6 w | `6:+4,3:+2,2:+2,5:-3,0:-3,1:+2,4:-5,0:+3,3:-2,0:+4,4:-3` | 11 | 2 / 1 | 5 | 1.41 | 6.5 | 4 | 0.54 | 3 | 17 | 70% | 0% |
 
 ### Tray 7: Second Pass, on the moths
 
-Primaries, and red with cyan: more rods stirred twice and three times, each showing the sum of its stirs, so the count read off the glass is not the move. Depth 9 to 12.
+Primaries, pairs and inks, more rods stirred twice and three times, each showing the sum of its stirs, so the count read off the glass is the move only on a rod's last stir. Depth 9 to 12.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 37 | pent | 0 b, 1 b, 2 w, 3 r, 4 g | `2:+3,0:+3,1:+4,0:-4,4:-4,3:+5,1:-2,0:-5,1:-5` | 9 | 3 / 2 | 2 | 1.66 | 4.6 | 4 | 0.97 | 14 | 68% | 5% |
-| 38 | eye | 0 c, 1 r, 2 c, 3 w | `3:-2,1:+5,0:-3,2:-5,0:+4,2:-5,0:+4,2:-4,0:+5,2:-4` | 10 | 2 / 1 | 2 | 1.20 | 8.0 | 6 | 0.65 | 23 | 70% | 0% |
-| 39 | pent | 0 w, 1 r, 2 g, 3 b, 4 b | `0:+5,4:+5,3:+2,1:+3,4:+4,3:+4,4:-4,3:-4,4:+5,2:-3` | 10 | 3 / 2 | 2 | 1.50 | 6.5 | 5 | 0.97 | 15 | 67% | 5% |
-| 40 | hex | 0 b, 1 b, 2 g, 3 g, 4 w, 5 r, 6 b | `4:+3,1:-4,3:+2,0:-2,1:+2,6:-2,1:-5,6:-3,5:+5,2:+5,1:-5` | 11 | 3 / 2 | 4 | 1.76 | 4.9 | 4 | 0.71 | 16 | 75% | 17% |
-| 41 | pent | 0 r, 1 b, 2 w, 3 g, 4 r | `2:+2,0:+4,1:+4,3:-5,4:-5,0:-2,4:-4,0:-2,4:-5,0:+5,4:+5` | 11 | 3 / 1 | 2 | 1.63 | 5.6 | 6 | 0.97 | 16 | 67% | 5% |
-| 42 | hex | 0 w, 1 r, 2 r, 3 c, 4 c, 5 c, 6 c | `0:+4,1:+2,4:+2,3:+2,6:-4,2:-2,4:+4,3:-5,4:+5,5:+3,6:+4,5:-3` | 12 | 3 / 2 | 4 | 1.85 | 5.0 | 5 | 0.65 | 26 | 72% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 37 | pent | 0 w, 1 r, 2 g, 3 b, 4 b | `0:+5,4:+5,3:+2,1:+3,4:+4,3:+4,4:-4,3:+3,2:+5` | 9 | 3 / 1 | 2 | 1.55 | 5.5 | 4 | 0.97 | 3 | 14 | 68% | 5% |
+| 38 | hex | 0 m, 1 w, 2 m, 3 m, 4 g, 5 m, 6 m | `1:+3,4:+5,6:+3,0:-5,5:-4,6:-4,2:+2,5:+5,3:-4,6:-3` | 10 | 3 / 2 | 4 | 1.70 | 5.2 | 3 | 0.58 | 3 | 23 | 79% | 0% |
+| 39 | hex | 0 w, 1 r, 2 r, 3 r, 4 c, 5 c, 6 r | `0:-4,1:-3,3:+4,6:-2,5:-4,4:-5,1:-2,2:+4,5:-5,1:-3` | 10 | 2 / 2 | 5 | 1.80 | 3.4 | 3 | 0.65 | 3 | 18 | 86% | 0% |
+| 40 | pent | 0 c, 1 y, 2 w, 3 m, 4 m | `2:+2,1:-3,4:+5,3:+2,4:-3,0:+2,4:+4,3:-5,0:+4,1:+3,0:+2` | 11 | 2 / 2 | 3 | 1.40 | 6.6 | 6 | 0.97 | 3 | 26 | 53% | 9% |
+| 41 | hex | 0 b, 1 g, 2 g, 3 g, 4 w, 5 b, 6 r | `4:-5,3:-4,6:+4,2:-2,0:-3,3:+5,1:-2,5:+5,2:+2,3:+2,1:+4` | 11 | 4 / 3 | 3 | 2.03 | 4.5 | 4 | 0.71 | 3 | 16 | 72% | 18% |
+| 42 | hex | 0 c, 1 r, 2 w, 3 c, 4 r, 5 c, 6 c | `2:-2,5:-2,1:+2,6:+2,0:+3,3:-3,4:+2,5:+3,0:-4,5:+2,0:+3,3:-4` | 12 | 3 / 1 | 4 | 1.63 | 6.1 | 5 | 0.59 | 3 | 26 | 79% | 0% |
 
 ### Tray 8: One Ink, on the reef
 
-Pairs again, deeper and wider, where several rods of one colour overlap and block: the knob tinted alike is the trap. Depth 10 to 13.
+Pairs, wider: several rods of one colour overlapping, each blocking the next, so a knob tinted like its neighbour is the trap. Depth 10 to 12.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 43 | eye | 0 g, 1 w, 2 g, 3 m | `1:-2,3:-4,0:-3,2:-5,0:+5,2:+2,0:-4,2:+2,0:+5,2:+3` | 10 | 2 / 1 | 2 | 1.20 | 8.0 | 6 | 0.80 | 16 | 60% | 0% |
-| 44 | pent | 0 r, 1 w, 2 r, 3 c, 4 r | `1:+4,0:-4,3:+5,4:+4,2:-5,0:-3,4:-4,0:-5,4:-4,0:-4,4:-2` | 11 | 3 / 2 | 2 | 1.45 | 7.5 | 6 | 0.95 | 17 | 68% | 0% |
-| 45 | pent | 0 b, 1 y, 2 y, 3 y, 4 w | `4:+5,2:+4,3:+2,2:+2,1:-5,0:-3,2:-5,1:+5,2:-2,1:-5,3:-2` | 11 | 3 / 3 | 2 | 1.42 | 7.3 | 6 | 0.97 | 25 | 52% | 0% |
-| 46 | hex | 0 m, 1 g, 2 g, 3 m, 4 w, 5 m, 6 m | `4:-3,6:+2,1:-5,2:+3,0:-4,5:-3,6:+3,0:+4,1:-5,3:-5,5:+3,0:+2` | 12 | 2 / 1 | 5 | 1.73 | 4.6 | 5 | 0.59 | 25 | 70% | 0% |
-| 47 | hex | 0 w, 1 r, 2 r, 3 r, 4 c, 5 c, 6 r | `0:-4,1:-3,3:+4,6:-2,5:-4,4:-5,1:-2,2:+4,5:-5,1:-3,4:-2,3:-4` | 12 | 3 / 2 | 4 | 1.98 | 3.3 | 5 | 0.65 | 21 | 74% | 0% |
-| 48 | hex | 0 b, 1 y, 2 y, 3 w, 4 b, 5 b, 6 b | `3:+5,0:+2,1:-3,2:+2,5:-2,4:+3,6:-4,5:+2,4:+4,5:+5,6:+3,5:-5,1:-4` | 13 | 2 / 2 | 5 | 1.55 | 6.2 | 6 | 0.59 | 21 | 72% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 43 | pent | 0 w, 1 r, 2 c, 3 c, 4 c | `0:+2,1:-2,3:-3,4:+4,2:+2,3:+2,4:+4,2:-4,3:-3,2:+2` | 10 | 2 / 1 | 3 | 1.54 | 4.9 | 5 | 0.95 | 3 | 23 | 56% | 0% |
+| 44 | pent | 0 y, 1 w, 2 b, 3 b, 4 b | `1:-4,0:+2,4:-3,2:-4,3:-5,4:-2,3:+3,2:-4,3:+5,4:-3,2:+3` | 11 | 3 / 2 | 2 | 1.47 | 6.8 | 6 | 0.95 | 3 | 17 | 67% | 0% |
+| 45 | hex | 0 m, 1 g, 2 g, 3 w, 4 m, 5 m, 6 g | `3:+5,2:-3,5:-4,4:+4,1:+5,2:+3,0:+2,6:+5,4:+3,1:-2,0:-5` | 11 | 2 / 1 | 5 | 1.91 | 2.7 | 4 | 0.57 | 2 | 21 | 70% | 0% |
+| 46 | hex | 0 b, 1 y, 2 y, 3 y, 4 b, 5 w, 6 y | `5:+2,1:+5,0:-5,6:-4,1:-4,6:-4,1:-4,6:-2,2:-2,3:+4,4:-3,0:-4` | 12 | 3 / 1 | 4 | 1.80 | 4.5 | 5 | 0.70 | 3 | 25 | 79% | 0% |
+| 47 | hex | 0 g, 1 w, 2 g, 3 g, 4 g, 5 g, 6 m | `1:+4,0:-4,2:-3,4:+2,5:+2,6:+5,4:+4,5:+5,0:+4,3:-4,5:-4,2:+2` | 12 | 3 / 2 | 4 | 1.53 | 7.1 | 5 | 0.61 | 3 | 18 | 76% | 0% |
+| 48 | hex | 0 r, 1 r, 2 r, 3 c, 4 r, 5 r, 6 w | `6:-2,2:-5,5:+5,4:+5,5:+3,4:+5,0:-2,3:-4,1:-2,2:+2,5:+5,4:+3` | 12 | 3 / 2 | 4 | 1.65 | 6.2 | 5 | 0.53 | 3 | 18 | 79% | 0% |
 
 ### Tray 9: Trapping, on the diatoms
 
-Inks over primaries and over each other: an ink blocks both its primaries and every ink it shares a channel with, so most knobs push if turned first. Depth 11 to 14, the deepest ink deals, some splitting a fifth of the glass three ways.
+Inks over primaries and over each other: an ink blocks both its primaries and every ink it shares a channel with, so most knobs push if turned first. The tray splits the glass three ways the most (up to a quarter). Depth 11 to 13.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 49 | tri | 0 y, 1 w, 2 c | `1:-2,2:-4,0:-4,2:-4,0:+3,2:+3,0:-4,2:-2,0:+2,2:+3,0:+3` | 11 | 1 / 1 | 2 | 1.00 | 11.0 | 8 | 1.00 | 26 | 41% | 13% |
-| 50 | quad | 0 m, 1 w, 2 c, 3 y | `1:-5,0:-3,2:+2,3:-2,2:-3,3:+5,2:-5,3:-5,0:+2,2:-5,3:-4,2:-4` | 12 | 1 / 1 | 3 | 1.17 | 10.0 | 8 | 0.97 | 28 | 60% | 18% |
-| 51 | eye | 0 w, 1 y, 2 b, 3 g | `0:+3,3:-5,2:+4,1:-2,3:+3,1:+4,3:+4,1:+2,3:-5,1:+2,3:-5,1:-4` | 12 | 2 / 1 | 2 | 1.17 | 10.0 | 8 | 0.94 | 22 | 60% | 14% |
-| 52 | pent | 0 g, 1 c, 2 r, 3 w, 4 y | `3:+3,1:-5,0:+5,4:-2,1:+2,0:+2,2:+5,1:+3,4:+3,0:+4,1:-5,0:+4,4:+2` | 13 | 2 / 1 | 3 | 1.44 | 7.4 | 8 | 0.97 | 25 | 68% | 9% |
-| 53 | pent | 0 w, 1 m, 2 y, 3 c, 4 y | `0:+5,1:-5,3:+2,2:-4,1:-4,4:+5,3:-3,2:+2,3:-4,4:+2,1:+2,2:-4,3:+5` | 13 | 1 / 1 | 4 | 1.48 | 6.7 | 8 | 0.98 | 30 | 59% | 15% |
-| 54 | pent | 0 w, 1 b, 2 r, 3 y, 4 g | `0:+3,2:-2,1:-4,4:-3,3:+5,2:-5,3:-2,2:-5,4:-5,3:+3,4:+3,2:-3,3:-4,4:-2` | 14 | 2 / 1 | 3 | 1.41 | 8.6 | 9 | 0.98 | 23 | 68% | 12% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 49 | pent | 0 m, 1 y, 2 c, 3 w, 4 y | `3:-2,1:+3,0:+4,1:-2,4:-5,0:+5,4:+4,0:+5,1:-4,2:-3,4:-2` | 11 | 2 / 2 | 3 | 1.38 | 6.9 | 6 | 1.00 | 3 | 26 | 67% | 14% |
+| 50 | pent | 0 g, 1 c, 2 r, 3 w, 4 y | `3:+3,1:-5,0:+5,4:-2,1:+2,0:+2,2:+5,1:+3,4:+3,0:+3,4:-5` | 11 | 2 / 1 | 3 | 1.53 | 5.5 | 6 | 0.97 | 3 | 22 | 56% | 4% |
+| 51 | pent | 0 y, 1 g, 2 m, 3 r, 4 w | `4:-2,2:-4,0:-5,3:-2,1:-5,2:-3,0:-4,1:+4,0:+5,3:-2,1:+5,2:-4` | 12 | 2 / 1 | 3 | 1.72 | 3.3 | 7 | 0.98 | 3 | 23 | 68% | 9% |
+| 52 | pent | 0 m, 1 w, 2 y, 3 c, 4 m | `1:+2,4:-2,3:+4,2:+4,4:+4,0:+4,4:+5,0:-2,3:+4,2:+5,3:+5,2:-2` | 12 | 2 / 2 | 3 | 1.45 | 6.6 | 7 | 0.98 | 3 | 28 | 68% | 12% |
+| 53 | pent | 0 y, 1 y, 2 c, 3 m, 4 w | `4:-5,1:+2,3:-2,0:-4,2:-3,1:-5,3:-3,2:-2,0:-2,1:+3,2:-4,3:+2` | 12 | 1 / 1 | 4 | 1.44 | 6.8 | 7 | 0.98 | 3 | 28 | 57% | 11% |
+| 54 | hex | 0 m, 1 m, 2 m, 3 y, 4 c, 5 w, 6 m | `5:-4,0:+5,4:-3,3:+4,4:+2,0:-4,2:+4,1:+3,3:-4,2:+2,1:+5,6:+3,4:-3` | 13 | 2 / 2 | 5 | 1.22 | 10.2 | 6 | 0.71 | 3 | 30 | 74% | 23% |
 
 ### Tray 10: Registration, on the fungi
 
-Any colours, depth 12 to 15; the held read (a rod in hand drawn in its own colour) is how the deeper ones are cracked.
+Mostly hex from here on, pairs on seven discs; the held read (a rod in hand drawn in its own colour) is how they are cracked. Depth 12 to 13.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 55 | eye | 0 r, 1 w, 2 r, 3 c | `1:+4,0:+2,2:-2,3:+5,0:+3,2:+2,0:-4,2:-2,0:-2,2:-5,0:+4,2:+5` | 12 | 2 / 1 | 2 | 1.17 | 10.0 | 8 | 0.80 | 18 | 60% | 0% |
-| 56 | pent | 0 g, 1 w, 2 b, 3 c, 4 r | `1:+3,2:+3,3:+3,4:-5,2:+2,3:+2,2:-3,3:+3,2:+2,3:+3,0:-5,2:+3,3:-5` | 13 | 3 / 2 | 2 | 1.38 | 9.5 | 8 | 0.98 | 23 | 68% | 10% |
-| 57 | pent | 0 w, 1 b, 2 g, 3 m, 4 y | `0:-3,2:+2,4:+2,1:+5,3:+3,4:+3,3:+2,4:-5,3:-5,4:-2,3:+5,4:+3,3:+2` | 13 | 3 / 2 | 2 | 1.38 | 9.5 | 8 | 0.98 | 28 | 67% | 10% |
-| 58 | pent | 0 b, 1 b, 2 y, 3 w, 4 b | `3:+3,0:-3,1:+5,4:-2,2:+2,0:+2,4:+2,1:-5,0:+4,1:-4,0:+3,1:+4,0:+2,1:+5` | 14 | 2 / 1 | 3 | 1.38 | 8.8 | 9 | 0.97 | 20 | 52% | 0% |
-| 59 | hex | 0 g, 1 g, 2 g, 3 g, 4 m, 5 m, 6 w | `6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,0:-3,3:-4,2:+3,4:+3,0:+3,1:+2,0:+4` | 14 | 2 / 1 | 5 | 1.41 | 8.3 | 7 | 0.55 | 21 | 68% | 0% |
-| 60 | pent | 0 y, 1 r, 2 c, 3 w, 4 b | `3:-2,4:+4,1:+5,2:+5,0:+2,1:+5,0:+5,1:-3,0:-2,1:-2,0:-4,1:+2,0:+2,1:+2,0:+4` | 15 | 3 / 1 | 2 | 1.47 | 9.5 | 10 | 0.97 | 27 | 68% | 7% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 55 | hex | 0 w, 1 r, 2 r, 3 c, 4 c, 5 c, 6 c | `0:+4,1:+2,4:+2,3:+2,6:-4,2:-2,4:+4,3:-5,4:+5,3:-4,5:+3,6:-5` | 12 | 3 / 2 | 4 | 1.77 | 5.6 | 5 | 0.65 | 3 | 26 | 86% | 0% |
+| 56 | hex | 0 b, 1 y, 2 y, 3 y, 4 b, 5 w, 6 b | `5:-2,2:-5,0:-3,3:+2,4:-3,1:-5,6:+2,2:-3,1:+3,0:+2,2:+2,4:-4` | 12 | 2 / 2 | 5 | 2.02 | 2.3 | 5 | 0.71 | 3 | 23 | 79% | 0% |
+| 57 | hex | 0 b, 1 y, 2 w, 3 b, 4 y, 5 b, 6 y | `2:+3,3:+2,5:+5,4:-3,0:-4,1:-5,5:+3,0:+3,5:-5,6:+2,1:+5,3:+5,0:+2` | 13 | 3 / 1 | 4 | 2.02 | 4.2 | 6 | 0.58 | 3 | 22 | 69% | 0% |
+| 58 | hex | 0 r, 1 r, 2 c, 3 c, 4 r, 5 w, 6 r | `5:+2,0:-4,3:+2,2:-2,1:+3,6:+5,1:-4,3:+3,6:-4,2:-3,0:+3,1:+5,4:-5` | 13 | 3 / 2 | 4 | 1.75 | 4.8 | 6 | 0.71 | 3 | 22 | 79% | 0% |
+| 59 | hex | 0 g, 1 g, 2 g, 3 g, 4 m, 5 m, 6 w | `6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,1:-3,4:-2,5:-4,4:+3,5:+3,0:+4` | 13 | 2 / 1 | 5 | 1.89 | 2.8 | 6 | 0.55 | 3 | 23 | 73% | 0% |
+| 60 | hex | 0 c, 1 r, 2 c, 3 c, 4 w, 5 c, 6 r | `4:-5,5:+4,1:+2,0:-3,2:-5,3:-2,5:+2,2:+2,0:+5,5:-5,2:-3,0:+5,6:+4` | 13 | 2 / 1 | 5 | 1.59 | 6.7 | 6 | 0.59 | 3 | 28 | 78% | 0% |
 
 ### Tray 11: Misregister, on the feathers
 
-Depth 13 to 16, pent and hex: on hex's seven discs, those that miss pass whatever their colours.
+Hex and pent: discs that miss pass whatever their colours, and one deals the three primaries. Depth 13 to 14.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 61 | pent | 0 m, 1 w, 2 m, 3 g, 4 g | `1:-4,3:-3,0:-3,4:-5,3:-3,2:-2,4:-4,3:+3,4:+3,3:-2,4:-4,3:+3,4:-4` | 13 | 3 / 1 | 2 | 1.54 | 7.5 | 8 | 0.95 | 20 | 67% | 0% |
-| 62 | pent | 0 c, 1 g, 2 b, 3 r, 4 w | `4:+2,3:-5,1:+3,2:-5,0:+4,1:+4,0:+5,1:+2,0:+2,1:-3,0:-2,1:+3,0:-2,1:-3` | 14 | 3 / 1 | 2 | 1.43 | 9.5 | 9 | 0.97 | 24 | 68% | 13% |
-| 63 | hex | 0 c, 1 c, 2 c, 3 r, 4 r, 5 w, 6 r | `5:-3,4:+4,3:+4,4:+3,3:-2,0:+2,1:+3,0:-4,1:+3,2:-4,1:-3,6:-2,0:-4,4:+5` | 14 | 3 / 1 | 4 | 1.91 | 4.1 | 7 | 0.58 | 26 | 75% | 0% |
-| 64 | pent | 0 w, 1 g, 2 g, 3 r, 4 b | `0:-2,3:+4,1:-4,4:+5,2:-4,1:+3,2:-4,1:-3,2:+4,1:+4,2:+5,1:+5,2:-3,1:-2,2:+2` | 15 | 3 / 2 | 2 | 1.33 | 11.5 | 10 | 0.97 | 20 | 58% | 3% |
-| 65 | hex | 0 r, 1 r, 2 c, 3 c, 4 r, 5 w, 6 r | `5:+2,0:-4,3:+2,2:-2,1:+3,6:+5,1:-4,3:+3,6:-4,2:-3,0:+3,1:+5,3:-5,6:+3,4:-3` | 15 | 3 / 2 | 4 | 1.84 | 4.7 | 8 | 0.71 | 25 | 69% | 0% |
-| 66 | hex | 0 m, 1 w, 2 g, 3 g, 4 g, 5 g, 6 m | `1:+2,0:+3,2:-3,3:+4,6:+2,0:+5,6:+4,0:-3,4:-3,2:+4,6:-4,0:+4,5:-2,4:+5,6:-2,3:+2` | 16 | 2 / 2 | 5 | 1.89 | 4.3 | 9 | 0.58 | 29 | 72% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 61 | pent | 0 m, 1 m, 2 g, 3 g, 4 w | `4:+2,1:-4,0:+3,3:+5,2:+4,1:+4,0:+2,1:-5,0:+4,3:-5,2:-2,3:+4,2:+5` | 13 | 2 / 2 | 3 | 1.75 | 3.2 | 8 | 0.95 | 3 | 24 | 68% | 0% |
+| 62 | hex | 0 c, 1 c, 2 c, 3 r, 4 r, 5 w, 6 r | `5:-3,4:+4,3:+4,4:+3,3:-2,0:+2,1:+3,0:-4,1:+3,2:-4,1:-3,2:+5,6:+2` | 13 | 3 / 2 | 4 | 1.87 | 4.6 | 6 | 0.58 | 3 | 25 | 79% | 0% |
+| 63 | hex | 0 b, 1 y, 2 y, 3 y, 4 y, 5 w, 6 b | `5:+4,4:+5,0:+4,6:-2,1:-4,0:-2,2:-3,1:-2,3:-3,6:-5,0:+5,6:+4,4:+3,2:-4` | 14 | 3 / 3 | 4 | 2.16 | 3.0 | 7 | 0.59 | 3 | 26 | 79% | 0% |
+| 64 | hex | 0 w, 1 g, 2 g, 3 m, 4 g, 5 g, 6 g | `0:+2,3:-4,6:+4,1:-2,2:+4,6:+3,4:+4,5:+3,1:+3,4:+3,2:-5,5:+5,4:+2` | 13 | 3 / 2 | 4 | 1.84 | 5.0 | 6 | 0.65 | 3 | 19 | 86% | 0% |
+| 65 | hex | 0 b, 1 b, 2 g, 3 g, 4 w, 5 r, 6 b | `4:+3,1:-4,3:+2,0:-2,1:+2,6:-2,1:-5,5:-3,2:+5,6:+5,0:-2,3:-2,6:+4,0:-5` | 14 | 3 / 1 | 4 | 1.76 | 6.0 | 7 | 0.71 | 3 | 19 | 66% | 17% |
+| 66 | hex | 0 m, 1 w, 2 g, 3 g, 4 g, 5 g, 6 m | `1:+2,0:+3,2:-3,3:+4,6:+2,0:+5,6:+4,0:-3,4:+4,2:-3,3:-4,2:+5,3:+4,5:-2` | 14 | 3 / 2 | 4 | 2.04 | 3.7 | 7 | 0.58 | 3 | 24 | 79% | 0% |
 
 ### Tray 12: Chromatic, on the starfish
 
-Depth 14 to 17: a stir under another colour is not buried, and the long lines are mostly reading which is.
+A stir under its opposite colour (red under cyan, green under magenta, blue under yellow) is not buried; the long lines are mostly reading which is. Depth 13 to 15.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 67 | pent | 0 b, 1 w, 2 b, 3 y, 4 b | `1:-4,3:+5,4:+4,2:-2,0:-5,4:-3,0:-4,4:+5,0:-3,4:+3,0:-2,4:+2,0:-5,4:+2` | 14 | 3 / 2 | 2 | 1.43 | 9.5 | 9 | 0.97 | 20 | 68% | 0% |
-| 68 | pent | 0 r, 1 c, 2 r, 3 r, 4 w | `4:-3,3:+5,2:-5,1:-5,0:+5,3:-5,2:-5,3:+4,2:+2,3:-3,2:-4,3:+2,2:-5,3:-2,2:-4` | 15 | 3 / 2 | 2 | 1.33 | 11.5 | 10 | 0.97 | 21 | 67% | 0% |
-| 69 | pent | 0 y, 1 g, 2 m, 3 r, 4 w | `4:-2,2:-4,0:-5,3:-2,1:-5,2:-3,0:-4,1:+4,0:+5,1:-3,0:-2,3:+3,2:-2,1:-2,3:-4` | 15 | 2 / 2 | 3 | 1.73 | 4.1 | 10 | 0.98 | 27 | 68% | 10% |
-| 70 | hex | 0 r, 1 c, 2 r, 3 c, 4 c, 5 c, 6 w | `6:-5,4:+3,5:-4,2:-5,0:+3,1:+4,2:-4,4:+3,3:+5,0:+3,4:+5,5:+4,3:-4,2:-3,0:+3,4:-4` | 16 | 3 / 1 | 4 | 2.13 | 3.1 | 9 | 0.53 | 30 | 68% | 0% |
-| 71 | pent | 0 w, 1 g, 2 g, 3 m, 4 g | `0:-3,3:+5,4:+4,1:+5,2:-4,1:-3,2:-2,1:+5,2:+2,1:-5,2:-3,1:-4,2:-4,1:-4,2:-4,1:-4` | 16 | 3 / 2 | 2 | 1.31 | 12.5 | 11 | 0.95 | 22 | 68% | 0% |
-| 72 | hex | 0 b, 1 y, 2 w, 3 b, 4 y, 5 b, 6 y | `2:+3,3:+2,5:+5,4:-3,0:-4,1:-5,5:+3,0:+3,5:-5,3:+2,6:-5,0:+4,3:-5,1:-3,6:+5,0:+3,5:-4` | 17 | 3 / 1 | 4 | 1.87 | 5.8 | 10 | 0.58 | 27 | 70% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 67 | hex | 0 m, 1 m, 2 g, 3 w, 4 g, 5 g, 6 g | `3:+3,6:-2,5:-5,2:+4,0:+3,6:+5,5:-2,4:-3,6:+5,5:+2,4:+4,1:+2,0:-4` | 13 | 3 / 1 | 4 | 2.00 | 3.7 | 6 | 0.53 | 3 | 21 | 79% | 0% |
+| 68 | pent | 0 b, 1 y, 2 y, 3 w, 4 b | `3:-3,1:+3,4:-2,0:-3,2:+2,4:-2,0:-5,1:-3,2:-5,4:-3,0:-3,1:-5,2:-5` | 13 | 2 / 1 | 3 | 1.75 | 3.2 | 8 | 0.95 | 3 | 24 | 68% | 0% |
+| 69 | hex | 0 c, 1 r, 2 w, 3 r, 4 r, 5 c, 6 c | `2:-2,3:-2,5:-5,0:+5,6:+3,4:+5,1:-4,5:-3,0:-4,6:+4,5:+2,3:-3,4:-3,0:+3` | 14 | 3 / 1 | 4 | 1.88 | 4.4 | 7 | 0.59 | 3 | 27 | 79% | 0% |
+| 70 | hex | 0 w, 1 y, 2 y, 3 y, 4 b, 5 b, 6 b | `0:-3,1:+3,4:+4,5:+5,2:-2,4:-5,1:-4,5:-4,2:+2,1:-2,2:-2,4:+3,6:-5,3:-2` | 14 | 3 / 2 | 4 | 1.82 | 4.0 | 7 | 0.66 | 3 | 26 | 85% | 0% |
+| 71 | hex | 0 w, 1 r, 2 r, 3 c, 4 r, 5 r, 6 r | `0:+2,2:-2,1:+5,4:+3,5:+3,2:-2,6:+5,5:-2,6:+3,1:-3,4:-3,5:-4,4:-3,2:+4,3:-4` | 15 | 3 / 1 | 4 | 1.81 | 5.8 | 8 | 0.66 | 3 | 21 | 78% | 0% |
+| 72 | hex | 0 g, 1 m, 2 g, 3 m, 4 m, 5 w, 6 g | `5:+2,1:-2,2:+3,3:-3,0:-5,6:+4,2:-2,4:-4,0:+3,2:-4,3:+2,4:-5,6:+2,0:-2,3:-4` | 15 | 3 / 1 | 4 | 2.20 | 2.9 | 8 | 0.59 | 3 | 26 | 79% | 0% |
 
 ### Tray 13: Separations, on the beetles
 
-Depth 15 to 18: pairs, red with cyan and green with magenta, every ink read as its two primaries.
+Every ink read as its two primaries, against the primary it passes. Depth 13 to 16.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 73 | eye | 0 w, 1 r, 2 r, 3 c | `0:+5,1:+2,3:-2,2:+3,1:+3,2:+2,1:+3,2:+5,1:-5,2:-3,1:-2,2:+5,1:+2,2:-5,1:+2` | 15 | 2 / 1 | 2 | 1.13 | 13.0 | 11 | 0.80 | 21 | 60% | 0% |
-| 74 | pent | 0 m, 1 w, 2 g, 3 g, 4 m | `1:-2,3:-4,2:+4,3:+3,4:-5,0:+4,2:-2,3:-3,4:+2,2:-5,3:+5,2:+5,3:+3,0:+5,2:-2,4:-2` | 16 | 2 / 2 | 3 | 1.67 | 5.3 | 11 | 0.97 | 26 | 55% | 0% |
-| 75 | pent | 0 b, 1 y, 2 b, 3 w, 4 b | `3:+4,1:+3,2:-3,4:-2,0:-5,4:-4,0:+5,4:-2,0:+4,4:-5,0:+4,4:-5,0:-2,4:+3,0:+5,4:+2` | 16 | 3 / 2 | 2 | 1.31 | 12.5 | 11 | 0.95 | 22 | 68% | 0% |
-| 76 | hex | 0 r, 1 r, 2 r, 3 c, 4 r, 5 r, 6 w | `6:-2,2:-5,5:+5,4:+5,5:+3,4:+5,0:-2,3:-4,1:-2,2:+2,5:+5,4:-5,0:-4,5:+2,4:-3,1:-2,2:+3` | 17 | 3 / 2 | 4 | 1.60 | 8.7 | 10 | 0.53 | 23 | 73% | 0% |
-| 77 | pent | 0 r, 1 r, 2 c, 3 r, 4 w | `4:-4,0:+4,3:+2,2:-4,1:-4,0:+4,1:-3,0:-3,1:+3,0:+2,1:-3,0:+4,1:-5,0:-3,1:+5,0:-5,1:+2` | 17 | 3 / 1 | 2 | 1.29 | 13.5 | 12 | 0.95 | 23 | 67% | 0% |
-| 78 | pent | 0 g, 1 g, 2 m, 3 w, 4 g | `3:-3,2:-5,1:-3,4:-5,0:-5,4:+4,0:-4,4:-5,0:+2,4:-4,0:+4,1:+2,0:-5,4:-2,1:+4,0:+5,4:+5,0:-2` | 18 | 2 / 1 | 3 | 1.25 | 13.5 | 13 | 0.95 | 24 | 68% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 73 | pent | 0 w, 1 r, 2 r, 3 c, 4 c | `0:+2,1:+4,3:-5,2:+4,4:-4,3:-3,4:-4,1:-3,3:+3,2:+5,4:-5,1:+3,2:+3` | 13 | 2 / 2 | 3 | 1.75 | 3.2 | 8 | 0.95 | 3 | 24 | 61% | 0% |
+| 74 | hex | 0 r, 1 c, 2 r, 3 w, 4 r, 5 c, 6 c | `3:-5,5:-4,6:-3,5:-2,0:-3,2:-2,0:+2,4:+2,2:+3,6:-5,0:-3,5:+5,1:-5,2:+2` | 14 | 3 / 2 | 4 | 1.98 | 3.1 | 7 | 0.59 | 3 | 25 | 79% | 0% |
+| 75 | hex | 0 b, 1 y, 2 y, 3 b, 4 y, 5 y, 6 w | `6:-3,2:+5,3:-2,1:+4,0:+2,5:+2,4:-4,3:+4,5:+5,4:-4,5:-5,2:-4,0:+5,1:+3,4:+3` | 15 | 3 / 2 | 4 | 2.36 | 3.0 | 8 | 0.58 | 3 | 30 | 79% | 0% |
+| 76 | hex | 0 m, 1 w, 2 g, 3 g, 4 m, 5 g, 6 m | `1:+5,0:-2,5:+4,6:+5,4:+3,0:-5,2:-2,6:-4,4:+2,0:-5,4:-4,6:+3,3:+2,2:+5,3:+2` | 15 | 4 / 2 | 3 | 2.14 | 4.4 | 8 | 0.59 | 3 | 29 | 77% | 0% |
+| 77 | hex | 0 c, 1 c, 2 c, 3 r, 4 r, 5 r, 6 w | `6:+5,3:-5,0:-3,4:+3,3:-4,4:-2,3:-2,4:+4,5:-3,2:-2,0:+4,2:-4,0:+2,2:-2,1:+2` | 15 | 2 / 1 | 5 | 1.79 | 3.1 | 8 | 0.70 | 3 | 27 | 79% | 0% |
+| 78 | hex | 0 b, 1 y, 2 w, 3 y, 4 b, 5 y, 6 y | `2:+2,4:-3,5:-5,3:+5,0:+5,6:+2,5:-3,6:+3,1:+3,4:-5,6:+3,5:-2,1:-2,0:+4,4:+2,0:-3` | 16 | 4 / 1 | 3 | 2.20 | 2.8 | 9 | 0.58 | 3 | 30 | 79% | 0% |
 
 ### Tray 14: Interference, on the seahorses
 
-Depth 16 to 19, all on pent but one: the longest lines read by sums, nearly every move on a rod still holding another stir.
+All hex: rods stirred three times, their sums read and deduced. Depth 14 to 16.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 79 | pent | 0 b, 1 y, 2 w, 3 y, 4 b | `2:-5,0:-2,1:+3,4:+3,0:-2,4:+5,3:-2,0:-5,4:-5,0:-5,4:+3,0:+2,4:-4,0:+5,4:+2,0:-4` | 16 | 3 / 1 | 2 | 1.44 | 10.5 | 11 | 0.97 | 23 | 67% | 0% |
-| 80 | pent | 0 r, 1 r, 2 w, 3 r, 4 c | `2:+2,0:+5,4:-3,1:+4,0:+4,1:+5,0:-3,3:-3,1:+2,0:+3,1:-3,0:+5,1:-2,0:+4,1:+2,0:+2,1:-5` | 17 | 3 / 2 | 2 | 1.35 | 12.5 | 12 | 0.97 | 23 | 67% | 0% |
-| 81 | pent | 0 g, 1 m, 2 g, 3 g, 4 w | `4:-4,0:+2,3:-5,1:-4,2:+4,3:-2,2:+4,3:+2,2:+3,3:+4,2:-3,3:-4,2:-5,3:-2,2:+4,3:-3,2:-3` | 17 | 3 / 1 | 2 | 1.29 | 13.5 | 12 | 0.95 | 23 | 67% | 0% |
-| 82 | pent | 0 g, 1 w, 2 g, 3 m, 4 g | `1:-5,3:+4,2:-5,0:+2,4:+4,0:+3,4:+3,0:-2,4:-4,0:+3,4:-4,0:+2,4:+3,0:+4,4:+2,0:-3,4:-3,0:-4` | 18 | 3 / 2 | 2 | 1.28 | 14.5 | 13 | 0.95 | 24 | 67% | 0% |
-| 83 | pent | 0 g, 1 w, 2 g, 3 g, 4 m | `1:-4,2:-5,0:-5,4:-5,3:-2,2:-3,3:-2,2:-4,3:-2,2:+3,3:+5,2:+3,3:-5,2:-4,3:-4,2:+5,3:-5,2:-4` | 18 | 3 / 1 | 2 | 1.28 | 14.5 | 13 | 0.95 | 24 | 68% | 0% |
-| 84 | pent | 0 y, 1 b, 2 b, 3 w, 4 b | `3:+3,2:+5,4:-5,0:-3,1:-4,2:-5,1:+5,2:-4,1:-4,2:-5,1:+5,2:-5,1:+3,2:+5,1:+5,2:+4,1:+5,2:-3,1:+4` | 19 | 3 / 1 | 2 | 1.26 | 15.5 | 14 | 0.95 | 25 | 68% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 79 | hex | 0 w, 1 g, 2 g, 3 m, 4 g, 5 m, 6 m | `0:-4,5:+5,3:-5,2:-2,6:+5,4:+3,1:+3,2:+5,1:+2,5:-4,2:-3,1:+5,6:+2,5:+3` | 14 | 4 / 1 | 3 | 2.22 | 3.6 | 7 | 0.65 | 3 | 25 | 79% | 0% |
+| 80 | hex | 0 r, 1 r, 2 r, 3 w, 4 r, 5 c, 6 c | `3:-4,2:-3,0:+2,2:-4,0:-3,6:+3,2:-4,0:+2,4:+2,1:+4,5:-2,6:+2,5:-5,6:+4,5:-3` | 15 | 3 / 1 | 4 | 1.86 | 3.6 | 8 | 0.59 | 3 | 26 | 79% | 0% |
+| 81 | hex | 0 r, 1 c, 2 r, 3 c, 4 c, 5 w, 6 c | `5:+2,0:-5,4:+5,3:-5,4:-4,3:-4,4:-4,3:+3,2:-2,6:-2,1:+4,6:-2,0:+3,2:-4,1:-3` | 15 | 3 / 1 | 4 | 2.33 | 3.4 | 8 | 0.59 | 3 | 30 | 79% | 0% |
+| 82 | hex | 0 w, 1 g, 2 g, 3 m, 4 g, 5 g, 6 g | `0:+2,3:-4,6:+4,1:-2,2:+4,6:+3,4:+4,5:+3,1:+3,4:+3,2:-5,5:+5,4:+2,5:+5,1:+4,6:+4` | 16 | 2 / 1 | 5 | 1.74 | 5.8 | 9 | 0.65 | 3 | 22 | 86% | 0% |
+| 83 | hex | 0 r, 1 r, 2 r, 3 c, 4 r, 5 r, 6 w | `6:-2,2:-5,5:+5,4:+5,5:+3,4:+5,0:-2,3:-4,1:-2,2:+2,5:+5,4:+3,1:+4,2:-5,0:+4,1:-4` | 16 | 2 / 1 | 5 | 1.49 | 8.7 | 9 | 0.53 | 3 | 22 | 79% | 0% |
+| 84 | hex | 0 b, 1 b, 2 b, 3 b, 4 b, 5 y, 6 w | `6:+4,3:+2,2:+2,5:-3,0:-3,1:+2,4:-5,0:+3,3:-2,0:+4,4:-3,2:+5,1:+5,3:+2,2:-4,1:-4` | 16 | 2 / 1 | 5 | 1.44 | 9.4 | 9 | 0.54 | 3 | 22 | 79% | 0% |
 
 ### Tray 15: Full Spectrum, on the octopus
 
-Depth 17 to 20, the pack's deepest.
+The pack's deepest, every one on hex. Depth 15 to 16.
 
-| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Cost | Ghost | Triple |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 85 | pent | 0 g, 1 g, 2 m, 3 w, 4 m | `3:-3,4:-3,0:+3,1:-2,2:+3,0:+4,1:-5,0:-2,1:-5,0:-3,1:+3,0:+4,1:-2,0:-3,1:-2,0:-2,1:+2` | 17 | 3 / 1 | 2 | 1.41 | 11.5 | 12 | 0.97 | 24 | 67% | 0% |
-| 86 | pent | 0 c, 1 r, 2 w, 3 r, 4 r | `2:+3,4:+2,3:-3,0:+4,1:+3,4:-5,3:-5,4:-5,3:-3,4:-4,3:+5,4:+3,3:-2,4:+3,3:-4,4:+2,3:-2,4:+5` | 18 | 3 / 2 | 2 | 1.33 | 13.5 | 13 | 0.97 | 24 | 67% | 0% |
-| 87 | pent | 0 w, 1 r, 2 r, 3 c, 4 r | `0:-5,2:-3,3:-5,1:+5,4:+3,2:+2,1:+3,2:+4,1:+5,2:-2,1:+3,2:-5,1:+2,2:+3,1:-4,2:+3,1:-3,2:-2` | 18 | 3 / 2 | 2 | 1.33 | 13.5 | 13 | 0.97 | 24 | 57% | 0% |
-| 88 | pent | 0 b, 1 y, 2 w, 3 b, 4 b | `2:+5,0:+4,4:+5,3:-5,4:+4,3:+4,0:-2,1:-3,4:-5,3:-5,4:-3,0:-4,3:-5,4:+5,0:+3,4:+4,0:-5,3:+3,4:-2` | 19 | 2 / 1 | 3 | 1.36 | 12.7 | 14 | 0.97 | 25 | 68% | 0% |
-| 89 | pent | 0 m, 1 g, 2 g, 3 m, 4 w | `4:+3,3:+5,0:-2,1:+5,2:-2,1:-3,2:-4,1:-2,2:+4,1:+5,2:+2,1:+4,2:+5,1:-2,2:-5,1:-3,2:-5,1:-2,2:-2` | 19 | 3 / 1 | 2 | 1.37 | 13.5 | 14 | 0.95 | 26 | 67% | 0% |
-| 90 | pent | 0 w, 1 r, 2 r, 3 r, 4 c | `0:+2,4:+2,1:+3,2:-3,1:+4,3:-5,2:+2,1:+2,3:-5,2:-5,3:-4,1:-3,2:+5,1:+5,3:-5,2:-2,3:-2,2:-2,1:+3,2:-2` | 20 | 2 / 1 | 3 | 1.30 | 14.0 | 15 | 0.95 | 26 | 68% | 0% |
+| # | Layout | Masks | Scramble | Depth | Free (masks / white) | Blocked | Right/step | Forced | Sums | Least read | Most | Cost | Ghost | Triple |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 85 | hex | 0 r, 1 c, 2 r, 3 c, 4 c, 5 c, 6 w | `6:-5,4:+3,5:-4,2:-5,0:+3,1:+4,2:-4,4:+3,3:+5,0:+3,4:+5,5:+2,2:-4,3:+3,0:-4` | 15 | 4 / 1 | 3 | 2.17 | 2.8 | 8 | 0.53 | 3 | 28 | 79% | 0% |
+| 86 | hex | 0 w, 1 r, 2 r, 3 c, 4 r, 5 r, 6 r | `0:+2,2:-2,1:+5,4:+3,5:+3,2:-2,6:+5,5:-2,6:+3,1:-3,4:-3,5:-4,4:-3,2:+4,3:-4,1:+2` | 16 | 3 / 2 | 4 | 1.81 | 6.0 | 9 | 0.66 | 3 | 22 | 79% | 0% |
+| 87 | hex | 0 g, 1 g, 2 g, 3 g, 4 m, 5 m, 6 w | `6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,1:-3,4:-2,5:-4,4:+3,5:+3,0:+4,1:-2,4:-5,2:-3` | 16 | 2 / 2 | 5 | 1.87 | 3.3 | 9 | 0.55 | 3 | 27 | 75% | 0% |
+| 88 | hex | 0 w, 1 y, 2 y, 3 y, 4 b, 5 b, 6 b | `0:-3,1:+3,4:+4,5:+5,2:-2,4:-5,1:-4,5:-4,2:+2,1:-2,2:-2,4:+3,6:-5,3:-2,5:-3,6:-5` | 16 | 2 / 2 | 5 | 1.84 | 4.0 | 9 | 0.66 | 3 | 28 | 85% | 0% |
+| 89 | hex | 0 r, 1 r, 2 c, 3 c, 4 r, 5 w, 6 r | `5:+2,0:-4,3:+2,2:-2,1:+3,6:+5,1:-4,3:+3,6:-4,2:-3,0:+3,1:+5,4:-5,3:+3,0:-2,2:-4` | 16 | 2 / 1 | 5 | 1.83 | 4.2 | 9 | 0.71 | 3 | 27 | 79% | 0% |
+| 90 | hex | 0 g, 1 w, 2 g, 3 g, 4 g, 5 g, 6 m | `1:+4,0:-4,2:-3,4:+2,5:+2,6:+5,4:+4,5:+5,0:+4,3:-4,5:-4,2:+2,3:+2,4:-3,3:+5,2:-2` | 16 | 2 / 1 | 5 | 1.36 | 10.4 | 9 | 0.61 | 3 | 22 | 75% | 0% |
 
