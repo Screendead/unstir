@@ -39,24 +39,23 @@ extension LensArt {
         Glass(centre: centre, glass: glass, rim: rim, tone: tone, bands: frame.map { Band(end: $0.0, tone: $0.1) })
     }
 
-    /// The glasses first, then the fills, the first that holds a point giving its tone, over `ground`.
+    /// The glasses first, then the fills, the first that holds a point giving its tone, over `ground`. Each stroke is
+    /// cut into pieces of eight segments, so a pixel measures only the pieces whose boxes reach it.
     fileprivate static func drawn(_ name: String, glasses: [Glass], fills: [Fill], strokes: [Halftone.Stroke],
                                   ground: @escaping @Sendable (P) -> Tone) -> Halftone.Panel {
-        Halftone.Panel(name: name, tones: { p in
+        let short = strokes.flatMap { s in
+            stride(from: 0, to: s.points.count - 1, by: 8).map { stroke(Array(s.points[$0...min($0 + 8, s.points.count - 1)]), s.width) }
+        }
+        return Halftone.Panel(name: name, tones: { p in
             for g in glasses { if let t = g.tone(at: p) { return t } }
             for f in fills where f.holds(p) { return f.tone }
             return ground(p)
-        }, strokes: strokes)
+        }, strokes: short)
     }
 
-    /// A circle as `pieces` arcs, so each pixel tests only the arcs whose boxes reach it.
+    /// A circle in `pieces` arcs of eight segments each.
     fileprivate static func hoop(_ c: P, _ r: Double, _ width: Double, pieces: Int = 6) -> [Halftone.Stroke] {
-        (0..<pieces).map { k in stroke(arc(c, r, 360 * Double(k) / Double(pieces), 360 * Double(k + 1) / Double(pieces), 10), width) }
-    }
-
-    /// A long line as pieces of `n` steps each, for the same reason.
-    fileprivate static func pieces(_ line: [P], _ width: Double, every n: Int = 8) -> [Halftone.Stroke] {
-        stride(from: 0, to: line.count - 1, by: n).map { stroke(Array(line[$0...min($0 + n, line.count - 1)]), width) }
+        [stroke(circle(c, r, 8 * pieces), width)]
     }
 }
 
@@ -369,7 +368,7 @@ extension LensArt {
         for side in [-1.0, 1.0] {
             s += runs(span(P(side * 0.4, sea), P(side, sea), 30), mid) { p in simd_distance(p, eyepiece) > 0.26 && simd_distance(p, horizon) > 0.26 }
         }
-        s += pieces(arc(P(-0.84, sea), 0.13, 180, 360, 12), mid, every: 6)
+        s.append(stroke(arc(P(-0.84, sea), 0.13, 180, 360, 12), mid))
         for at in [P(-0.86, 0.12), P(0.84, 0.08), P(-0.74, 0.62), P(0.8, 0.6), P(-0.9, 0.38), P(0.92, 0.32)] {
             s.append(stroke(curve(at + P(-0.05, 0), at + P(-0.025, -0.025), at, 5) + curve(at, at + P(0.025, 0.025), at + P(0.05, 0), 5), hair))
         }
@@ -555,7 +554,7 @@ extension LensArt {
             let a = fan.0 + (fan.1 - fan.0) * Double(k) / 6
             s += runs(span(polar(drum, 0.26, a), polar(drum, 0.97, a), 40), k == 0 || k == 6 ? mid : hair, keep: clear)
         }
-        s += pieces(arc(drum, 0.93, fan.0 - 4, fan.1 + 4, 32), bold)
+        s.append(stroke(arc(drum, 0.93, fan.0 - 4, fan.1 + 4, 32), bold))
         // The tubes, banded where they join their glasses, the burner and its flame.
         for t in tubes {
             s += runs(span(t[0], t[1], 30), mid, keep: clear) + runs(span(t[3], t[2], 30), mid, keep: clear)
