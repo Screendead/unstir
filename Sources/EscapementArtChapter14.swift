@@ -525,6 +525,98 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 84, Small hours, hex, clocks 1-.
-    static func plate84() -> Plate? { nil }
+    /// A house end on under its gable: the wall shaded, the roof in ink coursed with bone tiles, and its windows.
+    private static func house(_ plate: inout Plate, x0: Double, x1: Double, eave: Double, ridge: Double, foot: Double,
+                              windows: [P], seed: Int) {
+        let mid = (x0 + x1) / 2
+        Kit.solid(&plate, box(P(x0, eave), P(x1, foot)), angle: .pi / 2, gap: 0.05, width: 0.009, edge: 0.016)
+        for w in windows {
+            Kit.mass(&plate, box(w - P(0.035, 0.05), w + P(0.035, 0.05)))
+            plate.line([w - P(0, 0.05), w + P(0, 0.05)], heavy, .bone)
+            plate.line([w - P(0.035, 0), w + P(0.035, 0)], heavy, .bone)
+            Kit.mass(&plate, box(w + P(-0.05, 0.05), w + P(0.05, 0.07)))
+        }
+        let roof = [P(x0 - 0.04, eave), P(mid, ridge), P(x1 + 0.04, eave), P(x0 - 0.04, eave)]
+        Kit.mass(&plate, roof)
+        for (k, course) in hatch([roof], angle: 0, gap: 0.055, shift: 0.3).enumerated() where course.count == 2 {
+            plate.line(course, 0.028, .bone)
+            let y = course[0].y, left = min(course[0].x, course[1].x), right = max(course[0].x, course[1].x)
+            var x = left + 0.03 + 0.04 * rnd(seed, k)
+            while x < right - 0.02 {
+                plate.line([P(x, y), P(x, y - 0.03)], 0.014, .bone)
+                x += 0.07
+            }
+        }
+        plate.line([P(x0 - 0.04, eave), P(mid, ridge), P(x1 + 0.04, eave)], 0.03)
+    }
+
+    /// A chimney stack from `foot` up to `top`, its bricks coursed in bone and two pots on it.
+    private static func chimney(_ plate: inout Plate, x: Double, top: Double, foot: Double, width w: Double) {
+        Kit.mass(&plate, box(P(x - w / 2, top), P(x + w / 2, foot)))
+        for (k, y) in stride(from: top + 0.06, to: foot, by: 0.045).enumerated() {
+            plate.line([P(x - w / 2 + 0.006, y), P(x + w / 2 - 0.006, y)], 0.01, .bone)
+            let j = x + (k % 2 == 0 ? -0.2 : 0.2) * w
+            plate.line([P(j, y), P(j, y - 0.045)], 0.008, .bone)
+        }
+        Kit.mass(&plate, box(P(x - w / 2 - 0.02, top), P(x + w / 2 + 0.02, top + 0.035)))
+        for dx in [-0.25 * w, 0.25 * w] {
+            Kit.mass(&plate, box(P(x + dx - 0.022, top - 0.07), P(x + dx + 0.022, top)))
+            plate.line([P(x + dx - 0.03, top - 0.07), P(x + dx + 0.03, top - 0.07)], 0.016)
+        }
+    }
+
+    /// Problem 84, Small hours, hex, clocks 1-: rooftops and chimneys at night under a crescent moon, two rows of
+    /// gables in ink coursed with bone tiles over shaded walls, every window dark but one; the lit window in the second
+    /// ink, in the lane at three o'clock between the rods.
+    static func plate84() -> Plate {
+        var plate = Plate()
+        let moon = P(-0.4, -0.66), lit = P(0.36, 0.0)
+        Kit.ground(&plate, angle: 0.2, around: [arc(moon, 0.2)])
+        plate.lines(dashed(arc(moon, 0.2), on: 0.03, off: 0.03), medium)
+        let bite = moon + P(0.08, -0.05), r1 = 0.15, r2 = 0.13, d = simd_length(bite - moon)
+        let toward = atan2(bite.y - moon.y, bite.x - moon.x), along = (r1 * r1 - r2 * r2 + d * d) / (2 * d)
+        let alpha = acos(along / r1), beta = acos((d - along) / r2)
+        let crescent = arc(moon, r1, from: toward + alpha, to: toward + 2 * .pi - alpha)
+            + arc(bite, r2, from: toward + .pi + beta, to: toward + .pi - beta).dropFirst()
+        Kit.cut(&plate, crescent, edge: 0.02)
+        plate.lines(hatch([crescent], angle: 0.9, gap: 0.03), fine)
+        for (k, p) in [P(0.15, -0.85), P(0.62, -0.62), P(0.82, -0.3), P(-0.78, -0.25), P(-0.12, -0.5), P(0.4, -0.78)].enumerated() {
+            let ray = star(p, 0.03 + 0.012 * Double(k % 2), points: 4, inner: 0.3, turn: 0.3 * Double(k))
+            plate.line(ray, 0.022, .bone)
+            Kit.mass(&plate, ray)
+        }
+
+        // The far row, and its smoke.
+        chimney(&plate, x: 0.2, top: -0.62, foot: -0.2, width: 0.1)
+        chimney(&plate, x: -0.7, top: -0.48, foot: -0.15, width: 0.09)
+        let smoke = (0...40).map { i -> P in
+            let t = Double(i) / 40
+            return P(0.2 + 0.2 * t + 0.03 * sin(t * 7), -0.72 - 0.2 * t)
+        }
+        for (k, i) in stride(from: 0, to: 40, by: 8).enumerated() {
+            let puff = arc(smoke[i], 0.035 + 0.012 * Double(k))
+            Kit.cut(&plate, puff, edge: heavy)
+        }
+        house(&plate, x0: -1.05, x1: -0.45, eave: -0.04, ridge: -0.34, foot: 0.4, windows: [P(-0.62, 0.08)], seed: 841)
+        house(&plate, x0: -0.42, x1: 0.06, eave: 0.02, ridge: -0.2, foot: 0.4, windows: [P(-0.32, 0.12)], seed: 842)
+        house(&plate, x0: 0.1, x1: 0.62, eave: -0.12, ridge: -0.46, foot: 0.4, windows: [P(0.2, 0.0)], seed: 843)
+        house(&plate, x0: 0.66, x1: 1.1, eave: -0.02, ridge: -0.24, foot: 0.4, windows: [P(0.8, 0.1)], seed: 844)
+        Kit.mass(&plate, box(lit - P(0.04, 0.055), lit + P(0.04, 0.055)))
+        plate.fill(box(lit - P(0.03, 0.045), lit + P(0.03, 0.045)), .second)
+        plate.line([lit - P(0, 0.045), lit + P(0, 0.045)], heavy)
+        plate.line([lit - P(0.03, 0), lit + P(0.03, 0)], heavy)
+        Kit.mass(&plate, box(lit + P(-0.055, 0.055), lit + P(0.055, 0.075)))
+
+        // The near row.
+        chimney(&plate, x: 0.72, top: -0.06, foot: 0.3, width: 0.1)
+        house(&plate, x0: -1.05, x1: -0.28, eave: 0.44, ridge: 0.12, foot: 1.1, windows: [P(-0.62, 0.62), P(-0.42, 0.62)], seed: 845)
+        house(&plate, x0: -0.24, x1: 0.34, eave: 0.52, ridge: 0.22, foot: 1.1, windows: [P(-0.08, 0.7), P(0.18, 0.7)], seed: 846)
+        house(&plate, x0: 0.38, x1: 1.1, eave: 0.42, ridge: 0.12, foot: 1.1, windows: [P(0.56, 0.6)], seed: 847)
+
+        callout(&plate, "A", from: moon + P(-0.12, 0.05), to: P(-0.72, -0.5))
+        callout(&plate, "B", from: P(0.2, -0.66), to: P(0.42, -0.9))
+        callout(&plate, "C", from: P(0.5, -0.2), to: P(0.78, -0.46))
+        callout(&plate, "D", from: P(0.0, 0.3), to: P(-0.18, -0.06))
+        return plate
+    }
 }
