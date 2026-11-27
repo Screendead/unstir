@@ -348,8 +348,8 @@ extension EscapementArt {
     /// on the nearest pile; the gauge's marker at the water in the second ink.
     static func plate46() -> Plate {
         var plate = Plate()
-        let o = Kit.origin, deck = -0.05, wet = 0.04, water = 0.31, gaugeX = 0.07
-        let piles: [Double] = [-0.8, -0.45, -0.12, gaugeX]
+        let o = Kit.origin, deck = -0.05, wet = 0.04, water = 0.31, gaugeX = -0.04
+        let piles: [Double] = [-0.8, -0.47, -0.22, gaugeX]
         func swell(_ j: Int, _ x: Double) -> Double {
             let y0 = water + 0.05 + Double(j) * 0.1, a = 0.012 + 0.004 * Double(j)
             return y0 + a * sin(x * (7 - 0.4 * Double(j)) + 1.3 * Double(j)) + 0.5 * a * sin(x * 13 + Double(j))
@@ -416,7 +416,7 @@ extension EscapementArt {
         for (i, n) in ["IV", "III", "II"].enumerated() {
             plate.lines(Kit.numeral(n, at: P(gaugeX + 0.155, wet + 0.015 + 0.09 * Double(i)), height: 0.04, squeeze: 0.8), medium)
         }
-        let marker = [P(gaugeX + 0.125, water), P(gaugeX + 0.2, water - 0.04), P(gaugeX + 0.2, water + 0.04), P(gaugeX + 0.125, water)]
+        let marker = [P(gaugeX + 0.125, water), P(gaugeX + 0.18, water - 0.03), P(gaugeX + 0.18, water + 0.03), P(gaugeX + 0.125, water)]
         plate.fill(marker, .second)
         plate.line(marker, medium)
 
@@ -424,10 +424,10 @@ extension EscapementArt {
         plate.fill(Kit.band(P(-0.2, 0.9), P(0.22, 0.9), 0.045))
         plate.fill(Kit.barb(P(0.36, 0.9), toward: 0, size: 0.14))
 
-        callout(&plate, "A", from: P(-0.26, wet + 0.08), to: P(-0.12, -0.42))
-        callout(&plate, "B", from: moon + P(-0.1, 0.06), to: P(0.2, -0.62))
+        callout(&plate, "A", from: P(-0.22, wet + 0.08), to: P(-0.3, -0.64))
+        callout(&plate, "B", from: moon + P(-0.12, -0.04), to: P(0.24, -0.84))
         callout(&plate, "C", from: marker[1] + P(0, 0.02), to: P(0.6, 0.18))
-        callout(&plate, "D", from: P(0.7, swell(3, 0.7) + 0.02), to: P(0.82, 0.55))
+        callout(&plate, "D", from: P(0.62, swell(3, 0.62) + 0.02), to: P(0.72, 0.5))
         return plate
     }
 
