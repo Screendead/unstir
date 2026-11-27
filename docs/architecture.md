@@ -1510,7 +1510,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   picture's stitchable by the case's name, which `testEveryLivePictureHasItsShader` checks in the app's library. The
   glass's cells take the raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
-  twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
+  twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. Mineral's four (**Mineral.metal**: strata, sandstone's beds; agate, its bands; lamellae, a thin section of slate
+  between polarisers; columns, basalt's columns end on), the set Jack kept for the fifth chapter (2026-11-27), came
+  over unchanged from the slope's candidate sets and are drawn live the same way, with no twins: a 20 s period, their
+  floats `Picture.gradients` salted per picture (`mineralTable`), and fills of 2, 2, 5 and 5 entries by the picture
+  lab's bench. No level shows one yet, and the sandbox's cycle skips them. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
   halftone; its header's two controls read "picture: grid ›" and "rods: 3 ›", or "grid ›" and "3 rods ›" where the
   width is short (`ViewThatFits`); quad and eye, which share a count, add their name ("rods: 4 · eye ›", short "eye ›",

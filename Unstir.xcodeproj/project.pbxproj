@@ -15,6 +15,7 @@
 		0ED25749C2CA58123B100D5E /* FreshDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */; };
 		12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8582290C096A27A793005B80 /* LensArtCloseUp.swift */; };
 		18F4207A2B3955DA16ECDC18 /* ShaderKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 254553325D43A8E887B3C94D /* ShaderKit.swift */; };
+		191BFB4F303629BF6253DAA3 /* Mineral.metal in Sources */ = {isa = PBXBuildFile; fileRef = A95F317FA4A3963E8F30C482 /* Mineral.metal */; };
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		1C81C4836870BE840077E00B /* LensArtDoubleTake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A48099D8C6DA81CFAC630E /* LensArtDoubleTake.swift */; };
 		1E804D07FF7FF37E986BFF19 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 25930862609F89911BFB5015 /* Sounds */; };
@@ -215,6 +216,7 @@
 		A2354CA664A9CF0FD0C4750A /* ResultMarksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultMarksTests.swift; sourceTree = "<group>"; };
 		A96E4651A2353A1299E6FE49 /* Unstir.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Unstir.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA12B7B59978B3DF2619B7B0 /* Rods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rods.swift; sourceTree = "<group>"; };
+		A95F317FA4A3963E8F30C482 /* Mineral.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Mineral.metal; sourceTree = "<group>"; };
 		AA44B6DE028AB83D502C8EC5 /* Engraving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engraving.swift; sourceTree = "<group>"; };
 		AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensDetailTests.swift; sourceTree = "<group>"; };
 		ABE2B06B8CFB2F3BB5B6CF7F /* Lessons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lessons.swift; sourceTree = "<group>"; };
@@ -387,6 +389,7 @@
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				18BFB7C893FE494190410F59 /* OracleBench.swift */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
+				A95F317FA4A3963E8F30C482 /* Mineral.metal */,
 				799D669DC17401F34FBEB5D2 /* Page.swift */,
 				580758B9300EF9A94D07C121 /* Payoff.swift */,
 				80EE66DF325957EFE55650C3 /* PayoffViews.swift */,
@@ -578,6 +581,7 @@
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
+				191BFB4F303629BF6253DAA3 /* Mineral.metal in Sources */,
 				346EECEE0574652612E6DB3B /* Page.swift in Sources */,
 				AE4D088FB75371D72F05FEF9 /* Payoff.swift in Sources */,
 				357A4E83B9062002FD1BDA54 /* PayoffViews.swift in Sources */,
