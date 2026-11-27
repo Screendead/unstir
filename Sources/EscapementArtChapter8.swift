@@ -452,7 +452,7 @@ extension EscapementArt {
         path.append(P(0.05, legs[legs.count - 1] - 0.005))
         path = resampled(path, spacing: 0.012)
         // The road narrows as it climbs away.
-        func width(_ p: P) -> Double { 0.065 + 0.1 * min(1, max(0, (p.y + 0.4) / 1.26)) }
+        func width(_ p: P) -> Double { 0.075 + 0.1 * min(1, max(0, (p.y + 0.4) / 1.26)) }
         var left: [P] = [], right: [P] = []
         for i in path.indices {
             let d = path[min(i + 1, path.count - 1)] - path[max(i - 1, 0)]
@@ -469,17 +469,24 @@ extension EscapementArt {
         Kit.ground(&plate, angle: -0.35, around: [hill])
         Kit.mass(&plate, hill)
         // Trees on the hillside: bone firs in the ink, thinning toward the top.
-        for k in 0..<700 {
+        for k in 0..<900 {
             let c = P(-1 + 2 * rnd(47, k), -0.6 + 1.6 * rnd(47, k + 200))
-            let h = (0.03 + 0.05 * min(1, max(0, (c.y + 0.5) / 1.3))) * (0.8 + 0.4 * rnd(47, k + 400))
-            guard simd_length(c) < 0.98, inside(c + P(0, -h), hill) else { continue }
+            let tall = (0.03 + 0.05 * min(1, max(0, (c.y + 0.5) / 1.3))) * (0.8 + 0.4 * rnd(47, k + 400))
+            // A tree the road would cut is drawn smaller, to stand clear of it, or left out.
+            func cut(_ h: Double) -> Bool {
+                [c + P(0, -h), c + P(0, 0.25 * h), c + P(0.4 * h, 0), c + P(-0.4 * h, 0)].contains { q in
+                    stride(from: 0, to: path.count, by: 2).contains { simd_distance(path[$0], q) < width(path[$0]) / 2 + 0.008 }
+                }
+            }
+            guard simd_length(c) < 0.98, inside(c + P(0, -tall), hill), let h = [tall, 0.7 * tall, 0.5 * tall].first(where: { !cut($0) })
+            else { continue }
             plate.fill([c + P(0, -h), c + P(0.4 * h, 0), c + P(-0.4 * h, 0), c + P(0, -h)])
             plate.line([c, c + P(0, 0.25 * h)], medium, .bone)
         }
         // The road over them, kerbed, its crown dashed.
         plate.fill(road)
-        plate.line(left, 0.016)
-        plate.line(right, 0.016)
+        plate.line(left, heavy)
+        plate.line(right, heavy)
         plate.lines(dashed(path.filter { $0.y > -0.2 }, on: 0.03, off: 0.03), medium)
 
         // The signpost on the bend, its arm pointing back.
