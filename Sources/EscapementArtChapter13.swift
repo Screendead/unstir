@@ -20,16 +20,22 @@ extension EscapementArt {
         }
     }
 
-    /// The pieces of the level line at `y` inside a ring.
-    private static func across(_ ring: [P], at y: Double) -> [[P]] {
-        var xs: [Double] = []
+    /// The pieces of the segment from a to b inside a ring.
+    private static func clipped(_ ring: [P], from a: P, to b: P) -> [[P]] {
+        let d = b - a
+        var ts: [Double] = []
         for i in 0..<(ring.count - 1) {
-            let a = ring[i], b = ring[i + 1]
-            if (a.y <= y) != (b.y <= y) { xs.append(a.x + (y - a.y) / (b.y - a.y) * (b.x - a.x)) }
+            let p = ring[i], e = ring[i + 1] - p, den = d.x * e.y - d.y * e.x
+            guard abs(den) > 1e-12 else { continue }
+            let w = p - a, t = (w.x * e.y - w.y * e.x) / den, u = (w.x * d.y - w.y * d.x) / den
+            if u >= 0 && u < 1 && t >= 0 && t <= 1 { ts.append(t) }
         }
-        xs.sort()
-        return stride(from: 0, to: xs.count - 1, by: 2).map { [P(xs[$0], y), P(xs[$0 + 1], y)] }
+        ts.sort()
+        return stride(from: 0, to: ts.count - 1, by: 2).map { [a + d * ts[$0], a + d * ts[$0 + 1]] }
     }
+
+    /// The pieces of the level line at `y` inside a ring.
+    private static func across(_ ring: [P], at y: Double) -> [[P]] { clipped(ring, from: P(-1.2, y), to: P(1.2, y)) }
 
     // MARK: 73 Sundial
 
@@ -176,8 +182,163 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 74, Gnomon, hex, clocks 1+.
-    static func plate74() -> Plate? { nil }
+    // MARK: 74 Gnomon
+
+    /// Problem 74, Gnomon, hex, clocks 1+: an obelisk standing as a great gnomon in a paved plaza before a colonnade
+    /// and a dome, its long shadow laid along an hour line of the plaza's bold fan of hour lines; the sun's spot at its
+    /// tip in the second ink.
+    static func plate74() -> Plate {
+        var plate = Plate()
+        // The plaza in perspective: a point (X, Z) of the ground, Z its depth, seen from a horizon at y = -0.12.
+        let horizon = -0.12
+        func ground(_ q: P) -> P { P(q.x / q.y, horizon + 1 / q.y) }
+        let cx = -0.243, foot = 0.4, base = 0.3, shaft = -0.66, tip = -0.82
+        let at = P(cx / (foot - horizon), 1 / (foot - horizon))
+
+        // The colonnade and the dome along the horizon behind.
+        var skyline: [P] = [P(-1.1, horizon + 0.1), P(-1.1, horizon - 0.2)]
+        for x in stride(from: -1.1, through: 1.1, by: 0.02) {
+            let dome = 0.26 * sqrt(max(0, 1 - pow((x - 0.36) / 0.21, 2)))
+            let drum = abs(x - 0.36) < 0.19 ? 0.07 : 0
+            let lantern = abs(x - 0.36) < 0.03 ? 0.08 : 0
+            skyline.append(P(x, horizon - 0.2 - max(dome + drum + lantern, 0) - (abs(x - 0.36) < 0.24 ? 0.03 : 0)))
+        }
+        skyline += [P(1.1, horizon - 0.2), P(1.1, horizon + 0.1), P(-1.1, horizon + 0.1)]
+        let plaza = { () -> [P] in
+            let a = asin((horizon + 0.1) / 1.06), rim = arc(.zero, 1.06, from: a, to: .pi - a)
+            return rim + [rim[0]]
+        }()
+
+        // The obelisk: the lit west face, the shadowed south face, and the pyramidion.
+        let ridge = cx - 0.014
+        let lit = [P(cx - 0.05, base), P(ridge, base), P(ridge, shaft), P(cx - 0.034, shaft), P(cx - 0.05, base)]
+        let dark = [P(ridge, base), P(cx + 0.05, base), P(cx + 0.034, shaft), P(ridge, shaft), P(ridge, base)]
+        let capLit = [P(cx - 0.034, shaft), P(ridge, shaft), P(ridge + 0.002, tip), P(cx - 0.034, shaft)]
+        let capDark = [P(ridge, shaft), P(cx + 0.034, shaft), P(ridge + 0.002, tip), P(ridge, shaft)]
+        let plinth = box(P(cx - 0.08, base), P(cx + 0.08, foot - 0.03)), step = box(P(cx - 0.1, foot - 0.03), P(cx + 0.1, foot))
+
+        // Its shadow along the plaza, toward the viewer and right: the shaft's width, then the pyramidion's point.
+        let along = simd_normalize(P(0.78, -0.55)), side = P(-along.y, along.x)
+        let w = 0.1 / (foot - horizon) / 2, reach = 1.18, capLength = 0.16
+        let shadow = [at + side * w, at + along * reach + side * w * 0.72, at + along * (reach + capLength),
+                      at + along * reach - side * w * 0.72, at - side * w, at + side * w].map(ground)
+
+        K.ground(&plate, angle: 0.3, around: [skyline, plaza])
+        // The colonnade: its columns standing in bone between dark intercolumns, an attic over them.
+        K.mass(&plate, skyline)
+        let dome = P(0.36, horizon - 0.3)
+        for x in stride(from: -1.04, through: 1.04, by: 0.05) {
+            plate.line([P(x, horizon + 0.06), P(x, horizon - 0.14)], 0.03, .bone)
+        }
+        for y in [horizon + 0.075, horizon - 0.165] {
+            plate.line([P(-1.1, y), P(1.1, y)], 0.018, .bone)
+        }
+        // The attic's balusters.
+        for x in stride(from: -1.05, through: 1.05, by: 0.026) where abs(x - 0.36) > 0.2 {
+            plate.line([P(x, horizon - 0.177), P(x, horizon - 0.198)], 0.011, .bone)
+        }
+        for x in stride(from: -1.0, through: 1.0, by: 0.16) where abs(x - 0.36) > 0.3 {
+            plate.fill(box(P(x - 0.012, horizon - 0.25), P(x + 0.012, horizon - 0.2)), .black)
+        }
+        // The dome ruled in courses, dark to the east, its ribs and the drum's windows in bone.
+        let shell = (0...40).map { i -> P in polar(dome, 1, .pi + .pi * Double(i) / 40) }.map { P(dome.x + 0.21 * ($0.x - dome.x), dome.y + 0.26 * ($0.y - dome.y)) }
+        let shellRing = shell + [shell[0]]
+        plate.fill(shellRing)
+        for l in hatch([shellRing], angle: 0, gap: 0.036) {
+            plate.line(l, 0.01)
+            if l[1].x > dome.x + 0.08 { plate.line([P(max(l[0].x, dome.x + 0.08), l[0].y), l[1]], 0.018) }
+        }
+        plate.line(shellRing, medium)
+        for k in -3...3 {
+            let x = dome.x + Double(k) * 0.05
+            let top = dome.y - 0.26 * sqrt(max(0, 1 - pow((x - dome.x) / 0.21, 2)))
+            plate.line(curve(P(x, dome.y), P(dome.x + Double(k) * 0.058, (top + dome.y) / 2), P(dome.x + Double(k) * 0.012, dome.y - 0.25)),
+                       heavy, k > 0 ? .bone : .black)
+        }
+        // The drum in bone between dark pilasters, its windows dark.
+        plate.fill(box(P(dome.x - 0.19, horizon - 0.3), P(dome.x + 0.19, horizon - 0.205)))
+        for (i, x) in stride(from: dome.x - 0.18, through: dome.x + 0.18, by: 0.036).enumerated() {
+            plate.line([P(x, horizon - 0.3), P(x, horizon - 0.205)], 0.012)
+            if i < 10 { plate.fill(arc(P(x + 0.018, horizon - 0.255), 0.009) + box(P(x + 0.009, horizon - 0.255), P(x + 0.027, horizon - 0.225)), .black) }
+        }
+        plate.line(box(P(dome.x - 0.19, horizon - 0.3), P(dome.x + 0.19, horizon - 0.205)), medium)
+
+        // The plaza paved in courses closing toward the horizon, its joints running to the vanishing point.
+        plate.fill(plaza)
+        var z = 0.86
+        while z < 7 {
+            let y = horizon + 1 / z
+            plate.line([P(-1.1, y), P(1.1, y)], fine + 0.004 * (y - horizon))
+            z *= 1.16
+        }
+        for X in stride(from: -2.4, through: 2.4, by: 0.16) {
+            plate.line([ground(P(X, 0.8)), ground(P(X, 8))], fine)
+        }
+        // The hour lines fanned across the plaza from the obelisk's foot, bold, numbered at the rim.
+        for h in -5...5 {
+            let dir = P(sin(Double(h) * 0.24 + 0.62), -cos(Double(h) * 0.24 + 0.62))
+            var path: [P] = []
+            for t in stride(from: 0.4, through: 3.0, by: 0.05) {
+                let q = at + dir * t
+                if q.y < 0.8 || simd_length(ground(q)) > 1.0 { break }
+                path.append(q)
+            }
+            guard path.count > 1 else { continue }
+            K.mass(&plate, K.ribbon(path.map(ground), 0.016))
+            if let end = path.last, simd_length(ground(end)) > 0.9 {
+                let p = ground(at + dir * (simd_distance(end, at) - 0.12))
+                let n = h + 6
+                plate.fill(arc(p, 0.04))
+                plate.lines(K.numeral(roman(n), at: p, height: 0.05, squeeze: 0.7), medium)
+            }
+        }
+        K.mass(&plate, shadow)
+        // The paving's joints run on through the shadow in bone.
+        var joint = 0.86
+        while joint < 3 {
+            plate.lines(across(shadow, at: horizon + 1 / joint), heavy, .bone)
+            joint *= 1.077
+        }
+        for X in stride(from: -2.4, through: 2.4, by: 0.08) {
+            plate.lines(clipped(shadow, from: ground(P(X, 0.8)), to: ground(P(X, 8))), medium, .bone)
+        }
+
+        // The obelisk over its shadow.
+        K.cut(&plate, step)
+        K.solid(&plate, plinth, angle: 0.8, gap: 0.02, width: fine)
+        plate.fill(lit)
+        plate.line(lit, medium)
+        // Its glyphs cut down the lit face.
+        for k in 0..<22 {
+            let y = shaft + 0.04 + Double(k) * 0.042, x0 = cx - 0.044 + 0.002 * Double(k) / 22
+            switch k % 4 {
+            case 0: plate.line(arc(P((x0 + ridge) / 2, y), 0.009), medium)
+            case 1: plate.line([P(x0 + 0.004, y), P(ridge - 0.006, y)], heavy)
+            case 2: plate.line([P(x0 + 0.006, y - 0.012), P((x0 + ridge) / 2, y + 0.01), P(ridge - 0.006, y - 0.012)], medium)
+            default: plate.line([P((x0 + ridge) / 2, y - 0.014), P((x0 + ridge) / 2, y + 0.014)], heavy)
+            }
+        }
+        K.mass(&plate, dark)
+        for k in stride(from: 1, to: 22, by: 2) {
+            let y = shaft + 0.04 + Double(k) * 0.042
+            plate.line([P(ridge + 0.012, y), P(cx + 0.03, y)], medium, .bone)
+        }
+        plate.fill(capLit)
+        plate.line(capLit, medium)
+        K.mass(&plate, capDark)
+        // The sun's spot sitting on the tip.
+        let sun = P(ridge - 0.07, tip - 0.03)
+        plate.fill(arc(sun, 0.05), .second)
+        for k in 0..<12 {
+            let a = Double(k) * .pi / 6
+            plate.line([polar(sun, 0.068, a), polar(sun, 0.1, a)], heavy)
+        }
+
+        callout(&plate, "A", from: P(cx + 0.03, -0.55), to: P(-0.07, -0.8))
+        callout(&plate, "B", from: ground(at + along * 0.55), to: P(0.17, 0.3))
+        callout(&plate, "C", from: P(-0.7, horizon - 0.08), to: P(-0.72, -0.42))
+        return plate
+    }
 
     /// Problem 75, Noon mark, pent, clocks 0+.
     static func plate75() -> Plate? { nil }
