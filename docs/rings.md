@@ -62,8 +62,8 @@ at rest.
   one bitmap. Soft or large art is baked under the screen's scale: the suns and the floor at 2x, the sky as a strip
   four points wide. The cross lines' strip is 2 points wide and 5200 long, stretched across the floor, baked at 1.5x
   so it stays under 8192 pixels: at 3x (15,600) the simulator drew a hard-edged pale band over the far floor on some
-  launches, as a texture that size is cut into tiles. On a Pro Max with every piece baked the art is about 23 MB (the
-  tour's log line prints it).
+  launches, as a texture that size is cut into tiles. On a Pro Max with every piece baked the art is about 23 MB with
+  the four tiers' rings and 31 MB with the archive's and endless's too (the tour's log line prints it).
 - **Layers.** `RingsView` (RingsView.swift) is a `UIView` whose layers are `RingsLayer`s, which never animate a
   change by themselves. Back to front: the ground behind the suns (sky, stars), one sun a ring, the ground in front
   (mountains, floor, the cross lines, the horizon's haze), one container a ring (its beads group and its words
@@ -90,7 +90,8 @@ at rest.
 - **At rest nothing runs.** No timer, no display link, no animation. `RingsCount` counts what the main thread does
   for the menu (layouts, SwiftUI updates, model reads, builds, bakes, scroll callbacks), and the tour's `rest`
   prints them over six seconds: all zero on the simulator (2026-11-27). Its `swipe`, down through every ring and back,
-  costs scroll callbacks alone (112 at the simulator's 60 Hz), with no layout, build or bake.
+  costs scroll callbacks alone (112 at the simulator's 60 Hz over four rings, 184 over six), with no layout, build or
+  bake.
 - **A named bead** bakes its three lines on a tap, off the main thread, and shows them as they land.
 
 ## The files
