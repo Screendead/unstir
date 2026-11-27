@@ -1,6 +1,8 @@
 ; Copyright © 2026 Jack Lusher. All rights reserved.
 ; Sketches for the synthwave menu, for Jack's ear: three directions (outrun, night, dark), each a menu bed of 16 bars
-; and four menu effects (a bead's tap, the tier swipe, a level opening, a locked bead's tap).
+; and four menu effects (a bead's tap, the tier swipe, a level opening, a locked bead's tap). Round two adds two takes
+; each of night's and dark's beds, a hybrid bed (dark's bass and harmony in night's groove and pads) and swipes: each
+; direction's in the other's key, and one of both.
 ; scripts/synthwave-sketches.sh passes the sketch (SKETCH), its tempo (BPM), the seconds to render (DUR) and the
 ; output (OUT); NOLEAD leaves a bed's top line out, and BASSONLY renders the bass alone, dry, to measure it. Stereo, 48 kHz, 32-bit float; the script sets the level and cuts
 ; a bed's loop from its second period.
@@ -72,6 +74,22 @@ giBassRes init 0.3
 giBassDrive init 2.2
 giBassPump init 0.6
 giTineNdx init 2.2
+giTineBark init 1.6
+giTineBarkAmp init 0.3
+giTineDrive init 1.5
+giTopVoice init 0
+giTopTrans init 0
+giTopAmp init 0.42
+giKickAmp init 1
+giKickHalf init 0
+giSnAmp init 0.5
+giSnSend init 0.7
+giSnHold init 0.34
+giSnHalf init 0
+giHatAmp init 0.14
+giHatHalf init 0
+giTomAmp init 1
+giTomSend init 0.5
 giTineRv init 0.3
 giTineDl init 0.35
 giSnTone init 190
@@ -116,7 +134,8 @@ opcode Notes, 0, Si[]iiii
 endop
 
 ; ------------------------------------------------------------------ the kit
-; Defined first: the kick sets the pump the bass and pad read on the same cycle. p4 level, p5 the pump's depth.
+; Defined first: the kick sets the pump the bass and pad read on the same cycle. p4 level, p5 the pump's depth; a
+; negative p5 leaves the pump to other kicks, and a kick at level 0 pumps without sounding.
 instr kick
   kf expseg 250, 0.014, 120, 0.07, 54, 0.3, 46
   a1 oscili 1, kf
@@ -127,7 +146,10 @@ instr kick
   aenv transeg 1, p3, -3.5, 0
   a1 = tanh(2.8 * (a1 * aenv + 0.35 * ac * kce))
   kp transeg 1, p3 * 0.85, -2.5, 0
-  gkPump = 1 - p5 * kp
+  kpumps = p5 >= 0 ? 1 : 0
+  if kpumps == 1 then
+    gkPump = 1 - p5 * kp
+  endif
   Out a1 * p4, 0.5, 0, 0
 endin
 
@@ -250,11 +272,11 @@ instr tine
   ihz = Hz(p4)
   kndx expseg giTineNdx, 0.35, giTineNdx * 0.3, 2, giTineNdx * 0.12
   a1 foscili 1, ihz, 1, 1, kndx, gisine
-  kn2 expseg 1.6, 0.06, 0.05, 1, 0.01
-  a2 foscili 0.3, ihz, 1, 5, kn2, gisine
+  kn2 expseg giTineBark, 0.06, 0.05, 1, 0.01
+  a2 foscili giTineBarkAmp, ihz, 1, 5, kn2, gisine
   kenv expseg 1, 1.4, 0.3, 3, 0.08
   adc linsegr 0, 0.003, 1, 0.25, 0
-  af = tanh(1.5 * (a1 + a2)) * kenv * adc * p5
+  af = tanh(giTineDrive * (a1 + a2)) * kenv * adc * p5
   gaPad += 0.6 * af
   Out 0.5 * af, 0.5, giTineRv, giTineDl
 endin
@@ -422,8 +444,15 @@ opcode NightPatch, 0, 0
   giDlFb = 0.45
 endop
 
-instr night
-  NightPatch
+opcode NightTineSoft, 0, 0
+  giTineNdx = 1.3
+  giTineBark = 0.5
+  giTineBarkAmp = 0.15
+  giTineDrive = 1.1
+endop
+
+; Night's song. Its top line plays on giTopVoice (0 the tine, 1 the lead), giTopTrans semitones off, at giTopAmp.
+opcode NightSong, 0, 0
   iroot[] fillarray 31, 31, 33, 33, 35, 35, 30, 30
   ichord[] fillarray 55, 59, 62, 66, 57, 61, 64, 69, 59, 62, 66, 69, 57, 61, 64, 66
   ipat[] fillarray 0, 1, 2, 3, -1, 2, 3, 1
@@ -476,8 +505,46 @@ instr night
     49.5, 0.5, 83, 50, 1.5, 86, 51.5, 2.5, 85, 54.5, 1.5, 83, \
     56.5, 1.5, 81, 58, 1, 85, 59, 4, 76
   if giLeadOn == 1 then
-    Notes "tine", imotif, 0, 0.42, 1, ireps
+    if giTopVoice == 0 then
+      Notes "tine", imotif, giTopTrans, giTopAmp, 1, ireps
+    else
+      Notes "lead", imotif, giTopTrans, giTopAmp, 0.92, ireps
+    endif
   endif
+endop
+
+
+instr night
+  NightPatch
+  NightSong
+  turnoff
+endin
+
+; Round two: the tine's bark and index cut and its drive eased, a little quieter, the same notes.
+instr night2
+  NightPatch
+  NightTineSoft
+  giTopAmp = 0.32
+  NightSong
+  turnoff
+endin
+
+; Round two: the motif an octave down on a dark, soft lead.
+instr night3
+  NightPatch
+  giLeadDet = 4
+  giLeadSub = 0
+  giLeadCut = 1700
+  giLeadRes = 0.15
+  giLeadAtk = 0.04
+  giLeadDrive = 1.1
+  giLeadGlide = 0.03
+  giLeadRv = 0.4
+  giLeadDl = 0.4
+  giTopVoice = 1
+  giTopTrans = -12
+  giTopAmp = 0.34
+  NightSong
   turnoff
 endin
 
@@ -486,15 +553,28 @@ instr nightTap
   schedule "tine", 0.02, 0.35, 83, 0.6
   turnoff
 endin
+; Night's swipe: a tine run up irun's notes at iamp.
+opcode NightRun, 0, i[]i
+  irun[], iamp xin
+  ii = 0
+  while ii < lenarray(irun) do
+    schedule "tine", 0.02 + ii * 0.06, 0.3, irun[ii], iamp * (0.3 + 0.03 * ii)
+    ii += 1
+  od
+endop
 instr nightSwipe
   NightPatch
   irun[] fillarray 62, 66, 69, 71, 74, 78, 81, 86
-  ii = 0
-  while ii < 8 do
-    schedule "tine", 0.02 + ii * 0.06, 0.3, irun[ii], 0.3 + 0.03 * ii
-    ii += 1
-  od
+  NightRun irun, 1
   schedule "sweep", 0.02, 0.5, 50, 62, 0.22, 400, 2600, 0
+  turnoff
+endin
+; Round two: night's swipe on E minor's notes, for dark's key.
+instr nightSwipeE
+  NightPatch
+  irun[] fillarray 64, 67, 71, 74, 76, 79, 83, 88
+  NightRun irun, 1
+  schedule "sweep", 0.02, 0.5, 52, 64, 0.22, 400, 2600, 0
   turnoff
 endin
 instr nightOpen
@@ -558,8 +638,9 @@ opcode DarkPatch, 0, 0
   giTape = 1.5
 endop
 
-instr dark
-  DarkPatch
+; Dark's song. giKickHalf 1 keeps only beats 1 and 3's kicks sounding (the others still pump), giSnHalf 1 strikes the
+; snare on beat 3 alone, giHatHalf 1 keeps the hats on the offbeats of 2 and 4.
+opcode DarkSong, 0, 0
   iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
   ichord[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
   icbar[] fillarray 0, 4, 6, 8, 12, 14
@@ -575,17 +656,28 @@ instr dark
       ifill = (ibar % 8 == 7) ? 1 : 0
       ik = 0
       while ik < 4 do
-        schedule "kick", it + ik * giB, 0.36, 1, 1
-        schedule "hat", it + (ik + 0.5) * giB, 0.2, 0.14, 0.11
+        ika = giKickAmp
+        if giKickHalf == 1 && ik % 2 == 1 then
+          ika = 0
+        endif
+        schedule "kick", it + ik * giB, 0.36, ika, 1
+        if giHatHalf == 0 || ik % 2 == 1 then
+          schedule "hat", it + (ik + 0.5) * giB, 0.2, giHatAmp, 0.11
+        endif
         ik += 1
       od
-      schedule "snare", it + giB, 0.45, 0.5, 0.7, 0.34
-      if ifill == 0 then
-        schedule "snare", it + 3 * giB, 0.45, 0.5, 0.7, 0.34
+      if giSnHalf == 0 then
+        schedule "snare", it + giB, 0.45, giSnAmp, giSnSend, giSnHold
+        if ifill == 0 then
+          schedule "snare", it + 3 * giB, 0.45, giSnAmp, giSnSend, giSnHold
+        endif
       else
-        schedule "tom", it + 3 * giB, 0.35, 0.6, 123, 0.5
-        schedule "tom", it + 3.5 * giB, 0.4, 0.6, 98, 0.5
-        schedule "tom", it + 3.75 * giB, 0.5, 0.65, 82, 0.5
+        schedule "snare", it + 2 * giB, 0.45, giSnAmp, giSnSend, giSnHold
+      endif
+      if ifill == 1 then
+        schedule "tom", it + 3 * giB, 0.35, 0.6 * giTomAmp, 123, giTomSend
+        schedule "tom", it + 3.5 * giB, 0.4, 0.6 * giTomAmp, 98, giTomSend
+        schedule "tom", it + 3.75 * giB, 0.5, 0.65 * giTomAmp, 82, giTomSend
       endif
       ih = 0
       while ih < 16 do
@@ -617,6 +709,53 @@ instr dark
   if giLeadOn == 1 then
     Notes "lead", imotif, 0, 0.3, 0.92, ireps
   endif
+endop
+
+
+instr dark
+  DarkPatch
+  DarkSong
+  turnoff
+endin
+
+; Round two: the lead's drive, edge and spread eased; the pad driven and pumped less; the gated room shorter and lower.
+opcode DarkSofter, 0, 0
+  giLeadDet = 10
+  giLeadCut = 1900
+  giLeadRes = 0.3
+  giLeadDrive = 1.9
+  giPadDrive = 1.5
+  giPadPump = 0.5
+  giGateMix = 1
+  giTomAmp = 0.75
+  giTomSend = 0.3
+  giHatAmp = 0.1
+endop
+
+; Half time: kicks on 1 and 3, the snare on 3.
+instr dark2
+  DarkPatch
+  DarkSofter
+  giKickHalf = 1
+  giKickAmp = 0.85
+  giSnHalf = 1
+  giSnAmp = 0.42
+  giSnSend = 0.45
+  giSnHold = 0.2
+  DarkSong
+  turnoff
+endin
+
+; Four on the floor, lighter: a quieter kick, a short gate, hats on 2 and 4's offbeats.
+instr dark3
+  DarkPatch
+  DarkSofter
+  giKickAmp = 0.7
+  giSnAmp = 0.38
+  giSnSend = 0.3
+  giSnHold = 0.12
+  giHatHalf = 1
+  DarkSong
   turnoff
 endin
 
@@ -628,16 +767,50 @@ instr darkTap
   schedule "pluck", 0.02, 0.3, 52, 0.4
   turnoff
 endin
+; Dark's swipe: a pluck run up irun's notes over a saw rising from isw0 to isw1 (MIDI), landing on a tom at itom Hz.
+opcode DarkRun, 0, i[]iiii
+  irun[], isw0, isw1, itom, iamp xin
+  ii = 0
+  while ii < lenarray(irun) do
+    schedule "pluck", 0.02 + ii * 0.075, 0.25, irun[ii], iamp * (0.35 + 0.04 * ii)
+    ii += 1
+  od
+  schedule "sweep", 0.02, 0.5, isw0, isw1, iamp * 0.5, 180, 3200, 0
+  schedule "tom", 0.5, 0.4, iamp * 0.5, itom, 0.5
+endop
 instr darkSwipe
   DarkPatch
   irun[] fillarray 40, 47, 52, 55, 59, 64
-  ii = 0
-  while ii < 6 do
-    schedule "pluck", 0.02 + ii * 0.075, 0.25, irun[ii], 0.35 + 0.04 * ii
-    ii += 1
-  od
-  schedule "sweep", 0.02, 0.5, 28, 52, 0.5, 180, 3200, 0
-  schedule "tom", 0.5, 0.4, 0.5, 82, 0.5
+  DarkRun irun, 28, 52, 82, 1
+  turnoff
+endin
+; Round two: dark's swipe on D major's notes, for night's key.
+instr darkSwipeD
+  DarkPatch
+  irun[] fillarray 38, 45, 50, 54, 57, 62
+  DarkRun irun, 26, 50, Hz(38), 1
+  turnoff
+endin
+; Round two: both swipes at once, on dark's patch with night's tine: dark's body under night's sparkle.
+opcode BothPatch, 0, 0
+  DarkPatch
+  giTineRv = 0.4
+  giTineDl = 0.4
+endop
+instr swipeBothE
+  BothPatch
+  ilow[] fillarray 40, 47, 52, 55, 59, 64
+  ihigh[] fillarray 64, 67, 71, 74, 76, 79, 83, 88
+  DarkRun ilow, 28, 52, 82, 0.8
+  NightRun ihigh, 0.7
+  turnoff
+endin
+instr swipeBothD
+  BothPatch
+  ilow[] fillarray 38, 45, 50, 54, 57, 62
+  ihigh[] fillarray 62, 66, 69, 71, 74, 78, 81, 86
+  DarkRun ilow, 26, 50, Hz(38), 0.8
+  NightRun ihigh, 0.7
   turnoff
 endin
 instr darkOpen
@@ -657,6 +830,87 @@ instr darkLocked
   giBassPump = 0
   schedule "bass", 0.02, 0.08, 40, 0.7
   schedule "bass", 0.15, 0.13, 35, 0.7
+  turnoff
+endin
+
+; ------------------------------------------------------------------ hybrid: dark's bass line and harmony, E minor at 100,
+; in night's groove and pad world. Kicks at level 0 on every beat keep dark's pump on the bass; night's own kicks
+; sound without pumping.
+instr hybrid
+  NightPatch
+  NightTineSoft
+  giBassDet = 9
+  giBassCut = 1800
+  giBassDec = 0.12
+  giBassRes = 0.4
+  giBassDrive = 3.6
+  giBassPump = 0.8
+  iroot[] fillarray 28, 28, 28, 28, 36, 36, 38, 38, 28, 28, 28, 28, 36, 36, 35, 35
+  ichord[] fillarray 52, 59, 64, 67, 55, 60, 64, 67, 57, 62, 66, 69, 52, 59, 64, 67, 55, 60, 64, 67, 59, 63, 66, 71
+  icbar[] fillarray 0, 4, 6, 8, 12, 14
+  iclen[] fillarray 4, 2, 2, 4, 2, 2
+  ibarch[] fillarray 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5
+  ioct[] fillarray 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 12, 0, 0
+  iacc[] fillarray 1, 0.6, 0.8, 0.6
+  ipat[] fillarray 0, 1, 2, 3, -1, 2, 3, 1
+  ireps = 3
+  ir = 0
+  while ir < ireps do
+    ibar = 0
+    while ibar < 16 do
+      it = (ir * 16 + ibar) * 4 * giB
+      ic = ibarch[ibar] * 4
+      ik = 0
+      while ik < 4 do
+        schedule "kick", it + ik * giB, 0.36, 0, 1
+        ik += 1
+      od
+      schedule "kick", it, 0.34, 0.8, -1
+      schedule "kick", it + 2.5 * giB, 0.34, 0.65, -1
+      schedule "snare", it + 2 * giB, 0.5, 0.3, 0.55, 0.38
+      ih = 0
+      while ih < 4 do
+        schedule "hat", it + (ih + 0.5) * giB, 0.1, 0.1, (ih == 3 ? 0.12 : 0.05)
+        ih += 1
+      od
+      ih = 0
+      while ih < 16 do
+        schedule "bass", it + ih * 0.25 * giB, 0.2 * giB, iroot[ibar] + ioct[ih], 0.5 * iacc[ih % 4]
+        ih += 1
+      od
+      ih = 0
+      while ih < 8 do
+        if ipat[ih] >= 0 then
+          schedule "pluck", it + ih * 0.5 * giB, 0.45 * giB, ichord[ic + ipat[ih]] + 12, (ih % 4 == 1 ? 0.2 : 0.14), \
+            (ih % 2 == 0 ? 0.4 : 0.6)
+        endif
+        ih += 1
+      od
+      ibar += 1
+    od
+    ic = 0
+    while ic < 6 do
+      it = (ir * 16 + icbar[ic]) * 4 * giB
+      ip = 0
+      while ip < 4 do
+        schedule "pad", it, iclen[ic] * 4 * giB - 0.2, ichord[ic * 4 + ip], 0.1
+        ip += 1
+      od
+      ic += 1
+    od
+    ir += 1
+  od
+  imotif[] fillarray 1.5, 0.5, 64, 2, 1.5, 67, 3.5, 2.5, 66, 6, 1, 64, 7, 0.5, 62, 7.5, 2.5, 59, \
+    10.5, 0.5, 64, 11, 1.5, 67, 12.5, 1, 71, 13.5, 1.5, 69, 15, 0.5, 67, 15.5, 2.5, 72, \
+    18.5, 0.5, 71, 19, 1.5, 67, 20.5, 1, 64, 21.5, 2, 67, 23.5, 2.5, 69, \
+    26.5, 0.5, 66, 27, 1.5, 69, 28.5, 3, 74, \
+    33.5, 0.5, 71, 34, 1.5, 76, 35.5, 2.5, 74, 38, 1, 71, 39, 0.5, 69, 39.5, 2.5, 67, \
+    42.5, 0.5, 71, 43, 1.5, 76, 44.5, 1, 79, 45.5, 1.5, 78, 47, 0.5, 74, 47.5, 2.5, 76, \
+    50.5, 0.5, 79, 51, 1.5, 76, 52.5, 1, 72, 53.5, 2, 76, 55.5, 2.5, 75, \
+    58.5, 0.5, 71, 59, 1.5, 75, 60.5, 3, 78
+  if giLeadOn == 1 then
+    Notes "tine", imotif, 0, 0.36, 1, ireps
+  endif
   turnoff
 endin
 
