@@ -333,8 +333,103 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 35, Click spring, pent, clocks 0+.
-    static func plate35() -> Plate? { nil }
+    /// Problem 35, Click spring, pent, clocks 0+: the crown wheel's ratchet on the barrel bridge, a big ink plate whose
+    /// arms run out between the rods to its screws; off it, at one o'clock, the click on its screw and the click spring,
+    /// a long hairpin blade bent round two screws, bearing on the click's tail. The click's tip, in the tooth, is in the
+    /// second ink.
+    static func plate35() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, lane = -54.0 * .pi / 180
+        // The bridge: a round middle under the ratchet, and an arm out along each lane but the click's.
+        let middle = 0.445, arms = [18.0, 90.0, 162.0, 234.0].map { $0 * .pi / 180 }
+        var bridge: [P] = []
+        for (k, a) in arms.enumerated() {
+            let next = k + 1 < arms.count ? arms[k + 1] : arms[0] + 2 * .pi
+            let half = 0.085, end = 0.84
+            bridge += [polar(o, middle + 0.1, a - asin(half / (middle + 0.1)))]
+            bridge += [polar(o, end, a) + P(cos(a - .pi / 2), sin(a - .pi / 2)) * half]
+            bridge += arc(polar(o, end, a), half, from: a - .pi / 2, to: a + .pi / 2)
+            bridge += [polar(o, middle + 0.1, a + asin(half / (middle + 0.1)))]
+            let from = a + asin(half / middle) + 0.12, to = k + 1 < arms.count ? next - asin(half / middle) - 0.12 : lane + 2 * .pi - 0.3
+            bridge += arc(o, middle, from: from, to: to)
+            if k + 1 == arms.count {
+                bridge += [polar(o, 0.42, lane + 2 * .pi - 0.2), polar(o, 0.42, lane + 2 * .pi + 0.2)]
+                bridge += arc(o, middle, from: lane + 2 * .pi + 0.3, to: arms[0] + 2 * .pi - asin(0.085 / middle) - 0.12)
+            }
+        }
+        bridge.append(bridge[0])
+        // The ratchet: 30 teeth, each face radial and its back sloping down against the turn.
+        let teeth = 30, tau = 2 * Double.pi / Double(teeth), root = 0.335, tip = 0.395
+        let nose = polar(o, 0.345, lane - 0.2), face = lane - 0.2 - 0.25 * tau
+        let ratchet = (0..<teeth).flatMap { k -> [P] in
+            let a = face + Double(k) * tau
+            return [polar(o, root, a), polar(o, tip, a + tau)]
+        } + [polar(o, root, face)]
+
+        Kit.ground(&plate, angle: 0.6)
+        Kit.mass(&plate, bridge)
+        plate.line(arc(o, middle - 0.03, from: arms[0] + 0.35, to: lane + 2 * .pi - 0.35), fine, .bone)
+        for a in arms {
+            for side in [-1.0, 1.0] {
+                let off = P(-sin(a), cos(a)) * (side * 0.058)
+                plate.line([polar(o, middle + 0.02, a) + off, polar(o, 0.78, a) + off], medium, .bone)
+            }
+            let c = polar(o, 0.84, a)
+            plate.fill(arc(c, 0.055))
+            plate.line(arc(c, 0.055), heavy)
+            plate.line(arc(c, 0.042), fine)
+            Kit.mass(&plate, Kit.band(polar(c, 0.048, a + 0.7), polar(c, 0.048, a + 0.7 + .pi), 0.02))
+        }
+
+        // The ratchet in bone, its teeth outlined heavy, its face snailed, the arbor's square and the screw over it.
+        plate.fill(ratchet)
+        plate.line(ratchet, 0.014)
+        plate.line(arc(o, root - 0.03), medium)
+        for r in stride(from: 0.135, through: 0.28, by: 0.036) { plate.line(arc(o, r), medium) }
+        plate.fill(arc(o, 0.1))
+        plate.line(arc(o, 0.1), heavy)
+        Kit.mass(&plate, turned(box(P(-0.048, -0.048), P(0.048, 0.048)), by: 0.3))
+        plate.fill(arc(o, 0.032))
+        plate.line(arc(o, 0.032), medium)
+
+        // The click spring in the lane between twelve and two: an eye round the near screw, a leg out, a bend round
+        // the far screw, and a leg back to bear on the click's tail.
+        let u = P(cos(lane), sin(lane)), v = P(-u.y, u.x)
+        func at(_ r: Double, _ s: Double) -> P { u * r + v * s }
+        let near = at(0.6, -0.075), far = at(0.88, 0), leg = 0.072
+        var spring = [at(0.6, -0.075 + 0.0) + u * 0.04, at(0.88, -leg)]
+        spring += (1...24).map { i -> P in
+            let t = Double(i) / 24 * .pi
+            return far - v * (leg * cos(t)) + u * (leg * sin(t))
+        }
+        spring += [at(0.62, leg)]
+        plate.fill(Kit.ribbon(spring, 0.084))
+        Kit.mass(&plate, Kit.ribbon(spring, 0.052))
+        plate.line(Array(spring.dropFirst().dropLast()), fine, .bone)
+        plate.fill(arc(near, 0.072))
+        Kit.mass(&plate, arc(near, 0.062))
+
+        // The click on its screw, its nose in a tooth and its tail under the spring, edged in bone off the bridge.
+        let pivot = at(0.5, 0.0), d = simd_normalize(pivot - nose), n = P(-d.y, d.x)
+        let click = [nose, nose + d * 0.07 + n * 0.042, pivot + n * 0.062, pivot + d * 0.09 + n * 0.05, pivot + d * 0.135 + n * 0.02,
+                     pivot + d * 0.12 - n * 0.035, pivot - n * 0.06, nose + d * 0.06 - n * 0.018, nose]
+        plate.line(click, 0.03, .bone)
+        Kit.mass(&plate, click)
+        let tipInk = [nose, nose + d * 0.06 + n * 0.038, nose + d * 0.055 - n * 0.016, nose]
+        plate.fill(tipInk, .second)
+        plate.line(tipInk, medium)
+        for c in [near, far, pivot] {
+            plate.fill(arc(c, 0.036))
+            plate.line(arc(c, 0.036), heavy)
+            plate.line([polar(c, 0.028, 0.5), polar(c, 0.028, 0.5 + .pi)], 0.012)
+        }
+
+        callout(&plate, "A", from: polar(o, 0.37, 3.3), to: P(-0.74, 0.12))
+        callout(&plate, "B", from: pivot - d * 0.06 + n * 0.03, to: P(0.06, -0.86))
+        callout(&plate, "C", from: at(0.74, leg), to: P(0.84, -0.08))
+        callout(&plate, "D", from: polar(o, 0.7, .pi / 2) + P(0.06, 0), to: P(0.2, 0.74))
+        return plate
+    }
 
     /// Problem 36, Crown wheel, hex, clocks 1+.
     static func plate36() -> Plate? { nil }
