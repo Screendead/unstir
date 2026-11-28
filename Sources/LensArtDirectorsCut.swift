@@ -124,7 +124,7 @@ extension LensArt {
         let plate: [P] = [cam(-1.2, -0.7), cam(1.2, -0.7), cam(1.2, 0.12), cam(-1.2, 0.12)]
         let barrel: P = cam(0.2, 0.3)
         let tab: [P] = bar(polar(barrel, 0.15, 185), polar(barrel, 0.31, 185), 0.08)
-        let dial: P = cam(-0.6, 0.16), lugs: [P] = [cam(-1.06, 0.3), cam(1.06, 0.3)]
+        let dial: P = cam(-0.68, 0.24), timer: P = cam(0.64, 0.22), lugs: [P] = [cam(-1.06, 0.3), cam(1.06, 0.3)]
         let straps: [[P]] = [bar(lugs[0], lugs[0] + P(-0.3, 0.5), 0.1), bar(lugs[1], lugs[1] + P(0.2, 0.6), 0.1)]
         let can: [P] = rect(0.36, 0.62, 0.66, 0.78), caps: [[P]] = [rect(0.34, 0.6, 0.4, 0.8), rect(0.62, 0.6, 0.68, 0.8)]
         let leader: [P] = [P(0.68, 0.64), P(1, 0.6), P(1, 0.7), P(0.68, 0.74)]
@@ -132,7 +132,10 @@ extension LensArt {
         var fills: [Fill] = hoods + [disc(barrel + P(-0.04, 0.03), 0.07, m(0.6)), ring(barrel, 0.1, 0.14, black), ring(barrel, 0.14, 0.2, chrome)]
         fills += caps.map { fill($0, black) } + [fill(can, y(0.85)), fill(leader, black)]
         fills += [fill(tab, chrome), disc(dial, 0.075, chrome)] + straps.map { fill($0, y(0.6)) }
-        let shell = fill(body, black), front = fill(plate, chrome)
+        let lever: [P] = bar(timer, timer + 0.17 * u + 0.12 * v, 0.045)
+        let screws: [P] = [cam(-0.42, 0.4), cam(-0.5, 0.15), cam(0.5, 0.42)]
+        fills += [disc(timer, 0.05, chrome), fill(lever, chrome)] + screws.map { disc($0, 0.032, y(0.7)) }
+        let shell = fill(body, black), front = fill(plate, chrome), base = fill([cam(-1.4, 0.5), cam(1.4, 0.5), cam(1.4, 0.7), cam(-1.4, 0.7)], chrome)
 
         var s: [Halftone.Stroke] = []
         // The body: its outline, the plate's edge, the lugs and the slow speeds' dial.
@@ -142,6 +145,13 @@ extension LensArt {
         for st in straps { s.append(stroke([st[0], st[1]], mid)); s.append(stroke([st[3], st[2]], mid)) }
         s.append(stroke(circle(dial, 0.075, 24), mid))
         for k in 0..<8 { s.append(stroke([polar(dial, 0.05, 45 * Double(k) + 10), polar(dial, 0.075, 45 * Double(k) + 10)], hair)) }
+        s.append(stroke([dial, polar(dial, 0.05, 200)], mid))
+        // The self-timer's lever, and the base plate's edge.
+        s.append(stroke(circle(timer, 0.05, 20), mid))
+        s.append(stroke(closed(lever), mid))
+        s.append(stroke(circle(timer, 0.012, 8), hair))
+        for (k, sc) in screws.enumerated() { s.append(stroke(circle(sc, 0.032, 12), mid)); s.append(stroke([polar(sc, 0.024, 40 + 50 * Double(k)), polar(sc, 0.024, 220 + 50 * Double(k))], hair)) }
+        s += runs(span(cam(-1.4, 0.5), cam(1.4, 0.5), 140), mid) { shell.holds($0) }
         // The barrel: its rings, the knurl on the focusing ring, the tab and its knob, the front glass's glint.
         for r in [0.1, 0.14, 0.2] { s.append(stroke(circle(barrel, r, 40), r == 0.2 ? bold : mid)) }
         for k in 0..<36 where k % 6 != 2 { let a: Double = 10 * Double(k); s.append(stroke([polar(barrel, 0.155, a), polar(barrel, 0.185, a)], hair)) }
@@ -204,7 +214,7 @@ extension LensArt {
         let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
             for pt in ports { if let t = pt.tone(at: p) { return t } }
             for f in shapes where f.holds(p) { return f.tone }
-            if shell.holds(p) { return front.holds(p) ? chrome : black }
+            if shell.holds(p) { return front.holds(p) || base.holds(p) ? chrome : black }
             return cloth
         }
         return Halftone.Panel(name: "rangefinder", tones: tones, strokes: cut(s))
