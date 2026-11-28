@@ -304,7 +304,7 @@ def main():
                     continue
                 stack, m = found
                 # Most deals that miss par miss it because untwists join, which a fraction of the proof's time shows.
-                quick, _ = solve(layout, lenses, text(stack), None, "untwisting")
+                quick, _ = solve(layout, lenses, text(stack), int(os.environ.get("PROOF_LIMIT", "60")), "untwisting")
                 if f"entries {len(stack)}\nuntwisting {len(stack)}" not in quick:
                     continue
                 out, _ = solve(layout, lenses, text(stack), limit=int(os.environ.get("PROOF_LIMIT", "60")))
