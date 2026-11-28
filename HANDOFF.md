@@ -56,12 +56,11 @@ session on `packs/treble`; its draft PR is the claim.
   panel per level; Prism's titles are a plate's specimens, so 60 more need new plates or more names per plate. A rule
   change to make a pack tougher goes to Jack as a pitch. Proofs that run past CI's 15 minutes go behind
   `UNSTIR_SLOW_TESTS`.
-- **Fifth chapter.** Mineral's four pictures (`slope/art`, `Mineral.metal`, self-contained) move to master unchanged
-  and go on a new tier after maelstrom. Its mechanic (Debug prototypes, filmed), name (a stored raw value and prefix)
-  and length go to Jack as one pitch before its levels are built. It must not give away a paid pack's mechanic or touch
-  the frozen generator. Groundwork built on `chapter5/mineral` (2026-11-27; `docs/fifth-chapter.md`): Mineral on master's
-  code, three candidate rules (keys, the keel, ebb and flow) as Debug prototypes with films and proved levels, names
-  and length. Keys and ebb and flow hold at maelstrom's depth; the keel doesn't and is out. Recommended keys. Waits on the pitch to Jack; charybdis's standing calls (orbits, the swirling rim) go in it.
+- **Fifth chapter: Charybdis (C), keys on Mineral's pictures, 30 levels** (Jack, 2026-11-28). Built on
+  `chapter5/mineral` (`docs/fifth-chapter.md`): `Level.wards`, the keys' look and VoiceOver, `Tier.charybdis` last,
+  `KeySolver` behind `scripts/solve.sh ... keys=`, levels dealt by `scripts/charybdis-levels.py`. Its PR waits on the
+  others' 30-level counts (`levels/thirty`). Open: a bed of its own (maelstrom's for now), an
+  achievement for finishing it (a new permanent id), and the orbits, still reserved.
 - Measured 2026-11-27: today's pars run Lens 1 to 12, Escapement 2 to 9, Prism 3 to 8, maelstrom up to 26. At par the
   solvers deal Prism depth 11 on hex and Escapement 12 with two clocks.
 

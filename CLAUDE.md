@@ -121,6 +121,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots] [masks=slot:channel]`
+  `[keys=ward:key@mark]` (Charybdis's, `KeySolver`)
   (e.g. `quad 0:+3,2:-4 0` or `tri 2:+2,0:+3,1:+4 masks=0:r,1:c`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over its ties under each parking, the no-lookahead count
   and planning gap, one-visit and last-ring ties, whether it needs a plan (no rule's best tie reaches the

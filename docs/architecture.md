@@ -503,21 +503,29 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the tank has no limit a level shows, and `Tank.maxStack` (96) is a silent cap, a turn past it refused with the
   knob's shake and "the tank is full: undo or reset" as before. `BrimRing`, `Brim.frame` and `PlayLayout.Halo` are
   endless's alone again, so no glass sizes itself for a ring on a level, the Duo's split included.
-- **LabRules.swift** and **LabViews.swift** are the fifth chapter's candidate rules, Debug prototypes only
-  (`docs/fifth-chapter.md`): keys, the keel and ebb and flow, each a limit on which turns a level allows and never on
-  what a turn does, so the shader and `Array.commit` are untouched. `Level.lab` is empty on every level; only the
-  harness's `UNSTIR_LAB` sets it. `Game.kind(of:)` seizes a ward whose key is off its mark, `Game.labRoom` gives the
-  turns the keel and a knob's last sense allow, which the drag stops at and `commit` refuses past (`labRefusals`,
-  a knock), and `LabKnob` draws each knob's part beside it; `KeelGauge` sits across the bezel's top.
-  `UnstirTests/LabSolver.swift` proves a level under them (`scripts/solve.sh lab`).
-- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
-  maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
+- **Charybdis's keys** (Jack, 2026-11-28, "Charybdis teaches keys"): `Ward` in Twist.swift, so the solver's tools
+  compile it, and `Level.wards`, by slot: a warded knob turns only while its key's pointer, the player's own turns of
+  it (what the stack holds of its rod less what was dealt), stands on the mark, a whole turn either way the same place.
+  A limit on which turns a level allows, never on what a turn does, so the shader and `Array.commit` are untouched; a
+  turn turned straight back is always allowed, as no rod keys itself. `Game.kind(of:)` seizes a locked ward, so the
+  grab refuses its finger with the seized knob's knock, and `Game.commit` refuses it too (`wardRefusals`, which
+  knocks); `reachable` skips it, so autoplay and the harness's solve stop where the keys need a plan, and a harness
+  solve of a Charybdis level plays `UNSTIR_PLAYED`. `Level.print` adds `wards=` only where a level has them, so every
+  other print is as it was. **KeyViews.swift** draws them (`KeyKnob`, in `RodView`): a ring round each knob of a
+  pair in its colour (gold, rose, green) and stroke (solid, dashed, dotted, so colour never carries it alone) on a dark
+  bed, innermost the knob's own ward's; a notch on a key's fixed dial at each mark, pointing in; and a keyhole on a
+  ward's cap, turning with it opposite the pointer so the two never cross, dark in its colour while locked, lit and
+  glowing while open; the change eases over 0.3 s, 0.15 s under Reduce Motion. VoiceOver hears each ward in the tank's
+  value (`Game.wardSpoken`: where it sits, `Spoken.place`, and the hour its key must point to, `Spoken.hour`), and a
+  refused finger says it. `UNSTIR_KEYS=2:0@3` sets wards on any harness level. The groundwork's other rules (the keel,
+  ebb and flow) are in `docs/fifth-chapter.md`; the orbits stay reserved (`Level.Motion.crank`).
+- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom, charybdis. Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best, at
   any score (`Tier.isOpen`, `Tier.solved`; Jack, 2026-11-13: it had needed every one at par). `Tier.store` keeps only an open tier, so a locked one opened to look at
   never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
   `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
-  (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
+  (`L1`, `N1`, `V1`, `M1`, `C1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
   loses it unless the stored keys are remapped. Each table row's title and note is a `String(localized:)` keyed by the
   level's id (`level.L1.title`, `level.L1.note`), so an English edit keeps its translations; `Level.title`, `note` and
@@ -533,7 +541,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   solver's optimum (`testMaelstromParIsTheOptimum`, slow). The levels that need a plan (M6, M11–M14 and most of hex
   past M18) miss par by every rule of thumb however its ties go, and the rest are fair, the park rule reaching par
   however its ties go; the test pins which is which. Jack dropped the promise that a sensible player always reaches par
-  (2026-11-12): it is the last free tier. `scripts/maelstrom-levels.sh` measures the table and deals candidates. Past quad, the park
+  (2026-11-12). Charybdis (C) is the last free tier: keys on Mineral's four pictures (`Level.wards`, above), quad, pent
+  and hex, no knob seized, with a `fixedPar` that counts what the keys cost: the `KeySolver`'s optimum, over every
+  count on its small levels and the bounded optimum on the rest (`testCharybdisParIsTheOptimum`), dealt by
+  `scripts/charybdis-levels.py` on its own seeds. Its bed is maelstrom's until it has one. `scripts/maelstrom-levels.sh` measures the table and deals candidates. Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
   prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Its draws are `Layout.daily`, in the extension the scripts cut out. On a frost day (built for
@@ -583,7 +594,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   unread, a new boot shows as the uptime going back, or as a jump at least the anchor's uptime, which is believed. The
   launch logs whether the session was read, never the uptime: the log can leave the phone, and a line's time less the
   uptime is the boot's instant. A `Level` has a `motion`, what the rim holds to carry the knobs round without a stir
-  (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
+  (`.none`; `.tank`, maelstrom's; `.crank`, the orbits' planets, reserved and not built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
   one or a socket refuses touch, and a ratchet is one of Escapement's clocks (`Level.clocks`, in tick order: clockwise from twelve by
   `Layout.clockwise`, each +1, or -1 if in `woundBack`), with a
   `demo` stack for the demonstration before the first stir. Every level today turns its tank exactly where a
@@ -1545,7 +1556,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   between polarisers; columns, basalt's columns end on), the set Jack kept for the fifth chapter (2026-11-27), came
   over unchanged from the slope's candidate sets and are drawn live the same way, with no twins: a 20 s period, their
   floats `Picture.gradients` salted per picture (`mineralTable`), and fills of 2, 2, 5 and 5 entries by the picture
-  lab's bench. No level shows one yet, and the sandbox's cycle skips them. The sandbox's cycle
+  lab's bench. Charybdis's levels show them, and the sandbox's cycle skips them. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
   halftone; its header's two controls read "picture: grid ›" and "rods: 3 ›", or "grid ›" and "3 rods ›" where the
   width is short (`ViewThatFits`); quad and eye, which share a count, add their name ("rods: 4 · eye ›", short "eye ›",
@@ -1876,6 +1887,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   out of ticks); the same slot may be
   stirred twice running, as every let-go is final. So its first line is a fewest, and no shorter line exists among
   those counts: the proof each problem ships with. `Move.wait` is its tap.
+
+- **UnstirTests/KeySolver.swift** proves a Charybdis level (`scripts/solve.sh <layout> <scramble> keys=...`): A* over
+  stacks, each move a commit to a knob other than the last one turned, never a ward its key leaves locked, with an
+  admissible heuristic (each rod whose entries don't sum to 0 needs a turn; a key off a mark a ward still needs, one
+  more). `exhaustive` tries every count from -12 to +12, a proof to that range; by default it tries the counts that
+  cancel an entry, overshoot onto another of its rod, bring a key to a mark or a knob home, and +-1; `deep` tries only
+  whole entries off and keys to their marks, maelstrom's bounded standard, which reaches hex at 30 entries in
+  milliseconds. It prints untwisting under the wards, the first moves that reach the optimum, the steps of its line
+  where one move alone keeps par and the moves tried there that lose it, and the deepest stack along the line. Keys
+  whose disc overlaps their ward's leave the deep search no line, so the levels pair knobs whose discs don't touch.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's and vortex's pictures).

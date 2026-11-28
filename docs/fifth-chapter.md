@@ -3,8 +3,13 @@
 Jack, 2026-11-27: "Mineral is the one I wanted to keep. Add a fifth chapter, harder than Maelstrom - and see if you
 can find a new mechanic or skill to introduce in that one too." This is the record of the groundwork on
 `chapter5/mineral`: Mineral's pictures on master's code, three candidate rules built as Debug prototypes and filmed,
-the tier's name and length, and what a fifth `Tier` case touches. Nothing here is a call: the rule, the name and the
-length go to Jack as one pitch, and no `Tier` case or level id exists until he decides.
+the tier's name and length, and what a fifth `Tier` case touches.
+
+Jack's calls (2026-11-28): Charybdis teaches keys, its prefix is C, and every free chapter has 30 levels. Built since:
+keys are a level property (`Level.wards`, `Ward`; the keel, ebb and flow and `UNSTIR_LAB` are gone, their record
+below), `Tier.charybdis` is the last tier, `scripts/solve.sh <layout> <scramble> keys=...` proves a level
+(`KeySolver`, the lab mode folded in), and `scripts/charybdis-levels.py` deals and measures its 30 levels on its own
+seeds. Where this record says `UNSTIR_LAB`, `LabRules` or `solve.sh lab`, read `UNSTIR_KEYS`, `Ward` and `keys=`.
 
 ## Mineral, lifted
 
