@@ -6,16 +6,18 @@ import UIKit
 
 /// Game Center's sign-in and achievements (Jack's call F5 = B, round 14), behind the build's GAME_CENTER: NO, v1's
 /// until the sign-in overlay test on an iOS 26.2 phone passes, makes no GameKit call. With it YES, a plain launch signs
-/// in once, the first time the menu is up with nothing over it, and reports what `Achievement.due` finds as every
+/// in once, as its first level opens, so the welcome banner never lands over the menu (Jack, 2026-11-28); a sheet
+/// GameKit hands over waits for the menu up with nothing over it. It reports what `Achievement.due` finds as every
 /// finish's card shows (`Carded.shown`, so a banner never lands before the card) and on the first turn of the tank or
-/// the swirl. The harness and the test host never sign in, so never report.
+/// the swirl; one asked for before the sign-in has landed sends nothing, and the sign-in's own report, read afresh
+/// from the stored state, sends it. The harness and the test host never sign in, so never report.
 @MainActor
 final class GameCenter {
     static let shared = GameCenter()
 
     /// Info.plist's `GameCenter`, which the build's GAME_CENTER sets.
     static let built = Bundle.main.object(forInfoDictionaryKey: "GameCenter") as? String == "YES"
-    /// Past the dip into the menu, as `AgeCheck.settle`, so the sign-in never lands over the black.
+    /// Past the dip into the menu, as `AgeCheck.settle`, so a sign-in sheet never lands over the black.
     static let settle = Duration.seconds(0.3)
 
     /// A plain launch of a build with Game Center: set once, by `RootView`.

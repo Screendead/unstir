@@ -1332,10 +1332,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Achievement.shelf`). Only A Week of Tanks and Brim report a share on the way, and `due` sends only a rise past 0,
   so a hidden one never shows unearned. The build's `GAME_CENTER` (`Config/Unstir.xcconfig`, YES since the sign-in
   overlay test passed on the phone, 2026-11-18) sets Info.plist's `GameCenter`, read as `GameCenter.built`; off, no GameKit
-  call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once the menu has
-  been up with nothing over it for `settle` (`RootView.calm`, the age check's moment), holding a sign-in sheet GameKit
-  hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports as every
-  finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the swirl. It signs with Game Center's entitlement (`Config/*GameCenter.entitlements`,
+  call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once, as the session's
+  first level opens from either menu (`RootView`'s change of level), so Game Center's welcome banner never slides over
+  the menu (Jack, 2026-11-28); it holds a sign-in sheet GameKit hands over until the menu has been up with nothing over
+  it for `settle` (`RootView.calm`, the age check's moment), hides the access point, loads what Game Center has, and
+  reports as every finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the
+  swirl. A report asked for before the sign-in lands sends nothing and needs no queue: the sign-in's own report reads
+  the stored state afresh and sends everything due. It signs with Game Center's entitlement (`Config/*GameCenter.entitlements`,
   picked with iCloud's and Declared Age Range's), and App Store Connect holds the 16 achievements, their images made by
   `scripts/achievement-art.sh`.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):

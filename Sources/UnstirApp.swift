@@ -852,18 +852,19 @@ struct RootView: View {
         }
         .modifier(AgeChecked(menu: calm,
                              played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
-        // Game Center signs in only once the menu has settled, and holds its sheet while anything covers the menu.
+        // Game Center holds a sign-in sheet while anything covers the menu, until it has settled.
         .task(id: calm) {
             GameCenter.shared.calm = false
             guard calm, GameCenter.shared.plays, (try? await Task.sleep(for: GameCenter.settle)) != nil else { return }
             GameCenter.shared.calm = true
-            GameCenter.shared.signIn()
         }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier,
-        // a pack's with the pack's layer over it.
+        // a pack's with the pack's layer over it. Game Center signs in as the session's first level opens, so its
+        // welcome banner never slides over the menu (Jack, 2026-11-28).
         .onChange(of: level?.id, initial: true) {
             Sound.shared.bed(level?.bed ?? .menu)
             Sound.shared.layer(level?.layer)
+            if level != nil { GameCenter.shared.signIn() }
         }
         // Closed again mid-level, a card or the archive parked as the phone opened waits under the level, as on a phone,
         // if it opened that level. The slot goes with the menu beside play, so a later one waits for the level's own.
