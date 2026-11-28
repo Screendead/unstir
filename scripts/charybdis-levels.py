@@ -3,23 +3,27 @@
 """Deals Charybdis levels (keys and wards) on seeded scrambles and measures each through `scripts/solve.sh ... keys=`.
 
 usage: scripts/charybdis-levels.py deal <layout> <entries> <seeds> [from=0] [pairs=1] [chain] [twomarks]
-           [stirredkeys] [steps=2-8] [gap=0-99] [top=8] [prove=3] [timeout=60]
+           [stirredkeys] [steps=2-8] [gap=0-99] [firsts=99] [top=8] [prove=3] [timeout=60]
        scripts/charybdis-levels.py check <layout> <scramble> <ward>:<key>@<mark>,... [timeout=60]
        scripts/charybdis-levels.py table [id...] [timeout=120]
+       scripts/charybdis-levels.py line <n> [timeout=120]
 
 `deal` deals seeds from..from+seeds-1 on its own RNG, never the game's frozen generator. Each seed takes `pairs`
-ward/key pairs whose discs don't touch, one ward per key (`chain` makes the second pair's ward the first pair's key;
-`twomarks` gives the second pair the first pair's key at another mark; `stirredkeys` deals every key an entry). It
-solves each deal in deep mode and keeps it when untwisting without the wards takes exactly its entries (so the keys
-alone cost the moves over them), no entry merges under 2 or past 9 steps, the stack stays within 30 and par is over
-the entries by `gap`. It prints the kept deals best first (stranded, then the share of forced steps, the moves that
-lose par per step, and the fewest first moves), and runs the default and exhaustive modes on the best `prove`.
+ward/key pairs whose discs don't touch, no knob keying two wards and no cycle (a ward may still be another's key, a
+chain; `chain` makes the second pair one; `twomarks` gives the second pair the first pair's key at another mark;
+`stirredkeys` deals every key an entry). It solves each deal in deep mode and keeps it when untwisting without the
+wards takes exactly its entries (so the keys alone cost the moves over them), no entry merges under 2 or past 9
+steps, the stack stays within 35, par is over the entries by `gap` and at most `firsts` places for a first move reach
+par. It prints the kept deals best first (stranded, then the share of forced steps, the moves that lose par per step,
+and the fewest first moves), and runs the default and exhaustive modes on the best `prove`.
 `check` measures one level in every mode. `table` re-measures Charybdis's levels below (or those named) in deep mode
-and in the mode that proved each, and fails if a par has moved. Each run stops at `timeout` seconds."""
-import os, random, re, signal, subprocess, sys
+and in the mode that proved each, and fails if a par has moved. `line` prints a line at par for level C<n> of the app's
+own table (`Level.charybdis` in Sources/Levels.swift), solved in the mode the game's test uses, and fails if its length
+isn't the row's par. Each run stops at `timeout` seconds."""
+import os, pty, random, re, select, signal, subprocess, sys, time
 
-RODS = {"quad": 4, "pent": 5, "hex": 7}
-MAX_STACK = 30
+RODS = {"quad": 4, "eye": 4, "pent": 5, "hex": 7}
+MAX_STACK = 35
 
 # id, layout, scramble as it stands after parse, wards, par, the strongest mode that proved it, and where it came from.
 LEVELS = [
@@ -41,6 +45,8 @@ LEVELS = [
 
 
 def touch(layout, a, b):
+    if layout == "eye":
+        return {a, b} != {2, 3}
     if layout == "hex":
         if 0 in (a, b):
             return True
@@ -49,22 +55,45 @@ def touch(layout, a, b):
     return (a - b) % n in (1, n - 1)
 
 
-def solve(args, timeout):
-    # Its own process group, so a timeout also stops the solver solve.sh started.
-    p = subprocess.Popen(["scripts/solve.sh", *args], stdout=subprocess.PIPE, text=True, start_new_session=True)
+def solve(args, timeout, stop=None):
+    """The solver's output, None past `timeout`, or what it had printed when `stop(output so far)` held."""
+    # A pty, so the solver prints a line at a time and `stop` can end a run before its slow measures.
+    master, slave = pty.openpty()
+    # Its own process group, so stopping it also stops the solver solve.sh started.
+    p = subprocess.Popen(["scripts/solve.sh", *args], stdout=slave, stderr=subprocess.DEVNULL, start_new_session=True)
+    os.close(slave)
+    out, end = b"", time.monotonic() + timeout
     try:
-        return p.communicate(timeout=timeout)[0]
-    except subprocess.TimeoutExpired:
-        os.killpg(p.pid, signal.SIGKILL)
-        p.communicate()
-        return None
+        while True:
+            left = end - time.monotonic()
+            if left <= 0:
+                return None
+            if select.select([master], [], [], left)[0]:
+                try:
+                    chunk = os.read(master, 65536)
+                except OSError:
+                    chunk = b""
+                if not chunk:
+                    p.wait()
+                    return out.decode()
+                out += chunk
+                if stop and stop(out.decode()):
+                    return out.decode()
+    finally:
+        if p.poll() is None:
+            os.killpg(p.pid, signal.SIGKILL)
+            p.wait()
+        os.close(master)
 
 
-def measure(layout, scramble, keys, mode, timeout):
-    out = solve([layout, scramble, "keys=" + keys] + ([mode] if mode else []), timeout)
+def measure(layout, scramble, keys, mode, timeout, stop=None):
+    out = solve([layout, scramble, "keys=" + keys] + ([mode] if mode else []), timeout, stop)
     if out is None:
         return {"mode": mode or "default", "timeout": True}
     m = {"mode": mode or "default", "timeout": False}
+    if stop and "a line:" not in out:
+        m["stopped"] = out
+        return m
     e = re.search(r"entries (\d+) on \w+: (\S+);", out)
     m["entries"], m["scramble"] = (int(e.group(1)), e.group(2)) if e else (None, scramble)
     o = re.search(r"optimum (\d+) \(\d+ states, (\d+) ms\)", out)
@@ -83,6 +112,17 @@ def measure(layout, scramble, keys, mode, timeout):
     m["deepest"] = int(re.search(r"deepest stack along the line (\d+)", out).group(1))
     m["line"] = re.search(r"a line: (\S+)", out).group(1)
     return m
+
+
+def early(out, gap, firsts):
+    """Whether a deal's optimum, untwisting and first moves already rule it out, before the slow measures."""
+    f = re.search(r"first moves that reach it: (.*) \(", out)
+    if not f:
+        return False
+    entries = int(re.search(r"entries (\d+)", out).group(1))
+    par = int(re.search(r"optimum (\d+)", out).group(1))
+    places = {(t.split(":")[0], int(t.split(":")[1]) % 12) for t in f.group(1).split(", ")}
+    return "stranded" not in out or not gap[0] <= par - entries <= gap[1] or len(places) > firsts
 
 
 def bare(layout, scramble, timeout):
@@ -164,16 +204,40 @@ def score(m):
     return (m["untwist"] == "stranded", m["forced"] / m["par"], m["wrong"] / m["par"], -m["firsts_n"])
 
 
+def app_levels():
+    """(layout, scramble, wards, par) for each row of `Level.charybdis`, in order."""
+    text = open("Sources/Levels.swift").read()
+    block = text[text.index("static let charybdis"):]
+    block = block[:block.index("\n    ]")] if "\n    ]" in block else block
+    return [(l, sc, k, int(p)) for l, sc, k, p in
+            re.findall(r'\(\.(\w+), "([^"]+)", "([^"]+)", (\d+), \.', block)]
+
+
 def main(argv):
     opts = dict(a.split("=", 1) for a in argv if "=" in a and ":" not in a)
     flags = {a for a in argv if a in ("chain", "twomarks", "stirredkeys")}
     words = [a for a in argv if a not in flags and a not in {f"{k}={v}" for k, v in opts.items()}]
-    timeout = int(opts.get("timeout", 120 if words[:1] == ["table"] else 60))
+    timeout = int(opts.get("timeout", 120 if words[:1] in (["table"], ["line"]) else 60))
     if words[:1] == ["check"] and len(words) == 4:
         layout, scramble, keys = words[1:]
         print(f"{layout} {scramble} keys={keys}; without the wards {bare(layout, scramble, timeout)}")
         for mode in ("deep", "", "exhaustive"):
             print(row(measure(layout, scramble, keys, mode, timeout)), flush=True)
+        return
+    if words[:1] == ["line"] and len(words) == 2:
+        rows = app_levels()
+        n = int(words[1])
+        if not 1 <= n <= len(rows):
+            sys.exit(f"no level C{n}: the app's table holds C1 to C{len(rows)}")
+        layout, scramble, keys, par = rows[n - 1]
+        # The game's test: the default mode on the smallest levels, deep on the rest.
+        mode = "" if len(scramble.split(",")) <= 3 else "deep"
+        m = measure(layout, scramble, keys, mode, timeout)
+        if m.get("timeout") or m.get("none"):
+            sys.exit(f"C{n}: " + row(m))
+        print(m["line"])
+        if len(m["line"].split(",")) != par:
+            sys.exit(f"C{n}: the line takes {len(m['line'].split(','))} moves, par is {par}")
         return
     if words[:1] == ["table"]:
         moved, slow = False, False
@@ -197,6 +261,7 @@ def main(argv):
     start, pairs = int(opts.get("from", 0)), int(opts.get("pairs", 1))
     lo, hi = map(int, opts.get("steps", "2-8").split("-"))
     gap = tuple(map(int, opts.get("gap", "0-99").split("-")))
+    firsts = int(opts.get("firsts", 99))
     chain, twomarks = "chain" in flags, "twomarks" in flags
     kept = []
     for seed in range(start, start + seeds):
@@ -208,7 +273,12 @@ def main(argv):
         keys = spell(wards)
         must = set(wards) | ({k for k, _ in wards.values()} if "stirredkeys" in flags else set())
         scramble = deal(rng, layout, n, lo, hi, must)
-        m = measure(layout, scramble, keys, "deep", timeout)
+        m = measure(layout, scramble, keys, "deep", timeout, lambda out: early(out, gap, firsts))
+        if m.get("stopped"):
+            print(f"seed {seed}: " + "; ".join(l.strip() for l in m["stopped"].splitlines()
+                                              if l.startswith(("optimum", "untwisting", "first"))) + "; dropped early",
+                  flush=True)
+            continue
         if m.get("timeout") or m.get("none"):
             print(f"seed {seed}: {row(m)}", flush=True)
             continue
