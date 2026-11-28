@@ -10,7 +10,7 @@ hold=5 shot prism-mixed "Prism on tri, magenta, yellow and cyan rods, 0:+3,1:-2,
   PACK=prism MASKS=0:m,1:y,2:c STACK=0:+3,1:-2,2:+2
 hold=5 shot prism-hex "Prism on hex, every rod a different mask (white hub), 1:+3,4:-4,2:+2,5:-3: the fern's lines in every core." \
   PACK=prism LAYOUT=hex MASKS=1:r,2:g,3:b,4:c,5:m,6:y STACK=1:+3,4:-4,2:+2,5:-3
-for n in $(seq 2 30); do
+for n in $(seq 2 90); do
   hold=5 shot "prism-specimen-$n" "Prism specimen $n as dealt (docs/prism-design.md), on its tray's plate." PACK=prism LEVEL=$n OWNED=prism
 done
 for layout in quad eye pent hex; do
@@ -43,7 +43,7 @@ hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
 hold=5 shot prism-letters-chosen "Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches." PACK=prism LEVEL=1 LETTERSCHOICE=1
 hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG." PACK=prism LEVEL=14 OWNED=prism LETTERS=1
-for plate in seeds medusae radiolaria nautilus; do
+for plate in seeds medusae radiolaria nautilus leaves moths reef diatoms fungi feathers starfish beetles seahorses octopus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
 # Reading the picture while a rod turns: each move's rod held at rest, short of its count, on it and past it, so the
@@ -66,3 +66,10 @@ reads 08-blue 8 2:+2,4:+4 0 -4 "Thistle's blue rod, its third move"
 reads 14-yellow 14 2:+2 3 +4 "specimen 14's yellow rod, its second move"
 reads 30-yellow 30 0:+2,1:-2,4:-2 0 -3 "the last specimen's yellow rod, its fourth move"
 reads 15-magenta 15 "" 2 -5 "Sea nettle's magenta rod, stirred twice, its first move"
+# A rule idea for Jack (not shipped): a white stir mid-stack. Spore's deal with a second white stir, 4:-2, under the
+# later red and cyan ones: it moves every channel alike, so it shows no colour, only white lines sheared, and every
+# coloured knob over it pushes until it comes off.
+hold=5 shot prism-idea-white-mid "Rule idea: Spore with a white stir mid-stack (4:-2): a sheared white disc with no colour, the red and cyan over it." \
+  PACK=prism LAYOUT=pent PICTURE=fern MASKS=0:r,1:r,2:c,3:c,4:w STACK=4:+3,0:+4,2:-3,4:-2,1:+2,3:+4,0:-3,2:+5
+hold=5 shot prism-idea-white-mid-before "Rule idea's control: Spore as dealt, the same stirs without the white one." \
+  PACK=prism LAYOUT=pent PICTURE=fern MASKS=0:r,1:r,2:c,3:c,4:w STACK=4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5

@@ -110,23 +110,10 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): String(localized: "a story told backwards", comment: "First Stir's pitch, on its card")
         case .pack(.lens): String(localized: "some rods zoom instead of turning", comment: "Lens's pitch, on its card")
-        case .pack(.escapement): String(localized: "clocks tick after every move, on a budget of ticks",
+        case .pack(.escapement): String(localized: "a clock ticks after every move",
                                         comment: "Escapement's pitch, on its card")
         case .pack(.prism): String(localized: "each rod stirs only some colours", comment: "Prism's pitch, on its card")
         case .complete: String(localized: "three packs, for less", comment: "The bundle's pitch, on its card")
-        }
-    }
-
-    /// What the pack assumes of the player, as its card says it.
-    var assumes: String {
-        switch self {
-        case .pack(.firstStir): String(localized: "anyone \u{00B7} an evening, not a challenge", comment: "Who First Stir is for")
-        case .pack(.lens): String(localized: "after plughole", comment: "Who Lens is for. The first tier, in lower case")
-        case .pack(.escapement): String(localized: "hard \u{00B7} composed problems", comment: "Who Escapement is for")
-        case .pack(.prism): String(localized: "after plughole \u{00B7} reading by colour",
-                                   comment: "Who Prism is for. The first tier, in lower case")
-        case .complete: String(localized: "after plughole, then harder",
-                               comment: "Who the bundle is for. The first tier, in lower case")
         }
     }
 
@@ -134,11 +121,11 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): String(localized: "\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
                                        comment: "What First Stir holds. Its levels counted")
-        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
+        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in twelve issues",
                                   comment: "What Lens holds. Its levels counted")
-        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
+        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in fifteen chapters",
                                         comment: "What Escapement holds. Its levels counted")
-        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in five trays",
+        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in fifteen trays",
                                    comment: "What Prism holds. Its levels counted")
         case .complete: String(localized: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels",
                                comment: "What the bundle holds. Its packs, then their levels")
@@ -150,13 +137,6 @@ enum Offer: Hashable, Sendable {
     /// A line under the facts, owned or not.
     var note: String? {
         self == .pack(.prism) ? String(localized: "letters for colour-blind play, in settings", comment: "Prism's card, under its facts") : nil
-    }
-
-    var free: String {
-        switch self {
-        case .pack(let p): String(localized: "levels 1\u{2013}\(p.taste) free, no purchase", comment: "A pack's card: its free levels")
-        case .complete: String(localized: "each pack's first 3 levels", comment: "The bundle's card: what is free")
-        }
     }
 
     var sweep: [Color] {
@@ -385,8 +365,9 @@ struct PackTank: View {
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
                 if k == level.clocks.first?.rod {
                     ClockHint(radius: min(rods[k].z * r, r - 4)).position(at(k))
-                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core), plate: LevelView.ratchetReach * r, pawl: 0,
-                                lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true)
+                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core, cards: level.hubCards), plate: LevelView.ratchetReach(cards: level.hubCards) * r,
+                                pawl: 0, lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true,
+                                digits: level.hubCards)
                         .position(at(k))
                 } else {
                     RodView(angle: angle(k), size: core, seized: level.kind(of: k) != .working, grabbed: false,
@@ -471,10 +452,7 @@ struct PackClip: View {
         ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
             .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(offer.pack == nil // loc: verbatim each a key
-                ? Text("\(offer.name): \(offer.pitch). A level from each pack, played.",
-                       comment: "VoiceOver: the bundle's clip. Its name, then its pitch")
-                : Text("\(offer.name): \(offer.pitch). A level played.", comment: "VoiceOver: a pack's clip. Its name, then its pitch"))
+            .accessibilityLabel(Text("\(offer.name): \(offer.pitch).", comment: "VoiceOver: a pack's or the bundle's clip. Its name, then its pitch"))
             .accessibilityAddTraits(.isImage)
     }
 
@@ -487,7 +465,7 @@ struct PackClip: View {
 
 // MARK: - The card
 
-/// A pack's card, or Triptych I's: its clip, what it assumes, the free taste, the App Store's price, buy and restore, and
+/// A pack's card, or Triptych I's: its clip, the App Store's price, buy and restore, and
 /// the pack's levels once it has them.
 struct PackCard: View {
     let offer: Offer
@@ -541,11 +519,8 @@ struct PackCard: View {
                 ScrollViewReader { reader in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            (offer.pack == nil
-                                ? state == .owned ? Text("BUNDLE", comment: "The bundle's card, over its name, owned")
-                                    : Text("BUNDLE \u{00B7} PAID ADD-ON", comment: "The bundle's card, over its name")
-                                : state == .owned ? Text("PACK", comment: "A pack's card, over its name, owned")
-                                    : Text("PACK \u{00B7} PAID ADD-ON", comment: "A pack's card, over its name"))
+                            (offer.pack == nil ? Text("BUNDLE", comment: "The bundle's card, over its name")
+                                : Text("PACK", comment: "A pack's card, over its name"))
                                 .font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3)
                                 .padding(.top, 12)
                             Text(verbatim: offer.name).font(.ui(.display)).tracking(2)
@@ -558,12 +533,6 @@ struct PackCard: View {
                                 .frame(maxWidth: .infinity).padding(.top, 28)
                             // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                             VStack(alignment: .leading, spacing: 9) {
-                                fact(String(localized: "for", comment: "A pack's card: the key beside who it is for"),
-                                     Text(offer.assumes)) // loc: verbatim localized by Offer
-                                if state != .owned {
-                                    fact(String(localized: "free", comment: "A pack's card: the key beside its free levels"),
-                                         Text(offer.free)) // loc: verbatim localized by Offer
-                                }
                                 if state == .owned, offer.pack != nil, !levels.isEmpty {
                                     let par = levels.filter { Best.load($0.id)?.over == 0 }.count
                                     fact(String(localized: "done", comment: "An owned pack's card: the key beside its progress"),
@@ -844,10 +813,7 @@ struct PackCard: View {
         switch state {
         case .unowned: EmptyView()
         case .owned:
-            line(offer.pack == nil
-                 ? String(localized: "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open",
-                          comment: "The bundle's card, owned. Its packs, counted in words")
-                 : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), .lime)
+            line(String(localized: "\u{2713} owned", comment: "A pack's or the bundle's card, owned"), .lime)
         case .pending:
             // A pack can wait on Triptych I's request alone, which only Triptych I's card asks again.
             let asked = store.asked(offer)
@@ -863,9 +829,9 @@ struct PackCard: View {
                 if let why = store.failures[offer.productID]?.words {
                     detail(why)
                 } else {
-                    (asked ? Text("Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again.",
+                    (asked ? Text("Ask to Buy sent \u{00B7} tap asked to send it again",
                                   comment: "A pack's card: its Ask to Buy sent. Asked is the buy pill's word")
-                        : Text("Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.",
+                        : Text("\(offer.name) opens once \(Offer.bundleName) is approved.",
                                comment: "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"))
                         .font(.ui(.detail)).foregroundStyle(Color.text2)
                         .fixedSize(horizontal: false, vertical: true)

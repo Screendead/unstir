@@ -136,9 +136,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   with twists left (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
   optimum and its proof, absolute when par is what the clocks owe, the lines and keys at par over turns of up
   to `span` steps, and each move of the line with the alternatives that would lose. `build` deals problems backwards from a line,
-  and `book scripts/escapement/problems.tsv` proves the book (`docs/escapement-problems.md`, about eight
-  minutes). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, `ESC_PUSHED=1` plays on past a pushed
-  tick, and `ESC_WAIT=0` plays without the wait. It builds `build/escapement/prove` as `solve.sh` does.
+  and `book scripts/escapement/problems.tsv` proves the book (`docs/escapement-problems.md`, under two minutes; every
+  turn up to ±6 for 1 to 30, whole heals and waits from 31); `measure` prints each problem's decoys, how far they run
+  and bits. `scripts/escapement/pools.sh` deals pools, `scripts/escapement/pools-31-90.sh` those 31 to 90 came from,
+  and `scripts/escapement/pick.py` picks a plan's slots from them. `ESC_RULE=lab` plays the lab's re-grab instead of the
+  final tick, `ESC_PUSHED=1` plays on past a pushed tick, `ESC_WAIT=0` plays without the wait, and `ESC_WAIT=one` a
+  wait that ticks the tapped clock alone. It builds `build/escapement/prove` as `solve.sh` does.
 - Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
@@ -215,13 +218,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet.
+- Escapement's plates: `scripts/escapement-art.sh render|check <problem> ...` draws and measures one on the Mac, `deal`
+  through its scramble; `scripts/escapement-art-sheet.py plates|deals|shots <from> <to>` lays them out.
 - Prism's specimens: `scripts/prism-levels.sh table` measures every specimen in Pack.swift (depth, the solver's
   optimum, what is free under the masks and read white, blocked knobs, right moves per step, the shader's assumed cost,
   and the shares of the glass showing ghosts and three-way splits, the readability limits); `check <layout> <masks>
   <scramble>` measures one and `search <layout> <depth> <palette> <from> <to>` deals seeded ones over a white bottom rod,
   keeping those at par; `read` prints whether each move's count shows in its rod's core (a rod stirred twice shows
-  the sum). `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools.
-  `scripts/prism-plates.sh render <plate> <out.png> [side] [layout]` draws a plate on the Mac, and `check` prints each
+  the sum). `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools; trays 6 to 15's from `scripts/prism-levels/pools.sh <dir>`'s, with `--deep`.
+  `scripts/prism-plates.sh render <plate> <out.png> [side] [layout]` draws a plate on the Mac (`PLATE_ONLY=<Name>` builds that plate alone), and `check` prints each
   core's lit share and how much of it a 30° step moves, as the test measures. `deal <plate> <layout> <masks>
   <scramble> <out.png>` draws a deal.
 - Lens's tables: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4] [--solve]` reads the level rows of

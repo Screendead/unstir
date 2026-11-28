@@ -69,8 +69,8 @@ func raster(_ plate: EscapementArt.Plate, side w: Int, hairline: Double? = nil) 
 }
 
 /// Where the game's controls fall on a plate, for composing round them: a knob on every rod of the layout, and round
-/// each the hub a clock there would wear, as any rod may be one.
-func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int) {
+/// each the hub a clock there would wear, as any rod may be one, drawn larger for two cards (`RatchetView.grown`).
+func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int, cards: Int = 1) {
     let r = Double(w) / 2
     func disc(_ rod: SIMD3<Double>, _ radius: Double) -> CGRect {
         CGRect(x: r + (rod.x - radius) * r, y: r + (rod.y - radius) * r, width: 2 * radius * r, height: 2 * radius * r)
@@ -80,7 +80,7 @@ func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int) {
         ctx.fillEllipse(in: disc(rod, 0.08))
         ctx.setStrokeColor(rgb(0x1F3A5F))
         ctx.setLineWidth(0.006 * r)
-        ctx.strokeEllipse(in: disc(rod, 0.155))
+        ctx.strokeEllipse(in: disc(rod, cards > 1 ? 0.195 : 0.155))
     }
 }
 
@@ -126,12 +126,79 @@ func check(_ plate: EscapementArt.Plate, _ layout: Layout, hairline: Double? = n
     }
 }
 
+/// The plate seen through a stack, each pixel pulled back through the entries' inverses newest first, as the shader
+/// does: a sketch for reading a deal on the Mac, with each rod's knob and a clock's dashed edge marked; the app draws
+/// the real one.
+func dealt(_ plate: EscapementArt.Plate, _ layout: Layout, _ stack: [Twist], clocks: [Int], side: Int) -> CGContext {
+    let from = 2 * side, (_, src) = raster(plate, side: from, hairline: 2.2 * Double(from) / 1136)
+    let ctx = CGContext(data: nil, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
+                        space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    let out = ctx.data!.bindMemory(to: UInt8.self, capacity: 4 * side * side)
+    let word = Array(stack.reversed())
+    for j in 0..<side {
+        for i in 0..<side {
+            let p = P((Double(i) + 0.5) / Double(side) * 2 - 1, (Double(j) + 0.5) / Double(side) * 2 - 1)
+            let k = 4 * (j * side + i)
+            guard simd_length(p) < 1 else { (out[k], out[k + 1], out[k + 2]) = (12, 12, 14); continue }
+            let q = word.reduce(p) { Tank.twist($0, rod: layout.rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+            let u = min(max(Int((q.x + 1) / 2 * Double(from)), 0), from - 2), v = min(max(Int((q.y + 1) / 2 * Double(from)), 0), from - 2)
+            for c in 0..<3 {
+                let at = { (x: Int, y: Int) in Int(src[4 * (y * from + x) + c]) }
+                out[k + c] = UInt8((at(u, v) + at(u + 1, v) + at(u, v + 1) + at(u + 1, v + 1)) / 4)
+            }
+        }
+    }
+    let r = Double(side) / 2
+    for (n, rod) in layout.rods.enumerated() {
+        let c = CGPoint(x: r + rod.x * r, y: r - rod.y * r)
+        ctx.setFillColor(rgb(0x1A1A1A))
+        ctx.fillEllipse(in: CGRect(x: c.x - 0.07 * r, y: c.y - 0.07 * r, width: 0.14 * r, height: 0.14 * r))
+        guard clocks.contains(n) else { continue }
+        ctx.setStrokeColor(rgb(0xD8402A))
+        ctx.setLineWidth(max(1.5, 0.006 * r))
+        ctx.setLineDash(phase: 0, lengths: [0.03 * r, 0.02 * r])
+        ctx.strokeEllipse(in: CGRect(x: c.x - rod.z * r, y: c.y - rod.z * r, width: 2 * rod.z * r, height: 2 * rod.z * r))
+        ctx.setLineDash(phase: 0, lengths: [])
+    }
+    return ctx
+}
+
+/// A stack after a line's moves, each running clock's tick committed after every move in the tick order: a running
+/// clock is one with an entry left on its rod. Clocks are rods, each with its tick's steps; a move on a clock's rod, or
+/// `wait`, is a wait.
+func played(_ scramble: String, _ line: [String], clocks: [(rod: Int, steps: Int)], in layout: Layout) -> [Twist] {
+    var stack = [Twist].parse(scramble, in: layout)
+    let order = clocks.sorted { layout.clockwise($0.rod) < layout.clockwise($1.rod) }
+    for move in line {
+        let f = move.split(separator: ":")
+        if f.count == 2, let r = Int(f[0]), let n = Int(f[1]), !clocks.contains(where: { $0.rod == r }) {
+            stack.commit(rod: r, steps: n, in: layout)
+        }
+        for clock in order where stack.contains(where: { $0.rod == clock.rod }) { stack.commit(rod: clock.rod, steps: clock.steps, in: layout) }
+    }
+    return stack
+}
+
+func png(_ ctx: CGContext, _ path: String) {
+    let out = CGImageDestinationCreateWithURL(URL(fileURLWithPath: path) as CFURL, UTType.png.identifier as CFString, 1, nil)!
+    CGImageDestinationAddImage(out, ctx.makeImage()!, nil)
+    CGImageDestinationFinalize(out)
+}
+
 let args = CommandLine.arguments
 switch args.count > 1 ? args[1] : "" {
+case "deal" where args.count >= 7:
+    // deal <problem|today> <layout> <clocks, e.g. 1+,2-> <scramble> <out.png> [side] [the line's moves played]
+    let layout = Layout(rawValue: args[3])!, side = args.count > 7 ? Int(args[7])! : 860
+    let clocks = args[4].split(separator: ",").map { (rod: Int($0.dropLast())!, steps: $0.hasSuffix("-") ? -1 : 1) }
+    let line = args.count > 8 ? args[8].replacingOccurrences(of: " · ", with: ",").split(separator: ",").map(String.init) : []
+    let stack = played(args[5], line, clocks: clocks, in: layout)
+    print("\(stack.count) entries")
+    png(dealt(plate(args[2]), layout, stack, clocks: clocks.map(\.rod), side: side), args[6])
 case "render" where args.count >= 4:
     let side = args.count > 4 ? Int(args[4])! : 1284
     let (ctx, _) = raster(plate(args[2]), side: side)
-    if args.count > 5 { overlay(ctx, Layout(rawValue: args[5])!, side: side) }
+    if args.count > 5 { overlay(ctx, Layout(rawValue: args[5])!, side: side, cards: args.count > 6 ? Int(args[6])! : 1) }
     let out = CGImageDestinationCreateWithURL(URL(fileURLWithPath: args[3]) as CFURL, UTType.png.identifier as CFString, 1, nil)!
     CGImageDestinationAddImage(out, ctx.makeImage()!, nil)
     CGImageDestinationFinalize(out)
@@ -158,6 +225,6 @@ case "bench" where args.count >= 3:
     }
     print(String(format: "%@  geometry %.1f ms  raster at 1284 px %.0f ms  marks %d  points %d", args[2], build * 200, draw * 200, marks, points))
 default:
-    print("usage: render <problem|today> <out.png> [side] [layout] | check <problem|today> <layout> | bench <problem|today>")
+    print("usage: render <problem|today> <out.png> [side] [layout [cards]] | deal <problem|today> <layout> <clocks> <scramble> <out.png> [side] [moves] | check <problem|today> <layout> | bench <problem|today>")
     exit(2)
 }

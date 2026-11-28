@@ -112,11 +112,6 @@ struct ResultCard: View {
                         } else {
                             facts.foregroundStyle(quiet)
                         }
-                        if !game.clean && (!par || game.over == 0) {
-                            (game.firstTry || !Best.cleanNeedsFirstTry(game.level.id) ? Text("clean needs no undo or reset")
-                                : Text("clean counts on the first try"))
-                                .font(.ui(.detail)).tone(page.tone(.text3))
-                        }
                     }
                     if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
                         Text(line).tone(.text2) // loc: verbatim localized by bestLine

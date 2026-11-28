@@ -621,12 +621,12 @@ final class UnstirTests: XCTestCase {
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         game.commit(rod: 0, steps: -4)
         XCTAssertEqual(game.completed, .pack(.lens))
-        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. Clean. Lens complete, 25 panels.")
+        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. Clean. Lens complete, 75 panels.")
         XCTAssertTrue(game.reset())
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
         XCTAssertNil(game.completed)
-        XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 25 panels")
+        XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 75 panels")
         XCTAssertEqual(Completion.free.spoken, "Every tier unstirred.")
 
         let sea = Tier.maelstrom.levels.map(\.id)
@@ -2289,7 +2289,6 @@ final class UnstirTests: XCTestCase {
     /// characters, and no title repeats anywhere in the game, First Stir's kept titles included.
     func testEveryTitleIsItsOwn() {
         let v1 = Tier.allCases.flatMap(\.levels) + [Pack.lens, .escapement, .prism].flatMap(\.levels)
-        XCTAssertEqual(v1.count, 193)
         for level in v1 {
             XCTAssertLessThanOrEqual(level.title.count, 16, level.id)
             XCTAssertLessThanOrEqual(level.title.split(separator: " ").count, 2, level.id)
@@ -2661,16 +2660,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(Best.swirled)
     }
 
-    /// Only plughole 01 points at the settings, and only until it has; under the harness only UNSTIR_FRESH shows it.
-    func testOnlyPlughole01PointsAtTheSettingsOnce() {
-        let first = Tier.plughole.levels[0], second = Tier.plughole.levels[1]
-        XCTAssertTrue(LevelView.points(at: first, harnessed: false, fresh: false, pointed: false))
-        XCTAssertFalse(LevelView.points(at: first, harnessed: false, fresh: false, pointed: true))
-        XCTAssertFalse(LevelView.points(at: second, harnessed: false, fresh: false, pointed: false))
-        XCTAssertFalse(LevelView.points(at: first, harnessed: true, fresh: false, pointed: false))
-        XCTAssertTrue(LevelView.points(at: first, harnessed: true, fresh: true, pointed: true))
-        XCTAssertFalse(LevelView.points(at: Tier.whirlpool.levels[0], harnessed: true, fresh: true, pointed: false))
-    }
 
     /// The swirl breathes only until the player's first stir of it commits, the moment its lesson goes: a stir of another
     /// rod or a turn of the tank leaves it breathing, and after that stir no level breathes again. A layout without a

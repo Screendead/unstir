@@ -265,12 +265,6 @@ struct LevelView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
-    /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
-    /// SwiftUI reruns the init after the flag is stored, and the line stays the visit out.
-    @State private var pointing: Bool
-    @State private var pointed = false
-    /// Only a plain launch stores that it has; under the harness UNSTIR_FRESH shows it.
-    private let storesPointing: Bool
     /// A line the caption shows for a few seconds in place of its own, saying why a control or a turn did nothing.
     @State private var notice: String?
     @State private var notices = 0
@@ -504,10 +498,6 @@ struct LevelView: View {
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
-        let harnessed = harness?.harnessed == true
-        _pointing = State(initialValue: Self.points(at: level, harnessed: harnessed, fresh: harness?.fresh == true,
-                                                    pointed: Best.pointedAtSettings))
-        storesPointing = !harnessed
         // A resumed try opens where it was left, with no opening.
         _shown = State(initialValue: still || level.sandbox || self.resumed ? nil : 0)
         self.onExit = onExit
@@ -744,26 +734,11 @@ struct LevelView: View {
     /// is an overlay, so the solved tank stays exactly where it was played.
     private func caption(_ layout: PlayLayout) -> some View {
         let toSkip = String(localized: "tap to skip", comment: "The caption over an opening's stir")
-        let practice = game.level.archived
-            ? String(localized: "Practice: this day's best was set on its day.", comment: "The caption of an archive day replayed")
-            : String(localized: "Practice: only the first try counts.", comment: "The caption of a daily replayed")
+        let practice = String(localized: "practice", comment: "The caption of a daily or archive day replayed: its best is not saved")
         let opening = game.level.replay
             ? String(localized: "watch the stir \u{00B7} tap to skip", comment: "The caption over a replay's opening stir") : toSkip
         return Text(notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening)) // loc: verbatim localized here, by Game and by say
             .font(page.caption).opacity(captionOpacity)
-            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does. Beside the
-            // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
-            .overlay(alignment: .bottom) {
-                if pointing && !beside {
-                    Self.pointer.font(.ui(.detail)).fixedSize()
-                        .opacity(showResult || ending || shown != nil ? 0 : page.tone(.text3).alpha)
-                        .animation(.easeOut(duration: 0.4), value: shown == nil)
-                        .accessibilityLabel(Self.pointerSpoken) // loc: verbatim localized by pointerSpoken
-                        .accessibilityHidden(showResult || ending || shown != nil)
-                        // A gap below the note's last line.
-                        .offset(y: TypeRole.detail.line(at: playType).height + 7)
-                }
-            }
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity, minHeight: Self.captionLines(paper: page.paper, type: playType), alignment: .top)
             .padding(.top, 14)
@@ -1035,11 +1010,6 @@ struct LevelView: View {
                 game.startClock()
                 badge = game.badge
                 noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && !game.level.isStory
-                if pointing && !pointed {
-                    pointed = true
-                    if storesPointing { Best.pointedAtSettings = true }
-                    if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() } // loc: verbatim localized by pointerSpoken
-                }
             } else {
                 lifted = false
             }
@@ -1431,18 +1401,6 @@ struct LevelView: View {
 
     nonisolated static var refills: String {
         String(localized: "undos refill +2 each day you play", comment: "Said when undo is tapped with none left")
-    }
-
-    /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
-    static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
-    nonisolated static var pointerSpoken: String {
-        String(localized: "Sound, haptics and colour letters are in settings, the gear on the menu.",
-               comment: "VoiceOver: plughole 01's pointer to the settings")
-    }
-
-    /// Whether this level opens pointing at the settings: plughole 01 until it has, or under the harness UNSTIR_FRESH.
-    nonisolated static func points(at level: Level, harnessed: Bool, fresh: Bool, pointed: Bool) -> Bool {
-        level.id == Tier.plughole.levels.first?.id && (harnessed ? fresh : !pointed)
     }
 
     /// A notice, or Escapement's dead tick, reads above the resting caption.
@@ -1932,7 +1890,7 @@ struct LevelView: View {
             + (swirlLesson ? RimLesson.arc(r, .swirl) : [])
         // A clock's ratchet and its count want more room than a knob.
         let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }
-            .map { (at($0), (game.level.ratchets.contains($0) ? Self.ratchetSize(core) / 2 + 40 : core / 2) + Self.countRoom) }
+            .map { (at($0), (game.level.ratchets.contains($0) ? Self.ratchetSize(core, cards: game.level.hubCards) / 2 + 40 : core / 2) + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
             + (lensTrack.map { x in (-3...3).map { (CGPoint(x: x, y: at(rodCount!.k).y + CGFloat($0) * Self.trackPitch), Self.countRoom + 4) } } ?? [])
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
@@ -2128,7 +2086,7 @@ struct LevelView: View {
                             let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
                             KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                                 ratchet(k, back: c.dir < 0, at: v, of: i, flight: f, pawl: ride, shake: s, core: core,
-                                        plate: Self.ratchetReach * r)
+                                        plate: Self.ratchetReach(cards: game.level.hubCards) * r)
                             } keyframes: { _ in Self.jolt }
                         } keyframes: { _ in Self.tickKeys }
                         .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
@@ -2164,9 +2122,9 @@ struct LevelView: View {
                         LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
                     }
                     .position(at(fk))
-                ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
+                ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core, cards: game.level.hubCards), r: r) }
                 if game.lost && shown == nil, let k = game.tick.last?.rod ?? game.pushedClock ?? game.lastStopped {
-                    lostMarks(at(k), size: Self.ratchetSize(core), r: r,
+                    lostMarks(at(k), size: Self.ratchetSize(core, cards: game.level.hubCards), r: r,
                               twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
                 }
                 if knobLesson && shown == nil && !touching {
@@ -2312,8 +2270,8 @@ struct LevelView: View {
         .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } } // loc: verbatim localized by Game
     }
 
-    /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
-    nonisolated static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
+    /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read, grown for two cards on its hub.
+    nonisolated static func ratchetSize(_ core: CGFloat, cards: Int = 1) -> CGFloat { 1.5 * core * RatchetView.grown(cards) }
 
     /// Clock `k`'s ratchet, `flight` of the way through its newest tick's turn, the `i`th of the move's turn at `v`. Its
     /// hub flips as the header does, as its tick starts, so the header is always the hubs' sum; it greys once that tick
@@ -2322,10 +2280,11 @@ struct LevelView: View {
                          core: CGFloat, plate: CGFloat) -> RatchetView {
         let owed = game.owed(k), started = i.map { v > Double($0) }
         return RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                           size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k || waitedOn == k,
+                           size: Self.ratchetSize(core, cards: game.level.hubCards), plate: plate, pawl: pawl, lit: pressing == k || waitedOn == k,
                            stopped: !game.canTick(k) && f >= 1 && shown == nil && !demoing, back: back,
                            owed: started == false ? owed + 1 : owed, was: started == true ? owed + 1 : nil,
-                           fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion)
+                           fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion,
+                           digits: game.level.hubCards)
     }
 
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a
@@ -2365,7 +2324,7 @@ struct LevelView: View {
                 }
                 .position(c)
             // A tap off the plate: a ring through the finger closes on the plate's edge, which flares.
-            let plate = Self.ratchetReach * r, from = missed?.k == k ? (missed?.by ?? 0) * r : plate
+            let plate = Self.ratchetReach(cards: game.level.hubCards) * r, from = missed?.k == k ? (missed?.by ?? 0) * r : plate
             Circle().stroke(page.live, lineWidth: 1.5)
                 .keyframeAnimator(initialValue: 2.0, trigger: misses) { v, t in
                     v.frame(width: 2 * (from + (plate - from) * min(t, 1)), height: 2 * (from + (plate - from) * min(t, 1)))
@@ -2727,19 +2686,20 @@ struct LevelView: View {
         }
     }
 
-    /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack.
-    nonisolated static let ratchetReach = 0.16
+    /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack, the
+    /// dark plate it sits on drawn as far, both grown with a clock grown for two cards.
+    nonisolated static func ratchetReach(cards: Int = 1) -> Double { 0.16 * Double(RatchetView.grown(cards)) }
 
     /// Escapement: a touch on the disc of the clock centred at `centre`, landing at `start` and lifting at `end`, waits.
-    nonisolated static func waits(from start: SIMD2<Double>, to end: SIMD2<Double>, centre: SIMD2<Double>) -> Bool {
-        simd_distance(start, end) < 0.06 && simd_distance(start, centre) < ratchetReach
+    nonisolated static func waits(from start: SIMD2<Double>, to end: SIMD2<Double>, centre: SIMD2<Double>, cards: Int = 1) -> Bool {
+        simd_distance(start, end) < 0.06 && simd_distance(start, centre) < ratchetReach(cards: cards)
     }
 
     /// A touch on clock `k`'s disc let go: a tap on the ratchet's plate waits, a tap elsewhere on the disc points the
     /// finger to the plate, and a drag is refused.
     private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
         pressing = nil
-        if Self.waits(from: start, to: end, centre: centre(k)) {
+        if Self.waits(from: start, to: end, centre: centre(k), cards: game.level.hubCards) {
             waitMove(on: k)
         } else if simd_distance(start, end) < 0.06 {
             missed = (k, simd_distance(start, centre(k))); misses += 1
