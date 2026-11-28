@@ -221,7 +221,7 @@ struct Level: Hashable, Sendable {
         (.tri, "1:-6,2:+4,0:+2",
          String(localized: "level.L8.title", defaultValue: "Mist",
                            comment: "Plughole level title, a word for draining water"),
-         String(localized: "level.L8.note", defaultValue: "Turn a rod to look. A fresh hard ring means not that one.",
+         String(localized: "level.L8.note", defaultValue: "A new hard ring means that rod isn't next.",
                            comment: "A level's lesson, one line under the tank")),
         (.quad, "0:+3,2:-4",
          String(localized: "level.L9.title", defaultValue: "Spray",
@@ -311,7 +311,7 @@ struct Level: Hashable, Sendable {
         (.tri, "0:-5,1:+3",
          String(localized: "level.N1.title", defaultValue: "Spring",
                            comment: "Whirlpool level title, a word for a river from its source to the sea"),
-         String(localized: "level.N1.note", defaultValue: "Same rules, twice the stirs, no replays.",
+         String(localized: "level.N1.note", defaultValue: "Same rules, twice the stirs.",
                            comment: "A level's lesson, one line under the tank")),
         (.tri, "2:+7,0:-7",
          String(localized: "level.N2.title", defaultValue: "Headwaters",
@@ -736,7 +736,7 @@ struct Level: Hashable, Sendable {
             level.seized = Set(frost.knobs)
             level.motion = .tank
             level.fixedPar = frost.par
-            level.note = String(localized: "Frost day: two knobs are frozen. Turn the tank. Turns count as moves.",
+            level.note = String(localized: "Two knobs are frozen. Turn the tank. Turns count as moves.",
                                 comment: "A frost day's daily: two knobs seized. One line under the tank")
         }
         return level
@@ -1113,11 +1113,6 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "packs.pointed") }
     }
 
-    /// Set as plughole 01's first open points at the settings, so it does so once (Jack's call F3, round 14).
-    static var pointedAtSettings: Bool {
-        get { UserDefaults.standard.bool(forKey: "settings.pointed") }
-        set { UserDefaults.standard.set(newValue, forKey: "settings.pointed") }
-    }
 
     /// Set the first time the daily or endless opens: until then, once open, their rows are marked new. Unstored, the
     /// harness's, it lasts only this launch.

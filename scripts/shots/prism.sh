@@ -66,10 +66,27 @@ reads 08-blue 8 2:+2,4:+4 0 -4 "Thistle's blue rod, its third move"
 reads 14-yellow 14 2:+2 3 +4 "specimen 14's yellow rod, its second move"
 reads 30-yellow 30 0:+2,1:-2,4:-2 0 -3 "the last specimen's yellow rod, its fourth move"
 reads 15-magenta 15 "" 2 -5 "Sea nettle's magenta rod, stirred twice, its first move"
-# A rule idea for Jack (not shipped): a white stir mid-stack. Spore's deal with a second white stir, 4:-2, under the
-# later red and cyan ones: it moves every channel alike, so it shows no colour, only white lines sheared, and every
-# coloured knob over it pushes until it comes off.
+# The rule idea that became the buried white stir (Jack, 2026-11-28): Spore's deal with a second white stir, 4:-2,
+# under the later red and cyan ones: it moves every channel alike, so it shows no colour, only white lines sheared, and
+# every coloured knob over it pushes until it comes off.
 hold=5 shot prism-idea-white-mid "Rule idea: Spore with a white stir mid-stack (4:-2): a sheared white disc with no colour, the red and cyan over it." \
   PACK=prism LAYOUT=pent PICTURE=fern MASKS=0:r,1:r,2:c,3:c,4:w STACK=4:+3,0:+4,2:-3,4:-2,1:+2,3:+4,0:-3,2:+5
 hold=5 shot prism-idea-white-mid-before "Rule idea's control: Spore as dealt, the same stirs without the white one." \
   PACK=prism LAYOUT=pent PICTURE=fern MASKS=0:r,1:r,2:c,3:c,4:w STACK=4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5
+# The specimens that bury a white stir mid-stack (docs/prism-design.md, "A buried white stir"): each a third of the way
+# into its untwist, and with every entry over the white stir lifted, the sheared white seam on top. Each line: the
+# specimen, the moves to a third in, then the rest of the moves to the white stir.
+for line in "76 3:-2,2:-5,3:-2,6:-3,1:-3 3:-2,2:-5,3:-2,6:-3" \
+  "77 1:-2,2:+2,0:-2,2:+4,0:-4 1:-2,2:+2,0:-2,2:+4,0:-4" \
+  "79 5:-3,6:-2,1:-5,2:+3,5:+4 5:-3,6:-2,1:-5,2:+3,5:+4,1:-2,2:-5,1:-3" \
+  "82 6:-4,1:-4,5:-5,4:-2,5:-5 6:-4,1:-4,5:-5,4:-2,5:-5,2:+5,4:-3,1:-3,5:-3,4:-4" \
+  "87 2:+3,4:+5,1:+2,0:-4,5:-3 2:+3,4:+5,1:+2,0:-4,5:-3,4:-3,5:+4" \
+  "88 6:+5,5:+3,3:+2,6:+5,0:+4 6:+5,5:+3,3:+2,6:+5"; do
+  read -r n third white <<< "$line"
+  hold=5 shot "prism-buried-$n-third" "Prism specimen $n a third of the way into its untwist ($third)." \
+    PACK=prism LEVEL=$n OWNED=prism PLAYED=$third
+  # On 77 a third of the way in is the white stir's turn.
+  [[ $white == "$third" ]] || hold=5 shot "prism-buried-$n-white" \
+    "Prism specimen $n with every entry over its buried white stir lifted: the white seam on top." \
+    PACK=prism LEVEL=$n OWNED=prism PLAYED=$white
+done

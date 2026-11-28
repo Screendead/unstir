@@ -61,6 +61,10 @@ session on `packs/treble`; its draft PR is the claim.
   `KeySolver` behind `scripts/solve.sh ... keys=`, levels dealt by `scripts/charybdis-levels.py`. Its PR waits on the
   others' 30-level counts (`levels/thirty`). Open: a bed of its own (maelstrom's for now), an
   achievement for finishing it (a new permanent id), and the orbits, still reserved.
+- **Prism's buried white stir** (Jack's call, 2026-11-28): built on `packs/prism-white`, off `packs/treble`.
+  Specimens 76, 77, 79, 82, 87 and 88 give the white rod a second stir mid-stack, each proven at par and as hard or
+  harder on every measure; 76 carries the note "White blocks every colour stirred over it." (`docs/prism-design.md`,
+  "A buried white stir").
 - Measured 2026-11-27: today's pars run Lens 1 to 12, Escapement 2 to 9, Prism 3 to 8, maelstrom up to 26. At par the
   solvers deal Prism depth 11 on hex and Escapement 12 with two clocks.
 

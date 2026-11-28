@@ -261,7 +261,7 @@ final class PlayLayoutTests: XCTestCase {
         for level in levels {
             XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, "\(level.id) at \(type)", file: file, line: line)
         }
-        for text in [LevelView.refills, "Practice: this day's best was set on its day.", "Practice: only the first try counts.",
+        for text in [LevelView.refills,
                      "watch the stir \u{00B7} tap to skip", "the tank is full: undo or reset"] {
             XCTAssertLessThanOrEqual(lines(text, mono), 2, "\(text) at \(type)", file: file, line: line)
         }
