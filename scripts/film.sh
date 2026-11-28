@@ -345,7 +345,7 @@ if wants charybdis-01; then
 fi
 hard=${CHARYBDIS_HARD:-$(grep -c '"level\.C[0-9]*\.title"' Sources/Levels.swift)}
 if wants "charybdis-$hard"; then
-  film "charybdis-$hard" 150 "fps=1/3,scale=150:-1,tile=10x5:padding=4" "${keys[@]}" LEVEL="$hard" \
+  film "charybdis-$hard" 170 "fps=1/3,scale=150:-1,tile=10x6:padding=4" "${keys[@]}" LEVEL="$hard" \
     MOVES="$(scripts/charybdis-levels.py line "$hard")"
 fi
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
