@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright © 2026 Jack Lusher. All rights reserved.
-"""Picks vortex's 27 levels from pools that scripts/vortex-levels.sh search wrote, one TSV per band, named
+"""Picks vortex's 30 levels from pools that scripts/vortex-levels.sh search wrote, one TSV per band, named
 <layout>-<depth>-<inversions>.tsv in the directory given (pools.sh there writes them). Each slot takes the lowest seed
 that meets it, scanning its bands in order. The top swirl's undo never runs the same way three levels in a row, no two
 levels open on the same three stirs (one seed deals the same start at every depth), and the swirl is rarely 240°: at
@@ -15,7 +15,8 @@ SWIRL = {"triSwirl": 3, "quadSwirl": 4, "eyeSwirl": 4, "pentSwirl": 5, "hexSwirl
 FIELDS = ["seed", "entries", "hidden", "hiddenSwirls", "swirls", "above", "undo", "sizes", "widest", "hub", "optimum",
           "untwisting", "ms", "scramble"]
 
-# (layout, depth, hidden, swirls, entries above the top swirl, least hidden swirls, picture, hub and swirl together)
+# (layout, depth, hidden, swirls, entries above the top swirl, least hidden swirls, picture, hub and swirl together,
+# and for the finales the most entries ever removable at once, so each step's read is tight)
 SLOTS = [
     ("quadSwirl", 2, 0, 1, (0, 0), 0, "isobars", None),
     ("quadSwirl", 3, 0, 1, (1, 1), 0, "ephemeris", None),
@@ -44,6 +45,9 @@ SLOTS = [
     ("hexSwirl", 20, 6, 5, (0, 6), 1, "isobars", None),
     ("hexSwirl", 22, 7, 5, (0, 6), 2, "cords", None),
     ("hexSwirl", 24, 8, 6, (0, 6), 2, "isobars", None),
+    ("hexSwirl", 14, 6, 5, (0, 6), 2, "ephemeris", None, 2),
+    ("hexSwirl", 26, 9, 6, (0, 6), 3, "cords", None, 2),
+    ("hexSwirl", 28, 10, 7, (0, 7), 3, "isobars", None, 2),
 ]
 
 
@@ -77,7 +81,7 @@ def sizes_ok(row, i):
 def main():
     pool = pathlib.Path(sys.argv[1])
     picked, undos = [], []
-    for i, (layout, depth, hidden, swirls, above, hidden_swirls, picture, hub) in enumerate(SLOTS):
+    for i, (layout, depth, hidden, swirls, above, hidden_swirls, picture, hub, *widest) in enumerate(SLOTS):
         if i == 0:
             rows = [dict(zip(FIELDS, ["-", "2", "0", "0", "1", "0", "-", "+4", "1", ".", "2", "2", "0", "0:+3,4:+4"]),
                          band="fixed")]
@@ -89,6 +93,8 @@ def main():
             if not above[0] <= int(row["above"]) <= above[1] or int(row["hiddenSwirls"]) < hidden_swirls:
                 continue
             if hub is not None and (row["hub"] == "hub") != hub:
+                continue
+            if widest and int(row["widest"]) > widest[0]:
                 continue
             if len(undos) >= 2 and undos[-1] == undos[-2] == row["undo"]:
                 continue

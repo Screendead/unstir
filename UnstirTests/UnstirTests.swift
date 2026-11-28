@@ -2226,24 +2226,24 @@ final class UnstirTests: XCTestCase {
 
     /// Against vortex's provisional table: quad, tri, eye, pent, then hex, each with its swirl; the swirl in every
     /// scramble, hidden stirs and swirls climbing within each layout, no knob seized, par the entry count; its own
-    /// family, nine levels each, no two neighbours alike, the first three one of each, the ephemeris only to 14 stirs,
+    /// family, ten levels each, no two neighbours alike, the first three one of each, the ephemeris only to 14 stirs,
     /// and each tank four taps as dealt. That par is the optimum is `SolverTests`' to check.
     func testVortexTable() {
         let levels = Level.vortex
-        XCTAssertEqual(levels.count, 27)
         XCTAssertEqual(levels.map(\.layout), Array(repeating: .quadSwirl, count: 6) + Array(repeating: .triSwirl, count: 3)
                        + Array(repeating: .eyeSwirl, count: 4) + Array(repeating: .pentSwirl, count: 7)
-                       + Array(repeating: .hexSwirl, count: 7))
+                       + Array(repeating: .hexSwirl, count: 10))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [2, 3, 4, 5, 6, 8, 5, 6, 8, 7, 8, 10, 12, 8, 10, 12, 13, 14, 16, 18, 12, 14, 16, 18, 20, 22, 24])
+                       [2, 3, 4, 5, 6, 8, 5, 6, 8, 7, 8, 10, 12, 8, 10, 12, 13, 14, 16, 18, 12, 14, 16, 18, 20, 22, 24,
+                        14, 26, 28])
         XCTAssertEqual(levels.map { $0.layout.inversions($0.scramble) },
-                       [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8])
+                       [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8, 6, 9, 10])
         XCTAssertEqual(levels.map { level in level.scramble.filter { $0.rod == level.layout.swirl }.count },
-                       [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6])
-        let table: [(Picture, [Int])] = [(.isobars, [1, 7, 10, 14, 19, 21, 23, 25, 27]),
-                                         (.ephemeris, [2, 4, 6, 8, 11, 13, 15, 17, 22]),
-                                         (.cords, [3, 5, 9, 12, 16, 18, 20, 24, 26])]
-        var want = [Picture?](repeating: nil, count: 27)
+                       [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6, 5, 6, 7])
+        let table: [(Picture, [Int])] = [(.isobars, [1, 7, 10, 14, 19, 21, 23, 25, 27, 30]),
+                                         (.ephemeris, [2, 4, 6, 8, 11, 13, 15, 17, 22, 28]),
+                                         (.cords, [3, 5, 9, 12, 16, 18, 20, 24, 26, 29])]
+        var want = [Picture?](repeating: nil, count: levels.count)
         for (picture, numbers) in table { for n in numbers { want[n - 1] = picture } }
         XCTAssertEqual(levels.map(\.picture), want)
         XCTAssertEqual(Set(levels.prefix(3).map(\.picture)).count, 3)

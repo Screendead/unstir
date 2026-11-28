@@ -424,7 +424,9 @@ struct Level: Hashable, Sendable {
 
     /// The swirl: a rod the size of the tank, held from the rim. Quad teaches it, then tri, eye, pent and hex, each
     /// opening easier than the last one's showpiece. No knob seizes, so
-    /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py.
+    /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py; the finales,
+    /// 28 to 30, never leave more than two rods free to come off at once and hide three to five swirls under louder
+    /// stirs, the ephemeris's short as it reads only to 14.
     static let vortex: [Level] = ([
         (.quadSwirl, "0:+3,4:+4", Picture.isobars,
          String(localized: "level.V1.title", defaultValue: "Calm",
@@ -514,6 +516,15 @@ struct Level: Hashable, Sendable {
                            comment: "Vortex level title, a word for wind, gentle to wild"), ""),
         (.hexSwirl, "4:+3,1:-2,7:-6,1:-3,7:-2,0:-4,2:+6,1:+4,6:+5,1:+7,0:-8,6:+4,7:-3,0:+6,5:-7,3:+3,7:-8,0:+6,1:+3,7:-4,1:-7,3:-3,7:+8,5:-8", .isobars,
          String(localized: "level.V27.title", defaultValue: "Tornado",
+                           comment: "Vortex level title, a word for wind, gentle to wild"), ""),
+        (.hexSwirl, "4:-2,5:-3,7:-4,2:+6,7:-5,1:+7,7:-5,5:-5,7:-4,1:+6,6:+7,2:-4,7:+6,1:+3", .ephemeris,
+         String(localized: "level.V28.title", defaultValue: "Downburst",
+                           comment: "Vortex level title, a word for wind, gentle to wild"), ""),
+        (.hexSwirl, "3:-3,4:-4,5:-6,6:+7,0:-8,4:+4,7:-5,0:-6,5:+7,7:+8,4:+2,5:+4,3:+3,7:+2,6:+4,7:+2,2:-5,0:-4,2:+7,3:+7,2:+8,7:-3,2:-3,3:-5,2:-5,7:-6", .cords,
+         String(localized: "level.V29.title", defaultValue: "Supercell",
+                           comment: "Vortex level title, a word for wind, gentle to wild"), ""),
+        (.hexSwirl, "1:+4,7:+2,4:-4,7:+3,0:-2,1:-5,6:+8,7:-3,2:+6,1:+8,4:-3,7:-3,6:-2,7:-3,0:-6,2:-8,3:+5,6:+2,2:+6,5:-5,7:-7,3:+8,6:+2,1:-4,7:+6,1:-8,0:-8,3:+4", .isobars,
+         String(localized: "level.V30.title", defaultValue: "Polar vortex",
                            comment: "Vortex level title, a word for wind, gentle to wild"), ""),
     ] as [(Layout, String, Picture, String, String)]).enumerated().map { i, l in
         // Vortex's own family. Isobars open each layout and take the deepest; the ephemeris dims with depth, so it
