@@ -311,7 +311,8 @@ struct Level: Hashable, Sendable {
     }
 
     /// Twice the stirs of the same-numbered plughole level, more of them hidden under louder ones, live pictures,
-    /// nothing replayed.
+    /// nothing replayed. The finales go past twice: dealt by the frozen generator as hex-depth-hidden #seed, hex-30-13
+    /// #218, hex-31-14 #42, hex-32-15 #299 (`scripts/plughole-levels.sh search`), each with fewer right moves a step.
     static let whirlpool: [Level] = ([
         (.tri, "0:-5,1:+3",
          String(localized: "level.N1.title", defaultValue: "Spring",
@@ -400,14 +401,24 @@ struct Level: Hashable, Sendable {
         (.hex, "3:+3,4:-2,5:-2,6:-2,2:-2,4:-2,1:-4,3:+4,6:-4,1:-5,0:-7,2:+3,5:-4,1:+3,0:+5,1:+6,6:-3,5:+4,0:-6,6:+5,0:+4,2:-6,3:+7,1:+4,4:-4,2:+6,3:-5,2:+2",
          String(localized: "level.N27.title", defaultValue: "Estuary",
                            comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
+        (.hex, "6:+2,2:+4,0:-5,6:-7,4:-4,5:+2,3:-3,0:-6,6:-3,0:+3,4:+2,3:-2,2:-2,0:+2,5:-3,3:+3,4:+5,5:+6,4:+6,5:+5,4:+3,5:+6,6:+7,1:+4,6:-5,1:+5,5:+2,3:+3,2:-3,1:+5",
+         String(localized: "level.N28.title", defaultValue: "Mudflats",
+                           comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
+        (.hex, "3:-2,2:+2,0:+5,2:+3,1:+5,3:-3,2:+3,3:+6,2:+4,0:-4,6:-2,0:-3,4:+5,6:+2,1:-2,5:-2,0:+4,4:+5,6:-4,2:+2,5:-6,4:+4,3:-5,0:+4,1:-7,6:+6,5:+3,4:-2,5:+3,4:-2,0:-4",
+         String(localized: "level.N29.title", defaultValue: "Delta",
+                           comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
+        (.hex, "0:+4,1:-5,6:-4,5:+4,0:+6,4:-7,5:-4,0:+3,2:+5,6:-2,1:-4,0:+7,2:-3,4:+3,5:-3,4:+4,5:-4,3:+2,4:+5,6:-4,0:-6,5:-2,0:-3,3:+4,4:+3,3:+4,4:+3,5:+5,0:+5,3:-7,2:+4,3:+4",
+         String(localized: "level.N30.title", defaultValue: "River mouth",
+                           comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
-        // The glass opens each layout and takes the deepest levels. Coral reads only to 6 stirs, and neurons, the dearest
-        // to draw, to 14.
+        // The glass opens each layout and takes the deepest levels, chainmail and marbling the finales before the last.
+        // Coral reads only to 6 stirs, and neurons, the dearest to draw, to 14.
         Level(id: Tier.whirlpool.prefix + "\(i + 1)", tier: .whirlpool, label: String(format: "%02d", i + 1),
               title: l.2, note: l.3,
-              picture: [3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
+              picture: ([3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
                         2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
-                        20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
+                        20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling,
+                        28: .chainmail, 29: .marbling] as [Int: Picture])[i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 

@@ -1455,15 +1455,18 @@ final class UnstirTests: XCTestCase {
                        [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3])
     }
 
-    /// Twice the par of each plughole level as first written (19 to 27 have since eased), strictly more inversions than
-    /// the same-numbered level (against the whirlpool design table), and room to stir on top.
+    /// Twice the par of each plughole level as first written (19 to 27 have since eased; the finales, 28 to 30, go past
+    /// it), strictly more inversions than the same-numbered level (against the whirlpool design table), and room to stir
+    /// on top.
     func testWhirlpool() {
         let whirlpool = Level.whirlpool
         XCTAssertEqual(whirlpool.map(\.layout), Level.plughole.map(\.layout))
         XCTAssertEqual(whirlpool.map(\.scramble.count),
-                       [2, 2, 4, 4, 6, 6, 8, 6, 4, 8, 10, 12, 14, 8, 10, 6, 14, 16, 12, 14, 16, 18, 14, 16, 20, 24, 28])
+                       [2, 2, 4, 4, 6, 6, 8, 6, 4, 8, 10, 12, 14, 8, 10, 6, 14, 16, 12, 14, 16, 18, 14, 16, 20, 24, 28,
+                        30, 31, 32])
         let inversions = whirlpool.map { $0.layout.inversions($0.scramble) }
-        XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12])
+        XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12, 13, 14,
+                                    15])
         for (n, level) in zip(inversions, Level.plughole) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
         XCTAssertFalse(whirlpool.contains(where: \.replay))
         XCTAssertGreaterThanOrEqual(Tank.maxStack - whirlpool.map(\.scramble.count).max()!, 8)
