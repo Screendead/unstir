@@ -387,47 +387,48 @@ extension LensArt {
 
 // MARK: - 52: Chameleon
 
-/// Level 52's name: a chameleon side on across the glass at dusk, climbing, its head tipped up to the right: the
-/// turret of its eye over the hub, its snout up into the upper right, the casque raised up the upper left, its body
-/// down the left to two mitten feet gripping a branch, and its tail curled under into a coil over the bottom core. A
-/// moon rises over the top core and a flower opens over the lower right (hex's four lenses on this level). Each holds
-/// what the chameleon has its eye on: a cricket in the eye, a hawk across the moon, a bee on the flower and a
-/// butterfly in the coil.
+/// Level 52's name: a chameleon side on across the glass at dusk, its head tipped up to the right: the turret of its
+/// eye over the hub, its snout up into the upper right, the casque raised up the upper left, its crested back along
+/// the left, its tail curled under into a coil on the lower left, and a front foot stepping down onto a twig. A moon
+/// rises over the top core, a flower opens over the lower right and a leaf hangs over the bottom (hex's four lenses on
+/// this level). Each holds what the chameleon has its eye on: a cricket in the eye, a hawk across the moon, a bee on
+/// the flower and a butterfly on the leaf.
 extension LensArt {
     static let chameleon: Halftone.Panel = drawChameleon()
 
     private static func drawChameleon() -> Halftone.Panel {
-        let eye = P(0, 0), moon = P(0, -0.56), flower = P(0.485, 0.28), coil = P(0, 0.56)
-        let skin = c(0.85), pale = Tone(0.3, 0.3, 0.35), sky = m(0.3), wood = y(0.5)
+        let eye = P(0, 0), moon = P(0, -0.56), flower = P(0.485, 0.28), leaf = P(0, 0.56), coil = P(-0.485, 0.28)
+        let skin = c(0.85), pale = Tone(0.3, 0.3, 0.35), sky = m(0.3), wood = y(0.5), green = c(0.42)
         // The tail's coil: a band of skin winding out a tenth of the glass a turn, the gap between dark.
         let coiled: @Sendable (P) -> Bool = { d in
             let turns = simd_length(d) / 0.1 - bearing(d) / 360
             return turns - turns.rounded(.down) < 0.55
         }
         // Head and body as one outline, clockwise from the snout's tip: over the eye, up the casque, down the back to
-        // the rump, along the belly to the chest and up the throat and jaw.
+        // the rump, along the belly over the coil to the chest and up the throat and jaw.
         let lizard: [P] = [P(0.6, -0.33), P(0.54, -0.42), P(0.38, -0.4), P(0.22, -0.3), P(0.0, -0.28), P(-0.2, -0.3),
-                           P(-0.3, -0.5), P(-0.44, -0.68), P(-0.56, -0.64), P(-0.62, -0.46), P(-0.66, -0.3), P(-0.8, -0.2), P(-0.92, -0.02),
-                           P(-0.96, 0.2), P(-0.9, 0.38), P(-0.7, 0.48), P(-0.46, 0.46), P(-0.24, 0.36), P(0.0, 0.29),
-                           P(0.13, 0.29), P(0.23, 0.16), P(0.31, 0.03), P(0.44, -0.08), P(0.55, -0.18), P(0.6, -0.28)]
-        let belly = ribbon(curve(P(0.02, 0.27), P(-0.5, 0.5), P(-0.92, 0.3), 14), 0.05, 0.09)
-        let branch = bar(P(-1.0, 0.5), P(-0.34, 0.76), 0.055)
-        let legs: [[P]] = [bar(P(-0.4, 0.4), P(-0.5, 0.68), 0.08), bar(P(-0.76, 0.42), P(-0.8, 0.56), 0.085)]
-        let feet: [P] = [P(-0.5, 0.7), P(-0.8, 0.58)]
-        let tail = ribbon(curve(P(-0.9, 0.34), P(-0.6, 0.94), P(-0.28, 0.66), 16), 0.12, 0.075)
+                           P(-0.3, -0.5), P(-0.44, -0.68), P(-0.56, -0.64), P(-0.62, -0.46), P(-0.78, -0.38), P(-0.9, -0.24),
+                           P(-0.97, -0.06), P(-0.9, 0.06), P(-0.7, -0.03), P(-0.46, -0.04), P(-0.27, 0.06), P(-0.1, 0.28),
+                           P(0.0, 0.29), P(0.13, 0.29), P(0.23, 0.16), P(0.31, 0.03), P(0.44, -0.08), P(0.55, -0.18), P(0.6, -0.28)]
+        let belly = ribbon(curve(P(-0.1, 0.25), P(-0.4, -0.06), P(-0.88, 0.02), 14), 0.06, 0.05)
+        let tail = ribbon(curve(P(-0.93, -0.02), P(-1.0, 0.2), P(-0.77, 0.3), 12), 0.12, 0.1)
+        let twig = bar(P(0.14, 0.4), P(0.62, 0.86), 0.05)
+        let leg = bar(P(0.04, 0.24), P(0.2, 0.44), 0.08)
+        let foot = P(0.2, 0.46)
+        let blade = ellipse(leaf, 0.3, 0.22, degrees: -40, 48)
         let scales: [Double] = [8, 30, 55, 74, 100, 128, 150, 171, 197, 222, 248, 266, 290, 316, 337]
         let craters: [Double] = [5, 22, 38, 61, 80, 97, 118, 139, 157, 176, 194, 212, 235, 251, 270, 290, 309, 331, 347]
         let body = fill(lizard, skin)
-        let fills = [fill(belly, pale), body, fill(branch, wood)]
-            + legs.map { fill($0, skin) } + [fill(tail, skin)]
+        let fills = [fill(belly, pale), body, fill(tail, skin), fill(leg, skin), fill(twig, wood), fill(blade, green)]
         let petal: @Sendable (Double) -> Double = { a in 0.27 + 0.15 * abs(cos((a - 10) * 4 * .pi / 180)).squareRoot() * (0.85 + 0.15 * sin(a * .pi / 60)) }
 
         var s: [Halftone.Stroke] = []
-        // The chameleon: its outline, the casque's ridge, the mouth, the crest down its back, legs and gripping feet,
-        // the branch and the tail.
+        // The chameleon: its outline, the casque's ridges, the mouth, the crest down its back, the stepping leg and its
+        // gripping foot, the twig, the leaf and the tail into its coil.
         let outline = (0..<lizard.count).flatMap { span(lizard[$0], lizard[($0 + 1) % lizard.count], 10).dropLast() }
         let free = { (p: P) in
-            simd_distance(p, eye) > 0.345 && simd_distance(p, moon) > 0.27 && simd_distance(p, flower) > 0.27 && simd_distance(p, coil) > 0.345
+            simd_distance(p, eye) > 0.345 && simd_distance(p, moon) > 0.27 && simd_distance(p, flower) > 0.27
+                && simd_distance(p, leaf) > 0.27 && simd_distance(p, coil) > 0.3
         }
         s += runs(outline + [lizard[0]], bold, keep: free)
         for k in 0..<3 {
@@ -436,28 +437,29 @@ extension LensArt {
         }
         s += runs(curve(P(0.6, -0.31), P(0.46, -0.2), P(0.36, -0.06), 10), bold, keep: free)
         s += runs(closed(belly), hair, keep: free)
-        s += runs((0..<15).map { (k: Int) -> P in
-            let a = P(-0.66, -0.3) + (P(-0.95, 0.12) - P(-0.66, -0.3)) * (Double(k) / 14)
-            return k % 2 == 0 ? a : a + P(-0.04, -0.025)
+        s += runs((0..<13).map { (k: Int) -> P in
+            let a = P(-0.62, -0.46) + (P(-0.97, -0.06) - P(-0.62, -0.46)) * (Double(k) / 12)
+            return k % 2 == 0 ? a : a + P(-0.04, -0.04)
         }, mid, keep: free)
-        for l in legs { s += runs(closed(l), mid, keep: free) }
-        for f in feet {
-            s.append(stroke(curve(f + P(-0.06, -0.05), f + P(-0.08, 0.05), f + P(-0.01, 0.06), 8), bold))
-            s.append(stroke(curve(f + P(0.06, -0.03), f + P(0.08, 0.06), f + P(0.01, 0.06), 8), bold))
-        }
-        s += runs(closed(branch), mid, keep: free)
+        s += runs(closed(leg), mid, keep: free)
+        s.append(stroke(curve(foot + P(-0.06, -0.03), foot + P(-0.06, 0.06), foot + P(0.0, 0.06), 8), bold))
+        s.append(stroke(curve(foot + P(0.06, -0.05), foot + P(0.09, 0.03), foot + P(0.02, 0.06), 8), bold))
+        s += runs(closed(twig), mid, keep: free)
+        s += runs(closed(blade), mid, keep: free)
         s += runs(closed(tail), mid, keep: free)
-        // The eye's turret, the moon's rim, the flower's petals and the coil's turns.
+        // The eye's turret, the moon's rim, the flower's petals, the leaf's rib and the coil's turns.
         s.append(stroke(circle(eye, 0.34, 64), bold))
         s.append(stroke(circle(eye, 0.264, 64), mid))
         for a in scales { s.append(stroke([polar(eye, 0.27, a), polar(eye, 0.335, a)], hair)) }
         s.append(stroke(circle(moon, 0.264, 56), mid))
         s.append(stroke(closed((0..<96).map { polar(flower, petal(Double($0) * 3.75), Double($0) * 3.75) }), mid))
         s.append(stroke(circle(flower, 0.264, 56), hair))
-        s.append(stroke(circle(coil, 0.264, 56), hair))
-        s += runs(spiral(coil, 0.05, grow: 0.1 / 36, turn: 10, 104), mid) { simd_distance($0, coil) > 0.06 }
+        s.append(stroke(circle(leaf, 0.264, 56), hair))
+        s.append(stroke([polar(leaf, 0.3, 140), polar(leaf, 0.12, 140)], mid))
+        s.append(stroke([polar(leaf, 0.12, 320), polar(leaf, 0.3, 320)], mid))
+        s += runs(spiral(coil, 0.05, grow: 0.1 / 36, turn: 10, 90), mid) { simd_distance($0, coil) > 0.06 }
 
-        // A cricket in the eye, a hawk across the moon, a bee on the flower and a butterfly in the coil.
+        // A cricket in the eye, a hawk across the moon, a bee on the flower and a butterfly on the leaf.
         var mark = s.count
         let cricket = eye + P(-0.03, -0.055)
         s.append(stroke(ellipse(cricket, 0.03, 0.011, degrees: 10, 18), 0.0036))
@@ -484,7 +486,7 @@ extension LensArt {
         s.append(stroke([bee + P(-0.026, 0), bee + P(-0.036, 0.002)], 0.0024))
         fit(&s, from: mark, core: flower)
         mark = s.count
-        let fly = coil + P(0.035, 0.05)
+        let fly = leaf + P(0.035, 0.05)
         for side in ([-1.0, 1.0] as [Double]) {
             s.append(stroke(closed([fly, fly + P(side * 0.03, -0.045), fly + P(side * 0.055, -0.03), fly + P(side * 0.04, -0.004)]), 0.0034))
             s.append(stroke(closed([fly + P(0, 0.004), fly + P(side * 0.036, 0.01), fly + P(side * 0.03, 0.036)]), 0.003))
@@ -492,14 +494,16 @@ extension LensArt {
         }
         s.append(stroke([fly + P(0, -0.016), fly + P(0, 0.024)], 0.0034))
 
-        fit(&s, from: mark, core: coil)
+        fit(&s, from: mark, core: leaf)
         return panel("chameleon", fills: [], strokes: pieces(s)) { p in
             let de = simd_length_squared(p - eye), dm = simd_length_squared(p - moon)
-            let df = simd_length_squared(p - flower), dc = simd_length_squared(p - coil)
+            let df = simd_length_squared(p - flower), dl = simd_length_squared(p - leaf)
+            let dc = simd_length_squared(p - coil)
             if de < 0.069696 { return simd_distance(p, eye + P(0.07, -0.04)) < 0.04 ? .zero : y(0.9) }
             if dm < 0.069696 { return pale }
             if df < 0.069696 { return y(0.8) }
-            if dc < 0.1156 { return coiled(p - coil) ? skin : .zero }
+            if dl < 0.069696 { return green }
+            if dc < 0.09 { return coiled(p - coil) ? skin : .zero }
             if de < 0.1156 { return odd(bearing(p - eye), scales) != (de < 0.09) ? .zero : skin }
             if dm < 0.0961, odd(bearing(p - moon), craters), !body.holds(p) { return m(0.55) }
             if df < 0.1764, df.squareRoot() < petal(bearing(p - flower)), !body.holds(p) { return Tone(0.4, 0.4, 0.45) }
