@@ -74,7 +74,9 @@ private extension LensArt {
 /// on this level), each a ruff of feathers round an iris, and in each pupil what the eye has caught: a mouse, a bat,
 /// and in the water's eyes a frog and a dragonfly.
 extension LensArt {
-    static let owl: Halftone.Panel = {
+    static let owl: Halftone.Panel = drawOwl()
+
+    private static func drawOwl() -> Halftone.Panel {
         let eyes = [P(-0.485, -0.28), P(0.485, -0.28)], water = 0.0
         let iris = y(1), ruffA = y(0.45), ruffB = m(0.3)
         let body = m(0.6), sky = c(0.2), beakTone = y(0.75), branchTone = y(0.3)
@@ -208,7 +210,7 @@ extension LensArt {
             return Tone(min(0.3 * t.x + 0.35 * t.y + 0.9 * t.z, 1), 0.6 * t.y, 0)
         }
         return Halftone.Panel(name: "owl", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 51: Fly's eye
@@ -218,7 +220,9 @@ extension LensArt {
 /// each drawn whole in a colour of their own inside a hexagon's dark corners, and each shows the fly its piece of the
 /// kitchen: a swatter coming, a spider, the window, a sugar cube, an apple core and the lamp.
 extension LensArt {
-    static let flyseye: Halftone.Panel = {
+    static let flyseye: Halftone.Panel = drawFlyseye()
+
+    private static func drawFlyseye() -> Halftone.Panel {
         let facets = (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
         let cores: [Tone] = [y(0.95), c(0.75), y(0.6), c(0.5), y(0.8), c(0.95)]
         let head = P(0.015, -0.01), tilt = 12.0, red = m(0.95)
@@ -378,7 +382,7 @@ extension LensArt {
             return tone
         }
         return Halftone.Panel(name: "flyseye", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 52: Chameleon
@@ -390,7 +394,9 @@ extension LensArt {
 /// what the chameleon has its eye on: a cricket in the eye, a hawk across the moon, a bee on the flower and a
 /// butterfly in the coil.
 extension LensArt {
-    static let chameleon: Halftone.Panel = {
+    static let chameleon: Halftone.Panel = drawChameleon()
+
+    private static func drawChameleon() -> Halftone.Panel {
         let eye = P(0, 0), moon = P(0, -0.56), flower = P(0.485, 0.28), coil = P(0, 0.56)
         let skin = c(0.85), pale = Tone(0.3, 0.3, 0.35), sky = m(0.3), wood = y(0.5)
         // The tail's coil: a band of skin winding out a tenth of the glass a turn, the gap between dark.
@@ -500,7 +506,7 @@ extension LensArt {
             for f in fills where f.holds(p) { return f.tone }
             return sky
         }
-    }()
+    }
 }
 
 // MARK: - 53: Cat's eye
@@ -510,7 +516,9 @@ extension LensArt {
 /// lenses on this level), a paw out for one and a ball of wool by its ear. In its eyes a butterfly and a sparrow; in
 /// the marbles a fish's bones and, looking back, a cat's eye.
 extension LensArt {
-    static let catseye: Halftone.Panel = {
+    static let catseye: Halftone.Panel = drawCatseye()
+
+    private static func drawCatseye() -> Halftone.Panel {
         let eyes = [P(0, 0.56), P(0.485, 0.28)], marbles = [P(0, -0.56), P(-0.485, -0.28)]
         let u = simd_normalize(eyes[1] - eyes[0]), n = P(-u.y, u.x), crown = (eyes[0] + eyes[1]) / 2 + 0.1 * n
         let face = { (x: Double, y: Double) in crown + x * u + y * n }
@@ -649,7 +657,7 @@ extension LensArt {
             return plank % 2 == 0 ? m(0.3) : m(0.18)
         }
         return Halftone.Panel(name: "catseye", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 54: Eagle eye
@@ -660,7 +668,9 @@ extension LensArt {
 /// bottom a pool below its chin (hex's four lenses on this level), each holding what it has seen: a hare in its eye,
 /// a goat on a crag against the sun, a dove by the cloud and a salmon leaping in the pool.
 extension LensArt {
-    static let eagleeye: Halftone.Panel = {
+    static let eagleeye: Halftone.Panel = drawEagleeye()
+
+    private static func drawEagleeye() -> Halftone.Panel {
         let eye = P(0, 0), sun = P(0, -0.56), cloud = P(0.485, -0.28), pool = P(0, 0.56)
         let white = Tone(0.3, 0.3, 0.35), gold = y(0.95), sky = c(0.3), dark = Tone(0, 0.4, 0.22), puff = c(0.75)
         let rays: [Double] = [5, 22, 38, 61, 80, 97, 118, 139, 157, 176, 194, 212, 235, 251, 270, 290, 309, 331, 347]
@@ -767,7 +777,7 @@ extension LensArt {
             if nape.holds(p) { return dark }
             return sky
         }
-    }()
+    }
 }
 
 // MARK: - 55: Peacock
@@ -777,7 +787,9 @@ extension LensArt {
 /// this level), each a magenta heart in a notched teal ring, then bronze and gold, the upper left's heart gilded. In the
 /// eyes: a peahen, a rain cloud, a snake, a lotus and, in the gilded one, a crown.
 extension LensArt {
-    static let peacock: Halftone.Panel = {
+    static let peacock: Halftone.Panel = drawPeacock()
+
+    private static func drawPeacock() -> Halftone.Panel {
         let base = P(0, 0.66), spots = [1, 2, 3, 5, 6].map { polar(P(0, 0), 0.56, -90 + 60 * Double($0 - 1)) }
         let hearts = [m(0.85), m(0.5), m(0.85), m(0.5), y(0.8)], teal = c(0.95), bronze = y(0.9), gold = Tone(0, 0.45, 0.6)
         let barbs = [c(0.35), y(0.28)]
@@ -890,5 +902,5 @@ extension LensArt {
             return barbs[Int((bearing(p - base) / 6.5).rounded(.down)) % 2]
         }
         return Halftone.Panel(name: "peacock", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
