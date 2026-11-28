@@ -945,7 +945,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   then the ten the treble added (Jack, 2026-11-27: "at least treble the number of levels... to a much higher maximum
   difficulty"), depth 8 to 16: Complements, Second Pass, One Ink, Trapping, Registration, Misregister, Chromatic,
   Separations, Interference and Full Spectrum.
-  Every rod is dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, no rod
+  Every rod is dealt, over one white rod that holds only the bottom entry (in six of trays 13 to 15 a second white
+  stir too, buried mid-stack, Jack 2026-11-28), no entry merging as it is dealt, no rod
   stirred more than three times (a rod stirred more often shows only the sum of its stirs, its decoys nearly as strong
   as its count), the first five trays no deeper than 8 (Jack's call PK1: deeper reads too busy) and the ten after no
   deeper than 16, par the depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under
