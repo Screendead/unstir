@@ -429,9 +429,11 @@ struct LevelView: View {
             }
             // A seized knob's twists come off once a turn of the tank brings them under a working one; a tank no turn
             // helps is left as it is.
-            var idle = 0
+            // On Charybdis the harness's line solves it, as only a plan gets past the keys.
+            var idle = level.wards.isEmpty || h.played.isEmpty ? 0 : level.layout.order
             while !game.finished, idle < level.layout.order {
-                if let t = game.reachable { game.commit(rod: t.rod, steps: t.steps); idle = 0 } else { game.turnTank(1); idle += 1 }
+                if let t = game.reachable { game.commit(rod: t.rod, steps: t.steps); idle = 0 }
+                else if level.motion == .none { break } else { game.turnTank(1); idle += 1 }
             }
         }
         if resumed == nil, let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
@@ -1085,11 +1087,12 @@ struct LevelView: View {
             undoQueued = false
             if !game.finished { undo() }
         }
-        .onChange(of: game.labRefusals) {
+        .onChange(of: game.wardRefusals) {
             jammed = game.refusedKnob
             jams += 1
             Knock.thud.play()
             Sound.shared.play(.seized)
+            say(game.wardSpoken(game.slot(of: game.refusedKnob)))
         }
         .onChange(of: game.refusals) {
             // A full stack refuses as a seized knob does, and says what frees it.
@@ -1711,24 +1714,10 @@ struct LevelView: View {
         withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim, !rim && level.lenses.contains(game.slot(of: m.rod))) }
         finger = at; landed = at
         guard await pause(0.45) else { return false }
-        // The fifth chapter's candidate rules: a locked ward refuses the finger as a seized knob does, and a turn
-        // they would stop short goes as far as they allow, knocks, and springs back uncommitted.
-        if case .seized(let k) = grab, !level.lab.isEmpty {
+        // A locked ward refuses the finger as a seized knob does.
+        if case .seized(let k) = grab, !level.wards.isEmpty {
             jammed = k; jams += 1; Knock.thud.play(); Sound.shared.play(.seized)
             guard await pause(0.7) else { return false }
-            withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
-            return true
-        }
-        if !rim, let room = game.labRoom(m.rod), !room.contains(m.steps) {
-            let stop = min(max(m.steps, room.lowerBound), room.upperBound)
-            liveRod = m.rod; counted = m.rod
-            withAnimation(.easeInOut(duration: turnPace * Double(max(abs(stop), 1)) + 0.25)) { liveAngle = Double(stop) * Tank.step }
-            guard await pause(turnPace * Double(max(abs(stop), 1)) + 0.45) else { return false }
-            jammed = m.rod; jams += 1; Knock.thud.play(); Sound.shared.play(.seized)
-            guard await pause(0.5) else { return false }
-            withAnimation(.snappy(duration: 0.3)) { liveAngle = 0 }
-            guard await pause(0.35) else { return false }
-            liveRod = nil
             withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
             return true
         }
@@ -2105,13 +2094,6 @@ struct LevelView: View {
                     }
                     .position(at(fk))
                 Bezel(r: r)
-                if let keel = game.level.lab.keel {
-                    InHand(hand: hand) { h in
-                        KeelGauge(r: r, list: LabRules.list(stack: game.stack, dealt: game.level.scramble), keel: keel,
-                                  live: liveRod == nil ? nil : Double(LabRules.list(stack: game.stack, dealt: game.level.scramble))
-                                      + (h.angle) / Tank.step)
-                    }
-                }
                 if game.level.motion != .none {
                     InHand(hand: hand) { h in Knurl(r: r, angle: turn + inHand(h), held: h.turning) }
                         .opacity(showResult && !game.spilled ? 0 : 1)
@@ -2175,7 +2157,7 @@ struct LevelView: View {
                                         lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
                                         channels: game.level.channels(of: game.slot(of: k)),
                                         frost: game.level.frosty && game.level.kind(of: k) == .seized ? !waved : nil,
-                                        lab: LabKnob.of(k, in: game))
+                                        keys: KeyKnob.of(k, in: game))
                                     .animation(thawing, value: waved)
                             }
                         } keyframes: { _ in Self.jolt }
@@ -2664,10 +2646,6 @@ struct LevelView: View {
             : simd_length(d) > 0.1 ? atan2(sin(a - last), cos(a - last)) : 0
         if g.grab != .rim {
             liveAngle += da
-            // The fifth chapter's candidate rules stop a knob where the turn would break them.
-            if case .rod(let k) = g.grab, let room = game.labRoom(k) {
-                liveAngle = min(max(liveAngle, Double(room.lowerBound) * Tank.step), Double(room.upperBound) * Tank.step)
-            }
             // Travel past the track's end is dropped, so the finger turning back turns the lens back at once.
             if lens, case .rod(let k) = g.grab, let fit = room(k) {
                 liveAngle = Self.lensCapped(liveAngle, joined: fit.joined, room: fit.steps)
@@ -2728,6 +2706,8 @@ struct LevelView: View {
             jams += 1
             Knock.thud.play()
             Sound.shared.play(.seized)
+            // A locked ward says what opens it.
+            if game.level.wards[game.slot(of: k)] != nil { say(game.wardSpoken(game.slot(of: k))) }
         }
         if case .ratchet(let k)? = drag?.grab { pressing = k; grabs += 1 }
         guard let g = drag, let pivot = pivot(g.grab) else { return }

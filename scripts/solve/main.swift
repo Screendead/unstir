@@ -2,7 +2,8 @@
 
 import Foundation
 
-if CommandLine.arguments.dropFirst().first == "lab" { lab(CommandLine.arguments.dropFirst(2).map { $0 }) }
+// keys=2:0@3 anywhere after the scramble: a Charybdis level, proved by its own solver (`KeySolver`).
+if CommandLine.arguments.dropFirst(3).contains(where: { $0.hasPrefix("keys=") }) { keys(CommandLine.arguments.dropFirst().map { $0 }) }
 if CommandLine.arguments.dropFirst().first == "escapement" { escapement(CommandLine.arguments.dropFirst(2).map { $0 }) }
 // lenses=0,2 and masks=0:r,1:c may come anywhere after the scramble.
 let all = CommandLine.arguments.dropFirst().map { $0 }

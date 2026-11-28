@@ -133,8 +133,8 @@ struct Level: Hashable, Sendable {
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
-    /// The fifth chapter's candidate rules, empty on every level; only a Debug harness launch sets them (`UNSTIR_LAB`).
-    var lab = LabRules()
+    /// Charybdis's keys by slot (`Ward`): a warded knob turns only while its key's pointer stands on the mark.
+    var wards: [Int: Ward] = [:]
     #if FIRST_STIR
     /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
     var story: Story?
@@ -151,7 +151,7 @@ struct Level: Hashable, Sendable {
 
     enum Motion: Hashable, Sendable {
         case none, tank
-        /// Charybdis's planets, not built.
+        /// Orrery's planets, reserved for a later chapter, not built.
         case crank
     }
 

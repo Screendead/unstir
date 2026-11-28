@@ -429,17 +429,10 @@ struct Harness {
                 .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
             level.motion = level.seized.isEmpty ? .none : .tank
         }
-        #if DEBUG
-        // UNSTIR_LAB="keys=2:0@3 keel=4 flip": the fifth chapter's candidate rules on the level (`LabRules`), with its
-        // note cleared, as each candidate's first level teaches without words; UNSTIR_TITLE and UNSTIR_LABEL name it.
-        if let rules = env["UNSTIR_LAB"].flatMap({ LabRules($0) }) {
-            level.lab = rules
-            level.note = ""
-            if let title = env["UNSTIR_TITLE"] { level.title = title }
-            // The number shown, which also seeds a live picture.
-            if let label = env["UNSTIR_LABEL"] { level.label = label }
+        // UNSTIR_KEYS=2:0@3: Charybdis's wards by slot (`Ward`), ward 2 turning while knob 0 stands at +3 steps.
+        if let w = env["UNSTIR_KEYS"].flatMap(Ward.wards) {
+            level.wards = w.filter { level.layout.rods.indices.contains($0.key) && level.layout.rods.indices.contains($0.value.key) }
         }
-        #endif
         self.level = level
         // UNSTIR_RESUME=0:+2,1:-3,u: the level's try saved with that line, the launch's only save. Empty, with endless,
         // the run saved on its tank with no move yet.

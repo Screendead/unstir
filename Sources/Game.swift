@@ -75,8 +75,8 @@ final class Game {
     /// Turns a full stack refused (`Tank.maxStack`), and the knob of the last, which shakes.
     private(set) var refusals = 0
     private(set) var refusedKnob = 0
-    /// A turn the fifth chapter's candidate rules refused (`LabRules`), and its knob.
-    private(set) var labRefusals = 0
+    /// Turns a locked ward refused (`Ward`); its knob is `refusedKnob`.
+    private(set) var wardRefusals = 0
     /// The tier this solve opened, on whichever level was the last to be solved: the card goes up a notch.
     private(set) var opened: Tier?
     /// What this solve completed, the one that gave the last of a pack's levels, or of the last tier's, a best.
@@ -269,38 +269,24 @@ final class Game {
     func slot(of knob: Int) -> Int { level.layout.slot(of: knob, at: position) }
     func knob(over slot: Int) -> Int { level.layout.knob(over: slot, at: position) }
 
-    /// A knob's kind now: a ward whose key is off its mark is seized while it stays so (`LabRules`).
+    /// A knob's kind now: a ward whose key is off its mark is seized while it stays so (`Ward`).
     func kind(of knob: Int) -> Level.Knob {
         let kind = level.kind(of: knob)
-        guard kind == .working, !level.lab.isEmpty else { return kind }
-        return level.lab.opens(slot(of: knob), stack: stack, dealt: level.scramble) ? .working : .seized
+        guard kind == .working, !level.wards.isEmpty else { return kind }
+        return level.wards.opens(slot(of: knob), stack: stack, dealt: level.scramble) ? .working : .seized
     }
 
-    /// The turns knob `knob` may make now, in steps, or nil where no candidate rule limits them (`LabRules.room`).
-    func labRoom(_ knob: Int) -> ClosedRange<Int>? {
-        guard level.lab.keel != nil || level.lab.flip else { return nil }
-        let slot = self.slot(of: knob)
-        // Ebb and flow counts moves, so a turn joining the open move counts with it and the move before it sets the sense.
-        let joined = openStir?.rod == slot ? openStir!.steps : 0
-        let before = stirs.dropLast(joined != 0 ? 1 : 0).last { $0.twist.rod == slot }?.twist.steps ?? 0
-        return level.lab.room(slot, stack: stack, dealt: level.scramble, sense: before.signum(), joined: joined)
-    }
-
-    /// The sense knob `knob` must turn next under ebb and flow: +1, -1, or 0 either way.
-    func labSense(_ knob: Int) -> Int {
-        guard level.lab.flip else { return 0 }
-        let slot = self.slot(of: knob)
-        return -(stirs.last { $0.twist.rod == slot }?.twist.steps.signum() ?? 0)
-    }
+    /// Knob `knob`'s pointer: the player's own turns of its rod, upright as dealt.
+    func pointer(_ knob: Int) -> Int { Ward.pointer(slot(of: knob), stack: stack, dealt: level.scramble) }
 
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
         if !level.ratchets.isEmpty { return clockCommit(knob: rod, steps: steps) }
-        if !level.lab.isEmpty, kind(of: rod) != .working || labRoom(rod).map({ !$0.contains(steps) }) == true {
-            log("commit \(Twist(rod: rod, steps: steps)) refused by the lab's rules")
+        if kind(of: rod) == .seized, level.kind(of: rod) == .working {
+            log("commit \(Twist(rod: rod, steps: steps)) refused: its ward is locked")
             refusedKnob = rod
-            labRefusals += 1
+            wardRefusals += 1
             return
         }
         let slot = self.slot(of: rod), was = entries, playedWas = played
@@ -690,10 +676,11 @@ final class Game {
         reset()
     }
 
-    /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
+    /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play. A
+    /// locked ward's is none, so on Charybdis they stop where the keys need a plan.
     var reachable: Twist? {
         level.layout.removable(stack, lenses: level.lenses, masks: level.masks).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
-            .first { level.kind(of: $0.rod) == .working }
+            .first { kind(of: $0.rod) == .working }
     }
 
     /// A knob's two-step turn that would push a new entry, a red flash: what the harness's brim demo wastes.

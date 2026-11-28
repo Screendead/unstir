@@ -112,6 +112,31 @@ extension Spoken {
     }
 }
 
+extension Spoken {
+    /// Where slot `slot` sits in the glass, in words: the middle, or one of eight ways from it.
+    static func place(_ slot: Int, in layout: Layout) -> String {
+        let rod = layout.rods[slot]
+        guard hypot(rod.x, rod.y) > 0.1 else { return String(localized: "middle", comment: "VoiceOver: the knob in the glass's middle") }
+        let way = Int((atan2(rod.x, -rod.y) / (.pi / 4)).rounded()) & 7
+        return switch way {
+        case 0: String(localized: "top", comment: "VoiceOver: where a knob sits in the glass")
+        case 1: String(localized: "upper right", comment: "VoiceOver: where a knob sits in the glass")
+        case 2: String(localized: "right", comment: "VoiceOver: where a knob sits in the glass")
+        case 3: String(localized: "lower right", comment: "VoiceOver: where a knob sits in the glass")
+        case 4: String(localized: "bottom", comment: "VoiceOver: where a knob sits in the glass")
+        case 5: String(localized: "lower left", comment: "VoiceOver: where a knob sits in the glass")
+        case 6: String(localized: "left", comment: "VoiceOver: where a knob sits in the glass")
+        default: String(localized: "upper left", comment: "VoiceOver: where a knob sits in the glass")
+        }
+    }
+
+    /// A pointer `steps` from upright as a clock's hour: upright is 12 o'clock, a step clockwise 1.
+    static func hour(_ steps: Int) -> String {
+        let h = ((steps % 12) + 12) % 12
+        return String(localized: "\(h == 0 ? 12 : h) o'clock", comment: "VoiceOver: where a knob's pointer stands, as a clock's hour")
+    }
+}
+
 extension Game {
     /// The header's count, and what its colour says at and past par. Endless and the sandbox have no par.
     var movesSpoken: String {
@@ -130,9 +155,20 @@ extension Game {
     var tankSpoken: String {
         if !level.ratchets.isEmpty { return String(localized: "\(budget) ticks left",
                                                    comment: "VoiceOver: Escapement's tank. Ticks left") }
+        if !level.wards.isEmpty { return ([movesSpoken] + level.wards.keys.sorted().map(wardSpoken)).joined(separator: ". ") }
         return level.run == nil ? movesSpoken
             : String(localized: "\(movesSpoken), brim \(brim) of \(Run.room)",
                      comment: "VoiceOver: endless's tank. Moves, then the brim's notches of its room")
+    }
+
+    /// Charybdis: whether the ward at `slot` turns now, and if not, what opens it.
+    func wardSpoken(_ slot: Int) -> String {
+        let ward = level.wards[slot]!, place = Spoken.place(slot, in: level.layout)
+        if ward.open(stack: stack, dealt: level.scramble) {
+            return String(localized: "\(place) knob open", comment: "VoiceOver: a Charybdis ward its key has opened. Where the knob is")
+        }
+        return String(localized: "\(place) knob locked, opens while the \(Spoken.place(ward.key, in: level.layout)) knob points to \(Spoken.hour(ward.mark))",
+                      comment: "VoiceOver: a locked Charybdis ward. Where it is, where its key is, and the hour its key's pointer must stand at")
     }
 
     /// The card's account of how the level ended, where VoiceOver lands as it shows.
