@@ -74,7 +74,9 @@ private extension LensArt {
 /// on this level), each a ruff of feathers round an iris, and in each pupil what the eye has caught: a mouse, a bat,
 /// and in the water's eyes a frog and a dragonfly.
 extension LensArt {
-    static let owl: Halftone.Panel = {
+    static let owl: Halftone.Panel = drawOwl()
+
+    private static func drawOwl() -> Halftone.Panel {
         let eyes = [P(-0.485, -0.28), P(0.485, -0.28)], water = 0.0
         let iris = y(1), ruffA = y(0.45), ruffB = m(0.3)
         let body = m(0.6), sky = c(0.2), beakTone = y(0.75), branchTone = y(0.3)
@@ -208,7 +210,7 @@ extension LensArt {
             return Tone(min(0.3 * t.x + 0.35 * t.y + 0.9 * t.z, 1), 0.6 * t.y, 0)
         }
         return Halftone.Panel(name: "owl", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 51: Fly's eye
@@ -218,7 +220,9 @@ extension LensArt {
 /// each drawn whole in a colour of their own inside a hexagon's dark corners, and each shows the fly its piece of the
 /// kitchen: a swatter coming, a spider, the window, a sugar cube, an apple core and the lamp.
 extension LensArt {
-    static let flyseye: Halftone.Panel = {
+    static let flyseye: Halftone.Panel = drawFlyseye()
+
+    private static func drawFlyseye() -> Halftone.Panel {
         let facets = (0..<6).map { polar(P(0, 0), 0.56, -90 + 60 * Double($0)) }
         let cores: [Tone] = [y(0.95), c(0.75), y(0.6), c(0.5), y(0.8), c(0.95)]
         let head = P(0.015, -0.01), tilt = 12.0, red = m(0.95)
@@ -378,75 +382,84 @@ extension LensArt {
             return tone
         }
         return Halftone.Panel(name: "flyseye", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 52: Chameleon
 
-/// Level 52's name: a chameleon on a branch at dusk, side on, blue banded with yellow, its lip and belly pale, casque
-/// up behind, tail curled under; its turret of an eye is over the hub, the low sun over the top core, a flower over
-/// the lower right and a dewdrop over the bottom (hex's four lenses on this level). Each holds what the chameleon has
-/// its eye on: a cricket in the eye, a hawk crossing the sun, a bee on the flower and a butterfly in the drop.
+/// Level 52's name: a chameleon side on across the glass at dusk, its head tipped up to the right: the turret of its
+/// eye over the hub, its snout up into the upper right, the casque raised up the upper left, its crested back along
+/// the left, its tail curled under into a coil on the lower left, and a front foot stepping down onto a twig. A moon
+/// rises over the top core, a flower opens over the lower right and a leaf hangs over the bottom (hex's four lenses on
+/// this level). Each holds what the chameleon has its eye on: a cricket in the eye, a hawk across the moon, a bee on
+/// the flower and a butterfly on the leaf.
 extension LensArt {
-    static let chameleon: Halftone.Panel = {
-        let eye = P(0, 0), sun = P(0, -0.56), flower = P(0.485, 0.28), drop = P(0, 0.56)
-        let skin = c(0.7), dark = y(0.85), pale = Tone(0.3, 0.3, 0.35), sky = m(0.3), wood = y(0.4)
-        let head = [P(0.64, -0.05), P(0.44, -0.22), P(0.16, -0.31), P(0, -0.285), P(-0.2, -0.335), P(-0.4, -0.52), P(-0.5, -0.44),
-                    P(-0.44, -0.2), P(-0.2, 0.3), P(0.05, 0.3), P(0.25, 0.12), P(0.45, -0.02)]
-        let body = [P(-0.44, -0.2), P(-0.56, -0.38), P(-0.76, -0.44), P(-0.96, -0.32), P(-1.05, -0.12), P(-1.02, 0.14), P(-0.76, 0.3),
-                    P(-0.45, 0.33), P(-0.2, 0.3)]
-        let lip = ribbon(curve(P(0.62, -0.05), P(0.4, 0.04), P(0.2, 0.17), 10), 0.05, 0.03)
-        let belly = ribbon(curve(P(-0.2, 0.27), P(-0.6, 0.33), P(-1.0, 0.1), 14), 0.06, 0.07)
-        let bands = [-0.58, -0.76, -0.94].map { x in bar(P(x + 0.06, -0.45), P(x - 0.06, 0.32), 0.07) }
-        let legs = [bar(P(-0.32, 0.26), P(-0.28, 0.44), 0.075), bar(P(-0.78, 0.26), P(-0.74, 0.5), 0.075)]
-        let branch = bar(P(-1.05, 0.55), P(-0.2, 0.42), 0.07)
-        let tail = curve(P(-1.0, 0.1), P(-0.95, 0.5), P(-0.62, 0.58), 12)
-        let coil = P(-0.52, 0.66)
-        let leaves = [ellipse(P(0.75, -0.5), 0.2, 0.075, degrees: -35, 24), ellipse(P(0.42, -0.8), 0.15, 0.055, degrees: 20, 20),
-                      ellipse(P(0.78, -0.08), 0.16, 0.06, degrees: 10, 20)]
+    static let chameleon: Halftone.Panel = drawChameleon()
+
+    private static func drawChameleon() -> Halftone.Panel {
+        let eye = P(0, 0), moon = P(0, -0.56), flower = P(0.485, 0.28), leaf = P(0, 0.56), coil = P(-0.485, 0.28)
+        let skin = c(0.85), pale = Tone(0.3, 0.3, 0.35), sky = m(0.3), wood = y(0.5), green = c(0.42)
+        // The tail's coil: a band of skin winding out a tenth of the glass a turn, the gap between dark.
+        let coiled: @Sendable (P) -> Bool = { d in
+            let turns = simd_length(d) / 0.1 - bearing(d) / 360
+            return turns - turns.rounded(.down) < 0.55
+        }
+        // Head and body as one outline, clockwise from the snout's tip: over the eye, up the casque, down the back to
+        // the rump, along the belly over the coil to the chest and up the throat and jaw.
+        let lizard: [P] = [P(0.6, -0.33), P(0.54, -0.42), P(0.38, -0.4), P(0.22, -0.3), P(0.0, -0.28), P(-0.2, -0.3),
+                           P(-0.3, -0.5), P(-0.44, -0.68), P(-0.56, -0.64), P(-0.62, -0.46), P(-0.78, -0.38), P(-0.9, -0.24),
+                           P(-0.97, -0.06), P(-0.9, 0.06), P(-0.7, -0.03), P(-0.46, -0.04), P(-0.27, 0.06), P(-0.1, 0.28),
+                           P(0.0, 0.29), P(0.13, 0.29), P(0.23, 0.16), P(0.31, 0.03), P(0.44, -0.08), P(0.55, -0.18), P(0.6, -0.28)]
+        let belly = ribbon(curve(P(-0.1, 0.25), P(-0.4, -0.06), P(-0.88, 0.02), 14), 0.06, 0.05)
+        let tail = ribbon(curve(P(-0.93, -0.02), P(-1.0, 0.2), P(-0.77, 0.3), 12), 0.12, 0.1)
+        let twig = bar(P(0.14, 0.4), P(0.62, 0.86), 0.05)
+        let leg = bar(P(0.04, 0.24), P(0.2, 0.44), 0.08)
+        let foot = P(0.2, 0.46)
+        let blade = ellipse(leaf, 0.3, 0.22, degrees: -40, 48)
         let scales: [Double] = [8, 30, 55, 74, 100, 128, 150, 171, 197, 222, 248, 266, 290, 316, 337]
-        let rays: [Double] = [5, 22, 38, 61, 80, 97, 118, 139, 157, 176, 194, 212, 235, 251, 270, 290, 309, 331, 347]
-        let face = [fill(lip, pale), fill(head, skin)]
-        let lizard = [face[0], fill(belly, pale)] + bands.map { fill($0, dark) } + [face[1], fill(body, skin)]
-            + legs.map { fill($0, skin) } + [fill(ribbon(tail, 0.08, 0.06), skin), ring(coil, 0.035, 0.11, skin), fill(branch, wood)]
-            + leaves.map { fill($0, c(0.6)) }
+        let craters: [Double] = [5, 22, 38, 61, 80, 97, 118, 139, 157, 176, 194, 212, 235, 251, 270, 290, 309, 331, 347]
+        let body = fill(lizard, skin)
+        let fills = [fill(belly, pale), body, fill(tail, skin), fill(leg, skin), fill(twig, wood), fill(blade, green)]
         let petal: @Sendable (Double) -> Double = { a in 0.27 + 0.15 * abs(cos((a - 10) * 4 * .pi / 180)).squareRoot() * (0.85 + 0.15 * sin(a * .pi / 60)) }
 
         var s: [Halftone.Stroke] = []
-        // The chameleon: head and casque, mouth, body and its crest, legs gripping, the tail coiled.
-        let outline = (0..<head.count - 1).flatMap { span(head[$0], head[$0 + 1], 10).dropLast() } + [head[head.count - 1], head[0]]
-        s += runs(outline, bold) { simd_distance($0, eye) > 0.345 && simd_distance($0, sun) > 0.27 }
-        s.append(stroke(curve(P(-0.12, -0.3), P(-0.3, -0.36), P(-0.42, -0.5), 8), hair))
-        s.append(stroke(closed(lip), hair))
-        s.append(stroke(Array(body[1...7]), bold))
-        s.append(stroke((0..<11).map { k in
-            let a = P(-0.56, -0.38) + (P(-1.0, -0.22) - P(-0.56, -0.38)) * (Double(k) / 10)
-            return k % 2 == 0 ? a : a + P(0.0, -0.045)
-        }, mid))
-        for b in bands { s.append(stroke(closed(b), hair)) }
-        for l in legs { s.append(stroke(closed(l), mid)) }
-        for f in [P(-0.28, 0.44), P(-0.74, 0.5)] { s.append(stroke(curve(f + P(-0.05, 0.03), f + P(0, 0.08), f + P(0.05, 0.03), 8), mid)) }
-        s.append(stroke(closed(branch), mid))
-        s.append(stroke(closed(ribbon(tail, 0.08, 0.06)), mid))
-        s.append(stroke(circle(coil, 0.11, 32), mid))
-        s.append(stroke(spiral(coil, 0.02, grow: 0.0028, turn: 15, 26), mid))
-        for l in leaves {
-            s.append(stroke(closed(l), mid))
-            s.append(stroke([l[0], l[12]], hair))
+        // The chameleon: its outline, the casque's ridges, the mouth, the crest down its back, the stepping leg and its
+        // gripping foot, the twig, the leaf and the tail into its coil.
+        let outline = (0..<lizard.count).flatMap { span(lizard[$0], lizard[($0 + 1) % lizard.count], 10).dropLast() }
+        let free = { (p: P) in
+            simd_distance(p, eye) > 0.345 && simd_distance(p, moon) > 0.27 && simd_distance(p, flower) > 0.27
+                && simd_distance(p, leaf) > 0.27 && simd_distance(p, coil) > 0.3
         }
-        // The eye's turret, the sun's rim and rays, the flower's petals and the drop's skin.
+        s += runs(outline + [lizard[0]], bold, keep: free)
+        for k in 0..<3 {
+            let d = 0.07 * Double(k)
+            s += runs(curve(P(-0.24 - d, -0.3), P(-0.36 - d, -0.42), P(-0.46 - 0.04 * Double(k), -0.64 + d), 10), hair, keep: free)
+        }
+        s += runs(curve(P(0.6, -0.31), P(0.46, -0.2), P(0.36, -0.06), 10), bold, keep: free)
+        s += runs(closed(belly), hair, keep: free)
+        s += runs((0..<13).map { (k: Int) -> P in
+            let a = P(-0.62, -0.46) + (P(-0.97, -0.06) - P(-0.62, -0.46)) * (Double(k) / 12)
+            return k % 2 == 0 ? a : a + P(-0.04, -0.04)
+        }, mid, keep: free)
+        s += runs(closed(leg), mid, keep: free)
+        s.append(stroke(curve(foot + P(-0.06, -0.03), foot + P(-0.06, 0.06), foot + P(0.0, 0.06), 8), bold))
+        s.append(stroke(curve(foot + P(0.06, -0.05), foot + P(0.09, 0.03), foot + P(0.02, 0.06), 8), bold))
+        s += runs(closed(twig), mid, keep: free)
+        s += runs(closed(blade), mid, keep: free)
+        s += runs(closed(tail), mid, keep: free)
+        // The eye's turret, the moon's rim, the flower's petals, the leaf's rib and the coil's turns.
         s.append(stroke(circle(eye, 0.34, 64), bold))
         s.append(stroke(circle(eye, 0.264, 64), mid))
         for a in scales { s.append(stroke([polar(eye, 0.27, a), polar(eye, 0.335, a)], hair)) }
-        s.append(stroke(circle(eye + P(0.06, 0.03), 0.035, 16), mid))
-        s.append(stroke(circle(sun, 0.264, 56), mid))
-        for a in rays { s.append(stroke([polar(sun, 0.28, a), polar(sun, 0.33, a)], hair)) }
+        s.append(stroke(circle(moon, 0.264, 56), mid))
         s.append(stroke(closed((0..<96).map { polar(flower, petal(Double($0) * 3.75), Double($0) * 3.75) }), mid))
         s.append(stroke(circle(flower, 0.264, 56), hair))
-        s.append(stroke(circle(drop, 0.264, 56), bold))
-        s.append(stroke(arc(drop, 0.22, 200, 250, 10), mid))
+        s.append(stroke(circle(leaf, 0.264, 56), hair))
+        s.append(stroke([polar(leaf, 0.3, 140), polar(leaf, 0.12, 140)], mid))
+        s.append(stroke([polar(leaf, 0.12, 320), polar(leaf, 0.3, 320)], mid))
+        s += runs(spiral(coil, 0.05, grow: 0.1 / 36, turn: 10, 90), mid) { simd_distance($0, coil) > 0.06 }
 
-        // A cricket in the eye, a hawk on the sun, a bee on the flower and a butterfly in the drop.
+        // A cricket in the eye, a hawk across the moon, a bee on the flower and a butterfly on the leaf.
         var mark = s.count
         let cricket = eye + P(-0.03, -0.055)
         s.append(stroke(ellipse(cricket, 0.03, 0.011, degrees: 10, 18), 0.0036))
@@ -456,13 +469,13 @@ extension LensArt {
         for dx in ([0.0, 0.016] as [Double]) { s.append(stroke([cricket + P(dx, 0.01), cricket + P(dx + 0.008, 0.028)], 0.002)) }
         fit(&s, from: mark, core: eye)
         mark = s.count
-        let hawk = sun + P(0.02, 0.035)
+        let hawk = moon + P(0.02, 0.035)
         s.append(stroke([hawk + P(-0.08, -0.02), hawk + P(-0.045, -0.032), hawk + P(-0.012, -0.004), hawk + P(0, -0.016),
                          hawk + P(0.012, -0.004), hawk + P(0.045, -0.032), hawk + P(0.08, -0.02)], 0.0038))
         s.append(stroke([hawk + P(-0.065, -0.022), hawk + P(-0.03, 0.004), hawk + P(-0.01, 0.0)], 0.003))
         s.append(stroke([hawk + P(0.065, -0.022), hawk + P(0.03, 0.004), hawk + P(0.01, 0.0)], 0.003))
         s.append(stroke([hawk + P(-0.01, 0.0), hawk + P(-0.014, 0.03), hawk + P(0.014, 0.03), hawk + P(0.01, 0.0)], 0.003))
-        fit(&s, from: mark, core: sun)
+        fit(&s, from: mark, core: moon)
         mark = s.count
         let bee = flower + P(-0.03, -0.045)
         s.append(stroke(ellipse(bee, 0.026, 0.015, 18), 0.0036))
@@ -473,7 +486,7 @@ extension LensArt {
         s.append(stroke([bee + P(-0.026, 0), bee + P(-0.036, 0.002)], 0.0024))
         fit(&s, from: mark, core: flower)
         mark = s.count
-        let fly = drop + P(0.035, 0.05)
+        let fly = leaf + P(0.035, 0.05)
         for side in ([-1.0, 1.0] as [Double]) {
             s.append(stroke(closed([fly, fly + P(side * 0.03, -0.045), fly + P(side * 0.055, -0.03), fly + P(side * 0.04, -0.004)]), 0.0034))
             s.append(stroke(closed([fly + P(0, 0.004), fly + P(side * 0.036, 0.01), fly + P(side * 0.03, 0.036)]), 0.003))
@@ -481,22 +494,23 @@ extension LensArt {
         }
         s.append(stroke([fly + P(0, -0.016), fly + P(0, 0.024)], 0.0034))
 
-        fit(&s, from: mark, core: drop)
+        fit(&s, from: mark, core: leaf)
         return panel("chameleon", fills: [], strokes: pieces(s)) { p in
-            let de = simd_length_squared(p - eye), ds = simd_length_squared(p - sun)
-            let df = simd_length_squared(p - flower), dd = simd_length_squared(p - drop)
-            if de < 0.069696 { return simd_distance(p, eye + P(0.06, 0.03)) < 0.035 ? .zero : m(0.8) }
-            if ds < 0.069696 { return y(0.95) }
+            let de = simd_length_squared(p - eye), dm = simd_length_squared(p - moon)
+            let df = simd_length_squared(p - flower), dl = simd_length_squared(p - leaf)
+            let dc = simd_length_squared(p - coil)
+            if de < 0.069696 { return simd_distance(p, eye + P(0.07, -0.04)) < 0.04 ? .zero : y(0.9) }
+            if dm < 0.069696 { return pale }
             if df < 0.069696 { return y(0.8) }
-            if dd < 0.069696 { return c(0.6) }
+            if dl < 0.069696 { return green }
+            if dc < 0.09 { return coiled(p - coil) ? skin : .zero }
             if de < 0.1156 { return odd(bearing(p - eye), scales) != (de < 0.09) ? .zero : skin }
-            if ds < 0.1089 { return odd(bearing(p - sun), rays) ? y(0.55) : sky }
-            if dd < 0.09 { return (45...135).contains(bearing(p - drop)) ? .zero : c(0.95) }
-            if df < 0.1764, df.squareRoot() < petal(bearing(p - flower)), !face[1].holds(p) { return Tone(0.4, 0.4, 0.45) }
-            for f in lizard where f.holds(p) { return f.tone }
+            if dm < 0.0961, odd(bearing(p - moon), craters), !body.holds(p) { return m(0.55) }
+            if df < 0.1764, df.squareRoot() < petal(bearing(p - flower)), !body.holds(p) { return Tone(0.4, 0.4, 0.45) }
+            for f in fills where f.holds(p) { return f.tone }
             return sky
         }
-    }()
+    }
 }
 
 // MARK: - 53: Cat's eye
@@ -506,7 +520,9 @@ extension LensArt {
 /// lenses on this level), a paw out for one and a ball of wool by its ear. In its eyes a butterfly and a sparrow; in
 /// the marbles a fish's bones and, looking back, a cat's eye.
 extension LensArt {
-    static let catseye: Halftone.Panel = {
+    static let catseye: Halftone.Panel = drawCatseye()
+
+    private static func drawCatseye() -> Halftone.Panel {
         let eyes = [P(0, 0.56), P(0.485, 0.28)], marbles = [P(0, -0.56), P(-0.485, -0.28)]
         let u = simd_normalize(eyes[1] - eyes[0]), n = P(-u.y, u.x), crown = (eyes[0] + eyes[1]) / 2 + 0.1 * n
         let face = { (x: Double, y: Double) in crown + x * u + y * n }
@@ -645,124 +661,127 @@ extension LensArt {
             return plank % 2 == 0 ? m(0.3) : m(0.18)
         }
         return Halftone.Panel(name: "catseye", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
 
 // MARK: - 54: Eagle eye
 
-/// Level 54's name: a golden eagle's head close at the foot of the glass, its eye over the bottom core, hooked beak out
-/// to the right, and the valley it watches spread above it, peaks, meadow and river. Three things it has picked out
-/// are ringed in its sights over the hub, the top and the upper right cores (hex's four lenses on this level): a hare
-/// in the meadow, a dove against the sun and a goat on the crags; in the eagle's eye, a salmon leaping.
+/// Level 54's name: a bald eagle's head filling the glass, side on and facing right: its white head with hackles
+/// raised up the left, the dark of its neck below, a heavy brow slanting down over its yellow eye on the hub, and the
+/// hooked yellow beak over the lower right. Over the top core the sun, over the upper right a cloud and over the
+/// bottom a pool below its chin (hex's four lenses on this level), each holding what it has seen: a hare in its eye,
+/// a goat on a crag against the sun, a dove by the cloud and a salmon leaping in the pool.
 extension LensArt {
-    static let eagleeye: Halftone.Panel = {
-        let eye = P(0, 0.56), sights = [P(0, 0), P(0, -0.56), P(0.485, -0.28)]
-        let looks: [Tone] = [m(0.75), y(1), c(0.85)], marks: [Double] = [10, 40, 55, 100, 145, 190, 205, 250, 290, 335]
-        let head = [P(-1.05, 0.16), P(-0.6, 0.2), P(-0.3, 0.26), P(-0.12, 0.29), P(0.1, 0.29), P(0.24, 0.3), P(0.32, 0.34), P(0.3, 0.62),
-                    P(0.34, 1.05), P(-1.05, 1.05)]
-        let beak = [P(0.3, 0.33), P(0.5, 0.3), P(0.64, 0.36), P(0.73, 0.47), P(0.74, 0.58), P(0.69, 0.7), P(0.665, 0.62), P(0.62, 0.57),
-                    P(0.5, 0.57), P(0.46, 0.62), P(0.36, 0.66), P(0.3, 0.62)]
-        let tip = [P(0.72, 0.52), P(0.74, 0.58), P(0.69, 0.7), P(0.665, 0.62), P(0.64, 0.58)]
-        let gape = curve(P(0.31, 0.52), P(0.45, 0.57), P(0.62, 0.57), 10)
-        let peaks = [P(-1.05, -0.1), P(-0.78, -0.42), P(-0.52, -0.74), P(-0.36, -0.52), P(-0.2, -0.4), P(0.0, -0.18), P(0.2, -0.36),
-                     P(0.42, -0.62), P(0.62, -0.44), P(0.8, -0.5), P(1.05, -0.22), P(1.05, -0.12), P(-1.05, -0.12)]
-        let snow = [[P(-0.64, -0.56), P(-0.52, -0.74), P(-0.42, -0.6), P(-0.48, -0.62), P(-0.54, -0.56), P(-0.6, -0.6)],
-                    [P(0.3, -0.5), P(0.42, -0.62), P(0.52, -0.53), P(0.46, -0.55), P(0.4, -0.5), P(0.35, -0.53)]]
-        let river = curve(P(0.62, -0.06), P(0.3, 0.06), P(-0.1, -0.02), 12) + curve(P(-0.1, -0.02), P(-0.5, -0.08), P(-0.9, 0.12), 12).dropFirst()
-        let nape: [[P]] = (0..<4).map { (k: Int) -> [P] in
-            let d = Double(k)
-            let line: [P] = curve(P(-0.95 + 0.17 * d, 0.22), P(-0.8 + 0.2 * d, 0.5), P(-0.6 + 0.2 * d, 0.95), 8)
-            return ribbon(line, 0.07, 0.02)
-        }
-        let fills = [fill(tip, c(0.5)), fill(beak, y(0.95))] + nape.map { fill($0, y(0.7)) } + [fill(head, m(0.6))]
-            + snow.map { fill($0, Tone(0.35, 0.35, 0.4)) } + [fill(peaks, m(0.55)), fill(ribbon(river, 0.14, 0.04), c(0.85))]
+    static let eagleeye: Halftone.Panel = drawEagleeye()
+
+    private static func drawEagleeye() -> Halftone.Panel {
+        let eye = P(0, 0), sun = P(0, -0.56), cloud = P(0.485, -0.28), pool = P(0, 0.56)
+        let white = Tone(0.3, 0.3, 0.35), gold = y(0.95), sky = c(0.3), dark = Tone(0, 0.4, 0.22), puff = c(0.75)
+        let rays: [Double] = [5, 22, 38, 61, 80, 97, 118, 139, 157, 176, 194, 212, 235, 251, 270, 290, 309, 331, 347]
+        let ripples: [Double] = [10, 40, 55, 100, 145, 190, 205, 250, 290, 335]
+        // The head, clockwise from the beak's root: over the eye, up the crown, its hackles down the back of the head,
+        // the white's ragged edge across the neck, and the chin back to the beak.
+        let head: [P] = [P(0.3, -0.1), P(0.2, -0.27), P(0.0, -0.28), P(-0.18, -0.3), P(-0.34, -0.44), P(-0.52, -0.56),
+                         P(-0.72, -0.56), P(-0.86, -0.44), P(-0.92, -0.3), P(-0.86, -0.22), P(-0.97, -0.12), P(-0.9, -0.02),
+                         P(-1.05, 0.06), P(-1.05, 0.3), P(-0.86, 0.24), P(-0.78, 0.42), P(-0.64, 0.34), P(-0.54, 0.52), P(-0.42, 0.4),
+                         P(-0.3, 0.37), P(-0.16, 0.3), P(0.0, 0.285), P(0.18, 0.29), P(0.3, 0.26)]
+        let neck: [P] = [P(-1.05, 0.3), P(-0.86, 0.24), P(-0.78, 0.42), P(-0.64, 0.34), P(-0.54, 0.52), P(-0.42, 0.4),
+                         P(-0.3, 0.37), P(-0.29, 0.7), P(-0.32, 1.05), P(-1.05, 1.05)]
+        let beak: [P] = [P(0.26, -0.12), P(0.42, -0.01), P(0.62, 0.03), P(0.78, 0.11), P(0.89, 0.25), P(0.91, 0.4), P(0.85, 0.54),
+                         P(0.74, 0.64), P(0.76, 0.52), P(0.72, 0.43), P(0.62, 0.38), P(0.52, 0.42), P(0.38, 0.38), P(0.28, 0.26),
+                         P(0.24, 0.06)]
+        let brow: [P] = [P(-0.34, -0.4), P(-0.18, -0.31), P(0.0, -0.29), P(0.2, -0.27), P(0.3, -0.07), P(0.2, -0.05),
+                         P(0.06, -0.13), P(-0.1, -0.19), P(-0.3, -0.25)]
+        let gape = curve(P(0.3, 0.22), P(0.48, 0.34), P(0.72, 0.43), 10)
+        let shade = fill(brow, .zero), bill = fill(beak, gold), crown = fill(head, white), nape = fill(neck, dark)
 
         var s: [Halftone.Stroke] = []
-        // The valley: peaks and their snow, the river, the meadow's hedges and the sun's rays down from behind the top ring.
-        let clear = { (p: P) in sights.allSatisfy { simd_distance(p, $0) > 0.3 } }
-        let ridge = (0..<10).flatMap { span(peaks[$0], peaks[$0 + 1], 12).dropLast() } + [peaks[10]]
-        s += runs(ridge, bold, keep: clear)
-        for p in snow { s.append(stroke(Array(p.dropFirst(3)) + [p[0]], hair)) }
-        s += runs(closed(ribbon(river, 0.14, 0.04)), mid, keep: clear)
-        for (k, at) in [P(-0.62, -0.1), P(0.66, 0.04), P(-0.32, 0.12), P(0.86, -0.1)].enumerated() {
-            s += runs(curve(at, at + P(0.08, -0.04 + 0.02 * Double(k)), at + P(0.18, 0.0), 8), hair, keep: clear)
+        // The eagle: its outline, brow, beak and gape, the cere and nostril, feathers and the white's edge.
+        let free = { (p: P) in
+            simd_distance(p, eye) > 0.345 && simd_distance(p, sun) > 0.27 && simd_distance(p, cloud) > 0.27 && simd_distance(p, pool) > 0.27
         }
-        for a in stride(from: 200.0, through: 340, by: 28) { s.append(stroke([polar(sights[1], 0.34, a), polar(sights[1], 0.42, a)], mid)) }
-        // The sights: each ring broken in four, ticked at the quarters.
-        for c in sights {
-            s += runs(circle(c, 0.3, 64), bold) { abs((bearing($0 - c) + 22.5).truncatingRemainder(dividingBy: 90) - 22.5) > 9 }
-            s.append(stroke(circle(c, 0.264, 56), hair))
-            for a in ([0.0, 90, 180, 270] as [Double]) { s.append(stroke([polar(c, 0.235, a + 45), polar(c, 0.255, a + 45)], mid)) }
-        }
-        // The eagle: head and nape feathers, brow, the eye's rim, the beak, its hook, nostril and gape.
-        s.append(stroke(Array(head.prefix(7)), bold))
-        for f in nape { s.append(stroke(Array(f.prefix(9)), hair)) }
-        s += runs(circle(eye, 0.3, 64), bold) { (200...340).contains(bearing($0 - eye)) }
-        s.append(stroke(circle(eye, 0.264, 56), mid))
-        s.append(stroke(circle(eye, 0.03, 16), hair))
-        s.append(stroke(arc(eye, 0.2, 200, 240, 8), mid))
-        s.append(stroke(closed(beak), bold))
+        let ring = { (line: [P]) in (0..<line.count - 1).flatMap { span(line[$0], line[$0 + 1], 10).dropLast() } + [line[line.count - 1]] }
+        s += runs(ring(Array(head[0...12])), bold, keep: free)
+        s += runs(ring(Array(neck[0...8])), bold, keep: free)
+        s += runs(ring(Array(head[19...]) + [beak[13]]), bold, keep: free)
+        s += runs(ring(closed(brow)), bold) { simd_distance($0, sun) > 0.27 && simd_distance($0, cloud) > 0.27 }
+        s += runs(ring(closed(beak)), bold) { simd_distance($0, cloud) > 0.27 }
         s.append(stroke(gape, mid))
-        s.append(stroke(ellipse(P(0.42, 0.4), 0.03, 0.015, degrees: 20, 12), mid))
-        s.append(stroke(curve(P(0.62, 0.4), P(0.72, 0.5), P(0.68, 0.66), 8), hair))
-        for (k, at) in [P(-0.3, 0.4), P(-0.5, 0.35), P(-0.2, 0.62), P(-0.4, 0.75), P(0.12, 0.9), P(-0.2, 0.9)].enumerated() {
-            s.append(stroke(curve(at, at + P(0.05, 0.03), at + P(0.1, 0.01 * Double(k % 3)), 6), hair))
+        s.append(stroke(curve(P(0.4, 0.0), P(0.36, 0.12), P(0.38, 0.27), 8), mid))
+        s.append(stroke(ellipse(P(0.47, 0.1), 0.035, 0.016, degrees: 15, 12), mid))
+        s.append(stroke(curve(P(0.66, 0.08), P(0.82, 0.24), P(0.77, 0.52), 10), hair))
+        for (k, at) in ([P(-0.48, -0.3), P(-0.6, -0.16), P(-0.44, -0.02), P(-0.7, 0.04), P(-0.52, 0.16), P(-0.86, 0.06)] as [P]).enumerated() {
+            s.append(stroke(curve(at, at + P(-0.06, -0.02), at + P(-0.13, 0.01 * Double(k % 3)), 6), hair))
         }
+        for at in ([P(-0.6, 0.66), P(-0.8, 0.6), P(-0.46, 0.84), P(-0.7, 0.84)] as [P]) {
+            s.append(stroke(curve(at, at + P(0.04, 0.05), at + P(0.1, 0.04), 6), hair))
+        }
+        // The rims: the eye's, the sun's with its rays, the cloud's and the pool's.
+        s.append(stroke(circle(eye, 0.34, 64), bold))
+        s.append(stroke(circle(eye, 0.264, 56), mid))
+        s.append(stroke(circle(sun, 0.264, 56), mid))
+        for a in stride(from: 200.0, through: 340, by: 28) { s.append(stroke([polar(sun, 0.3, a), polar(sun, 0.4, a)], mid)) }
+        s.append(stroke(circle(cloud, 0.264, 56), mid))
+        s.append(stroke(circle(pool, 0.264, 56), bold))
+        s.append(stroke(arc(pool, 0.22, 200, 250, 10), mid))
 
-        // What its sights hold: a hare, a dove, a goat; in its eye, a salmon.
+        // What it has seen: a hare in its eye, a goat against the sun, a dove by the cloud and a salmon in the pool.
         var mark = s.count
-        let hare = sights[0] + P(-0.035, -0.03)
+        let hare = eye + P(-0.035, 0.04)
         s.append(stroke(ellipse(hare, 0.03, 0.018, 20), 0.0038))
         s.append(stroke(ellipse(hare + P(0.034, -0.016), 0.013, 0.01, 12), 0.0036))
         s.append(stroke(circle(hare + P(0.04, -0.018), 0.002, 4), 0.003))
         for (dx, t) in [(0.026, -20.0), (0.034, 5.0)] { s.append(stroke(ellipse(hare + P(dx, -0.045), 0.006, 0.022, degrees: t, 12), 0.003)) }
         s.append(stroke(circle(hare + P(-0.032, -0.004), 0.007, 8), 0.0024))
         s.append(stroke([hare + P(-0.018, 0.014), hare + P(-0.03, 0.026), hare + P(-0.01, 0.026)], 0.0024))
-        fit(&s, from: mark, core: sights[0])
+        fit(&s, from: mark, core: eye)
         mark = s.count
-        let dove = sights[1] + P(0.04, 0.05)
-        s.append(stroke(ellipse(dove, 0.024, 0.012, degrees: -10, 16), 0.0036))
-        s.append(stroke(circle(dove + P(0.026, -0.01), 0.008, 8), 0.0034))
-        s.append(stroke([dove + P(0.034, -0.012), dove + P(0.044, -0.008)], 0.0024))
-        s.append(stroke(closed([dove + P(-0.006, -0.008), dove + P(0.0, -0.05), dove + P(0.02, -0.04), dove + P(0.01, -0.01)]), 0.003))
-        s.append(stroke(closed([dove + P(-0.022, 0.004), dove + P(-0.046, 0.016), dove + P(-0.044, -0.004)]), 0.0024))
-        fit(&s, from: mark, core: sights[1])
-        mark = s.count
-        let goat = sights[2] + P(-0.05, -0.02)
+        let goat = sun + P(-0.05, 0.02)
         s.append(stroke(closed(rect(goat.x - 0.028, goat.y - 0.012, goat.x + 0.02, goat.y + 0.008)), 0.0036))
         for dx in ([-0.022, -0.012, 0.008, 0.016] as [Double]) { s.append(stroke([goat + P(dx, 0.008), goat + P(dx, 0.03)], 0.0024)) }
         s.append(stroke([goat + P(0.018, -0.01), goat + P(0.03, -0.03), goat + P(0.04, -0.024), goat + P(0.026, -0.008)], 0.003))
         s.append(stroke(curve(goat + P(0.03, -0.03), goat + P(0.024, -0.05), goat + P(0.01, -0.046), 6), 0.0024))
         s.append(stroke([goat + P(0.036, -0.022), goat + P(0.034, -0.008)], 0.0018))
         s.append(stroke([goat + P(-0.06, 0.04), goat + P(-0.02, 0.03), goat + P(0.04, 0.034), goat + P(0.07, 0.05)], 0.0024))
-        fit(&s, from: mark, core: sights[2])
+        fit(&s, from: mark, core: sun)
         mark = s.count
-        let fish = eye + P(0.012, -0.04)
+        let dove = cloud + P(0.04, 0.05)
+        s.append(stroke(ellipse(dove, 0.024, 0.012, degrees: -10, 16), 0.0036))
+        s.append(stroke(circle(dove + P(0.026, -0.01), 0.008, 8), 0.0034))
+        s.append(stroke([dove + P(0.034, -0.012), dove + P(0.044, -0.008)], 0.0024))
+        s.append(stroke(closed([dove + P(-0.006, -0.008), dove + P(0.0, -0.05), dove + P(0.02, -0.04), dove + P(0.01, -0.01)]), 0.003))
+        s.append(stroke(closed([dove + P(-0.022, 0.004), dove + P(-0.046, 0.016), dove + P(-0.044, -0.004)]), 0.0024))
+        fit(&s, from: mark, core: cloud)
+        mark = s.count
+        let fish = pool + P(0.012, -0.04)
         s.append(stroke(closed(curve(fish + P(-0.04, 0.02), fish + P(-0.005, -0.03), fish + P(0.035, -0.02), 10)
             + curve(fish + P(0.035, -0.02), fish + P(0.0, 0.0), fish + P(-0.04, 0.02), 10).dropFirst()), 0.0036))
         s.append(stroke(closed([fish + P(-0.038, 0.018), fish + P(-0.06, 0.012), fish + P(-0.052, 0.04)]), 0.003))
         s.append(stroke(circle(fish + P(0.022, -0.017), 0.003, 6), 0.0024))
         for (k, at) in [P(0.05, -0.022), P(0.064, -0.036), P(0.074, -0.056)].enumerated() { s.append(stroke(circle(fish + at, 0.004 + 0.002 * Double(k), 8), 0.0016)) }
 
-        fit(&s, from: mark, core: eye, scale: 0.5)
+        fit(&s, from: mark, core: pool)
         return panel("eagleeye", fills: [], strokes: pieces(s)) { p in
-            let de = simd_length_squared(p - eye)
-            if de < 0.09 {
-                if de < 0.0009 { return .zero }
-                if de < 0.069696 { return y(1) }
-                return (200...340).contains(bearing(p - eye)) ? .zero : y(0.55)
+            let de = simd_length_squared(p - eye), ds = simd_length_squared(p - sun)
+            let dc = simd_length_squared(p - cloud), dp = simd_length_squared(p - pool)
+            if de < 0.069696 {
+                if shade.holds(p) { return .zero }
+                return simd_distance(p, eye + P(0.05, 0.02)) < 0.08 ? .zero : gold
             }
-            for (k, c) in sights.enumerated() {
-                let d = p - c, r2 = simd_length_squared(d)
-                guard r2 < 0.09 else { continue }
-                if r2 < 0.069696 { return looks[k] }
-                return odd((bearing(d) + 47 * Double(k)).truncatingRemainder(dividingBy: 360), marks) ? y(0.95) : .zero
-            }
-            for f in fills where f.holds(p) { return f.tone }
-            // The meadow under the peaks, and the sky over them.
-            return p.y > -0.2 ? y(0.3) : c(0.32)
+            if ds < 0.069696 { return gold }
+            if dc < 0.069696 { return puff }
+            if dp < 0.069696 { return c(0.9) }
+            if shade.holds(p) { return .zero }
+            if bill.holds(p) { return gold }
+            if de < 0.1156 { return .zero }
+            if ds < 0.1225, !crown.holds(p) { return odd(bearing(p - sun), rays) ? y(0.6) : sky }
+            if dc < 0.1156 { return dc.squareRoot() < 0.3 + 0.035 * cos(bearing(p - cloud) * 6 * .pi / 180) ? puff : sky }
+            if dp < 0.1156, !nape.holds(p) { return odd(bearing(p - pool), ripples) ? c(0.6) : sky }
+            if crown.holds(p) { return white }
+            if nape.holds(p) { return dark }
+            return sky
         }
-    }()
+    }
 }
 
 // MARK: - 55: Peacock
@@ -772,7 +791,9 @@ extension LensArt {
 /// this level), each a magenta heart in a notched teal ring, then bronze and gold, the upper left's heart gilded. In the
 /// eyes: a peahen, a rain cloud, a snake, a lotus and, in the gilded one, a crown.
 extension LensArt {
-    static let peacock: Halftone.Panel = {
+    static let peacock: Halftone.Panel = drawPeacock()
+
+    private static func drawPeacock() -> Halftone.Panel {
         let base = P(0, 0.66), spots = [1, 2, 3, 5, 6].map { polar(P(0, 0), 0.56, -90 + 60 * Double($0 - 1)) }
         let hearts = [m(0.85), m(0.5), m(0.85), m(0.5), y(0.8)], teal = c(0.95), bronze = y(0.9), gold = Tone(0, 0.45, 0.6)
         let barbs = [c(0.35), y(0.28)]
@@ -885,5 +906,5 @@ extension LensArt {
             return barbs[Int((bearing(p - base) / 6.5).rounded(.down)) % 2]
         }
         return Halftone.Panel(name: "peacock", tones: tones, strokes: pieces(s))
-    }()
+    }
 }
