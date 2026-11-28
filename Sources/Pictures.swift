@@ -13,6 +13,9 @@ enum Picture: String, CaseIterable {
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
     /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
+    /// Mineral, drawn live the same way: the rock cut and polished, sandstone's beds, agate's bands, a thin section of
+    /// slate between polarisers and basalt's columns end on: Charybdis's.
+    case strata, agate, lamellae, columns
     /// Lens's halftone panels (`Halftone.panel`), a level its own, baked a pixel at a time.
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
@@ -24,7 +27,7 @@ enum Picture: String, CaseIterable {
     var isLive: Bool {
         switch self {
         case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
-             .marblingTwin, .isobars, .ephemeris, .cords: true
+             .marblingTwin, .isobars, .ephemeris, .cords, .strata, .agate, .lamellae, .columns: true
         case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
              .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: false
         }
@@ -42,7 +45,7 @@ enum Picture: String, CaseIterable {
         case .neurons: .neuronsTwin
         case .marbling: .marblingTwin
         case .grid, .sunset, .city, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin, .isobars,
-             .ephemeris, .cords, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
+             .ephemeris, .cords, .strata, .agate, .lamellae, .columns, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
              .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: self
         }
     }
@@ -53,7 +56,7 @@ enum Picture: String, CaseIterable {
     /// Seconds after which a live picture repeats. Its shader gets the clock mod this, so float32 keeps its precision.
     var period: Double {
         switch self {
-        case .chainmail, .coral: 20
+        case .chainmail, .coral, .strata, .agate, .lamellae, .columns: 20
         case .neurons: 12
         // A twin's heartbeat delays loop once a minute, and every sibling's period divides that.
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: 60
@@ -87,12 +90,26 @@ enum Picture: String, CaseIterable {
         case .isobars: 2
         case .cords: 3
         case .ephemeris: 6
+        // Mineral's, by the picture lab's bench against the glass's four, on the Mac alone.
+        case .strata, .agate: 2
+        case .lamellae, .columns: 5
+        }
+    }
+
+    /// The salt of a Mineral picture's noise tables; nil for every other picture.
+    var mineralTable: UInt64? {
+        switch self {
+        case .strata: 0x534C_4F50
+        case .agate: 0x534C_4F51
+        case .lamellae: 0x534C_4F52
+        case .columns: 0x534C_4F53
+        default: nil
         }
     }
 
     /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins or the packs'.
     var next: Picture {
-        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil && !$0.paper }
+        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil && !$0.paper && $0.mineralTable == nil }
         return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
@@ -110,6 +127,7 @@ enum Picture: String, CaseIterable {
         case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
         case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
         case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
+        case .strata, .agate, .lamellae, .columns: Self.gradients(seed: seed, salt: mineralTable ?? 0, count: 2)
         case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
              .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: nil
         // A sibling is never a twin.
@@ -377,7 +395,7 @@ enum Picture: String, CaseIterable {
 
         // Drawn by their shaders or `Halftone`, never here.
         case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
-             .marblingTwin, .isobars, .ephemeris, .cords, .halftone:
+             .marblingTwin, .isobars, .ephemeris, .cords, .halftone, .strata, .agate, .lamellae, .columns:
             break
         }
     }
@@ -404,6 +422,10 @@ extension Picture {
         case .isobars: LocalizedStringResource("picture.isobars", defaultValue: "isobars", comment: "A picture's name on the sandbox's control")
         case .ephemeris: LocalizedStringResource("picture.ephemeris", defaultValue: "ephemeris", comment: "A picture's name on the sandbox's control")
         case .cords: LocalizedStringResource("picture.cords", defaultValue: "cords", comment: "A picture's name on the sandbox's control")
+        case .strata: LocalizedStringResource("picture.strata", defaultValue: "strata", comment: "A picture's name on the sandbox's control")
+        case .agate: LocalizedStringResource("picture.agate", defaultValue: "agate", comment: "A picture's name on the sandbox's control")
+        case .lamellae: LocalizedStringResource("picture.lamellae", defaultValue: "lamellae", comment: "A picture's name on the sandbox's control")
+        case .columns: LocalizedStringResource("picture.columns", defaultValue: "columns", comment: "A picture's name on the sandbox's control")
         case .halftone: LocalizedStringResource("picture.halftone", defaultValue: "halftone", comment: "A picture's name on the sandbox's control")
         case .fern: LocalizedStringResource("picture.fern", defaultValue: "fern", comment: "A picture's name on the sandbox's control")
         case .seeds: LocalizedStringResource("picture.seeds", defaultValue: "seeds", comment: "A picture's name on the sandbox's control")

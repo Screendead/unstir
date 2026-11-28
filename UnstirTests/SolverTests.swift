@@ -346,6 +346,100 @@ final class SolverTests: XCTestCase {
         }
     }
 
+    /// A line at par for each Charybdis level, by number, as `scripts/charybdis-levels.py line` prints it.
+    static let charybdisLines = [
+        "0:+3,2:-4,0:-3",
+        "0:-2,2:-4,0:-3",
+        "1:+3,3:-4,1:-3,0:+6,2:-2,0:-6",
+        "3:+2,1:-5,3:-2,2:-3,3:-4",
+        "4:-4,2:-1,4:+4,0:-2,4:+8,2:-2,4:-8",
+        "3:+2,1:+2,3:+4,4:-4,2:+6,3:+7,2:+9,0:+3,4:+7,0:+7,2:-9",
+        "1:+7,3:+5,1:-2,2:+7,4:-5,5:+2,4:-7,2:-10,0:-7,1:-3,2:+10,4:-5,2:-10,0:-5,5:-6,2:-2,4:+3,2:-2",
+        "0:+2,5:+2,1:-5,3:+3,1:-2,5:+4,6:-6,0:-3,2:-6,5:-4,1:+2,3:-6,1:+5,5:-3,0:+2,5:-4,4:-2,0:+7,5:+7,1:+7,3:+3,1:-7,5:-9,6:+4,4:-3",
+        "0:-5,1:+3,0:+7,1:-5,0:+5,3:-7,5:-2,6:-9,3:+7,4:+7,2:-3,3:+5,6:+9,5:-5,6:+5,5:+5,3:-7,1:+7,2:-6,1:+3,0:+2,6:+10,4:-7,6:-4,0:+6,6:+4,3:-3,4:+2,6:-4,1:+6",
+        "3:-7,4:+3,3:-6,0:-4,4:+5,1:-5,4:-9,0:-2,4:+9,1:+7,0:+5,2:+3,0:-5,1:+7,0:+5,2:-6,0:-5,1:-6,4:-6,3:+5,0:+5,2:+5,0:-2,4:+6,1:-5,4:-6,0:+2,3:-7,2:-3,3:-3,2:-2,0:-5",
+        "6:+1,3:+5,6:-1,2:-7,0:+4,2:+7,0:-3,1:-2,6:+2,4:-2,6:-2,5:-5,0:-5,5:-4,1:-4,0:-7,2:+6,1:+4,2:+2,1:+2,6:+1,3:-2,6:+1,4:+5,6:-9,5:+3,6:+9,4:+4,6:-11,2:-2,1:-3",
+        "1:-9,4:+4,1:+9,2:+6,1:-9,4:+2,3:-5,4:-2,1:+9,2:+6,1:+3,4:+5,3:-3,4:-5,1:+5,2:-5,1:+7,4:+5,1:-10,0:+4,1:-2,3:+7,4:+7,1:+2,2:-8,1:-2,4:-11,0:-6,4:+5,3:-5,4:+6,2:+2,4:-6,0:+6",
+        "1:+1,3:-4,6:+5,4:-5,6:-5,5:+3,3:-5,1:+5,0:-2,6:+5,4:+4,6:-8,5:+3,2:+5,1:+7,3:+2,2:-2,5:-5,6:-4,4:+7,6:-1,0:+7,5:+2,6:+4,3:+7",
+        "1:+7,3:+6,1:+4,4:+2,1:-11,0:+4,1:+11,4:-5,1:-11,2:+2,0:-2,1:+2,2:+4,1:+5,3:-5,1:+4,4:+3,1:-9,2:-6,0:+4,1:+5,3:+8,1:-8,4:-5,0:+7,4:+6,1:-2,0:+7,1:+2,4:+7,1:+3",
+        "3:-5,6:+6,1:+3,6:-2,3:+5,2:-2,3:+7,6:-5,5:-6,3:-7,0:-2,3:-5,6:+5,3:+5,2:+7,3:-2,4:+4,3:-3,6:-5,5:+4,6:+6,5:-4,1:-3,6:+2,1:-2,6:-3,2:+5,6:-2,3:+7,4:-5,0:-4,3:+5,6:-10,3:-2,2:-4,3:+2,6:+10,3:-2,0:-2",
+        "2:-5,3:-4,2:-1,0:+2,2:+7,0:+3,1:+3,2:+6,3:+4,2:+1,1:+3,0:-4,1:+5,0:-4,2:-1,3:+6,2:+8,1:-4,2:-8,3:-2,2:+8,0:-5,1:+5,0:-5,1:-5",
+        "1:+10,4:+6,1:-10,0:+2,2:+7,1:+10,4:+4,1:-10,0:-2,1:+10,4:+7,3:+2,4:-2,1:-10,0:+2,2:+2,0:+4,1:-7,0:+8,2:+6,0:-8,1:+5,3:+2,4:-4,1:-7,0:+8,3:+3,2:+6,3:-2,0:-2,1:+7,4:-7,3:+5,1:-7",
+        "2:+2,4:-5,2:+1,1:-3,0:+7,1:-4,2:+11,4:-7,2:-8,0:+7,2:-4,4:+9,6:+3,4:-9,2:+4,0:+5,1:+6,2:+8,4:+2,1:+5,5:+6,1:-5,4:+7,6:+3,4:-2,2:-3,1:+5,5:-5,1:-5,0:+3,2:+3,4:-3,2:-6",
+        "4:-4,0:+10,3:-4,0:-10,4:+2,0:-2,3:+1,0:+2,1:-5,0:-5,1:-7,0:-9,3:+2,2:+7,3:-2,0:+9,1:-7,0:+3,3:+6,0:+4,4:+7,0:-4,2:-4,3:-6,0:-1,1:+2,0:-11,3:-1,2:-2,3:-11,0:+11,1:-5,0:+1,3:+11,0:-1,4:-7,0:+1,2:-6,3:-3,0:+3",
+        "1:-2,6:-5,4:+4,0:-4,6:+4,4:+2,3:-2,5:+10,2:+3,5:-5,0:+6,1:+6,0:+4,6:-4,1:+6,4:+3,1:-6,0:+7,5:-7,2:-4,1:-6,5:+3,4:+7,3:-2,5:+6,4:-7,1:+6,6:-4,5:+3,1:-8,2:-6,5:-3,3:-3",
+        "1:+6,2:-2,4:+5,2:-3,3:-5,2:+9,0:+6,2:+6,4:-6,2:-8,3:+2,1:-7,2:+8,4:-6,2:-4,3:-7,2:+10,0:-7,2:-6,4:+4,2:+6,0:-4,2:-5,1:-2,2:+5,0:-6,2:-6,4:-2,2:+6,0:+4,2:+1,3:+6,1:+5,2:-7,4:+7,2:+6,0:+6,2:-2,3:-5",
+        "4:+5,2:+4,1:+2,6:-2,2:-6,4:-7,3:-6,4:+5,0:+2,3:+4,4:-10,6:-7,2:-9,4:+10,5:+4,4:+2,2:+9,4:-2,0:+7,4:+2,2:-9,6:+5,4:+2,5:-6,4:+10,2:+9,4:-10,3:-3,0:-5,4:-2,0:-5,3:-7,2:+3,5:+2,2:-3,0:+3,1:+4,2:+3,5:+3,2:+3,3:+3",
+        "1:+5,4:+2,1:-5,0:+9,2:+7,0:-7,1:+3,0:+7,3:-6,2:+3,0:-7,1:-2,0:+7,2:-6,0:-7,1:+4,4:+4,1:-1,0:+7,2:-3,0:-4,1:+1,4:+5,1:+3,0:+4,2:+2,3:+3,2:-5,0:-4,1:-6,0:-5,1:+3,4:+7,1:-8,0:-4",
+        "4:-2,0:+5,5:+8,3:+4,2:+3,3:+3,5:-8,2:+6,0:+4,5:+6,6:-2,5:+8,1:+7,5:-8,0:-4,5:+8,1:+3,5:-3,6:+3,4:-4,5:+3,1:-2,5:-6,4:-3,0:+7,3:-4,5:+6,2:+3,1:+5,2:+6,5:-6,6:+3,5:+6,1:-7,5:-6,3:-7",
+        "1:-3,4:-11,1:+3,2:-3,1:+9,4:+11,3:-2,4:+6,1:-9,0:-6,1:-3,4:-5,1:-2,2:-4,3:-6,0:-7,1:+2,2:+3,4:+6,0:-5,1:-3,0:-6,1:-9,4:-6,1:+9,2:+4,1:-9,4:+6,3:+3,4:-6,1:+9,2:+5,1:+3,4:+9,1:+4",
+        "1:-2,6:+5,1:+9,4:+3,5:-3,3:+7,4:-7,1:-9,0:-2,5:-7,6:+4,1:-3,6:+9,2:-6,6:-9,5:+7,4:+7,1:-7,6:-2,0:+7,1:+7,4:-6,1:-4,0:+4,6:+11,3:-2,2:+3,3:-6,6:-11,0:-5,6:+11,2:+5,6:-11,1:+4,4:+4,1:-4",
+        "1:-10,3:+6,5:+6,3:-6,1:+10,0:-7,6:+7,2:+2,1:+3,2:-1,4:-7,2:-4,0:-4,2:-4,1:+11,3:-7,1:-11,2:-6,1:+4,2:-7,0:+6,1:-5,3:+1,5:+3,3:-1,1:+5,0:-6,6:+6,1:-5,3:-6,2:+9,4:+3,2:-9,1:-1",
+        "0:-4,5:+7,1:+6,6:+2,3:+5,6:-9,4:-2,1:+6,5:-3,2:+2,5:-3,1:+2,6:+9,3:-7,6:-3,0:+2,5:-4,6:+3,3:+2,6:-3,0:+3,5:+4,1:-5,6:+2,5:-7,0:+5,5:-2,6:+1,2:-5,3:-7,6:-1,1:+7,2:-5,5:-3,0:+4,5:+5",
+        "5:+8,1:-6,5:-8,0:-7,4:-9,6:+6,2:-7,6:-6,4:+9,5:-4,0:-2,4:-9,6:+6,2:+3,6:-6,4:+9,5:-5,3:-5,0:+3,5:+5,1:+3,5:-5,4:+3,6:+6,2:+6,6:+1,4:+6,5:-2,4:+6,6:-7,5:+7,1:-5,5:-7,4:-9",
+        "6:-2,0:+4,4:+2,5:-6,6:+6,2:+6,6:-6,0:-5,1:+9,3:-2,1:-9,0:+7,6:+6,4:+3,5:+2,1:+6,6:+2,5:+7,1:-3,0:-2,6:+10,2:+6,6:-10,1:-7,5:+6,6:+5,5:-2,0:+2,1:+1,3:-5,4:+4,5:-4,1:-1,0:-6,6:+7,0:-5,6:-2,2:+4,6:+2",
+    ]
+
+    /// Each Charybdis level opens with a ward locked, so its keys are never decoration, and its line at par plays on a
+    /// real `Game` with the wards enforced, never refused, emptying the stack in par moves with the stack within the
+    /// glass's limit all the way. That the line is the fewest is `testCharybdisParIsTheOptimum`'s, slow.
+    @MainActor func testCharybdisLinesPlayAtPar() throws {
+        XCTAssertEqual(Self.charybdisLines.count, Level.charybdis.count)
+        for (level, text) in zip(Level.charybdis, Self.charybdisLines) {
+            XCTAssertTrue(level.wards.contains { !$0.value.open(stack: level.scramble, dealt: level.scramble) }, level.id)
+            let line = try text.split(separator: ",").map { move in
+                let f = move.split(separator: ":")
+                return Twist(rod: try XCTUnwrap(Int(f[0])), steps: try XCTUnwrap(Int(f[1])))
+            }
+            XCTAssertEqual(line.count, level.par, level.id)
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil), storesProgress: false)
+            var deepest = game.stack.count
+            for t in line {
+                let refused = game.wardRefusals
+                game.commit(rod: t.rod, steps: t.steps)
+                XCTAssertEqual(game.wardRefusals, refused, "\(level.id) refused \(t)")
+                deepest = max(deepest, game.stack.count)
+            }
+            XCTAssertLessThanOrEqual(deepest, Tank.maxStack, level.id)
+            XCTAssertTrue(game.solved, level.id)
+            XCTAssertEqual(game.moves, level.par, level.id)
+        }
+    }
+
+    /// Each Charybdis level's par is its optimum (`KeySolver`): the solver's bounded optimum where the deal is small,
+    /// and otherwise the bounded optimum maelstrom's par is, whole entries off and keys to their marks
+    /// (`scripts/charybdis-levels.py table` checks each over more, optimised, in about a minute). Minutes in a Debug
+    /// build, so slow.
+    @MainActor func testCharybdisParIsTheOptimum() throws {
+        try skipUnlessSlow()
+        for level in Level.charybdis {
+            let solver = KeySolver(level.layout, wards: level.wards, dealt: level.scramble)
+            solver.deep = level.scramble.count > 3
+            XCTAssertEqual(solver.solve(limit: level.par)?.count, level.par, level.id)
+        }
+    }
+
+    /// A locked ward refuses a turn and costs nothing; its key on the mark opens it, a whole turn round being the same
+    /// mark; and a turn turned straight back is always allowed.
+    @MainActor func testAWardTurnsOnlyWhileItsKeyStandsOnTheMark() throws {
+        let level = try XCTUnwrap(Level.charybdis.first)
+        let ward = try XCTUnwrap(level.wards.first), game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil),
+                                                                  storesProgress: false)
+        XCTAssertEqual(game.kind(of: ward.key), .seized)
+        game.commit(rod: ward.key, steps: -1)
+        XCTAssertEqual(game.wardRefusals, 1)
+        XCTAssertEqual(game.moves, 0)
+        game.commit(rod: ward.value.key, steps: ward.value.mark + 12)
+        XCTAssertEqual(game.kind(of: ward.key), .working, "a whole turn past the mark is the mark")
+        game.commit(rod: ward.value.key, steps: -12)
+        game.commit(rod: ward.key, steps: 2)
+        game.commit(rod: ward.key, steps: -2)
+        XCTAssertEqual(game.wardRefusals, 1, "turned straight back")
+        game.commit(rod: ward.value.key, steps: 1)
+        XCTAssertEqual(game.kind(of: ward.key), .seized)
+        XCTAssertTrue(game.tankSpoken.contains("locked"), game.tankSpoken)
+    }
+
     /// Past quad, playing by the park rule never goes more than a third of par, plus one, without a turn of the tank,
     /// so the seized knobs stay in the way to the end (Jack's playtest, 2026-10-24).
     func testMaelstromKeepsTheTankTurning() throws {

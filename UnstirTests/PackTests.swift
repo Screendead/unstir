@@ -9,13 +9,13 @@ final class PackTests: XCTestCase {
     /// they paid for. Every string here is a literal on purpose: change one only with a migration.
     func testStoredIdsAndProductIdsNeverChange() throws {
         // Vortex's is pinned ahead of its tier, so the pin holds whichever of the two lands first.
-        let prefixes = ["plughole": "L", "whirlpool": "N", "vortex": "V", "maelstrom": "M"]
+        let prefixes = ["plughole": "L", "whirlpool": "N", "vortex": "V", "maelstrom": "M", "charybdis": "C"]
         for tier in Tier.allCases {
             let prefix = try XCTUnwrap(prefixes[tier.rawValue], "\(tier.rawValue) has no pinned prefix")
             XCTAssertEqual(tier.prefix, prefix)
-            XCTAssertEqual(tier.levels.map(\.id), (1...27).map { "\(prefix)\($0)" })
+            XCTAssertEqual(tier.levels.map(\.id), tier.levels.indices.map { "\(prefix)\($0 + 1)" })
         }
-        XCTAssertTrue(Set(["plughole", "whirlpool", "maelstrom"]).isSubset(of: Tier.allCases.map(\.rawValue)))
+        XCTAssertTrue(Set(["plughole", "whirlpool", "maelstrom", "charybdis"]).isSubset(of: Tier.allCases.map(\.rawValue)))
         XCTAssertEqual(Level.daily(DateComponents(calendar: Calendar(identifier: .gregorian), year: 2026, month: 10,
                                                   day: 25).date!).id, "daily-20261025")
         XCTAssertEqual(Level.endless(Run(seed: 1)).id, "endless")

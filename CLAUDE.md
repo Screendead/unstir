@@ -121,6 +121,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots] [masks=slot:channel]`
+  `[keys=ward:key@mark]` (Charybdis's, `KeySolver`)
   (e.g. `quad 0:+3,2:-4 0` or `tri 2:+2,0:+3,1:+4 masks=0:r,1:c`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over its ties under each parking, the no-lookahead count
   and planning gap, one-visit and last-ring ties, whether it needs a plan (no rule's best tie reaches the
@@ -129,7 +130,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   out of Levels.swift, so that struct stays top-level there. `scripts/solve.sh escapement <layout> <scramble> <clocks>
   [limit]` (e.g. `escapement hex <scramble> 1+,4-`, clocks as `problems.tsv` writes them) runs the app's own prover
   (`Solver.escapement`) instead: the fewest moves with the clocks ticking after each, under the same rule, a line,
-  waits and all, and every first move that reaches it.
+  waits and all, and every first move that reaches it. `scripts/solve.sh lab <layout> <scramble> [keys=2:0@3] [keel=n] [flip] [exhaustive|deep]` proves a
+  level under the fifth chapter's candidate rules (`LabRules`, `docs/fifth-chapter.md`).
 - Escapement's prover: `scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]` (clocks as rods in tick
   order, each `+` or `-` for wound back, e.g. `hex <scramble> 1+,4-`) plays the pack's rule on `Array.commit`: every move
   (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses, as does the last clock stopping
@@ -212,7 +214,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   square corners, 72 dpi (needs Pillow).
 - Picture lab: `scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]` draws a live
   picture on the Mac's GPU, stirred by a stack if given; `scripts/picture-lab.sh bench <picture>...` times each
-  picture's fill against the glass and a stack entry of four-tap work. It knows the glass and vortex's family, and
+  picture's fill against the glass and a stack entry of four-tap work. It knows the glass, vortex's family and Mineral's four, and
   builds `build/picture-lab/lab` with `swiftc` from Twist.swift, VortexPictures.swift, `SplitMix64` cut out of
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as

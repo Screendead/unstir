@@ -42,6 +42,47 @@ struct Channels: OptionSet, Hashable, Sendable {
     }
 }
 
+/// Charybdis's keys (Jack, 2026-11-28): a warded rod turns only while its key's pointer stands on the mark. A limit on
+/// which turns a level allows, never on what a turn does, so every merge stays `Array.commit`'s. A pointer is the
+/// player's own turns of a rod, upright as dealt: what the stack holds of it less what was dealt, which every commit,
+/// merge and fall keeps. A turn turned straight back is always allowed, as no rod keys itself.
+struct Ward: Hashable, Sendable {
+    /// The key's slot, and the steps its pointer must stand at, a whole turn either way the same place on the dial.
+    var key: Int, mark: Int
+
+    static func pointer(_ rod: Int, stack: [Twist], dealt: [Twist]) -> Int {
+        stack.reduce(0) { $0 + ($1.rod == rod ? $1.steps : 0) } - dealt.reduce(0) { $0 + ($1.rod == rod ? $1.steps : 0) }
+    }
+
+    func open(stack: [Twist], dealt: [Twist]) -> Bool {
+        (Self.pointer(key, stack: stack, dealt: dealt) - mark) % 12 == 0
+    }
+
+    /// "2:0@3,1:4@-3" -> slot 2 warded by slot 0 at +3, slot 1 by slot 4 at -3; nil on anything else, or a rod keying
+    /// itself.
+    static func wards(_ s: String) -> [Int: Ward]? {
+        var out: [Int: Ward] = [:]
+        for part in s.split(separator: ",") {
+            let f = part.split(whereSeparator: { ":@".contains($0) })
+            guard f.count == 3, let w = Int(f[0]), let k = Int(f[1]), let m = Int(f[2]), w != k else { return nil }
+            out[w] = Ward(key: k, mark: m)
+        }
+        return out
+    }
+
+    /// The reverse of `wards`, slots in order.
+    static func spelt(_ wards: [Int: Ward]) -> String {
+        wards.sorted { $0.key < $1.key }.map { "\($0.key):\($0.value.key)@\($0.value.mark)" }.joined(separator: ",")
+    }
+}
+
+extension Dictionary where Key == Int, Value == Ward {
+    /// Whether slot `rod` may turn now: any rod but a ward, and a ward only while its key stands on the mark.
+    func opens(_ rod: Int, stack: [Twist], dealt: [Twist]) -> Bool {
+        self[rod]?.open(stack: stack, dealt: dealt) ?? true
+    }
+}
+
 /// Tank geometry in normalized coordinates: tank radius 1, centre at the origin, y down.
 enum Tank {
     static let step = Double.pi / 6

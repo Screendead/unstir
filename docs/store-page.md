@@ -50,7 +50,7 @@ which the category already shows.
 
 | Option | Text | Chars |
 |---|---|---|
-| **A (Jack, ST3)** | A picture, stirred by rods under the glass. Turn them back in the right order and it snaps clean. 108 levels free, a new daily every day, three packs to add. | 157 |
+| **A (Jack, ST3)** | A picture, stirred by rods under the glass. Turn them back in the right order and it snaps clean. 150 levels free, a new daily every day, three packs to add. | 157 |
 | B, set aside for later | Every stir left a seam. The newest one runs unbroken. Turn the rods back in order and the picture comes clean. Four tiers and a daily, free. | 140 |
 
 A says what is free and that packs exist; B teaches the rule. Since this field changes without a review, B can follow
@@ -67,12 +67,13 @@ The rule is simple to say and slow to master: the last stir is on top. Where two
 
 Drag a knob to turn its rod. Let go where you started and nothing happens, so you can look before you commit. Every level has a par, the fewest moves that unstir it. Reset is free in every level. Undos come from a small bank that refills a little on each day you play.
 
-FOUR TIERS, 108 LEVELS, FREE
+FIVE TIERS, 150 LEVELS, FREE
 
-- Plughole: 27 levels on neon pictures, from one stir on three rods to deep tanks on seven. The first three replay the scramble so you can watch it happen.
-- Whirlpool: 27 deeper levels on live pictures that move as you play: glass, chainmail, coral, a web of neurons and marbled ink. More stirs, more of them hidden under louder ones.
-- Vortex: 27 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
-- Maelstrom: 27 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. The last free tier and the hardest: some levels need a plan, not just a good eye. Its pictures have a heartbeat.
+- Plughole: 30 levels on neon pictures, from one stir on three rods to deep tanks on seven. The first three replay the scramble so you can watch it happen.
+- Whirlpool: 30 deeper levels on live pictures that move as you play: glass, chainmail, coral, a web of neurons and marbled ink. More stirs, more of them hidden under louder ones.
+- Vortex: 30 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
+- Maelstrom: 30 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. Some levels need a plan, not just a good eye. Its pictures have a heartbeat.
+- Charybdis: 30 levels of locks on polished stone. A locked knob turns only while its key points to the key's notch, and every turn of a key stirs the picture too. The last free tier and the hardest.
 
 Each tier opens when every level of the one before it is solved.
 
@@ -278,7 +279,7 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
   ```
   No account or sign-in is needed, and the app has no server of its own: purchases go through StoreKit alone.
 
-  How the game opens: the four free tiers (Plughole, Whirlpool, Vortex, Maelstrom) open in turn, each once every level of the one before is solved. The release build has no unlock. Plughole's first levels teach the rule; the screenshots and preview show the later tiers.
+  How the game opens: the five free tiers (Plughole, Whirlpool, Vortex, Maelstrom, Charybdis) open in turn, each once every level of the one before is solved. The release build has no unlock. Plughole's first levels teach the rule; the screenshots and preview show the later tiers.
 
   The daily and Endless open once Plughole level 23 is solved. About one daily in seven is a frost day, with two knobs frozen under frosted glass: this is intended.
 

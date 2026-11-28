@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+# Copyright © 2026 Jack Lusher. All rights reserved.
+"""Deals Charybdis levels (keys and wards) on seeded scrambles and measures each through `scripts/solve.sh ... keys=`.
+
+usage: scripts/charybdis-levels.py deal <layout> <entries> <seeds> [from=0] [pairs=1] [chain] [twomarks]
+           [stirredkeys] [steps=2-8] [gap=0-99] [firsts=99] [top=8] [prove=3] [timeout=60]
+       scripts/charybdis-levels.py check <layout> <scramble> <ward>:<key>@<mark>,... [timeout=60]
+       scripts/charybdis-levels.py table [id...] [timeout=120]
+       scripts/charybdis-levels.py line <n> [timeout=120]
+
+`deal` deals seeds from..from+seeds-1 on its own RNG, never the game's frozen generator. Each seed takes `pairs`
+ward/key pairs whose discs don't touch, no knob keying two wards and no cycle (a ward may still be another's key, a
+chain; `chain` makes the second pair one; `twomarks` gives the second pair the first pair's key at another mark;
+`stirredkeys` deals every key an entry). It solves each deal in deep mode and keeps it when untwisting without the
+wards takes exactly its entries (so the keys alone cost the moves over them), no entry merges under 2 or past 9
+steps, the stack stays within 35, par is over the entries by `gap` and at most `firsts` places for a first move reach
+par. It prints the kept deals best first (stranded, then the share of forced steps, the moves that lose par per step,
+and the fewest first moves), and runs the default and exhaustive modes on the best `prove`.
+`check` measures one level in every mode. `table` re-measures Charybdis's levels below (or those named) in deep mode
+and in the mode that proved each, and fails if a par has moved. `line` prints a line at par for level C<n> of the app's
+own table (`Level.charybdis` in Sources/Levels.swift), solved in the mode the game's test uses, and fails if its length
+isn't the row's par. Each run stops at `timeout` seconds."""
+import os, pty, random, re, select, signal, subprocess, sys, time
+
+RODS = {"quad": 4, "eye": 4, "pent": 5, "hex": 7}
+MAX_STACK = 35
+
+# id, layout, scramble as it stands after parse, wards, par, the strongest mode that proved it, and where it came from.
+LEVELS = [
+    ("C1", "quad", "2:+4", "2:0@3", 3, "exhaustive", "the prototype's first level"),
+    ("C2", "quad", "0:+5,2:+4", "2:0@-2", 3, "exhaustive", "the prototype's second level"),
+    ("C3", "quad", "2:+2,3:+4", "2:0@6,3:1@3", 6, "exhaustive", "deal quad 2 60 pairs=2 steps=2-5, seed 5"),
+    ("C4", "pent", "3:+4,2:+3,1:+5", "1:3@2", 5, "exhaustive", "by hand"),
+    ("C5", "pent", "0:+2,2:+3", "0:2@-1,2:4@-4", 7, "default",
+     "deal pent 2 60 pairs=2 chain steps=2-5, seed 14; exhaustive agrees, 20 s to the optimum and 48 s in all"),
+    ("C6", "pent", "0:-7,4:-7,3:-7,0:-3,2:-6,4:+4,1:-2,3:-6", "0:2@3,1:3@2", 11, "deep",
+     "deal pent 8 40 pairs=2 stirredkeys steps=2-7, seed 26"),
+    ("C7", "hex", "4:-3,2:+4,5:+6,0:+5,4:+5,1:+3,0:+7,2:+3,4:+7,5:-2,4:+5,1:-5,3:-5", "3:1@-5,4:2@-5", 18, "deep",
+     "deal hex 13 40 pairs=2 stirredkeys steps=2-7, seed 36"),
+    ("C8", "hex", "4:+3,6:-4,3:-3,5:+2,0:-7,4:+2,5:+4,0:-2,5:+7,1:-7,3:+6,2:+6,0:+3,6:+6,3:-3,1:+7,5:-6,0:-2",
+     "1:5@2,3:1@-5", 25, "deep", "deal hex 18 40 pairs=2 chain stirredkeys steps=2-7, seed 23"),
+    ("C9", "hex", "1:-6,4:-2,3:+3,0:-6,4:+7,6:-6,0:-2,1:-3,5:-5,2:+6,1:-7,3:+2,6:-5,5:+5,4:-7,2:+3,5:+2,0:-5,1:+5,"
+     "0:-7,1:-3,0:+5", "4:6@3,5:3@5", 30, "deep", "deal hex 22 30 pairs=2 stirredkeys steps=2-7, seed 11"),
+    ("C10", "pent",
+     "2:+2,0:+3,3:+3,2:+3,3:+7,1:+5,0:-3,2:-5,3:-5,1:+6,2:+6,4:-3,1:-7,2:-3,1:-7,0:+2,1:+5,4:+4,3:+6,0:+4,"
+     "4:-3,3:+7",
+     "1:4@-4,2:0@-1", 32, "deep", "deal pent 30 pairs=2 stirredkeys steps=2-7, seed 615"),
+    ("C11", "hex",
+     "4:-4,1:+3,6:+2,5:-3,4:-5,2:+2,3:+2,6:+7,1:-2,2:-2,1:-4,2:-6,0:+7,1:+4,5:+4,0:+5,5:+5,4:+2,1:+2,0:+3,"
+     "2:-7,0:-4,2:+7,3:-5",
+     "3:6@1,4:6@2", 31, "deep", "deal hex 26 pairs=2 twomarks stirredkeys steps=2-7, seed 315"),
+    ("C12", "pent",
+     "2:-2,1:+2,0:-6,3:+5,2:+8,4:-5,0:+6,4:+4,3:-7,0:-4,1:+3,2:+5,3:+3,1:-8,2:-6,4:-3,3:+5,4:-6,2:-6",
+     "2:4@4,4:1@3", 34, "deep", "deal pent 22 pairs=2 chain stirredkeys steps=2-7, seed 1123"),
+    ("C13", "hex",
+     "6:-4,5:-2,3:-7,0:-7,2:+2,6:+5,1:-7,4:-7,3:-2,5:+2,2:-5,6:+3,4:-4,0:+2,1:-6,3:+5,5:-3,4:+5,3:+4",
+     "2:5@6,3:1@1,4:6@5", 25, "deep", "deal hex 24 pairs=3 stirredkeys steps=2-7, seed 507"),
+    ("C14", "pent",
+     "4:-7,1:-5,0:-7,1:+2,4:-6,0:-7,1:+3,4:+5,3:-8,0:-4,2:+6,4:-3,3:+5,2:-4,1:-2,0:+2,2:-2,4:+5,0:-4,4:-2,"
+     "3:-6",
+     "3:1@-5,4:1@-1", 31, "deep", "deal pent 22 pairs=2 twomarks stirredkeys steps=2-7, seed 1223"),
+    ("C15", "hex",
+     "0:+2,2:+4,3:-3,0:+4,6:+5,4:+5,3:-7,2:-5,1:+2,6:-2,5:+4,1:+3,3:+3,6:-6,5:-4,4:-4,3:+2,2:-7,0:+2,5:+6,"
+     "2:+2,6:+7,1:-3,6:-6",
+     "2:6@4,6:3@-5", 39, "deep", "deal hex 27 pairs=2 chain stirredkeys steps=2-7, seed 1327"),
+    ("C16", "eye",
+     "1:+5,0:+5,1:-5,0:+5,3:+2,1:+4,2:-7,3:-6,0:+4,1:-5,0:+4,1:-3,2:-7,3:-4,1:-3,0:-3,2:-7,0:-2,2:+6,3:+4",
+     "3:2@-5", 25, "deep", "deal eye 20 pairs=1 stirredkeys steps=2-7, seed 1423"),
+    ("C17", "pent",
+     "3:-5,4:+7,3:+2,0:-6,2:-6,1:+2,3:-3,4:+4,3:-2,2:-6,1:+7,0:-6,2:-2,4:+2,3:-2,4:-7,0:+2,4:-4,0:-2,4:-6,"
+     "2:-7",
+     "2:0@2,4:1@-2", 34, "deep", "deal pent 22 pairs=2 stirredkeys steps=2-7, seed 1014"),
+    ("C18", "hex",
+     "2:+3,4:+3,0:-3,2:-5,5:+5,6:-3,4:-5,5:-6,4:-2,1:-6,0:-5,6:-3,0:-7,2:-3,4:+7,1:+4,0:-7,1:+3,2:-3,4:+5",
+     "4:2@2,5:1@4,6:4@-3", 33, "deep", "deal hex 20 pairs=3 stirredkeys steps=2-7, seed 1510"),
+    ("C19", "pent",
+     "0:-4,3:+3,2:+6,1:+5,4:+7,2:+2,1:-2,0:+5,3:+7,2:+4,4:-7,0:-7,1:+7,3:-4,2:-7,3:-3,1:+7,0:+5,4:-2,1:+5,"
+     "3:+4,4:+4",
+     "1:3@-3,3:0@-2", 40, "deep", "deal pent 22 pairs=2 chain stirredkeys steps=2-7, seed 1118"),
+    ("C20", "hex",
+     "3:+3,2:+6,1:+8,4:+7,6:+4,5:-6,3:+2,2:+4,4:-7,5:+4,0:-7,6:+4,4:-3,0:-4,1:-6,0:-6,5:-5,2:-3,3:+2,6:-4,"
+     "4:-2,0:+4,6:+5,4:-4,1:+2",
+     "2:5@-2,4:1@-2", 33, "deep", "deal hex 26 pairs=2 stirredkeys steps=2-7, seed 213"),
+    ("C21", "pent",
+     "0:-6,3:+5,2:+3,1:-5,4:-7,0:-4,3:-6,4:+2,2:-6,0:+6,1:+2,0:+4,2:-5,4:-4,3:+7,0:+7,2:-4,1:+7,4:+6,3:-2,"
+     "2:-7,4:+6,0:-6,3:+5,4:-5,2:+5,1:-6",
+     "0:2@4,4:2@-2", 39, "deep", "deal pent 30 pairs=2 twomarks stirredkeys steps=2-7, seed 811"),
+    ("C22", "hex",
+     "3:-3,5:-3,2:-6,1:-4,0:-3,5:-2,3:+7,0:+5,4:+2,0:+5,5:+6,6:-5,3:+3,4:-4,0:-7,3:-4,5:-4,6:+7,0:-2,4:-5,"
+     "3:+6,6:+2,4:+2,2:+6,1:-2,2:-4",
+     "2:4@5,5:2@1", 41, "deep", "deal hex 27 pairs=2 chain stirredkeys steps=2-7, seed 1317"),
+    ("C23", "pent",
+     "0:+4,4:-7,1:+5,0:+5,1:+6,2:+5,3:-3,4:-5,2:-2,1:-4,0:-3,2:+3,1:-3,2:+6,4:-4,1:+2,2:-3,1:-3,0:-2,3:+6,"
+     "2:-7,4:-2",
+     "2:0@-3,4:1@5", 35, "deep", "deal pent 22 pairs=2 stirredkeys steps=2-7, seed 1012"),
+    ("C24", "hex",
+     "1:+7,3:+7,6:-3,2:-6,1:-5,2:-3,3:+4,0:-7,1:+2,4:+3,5:+3,6:-3,1:-3,4:+4,5:-5,0:+4,1:-7,6:+2,5:-6,0:-4,"
+     "2:-6,3:-3,2:-3,3:-4,0:-5,4:+2",
+     "1:5@2,3:5@-4", 36, "deep", "deal hex 26 pairs=2 twomarks stirredkeys steps=2-7, seed 307"),
+    ("C25", "pent",
+     "1:-7,4:-3,2:-5,3:-3,2:-4,0:+6,1:+3,2:-3,0:+5,4:-6,1:-2,0:+7,3:+6,2:+4,1:+5,4:+5,0:+6,4:-6,3:+2,2:+3",
+     "2:4@1,4:1@-3", 35, "deep", "deal pent 22 pairs=2 chain stirredkeys steps=2-7, seed 1101"),
+    ("C26", "hex",
+     "4:-4,2:-5,0:+5,3:+6,2:-3,3:+2,0:-4,4:+6,1:-3,0:-7,6:+2,4:-7,1:+7,2:+6,5:-7,1:+3,6:-4,5:+7,0:+2,4:+7,"
+     "3:-7,5:+3,4:-3,6:-5,1:+2",
+     "2:6@6,4:1@-5", 36, "deep", "deal hex 29 pairs=2 stirredkeys steps=2-7, seed 1621"),
+    ("C27", "hex",
+     "1:+6,4:-3,6:-6,3:+6,0:+6,5:-3,0:-6,2:+7,1:-4,2:+6,3:+7,2:+4,0:+4,2:+5,1:-3,6:-7,4:+7,2:-2,0:+7,5:-6",
+     "3:1@2,4:2@1,5:3@6", 34, "deep", "deal hex 20 pairs=3 stirredkeys steps=2-7, seed 1500"),
+    ("C28", "hex",
+     "5:-5,0:-4,5:+5,2:+5,1:-7,3:+7,2:+5,0:-5,5:+7,6:-2,1:+5,5:-4,0:-3,5:+4,3:-2,0:-2,6:-6,3:+7,1:-2,5:+6,"
+     "4:+2,2:-2,1:-6,3:-5,6:+7,5:-7,1:-6,0:+4",
+     "2:5@4,3:6@2", 36, "deep", "deal hex 29 pairs=2 stirredkeys steps=2-7, seed 1610"),
+    ("C29", "hex",
+     "1:+5,2:-6,6:+7,4:+3,5:+2,6:-7,4:-9,1:-3,0:-3,3:+5,5:+5,2:-3,0:+2,2:+7,5:+4,0:+7,1:+6",
+     "1:5@-4,2:6@6,6:4@3", 34, "deep", "deal hex 20 pairs=3 stirredkeys steps=2-7, seed 1505"),
+    ("C30", "hex",
+     "2:-4,0:+5,6:-7,0:+6,5:+4,4:-4,3:+5,0:-2,5:+2,6:-5,1:+7,2:-6,5:-6,0:+2,5:-7,1:+3,6:-2,5:-2,1:-6,6:-6,"
+     "4:-3,0:-7,3:+2,0:+5,5:+6,2:-6,4:-2,0:-4,6:+2",
+     "2:6@4,3:1@-3", 39, "deep", "deal hex 29 pairs=2 stirredkeys steps=2-7, seed 1626"),
+]
+
+
+def touch(layout, a, b):
+    if layout == "eye":
+        return {a, b} != {2, 3}
+    if layout == "hex":
+        if 0 in (a, b):
+            return True
+        return (a - b) % 6 in (1, 5)
+    n = RODS[layout]
+    return (a - b) % n in (1, n - 1)
+
+
+def solve(args, timeout, stop=None):
+    """The solver's output, None past `timeout`, or what it had printed when `stop(output so far)` held."""
+    # A pty, so the solver prints a line at a time and `stop` can end a run before its slow measures.
+    master, slave = pty.openpty()
+    # Its own process group, so stopping it also stops the solver solve.sh started.
+    p = subprocess.Popen(["scripts/solve.sh", *args], stdout=slave, stderr=subprocess.DEVNULL, start_new_session=True)
+    os.close(slave)
+    out, end = b"", time.monotonic() + timeout
+    try:
+        while True:
+            left = end - time.monotonic()
+            if left <= 0:
+                return None
+            if select.select([master], [], [], left)[0]:
+                try:
+                    chunk = os.read(master, 65536)
+                except OSError:
+                    chunk = b""
+                if not chunk:
+                    p.wait()
+                    return out.decode()
+                out += chunk
+                if stop and stop(out.decode()):
+                    return out.decode()
+    finally:
+        if p.poll() is None:
+            os.killpg(p.pid, signal.SIGKILL)
+            p.wait()
+        os.close(master)
+
+
+def measure(layout, scramble, keys, mode, timeout, stop=None):
+    out = solve([layout, scramble, "keys=" + keys] + ([mode] if mode else []), timeout, stop)
+    if out is None:
+        return {"mode": mode or "default", "timeout": True}
+    m = {"mode": mode or "default", "timeout": False}
+    if stop and "a line:" not in out:
+        m["stopped"] = out
+        return m
+    e = re.search(r"entries (\d+) on \w+: (\S+);", out)
+    m["entries"], m["scramble"] = (int(e.group(1)), e.group(2)) if e else (None, scramble)
+    o = re.search(r"optimum (\d+) \(\d+ states, (\d+) ms\)", out)
+    if not o:
+        m["none"] = True
+        return m
+    m["par"], m["ms"] = int(o.group(1)), int(o.group(2))
+    u = re.search(r"untwisting alone under the wards: (.*)", out).group(1)
+    m["untwist"] = "stranded" if u.startswith("stranded") else u
+    f = re.search(r"first moves that reach it: (.*) \((\d+) of (\d+) tried\)", out)
+    m["firsts"], m["tried"] = f.group(1), int(f.group(3))
+    # A count and the same count a whole turn round leave the key on one mark: one idea, counted once.
+    m["firsts_n"] = len({(t.split(":")[0], int(t.split(":")[1]) % 12) for t in f.group(1).split(", ")})
+    s = re.search(r"forced (\d+) of \d+ steps; (\d+) moves tried along the line lose par", out)
+    m["forced"], m["wrong"] = int(s.group(1)), int(s.group(2))
+    m["deepest"] = int(re.search(r"deepest stack along the line (\d+)", out).group(1))
+    m["line"] = re.search(r"a line: (\S+)", out).group(1)
+    return m
+
+
+def early(out, gap, firsts):
+    """Whether a deal's optimum, untwisting and first moves already rule it out, before the slow measures."""
+    f = re.search(r"first moves that reach it: (.*) \(", out)
+    if not f:
+        return False
+    entries = int(re.search(r"entries (\d+)", out).group(1))
+    par = int(re.search(r"optimum (\d+)", out).group(1))
+    places = {(t.split(":")[0], int(t.split(":")[1]) % 12) for t in f.group(1).split(", ")}
+    return "stranded" not in out or not gap[0] <= par - entries <= gap[1] or len(places) > firsts
+
+
+def bare(layout, scramble, timeout):
+    out = solve([layout, scramble], timeout)
+    o = out and re.search(r"^optimum (\d+)", out, re.M)
+    return int(o.group(1)) if o else None
+
+
+def pick_wards(rng, layout, pairs, chain, twomarks):
+    knobs = list(range(1, 7)) if layout == "hex" else list(range(RODS[layout]))
+    marks = [m for m in range(-5, 7) if m]
+    for _ in range(200):
+        wards, used_keys = {}, {}
+        for i in range(pairs):
+            free = [w for w in knobs if w not in wards]
+            if chain and i == 1:
+                free = [k for k, _ in wards.values() if k not in wards]
+            w = rng.choice(free)
+            keys = [k for k in knobs if k != w and not touch(layout, w, k)
+                    and (twomarks and i == 1 or k not in used_keys)]
+            if twomarks and i == 1:
+                keys = [k for k in keys if k in used_keys]
+            keys = [k for k in keys if not reaches(wards, k, w)]
+            if not keys:
+                break
+            k = rng.choice(keys)
+            mark = rng.choice([m for m in marks if m != used_keys.get(k)])
+            wards[w], used_keys[k] = (k, mark), mark
+        else:
+            return wards
+    return None
+
+
+def reaches(wards, start, target):
+    """Whether keying `target` by `start` would close a cycle of wards."""
+    k = start
+    while k in wards:
+        k = wards[k][0]
+        if k == target:
+            return True
+    return start == target
+
+
+def parse_wards(text):
+    out = {}
+    for item in text.split(","):
+        w, rest = item.split(":")
+        k, mark = rest.split("@")
+        out[int(w)] = (int(k), int(mark))
+    return out
+
+
+def spell(wards):
+    return ",".join(f"{w}:{k}@{m}" for w, (k, m) in sorted(wards.items()))
+
+
+def deal(rng, layout, n, lo, hi, must):
+    while True:
+        out, last = [], None
+        for _ in range(n):
+            r = rng.choice([x for x in range(RODS[layout]) if x != last])
+            last = r
+            out.append((r, rng.choice([-1, 1]) * rng.randint(lo, hi)))
+        if must <= {r for r, _ in out}:
+            return ",".join(f"{r}:{s:+d}" for r, s in out)
+
+
+def row(m):
+    if m.get("timeout"):
+        return f"{m['mode']}: past the timeout"
+    if m.get("none"):
+        return f"{m['mode']}: no line"
+    return (f"{m['mode']}: par {m['par']} ({m['ms']} ms), entries {m['entries']}, untwisting {m['untwist']}, "
+            f"forced {m['forced']} of {m['par']}, {m['wrong']} lose par, first moves {len(m['firsts'].split(', '))} of "
+            f"{m['tried']} tried, {m['firsts_n']} places ({m['firsts']}), deepest {m['deepest']}\n    line {m['line']}")
+
+
+def score(m):
+    return (m["untwist"] == "stranded", m["forced"] / m["par"], m["wrong"] / m["par"], -m["firsts_n"])
+
+
+def app_levels():
+    """(layout, scramble, wards, par) for each row of `Level.charybdis`, in order."""
+    text = open("Sources/Levels.swift").read()
+    block = text[text.index("static let charybdis"):]
+    block = block[:block.index("\n    ]")] if "\n    ]" in block else block
+    return [(l, sc, k, int(p)) for l, sc, k, p in
+            re.findall(r'\(\.(\w+), "([^"]+)", "([^"]+)", (\d+), \.', block)]
+
+
+def main(argv):
+    opts = dict(a.split("=", 1) for a in argv if "=" in a and ":" not in a)
+    flags = {a for a in argv if a in ("chain", "twomarks", "stirredkeys")}
+    words = [a for a in argv if a not in flags and a not in {f"{k}={v}" for k, v in opts.items()}]
+    timeout = int(opts.get("timeout", 120 if words[:1] in (["table"], ["line"]) else 60))
+    if words[:1] == ["check"] and len(words) == 4:
+        layout, scramble, keys = words[1:]
+        print(f"{layout} {scramble} keys={keys}; without the wards {bare(layout, scramble, timeout)}")
+        for mode in ("deep", "", "exhaustive"):
+            print(row(measure(layout, scramble, keys, mode, timeout)), flush=True)
+        return
+    if words[:1] == ["line"] and len(words) == 2:
+        rows = app_levels()
+        n = int(words[1])
+        if not 1 <= n <= len(rows):
+            sys.exit(f"no level C{n}: the app's table holds C1 to C{len(rows)}")
+        layout, scramble, keys, par = rows[n - 1]
+        # The game's test: the default mode on the smallest levels, deep on the rest.
+        mode = "" if len(scramble.split(",")) <= 3 else "deep"
+        m = measure(layout, scramble, keys, mode, timeout)
+        if m.get("timeout") or m.get("none"):
+            sys.exit(f"C{n}: " + row(m))
+        print(m["line"])
+        if len(m["line"].split(",")) != par:
+            sys.exit(f"C{n}: the line takes {len(m['line'].split(','))} moves, par is {par}")
+        return
+    if words[:1] == ["table"]:
+        moved, slow = False, False
+        for id, layout, scramble, keys, par, proof, source in LEVELS:
+            if words[1:] and id not in words[1:]:
+                continue
+            # Every pointer starts at 0, so a ward whose mark isn't 0 refuses the first try.
+            locked = [w for w, (k, mark) in parse_wards(keys).items() if mark % 12]
+            print(f"\n{id}: {layout} {scramble} keys={keys}, par {par} by {proof} ({source}); "
+                  f"locked as dealt: {', '.join(map(str, locked)) or 'none'}")
+            for mode in dict.fromkeys(("deep", proof)):
+                m = measure(layout, scramble, keys, "" if mode == "default" else mode, timeout)
+                print("  " + row(m), flush=True)
+                if mode == proof:
+                    slow |= m["timeout"]
+                    moved |= not m["timeout"] and m.get("par") != par
+        sys.exit("a par has moved" if moved else "a proof ran past the timeout" if slow else 0)
+    if words[:1] != ["deal"] or len(words) != 4:
+        sys.exit(__doc__)
+    layout, n, seeds = words[1], int(words[2]), int(words[3])
+    start, pairs = int(opts.get("from", 0)), int(opts.get("pairs", 1))
+    lo, hi = map(int, opts.get("steps", "2-8").split("-"))
+    gap = tuple(map(int, opts.get("gap", "0-99").split("-")))
+    firsts = int(opts.get("firsts", 99))
+    chain, twomarks = "chain" in flags, "twomarks" in flags
+    kept = []
+    for seed in range(start, start + seeds):
+        rng = random.Random(seed)
+        wards = pick_wards(rng, layout, pairs, chain, twomarks)
+        if wards is None:
+            print(f"seed {seed}: no wards fit the rule", flush=True)
+            continue
+        keys = spell(wards)
+        must = set(wards) | ({k for k, _ in wards.values()} if "stirredkeys" in flags else set())
+        scramble = deal(rng, layout, n, lo, hi, must)
+        m = measure(layout, scramble, keys, "deep", timeout, lambda out: early(out, gap, firsts))
+        if m.get("stopped"):
+            print(f"seed {seed}: " + "; ".join(l.strip() for l in m["stopped"].splitlines()
+                                              if l.startswith(("optimum", "untwisting", "first"))) + "; dropped early",
+                  flush=True)
+            continue
+        if m.get("timeout") or m.get("none"):
+            print(f"seed {seed}: {row(m)}", flush=True)
+            continue
+        if any(not 2 <= abs(int(t.split(":")[1])) <= 9 for t in m["scramble"].split(",")):
+            print(f"seed {seed}: an entry merged under 2 or past 9 steps; dropped", flush=True)
+            continue
+        b = bare(layout, m["scramble"], timeout)
+        if b != m["entries"] or m["deepest"] > MAX_STACK or not gap[0] <= m["par"] - b <= gap[1]:
+            print(f"seed {seed}: par {m['par']}, without the wards {b} for {m['entries']} entries, "
+                  f"deepest {m['deepest']}; dropped", flush=True)
+            continue
+        print(f"seed {seed}: par {m['par']} for {m['entries']}, forced {m['forced']}, {m['wrong']} lose par, "
+              f"untwisting {m['untwist']}", flush=True)
+        kept.append((score(m), seed, keys, m))
+    kept.sort(key=lambda k: k[0], reverse=True)
+    print(f"\nbest of {len(kept)} kept:")
+    for i, (_, seed, keys, m) in enumerate(kept[:int(opts.get("top", 8))]):
+        print(f"\nseed {seed}: {layout} {m['scramble']} keys={keys}\n  {row(m)}")
+        if i < int(opts.get("prove", 3)):
+            for mode in ("", "exhaustive"):
+                print("  " + row(measure(layout, m["scramble"], keys, mode, timeout)), flush=True)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -56,10 +56,11 @@ session on `packs/treble`; its draft PR is the claim.
   panel per level; Prism's titles are a plate's specimens, so 60 more need new plates or more names per plate. A rule
   change to make a pack tougher goes to Jack as a pitch. Proofs that run past CI's 15 minutes go behind
   `UNSTIR_SLOW_TESTS`.
-- **Fifth chapter.** Mineral's four pictures (`slope/art`, `Mineral.metal`, self-contained) move to master unchanged
-  and go on a new tier after maelstrom. Its mechanic (Debug prototypes, filmed), name (a stored raw value and prefix)
-  and length go to Jack as one pitch before its levels are built. It must not give away a paid pack's mechanic or touch
-  the frozen generator.
+- **Fifth chapter: Charybdis (C), keys on Mineral's pictures, 30 levels** (Jack, 2026-11-28). Built on
+  `chapter5/mineral` (`docs/fifth-chapter.md`): `Level.wards`, the keys' look and VoiceOver, `Tier.charybdis` last,
+  `KeySolver` behind `scripts/solve.sh ... keys=`, levels dealt by `scripts/charybdis-levels.py`. Its PR waits on the
+  others' 30-level counts (`levels/thirty`). Open: a bed of its own (maelstrom's for now), an
+  achievement for finishing it (a new permanent id), and the orbits, still reserved.
 - **Prism's buried white stir** (Jack's call, 2026-11-28): built on `packs/prism-white`, off `packs/treble`.
   Specimens 76, 77, 79, 82, 87 and 88 give the white rod a second stir mid-stack, each proven at par and as hard or
   harder on every measure; 76 carries the note "White blocks every colour stirred over it." (`docs/prism-design.md`,

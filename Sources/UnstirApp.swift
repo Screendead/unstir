@@ -429,6 +429,10 @@ struct Harness {
                 .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
             level.motion = level.seized.isEmpty ? .none : .tank
         }
+        // UNSTIR_KEYS=2:0@3: Charybdis's wards by slot (`Ward`), ward 2 turning while knob 0 stands at +3 steps.
+        if let w = env["UNSTIR_KEYS"].flatMap(Ward.wards) {
+            level.wards = w.filter { level.layout.rods.indices.contains($0.key) && level.layout.rods.indices.contains($0.value.key) }
+        }
         self.level = level
         // UNSTIR_RESUME=0:+2,1:-3,u: the level's try saved with that line, the launch's only save. Empty, with endless,
         // the run saved on its tank with no move yet.

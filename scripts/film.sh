@@ -337,6 +337,17 @@ film editors-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FING
 film editors-vortex-02 24 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=0.2 MOVES=3:+8,4:+7,0:-4
 film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=0.2 \
   MOVES=-1:+1,2:+8,3:-7,0:+4
+# Charybdis, unstirred at par by a drawn fingertip along the solver's line (`scripts/charybdis-levels.py line`): 01, whose
+# first try is the locked ward, refused at no cost, and the hardest of the chapter (CHARYBDIS_HARD, its number).
+keys=(TIER=charybdis OPEN=1 FINGER=1 REST=0.6 TURN=0.16)
+if wants charybdis-01; then
+  film charybdis-01 30 "$whole" "${keys[@]}" LEVEL=1 MOVES=2:-4,$(scripts/charybdis-levels.py line 1)
+fi
+hard=${CHARYBDIS_HARD:-$(grep -c '"level\.C[0-9]*\.title"' Sources/Levels.swift)}
+if wants "charybdis-$hard"; then
+  film "charybdis-$hard" 170 "fps=1/3,scale=150:-1,tile=10x6:padding=4" "${keys[@]}" LEVEL="$hard" \
+    MOVES="$(scripts/charybdis-levels.py line "$hard")"
+fi
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
 if wants editors-lens-03; then
@@ -379,13 +390,17 @@ layer layer-prism-30 prism 30 0
 film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
 film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6
 # The curtain call (`Payoff`), which the solve that finishes a tier, a paid pack or the free game plays before its
-# card: plughole 27, maelstrom 27, Lens 25 (its halftone baked first, as for lens-08-solve) and Escapement 30, each
+# card: plughole 27, charybdis's last, Lens 25 (its halftone baked first, as for lens-08-solve) and Escapement 30, each
 # on a two-stir stand-in for its scramble, autoplayed, every other level of its tier or pack holding a best. Each
 # strip starts as the level's last stir lands. Then the game's and a tier's under Reduce Motion.
 pay="trim=start=1.5,setpts=PTS-STARTPTS,crop=iw:ih*0.86:0:ih*0.05,fps=3,scale=180:-1"
 pay_tier=(LEVEL=27 STACK=0:+3,1:-4 AUTOPLAY=1 BESTS=plughole:cc0c0cc0cc0ccc0c0ccc0c0c0c-)
-pay_game=(TIER=maelstrom LEVEL=27 STACK=0:+3,1:-4 PAR=2 AUTOPLAY=1 OWNED=first-stir
-  BESTS=plughole:ccccc0ccccccc0cccccccc0cccc,whirlpool:cc0c0cc0cc0ccc0c0ccc0c0c0cc,vortex:c00c0c00cc0c0c000c0cc000c0c,maelstrom:0c00102c0010c00020c0100c00-)
+# The last tier's last level, however many it has, on the stand-in with its keys dropped; every other level a best,
+# one character a level, which the harness reads as far as a tier goes.
+last=$(grep -c '"level\.C[0-9]*\.title"' Sources/Levels.swift)
+bests=plughole:ccccc0ccccccc0cccccccc0ccccccc,whirlpool:cc0c0cc0cc0ccc0c0ccc0c0c0cc0c0,vortex:c00c0c00cc0c0c000c0cc000c0c0c0
+bests+=,maelstrom:0c00102c0010c00020c0100c00c0c0,charybdis:$(printf 'c0%.0s' {1..18} | cut -c1-$((last - 1)))-
+pay_game=(TIER=charybdis LEVEL=$last STACK=0:+3,1:-4 PAR=2 KEYS= AUTOPLAY=1 OWNED=first-stir BESTS=$bests)
 film payoff-tier 10 "$pay,tile=9x3:padding=4" "${pay_tier[@]}"
 film payoff-game 14 "$pay,tile=10x4:padding=4" "${pay_game[@]}"
 if wants payoff-lens; then warm 25; fi

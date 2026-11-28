@@ -98,10 +98,14 @@ shot result-fullest "Plughole 27 replayed at par with a stir undone against a st
   SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
-shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
-  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
-shot result-ladder-end "Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
-  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0
+# The last tier's last level, its keys dropped (KEYS=) so the harness's own solve plays it.
+lastLevel=$(grep -c '"level\.C[0-9]*\.title"' Sources/Levels.swift)
+everyPar=$(printf '0%.0s' {1..36})
+shot result-every-tier "Charybdis $lastLevel solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=charybdis LEVEL=$lastLevel KEYS= OWNED=first-stir CLOCK=0 \
+  BESTS=plughole:$everyPar,whirlpool:$everyPar,vortex:$everyPar,maelstrom:$everyPar,charybdis:$(printf '0%.0s' $(seq $((lastLevel - 1))))-
+shot result-ladder-end "Charybdis $lastLevel solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=charybdis LEVEL=$lastLevel KEYS= OWNED=first-stir CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed, no other vortex level solved (as levels open in order, plain play never reaches this): as bright, with a lock, saying how many vortex levels are unsolved; it opens the menu on maelstrom's gate." \

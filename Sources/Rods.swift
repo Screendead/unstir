@@ -15,7 +15,10 @@ struct RodView: View {
     var channels: Channels?
     /// A frost day's seized knob: true frozen, false thawed by the solve, when it is drawn as a working knob; nil any other.
     var frost: Bool?
+    /// Charybdis's keys on this knob: its rings, a key's notches and a ward's keyhole.
+    var keys: KeyKnob?
     @Environment(\.channelLetters) private var letters
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -47,6 +50,8 @@ struct RodView: View {
                 Circle().fill(tint).overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 0.5))
                     .frame(width: size * 0.2, height: size * 0.2)
             }
+            // A ward's keyhole turns with its cap, opposite the pointer, so the two never cross.
+            keys?.cap(size: size, reduceMotion: reduceMotion)
             // Off-centre so a half turn reads as pointing down, not as untouched.
             // On pale ice the pointer goes near black, so the cap's angle still reads.
             let pointer = frozen ? Color(0x08141E) : lit
@@ -72,6 +77,7 @@ struct RodView: View {
         .background {
             Circle().strokeBorder(Color.black.opacity(0.7), lineWidth: 3).padding(-3)
             ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(lit.opacity(0.5), lineWidth: width)
+            keys?.dial(size: size, reduceMotion: reduceMotion)
             // Lit inside the knob's own footprint, so the picture round it stays in view.
             if grabbed {
                 ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(Color.live, lineWidth: width)

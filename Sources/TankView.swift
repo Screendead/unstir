@@ -423,9 +423,11 @@ struct LevelView: View {
             }
             // A seized knob's twists come off once a turn of the tank brings them under a working one; a tank no turn
             // helps is left as it is.
-            var idle = 0
+            // On Charybdis the harness's line solves it, as only a plan gets past the keys.
+            var idle = level.wards.isEmpty || h.played.isEmpty ? 0 : level.layout.order
             while !game.finished, idle < level.layout.order {
-                if let t = game.reachable { game.commit(rod: t.rod, steps: t.steps); idle = 0 } else { game.turnTank(1); idle += 1 }
+                if let t = game.reachable { game.commit(rod: t.rod, steps: t.steps); idle = 0 }
+                else if level.motion == .none { break } else { game.turnTank(1); idle += 1 }
             }
         }
         if resumed == nil, let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
@@ -1055,6 +1057,7 @@ struct LevelView: View {
             undoQueued = false
             if !game.finished { undo() }
         }
+        .onChange(of: game.wardRefusals) { wardRefused() }
         .onChange(of: game.refusals) {
             // A full stack refuses as a seized knob does, and says what frees it.
             jammed = game.refusedKnob
@@ -1156,9 +1159,11 @@ struct LevelView: View {
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
-            let pack = game.level.pack.map { p in
-                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "")"
-            } ?? ""
+            var pack = ""
+            if let p = game.level.pack {
+                let access: String = Store.shared.access(game.level).map { "\($0)" } ?? ""
+                pack = " \(p.rawValue) \(Store.shared.state(p)), \(access)"
+            }
             Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if knocks { Knock.warm() }
@@ -1421,6 +1426,15 @@ struct LevelView: View {
     /// (Jack's call C11, round 13).
     nonisolated static func haze(over: Int) -> Double { min(0.05 * Double(over), 0.2) }
 
+    /// A locked ward refused a commit: it knocks as a seized knob does, and says what opens it.
+    private func wardRefused() {
+        jammed = game.refusedKnob
+        jams += 1
+        Knock.thud.play()
+        Sound.shared.play(.seized)
+        say(game.wardSpoken(game.slot(of: game.refusedKnob)))
+    }
+
     private func say(_ text: String) {
         notice = text
         notices += 1
@@ -1658,11 +1672,18 @@ struct LevelView: View {
         let at: SIMD2<Double> = rim ? 1.04 * SIMD2(-0.7071, -0.7071)
             : swirl ? (both ? 0.93 : 0.99) * SIMD2(0.7071, -0.7071)
             : centre(m.rod) + 0.5 * rods[m.rod].z * SIMD2(0.7071, -0.7071)
-        let grab = Self.grab(layout, motion: level.motion, kind: level.kind(of:), at: at)
+        let grab = Self.grab(layout, motion: level.motion, kind: game.kind(of:), at: at)
         if grab != (rim ? .rim : .rod(m.rod)) { Log.write("finger at \(Log.point(at)) holds \(grab), not \(m)") }
         withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim, !rim && level.lenses.contains(game.slot(of: m.rod))) }
         finger = at; landed = at
         guard await pause(0.45) else { return false }
+        // A locked ward refuses the finger as a seized knob does.
+        if case .seized(let k) = grab, !level.wards.isEmpty {
+            jammed = k; jams += 1; Knock.thud.play(); Sound.shared.play(.seized)
+            guard await pause(0.7) else { return false }
+            withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
+            return true
+        }
         let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : turnPace * Double(abs(m.steps)) + 0.25
         if rim {
             liveTurn = 0
@@ -2098,7 +2119,8 @@ struct LevelView: View {
                                         size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
                                         lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
                                         channels: game.level.channels(of: game.slot(of: k)),
-                                        frost: game.level.frosty && game.level.kind(of: k) == .seized ? !waved : nil)
+                                        frost: game.level.frosty && game.level.kind(of: k) == .seized ? !waved : nil,
+                                        keys: KeyKnob.of(k, in: game))
                                     .animation(thawing, value: waved)
                             }
                         } keyframes: { _ in Self.jolt }
@@ -2566,7 +2588,7 @@ struct LevelView: View {
             // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
             let landed = norm(v.start)
             self.landed = landed
-            drag = (v.start, Self.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: landed))
+            drag = (v.start, Self.grab(level.layout, motion: level.motion, kind: game.kind(of:), at: landed))
             Log.write("touch \(drag!.grab) at \(Log.point(landed))")
             path = (drag!.grab, v.time, Trail(gap: 0.03) { simd_distance($0, $1) })
             path!.trail.add(landed, ms: 0)
@@ -2647,6 +2669,8 @@ struct LevelView: View {
             jams += 1
             Knock.thud.play()
             Sound.shared.play(.seized)
+            // A locked ward says what opens it.
+            if game.level.wards[game.slot(of: k)] != nil { say(game.wardSpoken(game.slot(of: k))) }
         }
         if case .ratchet(let k)? = drag?.grab { pressing = k; grabs += 1 }
         guard let g = drag, let pivot = pivot(g.grab) else { return }

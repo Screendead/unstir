@@ -532,7 +532,7 @@ final class PlayLayoutTests: XCTestCase {
     /// The cards that could be the tallest a player reaches, each with the progress it needs: what the card says grows
     /// with the solve's line, its best's, a completion's, its buttons and a way up.
     private var candidates: [(what: String, env: [String: String], store: () -> Void)] {
-        let maelstrom27 = Tier.maelstrom.levels.last!.id
+        let last = Tier.allCases.last!, end = last.levels.last!.id, number = "\(last.levels.count)"
         return [
             ("plughole 27 replayed at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
              storeTheFullestCard),
@@ -561,13 +561,13 @@ final class PlayLayoutTests: XCTestCase {
                                                      "UNSTIR_OWNED": "first-stir,lens", "UNSTIR_CLOCK": "0",
                                                      "UNSTIR_TRIED": Level.lensFace.id, "UNSTIR_PICTURE": "grid"],
              { for level in Pack.lens.levels where level != Level.lensFace { Best(over: 0, seconds: 60).save(level.id) } }),
-            ("maelstrom 27 unstirring every tier on a replay", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom",
-                                                                "UNSTIR_LEVEL": "27", "UNSTIR_OWNED": "first-stir",
-                                                                "UNSTIR_CLOCK": "0", "UNSTIR_TRIED": maelstrom27],
-             { for level in Tier.allCases.flatMap(\.levels) where level.id != maelstrom27 { Best(over: 0, seconds: 60).save(level.id) } }),
-            ("maelstrom 27 against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom", "UNSTIR_LEVEL": "27",
-                                         "UNSTIR_OWNED": "first-stir", "UNSTIR_CLOCK": "0"],
-             { Best(over: 6, seconds: 60).save(maelstrom27) }),
+            ("the last tier's last level unstirring every tier on a replay",
+             ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": last.rawValue, "UNSTIR_LEVEL": number, "UNSTIR_OWNED": "first-stir",
+              "UNSTIR_CLOCK": "0", "UNSTIR_TRIED": end],
+             { for level in Tier.allCases.flatMap(\.levels) where level.id != end { Best(over: 0, seconds: 60).save(level.id) } }),
+            ("the last tier's last level against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": last.rawValue, "UNSTIR_LEVEL": number,
+                                                       "UNSTIR_OWNED": "first-stir", "UNSTIR_CLOCK": "0"],
+             { Best(over: 6, seconds: 60).save(end) }),
         ]
     }
 

@@ -97,8 +97,11 @@ extension Level {
         let motion = switch self.motion { case .none: "none"; case .tank: "tank"; case .crank: "crank" }
         let masks = self.masks.sorted { $0.key < $1.key }.map { "\($0.key):\($0.value.rawValue)" }.joined(separator: ",")
         let run = self.run.map { " run=\($0.seed):\($0.tank):\($0.brim)" } ?? ""
+        // Only where a level has wards, so every other level's print stays as it was.
+        let wards = self.wards.isEmpty ? ""
+            : " wards=" + self.wards.sorted { $0.key < $1.key }.map { "\($0.key):\($0.value.key)@\($0.value.mark)" }.joined(separator: ",")
         return "\(layout.rawValue) [\(scramble)] seized=\(set(seized)) "
             + "sockets=\(set(sockets)) ratchets=\(set(ratchets)) back=\(set(woundBack)) lenses=\(set(lenses)) "
-            + "masks=\(masks) motion=\(motion) par=\(par)\(run)"
+            + "masks=\(masks) motion=\(motion) par=\(par)\(run)\(wards)"
     }
 }

@@ -19,7 +19,7 @@ struct Run: Hashable, Sendable, Codable {
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
 /// raw value is stored as the menu's choice, so it never changes.
 enum Tier: String, CaseIterable {
-    case plughole, whirlpool, vortex, maelstrom
+    case plughole, whirlpool, vortex, maelstrom, charybdis
 
     /// The tier's name, translated (Jack's call CAT2 = A); `rawValue` is its stored key.
     var name: String {
@@ -27,7 +27,8 @@ enum Tier: String, CaseIterable {
         case .plughole: String(localized: "Plughole", comment: "Tier name: the easiest, water draining")
         case .whirlpool: String(localized: "Whirlpool", comment: "Tier name: the second")
         case .vortex: String(localized: "Vortex", comment: "Tier name: the third, the wind's swirl")
-        case .maelstrom: String(localized: "Maelstrom", comment: "Tier name: the hardest, a sea whirlpool")
+        case .maelstrom: String(localized: "Maelstrom", comment: "Tier name: the fourth, a sea whirlpool")
+        case .charybdis: String(localized: "Charybdis", comment: "Tier name: the hardest, the whirlpool of Greek myth")
         }
     }
 
@@ -37,7 +38,8 @@ enum Tier: String, CaseIterable {
         case .plughole: String(localized: "plughole", comment: "Tier name in lower case, on the menu: the easiest")
         case .whirlpool: String(localized: "whirlpool", comment: "Tier name in lower case, on the menu: the second")
         case .vortex: String(localized: "vortex", comment: "Tier name in lower case, on the menu: the third")
-        case .maelstrom: String(localized: "maelstrom", comment: "Tier name in lower case, on the menu: the hardest")
+        case .maelstrom: String(localized: "maelstrom", comment: "Tier name in lower case, on the menu: the fourth")
+        case .charybdis: String(localized: "charybdis", comment: "Tier name in lower case, on the menu: the hardest, the whirlpool of Greek myth")
         }
     }
 
@@ -48,6 +50,7 @@ enum Tier: String, CaseIterable {
         case .whirlpool: "N"
         case .vortex: "V"
         case .maelstrom: "M"
+        case .charybdis: "C"
         }
     }
 
@@ -63,6 +66,7 @@ enum Tier: String, CaseIterable {
         case .whirlpool: Level.whirlpool
         case .vortex: Level.vortex
         case .maelstrom: Level.maelstrom
+        case .charybdis: Level.charybdis
         }
     }
 
@@ -133,6 +137,8 @@ struct Level: Hashable, Sendable {
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
+    /// Charybdis's keys by slot (`Ward`): a warded knob turns only while its key's pointer stands on the mark.
+    var wards: [Int: Ward] = [:]
     #if FIRST_STIR
     /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
     var story: Story?
@@ -149,7 +155,7 @@ struct Level: Hashable, Sendable {
 
     enum Motion: Hashable, Sendable {
         case none, tank
-        /// Charybdis's planets, not built.
+        /// Orrery's planets, reserved for a later chapter, not built.
         case crank
     }
 
@@ -601,6 +607,111 @@ struct Level: Hashable, Sendable {
         Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
               title: l.5, note: l.6, picture: l.4.twin, layout: l.0, scramble: .parse(l.1, in: l.0), seized: l.2,
               motion: .tank, fixedPar: l.3)
+    }
+
+    /// Charybdis's keys on Mineral's pictures (Jack, 2026-11-28): a warded knob turns only while its key stands on the
+    /// mark, so par counts what the keys cost, the bounded optimum `scripts/solve.sh ... keys=` proves
+    /// (`testCharybdisParIsTheOptimum`). Dealt by scripts/charybdis-levels.py on its own seeds, never the frozen
+    /// generator's. Level 1 teaches without words: the only stirred rod is the ward.
+    static let charybdis: [Level] = ([
+        (.quad, "2:+4", "2:0@3", 3, .strata,
+         String(localized: "level.C1.title", defaultValue: "Strait",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.quad, "0:+5,2:+4", "2:0@-2", 3, .agate,
+         String(localized: "level.C2.title", defaultValue: "Narrows",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"),
+         String(localized: "level.C2.note", defaultValue: "A key can stop on its notch on its way home.",
+                           comment: "A level's lesson, one line under the tank")),
+        (.quad, "2:+2,3:+4", "2:0@6,3:1@3", 6, .lamellae,
+         String(localized: "level.C3.title", defaultValue: "Siren",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "3:+4,2:+3,1:+5", "1:3@2", 5, .columns,
+         String(localized: "level.C4.title", defaultValue: "Sea cliff",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "0:+2,2:+3", "0:2@-1,2:4@-4", 7, .agate,
+         String(localized: "level.C5.title", defaultValue: "Fig tree",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"),
+         String(localized: "level.C5.note", defaultValue: "A key can be a ward too.",
+                           comment: "A level's lesson, one line under the tank")),
+        (.pent, "0:-7,4:-7,3:-7,0:-3,2:-6,4:+4,1:-2,3:-6", "0:2@3,1:3@2", 11, .strata,
+         String(localized: "level.C6.title", defaultValue: "Black water",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "4:-3,2:+4,5:+6,0:+5,4:+5,1:+3,0:+7,2:+3,4:+7,5:-2,4:+5,1:-5,3:-5", "3:1@-5,4:2@-5", 18, .columns,
+         String(localized: "level.C7.title", defaultValue: "Swallow",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "4:+3,6:-4,3:-3,5:+2,0:-7,4:+2,5:+4,0:-2,5:+7,1:-7,3:+6,2:+6,0:+3,6:+6,3:-3,1:+7,5:-6,0:-2", "1:5@2,3:1@-5", 25, .lamellae,
+         String(localized: "level.C8.title", defaultValue: "Gulp",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "1:-6,4:-2,3:+3,0:-6,4:+7,6:-6,0:-2,1:-3,5:-5,2:+6,1:-7,3:+2,6:-5,5:+5,4:-7,2:+3,5:+2,0:-5,1:+5,0:-7,1:-3,0:+5", "4:6@3,5:3@5", 30, .agate,
+         String(localized: "level.C9.title", defaultValue: "Gullet",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "2:+2,0:+3,3:+3,2:+3,3:+7,1:+5,0:-3,2:-5,3:-5,1:+6,2:+6,4:-3,1:-7,2:-3,1:-7,0:+2,1:+5,4:+4,3:+6,0:+4,4:-3,3:+7", "1:4@-4,2:0@-1", 32, .strata,
+         String(localized: "level.C10.title", defaultValue: "Throat",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "4:-4,1:+3,6:+2,5:-3,4:-5,2:+2,3:+2,6:+7,1:-2,2:-2,1:-4,2:-6,0:+7,1:+4,5:+4,0:+5,5:+5,4:+2,1:+2,0:+3,2:-7,0:-4,2:+7,3:-5", "3:6@1,4:6@2", 31, .columns,
+         String(localized: "level.C11.title", defaultValue: "Maw",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "2:-2,1:+2,0:-6,3:+5,2:+8,4:-5,0:+6,4:+4,3:-7,0:-4,1:+3,2:+5,3:+3,1:-8,2:-6,4:-3,3:+5,4:-6,2:-6", "2:4@4,4:1@3", 34, .agate,
+         String(localized: "level.C12.title", defaultValue: "Sinkhole",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "6:-4,5:-2,3:-7,0:-7,2:+2,6:+5,1:-7,4:-7,3:-2,5:+2,2:-5,6:+3,4:-4,0:+2,1:-6,3:+5,5:-3,4:+5,3:+4", "2:5@6,3:1@1,4:6@5", 25, .lamellae,
+         String(localized: "level.C13.title", defaultValue: "Hadal",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "4:-7,1:-5,0:-7,1:+2,4:-6,0:-7,1:+3,4:+5,3:-8,0:-4,2:+6,4:-3,3:+5,2:-4,1:-2,0:+2,2:-2,4:+5,0:-4,4:-2,3:-6", "3:1@-5,4:1@-1", 31, .strata,
+         String(localized: "level.C14.title", defaultValue: "Cold seep",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "0:+2,2:+4,3:-3,0:+4,6:+5,4:+5,3:-7,2:-5,1:+2,6:-2,5:+4,1:+3,3:+3,6:-6,5:-4,4:-4,3:+2,2:-7,0:+2,5:+6,2:+2,6:+7,1:-3,6:-6", "2:6@4,6:3@-5", 39, .agate,
+         String(localized: "level.C15.title", defaultValue: "Brine pool",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.eye, "1:+5,0:+5,1:-5,0:+5,3:+2,1:+4,2:-7,3:-6,0:+4,1:-5,0:+4,1:-3,2:-7,3:-4,1:-3,0:-3,2:-7,0:-2,2:+6,3:+4", "3:2@-5", 25, .columns,
+         String(localized: "level.C16.title", defaultValue: "Black smoker",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "3:-5,4:+7,3:+2,0:-6,2:-6,1:+2,3:-3,4:+4,3:-2,2:-6,1:+7,0:-6,2:-2,4:+2,3:-2,4:-7,0:+2,4:-4,0:-2,4:-6,2:-7", "2:0@2,4:1@-2", 34, .lamellae,
+         String(localized: "level.C17.title", defaultValue: "Ooze",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "2:+3,4:+3,0:-3,2:-5,5:+5,6:-3,4:-5,5:-6,4:-2,1:-6,0:-5,6:-3,0:-7,2:-3,4:+7,1:+4,0:-7,1:+3,2:-3,4:+5", "4:2@2,5:1@4,6:4@-3", 33, .strata,
+         String(localized: "level.C18.title", defaultValue: "Bedrock",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "0:-4,3:+3,2:+6,1:+5,4:+7,2:+2,1:-2,0:+5,3:+7,2:+4,4:-7,0:-7,1:+7,3:-4,2:-7,3:-3,1:+7,0:+5,4:-2,1:+5,3:+4,4:+4", "1:3@-3,3:0@-2", 40, .columns,
+         String(localized: "level.C19.title", defaultValue: "Aquifer",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "3:+3,2:+6,1:+8,4:+7,6:+4,5:-6,3:+2,2:+4,4:-7,5:+4,0:-7,6:+4,4:-3,0:-4,1:-6,0:-6,5:-5,2:-3,3:+2,6:-4,4:-2,0:+4,6:+5,4:-4,1:+2", "2:5@-2,4:1@-2", 33, .agate,
+         String(localized: "level.C20.title", defaultValue: "Cavern",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "0:-6,3:+5,2:+3,1:-5,4:-7,0:-4,3:-6,4:+2,2:-6,0:+6,1:+2,0:+4,2:-5,4:-4,3:+7,0:+7,2:-4,1:+7,4:+6,3:-2,2:-7,4:+6,0:-6,3:+5,4:-5,2:+5,1:-6", "0:2@4,4:2@-2", 39, .lamellae,
+         String(localized: "level.C21.title", defaultValue: "Hidden river",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "3:-3,5:-3,2:-6,1:-4,0:-3,5:-2,3:+7,0:+5,4:+2,0:+5,5:+6,6:-5,3:+3,4:-4,0:-7,3:-4,5:-4,6:+7,0:-2,4:-5,3:+6,6:+2,4:+2,2:+6,1:-2,2:-4", "2:4@5,5:2@1", 41, .columns,
+         String(localized: "level.C22.title", defaultValue: "Lethe",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "0:+4,4:-7,1:+5,0:+5,1:+6,2:+5,3:-3,4:-5,2:-2,1:-4,0:-3,2:+3,1:-3,2:+6,4:-4,1:+2,2:-3,1:-3,0:-2,3:+6,2:-7,4:-2", "2:0@-3,4:1@5", 35, .strata,
+         String(localized: "level.C23.title", defaultValue: "Cocytus",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "1:+7,3:+7,6:-3,2:-6,1:-5,2:-3,3:+4,0:-7,1:+2,4:+3,5:+3,6:-3,1:-3,4:+4,5:-5,0:+4,1:-7,6:+2,5:-6,0:-4,2:-6,3:-3,2:-3,3:-4,0:-5,4:+2", "1:5@2,3:5@-4", 36, .agate,
+         String(localized: "level.C24.title", defaultValue: "Acheron",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "1:-7,4:-3,2:-5,3:-3,2:-4,0:+6,1:+3,2:-3,0:+5,4:-6,1:-2,0:+7,3:+6,2:+4,1:+5,4:+5,0:+6,4:-6,3:+2,2:+3", "2:4@1,4:1@-3", 35, .lamellae,
+         String(localized: "level.C25.title", defaultValue: "Ferryman",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "4:-4,2:-5,0:+5,3:+6,2:-3,3:+2,0:-4,4:+6,1:-3,0:-7,6:+2,4:-7,1:+7,2:+6,5:-7,1:+3,6:-4,5:+7,0:+2,4:+7,3:-7,5:+3,4:-3,6:-5,1:+2", "2:6@6,4:1@-5", 36, .strata,
+         String(localized: "level.C26.title", defaultValue: "Phlegethon",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "1:+6,4:-3,6:-6,3:+6,0:+6,5:-3,0:-6,2:+7,1:-4,2:+6,3:+7,2:+4,0:+4,2:+5,1:-3,6:-7,4:+7,2:-2,0:+7,5:-6", "3:1@2,4:2@1,5:3@6", 34, .columns,
+         String(localized: "level.C27.title", defaultValue: "Styx",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "5:-5,0:-4,5:+5,2:+5,1:-7,3:+7,2:+5,0:-5,5:+7,6:-2,1:+5,5:-4,0:-3,5:+4,3:-2,0:-2,6:-6,3:+7,1:-2,5:+6,4:+2,2:-2,1:-6,3:-5,6:+7,5:-7,1:-6,0:+4", "2:5@4,3:6@2", 36, .agate,
+         String(localized: "level.C28.title", defaultValue: "Upwelling",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "1:+5,2:-6,6:+7,4:+3,5:+2,6:-7,4:-9,1:-3,0:-3,3:+5,5:+5,2:-3,0:+2,2:+7,5:+4,0:+7,1:+6", "1:5@-4,2:6@6,6:4@3", 34, .lamellae,
+         String(localized: "level.C29.title", defaultValue: "Driftwood",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "2:-4,0:+5,6:-7,0:+6,5:+4,4:-4,3:+5,0:-2,5:+2,6:-5,1:+7,2:-6,5:-6,0:+2,5:-7,1:+3,6:-2,5:-2,1:-6,6:-6,4:-3,0:-7,3:+2,0:+5,5:+6,2:-6,4:-2,0:-4,6:+2", "2:6@4,3:1@-3", 39, .strata,
+         String(localized: "level.C30.title", defaultValue: "Oceanus",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+    ] as [(Layout, String, String, Int, Picture, String, String)]).enumerated().map { i, l in
+        Level(id: Tier.charybdis.prefix + "\(i + 1)", tier: .charybdis, label: String(format: "%02d", i + 1),
+              title: l.5, note: l.6, picture: l.4, layout: l.0, scramble: .parse(l.1, in: l.0), fixedPar: l.3,
+              wards: Ward.wards(l.2)!)
     }
 
     /// The day's yyyymmdd on the Gregorian calendar in the current zone: the daily's seed and, in its id, its best's key.

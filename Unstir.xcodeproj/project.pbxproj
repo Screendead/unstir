@@ -17,6 +17,7 @@
 		12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8582290C096A27A793005B80 /* LensArtCloseUp.swift */; };
 		13C29AE4CEA0F4285B143855 /* EscapementArtChapter13.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55F647DE42D445B36F5519FC /* EscapementArtChapter13.swift */; };
 		18F4207A2B3955DA16ECDC18 /* ShaderKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 254553325D43A8E887B3C94D /* ShaderKit.swift */; };
+		191BFB4F303629BF6253DAA3 /* Mineral.metal in Sources */ = {isa = PBXBuildFile; fileRef = A95F317FA4A3963E8F30C482 /* Mineral.metal */; };
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		1C81C4836870BE840077E00B /* LensArtDoubleTake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A48099D8C6DA81CFAC630E /* LensArtDoubleTake.swift */; };
 		1E804D07FF7FF37E986BFF19 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 25930862609F89911BFB5015 /* Sounds */; };
@@ -43,10 +44,12 @@
 		4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */ = {isa = PBXBuildFile; fileRef = D322AA44C06018F3A665792F /* Brim.metal */; };
 		4C451DE21520F95F45F2477D /* LensDetailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */; };
 		4D6FD82491E362F2301B13A3 /* Hand.swift in Sources */ = {isa = PBXBuildFile; fileRef = B629DA84E96D6D76FFFBBFB6 /* Hand.swift */; };
+		4DB6ABD38E7517E9319E8653 /* LabSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B498D8B9BB22724EED1FE0 /* LabSolver.swift */; };
 		500060DF38B729F0EB090EBA /* Brim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6499D4977A88A7764419D373 /* Brim.swift */; };
 		50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A3010678E45A15B0543C3 /* Consent.swift */; };
 		5149A9D99C1F252AF495DA01 /* GPUBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882752BC69C1C5819416967C /* GPUBench.swift */; };
 		52972B0C126203096364F0AF /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E8193F7A9FB37B678695D2 /* Menu.swift */; };
+		5619232B85DAB9DE09672F0E /* LabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644073DA78FFB99713AE6973 /* LabViews.swift */; };
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
 		5DBA55C92B9F8415AE633266 /* Frost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE5E713943E3199845C370B /* Frost.swift */; };
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
@@ -65,6 +68,7 @@
 		81B20D11379D2ECD9A762AB5 /* EscapementArtChapter12.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CAFBC3EB14C100C1F2C304 /* EscapementArtChapter12.swift */; };
 		826769813DDDA6BD96FAE06E /* Spoken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE724B24586C771A00348BD /* Spoken.swift */; };
 		87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89654A86FE88E89D5339382 /* Sound.swift */; };
+		87E578C9F1E0F1D25B9204AE /* LabRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA47CB3393B9B0BCD308D9F8 /* LabRules.swift */; };
 		880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBF51F07B822677549432BB /* StoreTests.swift */; };
 		89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */; };
 		8978D3305E0CF909458894CF /* SoundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09BBC7A2B31B982E25F0D60C /* SoundTests.swift */; };
@@ -197,6 +201,7 @@
 		62ACB35AB99137624A08F6B9 /* EscapementArtChapter8.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArtChapter8.swift; sourceTree = "<group>"; };
 		63330CD5793ABE158F314B89 /* Unstir.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Unstir.metal; sourceTree = "<group>"; };
 		63E173CE4887FF0DF1142C19 /* SyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncTests.swift; sourceTree = "<group>"; };
+		644073DA78FFB99713AE6973 /* LabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabViews.swift; sourceTree = "<group>"; };
 		6499D4977A88A7764419D373 /* Brim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brim.swift; sourceTree = "<group>"; };
 		64A48099D8C6DA81CFAC630E /* LensArtDoubleTake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtDoubleTake.swift; sourceTree = "<group>"; };
 		67E7B4754B893A8AD4AC3AD4 /* CatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogTests.swift; sourceTree = "<group>"; };
@@ -215,6 +220,7 @@
 		7FD78B993A35245B095AA159 /* EscapementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementTests.swift; sourceTree = "<group>"; };
 		80EE66DF325957EFE55650C3 /* PayoffViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoffViews.swift; sourceTree = "<group>"; };
 		8235408DE6DD3E0A6017F00E /* TapLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapLawTests.swift; sourceTree = "<group>"; };
+		82B498D8B9BB22724EED1FE0 /* LabSolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabSolver.swift; sourceTree = "<group>"; };
 		8582290C096A27A793005B80 /* LensArtCloseUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtCloseUp.swift; sourceTree = "<group>"; };
 		87B3126D1242D15BAF1DBEDB /* Shader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shader.swift; sourceTree = "<group>"; };
 		882752BC69C1C5819416967C /* GPUBench.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUBench.swift; sourceTree = "<group>"; };
@@ -232,9 +238,11 @@
 		9B4B009E49499F923115A97B /* LensArtBigPicture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtBigPicture.swift; sourceTree = "<group>"; };
 		9C1D22B8050E976E3D264E88 /* ToneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTests.swift; sourceTree = "<group>"; };
 		A2354CA664A9CF0FD0C4750A /* ResultMarksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultMarksTests.swift; sourceTree = "<group>"; };
+		A95F317FA4A3963E8F30C482 /* Mineral.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Mineral.metal; sourceTree = "<group>"; };
 		A96E4651A2353A1299E6FE49 /* Unstir.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Unstir.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA12B7B59978B3DF2619B7B0 /* Rods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rods.swift; sourceTree = "<group>"; };
 		AA44B6DE028AB83D502C8EC5 /* Engraving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engraving.swift; sourceTree = "<group>"; };
+		AA47CB3393B9B0BCD308D9F8 /* LabRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabRules.swift; sourceTree = "<group>"; };
 		AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensDetailTests.swift; sourceTree = "<group>"; };
 		ABE2B06B8CFB2F3BB5B6CF7F /* Lessons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lessons.swift; sourceTree = "<group>"; };
 		AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreshDefaults.swift; sourceTree = "<group>"; };
@@ -309,6 +317,7 @@
 				59B662DA049B8A76E76E38BF /* FirstStirTests.swift */,
 				AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */,
 				9AC7565D93EC5AC584CF0825 /* HandTests.swift */,
+				82B498D8B9BB22724EED1FE0 /* LabSolver.swift */,
 				AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */,
 				3CB4A9DE240F63330597A189 /* LensTests.swift */,
 				D692C82FAF648856F00B09E0 /* PackTests.swift */,
@@ -404,6 +413,8 @@
 				B629DA84E96D6D76FFFBBFB6 /* Hand.swift */,
 				C45CEE9950106BAFE3A297A1 /* Icon.swift */,
 				B3380A991210C9195237AA14 /* Info.plist */,
+				AA47CB3393B9B0BCD308D9F8 /* LabRules.swift */,
+				644073DA78FFB99713AE6973 /* LabViews.swift */,
 				9671F664A49B27787D8573AD /* LensArt.swift */,
 				9B4B009E49499F923115A97B /* LensArtBigPicture.swift */,
 				8582290C096A27A793005B80 /* LensArtCloseUp.swift */,
@@ -417,6 +428,7 @@
 				536CF149EF97D4429DC2751F /* Loom.metal */,
 				0D958FCA92212546745A433D /* Marbling.metal */,
 				12E8193F7A9FB37B678695D2 /* Menu.swift */,
+				A95F317FA4A3963E8F30C482 /* Mineral.metal */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				18BFB7C893FE494190410F59 /* OracleBench.swift */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
@@ -607,6 +619,8 @@
 				A3FE9653504683BB8858E5DA /* Halftone.swift in Sources */,
 				4D6FD82491E362F2301B13A3 /* Hand.swift in Sources */,
 				973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */,
+				87E578C9F1E0F1D25B9204AE /* LabRules.swift in Sources */,
+				5619232B85DAB9DE09672F0E /* LabViews.swift in Sources */,
 				D97B6716323430A910684B48 /* LensArt.swift in Sources */,
 				C940A6344D7C3951F53F1746 /* LensArtBigPicture.swift in Sources */,
 				12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */,
@@ -619,6 +633,7 @@
 				3F40391B2B57058C26788864 /* Loom.metal in Sources */,
 				D7B47E903167691787C1EB50 /* Marbling.metal in Sources */,
 				52972B0C126203096364F0AF /* Menu.swift in Sources */,
+				191BFB4F303629BF6253DAA3 /* Mineral.metal in Sources */,
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				6419893E09093F2AB31830F7 /* OracleBench.swift in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
@@ -669,6 +684,7 @@
 				F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */,
 				0ED25749C2CA58123B100D5E /* FreshDefaults.swift in Sources */,
 				2E22714B59FCDAD87A335321 /* HandTests.swift in Sources */,
+				4DB6ABD38E7517E9319E8653 /* LabSolver.swift in Sources */,
 				4C451DE21520F95F45F2477D /* LensDetailTests.swift in Sources */,
 				B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */,
 				E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */,
