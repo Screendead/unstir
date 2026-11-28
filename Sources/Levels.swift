@@ -19,7 +19,7 @@ struct Run: Hashable, Sendable, Codable {
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
 /// raw value is stored as the menu's choice, so it never changes.
 enum Tier: String, CaseIterable {
-    case plughole, whirlpool, vortex, maelstrom
+    case plughole, whirlpool, vortex, maelstrom, charybdis
 
     /// The tier's name, translated (Jack's call CAT2 = A); `rawValue` is its stored key.
     var name: String {
@@ -27,7 +27,8 @@ enum Tier: String, CaseIterable {
         case .plughole: String(localized: "Plughole", comment: "Tier name: the easiest, water draining")
         case .whirlpool: String(localized: "Whirlpool", comment: "Tier name: the second")
         case .vortex: String(localized: "Vortex", comment: "Tier name: the third, the wind's swirl")
-        case .maelstrom: String(localized: "Maelstrom", comment: "Tier name: the hardest, a sea whirlpool")
+        case .maelstrom: String(localized: "Maelstrom", comment: "Tier name: the fourth, a sea whirlpool")
+        case .charybdis: String(localized: "Charybdis", comment: "Tier name: the hardest, the whirlpool of Greek myth")
         }
     }
 
@@ -37,7 +38,8 @@ enum Tier: String, CaseIterable {
         case .plughole: String(localized: "plughole", comment: "Tier name in lower case, on the menu: the easiest")
         case .whirlpool: String(localized: "whirlpool", comment: "Tier name in lower case, on the menu: the second")
         case .vortex: String(localized: "vortex", comment: "Tier name in lower case, on the menu: the third")
-        case .maelstrom: String(localized: "maelstrom", comment: "Tier name in lower case, on the menu: the hardest")
+        case .maelstrom: String(localized: "maelstrom", comment: "Tier name in lower case, on the menu: the fourth")
+        case .charybdis: String(localized: "charybdis", comment: "Tier name in lower case, on the menu: the hardest, the whirlpool of Greek myth")
         }
     }
 
@@ -48,6 +50,7 @@ enum Tier: String, CaseIterable {
         case .whirlpool: "N"
         case .vortex: "V"
         case .maelstrom: "M"
+        case .charybdis: "C"
         }
     }
 
@@ -63,6 +66,7 @@ enum Tier: String, CaseIterable {
         case .whirlpool: Level.whirlpool
         case .vortex: Level.vortex
         case .maelstrom: Level.maelstrom
+        case .charybdis: Level.charybdis
         }
     }
 
@@ -603,6 +607,48 @@ struct Level: Hashable, Sendable {
         Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
               title: l.5, note: l.6, picture: l.4.twin, layout: l.0, scramble: .parse(l.1, in: l.0), seized: l.2,
               motion: .tank, fixedPar: l.3)
+    }
+
+    /// Charybdis's keys on Mineral's pictures (Jack, 2026-11-28): a warded knob turns only while its key stands on the
+    /// mark, so par counts what the keys cost, the bounded optimum `scripts/solve.sh ... keys=` proves
+    /// (`testCharybdisParIsTheOptimum`). Dealt by scripts/charybdis-levels.py on its own seeds, never the frozen
+    /// generator's. Level 1 teaches without words: the only stirred rod is the ward.
+    static let charybdis: [Level] = ([
+        (.quad, "2:+4", "2:0@3", 3, .strata,
+         String(localized: "level.C1.title", defaultValue: "Strait",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.quad, "0:+5,2:+4", "2:0@-2", 3, .agate,
+         String(localized: "level.C2.title", defaultValue: "Narrows",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"),
+         String(localized: "level.C2.note", defaultValue: "A key can stop on its notch on its way home.",
+                           comment: "A level's lesson, one line under the tank")),
+        (.quad, "2:+2,3:+4", "2:0@6,3:1@3", 6, .lamellae,
+         String(localized: "level.C3.title", defaultValue: "Fig tree",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "3:+4,2:+3,1:+5", "1:3@2", 5, .columns,
+         String(localized: "level.C4.title", defaultValue: "Sea cliff",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.pent, "0:+2,2:+3", "0:2@-1,2:4@-4", 7, .agate,
+         String(localized: "level.C5.title", defaultValue: "Sea cave",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"),
+         String(localized: "level.C5.note", defaultValue: "A key can be a ward too.",
+                           comment: "A level's lesson, one line under the tank")),
+        (.pent, "0:-7,4:-7,3:-7,0:-3,2:-6,4:+4,1:-2,3:-6", "0:2@3,1:3@2", 11, .strata,
+         String(localized: "level.C6.title", defaultValue: "Black water",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "4:-3,2:+4,5:+6,0:+5,4:+5,1:+3,0:+7,2:+3,4:+7,5:-2,4:+5,1:-5,3:-5", "3:1@-5,4:2@-5", 18, .columns,
+         String(localized: "level.C7.title", defaultValue: "Swallow",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "4:+3,6:-4,3:-3,5:+2,0:-7,4:+2,5:+4,0:-2,5:+7,1:-7,3:+6,2:+6,0:+3,6:+6,3:-3,1:+7,5:-6,0:-2", "1:5@2,3:1@-5", 25, .lamellae,
+         String(localized: "level.C8.title", defaultValue: "Gulp",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+        (.hex, "1:-6,4:-2,3:+3,0:-6,4:+7,6:-6,0:-2,1:-3,5:-5,2:+6,1:-7,3:+2,6:-5,5:+5,4:-7,2:+3,5:+2,0:-5,1:+5,0:-7,1:-3,0:+5", "4:6@3,5:3@5", 30, .agate,
+         String(localized: "level.C9.title", defaultValue: "Gullet",
+                           comment: "Charybdis level title: the whirlpool of myth, down under the sea and back up"), ""),
+    ] as [(Layout, String, String, Int, Picture, String, String)]).enumerated().map { i, l in
+        Level(id: Tier.charybdis.prefix + "\(i + 1)", tier: .charybdis, label: String(format: "%02d", i + 1),
+              title: l.5, note: l.6, picture: l.4, layout: l.0, scramble: .parse(l.1, in: l.0), fixedPar: l.3,
+              wards: Ward.wards(l.2)!)
     }
 
     /// The day's yyyymmdd on the Gregorian calendar in the current zone: the daily's seed and, in its id, its best's key.

@@ -70,16 +70,16 @@ final class PayoffTests: XCTestCase {
     /// The last tier's is the whole game's: every tier's name, the completion's line, and the credit, which the card's
     /// label carries too, in Jack's words.
     func testTheGamesNamesEveryTierAndCredits() {
-        let game = Payoff(tier: .maelstrom)
+        let game = Payoff(tier: .charybdis)
         XCTAssertTrue(game.whole)
-        XCTAssertEqual(game.parts.map(\.name), ["Plughole", "Whirlpool", "Vortex", "Maelstrom"])
+        XCTAssertEqual(game.parts.map(\.name), ["Plughole", "Whirlpool", "Vortex", "Maelstrom", "Charybdis"])
         XCTAssertEqual(game.stamp, "every tier unstirred")
         XCTAssertTrue(game.spoken.hasPrefix("Plughole, Whirlpool, Vortex"), game.spoken)
         XCTAssertEqual(Payoff.Credit.shown, "made by screendead \u{00B7} thank you for playing")
         XCTAssertEqual(Payoff.Credit.spoken, "Made by screendead. Thank you for playing.")
         XCTAssertTrue(game.spoken.hasSuffix("Every tier unstirred. " + Payoff.Credit.spoken), game.spoken)
         XCTAssertEqual(game.carded, Payoff.Credit.spoken)
-        XCTAssertFalse(Payoff(tier: .vortex).whole)
+        XCTAssertFalse(Payoff(tier: .maelstrom).whole)
     }
 
     /// How long each curtain holds the screen, pinned as what Jack was told; the glass turns once and ends upright,
@@ -87,10 +87,10 @@ final class PayoffTests: XCTestCase {
     func testTheCurtainIsShortTurnsOnceAndLetsGo() {
         XCTAssertEqual(Payoff(tier: .plughole).length, 3.2)
         XCTAssertEqual(Payoff(pack: .prism).length, 3.2)
-        XCTAssertEqual(Payoff(tier: .maelstrom).length, 7.4)
+        XCTAssertEqual(Payoff(tier: .charybdis).length, 7.4)
         XCTAssertEqual(Payoff(tier: .plughole, still: true).length, 2.6)
-        XCTAssertEqual(Payoff(tier: .maelstrom, still: true).length, 5)
-        for tier in [Tier.plughole, .maelstrom] {
+        XCTAssertEqual(Payoff(tier: .charybdis, still: true).length, 5)
+        for tier in [Tier.plughole, .charybdis] {
             let payoff = Payoff(tier: tier), still = Payoff(tier: tier, still: true)
             for t in [-1, 0, payoff.length, .infinity] { XCTAssertEqual(payoff.turn(at: t), 0, "\(tier) \(t)") }
             XCTAssertEqual(payoff.turn(at: payoff.length / 2), .pi, accuracy: 1e-9)

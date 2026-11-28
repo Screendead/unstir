@@ -72,8 +72,8 @@ hold=25 shot duo-phone-lens-long "A phone, for comparison: the same held turn of
   PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42
 shot duo-tabletop-ending "Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half." \
   "${table[@]}" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=1.1
-shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold." \
-  "${table[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
+shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text size: the last tier's last level over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold." \
+  "${table[@]}" SCREEN=result TIER=charybdis LEVEL=$(grep -c '"level\.C[0-9]*\.title"' Sources/Levels.swift) KEYS= OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
 # Stage 4: the menu wide. The list keeps the leading half, its dock under it as on a phone; a pack's card or the archive
 # opens in the trailing half beside it, not over it. A tall window, folded or not, keeps today's menu.
 hold=10 shot duo-open-menu "Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens." \
@@ -135,8 +135,8 @@ hold=12 shot duo-beside-live-solve "Duo open: plughole 19 solved live at par (UN
   "${duo[@]}" LEVEL=19 MOVES=4:-7,1:+7,0:+4,3:+5,2:-4 BESTS=plughole:000000000000000000-00000000 OWNED= CLOCK=1
 hold=8 shot duo-beside-ax3 "Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size." \
   "${duo[@]}" SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 OWNED= CLOCK=0 TYPESIZE=accessibility3
-hold=8 shot duo-beside-ax5 "Duo open at the largest accessibility size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size." \
-  "${duo[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
+hold=8 shot duo-beside-ax5 "Duo open at the largest accessibility size: the last tier's last level over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size." \
+  "${duo[@]}" SCREEN=result TIER=charybdis LEVEL=$(grep -c '"level\.C[0-9]*\.title"' Sources/Levels.swift) KEYS= OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
 hold=10 shot duo-beside-pack-complete "Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu." \
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 hold=10 shot duo-beside-lost "Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass." \

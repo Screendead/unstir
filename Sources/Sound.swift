@@ -5,13 +5,14 @@ import os
 import SwiftUI
 
 extension Level {
-    /// Each tier's own bed; the daily, endless, the sandbox and the packs, which have none yet, are plughole's.
+    /// Each tier's own bed, charybdis maelstrom's until it has one; the daily, endless, the sandbox and the packs, which
+    /// have none yet, are plughole's.
     var bed: Sound.Bed {
         switch tier {
         case .plughole: .plughole
         case .whirlpool: .whirlpool
         case .vortex: .vortex
-        case .maelstrom: .maelstrom
+        case .maelstrom, .charybdis: .maelstrom
         }
     }
 

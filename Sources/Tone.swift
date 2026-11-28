@@ -68,6 +68,8 @@ extension Color {
     static let vortexInk = Color(0x00D2C0)
     /// Maelstrom's text, its sweep's red, in place of whirlpool's blood.
     static let maelstromInk = Color(0xFF1A2A)
+    /// Charybdis's text, its sweep's jade.
+    static let charybdisInk = Color(0x1FD67A)
 }
 
 extension Tier {
@@ -78,6 +80,7 @@ extension Tier {
         case .whirlpool: .blood
         case .vortex: .vortexInk
         case .maelstrom: .maelstromInk
+        case .charybdis: .charybdisInk
         }
     }
 }

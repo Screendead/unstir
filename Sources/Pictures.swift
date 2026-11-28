@@ -14,7 +14,7 @@ enum Picture: String, CaseIterable {
     /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
     /// Mineral, drawn live the same way: the rock cut and polished, sandstone's beds, agate's bands, a thin section of
-    /// slate between polarisers and basalt's columns end on. No level shows one yet.
+    /// slate between polarisers and basalt's columns end on: Charybdis's.
     case strata, agate, lamellae, columns
     /// Lens's halftone panels (`Halftone.panel`), a level its own, baked a pixel at a time.
     case halftone

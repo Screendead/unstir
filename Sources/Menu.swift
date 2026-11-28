@@ -11,8 +11,8 @@ extension Level {
     }
 
     /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
-    /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
-    /// magenta.
+    /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile, charybdis
+    /// on from chartreuse through jade to sea green. The daily is amber, endless cyan, the sandbox magenta.
     var colour: Color {
         if let pack { return Offer.pack(pack).glow }
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
@@ -22,6 +22,7 @@ extension Level {
         case .whirlpool: oklch(0.62, 0.3, 23 - 82 * t)
         case .vortex: oklch(0.66, 0.24, 300 - 110 * t)
         case .maelstrom: oklch(0.64, 0.3, 24 + 76 * t)
+        case .charybdis: oklch(0.72, 0.24, 118 + 72 * t)
         }
     }
 }
@@ -33,6 +34,7 @@ extension Tier {
         case .whirlpool: [.blood, .magenta, .violet]
         case .vortex: [.violet, Color(0x2F6BFF), Color(0x00D2C0)]
         case .maelstrom: [Color(0xFF1A2A), Color(0xD4200C), Color(0xB89A00)]
+        case .charybdis: [Color(0xA8E600), Color(0x1FD67A), Color(0x00B0A0)]
         }
     }
 
@@ -44,6 +46,7 @@ extension Tier {
         case .whirlpool: .blood
         case .vortex: Color(0x3D5BFF)
         case .maelstrom: Color(0xE0101C)
+        case .charybdis: Color(0x14C060)
         }
     }
 

@@ -346,6 +346,51 @@ final class SolverTests: XCTestCase {
         }
     }
 
+    /// Each Charybdis level's par is its optimum (`KeySolver`): over every count where the deal is small enough for
+    /// that to be cheap, and otherwise the bounded optimum, as maelstrom's is (whole entries off and keys to their
+    /// marks; `scripts/solve.sh ... keys=` checks the deep ones over more). Its line plays on a real `Game` with the
+    /// wards enforced, never refused, and empties the stack in par moves, the stack within the glass's limit all the
+    /// way; and every level opens with a ward locked, so the keys are never decoration.
+    @MainActor func testCharybdisParIsTheOptimum() throws {
+        for level in Level.charybdis {
+            XCTAssertTrue(level.wards.contains { !$0.value.open(stack: level.scramble, dealt: level.scramble) }, level.id)
+            let solver = KeySolver(level.layout, wards: level.wards, dealt: level.scramble)
+            solver.deep = level.scramble.count > 3
+            let line = try XCTUnwrap(solver.solve(limit: level.par), level.id)
+            XCTAssertEqual(line.count, level.par, level.id)
+            XCTAssertLessThanOrEqual(solver.deepest(along: line), Tank.maxStack, level.id)
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil), storesProgress: false)
+            for t in line {
+                let refused = game.wardRefusals
+                game.commit(rod: t.rod, steps: t.steps)
+                XCTAssertEqual(game.wardRefusals, refused, "\(level.id) refused \(t)")
+            }
+            XCTAssertTrue(game.solved, level.id)
+            XCTAssertEqual(game.moves, level.par, level.id)
+        }
+    }
+
+    /// A locked ward refuses a turn and costs nothing; its key on the mark opens it, a whole turn round being the same
+    /// mark; and a turn turned straight back is always allowed.
+    @MainActor func testAWardTurnsOnlyWhileItsKeyStandsOnTheMark() throws {
+        let level = try XCTUnwrap(Level.charybdis.first)
+        let ward = try XCTUnwrap(level.wards.first), game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil),
+                                                                  storesProgress: false)
+        XCTAssertEqual(game.kind(of: ward.key), .seized)
+        game.commit(rod: ward.key, steps: -1)
+        XCTAssertEqual(game.wardRefusals, 1)
+        XCTAssertEqual(game.moves, 0)
+        game.commit(rod: ward.value.key, steps: ward.value.mark + 12)
+        XCTAssertEqual(game.kind(of: ward.key), .working, "a whole turn past the mark is the mark")
+        game.commit(rod: ward.value.key, steps: -12)
+        game.commit(rod: ward.key, steps: 2)
+        game.commit(rod: ward.key, steps: -2)
+        XCTAssertEqual(game.wardRefusals, 1, "turned straight back")
+        game.commit(rod: ward.value.key, steps: 1)
+        XCTAssertEqual(game.kind(of: ward.key), .seized)
+        XCTAssertTrue(game.tankSpoken.contains("locked"), game.tankSpoken)
+    }
+
     /// Past quad, playing by the park rule never goes more than a third of par, plus one, without a turn of the tank,
     /// so the seized knobs stay in the way to the end (Jack's playtest, 2026-10-24).
     func testMaelstromKeepsTheTankTurning() throws {

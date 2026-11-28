@@ -598,7 +598,7 @@ final class UnstirTests: XCTestCase {
     /// A completion shows on the solve that gives the last of the pack's levels a best, whichever it is, and never on a
     /// re-solve; the free tiers complete on the last tier's last best.
     @MainActor func testCompletionShowsOnTheSolveThatCompletes() {
-        let ids = (Pack.lens.levels + Tier.maelstrom.levels).map(\.id) + ["L1"]
+        let ids = (Pack.lens.levels + Tier.charybdis.levels).map(\.id) + ["L1"]
         let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
         defer { for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") } }
         for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
@@ -629,11 +629,11 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 75 panels")
         XCTAssertEqual(Completion.free.spoken, "Every tier unstirred.")
 
-        let sea = Tier.maelstrom.levels.map(\.id)
-        for id in sea.dropLast() { Best(over: 3, seconds: 9).save(id) }
+        let last = Tier.charybdis.levels.map(\.id)
+        for id in last.dropLast() { Best(over: 3, seconds: 9).save(id) }
         XCTAssertNil(solve("L1"))
-        XCTAssertEqual(solve(sea.last!, tier: .maelstrom), .free)
-        XCTAssertNil(solve(sea.last!, tier: .maelstrom))
+        XCTAssertEqual(solve(last.last!, tier: .charybdis), .free)
+        XCTAssertNil(solve(last.last!, tier: .charybdis))
     }
 
     private static let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
@@ -650,10 +650,10 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(Offer.pointer(after: .free, shelf: Self.shelf, owned: Self.owning([.lens, .escapement, .prism])))
     }
 
-    /// "more puzzles in the packs ›" shows on maelstrom 27's card alone, once, opening the first pack on the shelf the
-    /// player doesn't own; never where a completion already points to one, nor once every pack is owned.
+    /// "more puzzles in the packs ›" shows on the last tier's last level's card alone, once, opening the first pack on
+    /// the shelf the player doesn't own; never where a completion already points to one, nor once every pack is owned.
     @MainActor func testTheLadderEndPointsToThePacksOnce() {
-        let end = Level.maelstrom.last!
+        let end = Level.charybdis.last!
         XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: Self.shelf, owned: Self.owning([])), .lens)
         XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: Self.shelf, owned: Self.owning([.lens])), .escapement)
         XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: true, shelf: Self.shelf, owned: Self.owning([])))
@@ -661,7 +661,7 @@ final class UnstirTests: XCTestCase {
                      "the completion's own pointer says it")
         XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: false, shelf: Self.shelf,
                                      owned: Self.owning([.lens, .escapement, .prism])))
-        for level in [Level.maelstrom[25], Level.vortex.last!, Level.plughole.last!] {
+        for level in [Level.charybdis.dropLast().last!, Level.maelstrom.last!, Level.vortex.last!, Level.plughole.last!] {
             XCTAssertNil(Offer.ladderEnd(level, completed: nil, shown: false, shelf: Self.shelf, owned: Self.owning([])), level.id)
         }
     }
@@ -1480,27 +1480,31 @@ final class UnstirTests: XCTestCase {
     func testTierGate() {
         var bests: [String: Best] = [:]
         func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false, false])
         for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
         XCTAssertEqual(Tier.plughole.solved { bests[$0] }, Array(repeating: true, count: 26) + [false])
         bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
         XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false], "over par opens it")
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false, false], "over par opens it")
         // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool solved opens
         // vortex and not maelstrom, and vortex solved opens maelstrom.
         for level in Level.maelstrom { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.maelstrom))
         for level in Level.whirlpool { bests[level.id] = Best(over: 0, seconds: 30) }
         for level in Level.plughole { bests[level.id] = nil }
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true, false])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true, false, true])
         for level in Level.vortex.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.maelstrom))
         for level in Level.whirlpool { bests[level.id] = nil }
         bests[Level.vortex.last!.id] = Best(over: 3, seconds: 30)
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, true])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, true, true])
+        // Maelstrom solved, at any score, opens charybdis.
+        for level in Level.vortex { bests[level.id] = nil }
+        for level in Level.maelstrom { bests[level.id] = Best(over: 2, seconds: 30) }
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false, true])
         bests = [:]
-        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true, true])
+        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true, true, true])
 
         let flag = Best.unlocked
         defer { Best.unlocked = flag }

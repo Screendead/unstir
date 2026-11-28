@@ -129,7 +129,7 @@ struct Payoff: Equatable {
 
     /// The sounds it plays, each at its seconds in, all the game's own at their own levels: the tier switch's as the
     /// name comes up, and under the stamp two of the heal's notes, the fifth and the tonic above it. The game's names
-    /// rise up the heal's scale instead, a note each, and its stamp lands on the solve's chime, the solve's own having
+    /// rise up the heal's scale instead, a note each (the tonic, third, fifth, sixth and the tonic above), and its stamp lands on the solve's chime, the solve's own having
     /// rung out by then; under Reduce Motion its names come up as one, so it sounds as a tier's does. Mixed after a
     /// level's last heal and chime, with or without a pack's resolution, each curtain's loudest 0.4 s is within 2 LU
     /// of that solve's own.
@@ -138,7 +138,7 @@ struct Payoff: Equatable {
         guard whole, !still else {
             return [Cue(at: rises(0), effect: .tier), Cue(at: stamp, effect: .heal(4)), Cue(at: stamp + 0.15, effect: .heal(6))]
         }
-        return zip(parts.indices, [1, 3, 4, 6]).map { Cue(at: rises($0), effect: .heal($1)) } + [Cue(at: stamp, effect: .solve)]
+        return zip(parts.indices, [1, 3, 4, 5, 6]).map { Cue(at: rises($0), effect: .heal($1)) } + [Cue(at: stamp, effect: .solve)]
     }
 
     // MARK: room
@@ -158,9 +158,9 @@ struct Payoff: Equatable {
         }
     }
 
-    /// The least the glass shrinks to for the words, as the curtain can't scroll and the game's six lines at the play
-    /// screen's largest type need this much of the smallest phone.
-    static let least: CGFloat = 0.45
+    /// The least the glass shrinks to for the words, as the curtain can't scroll and the game's seven lines at the play
+    /// screen's largest type need this much of the smallest phone: at 0.45 the credit ran off an SE's foot.
+    static let least: CGFloat = 0.3
 
     /// The text never shrinks: where the lines pass the glass's edge they stand under it instead, and the glass, its
     /// rim `stage` tall with `room` under it, scales about its top by this to leave them `block` and `gap`, down to
