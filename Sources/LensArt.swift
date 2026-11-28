@@ -23,7 +23,7 @@ enum LensArt {
                                                15: telescope, 16: eyepiece, 17: microscope, 18: nightVision, 19: camera,
                                                20: shutter, 21: viewfinder, 22: wideAngle, 23: fisheye, 24: telephoto,
                                                25: kaleidoscope]
-        .merging([wideShot, longTake, jumpCut, freezeFrame, splitScreen, slowMotion, dollyZoom, finalCut].joined().map { ($0.key, $0.value) }) { $1 }
+        .merging([wideShot, longTake, jumpCut, freezeFrame, splitScreen, slowMotion, dollyZoom, finalCut, directorsCut].joined().map { ($0.key, $0.value) }) { $1 }
 
     static let bold = 0.008, mid = 0.005, hair = 0.0025
 
