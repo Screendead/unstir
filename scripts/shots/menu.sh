@@ -3,20 +3,20 @@
 shot menu "Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list with no line over it, only level 01 unlocked, no daily or endless row, no pack dock." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
-par27=$(printf '0%.0s' {1..27})
+par30=$(printf '0%.0s' {1..30})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
 shot menu-whirlpool-locked "Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
 shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level solved: its level 01 playable, vortex still locked." \
-  TIER=whirlpool BESTS=plughole:$par27
-shot menu-vortex-locked "Menu looking at vortex, 20 of whirlpool's 27 solved (05, 12 and 18 over par): ticks 01 to 20 lit, and under them short: 21–27, opening 21, the first not played." \
-  TIER=vortex BESTS=plughole:$par27,whirlpool:$some
+  TIER=whirlpool BESTS=plughole:$par30
+shot menu-vortex-locked "Menu looking at vortex, 20 of whirlpool's 30 solved (05, 12 and 18 over par): ticks 01 to 20 lit, and under them short: 21–30, opening 21, the first not played." \
+  TIER=vortex BESTS=plughole:$par30,whirlpool:$some
 shot menu-vortex-open "Menu on vortex, opened by every whirlpool level solved: its level 01 playable, maelstrom still locked." \
-  TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
-shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: two of vortex's 27 ticks lit." \
-  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
+  TIER=vortex BESTS=plughole:$par30,whirlpool:$par30
+shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: two of vortex's 30 ticks lit." \
+  TIER=maelstrom BESTS=plughole:$par30,whirlpool:$par30,vortex:01
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
-  TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
+  TIER=whirlpool BESTS=plughole:$par30 TIERSPIN=-2.5:0.33
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
 # What the menu leads with (C4, C5, C18, C3's tried mark).
@@ -24,38 +24,38 @@ shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 on
 hold=9 shot first-launch-pointer "The same, its note at rest after 4 s, the knob lesson's ghost finger on knob 0 clear of it." FRESH=1 OPEN=1
 shot menu-after-01 "Menu with 01 solved: next: 02 · Drip over the list." BESTS=plughole:0
 shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear under today, one line each, each marked new, under next: 01." \
-  TIER=whirlpool BESTS=plughole:$par27
+  TIER=whirlpool BESTS=plughole:$par30
 shot menu-daily-run "The same with today's daily and the three before it solved: its marks at the daily row's right as on every row and 4 days running under its title, neither row new any more." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
+  TIER=whirlpool BESTS=plughole:$par30 DAILIES=4
 shot menu-all-done "Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row." \
-  BESTS=plughole:ccccccccccccccccccccccccccc,whirlpool:$par27,vortex:$par27,maelstrom:$par27,endless:9 DAILIES=4
+  BESTS=plughole:cccccccccccccccccccccccccccccc,whirlpool:$par30,vortex:$par30,maelstrom:$par30,endless:9 DAILIES=4
 # Frost days (UNSTIR_DAILY sets the menu's day): the daily's row says so under its title, at default and large type.
 shot menu-daily-frost "Menu on whirlpool, today a frost day (2026-10-15, two knobs frozen): the daily's row says frost day under its title." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILY=20261015
+  TIER=whirlpool BESTS=plughole:$par30 DAILY=20261015
 shot menu-daily-plain "The same on a plain day (2026-10-01): the daily's row one line, as on any day before a run." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILY=20261001
+  TIER=whirlpool BESTS=plughole:$par30 DAILY=20261001
 shot menu-daily-frost-large "The frost day at accessibility type (accessibility3), on plughole with every level at par so the list lands at its top: frost day under the title, which keeps the row's width." \
-  TIER=plughole BESTS=plughole:$par27 DAILY=20261015 TYPESIZE=accessibility3
+  TIER=plughole BESTS=plughole:$par30 DAILY=20261015 TYPESIZE=accessibility3
 shot menu-daily-plain-large "The plain day at accessibility type (accessibility3), landing at the list's top as above." \
-  TIER=plughole BESTS=plughole:$par27 DAILY=20261001 TYPESIZE=accessibility3
+  TIER=plughole BESTS=plughole:$par30 DAILY=20261001 TYPESIZE=accessibility3
 # The daily archive (to-do 47): a row under today's daily, shut until any purchase.
 shot menu-archive-locked "The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
+  TIER=whirlpool BESTS=plughole:$par30 DAILIES=4
 shot menu-archive-open "The same with Lens owned: the archive's row open, 30 past dailies and how many are at par." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens
+  TIER=whirlpool BESTS=plughole:$par30 DAILIES=4 OWNED=lens
 archived=5:c,6:0,8:2,11:t,14:c,17:1,22:0
 shot archive "The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=$archived
+  TIER=whirlpool BESTS=plughole:$par30 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=$archived
 shot archive-large "The same at accessibility type (accessibility3): a list of days in place of the week grid." \
-  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=$archived TYPESIZE=accessibility3
+  TIER=whirlpool BESTS=plughole:$par30 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=$archived TYPESIZE=accessibility3
 shot archive-day "The daily from five days ago, opened from the archive: its own tank, and its way out reads archive." \
   MODE=archive DAY=5 OWNED=lens
 shot menu-tried "Plughole 01 to 13 solved and 14 tried: three hollow marks on 14's row." BESTS=plughole:$upto13 TRIED=L14
 shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
-shot menu-list-end "A cold launch with plughole 01 to 26 solved: the list centred on 27, its last, and under it the sandbox's row under anything goes (Debug; Release has neither)." \
-  BESTS=plughole:${par27:1}
+shot menu-list-end "A cold launch with plughole 01 to 29 solved: the list centred on 30, its last, and under it the sandbox's row under anything goes (Debug; Release has neither)." \
+  BESTS=plughole:${par30:1}
 shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
   BESTS=plughole:$upto13 LOCKTAP=L15
 shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
@@ -68,10 +68,10 @@ shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and h
   BESTS=plughole:$upto13 TIERSPIN=0.25:0.1
 # A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
 hold=3.9 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
-  TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
-hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 20 of whirlpool's 27 solved: vortex is locked, so the list landed on its header, over the gate and its short list." \
-  TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
-shot menu-back-up "Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole." \
-  LEVEL=27 EXIT=up BESTS=plughole:$par27
+  TIERDEMO=1 BESTS=plughole:$par30,whirlpool:$some
+hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 20 of whirlpool's 30 solved: vortex is locked, so the list landed on its header, over the gate and its short list." \
+  TIERDEMO=1 BESTS=plughole:$par30,whirlpool:$some
+shot menu-back-up "Up a notch from plughole 30 into whirlpool 01, then back: the menu on whirlpool, not plughole." \
+  LEVEL=30 EXIT=up BESTS=plughole:$par30
 shot card-back-solved "Back from Lens 02's result card after a solve, Lens's card up (UNSTIR_CARD): the card centred on 03, the row next › opens." \
   SCREEN=clean PACK=lens LEVEL=2 CARD=lens EXIT=solved

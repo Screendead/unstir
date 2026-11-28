@@ -501,16 +501,16 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
-    /// The fullest card any level shows: plughole 27 replayed at par with a stir undone, against a best of +6, every
-    /// other plughole level at par, so its card says what clean takes and the new best, offers again (the best isn't
-    /// clean) and goes up a notch to the open tier. As tiers open on solved levels (Jack, 2026-11-13), a closed tier's
+    /// The fullest card any level shows: plughole's last level replayed at par with a stir undone, against a best of +6,
+    /// every other plughole level at par, so its card says what clean takes and the new best, offers again (the best
+    /// isn't clean) and goes up a notch to the open tier. As tiers open on solved levels (Jack, 2026-11-13), a closed tier's
     /// longer way up never shows on a tier's last level. Measured 2026-11-13: 311 pt at xxxLarge, the SE's glass at 59%.
     /// The tests measure every candidate rather than trust this.
     private func storeTheFullestCard() {
         for level in Tier.plughole.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) }
         Best(over: 6, seconds: 60).save(Tier.plughole.levels.last!.id)
     }
-    private let fullest = ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
+    private let fullest = ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "\(Level.plughole.count)", "UNSTIR_CLOCK": "0"]
 
     @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
         // Where the card stands, and the tank's give, are held on every screen below; here, that the measure settles
@@ -532,13 +532,13 @@ final class PlayLayoutTests: XCTestCase {
     /// The cards that could be the tallest a player reaches, each with the progress it needs: what the card says grows
     /// with the solve's line, its best's, a completion's, its buttons and a way up.
     private var candidates: [(what: String, env: [String: String], store: () -> Void)] {
-        let maelstrom27 = Tier.maelstrom.levels.last!.id
+        let maelstromLast = Tier.maelstrom.levels.last!.id, plugholeLast = "\(Level.plughole.count)"
         return [
-            ("plughole 27 replayed at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
+            ("plughole's last replayed at par against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": plugholeLast, "UNSTIR_CLOCK": "0"],
              storeTheFullestCard),
-            ("plughole 27 replayed over par against +6", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"],
+            ("plughole's last replayed over par against +6", ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": plugholeLast, "UNSTIR_CLOCK": "0"],
              storeTheFullestCard),
-            ("plughole 27 replayed at par with an undo against +6", fullest, storeTheFullestCard),
+            ("plughole's last replayed at par with an undo against +6", fullest, storeTheFullestCard),
             ("plughole 05 at par with an undo, the last plughole level without a best",
              ["UNSTIR_SCREEN": "undone", "UNSTIR_LEVEL": "5", "UNSTIR_CLOCK": "0"],
              { for (i, level) in Tier.plughole.levels.enumerated() where i != 4 { Best(over: 0, seconds: 60).save(level.id) } }),
@@ -561,13 +561,13 @@ final class PlayLayoutTests: XCTestCase {
                                                      "UNSTIR_OWNED": "first-stir,lens", "UNSTIR_CLOCK": "0",
                                                      "UNSTIR_TRIED": Level.lensFace.id, "UNSTIR_PICTURE": "grid"],
              { for level in Pack.lens.levels where level != Level.lensFace { Best(over: 0, seconds: 60).save(level.id) } }),
-            ("maelstrom 27 unstirring every tier on a replay", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom",
-                                                                "UNSTIR_LEVEL": "27", "UNSTIR_OWNED": "first-stir",
-                                                                "UNSTIR_CLOCK": "0", "UNSTIR_TRIED": maelstrom27],
-             { for level in Tier.allCases.flatMap(\.levels) where level.id != maelstrom27 { Best(over: 0, seconds: 60).save(level.id) } }),
-            ("maelstrom 27 against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom", "UNSTIR_LEVEL": "27",
+            ("maelstrom's last unstirring every tier on a replay", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom",
+                                                                "UNSTIR_LEVEL": "\(Level.maelstrom.count)", "UNSTIR_OWNED": "first-stir",
+                                                                "UNSTIR_CLOCK": "0", "UNSTIR_TRIED": maelstromLast],
+             { for level in Tier.allCases.flatMap(\.levels) where level.id != maelstromLast { Best(over: 0, seconds: 60).save(level.id) } }),
+            ("maelstrom's last against +6", ["UNSTIR_SCREEN": "clean", "UNSTIR_TIER": "maelstrom", "UNSTIR_LEVEL": "\(Level.maelstrom.count)",
                                          "UNSTIR_OWNED": "first-stir", "UNSTIR_CLOCK": "0"],
-             { Best(over: 6, seconds: 60).save(maelstrom27) }),
+             { Best(over: 6, seconds: 60).save(maelstromLast) }),
         ]
     }
 

@@ -142,8 +142,8 @@ fi
 film back-swipe 3 "fps=8,scale=180:-1,tile=8x3:padding=4" LEVEL=5 BACKSWIPE=run
 film tour 8 "fps=4,scale=200:-1,tile=9x4:padding=4" TOUR=1 OPEN=1
 # The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 20 ticks lit), then plughole tapped.
-par27=$(printf '0%.0s' {1..27})
-film tier-switch 11 "fps=6,scale=180:-1,tile=11x6:padding=4" TIERDEMO=1 BESTS=plughole:$par27,whirlpool:00001000000200000100
+par30=$(printf '0%.0s' {1..30})
+film tier-switch 11 "fps=6,scale=180:-1,tile=11x6:padding=4" TIERDEMO=1 BESTS=plughole:$par30,whirlpool:00001000000200000100
 # The twins' heartbeat, still: from 2.2 s in (the neural web lands about 2 s after launch), one beat at 20 frames a second.
 film heartbeat-maelstrom22-chainmail 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank,fps=20,scale=240:-1,tile=5x4:padding=4" TIER=maelstrom LEVEL=22
 film heartbeat-maelstrom18-neurons 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank,fps=20,scale=240:-1,tile=5x4:padding=4" TIER=maelstrom LEVEL=18
@@ -337,6 +337,10 @@ film editors-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FING
 film editors-vortex-02 24 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=0.2 MOVES=3:+8,4:+7,0:-4
 film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=0.2 \
   MOVES=-1:+1,2:+8,3:-7,0:+4
+# Maelstrom 30, the free game's last level, solved at par by a drawn fingertip: its 36 moves, four of them the tank's,
+# as scripts/solve.sh prints its optimal line.
+film maelstrom-30-solve 110 "fps=1,scale=150:-1,tile=11x10:padding=4" TIER=maelstrom LEVEL=30 SWIRLED=1 TANKTURNED=1 OPEN=1 \
+  FINGER=1 REST=0.2 MOVES=4:-6,0:+8,-1:+3,5:-5,0:+4,6:-8,0:+7,6:-4,0:+2,4:+2,0:+7,6:-4,5:+3,-1:+3,5:+6,4:-8,6:+4,5:+7,6:+4,5:+2,0:-5,4:-8,5:-3,-1:+3,6:+7,5:+6,6:-5,1:-8,0:+7,4:+4,-1:-2,6:-6,0:+8,4:+5,5:+2,6:+2
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
 if wants editors-lens-03; then
@@ -379,13 +383,13 @@ layer layer-prism-30 prism 30 0
 film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
 film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6
 # The curtain call (`Payoff`), which the solve that finishes a tier, a paid pack or the free game plays before its
-# card: plughole 27, maelstrom 27, Lens 25 (its halftone baked first, as for lens-08-solve) and Escapement 30, each
+# card: plughole 30, maelstrom 30, Lens 25 (its halftone baked first, as for lens-08-solve) and Escapement 30, each
 # on a two-stir stand-in for its scramble, autoplayed, every other level of its tier or pack holding a best. Each
 # strip starts as the level's last stir lands. Then the game's and a tier's under Reduce Motion.
 pay="trim=start=1.5,setpts=PTS-STARTPTS,crop=iw:ih*0.86:0:ih*0.05,fps=3,scale=180:-1"
-pay_tier=(LEVEL=27 STACK=0:+3,1:-4 AUTOPLAY=1 BESTS=plughole:cc0c0cc0cc0ccc0c0ccc0c0c0c-)
-pay_game=(TIER=maelstrom LEVEL=27 STACK=0:+3,1:-4 PAR=2 AUTOPLAY=1 OWNED=first-stir
-  BESTS=plughole:ccccc0ccccccc0cccccccc0cccc,whirlpool:cc0c0cc0cc0ccc0c0ccc0c0c0cc,vortex:c00c0c00cc0c0c000c0cc000c0c,maelstrom:0c00102c0010c00020c0100c00-)
+pay_tier=(LEVEL=30 STACK=0:+3,1:-4 AUTOPLAY=1 BESTS=plughole:cc0c0cc0cc0ccc0c0ccc0c0c0cc0c-)
+pay_game=(TIER=maelstrom LEVEL=30 STACK=0:+3,1:-4 PAR=2 AUTOPLAY=1 OWNED=first-stir
+  BESTS=plughole:ccccc0ccccccc0cccccccc0ccccc0c,whirlpool:cc0c0cc0cc0ccc0c0ccc0c0c0cc0cc,vortex:c00c0c00cc0c0c000c0cc000c0cc0c,maelstrom:0c00102c0010c00020c0100c00c01-)
 film payoff-tier 10 "$pay,tile=9x3:padding=4" "${pay_tier[@]}"
 film payoff-game 14 "$pay,tile=10x4:padding=4" "${pay_game[@]}"
 if wants payoff-lens; then warm 25; fi

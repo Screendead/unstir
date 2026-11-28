@@ -67,6 +67,13 @@ session on `packs/treble`; its draft PR is the claim.
 - Measured 2026-11-27: today's pars run Lens 1 to 12, Escapement 2 to 9, Prism 3 to 8, maelstrom up to 26. At par the
   solvers deal Prism depth 11 on hex and Escapement 12 with two clocks.
 
+### Open work (2026-11-28): every free chapter 30
+
+Jack's call "Thirty and ninety", on `levels/thirty`: plughole, whirlpool, vortex and maelstrom gain 28–30 as finales,
+dealt by each tier's own tool (maelstrom's each need a plan); what assumed 27 now derives from the level count or says
+30 (gates, the ladder's end, the curtain call, shots, store copy: 120 levels free). Charybdis and Lens's 90 are other
+owners'. Not yet seen: how the finales play on the phone.
+
 ### Open work (2026-11-23)
 
 The design pass's three rounds of directions (to-do 72, #302 to #304) are closed: moved word for word to

@@ -1,10 +1,11 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Whirlpool and maelstrom: probes, grabs, twins, seized knobs and the rim lesson. Sourced in order by scripts/shots.sh.
+# Whirlpool and maelstrom: probes, grabs, twins, seized knobs and the rim lesson, and every free chapter's finales.
+# Sourced in order by scripts/shots.sh.
 # Whirlpool: the menu, each layout's first level and the last (all glass), probes on level 12's and level 27's top rods,
 # a result card, then each other picture at its deepest level and, on maelstrom, each twin. The live background is held
 # 3 s in, so the probes compare; level 12 is marbling, so its probes are pinned to the glass.
 shot menu-whirlpool "Menu on whirlpool with every row unlocked." TIER=whirlpool UNLOCK=1
-for n in 01 09 14 19 23 27; do
+for n in 01 09 14 19 23 30; do
   shot "whirlpool$n" "Whirlpool level $n with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
 shot whirlpool-probe-short "Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal." \
@@ -31,13 +32,28 @@ shot whirlpool-count-hex-below "Whirlpool 25 (hex, marbling), finger down to the
   TIER=whirlpool LEVEL=25 LIVE=4:+2 TOUCH=0.2165,0.685 CLOCK=3
 shot whirlpool-result "Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par)." \
   TIER=whirlpool SCREEN=result LEVEL=5 CLOCK=3
-for level in 24:chainmail 16:coral 20:neurons 25:marbling; do
+for level in 28:chainmail 16:coral 20:neurons 29:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "whirlpool$n-$picture" "Whirlpool level $n ($picture) with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
-for level in 27:glass 22:chainmail 8:coral 18:neurons 24:marbling; do
+for level in 29:glass 28:chainmail 8:coral 18:neurons 30:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
+done
+# Each free chapter's finales, 28 to 30, as dealt and solved at par, the card over the clean picture: a harness solve,
+# or on maelstrom, whose harness solve turns the tank more than par allows, the optimal line scripts/solve.sh prints.
+for tier in plughole whirlpool vortex maelstrom; do
+  for n in 28 29 30; do
+    shot "finale-$tier$n" "The $tier chapter's level $n, one of its three finales, as dealt." TIER=$tier LEVEL=$n CLOCK=3 SWIRLED=1 TANKTURNED=1
+    case $tier$n in
+      maelstrom28) solve=(PLAYED=-1:+1,1:+2,0:-5,2:+2,4:+4,-1:-2,3:-7,2:+5,1:+4,0:+2,3:+8,4:-6,0:-5,2:-8,1:-8,-1:+1,1:+7,2:+3,-1:+3,3:+6,2:-5,0:+2,3:-5,0:+2,2:+6,1:-8,2:+6,0:-3,3:+2,4:-5,-1:+3,2:-2) ;;
+      maelstrom29) solve=(PLAYED=6:+4,-1:-2,3:+3,0:-8,2:+6,6:-6,-1:-1,4:+5,3:-2,4:+3,2:+4,0:+2,3:+2,0:+5,2:-8,4:-7,-1:-2,3:-6,4:+3,2:-4,-1:-1,4:-6,3:+6,4:-6,0:+5,3:+3,6:-3,0:+2,2:-2,-1:+3,4:+8,3:-7,2:-4) ;;
+      maelstrom30) solve=(PLAYED=4:-6,0:+8,-1:+3,5:-5,0:+4,6:-8,0:+7,6:-4,0:+2,4:+2,0:+7,6:-4,5:+3,-1:+3,5:+6,4:-8,6:+4,5:+7,6:+4,5:+2,0:-5,4:-8,5:-3,-1:+3,6:+7,5:+6,6:-5,1:-8,0:+7,4:+4,-1:-2,6:-6,0:+8,4:+5,5:+2,6:+2) ;;
+      *) solve=(SCREEN=clean) ;;
+    esac
+    shot "finale-$tier$n-solved" "The $tier chapter's level $n solved at par: its card over the clean picture." TIER=$tier LEVEL=$n CLOCK=3 \
+      TANKTURNED=1 "${solve[@]}"
+  done
 done
 # The turning tank: maelstrom levels on their twins, at home and turned one step, where every seam should sit
 # concentric on the knob it lands under. The bezel is knurled wherever knobs are seized (the rim-* shots show it beside

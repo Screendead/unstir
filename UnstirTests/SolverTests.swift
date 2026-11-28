@@ -335,7 +335,7 @@ final class SolverTests: XCTestCase {
     @MainActor func testMaelstromParIsTheOptimum() throws {
         try skipUnlessSlow()
         let planned: Set<String> = ["M6", "M11", "M12", "M13", "M14", "M19", "M20", "M21", "M22",
-                                       "M24", "M25", "M26"]
+                                       "M24", "M25", "M26", "M28", "M29", "M30"]
         for level in Level.maelstrom {
             let solver = Solver(level.layout), stack = level.scramble, seized = level.seized
             let optimal = try XCTUnwrap(solver.optimalPlay(stack, seized: seized), level.id)

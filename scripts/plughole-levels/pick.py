@@ -2,12 +2,14 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/plughole-levels/pick.py <pool dir> <Levels.swift>
 # The pool holds one `scripts/plughole-levels.sh search` TSV per band, named <layout>-<depth>-<inversions>.tsv
-# (seeds 1 to 3000 dealt 19-27). Prints the three lowest seeds that meet each slot; the first is the pick.
+# (seeds 1 to 3000 dealt 19-30). Prints the three lowest seeds that meet each slot; the first is the pick.
 import csv, os, sys, re
 
 os.chdir(sys.argv[1])
-# The other tiers' scrambles, and plughole's own as it stands, so a pick never copies one.
-existing = set(re.findall(r'"([0-9:+\-,]+)"', open(sys.argv[2]).read()))
+# The other tiers' scrambles, so a pick never copies one. Plughole's own are left out, so a rerun picks them again.
+source = open(sys.argv[2]).read()
+plughole = re.search(r'static let plughole.*?\] as \[', source, re.S).group(0)
+existing = set(re.findall(r'"([0-9:+\-,]+)"', source.replace(plughole, '')))
 def load(f,hidden):
     out=[]
     for r in csv.DictReader(open(f),delimiter='\t'):
@@ -30,6 +32,9 @@ slots=[
  ('L25','hex-8-1.tsv',1,(1.58,1.63),lambda r:True),
  ('L26','hex-9-1.tsv',1,(1.50,1.56),lambda r:True),
  ('L27','hex-9-2.tsv',2,(1.42,1.47),lambda r:any(a==0 for a,b in r['tw'])),
+ ('L28','hex-10-2.tsv',2,(1.38,1.42),lambda r:True),
+ ('L29','hex-10-3.tsv',3,(1.33,1.36),lambda r:True),
+ ('L30','hex-11-3.tsv',3,(1.27,1.30),lambda r:any(a==0 for a,b in r['tw'])),
 ]
 prev=None
 for name,f,h,(lo,hi),extra in slots:

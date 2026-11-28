@@ -6,8 +6,8 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-rows = [("isobars", "flow plates", ["01", "14", "27"]), ("ephemeris", "celestial plates", ["02", "13", "22"]),
-        ("cords", "textiles", ["03", "16", "26"])]
+rows = [("isobars", "flow plates", ["01", "14", "30"]), ("ephemeris", "celestial plates", ["02", "13", "22"]),
+        ("cords", "textiles", ["03", "16", "29"])]
 cell, gap, label, head = 420, 12, 360, 20
 font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 30)
 small = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 22)

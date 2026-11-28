@@ -16,3 +16,7 @@ for d in 4 5 6 7 8; do for i in 0 1 2 3; do band triSwirl $d $i 1 1500 & done; d
 for d in 6 7 8 9 10 11 12; do for i in 1 2 3 4; do band eyeSwirl $d $i 2 1500 & done; done; wait
 for d in 8 10 12 13 14 16 18; do for i in 2 3 4 5 6; do band pentSwirl $d $i 2 800 & done; wait; done
 for d in 12 14 16 18 20 22 24; do for i in 3 4 5 6 7 8; do band hexSwirl $d $i 3 400 & done; wait; done
+# The finales, 28 to 30: deeper bands on more seeds, and the ephemeris's 14 on more seeds, as five swirls are rare.
+for i in 5 6; do band hexSwirl 14 $i 3 3000 & done
+for i in 8 9 10; do band hexSwirl 26 $i 5 1500 & done
+for i in 9 10 11; do band hexSwirl 28 $i 6 1500 & done; wait

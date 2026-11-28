@@ -592,3 +592,4 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Prism's hidden-colour knob | 2026-11-28 | Not in this update. Jack picked A. | HANDOFF |
 | Escapement's waits stay | 2026-11-28 | A wait ticks every clock, never only a tapped one, and the wait button stays in every chapter. Jack picked A on both. | HANDOFF |
 | Lens zooms both ways | 2026-11-28 | The last Lens chapters deal lens entries that zoom out (-1 to -3) as well as in, each lens netting within ±3. The seized knob stays out of Lens. Jack picked A on both. | HANDOFF |
+| Thirty and ninety | 2026-11-28 | Every free chapter has 30 levels and every paid pack 90: plughole, whirlpool, vortex and maelstrom gain levels 28 to 30 as their finales, Charybdis has 30, and Lens goes from 75 to 90. Ids are appended, never renumbered. Jack: "The free ones should be 30, the paid packs should all be 90." | HANDOFF |
