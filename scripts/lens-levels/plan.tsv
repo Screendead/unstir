@@ -1,4 +1,4 @@
-# Lens 26 to 75: n, layout, lens slots, depth, lens entries, chain, faint twists, deals kept to pick from, and from 62 the
+# Lens 26 to 90: n, layout, lens slots, depth, lens entries, chain, faint twists, deals kept to pick from, and from 62 the
 # lens entries' signs (lens-levels.py's usage).
 # Depth climbs from 13 to 36 by level 53, nearly twice the first 25's slope, and holds at 33 to 36: past that a level
 # is a grind, not a harder puzzle. From 39 every deal is a chain (one right move a step), lens entries are a quarter of
@@ -60,3 +60,18 @@
 73	hex	1,3,4,5,6	36	16	1.0	0.55	3	mixed
 74	hex	0,1,2,4	31	13	1.0	0.55	1	mixed
 75	hex	1,2,3,4,6	36	16	1.0	0.55	3	mixed
+76	hex	1,2,4,5	34	15	1.0	0.55	3	mixed
+77	hex	0,2,3,5	31	13	1.0	0.55	1	mixed
+78	hex	1,2,3,4,6	35	16	1.0	0.55	3	mixed
+79	hex	2,3,5,6	34	15	1.0	0.55	3	mixed
+80	hex	1,3,4,5,6	35	16	1.0	0.55	3	mixed
+81	hex	1,2,3,4,5,6	36	16	1.0	0.55	3	mixed
+82	hex	0,2,3,6	32	14	1.0	0.55	1	mixed
+83	hex	1,2,4,6	34	15	1.0	0.6	3	mixed
+84	hex	0,1,4,6	31	13	1.0	0.6	1	mixed
+85	hex	1,2,3,4,5	35	16	1.0	0.6	3	mixed
+86	hex	0,2,4,6	32	14	1.0	0.6	1	mixed
+87	hex	1,3,4,6	34	15	1.0	0.6	3	mixed
+88	hex	2,3,4,5,6	35	16	1.0	0.6	3	mixed
+89	hex	0,1,3,5	31	13	1.0	0.6	1	mixed
+90	hex	1,2,3,4,5,6	36	16	1.0	0.6	3	mixed
