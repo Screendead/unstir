@@ -8,10 +8,22 @@
 # sketches a plate as the glass shows it under a stack and its masks, each channel through its own word.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-out=build/prism-plates
+# PLATE_ONLY=<Name> (an Engraving<Name>.swift) builds that plate alone, every other one an empty stub, into its own
+# folder, so one plate can be drawn while another is mid-edit.
+out=build/prism-plates${PLATE_ONLY:+-$PLATE_ONLY}
 mkdir -p "$out"
-if [[ ! -x "$out/plates" ]] || [[ -n "$(find Sources/Twist.swift Sources/Engraving.swift scripts/prism-plates/main.swift -newer "$out/plates")" ]]; then
+plates=(Sources/Engraving?*.swift)
+if [[ -n "${PLATE_ONLY:-}" ]]; then
+  plates=("Sources/Engraving$PLATE_ONLY.swift")
+  for f in Sources/Engraving?*.swift; do
+    n=$(basename "$f" .swift); n=${n#Engraving}
+    [[ "$n" == "$PLATE_ONLY" ]] && continue
+    printf 'enum %s { static let lines: [Engraving.Line] = [] }\n' "$n" > "$out/stub-$n.swift"
+    plates+=("$out/stub-$n.swift")
+  done
+fi
+if [[ ! -x "$out/plates" ]] || [[ -n "$(find Sources/Twist.swift Sources/Engraving*.swift scripts/prism-plates/main.swift -newer "$out/plates")" ]]; then
   awk '/^struct SplitMix64/,/^}/' Sources/Levels.swift > "$out/SplitMix64.swift"
-  swiftc -O -o "$out/plates" Sources/Twist.swift Sources/Engraving.swift "$out/SplitMix64.swift" scripts/prism-plates/main.swift
+  swiftc -O -o "$out/plates" Sources/Twist.swift Sources/Engraving.swift "${plates[@]}" "$out/SplitMix64.swift" scripts/prism-plates/main.swift
 fi
 "$out/plates" "$@"

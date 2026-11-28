@@ -57,14 +57,14 @@ final class PayoffTests: XCTestCase {
             XCTAssertEqual(payoff?.parts.map(\.name), ["Lens"])
             XCTAssertEqual(payoff?.parts.first?.colours, Offer.pack(.lens).sweep)
             XCTAssertEqual(payoff?.paper, false)
-            XCTAssertEqual(payoff?.stamp, "25 panels unstirred")
-            XCTAssertEqual(payoff?.spoken, "Lens: 25 panels unstirred.")
+            XCTAssertEqual(payoff?.stamp, "75 panels unstirred")
+            XCTAssertEqual(payoff?.spoken, "Lens: 75 panels unstirred.")
             XCTAssertNil(payoff?.carded)
-            XCTAssertTrue(game.finishSpoken.hasSuffix("Lens complete, 25 panels."), game.finishSpoken)
+            XCTAssertTrue(game.finishSpoken.hasSuffix("Lens complete, 75 panels."), game.finishSpoken)
             XCTAssertNil(Payoff(again))
         }
         XCTAssertEqual(Pack.allCases.filter(\.ships), [.lens, .escapement, .prism])
-        XCTAssertEqual(Payoff(pack: .escapement, paper: true).stamp, "30 problems unstirred")
+        XCTAssertEqual(Payoff(pack: .escapement, paper: true).stamp, "90 problems unstirred")
     }
 
     /// The last tier's is the whole game's: every tier's name, the completion's line, and the credit, which the card's

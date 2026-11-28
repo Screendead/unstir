@@ -1,12 +1,14 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/escapement-art.sh render <problem|today> <out.png> [side] [layout]
+# Usage: scripts/escapement-art.sh render <problem|today> <out.png> [side] [layout [cards on a hub]]
+#        scripts/escapement-art.sh deal <problem|today> <layout> <clocks> <scramble> <out.png> [side] [moves]
 #        scripts/escapement-art.sh check <problem|today> <layout>
 #        scripts/escapement-art.sh bench <problem|today>
 # Draws an Escapement problem's plate (Sources/EscapementArt*.swift; today is the shared engine-turning) on the Mac
-# with CoreGraphics, with a layout marking where its knobs and a clock's hub on each would sit; measures how a 30° step
-# shows in each of a layout's cores and how much second ink it carries, as the plates' test does; or times its geometry
-# and its raster at the Pro Max glass's size, five runs' mean.
+# with CoreGraphics, with a layout marking where its knobs and a clock's hub on each would sit; seen through a problem's
+# scramble (clocks as problems.tsv writes them), after the first of its line's moves if given, as a sketch of the deal;
+# measures how a 30° step shows in each of a layout's cores and how much second ink it carries, as the plates' test
+# does; or times its geometry and its raster at the Pro Max glass's size, five runs' mean.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/escapement-art

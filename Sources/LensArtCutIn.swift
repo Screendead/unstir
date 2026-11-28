@@ -105,8 +105,12 @@ extension LensArt {
                      fill(picture, c(0.3))]
         // The frames are tortoiseshell, yellow let into the magenta an eighth of the way round at a time: a twist slides
         // a rim along itself, which only a rim that changes along its length shows.
-        let frames = [a, b].flatMap { c in
-            (0..<4).map { fill(sector(c, inner, outer, 90 * Double($0) + 20, 90 * Double($0) + 65), y(0.9)) } + [ring(c, inner, outer, m(0.8))]
+        let frames: [Fill] = [a, b].flatMap { (c: P) -> [Fill] in
+            let shell: [Fill] = (0..<4).map { (k: Int) -> Fill in
+                let a0: Double = 90 * Double(k) + 20
+                return fill(sector(c, inner, outer, a0, a0 + 45), y(0.9))
+            }
+            return shell + [ring(c, inner, outer, m(0.8))]
         }
         fills += [fill(ribbon, Tone(0, 0.45, 0.9))]
         fills += blocks.map { fill(rect($0.0, $0.1, $0.2, $0.3), m(0.6)) }

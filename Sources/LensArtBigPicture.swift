@@ -10,11 +10,15 @@ import simd
 /// Level 19's name: a camera face on, its lens over the hub (hex's lens on this level), and in the glass the three it
 /// is about to take, standing in a row. Level 19 deals the lens +2 then +1.
 extension LensArt {
-    static let camera: Halftone.Panel = {
-        let lens = P(0, 0.02), body = squircle(P(0, 0.04), 0.86, 0.52), top = rect(-0.74, -0.56, 0.74, -0.38)
-        let hump = [P(-0.2, -0.56), P(-0.14, -0.72), P(0.14, -0.72), P(0.2, -0.56)]
+    static let camera: Halftone.Panel = drawCamera()
+
+    private static func drawCamera() -> Halftone.Panel {
+        let lens: P = P(0, 0.02)
+        let body: [P] = squircle(P(0, 0.04), 0.86, 0.52)
+        let top: [P] = rect(-0.74, -0.56, 0.74, -0.38)
+        let hump: [P] = [P(-0.2, -0.56), P(-0.14, -0.72), P(0.14, -0.72), P(0.2, -0.56)]
         let finder = rect(-0.62, -0.33, -0.38, -0.2), light = rect(0.36, -0.34, 0.66, -0.18)
-        let fills = [disc(lens, 0.17, c(0.3)), disc(lens, 0.235, m(0.8)), disc(lens, 0.31, y(0.85)), fill(finder, c(0.6)), fill(light, y(0.4)),
+        let fills: [Fill] = [disc(lens, 0.17, c(0.3)), disc(lens, 0.235, m(0.8)), disc(lens, 0.31, y(0.85)), fill(finder, c(0.6)), fill(light, y(0.4)),
                      fill(rect(0.44, -0.66, 0.62, -0.56), y(0.85)), disc(P(-0.52, -0.6), 0.09, y(0.85)), fill(hump, y(0.5)), fill(top, y(0.7)),
                      fill(body, m(0.5)), fill(rect(-1, 0.62, 1, 1), y(0.2))]
 
@@ -63,7 +67,7 @@ extension LensArt {
         s.append(stroke(closed(rect(row.x - 0.027, row.y - 0.026, row.x - 0.017, row.y - 0.018)), 0.002))
         s.append(stroke([row + P(-0.04, 0.03), row + P(0.04, 0.03)], 0.0016))
         return panel("camera", fills: fills, strokes: s) { _ in c(0.2) }
-    }()
+    }
 }
 
 // MARK: - 20: Shutter
@@ -72,7 +76,9 @@ extension LensArt {
 /// the top and bottom cores (hex's three lenses on this level): in the opening the drop it has caught mid-splash, on
 /// the dial a bolt for fast and a snail for slow. Level 20 deals the lenses +3, +3 and +2.
 extension LensArt {
-    static let shutter: Halftone.Panel = {
+    static let shutter: Halftone.Panel = drawShutter()
+
+    private static func drawShutter() -> Halftone.Panel {
         let o = P(0, 0), bolt = P(0.012, -0.585), snail = P(0.0, 0.54)
         func corner(_ k: Int) -> P { polar(o, 0.25, 60 * Double(k) + 30) }
         func rim(_ k: Int) -> P { polar(o, 0.9, 60 * Double(k) + 95) }
@@ -114,7 +120,7 @@ extension LensArt {
         s.append(stroke(curve(snail + P(-0.04, 0.016), snail + P(0.0, 0.022), snail + P(0.034, 0.012), 8) + [snail + P(0.04, -0.006)], 0.0036))
         for x in [0.036, 0.046] { s.append(stroke([snail + P(0.04, -0.006), snail + P(x + 0.004, -0.024)], 0.002)) }
         return panel("shutter", fills: fills, strokes: s) { _ in .zero }
-    }()
+    }
 }
 
 // MARK: - 21: Viewfinder
@@ -123,7 +129,9 @@ extension LensArt {
 /// balloon over the left core and ducks on the water over the bottom one (eye's two lenses on this level): in the
 /// balloon's basket someone waves. Level 21 deals each lens +3 in all.
 extension LensArt {
-    static let viewfinder: Halftone.Panel = {
+    static let viewfinder: Halftone.Panel = drawViewfinder()
+
+    private static func drawViewfinder() -> Halftone.Panel {
         let a = P(-0.4, 0), b = P(0, 0.56), basket = a + P(0.024, 0.012), balloon = basket + P(0, -0.2), duck = b + P(0.012, -0.03)
         let peaks = [[P(-1, 0.3), P(-0.62, -0.2), P(-0.3, 0.3)], [P(-0.2, 0.3), P(0.3, -0.42), P(0.62, 0.02), P(0.78, -0.16), P(1.1, 0.3)]]
         let sun = P(0.56, -0.5), green = Tone(0.32, 0, 0.36)
@@ -177,7 +185,7 @@ extension LensArt {
             s.append(stroke(curve(at + P(-0.03 * z, 0.016 * z), at + P(0, 0.022 * z), at + P(0.034 * z, 0.016 * z), 5), 0.0014))
         }
         return panel("viewfinder", fills: fills, strokes: s) { _ in c(0.2) }
-    }()
+    }
 }
 
 // MARK: - 22: Wide angle
@@ -186,7 +194,9 @@ extension LensArt {
 /// cat in a window over the upper right core and a bicycle on the pavement over the lower left (hex's three lenses on
 /// this level). Level 22 deals each lens +3 in all.
 extension LensArt {
-    static let wideAngle: Halftone.Panel = {
+    static let wideAngle: Halftone.Panel = drawWideAngle()
+
+    private static func drawWideAngle() -> Halftone.Panel {
         let far = P(0, 0.04), tram = far + P(0.014, -0.024), cat = P(0.485, -0.28) + P(0.012, -0.02), bike = P(-0.485, 0.28) + P(0.006, -0.02)
         // A point `t` of the way from the picture's edge to the far point.
         func back(_ from: P, _ t: Double) -> P { from + (far - from) * t }
@@ -258,7 +268,7 @@ extension LensArt {
         s.append(stroke([bike + P(-0.012, -0.02), bike + P(-0.014, -0.03)], 0.003))
         s.append(stroke([bike + P(-0.024, -0.03), bike + P(-0.004, -0.03)], 0.004))
         return panel("wideangle", fills: fills, strokes: s) { _ in y(0.26) }
-    }()
+    }
 }
 
 // MARK: - 23: Fisheye
@@ -266,7 +276,9 @@ extension LensArt {
 /// Level 23's name, taken at its word: a fish, close, its eye over the hub (hex's lens on this level), and in the eye
 /// what it is looking at, a hook with a worm on it. Level 23 deals the lens +1 three times.
 extension LensArt {
-    static let fisheye: Halftone.Panel = {
+    static let fisheye: Halftone.Panel = drawFisheye()
+
+    private static func drawFisheye() -> Halftone.Panel {
         let eye = P(0, 0), hook = eye + P(0.016, -0.016)
         let brow = curve(P(1.1, -0.66), P(-0.9, -0.82), P(-0.88, 0.06), 24), jaw = curve(P(-0.86, 0.22), P(-0.8, 0.92), P(1.1, 0.82), 24)
         let head = brow + [P(-0.72, 0.14)] + jaw
@@ -311,7 +323,7 @@ extension LensArt {
         s.append(stroke([hook + P(-0.024, 0.016), hook + P(-0.016, 0.02)], 0.003))
         s.append(stroke(curve(hook + P(-0.004, 0.03), hook + P(0.02, 0.05), hook + P(0.028, 0.026), 6) + curve(hook + P(0.028, 0.026), hook + P(0.034, 0.008), hook + P(0.046, 0.02), 6), 0.004))
         return panel("fisheye", fills: all, strokes: s) { _ in c(0.3) }
-    }()
+    }
 }
 
 // MARK: - 24: Telephoto
@@ -322,7 +334,9 @@ extension LensArt {
 /// over the bottom core, a snail goes by unseen (eye's two small lenses on this level). Level 24 deals each lens +3 in
 /// all.
 extension LensArt {
-    static let telephoto: Halftone.Panel = {
+    static let telephoto: Halftone.Panel = drawTelephoto()
+
+    private static func drawTelephoto() -> Halftone.Panel {
         let near = P(0.012, -0.585), far = P(-0.845, -0.185), snail = P(-0.012, 0.588)
         // The lens's axis, from its mount to the hood's mouth: `at` is a point `d` along it and `w` above it.
         let mount = P(0.31, 0.03), mouth = P(-0.69, -0.1), length = simd_distance(mount, mouth)
@@ -439,7 +453,7 @@ extension LensArt {
         s.append(stroke([snail + P(0.018, 0.012), snail + P(-0.035, 0.014), snail + P(-0.045, 0.0)], 0.003))
         for x in [-0.04, -0.05] { s.append(stroke([snail + P(-0.043, 0.002), snail + P(x - 0.004, -0.016)], 0.002)) }
         return panel("telephoto", fills: fills, strokes: s) { _ in c(0.2) }
-    }()
+    }
 }
 
 // MARK: - 25: Kaleidoscope
@@ -448,7 +462,9 @@ extension LensArt {
 /// and over the hub and three of the ring's cores (hex's four lenses on this level) the loose things that make it,
 /// each on its own: a star, a paper clip, a moon and a heart. Level 25 deals its lenses +3, +3, +3 and +2.
 extension LensArt {
-    static let kaleidoscope: Halftone.Panel = {
+    static let kaleidoscope: Halftone.Panel = drawKaleidoscope()
+
+    private static func drawKaleidoscope() -> Halftone.Panel {
         // The wedge, from 0 to 30 degrees, as (radius, degrees) corners and a tone.
         let wedge: [([(Double, Double)], Tone)] = [
             ([(0.06, 0), (0.25, 0), (0.2, 30), (0.06, 30)], y(0.75)),
@@ -493,5 +509,5 @@ extension LensArt {
             for f in shards where f.holds(q) { return f.tone }
             return .zero
         }
-    }()
+    }
 }

@@ -143,45 +143,65 @@ extension EscapementArt {
     /// Problem 12, hex: a longcase clock run down. The pendulum hangs plumb on its centre line in one gap between the
     /// rods, the weight at the bottom of its fall in another, and a spider has spun its web from one to the other.
     static func plate12() -> Plate {
-        var plate = Plate(), movement = Plate()
-        let x = 0.2425, cord = -0.1975
-        var rings = wheel(&movement, P(-0.2, -1.03), 0.2, teeth: 30, spokes: 4, phase: 0.2)
+        var plate = Plate()
+        let x = plate12X, cord = plate12Cord, w = -x
+        plate12Movement(&plate)
+        plate12Case(&plate)
+        let hub = P(0, -0.28)
+        plate12Web(&plate, hub, left: cord, right: x - 0.011, top: -0.775, floor: -0.085, seed: 12, turns: 13)
+        plate12Web(&plate, P(-0.6, 0.0), left: -0.80, right: -x - 0.045, top: -0.2, floor: 0.2, seed: 31, turns: 7)
+        // Threads hung in the case's corner.
+        let ends: [P] = [P(0.80, -0.42), P(0.80, -0.56), P(0.52, -0.775)]
+        for (k, end) in ends.enumerated() {
+            plate.line(curve(P(0.35 + 0.1 * Double(k), -0.775), P(0.56, -0.6 + 0.04 * Double(k)), end, 10), fine)
+        }
+        let bob: P = plate12Pendulum(&plate)
+        plate12Weight(&plate)
+        plate12Spider(&plate, hub)
+
+        callout(&plate, "A", from: bob + P(0.09, -0.06), to: P(0.55, 0.6))
+        callout(&plate, "B", from: P(0.1, -0.37), to: P(0.5, -0.62))
+        callout(&plate, "C", from: P(w - 0.075, 0.64), to: P(-0.56, 0.62))
+        callout(&plate, "D", from: P(x + 0.011, 0.04), to: P(0.585, 0.0))
+        return plate
+    }
+    private static let plate12X: Double = 0.2425
+    private static let plate12Cord: Double = -0.1975
+    private static func plate12Movement(_ plate: inout Plate) {
+        var movement = Plate()
+        var rings: [[P]] = wheel(&movement, P(-0.2, -1.03), 0.2, teeth: 30, spokes: 4, phase: 0.2)
         rings += wheel(&movement, P(0.3, -1.05), 0.17, teeth: 24, spokes: 4, phase: 0.5)
         plate.lines(hatch([Array(glass)] + rings, angle: -0.45, gap: 0.034), fine)
         plate.marks += movement.marks
-
+    }
+    private static func plate12Case(_ plate: inout Plate) {
         // The case: its sides in section, and the seatboard the movement stands on.
         for side in [-1.0, 1.0] { shaded(&plate, box(P(side * 0.80, -0.7), P(side * 0.88, 0.7)), angle: side * 0.8, gap: 0.013, outline: heavy) }
         shaded(&plate, box(P(-0.62, -0.845), P(0.62, -0.775)), angle: 0.03, gap: 0.012, outline: heavy)
-
-        // Webs, their spokes run out to whatever they reach: one hung between the weight's line and the pendulum, one
-        // between the weight's line and the case.
-        func web(_ hub: P, left: Double, right: Double, top: Double, floor: Double, seed: Int, turns: Int) {
-            let count = 12
-            let spokes: [(a: Double, reach: Double)] = (0..<count).map { k in
-                let a = (Double(k) * 30 + 8 + 12 * rnd(seed, k)) * deg, c = cos(a), s = sin(a)
-                return (a, min(((c > 0 ? right : left) - hub.x) / c, ((s > 0 ? floor : top) - hub.y) / s))
-            }
-            plate.line(curve(P(left, floor + 0.03), P(hub.x, floor - 0.035), P(right, floor - 0.02)), fine)
-            plate.line(curve(P(left, top + 0.02), P(hub.x, top + 0.04), P(right, top - 0.03)), fine)
-            for spoke in spokes { plate.line([hub, polar(hub, spoke.reach, spoke.a)], fine) }
-            for j in 1...turns {
-                let r = 0.026 + 0.025 * Double(j)
-                for k in 0..<count where rnd(seed + 1, j * count + k) > 0.07 {
-                    let p = spokes[k], q = spokes[(k + 1) % count], qa = q.a + (k == count - 1 ? 2 * .pi : 0)
-                    guard r < p.reach, r < q.reach else { continue }
-                    plate.line(curve(polar(hub, r, p.a), polar(hub, 0.9 * r, (p.a + qa) / 2), polar(hub, r, qa), 5), fine)
-                }
+    }
+    // Webs, their spokes run out to whatever they reach: one hung between the weight's line and the pendulum, one
+    // between the weight's line and the case.
+    private static func plate12Web(_ plate: inout Plate, _ hub: P, left: Double, right: Double, top: Double, floor: Double, seed: Int, turns: Int) {
+        let count = 12
+        let spokes: [(a: Double, reach: Double)] = (0..<count).map { (k: Int) -> (a: Double, reach: Double) in
+            let a: Double = (Double(k) * 30 + 8 + 12 * rnd(seed, k)) * deg, c: Double = cos(a), s: Double = sin(a)
+            let across: Double = ((c > 0 ? right : left) - hub.x) / c, down: Double = ((s > 0 ? floor : top) - hub.y) / s
+            return (a, min(across, down))
+        }
+        plate.line(curve(P(left, floor + 0.03), P(hub.x, floor - 0.035), P(right, floor - 0.02)), fine)
+        plate.line(curve(P(left, top + 0.02), P(hub.x, top + 0.04), P(right, top - 0.03)), fine)
+        for spoke in spokes { plate.line([hub, polar(hub, spoke.reach, spoke.a)], fine) }
+        for j in 1...turns {
+            let r: Double = 0.026 + 0.025 * Double(j)
+            for k in 0..<count where rnd(seed + 1, j * count + k) > 0.07 {
+                let p = spokes[k], q = spokes[(k + 1) % count], qa: Double = q.a + (k == count - 1 ? 2 * .pi : 0)
+                guard r < p.reach, r < q.reach else { continue }
+                plate.line(curve(polar(hub, r, p.a), polar(hub, 0.9 * r, (p.a + qa) / 2), polar(hub, r, qa), 5), fine)
             }
         }
-        let hub = P(0, -0.28)
-        web(hub, left: cord, right: x - 0.011, top: -0.775, floor: -0.085, seed: 12, turns: 13)
-        web(P(-0.6, 0.0), left: -0.80, right: -x - 0.045, top: -0.2, floor: 0.2, seed: 31, turns: 7)
-        // Threads hung in the case's corner.
-        for (k, end) in [P(0.80, -0.42), P(0.80, -0.56), P(0.52, -0.775)].enumerated() {
-            plate.line(curve(P(0.35 + 0.1 * Double(k), -0.775), P(0.56, -0.6 + 0.04 * Double(k)), end, 10), fine)
-        }
-
+    }
+    private static func plate12Pendulum(_ plate: inout Plate) -> P {
+        let x = plate12X
         // The pendulum, plumb: suspension, rod, bob and rating nut on one centre line, the beat scale's zero under it.
         cut(&plate, box(P(x - 0.055, -0.775), P(x + 0.055, -0.725)))
         plate.line([P(x, -0.725), P(x, -0.66)], heavy)
@@ -194,39 +214,39 @@ extension EscapementArt {
         plate.line(arc(bob, radius - 0.03), fine)
         shaded(&plate, box(P(x - 0.045, 0.795), P(x + 0.045, 0.84)), angle: 0, gap: 0.011)
         plate.line([P(x, 0.84), P(x, 0.875)], medium)
-        plate.lines(dashed([P(x, -0.97), P(x, -0.845)], on: 0.05, off: 0.025) + dashed([P(x, 0.875), P(x, 0.97)], on: 0.03, off: 0.015), fine)
+        let below: [[P]] = dashed([P(x, -0.97), P(x, -0.845)], on: 0.05, off: 0.025)
+        let above: [[P]] = dashed([P(x, 0.875), P(x, 0.97)], on: 0.03, off: 0.015)
+        plate.lines(below + above, fine)
         plate.line([P(x - 0.09, 0.9), P(x + 0.09, 0.9)], fine)
         for k in -4...4 { plate.line([P(x + 0.02 * Double(k), 0.9), P(x + 0.02 * Double(k), k == 0 ? 0.95 : 0.925)], k == 0 ? medium : fine) }
-
+        return bob
+    }
+    private static func plate12Weight(_ plate: inout Plate) {
+        let cord = plate12Cord, w: Double = -plate12X
         // The weight at the bottom of its fall, on a doubled line round its pulley.
-        let w = -x
         plate.lines([[P(cord, -0.775), P(cord, 0.42)], [P(2 * w - cord, -0.775), P(2 * w - cord, 0.42)]], fine)
         cut(&plate, arc(P(w, 0.42), 0.046))
         plate.line(arc(P(w, 0.42), 0.014), medium)
         plate.line([P(w, 0.466), P(w, 0.52)], heavy)
-        let weight = box(P(w - 0.075, 0.52), P(w + 0.075, 0.83))
+        let weight: [P] = box(P(w - 0.075, 0.52), P(w + 0.075, 0.83))
         plate.fill(weight)
         plate.lines(hatch([weight], angle: .pi / 2, gap: 0.017), fine)
         plate.lines(hatch([box(P(w + 0.02, 0.52), P(w + 0.075, 0.83))], angle: 0, gap: 0.014), fine)
         plate.line(weight, medium)
         plate.line(ellipse(P(w, 0.52), 0.075, 0.02), medium)
         plate.line(ellipse(P(w, 0.83), 0.075, 0.02, from: 0, to: .pi), medium)
-
+    }
+    private static func plate12Spider(_ plate: inout Plate, _ hub: P) {
         // The spider at the web's hub.
         for side in [-1.0, 1.0] {
             for i in 0..<4 {
-                let a = (-58 + 38 * Double(i)) * deg
-                plate.line([hub, hub + P(side * 0.05 * cos(a), 0.05 * sin(a) - 0.014), hub + P(side * 0.085 * cos(1.1 * a), 0.095 * sin(1.1 * a))], fine, .second)
+                let a: Double = (-58 + 38 * Double(i)) * deg
+                let m: P = hub + P(side * 0.05 * cos(a), 0.05 * sin(a) - 0.014), e: P = hub + P(side * 0.085 * cos(1.1 * a), 0.095 * sin(1.1 * a))
+                plate.line([hub, m, e], fine, .second)
             }
         }
         plate.fill(ellipse(hub + P(0, 0.02), 0.026, 0.032), .second)
         plate.fill(arc(hub + P(0, -0.02), 0.016), .second)
-
-        callout(&plate, "A", from: bob + P(0.09, -0.06), to: P(0.55, 0.6))
-        callout(&plate, "B", from: P(0.1, -0.37), to: P(0.5, -0.62))
-        callout(&plate, "C", from: P(w - 0.075, 0.64), to: P(-0.56, 0.62))
-        callout(&plate, "D", from: P(x + 0.011, 0.04), to: P(0.585, 0.0))
-        return plate
     }
 
     /// Problem 13, quad: two dials the same, driven from one wheel between them by a rod from below. Each dial sits

@@ -51,6 +51,86 @@ enum EscapementArt {
         case 29: plate29()
         case 30: plate30()
 
+        // Chapter 6, problems 31 to 36 (EscapementArtChapter6.swift).
+        case 31: plate31()
+        case 32: plate32()
+        case 33: plate33()
+        case 34: plate34()
+        case 35: plate35()
+        case 36: plate36()
+
+        // Chapter 7, problems 37 to 42 (EscapementArtChapter7.swift).
+        case 37: plate37()
+        case 38: plate38()
+        case 39: plate39()
+        case 40: plate40()
+        case 41: plate41()
+        case 42: plate42()
+
+        // Chapter 8, problems 43 to 48 (EscapementArtChapter8.swift).
+        case 43: plate43()
+        case 44: plate44()
+        case 45: plate45()
+        case 46: plate46()
+        case 47: plate47()
+        case 48: plate48()
+
+        // Chapter 9, problems 49 to 54 (EscapementArtChapter9.swift).
+        case 49: plate49()
+        case 50: plate50()
+        case 51: plate51()
+        case 52: plate52()
+        case 53: plate53()
+        case 54: plate54()
+
+        // Chapter 10, problems 55 to 60 (EscapementArtChapter10.swift).
+        case 55: plate55()
+        case 56: plate56()
+        case 57: plate57()
+        case 58: plate58()
+        case 59: plate59()
+        case 60: plate60()
+
+        // Chapter 11, problems 61 to 66 (EscapementArtChapter11.swift).
+        case 61: plate61()
+        case 62: plate62()
+        case 63: plate63()
+        case 64: plate64()
+        case 65: plate65()
+        case 66: plate66()
+
+        // Chapter 12, problems 67 to 72 (EscapementArtChapter12.swift).
+        case 67: plate67()
+        case 68: plate68()
+        case 69: plate69()
+        case 70: plate70()
+        case 71: plate71()
+        case 72: plate72()
+
+        // Chapter 13, problems 73 to 78 (EscapementArtChapter13.swift).
+        case 73: plate73()
+        case 74: plate74()
+        case 75: plate75()
+        case 76: plate76()
+        case 77: plate77()
+        case 78: plate78()
+
+        // Chapter 14, problems 79 to 84 (EscapementArtChapter14.swift).
+        case 79: plate79()
+        case 80: plate80()
+        case 81: plate81()
+        case 82: plate82()
+        case 83: plate83()
+        case 84: plate84()
+
+        // Chapter 15, problems 85 to 90 (EscapementArtChapter15.swift).
+        case 85: plate85()
+        case 86: plate86()
+        case 87: plate87()
+        case 88: plate88()
+        case 89: plate89()
+        case 90: plate90()
+
         default: nil
         }
     }
@@ -247,6 +327,8 @@ enum EscapementArt {
         "D": [[(0, 0), (0, 1), (0.34, 1), (0.6, 0.74), (0.6, 0.26), (0.34, 0), (0, 0)]],
         "E": [[(0.56, 0), (0, 0), (0, 1), (0.56, 1)], [(0, 0.48), (0.4, 0.48)]],
         "I": [[(0.3, 0), (0.3, 1)], [(0.12, 0), (0.48, 0)], [(0.12, 1), (0.48, 1)]],
+        "L": [[(0, 0), (0, 1), (0.56, 1)]],
+        "M": [[(0, 1), (0, 0), (0.33, 0.62), (0.66, 0), (0.66, 1)]],
         "V": [[(0, 0), (0.3, 1), (0.6, 0)]],
         "X": [[(0, 0), (0.6, 1)], [(0.6, 0), (0, 1)]],
     ]
@@ -264,7 +346,8 @@ enum EscapementArt {
 
     static func roman(_ n: Int) -> String {
         var n = n, out = ""
-        for (v, s) in [(10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")] {
+        for (v, s) in [(1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
+                       (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")] {
             while n >= v { out += s; n -= v }
         }
         return out

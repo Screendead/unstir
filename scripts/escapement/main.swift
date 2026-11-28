@@ -13,10 +13,13 @@ enum Rule: String { case final, lab }
 enum Move: Hashable, CustomStringConvertible {
     case wait
     case turn(Int, Int)
+    /// ESC_WAIT=one's wait: a tap on clock k's ratchet ticks that clock alone.
+    case waitOn(Int)
     var description: String {
         switch self {
         case .wait: "wait"
         case let .turn(r, s): "\(r):\(s > 0 ? "+" : "")\(s)"
+        case let .waitOn(k): "wait\(k)"
         }
     }
     var rod: Int? { if case let .turn(r, _) = self { r } else { nil } }
@@ -51,15 +54,22 @@ struct Problem {
     func play(_ s: [Twist], _ m: Move) -> [Twist]? {
         var s = s
         if case let .turn(r, n) = m { s.commit(rod: r, steps: n, in: layout) }
-        for c in clocks where s.contains(where: { $0.rod == c.rod }) {
+        var only: Int?
+        if case let .waitOn(k) = m { only = k }
+        for c in clocks where s.contains(where: { $0.rod == c.rod }) && (only == nil || only == c.rod) {
             if s.commit(rod: c.rod, steps: c.dir, in: layout) == .pushed, !keepsPushed { return nil }
         }
         return s.isEmpty || running(s) ? s : nil
     }
 
     /// Waits and whole heals: turns that land on one entry and pop it.
+    func waitMoves(_ s: [Twist]) -> [Move] {
+        guard waits, running(s) else { return [] }
+        return waitsOne ? clocks.filter { c in s.contains { $0.rod == c.rod } }.map { .waitOn($0.rod) } : [.wait]
+    }
+
     func cleanMoves(_ s: [Twist], after last: Move?) -> [Move] {
-        var moves: [Move] = waits && running(s) ? [.wait] : []
+        var moves = waitMoves(s)
         var seen = Set<Move>()
         for i in s.indices where !isClock(s[i].rod) {
             let t = s[i]
@@ -73,7 +83,7 @@ struct Problem {
 
     /// Every turn of every working knob up to `span` steps either way, and the wait.
     func allMoves(_ s: [Twist], after last: Move?, span: Int) -> [Move] {
-        var moves: [Move] = waits && running(s) ? [.wait] : []
+        var moves = waitMoves(s)
         for r in layout.rods.indices where !isClock(r) {
             if rule == .lab, last?.rod == r { continue }
             for n in -span...span where n != 0 { moves.append(.turn(r, n)) }
@@ -84,6 +94,9 @@ struct Problem {
 
 /// ESC_WAIT=0 plays without the waiting move, the no-wait rule, where a clock can't be touched.
 let waitsAllowed = ProcessInfo.processInfo.environment["ESC_WAIT"] != "0"
+
+/// ESC_WAIT=one, a rule for Jack to weigh: a tap on a ratchet ticks that clock alone, every turn still ticking them all.
+let waitsOne = ProcessInfo.processInfo.environment["ESC_WAIT"] == "one"
 
 /// ESC_PUSHED=1 plays on past a tick that pushes, to check that no such line ever empties the stack.
 let keepsPushed = ProcessInfo.processInfo.environment["ESC_PUSHED"] == "1"
@@ -439,6 +452,55 @@ func table(_ path: String, span: Int) {
     }
 }
 
+/// How many clean moves can still be played from `s` before every one loses: how far a doomed line runs before the
+/// player sees it is doomed.
+func survival(_ p: Problem, _ s: [Twist], last: Move?, memo: inout [Key: Int]) -> Int {
+    if s.isEmpty { return 0 }
+    let k = Key(s: s, last: last, left: 0, rule: p.rule)
+    if let c = memo[k] { return c }
+    var best = 0
+    for m in p.cleanMoves(s, after: last) {
+        guard let t = p.play(s, m), !t.isEmpty else { continue }
+        best = max(best, 1 + survival(p, t, last: m, memo: &memo))
+    }
+    memo[k] = best
+    return best
+}
+
+/// One problem's hardness, in whole heals and waits: par, entries, clock seams, waits on the line, lines at par, first
+/// moves that miss par of those open, moves on the line with no other way on, the decoys along it (moves that don't push
+/// at once but miss par), the furthest a decoy runs before every move loses, and bits.
+func measure(_ n: String, _ p: Problem) -> String {
+    // A wait on one clock alone can leave the others owing past the slowest clock's count.
+    let clean = Counter(p, span: nil), par = waitsOne ? clean.optimum(limit: p.owed(p.stack) + 12) ?? 0 : p.owed(p.stack)
+    let lines = clean.count(p.stack, last: nil, left: par)
+    guard lines > 0, let line = clean.lines(p.stack, last: nil, left: par, keep: 1).first else { return "\(n)\tunsolvable" }
+    var s = p.stack, last: Move? = nil, forced = 0, decoys = 0, losses = 0, reach = 0, firstMiss = 0, firstAll = 0
+    var memo: [Key: Int] = [:]
+    for (i, m) in line.enumerated() {
+        var other = false
+        let moves = p.cleanMoves(s, after: last)
+        for o in moves where o != m {
+            guard let t = p.play(s, o) else { losses += 1; if i == 0 { firstMiss += 1 }; continue }
+            if clean.count(t, last: o, left: par - i - 1) > 0 { other = true; continue }
+            decoys += 1
+            if i == 0 { firstMiss += 1 }
+            reach = max(reach, 1 + survival(p, t, last: o, memo: &memo))
+        }
+        if i == 0 { firstAll = moves.count }
+        if !other { forced += 1 }
+        s = p.play(s, m)!
+        last = m
+    }
+    let c = chance(p, par: par)
+    return [n, p.layout.rawValue, p.clocks.map { "\($0.rod)\($0.dir > 0 ? "+" : "-")" }.joined(separator: ","),
+            String(par), String(p.owed(p.stack) == par ? p.clocks.reduce(0) { a, cl in
+                a + max(0, -cl.dir * p.stack.filter { $0.rod == cl.rod }.reduce(0) { $0 + $1.steps }) } : 0),
+            String(p.stack.count), String(line.filter { $0.rod == nil }.count), String(lines), "\(firstMiss)/\(firstAll)",
+            String(forced), String(decoys), String(losses), String(reach), String(format: "%.1f", c > 0 ? abs(log2(c)) : 99),
+            line.map(\.description).joined(separator: " ")].joined(separator: "\t")
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 let rule = Rule(rawValue: ProcessInfo.processInfo.environment["ESC_RULE"] ?? "final") ?? .final
 switch args.first {
@@ -455,15 +517,18 @@ case "search" where args.count == 8:
            seeds: UInt64(args[5])!..<UInt64(args[6])!, rule: rule)
     _ = args[7]
 case "book" where args.count == 2:
-    // One line per problem of the book: number, layout, clocks, par, the bound, clean and split lines at par, keys,
-    // difficulty in bits, the line.
+    // One line per problem of the book: number, layout, clocks, par, the bound, clean and split lines at par (split
+    // only for 1 to 30), keys, difficulty in bits, the line.
     for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
         let f = row.split(separator: "\t").map(String.init)
         let layout = Layout(rawValue: f[1])!
         let p = Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: rule)
-        let clean = Counter(p, span: nil), full = Counter(p, span: 6)
+        let clean = Counter(p, span: nil)
         guard let par = clean.optimum(limit: p.owed(p.stack) + 12) else { print(f[0], "unsolvable"); continue }
-        let keys = p.allMoves(p.stack, after: nil, span: 6).filter { m in
+        // Past the first 30 the search over every turn outgrows any run (problem 33, par 7 with four free knobs, ran past
+        // fifteen minutes; a par 13 past ten), so problems 31 on are counted in whole heals and waits alone.
+        let every = Int(f[0])! <= 30, full = every ? Counter(p, span: 6) : clean
+        let keys = (every ? p.allMoves(p.stack, after: nil, span: 6) : p.cleanMoves(p.stack, after: nil)).filter { m in
             p.play(p.stack, m).map { full.count($0, last: m, left: par - 1) > 0 } ?? false
         }
         let c = chance(p, par: par)
@@ -472,6 +537,14 @@ case "book" where args.count == 2:
                String(format: "%.1f", c > 0 ? abs(log2(c)) : 99),
                clean.lines(p.stack, last: nil, left: par, keep: 1)[0].map(\.description).joined(separator: " ")]
             .joined(separator: "\t"))
+        fflush(stdout)
+    }
+case "measure" where args.count == 2:
+    print("#\tlayout\tclocks\tpar\tticks\tentries\twaits\tlines\tfirst miss\tforced\tdecoys\tlosses\treach\tbits\tline")
+    for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
+        let f = row.split(separator: "\t").map(String.init)
+        let layout = Layout(rawValue: f[1])!
+        print(measure(f[0], Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: rule)))
         fflush(stdout)
     }
 case "table" where args.count >= 2:

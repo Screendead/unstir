@@ -753,12 +753,16 @@ extension Solver {
             return s.isEmpty || running(s) ? s : nil
         }
 
-        /// Every move from `s`: each entry's exact inverse first, then the wait, then every count in `steps` on every
-        /// working slot.
+        /// Every move from `s`: each whole heal first, an entry's exact inverse that lands on it, then the wait, then
+        /// every count in `steps` on every working slot. An inverse that lands elsewhere is no heal, and searching it
+        /// too made the deep problems' search run past minutes.
         func moves(_ s: [Twist]) -> [Move] {
             var out: [Move] = [], seen = Set<Move>()
             func add(_ m: Move) { if seen.insert(m).inserted { out.append(m) } }
-            for t in s.reversed() where !isClock(t.rod) { add(.stir(knob: t.rod, slot: t.rod, steps: -t.steps)) }
+            for i in s.indices.reversed() where !isClock(s[i].rod)
+                && s.landing(rod: s[i].rod, steps: -s[i].steps, in: layout, lenses: lenses) == i {
+                add(.stir(knob: s[i].rod, slot: s[i].rod, steps: -s[i].steps))
+            }
             if running(s) { add(.wait) }
             for slot in layout.rods.indices where !isClock(slot) {
                 for k in steps { add(.stir(knob: slot, slot: slot, steps: k)) }

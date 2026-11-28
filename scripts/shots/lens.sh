@@ -4,7 +4,7 @@
 hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
   PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+3
 hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:-2
-for n in $(seq -w 1 25); do
+for n in $(seq -w 1 75); do
   hold=5 shot "lens-$n" "Lens $n as dealt, on its halftone panel (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
     $([[ $n == 01 ]] && echo BESTS=lens:0)
 done

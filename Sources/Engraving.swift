@@ -16,6 +16,7 @@ enum Engraving {
 
     enum Plate: String, CaseIterable {
         case fern, seeds, medusae, radiolaria, nautilus
+        case leaves, moths, reef, diatoms, fungi, feathers, starfish, beetles, seahorses, octopus
     }
 
     static let heavy = 0.006, medium = 0.004, fine = 0.003
@@ -27,6 +28,16 @@ enum Engraving {
         case .medusae: Medusae.lines
         case .radiolaria: Radiolaria.lines
         case .nautilus: Nautilus.lines
+        case .leaves: Leaves.lines
+        case .moths: Moths.lines
+        case .reef: Reef.lines
+        case .diatoms: Diatoms.lines
+        case .fungi: Fungi.lines
+        case .feathers: Feathers.lines
+        case .starfish: Starfish.lines
+        case .beetles: Beetles.lines
+        case .seahorses: Seahorses.lines
+        case .octopus: Octopus.lines
         }
     }
 

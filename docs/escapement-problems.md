@@ -15,7 +15,7 @@ the standing hint (E2), freeze on the +1 (E3), and the tick final once a move is
 every let-go final, its loss shown on that lift (round 9 E1, open points J1 and J2), and the problem lost when the last
 clock stops with twists still on the picture (round 9 E2, open point J4). The table behind this
 page is `scripts/escapement/problems.tsv`; `scripts/escapement.sh book scripts/escapement/problems.tsv` proves it again
-(about eight minutes).
+(1 min 40 s for all 90 on 2026-11-27; 31 to 90, section 2b, are counted in whole heals and waits alone).
 
 "Checked" means the prover confirmed it on all 30. "Inferred" means it follows from the rule and was not separately
 tested.
@@ -366,6 +366,203 @@ All 30: exists, none shorter (absolute), one key. "With detours" counts every li
 exactly its dial. They were kept only with one line in whole heals and waits, chosen by hand for an idea each, and
 ordered by grade within their chapter. None was edited after the deal, so the lines are what the search found, not a
 composer's polish.
+
+## 2b. Problems 31 to 90 (2026-11-27)
+
+Jack's call (2026-11-27): "At least treble the number of levels, and make them ramp up slightly faster in difficulty, to
+a much higher maximum difficulty." Problems 31 to 90 append ten chapters of six; 1 to 30 are untouched.
+
+**The ramp.** Par runs 6 to 21. A straight line through par against the problem's number rises 0.148 a problem over 1 to
+30 and 0.225 over 31 to 90, half as fast again (checked: `numpy.polyfit`). Each chapter opens lower than it ends, as the
+first five do. The ceiling is the reader's eye, not the prover or the GPU: every move heals a seam, so a stack holds par
+less waits plus the clocks' own seams, and past about 26 entries on hex the shear of the stack turns even a bold plate to
+grey bands in which no seam can be traced (the plates' shots, 2026-11-27: 80 reads at 25 entries, 82 to 90 did not at 31
+to 38). So every hex problem keeps to 26 entries but 39 and 61 (27 and 32), whose extra entries are one-step seams on
+their clocks, which read; pent, with fewer discs over each other, reads to 30 (62, 77 at 29). On hex one clock owing n is dealt in
+about n + 6 entries, so one clock's par stops near 20 (`pools.sh`'s `ESC_MOST`, below), and the deepest chapters climb in
+decoys, reach and bits instead (Hardness). A clock owing more than 9 shows two cards on its hub, the clock drawn larger
+so they stand as tall as one.
+
+**How they were made.** As 4 to 30: the prover's `build` deals each backwards from a random line, so every deal is
+solvable at exactly what its clocks owe. `scripts/escapement/pools.sh` deals pools for each layout, set of clocks and
+count of moves, keeping deals with one line in whole heals and waits and no seam of six steps or more (one reads as a
+turn the other way); `scripts/escapement/plan-31-90.txt` names a pool and par for each slot, and
+`scripts/escapement/pick.py build/pools scripts/escapement/plan-31-90.txt 31` takes, for each chapter's opener, the
+easiest deal with the chapter's idea in it, and for every other slot the hardest: the most bits plus half the decoys and
+half the reach (below). `scripts/escapement/pools-31-90.sh` deals every pool the plan picks from again, each with the seeds and cap it was
+dealt with; each pick's pool and seed are in the tables below and in `scripts/escapement/picks-31-90.tsv`. The 26 slots
+dealt again for the eye (41, 45, 48, 51 to 54, 59, 63 to 66, 74, 76, 78, 79, 81 to 90) pick from pools kept to 26
+entries (`-e26`; 74 to 22, as its plate is light) with `pick.py ... --only=...`, every other slot keeping its pick and
+seed, the last slot picking first so a later problem takes the harder deal; 41, 45, 51, 52 and 74 kept their pars,
+the rest came down 1 to 8 (Eternity, 27 to 19). Titles are in `scripts/escapement/titles-31-90.txt`; `scripts/escapement/to-swift.py`
+writes the rows as Pack.swift's problems.
+
+**Proof.** *Exists* and *none shorter* as for 1 to 30: the line is replayed through `Array.commit`, and par is what the
+slowest clock owes, an absolute bound. *One line and one key* in whole heals and waits, checked on every problem
+(`scripts/escapement.sh measure`, and `testEveryProblemHasOneKey`). The search over every turn of up to ±6 steps that
+proved 1 to 30 has one key and no detour line was not run on 31 to 90: on 33 (par 7, four free knobs) it ran past
+fifteen minutes, at par 13 past ten and at par 24 past twenty-five, so for 31 to 90 a detour (one step on a free knob and back, in place of a wait) may give
+more lines at par, as it did for 9 and 11. It cannot make one shorter.
+
+**Hardness.** `scripts/escapement.sh measure` plays each problem's line and counts, at every move, the other whole
+heals and waits open: *decoys* don't push at once but leave par out of reach, *losses* push at once. *Reach* is the
+furthest a decoy runs before every move from it loses, the lookahead a player needs to see it is wrong. *Bits* are the
+book's planning measure. Every move of every line in the book is forced (no other move keeps par).
+
+| Ch | Chapter | Pars | Mean par | Entries (most) | Decoys (mean / most) | Reach (most) | Bits (mean / most) |
+|---|---|---|---|---|---|---|---|
+| 1 | The Clock | 2 to 6 | 3.7 | 9 | 1.7 / 5 | 1 | 1.5 / 4.2 |
+| 2 | Tempo | 3 to 8 | 5.8 | 10 | 2.5 / 4 | 2 | 2.2 / 3.6 |
+| 3 | Two Clocks | 3 to 6 | 4.8 | 13 | 1.8 / 5 | 4 | 1.7 / 4.6 |
+| 4 | Wound Back | 3 to 7 | 5.7 | 11 | 2.0 / 5 | 3 | 1.7 / 4.2 |
+| 5 | Grand Complication | 3 to 9 | 7.5 | 13 | 2.7 / 5 | 3 | 2.5 / 4.6 |
+| 6 | Long Count | 6 to 9 | 7.5 | 11 | 5.0 / 7 | 8 | 4.9 / 7.0 |
+| 7 | Chronograph | 8 to 11 | 9.7 | 27 | 5.0 / 9 | 10 | 5.0 / 9.0 |
+| 8 | Retrograde | 9 to 12 | 11.0 | 26 | 5.5 / 9 | 10 | 5.5 / 9.0 |
+| 9 | Triple Calendar | 9 to 12 | 10.3 | 26 | 3.5 / 6 | 5 | 3.5 / 6.0 |
+| 10 | Countdown | 11 to 15 | 12.8 | 26 | 7.0 / 10 | 12 | 6.9 / 10.0 |
+| 11 | Gear Train | 12 to 13 | 12.2 | 32 | 7.2 / 10 | 10 | 7.2 / 10.0 |
+| 12 | Dead Beat | 13 to 18 | 15.5 | 23 | 6.2 / 8 | 10 | 6.2 / 8.0 |
+| 13 | Fusee | 17 to 21 | 18.8 | 29 | 10.0 / 13 | 12 | 9.9 / 13.0 |
+| 14 | Tourbillon | 17 to 20 | 18.7 | 26 | 10.5 / 13 | 16 | 10.5 / 13.0 |
+| 15 | Perpetual | 18 to 20 | 19.0 | 26 | 11.7 / 15 | 16 | 11.5 / 13.8 |
+
+The targets, chosen from the first book's measures: every new chapter beats every first-book chapter on
+mean decoys (2.7 at most there), on most decoys (5) and on longest reach (4), which all hold, and the last three chapters
+average 9.9 to 11.5 bits, against 7.2 at most before them (they passed 10 each before the deals were cut to 26 entries). Chapters of three clocks and of neighbouring clocks measure lower in bits, as their clocks
+cross most knobs and leave few choices; what is hard there is reading three dials and seams one step deep, which bits
+don't count (as 29 in the first book).
+
+
+### Chapter 6. Long Count
+
+One forward clock, pent and hex, par 6 to 9, the depth of the first book's end but with up to seven decoys: loose seams outside the clock's edge whose heal is right only later. The opener's note says so. The opener's note adds: *Not every loose seam is due.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 31 | Hairspring | pent | 0+ | `0:-1,1:-4,0:-1,1:-2,0:-1,4:+5,0:-2,3:+2,1:+5,0:-1,1:+2` | 6 | `1:-2` · `1:-5` · `3:-2` · `4:-5` · `1:+2` · `1:+4` | 1 | 1 | 1.0 | pent-0+-6 211 |
+| 32 | Balance wheel | hex | 1+ | `1:-1,0:-4,1:-3,3:+2,4:+4,6:+5,1:-3,3:-2,4:+4,3:-5` | 7 | `3:+5` · `4:-4` · `3:+2` · `6:-5` · `4:-4` · `3:-2` · `0:+4` | 5 | 6 | 5.0 | hex-1+-7 34 |
+| 33 | Escape wheel | pent | 0+ | `0:-5,2:+5,3:+5,2:-5,3:+2,4:+2,0:-2,2:+5,3:+4` | 7 | `3:-4` · `2:-5` · `4:-2` · `3:-2` · `2:+5` · `3:-5` · `2:-5` | 5 | 6 | 5.0 | pent-0+-7 146 |
+| 34 | Pallet fork | hex | 1+ | `1:-2,3:-3,6:+3,1:-2,5:-2,2:-2,1:-4,4:-5,3:+5,4:+2,3:+5` | 8 | `3:-5` · `4:-2` · `3:-5` · `4:+5` · `2:+2` · `5:+2` · `6:-3` · `3:+3` | 6 | 6 | 5.6 | hex-1+-8 7209 |
+| 35 | Click spring | pent | 0+ | `0:-3,3:+3,2:-4,1:-3,0:-5,3:-4,2:-5,3:+3,2:-3,3:-4` | 8 | `3:+4` · `2:+3` · `3:-3` · `2:+5` · `3:+4` · `1:+3` · `2:+4` · `3:-3` | 6 | 7 | 6.0 | pent-0+-8 485 |
+| 36 | Crown wheel | hex | 1+ | `1:-5,4:-4,3:+5,4:+5,3:-3,6:+4,1:-4,4:+5,3:+4,4:+3,3:+5` | 9 | `3:-5` · `4:-3` · `3:-4` · `4:-5` · `6:-4` · `3:+3` · `4:-5` · `3:-5` · `4:+4` | 7 | 8 | 7.0 | hex-1+-9 15826 |
+
+### Chapter 7. Chronograph
+
+Two forward clocks. Pent's 0 and 2 cover every knob and teach; hex's 1 and 3 leave knob 5 free, and hex's 1 and 2, neighbours, leave 4 and 5 free, and there the clock at twelve uncovers the clock at two on every move. From 40 the hubs show two cards. The opener's note adds: *Read both dials before every move.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 37 | Second hand | pent | 0+,2+ | `2:-1,3:+3,2:-2,0:-3,3:+2,2:-3,4:-2,0:-2,3:+2,2:-1,1:-2,2:-1,0:-1,1:-3` | 14 | `1:+3` · `1:+2` · `3:-2` · `4:+2` · `wait` · `3:-2` · `wait` · `3:-3` | 0 | 0 | 0.0 | pent-0+_2+-8 1 |
+| 38 | Pushpiece | hex | 1+,3+ | `3:-5,6:-3,5:-2,6:+5,5:-3,1:-1,0:-3,3:-3,1:-2,5:+4,6:+5,1:-1,2:+2,3:-1,1:-1,5:-5` | 14 | `5:+5` · `2:-2` · `6:-5` · `5:-4` · `0:+3` · `5:+3` · `6:-5` · `5:+2` · `6:+3` | 5 | 3 | 5.0 | hex-1+_3+-9 5420 |
+| 39 | Lap time | hex | 1+,2+ | `2:-1,1:-1,5:+3,2:-1,1:-1,4:-5,2:-1,1:-1,5:-5,2:-1,1:-1,4:+5,2:-1,1:-1,5:-2,2:-1,1:-1,4:+3,2:-1,1:-1,5:+2,2:-1,1:-1,4:-2,2:-1,1:-1,5:-5` | 18 | `5:+5` · `4:+2` · `5:-2` · `4:-3` · `5:+2` · `4:-5` · `5:+5` · `4:+5` · `5:-3` | 8 | 8 | 8.0 | hex-1+_2+-9 3597 |
+| 40 | Split second | hex | 1+,3+ | `3:-1,4:-2,3:-1,2:+3,3:-1,4:-4,3:-3,6:+4,5:+4,1:-3,4:-2,3:-3,5:+4,6:+3,1:-1,0:+4,3:-1,1:-1,5:+3` | 15 | `5:-3` · `0:-4` · `6:-3` · `5:-4` · `4:+2` · `5:-4` · `6:-4` · `4:+4` · `2:-3` · `4:+2` | 4 | 4 | 4.0 | hex-1+_3+-10 1305 |
+| 41 | Flyback | hex | 1+,2+ | `1:-4,4:-2,3:-3,4:+2,5:+5,2:-1,1:-1,4:-5,2:-1,1:-1,3:+2,2:-1,1:-1,5:-5,2:-1,1:-1,4:-4,2:-1,1:-1,5:+3,2:-1,1:-1,4:+3,2:-1,1:-1,5:-2` | 18 | `5:+2` · `4:-3` · `5:-3` · `4:+4` · `5:+5` · `3:-2` · `4:+5` · `5:-5` · `4:-2` · `3:+3` · `4:+2` | 9 | 10 | 9.0 | hex-1+_2+-11-e26 182048 |
+| 42 | Tachymeter | hex | 1+,3+ | `1:-2,5:-4,2:-5,1:-2,4:-3,6:+2,3:-2,1:-3,5:+5,4:-4,3:-5,6:-2,1:-2,5:-2,6:-3,1:-1,6:-5,1:-1,5:-3` | 18 | `5:+3` · `6:+5` · `6:+3` · `5:+2` · `6:+2` · `4:+4` · `5:-5` · `6:-2` · `4:+3` · `2:+5` · `5:+4` | 4 | 2 | 4.0 | hex-1+_3+-11 1726 |
+
+### Chapter 8. Retrograde
+
+One clock forward and one wound back, on pent's neighbours 0 and 1 and hex's 1 and 2 or 1 and 3. The opener's note adds: *One clock forward, one wound back.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 43 | Spring forward | pent | 0+,1- | `1:+2,3:+4,2:+4,1:+1,2:-5,1:+1,0:-1,2:+3,1:+1,0:-1,2:-2,1:+1,0:-1,1:+1,0:-1,2:+4,1:+1,0:-1,4:+3,1:+1,0:-1,2:+5` | 15 | `2:-5` · `4:-3` · `2:-4` · `wait` · `2:+2` · `2:-3` · `2:+5` · `2:-4` · `3:-4` | 0 | 0 | 0.0 | pent-0+_1--9 132 |
+| 44 | Recoil | hex | 1+,3- | `3:+1,4:-3,3:+1,4:-4,3:+4,6:-2,5:-3,6:-5,1:-2,4:-3,3:+3,6:+2,1:-1,6:-2,1:-2,4:+5,3:+1,5:+5` | 15 | `5:-5` · `4:-5` · `6:+2` · `6:-2` · `4:+3` · `6:+5` · `5:+3` · `6:+2` · `4:+4` · `4:+3` | 4 | 4 | 4.0 | hex-1+_3--10 3648 |
+| 45 | Backlash | hex | 1+,2- | `2:+1,0:+2,2:+5,4:-2,5:-5,6:+3,5:-4,1:-1,4:-5,2:+1,1:-1,5:+5,2:+1,1:-1,6:-4,2:+1,1:-1,4:+5,2:+1,1:-1,5:+4,2:+1,1:-1,4:+5` | 17 | `4:-5` · `5:-4` · `4:-5` · `6:+4` · `5:-5` · `4:+5` · `5:+4` · `6:-3` · `5:+5` · `4:+2` · `0:-2` | 9 | 10 | 9.0 | hex-1+_2--11-e26 114280 |
+| 46 | Ebb tide | pent | 0+,1- | `1:+3,4:-4,3:+2,2:-5,1:+4,3:-3,4:+4,3:+4,0:-1,4:+4,1:+1,0:-1,3:+4,1:+1,0:-1,4:+2,1:+1,0:-1,3:-3,1:+1,0:-1,2:-2,1:+1,0:-1` | 18 | `wait` · `2:+2` · `3:+3` · `4:-2` · `3:-4` · `4:-4` · `3:-4` · `4:-4` · `3:+3` · `2:+5` · `3:-2` · `4:+4` | 6 | 3 | 6.0 | pent-0+_1--12 2167 |
+| 47 | Turnback | hex | 1+,3- | `3:+2,5:+2,0:+5,3:+2,5:-4,1:-1,0:-4,3:+3,1:-1,6:-3,1:-2,5:+4,0:-2,3:+4,1:-2,5:-3,6:-5,1:-2,5:-5,0:+2,3:+1,1:-1,5:+2` | 21 | `5:-2` · `0:-2` · `5:+5` · `6:+5` · `5:+3` · `0:+2` · `5:-4` · `6:+3` · `0:+4` · `5:+4` · `0:-5` · `5:-2` | 5 | 1 | 5.0 | hex-1+_3--12 874 |
+| 48 | Tide clock | hex | 1+,2- | `1:-5,5:+3,4:+3,5:-4,4:+3,0:-3,1:-1,3:-3,2:+1,1:-1,5:-2,2:+1,1:-1,4:-5,2:+1,1:-1,5:-4,2:+1,1:-1,4:+5,2:+1,1:-1,5:-2,2:+1,1:-1,0:+3` | 18 | `0:-3` · `5:+2` · `4:-5` · `5:+4` · `4:+5` · `5:+2` · `3:+3` · `0:+3` · `4:-3` · `5:+4` · `4:-3` · `5:-3` | 9 | 6 | 9.0 | hex-1+_2--12-e26 63334 |
+
+### Chapter 9. Triple Calendar
+
+Three clocks: hex's 1, 3 and 5, which cross every knob, so at most one turn is safe a move and the work is reading; and hex's 1, 2 and 3, side by side, which leave knob 5 free. 51 winds the middle one back. The opener's note adds: *One move, three ticks.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 49 | Weekday | hex | 1+,3+,5+ | `3:-1,1:-3,4:-2,3:-1,4:+5,5:-2,3:-1,2:+2,3:-1,1:-3,4:-5,5:-5,3:-2,2:-3,3:-1,1:-1,2:+4,3:-1,1:-1,2:+2,3:-1,1:-1,2:+4` | 25 | `2:-4` · `2:-2` · `2:-4` · `2:+3` · `wait` · `4:+5` · `2:-2` · `4:-5` · `4:+2` | 0 | 0 | 0.0 | hex-1+_3+_5+-9 1 |
+| 50 | Fortnight | hex | 1+,2+,3+ | `3:-1,0:-3,3:-5,5:-2,6:-5,5:+5,6:+5,2:-1,1:-1,5:-3,3:-1,2:-1,1:-1,6:+4,3:-1,2:-1,1:-1,5:+3,3:-1,2:-1,1:-1,6:+3,3:-1,2:-1,1:-1,0:-2` | 20 | `0:+2` · `6:-3` · `5:-3` · `6:-4` · `5:+3` · `6:-5` · `5:-5` · `6:+5` · `5:+2` · `0:+3` | 6 | 5 | 6.0 | hex-1+_2+_3+-10 5694 |
+| 51 | Lunar month | hex | 1+,2-,3+ | `2:+5,4:-3,5:-4,6:-5,5:+4,4:+4,3:-1,2:+1,1:-1,5:-3,3:-1,2:+1,1:-1,4:-3,3:-1,2:+1,1:-1,0:-2,3:-1,2:+1,1:-1,3:-1,2:+1,1:-1` | 20 | `wait` · `wait` · `0:+2` · `4:+3` · `5:+3` · `4:-4` · `5:-4` · `6:+5` · `5:+4` · `4:+3` | 5 | 5 | 5.0 | hex-1+_2-_3+-10-e26 173760 |
+| 52 | Almanac | hex | 1+,3+,5+ | `3:-1,4:-4,3:-1,2:-5,3:-2,6:+5,0:+3,3:-2,6:-3,5:-1,1:-1,0:-5,5:-3,3:-3,1:-3,0:+2,5:-1,3:-2,1:-1,6:-2,5:-1,1:-1,6:+2` | 23 | `6:-2` · `6:+2` · `0:-2` · `wait` · `wait` · `0:+5` · `6:+3` · `0:-3` · `6:-5` · `2:+5` · `4:+4` | 2 | 2 | 2.0 | hex-1+_3+_5+-11-e26 30911 |
+| 53 | Solstice | hex | 1+,2+,3+ | `1:-5,5:+4,4:-5,5:-5,4:-4,5:+3,3:-1,2:-1,1:-1,0:+4,3:-1,2:-1,1:-1,5:-3,3:-1,2:-1,1:-1,4:+4,3:-1,2:-1,1:-1,0:+4,3:-1,2:-1,1:-1,5:+4` | 20 | `5:-4` · `0:-4` · `4:-4` · `5:+3` · `0:-4` · `5:-3` · `4:+4` · `5:+5` · `4:+5` · `5:-4` | 6 | 4 | 6.0 | hex-1+_2+_3+-10-e26 92795 |
+| 54 | Equinox | hex | 1+,3+,5+ | `3:-1,0:-5,3:-1,4:-2,3:-1,2:+5,3:-2,6:-2,0:-5,3:-3,6:-2,5:-1,1:-1,6:-2,5:-4,1:-1,2:-2,3:-2,1:-2,2:+2,3:-1,1:-2,4:-3,5:-1,3:-1,2:-2` | 24 | `2:+2` · `4:+3` · `2:-2` · `wait` · `2:+2` · `6:+2` · `6:+2` · `0:+5` · `6:+2` · `2:-5` · `4:+2` · `0:+5` | 2 | 3 | 2.0 | hex-1+_3+_5+-12-e26 7649 |
+
+### Chapter 10. Countdown
+
+Every clock wound back: hex's 1 alone, and with its neighbour 2 or with 3. The opener's note adds: *Every clock wound back.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 55 | Curfew | hex | 1- | `1:+2,4:+3,2:+4,1:+1,6:+5,1:+1,6:+4,1:+1,2:+4,1:+1,0:+4,1:+1,2:+3,1:+1,6:+5,1:+1,6:+4,1:+1,6:-2,1:+1` | 11 | `wait` · `6:+2` · `6:-4` · `6:-5` · `2:-3` · `0:-4` · `2:-4` · `6:-4` · `6:-5` · `2:-4` · `4:-3` | 0 | 0 | 0.0 | hex-1--11 1285 |
+| 56 | Last orders | hex | 1-,2- | `1:+1,6:+5,1:+5,4:-5,5:+4,4:-2,5:+2,0:-3,2:+1,1:+1,4:-3,2:+1,1:+1,5:+2,2:+1,1:+1,4:-2,2:+1,1:+1,3:+3,2:+1,1:+1,5:-4,2:+1,1:+1,4:+3` | 18 | `4:-3` · `5:+4` · `3:-3` · `4:+2` · `5:-2` · `4:+3` · `0:+3` · `5:-2` · `4:+2` · `5:-4` · `4:+5` · `6:-5` | 9 | 6 | 9.0 | hex-1-_2--12 6937 |
+| 57 | Deadline | hex | 1-,3- | `3:+3,4:+5,3:+4,5:+2,6:-5,5:-5,1:+1,0:+5,3:+2,1:+3,5:+5,4:-3,3:+1,0:+4,3:+1,1:+1,2:+5,3:+1,1:+2,4:-2,3:+1,5:+2` | 20 | `5:-2` · `4:+2` · `2:-5` · `0:-4` · `4:+3` · `5:-5` · `0:-5` · `5:+5` · `6:+5` · `5:-2` · `4:-5` · `wait` · `wait` | 5 | 3 | 5.0 | hex-1-_3--13 19921 |
+| 58 | Final hour | hex | 1- | `1:+2,3:+2,0:-2,1:+4,3:-3,4:-5,5:-4,6:-4,1:+1,6:+4,1:+5,4:+5,3:+2,4:-3,5:-4,2:-4,1:+2,4:-5,5:+3` | 14 | `5:-3` · `4:+5` · `2:+4` · `5:+4` · `4:+3` · `3:-2` · `4:-5` · `6:-4` · `6:+4` · `5:+4` · `4:+5` · `3:+3` · `0:+2` · `3:-2` | 9 | 12 | 9.0 | hex-1--14 6146 |
+| 59 | Time's up | hex | 1-,2- | `2:+3,0:+3,2:+2,6:+5,3:-4,2:+2,4:+3,1:+1,5:+3,2:+1,1:+1,4:-2,2:+1,1:+1,5:-5,2:+1,1:+1,4:+4,2:+1,1:+1,5:+2,2:+1,1:+1,4:+5` | 18 | `4:-5` · `5:-2` · `4:-4` · `5:+5` · `4:+2` · `5:-3` · `4:-3` · `3:+4` · `6:-5` · `0:-3` · `wait` · `wait` | 9 | 7 | 8.6 | hex-1-_2--12-e26 24589 |
+| 60 | Zero hour | hex | 1- | `1:+1,0:+5,1:+4,5:-4,4:+2,3:+2,2:-3,1:+1,2:+4,1:+5,5:+4,4:-4,5:+3,4:+3,6:+2,1:+4,5:+2,4:+4,3:-2,2:-5` | 15 | `2:+5` · `3:+2` · `4:-4` · `5:-2` · `6:-2` · `4:-3` · `5:-3` · `4:+4` · `5:-4` · `2:-4` · `2:+3` · `3:-2` · `4:-2` · `5:+4` · `0:-5` | 10 | 9 | 10.0 | hex-1--15 9663 |
+
+### Chapter 11. Gear Train
+
+Neighbouring clocks, the first in the tick order uncovering the second's seam on the same move, as 17 and 18 taught, now deep: 61 and 62 in 32 and 30 entries, most of them one-step clock seams, the rest in 25 or 26. The opener's note adds: *One clock's tick can free the next.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 61 | Pinion | hex | 1+,2+ | `1:-1,0:-4,1:-1,3:+2,2:-1,1:-1,6:-3,2:-1,1:-1,3:+3,2:-1,1:-1,3:+5,2:-1,1:-1,0:-5,2:-1,1:-1,0:+5,2:-1,1:-1,6:+4,2:-1,1:-1,6:-2,2:-1,1:-1,2:-1,1:-1,2:-1,1:-1,0:-3` | 22 | `0:+3` · `wait` · `wait` · `6:+2` · `6:-4` · `0:-5` · `0:+5` · `3:-5` · `3:-3` · `6:+3` · `3:-2` · `0:+4` | 1 | 1 | 1.0 | hex-1+_2+-12 15461 |
+| 62 | Arbor | pent | 0+,1- | `0:-2,3:-2,4:+4,0:-3,3:-3,2:-2,4:-4,0:-1,3:-5,1:+1,0:-1,2:-5,1:+1,0:-1,2:+4,1:+1,0:-1,3:-5,1:+1,0:-1,4:+5,1:+1,0:-1,3:+5,1:+1,0:-1,4:+2,1:+1,0:-1,4:+2` | 20 | `4:-2` · `4:-2` · `3:-5` · `4:-5` · `3:+5` · `2:-4` · `2:+5` · `3:+5` · `4:+4` · `2:+2` · `3:+3` · `4:-4` · `3:+2` | 5 | 2 | 5.0 | pent-0+_1--13 7725 |
+| 63 | Third wheel | hex | 1-,2- | `2:+4,4:-2,5:+5,4:+5,0:-2,2:+1,0:+5,2:+2,5:+4,1:+1,4:+5,2:+1,1:+1,5:+4,2:+1,1:+1,4:+4,2:+1,1:+1,5:-3,2:+1,1:+1,4:-3,2:+1,1:+1,5:+3` | 18 | `5:-3` · `4:+3` · `5:+3` · `4:-4` · `5:-4` · `4:-5` · `5:-4` · `0:-5` · `0:+2` · `4:-5` · `5:-5` · `4:+2` | 9 | 7 | 9.0 | hex-1-_2--12-e26 51659 |
+| 64 | Barrel | hex | 1+,2- | `1:-1,0:+3,1:-5,5:-4,4:-5,5:+3,4:-4,5:-3,2:+1,1:-1,4:+2,2:+1,1:-1,3:+4,2:+1,1:-1,5:-4,2:+1,1:-1,0:+3,2:+1,1:-1,5:-3,2:+1,1:-1,4:+3` | 18 | `4:-3` · `5:+3` · `0:-3` · `5:+4` · `3:-4` · `4:-2` · `5:+3` · `4:+4` · `5:-3` · `4:+5` · `5:+4` · `0:-3` | 9 | 8 | 9.0 | hex-1+_2--12-e26 81013 |
+| 65 | Motion work | hex | 1-,2- | `2:+2,4:-2,3:+4,2:+5,4:-2,5:-3,6:-3,5:+3,1:+1,6:+5,2:+1,1:+1,4:+4,2:+1,1:+1,5:-4,2:+1,1:+1,4:-3,2:+1,1:+1,5:-5,2:+1,1:+1,4:+3` | 18 | `4:-3` · `5:+5` · `4:+3` · `5:+4` · `4:-4` · `6:-5` · `5:-3` · `6:+3` · `5:+3` · `4:+2` · `3:-4` · `4:+2` | 9 | 10 | 9.0 | hex-1-_2--12-e26 49109 |
+| 66 | Centre wheel | hex | 1+,2+ | `1:-2,4:+4,6:+2,1:-4,5:+3,4:-5,5:+4,4:+3,2:-1,1:-1,5:-2,2:-1,1:-1,4:+3,2:-1,1:-1,5:+5,2:-1,1:-1,4:-5,2:-1,1:-1,5:+3,2:-1,1:-1,4:+3` | 18 | `4:-3` · `5:-3` · `4:+5` · `5:-5` · `4:-3` · `5:+2` · `4:-3` · `5:-4` · `4:+5` · `5:-3` · `6:-2` · `4:-4` | 10 | 10 | 10.0 | hex-1+_2+-12-e26 188233 |
+
+### Chapter 12. Dead Beat
+
+Waits in the middle of the line, two to four of them: every one where nothing can come off whole, but placed among decoys. The opener's note adds: *A wait can fall anywhere.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 67 | Lull | hex | 1+ | `1:-1,0:-4,1:-1,2:+2,1:-1,6:-3,1:-2,2:+3,1:-1,2:+5,1:-1,0:-5,1:-1,0:+5,1:-1,6:+4,1:-1,6:-2,1:-3,0:-3` | 13 | `0:+3` · `wait` · `wait` · `6:+2` · `6:-4` · `0:-5` · `0:+5` · `2:-5` · `2:-3` · `wait` · `6:+3` · `2:-2` · `0:+4` | 0 | 0 | 0.0 | hex-1+-13-w2-4 15461 |
+| 68 | Interlude | pent | 0+ | `0:-5,4:-5,0:-5,3:-3,2:-4,3:-2,2:-3,1:+3,0:-4,2:+2,3:+3,2:-3,4:-2` | 14 | `4:+2` · `2:+3` · `3:-3` · `2:-2` · `1:-3` · `2:+3` · `3:+2` · `2:+4` · `3:+3` · `4:+5` · `wait` · `wait` · `wait` · `wait` | 7 | 4 | 7.0 | pent-0+-14-w2-4 7622 |
+| 69 | Siesta | hex | 1+ | `1:-3,2:-2,1:-1,2:+4,1:-1,0:+3,1:-2,5:-5,6:-3,1:-1,2:-2,1:-3,4:-5,3:+2,2:+4,1:-4,5:+2,4:-4,3:-3,4:+5` | 15 | `4:-5` · `3:+3` · `4:+4` · `5:-2` · `2:-4` · `3:-2` · `4:+5` · `2:+2` · `6:+3` · `5:+5` · `0:-3` · `2:-4` · `2:+2` · `wait` · `wait` | 7 | 10 | 7.0 | hex-1+-15-w2-4 13575 |
+| 70 | Respite | pent | 0+ | `0:-3,1:-5,0:-2,2:-3,4:+5,0:-2,3:-5,4:+5,0:-2,3:-4,1:-5,0:-1,4:-5,0:-2,3:-2,4:-4,0:-4,2:+2,3:-3,2:+2,3:-2` | 16 | `3:+2` · `2:-2` · `3:+3` · `2:-2` · `4:+4` · `3:+2` · `4:+5` · `1:+5` · `3:+4` · `4:-5` · `3:+5` · `4:-5` · `2:+3` · `1:+5` · `wait` · `wait` | 8 | 6 | 8.0 | pent-0+-16-w2-4 12956 |
+| 71 | Intermission | hex | 1+ | `1:-2,0:-2,1:-2,0:+2,1:-4,3:+2,4:+2,5:-2,0:+3,1:-2,5:-3,2:+3,1:-1,6:-3,1:-2,2:-3,1:-1,0:+3,1:-3,4:+5,3:-5,4:+4` | 17 | `4:-4` · `3:+5` · `4:-5` · `0:-3` · `2:+3` · `wait` · `6:+3` · `2:-3` · `5:+3` · `0:-3` · `5:+2` · `4:-2` · `3:-2` · `0:-2` · `wait` · `0:+2` · `wait` | 7 | 3 | 7.0 | hex-1+-17-w2-4 18222 |
+| 72 | Hiatus | hex | 1+ | `1:-2,4:-4,0:-4,1:-2,4:-3,2:+2,1:-2,5:-4,2:+2,1:-5,4:-2,5:-5,4:-5,3:-4,2:+3,1:-2,5:+4,0:-4,1:-2,5:+5,6:+2,1:-3,0:+4` | 18 | `0:-4` · `wait` · `wait` · `6:-2` · `5:-5` · `0:+4` · `5:-4` · `2:-3` · `3:+4` · `4:+5` · `5:+5` · `4:+2` · `2:-2` · `5:+4` · `2:-2` · `4:+3` · `0:+4` · `4:+4` | 8 | 10 | 8.0 | hex-1+-18-w2-4 36658 |
+
+### Chapter 13. Fusee
+
+One forward clock, par 17 to 21: ten to thirteen decoys on each problem after the opener, some running twelve moves before every line from them loses. The opener's note adds: *Count the moves each seam can wait.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 73 | Sundial | pent | 0+ | `0:-2,2:-3,1:+3,0:-1,4:+5,0:-1,4:+3,0:-1,4:+2,0:-1,1:-3,0:-3,1:-4,0:-1,1:+4,0:-1,4:-3,0:-1,4:+2,0:-1,1:-2,0:-3,3:+4,2:+3,1:-2,0:-1,1:-4` | 17 | `1:+4` · `1:+2` · `2:-3` · `3:-4` · `1:+2` · `4:-2` · `4:+3` · `1:-4` · `1:+4` · `wait` · `wait` · `1:+3` · `4:-2` · `4:-3` · `4:-5` · `1:-3` · `2:+3` | 2 | 3 | 2.0 | pent-0+-17 22409 |
+| 74 | Gnomon | hex | 1+ | `1:-1,2:-5,1:-3,4:+2,3:+3,0:+3,1:-4,3:-5,4:+2,5:+5,6:-3,1:-5,4:+5,5:-3,4:+2,3:+2,0:-3,1:-3,0:+3,1:-2,4:-2,6:-5` | 18 | `6:+5` · `4:+2` · `0:-3` · `wait` · `wait` · `0:+3` · `3:-2` · `4:-2` · `5:+3` · `4:-5` · `6:+3` · `5:-5` · `4:-2` · `3:+5` · `0:-3` · `3:-3` · `4:-2` · `2:+5` | 10 | 8 | 10.0 | hex-1+-18-e26 49680 |
+| 75 | Noon mark | pent | 0+ | `0:-4,3:+5,2:+4,3:-4,1:-2,0:-2,2:+3,1:+4,0:-1,1:-3,0:-3,2:+4,3:-5,4:+5,0:-1,1:-4,0:-5,3:-4,2:-5,3:-5,2:-3,1:-3,0:-3,3:+2,2:+5,1:-4` | 19 | `1:+4` · `2:-5` · `3:-2` · `1:+3` · `2:+3` · `3:+5` · `2:+5` · `3:+4` · `1:+4` · `4:-5` · `3:+5` · `2:-4` · `1:+3` · `1:-4` · `2:-3` · `1:+2` · `3:+4` · `2:-4` · `3:-5` | 11 | 8 | 11.0 | pent-0+-19 430 |
+| 76 | Meridian | hex | 1+ | `1:-2,5:+4,2:+2,1:-4,3:+4,4:-2,5:-3,6:+4,1:-5,3:+5,4:-5,5:-3,4:+2,6:+3,1:-4,3:+5,4:-5,3:+3,0:+3,1:-1,0:+4,1:-2,3:-5,2:-4,1:-1,6:-4` | 19 | `6:+4` · `2:+4` · `3:+5` · `0:-4` · `0:-3` · `3:-3` · `4:+5` · `3:-5` · `6:-3` · `4:-2` · `5:+3` · `4:+5` · `3:-5` · `6:-4` · `5:+3` · `4:+2` · `3:-4` · `2:-2` · `5:-4` | 12 | 12 | 11.6 | hex-1+-19-e26 205767 |
+| 77 | Solar time | pent | 0+ | `0:-4,2:-4,3:-3,2:+2,4:-3,0:-1,4:+2,0:-4,3:-4,2:-4,3:+2,4:+2,0:-3,2:+2,3:-4,1:+2,0:-1,4:-3,0:-4,2:-5,3:-5,2:+2,4:+3,0:-2,3:+5,1:-4,0:-2,2:-3,3:-5` | 21 | `3:+5` · `2:+3` · `1:+4` · `3:-5` · `4:-3` · `2:-2` · `3:+5` · `2:+5` · `4:+3` · `1:-2` · `3:+4` · `2:-2` · `4:-2` · `3:-2` · `2:+4` · `3:+4` · `4:-2` · `4:+3` · `2:-2` · `3:+3` · `2:+4` | 13 | 6 | 13.0 | pent-0+-21 14434 |
+| 78 | Analemma | hex | 1+ | `1:-5,4:+3,5:-4,4:+2,3:+4,2:-5,1:-5,5:-2,4:-4,5:-4,4:+4,2:+5,1:-4,5:+3,4:+2,3:-5,0:-3,1:-2,3:-2,6:-5,1:-1,2:-2,1:-1,6:-4,1:-1,4:+5` | 19 | `4:-5` · `6:+4` · `2:+2` · `6:+5` · `3:+2` · `0:+3` · `3:+5` · `4:-2` · `5:-3` · `2:-5` · `4:-4` · `5:+4` · `4:+4` · `5:+2` · `2:+5` · `3:-4` · `4:-2` · `5:+4` · `4:-3` | 12 | 12 | 12.0 | hex-1+-19-e26 63249 |
+
+### Chapter 14. Tourbillon
+
+One wound-back clock, par 17 to 20, eleven to thirteen decoys after the opener, two running sixteen moves. The opener's note adds: *Every seam has its move.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 79 | Water clock | hex | 1- | `1:+2,5:-2,0:-3,1:+1,0:-2,1:+1,6:+5,1:+1,0:-4,1:+3,6:+2,1:+1,0:+3,1:+2,4:+3,2:-3,1:+1,0:+4,1:+2,3:-5,2:+2,1:+1,0:+3,1:+2,3:+4,2:+3` | 17 | `2:-3` · `3:-4` · `0:-3` · `2:-2` · `3:+5` · `0:-4` · `2:+3` · `4:-3` · `0:-3` · `6:-2` · `wait` · `wait` · `0:+4` · `6:-5` · `0:+2` · `0:+3` · `5:+2` | 3 | 1 | 3.0 | hex-1--17-e26 183892 |
+| 80 | Candle clock | hex | 1- | `1:+2,5:+3,0:-4,1:+5,4:+3,5:+3,4:+4,3:+2,0:-3,1:+1,6:+5,1:+4,4:+4,5:-3,4:+2,0:+3,1:+2,4:-3,0:+4,1:+5,3:-4,4:+2,3:-3,4:+3,5:+3` | 19 | `5:-3` · `4:-3` · `3:+3` · `4:-2` · `3:+4` · `0:-4` · `4:+3` · `0:-3` · `4:-2` · `5:+3` · `4:-4` · `6:-5` · `0:+3` · `3:-2` · `4:-4` · `5:-3` · `4:-3` · `0:+4` · `5:-3` | 13 | 5 | 13.0 | hex-1--19 28674 |
+| 81 | Nocturnal | hex | 1- | `1:+2,4:+5,0:-3,1:+1,6:-4,1:+4,3:-4,4:+2,5:+5,2:+2,1:+1,6:+4,1:+3,4:-2,5:-4,6:-4,1:+2,3:+3,2:-3,1:+5,5:+3,4:+3,5:+2,4:-4,3:+3` | 18 | `3:-3` · `4:+4` · `5:-2` · `4:-3` · `5:-3` · `2:+3` · `3:-3` · `6:+4` · `5:+4` · `4:+2` · `6:-4` · `2:-2` · `5:-5` · `4:-2` · `3:+4` · `6:+4` · `0:+3` · `4:-5` | 11 | 16 | 11.0 | hex-1--18-e26 394816 |
+| 82 | Astrolabe | hex | 1- | `1:+2,5:+3,6:-3,1:+2,5:+5,6:-5,1:+3,4:+4,5:-2,2:+5,1:+1,2:+3,1:+5,4:+4,3:+5,4:-2,5:-3,6:-5,1:+3,3:-5,4:+3,6:+4,1:+3,3:+4,4:-4,0:-5` | 19 | `0:+5` · `4:+4` · `3:-4` · `6:-4` · `4:-3` · `3:+5` · `6:+5` · `5:+3` · `4:+2` · `3:-5` · `4:-4` · `2:-3` · `2:-5` · `5:+2` · `4:-4` · `6:+5` · `5:-5` · `6:+3` · `5:-3` | 11 | 16 | 11.0 | hex-1--19-e26 304595 |
+| 83 | Night watch | hex | 1- | `1:+3,4:+5,5:+5,6:+2,1:+2,5:+4,6:-5,1:+2,3:-3,6:-3,1:+3,4:-4,3:-3,2:+2,1:+5,5:-4,4:-3,5:-2,4:-3,6:+5,1:+4,5:+5,4:+3,3:-4,0:+5` | 19 | `0:-5` · `3:+4` · `4:-3` · `5:-5` · `6:-5` · `4:+3` · `5:+2` · `4:+3` · `5:+4` · `2:-2` · `3:+3` · `4:+4` · `6:+3` · `3:+3` · `6:+5` · `5:-4` · `6:-2` · `5:-5` · `4:-5` | 12 | 13 | 12.0 | hex-1--19-e26 230001 |
+| 84 | Small hours | hex | 1- | `1:+3,5:-3,4:-4,0:+3,1:+2,5:+2,0:+5,1:+5,5:-2,4:+3,5:-3,4:-3,0:-5,1:+3,5:+3,4:+4,0:+3,1:+4,3:-3,4:-3,5:+5,0:-5,1:+3,5:-4,4:+4,6:+5` | 20 | `6:-5` · `4:-4` · `5:+4` · `0:+5` · `5:-5` · `4:+3` · `3:+3` · `0:-3` · `4:-4` · `5:-3` · `0:+5` · `4:+3` · `5:+3` · `4:-3` · `5:+2` · `0:-5` · `5:-2` · `0:-3` · `4:+4` · `5:+3` | 13 | 4 | 13.0 | hex-1--20-e26 327033 |
+
+### Chapter 15. Perpetual
+
+One forward clock, par 18 to 20, in 26 entries, the most a deal on hex keeps and still reads: the book's most decoys on average and at most (15), its longest reach (16, as Tourbillon's) and most bits (13.8), Eternity last with the hardest pick of all. The opener's note adds: *No move is spare.*
+
+| # | Title | Layout | Clocks | Scramble | Ticks | Line | Decoys | Reach | Bits | Seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 85 | Regulator | hex | 1+ | `1:-2,4:-2,2:+5,1:-3,5:+4,4:+2,0:+2,1:-3,3:-5,4:-3,0:+3,1:-1,6:-2,1:-2,5:+4,6:-4,1:-1,0:+2,1:-1,2:-4,1:-2,6:-4,1:-1,2:-3,1:-2,6:-4` | 18 | `6:+4` · `wait` · `2:+3` · `6:+4` · `wait` · `2:+4` · `0:-2` · `6:+4` · `5:-4` · `6:+2` · `0:-3` · `4:+3` · `3:+5` · `0:-2` · `4:-2` · `5:-4` · `2:-5` · `4:+2` | 5 | 3 | 5.0 | hex-1+-18-e26 60642 |
+| 86 | Chronometer | hex | 1+ | `1:-1,0:+5,1:-2,3:+4,0:+3,1:-3,4:+2,5:-5,2:+3,1:-3,4:+5,5:+3,6:-2,1:-5,4:+3,5:+4,4:-3,3:-5,0:+4,1:-2,3:-5,2:-2,1:-3,3:+2,4:+5,3:+5` | 19 | `3:-5` · `4:-5` · `3:-2` · `2:+2` · `3:+5` · `0:-4` · `3:+5` · `4:+3` · `5:-4` · `4:-3` · `6:+2` · `5:-3` · `4:-5` · `2:-3` · `5:+5` · `4:-2` · `0:-3` · `3:-4` · `0:-5` | 13 | 10 | 13.0 | hex-1+-19-e26 46088 |
+| 87 | Longcase clock | hex | 1+ | `1:-2,5:-4,2:+4,1:-2,3:-5,6:+5,1:-3,5:+2,4:+2,2:-4,1:-2,5:+5,2:-5,1:-3,3:-2,4:-3,2:+4,1:-2,3:-2,6:-4,1:-5,4:+4,3:-3,4:+5,3:+5,4:+2` | 19 | `4:-2` · `3:-5` · `4:-5` · `3:+3` · `4:-4` · `6:+4` · `3:+2` · `2:-4` · `4:+3` · `3:+2` · `2:+5` · `5:-5` · `2:+4` · `4:-2` · `5:-2` · `6:-5` · `3:+5` · `2:-4` · `5:+4` | 15 | 7 | 13.8 | hex-1+-19-e26 283978 |
+| 88 | Atomic clock | hex | 1+ | `1:-2,3:-2,6:+3,1:-2,4:-4,2:-5,1:-4,5:-3,4:+3,3:-3,6:+2,1:-3,4:+4,3:-5,2:-3,1:-5,4:+2,3:+5,4:+3,5:+4,0:-5,1:-2,4:-5,6:+5,1:-1,3:+3` | 19 | `3:-3` · `6:-5` · `4:+5` · `0:+5` · `5:-4` · `4:-3` · `3:-5` · `4:-2` · `2:+3` · `3:+5` · `4:-4` · `6:-2` · `3:+3` · `4:-3` · `5:+3` · `2:+5` · `4:+4` · `6:-3` · `3:+2` | 12 | 14 | 12.0 | hex-1+-19-e26 47269 |
+| 89 | Millennium | hex | 1+ | `1:-5,4:+2,3:-3,4:-5,3:-2,0:-3,1:-3,4:+2,3:+2,6:+4,1:-3,4:+3,5:-4,6:+2,1:-5,4:+4,3:+4,4:-2,3:-5,0:+2,1:-1,6:+2,1:-3,3:-3,4:-5,2:+2` | 20 | `2:-2` · `4:+5` · `3:+3` · `6:-2` · `0:-2` · `3:+5` · `4:+2` · `3:-4` · `4:-4` · `6:-2` · `5:+4` · `4:-3` · `6:-4` · `3:-2` · `4:-2` · `0:+3` · `3:+2` · `4:+5` · `3:+3` · `4:-2` | 13 | 10 | 13.0 | hex-1+-20-e26 262783 |
+| 90 | Eternity | hex | 1+ | `1:-3,4:-3,3:-2,2:+2,1:-2,5:+4,6:+3,1:-5,4:-5,3:+3,4:+5,3:-4,6:+4,1:-3,4:+5,3:+5,2:-3,1:-2,5:+3,6:-4,1:-3,4:-2,3:-3,0:-4,1:-1,4:-3` | 19 | `4:+3` · `0:+4` · `3:+3` · `4:+2` · `6:+4` · `5:-3` · `2:+3` · `3:-5` · `4:-5` · `6:-4` · `3:+4` · `4:-5` · `3:-3` · `4:+5` · `6:-3` · `5:-4` · `2:-2` · `3:+2` · `4:+3` | 12 | 16 | 12.0 | hex-1+-19-e26 136384 |
 
 ## 3. Open points for Jack
 

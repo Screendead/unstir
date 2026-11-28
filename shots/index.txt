@@ -637,7 +637,67 @@ escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-3,3
 escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4.
 escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
 escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
-escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
+escapement-book-31.png  Escapement 31 as dealt: pent, clocks 0+, scramble 0:-1,1:-4,0:-1,1:-2,0:-1,4:+5,0:-2,3:+2,1:+5,0:-1,1:+2.
+escapement-book-32.png  Escapement 32 as dealt: hex, clocks 1+, scramble 1:-1,0:-4,1:-3,3:+2,4:+4,6:+5,1:-3,3:-2,4:+4,3:-5.
+escapement-book-33.png  Escapement 33 as dealt: pent, clocks 0+, scramble 0:-5,2:+5,3:+5,2:-5,3:+2,4:+2,0:-2,2:+5,3:+4.
+escapement-book-34.png  Escapement 34 as dealt: hex, clocks 1+, scramble 1:-2,3:-3,6:+3,1:-2,5:-2,2:-2,1:-4,4:-5,3:+5,4:+2,3:+5.
+escapement-book-35.png  Escapement 35 as dealt: pent, clocks 0+, scramble 0:-3,3:+3,2:-4,1:-3,0:-5,3:-4,2:-5,3:+3,2:-3,3:-4.
+escapement-book-36.png  Escapement 36 as dealt: hex, clocks 1+, scramble 1:-5,4:-4,3:+5,4:+5,3:-3,6:+4,1:-4,4:+5,3:+4,4:+3,3:+5.
+escapement-book-37.png  Escapement 37 as dealt: pent, clocks 0+,2+, scramble 2:-1,3:+3,2:-2,0:-3,3:+2,2:-3,4:-2,0:-2,3:+2,2:-1,1:-2,2:-1,0:-1,1:-3.
+escapement-book-38.png  Escapement 38 as dealt: hex, clocks 1+,3+, scramble 3:-5,6:-3,5:-2,6:+5,5:-3,1:-1,0:-3,3:-3,1:-2,5:+4,6:+5,1:-1,2:+2,3:-1,1:-1,5:-5.
+escapement-book-39.png  Escapement 39 as dealt: hex, clocks 1+,2+, scramble 2:-1,1:-1,5:+3,2:-1,1:-1,4:-5,2:-1,1:-1,5:-5,2:-1,1:-1,4:+5,2:-1,1:-1,5:-2,2:-1,1:-1,4:+3,2:-1,1:-1,5:+2,2:-1,1:-1,4:-2,2:-1,1:-1,5:-5.
+escapement-book-40.png  Escapement 40 as dealt: hex, clocks 1+,3+, scramble 3:-1,4:-2,3:-1,2:+3,3:-1,4:-4,3:-3,6:+4,5:+4,1:-3,4:-2,3:-3,5:+4,6:+3,1:-1,0:+4,3:-1,1:-1,5:+3.
+escapement-book-41.png  Escapement 41 as dealt: hex, clocks 1+,2+, scramble 1:-4,4:-2,3:-3,4:+2,5:+5,2:-1,1:-1,4:-5,2:-1,1:-1,3:+2,2:-1,1:-1,5:-5,2:-1,1:-1,4:-4,2:-1,1:-1,5:+3,2:-1,1:-1,4:+3,2:-1,1:-1,5:-2.
+escapement-book-42.png  Escapement 42 as dealt: hex, clocks 1+,3+, scramble 1:-2,5:-4,2:-5,1:-2,4:-3,6:+2,3:-2,1:-3,5:+5,4:-4,3:-5,6:-2,1:-2,5:-2,6:-3,1:-1,6:-5,1:-1,5:-3.
+escapement-book-43.png  Escapement 43 as dealt: pent, clocks 0+,1-, scramble 1:+2,3:+4,2:+4,1:+1,2:-5,1:+1,0:-1,2:+3,1:+1,0:-1,2:-2,1:+1,0:-1,1:+1,0:-1,2:+4,1:+1,0:-1,4:+3,1:+1,0:-1,2:+5.
+escapement-book-44.png  Escapement 44 as dealt: hex, clocks 1+,3-, scramble 3:+1,4:-3,3:+1,4:-4,3:+4,6:-2,5:-3,6:-5,1:-2,4:-3,3:+3,6:+2,1:-1,6:-2,1:-2,4:+5,3:+1,5:+5.
+escapement-book-45.png  Escapement 45 as dealt: hex, clocks 1+,2-, scramble 2:+1,0:+2,2:+5,4:-2,5:-5,6:+3,5:-4,1:-1,4:-5,2:+1,1:-1,5:+5,2:+1,1:-1,6:-4,2:+1,1:-1,4:+5,2:+1,1:-1,5:+4,2:+1,1:-1,4:+5.
+escapement-book-46.png  Escapement 46 as dealt: pent, clocks 0+,1-, scramble 1:+3,4:-4,3:+2,2:-5,1:+4,3:-3,4:+4,3:+4,0:-1,4:+4,1:+1,0:-1,3:+4,1:+1,0:-1,4:+2,1:+1,0:-1,3:-3,1:+1,0:-1,2:-2,1:+1,0:-1.
+escapement-book-47.png  Escapement 47 as dealt: hex, clocks 1+,3-, scramble 3:+2,5:+2,0:+5,3:+2,5:-4,1:-1,0:-4,3:+3,1:-1,6:-3,1:-2,5:+4,0:-2,3:+4,1:-2,5:-3,6:-5,1:-2,5:-5,0:+2,3:+1,1:-1,5:+2.
+escapement-book-48.png  Escapement 48 as dealt: hex, clocks 1+,2-, scramble 1:-5,5:+3,4:+3,5:-4,4:+3,0:-3,1:-1,3:-3,2:+1,1:-1,5:-2,2:+1,1:-1,4:-5,2:+1,1:-1,5:-4,2:+1,1:-1,4:+5,2:+1,1:-1,5:-2,2:+1,1:-1,0:+3.
+escapement-book-49.png  Escapement 49 as dealt: hex, clocks 1+,3+,5+, scramble 3:-1,1:-3,4:-2,3:-1,4:+5,5:-2,3:-1,2:+2,3:-1,1:-3,4:-5,5:-5,3:-2,2:-3,3:-1,1:-1,2:+4,3:-1,1:-1,2:+2,3:-1,1:-1,2:+4.
+escapement-book-50.png  Escapement 50 as dealt: hex, clocks 1+,2+,3+, scramble 3:-1,0:-3,3:-5,5:-2,6:-5,5:+5,6:+5,2:-1,1:-1,5:-3,3:-1,2:-1,1:-1,6:+4,3:-1,2:-1,1:-1,5:+3,3:-1,2:-1,1:-1,6:+3,3:-1,2:-1,1:-1,0:-2.
+escapement-book-51.png  Escapement 51 as dealt: hex, clocks 1+,2-,3+, scramble 2:+5,4:-3,5:-4,6:-5,5:+4,4:+4,3:-1,2:+1,1:-1,5:-3,3:-1,2:+1,1:-1,4:-3,3:-1,2:+1,1:-1,0:-2,3:-1,2:+1,1:-1,3:-1,2:+1,1:-1.
+escapement-book-52.png  Escapement 52 as dealt: hex, clocks 1+,3+,5+, scramble 3:-1,4:-4,3:-1,2:-5,3:-2,6:+5,0:+3,3:-2,6:-3,5:-1,1:-1,0:-5,5:-3,3:-3,1:-3,0:+2,5:-1,3:-2,1:-1,6:-2,5:-1,1:-1,6:+2.
+escapement-book-53.png  Escapement 53 as dealt: hex, clocks 1+,2+,3+, scramble 1:-5,5:+4,4:-5,5:-5,4:-4,5:+3,3:-1,2:-1,1:-1,0:+4,3:-1,2:-1,1:-1,5:-3,3:-1,2:-1,1:-1,4:+4,3:-1,2:-1,1:-1,0:+4,3:-1,2:-1,1:-1,5:+4.
+escapement-book-54.png  Escapement 54 as dealt: hex, clocks 1+,3+,5+, scramble 3:-1,0:-5,3:-1,4:-2,3:-1,2:+5,3:-2,6:-2,0:-5,3:-3,6:-2,5:-1,1:-1,6:-2,5:-4,1:-1,2:-2,3:-2,1:-2,2:+2,3:-1,1:-2,4:-3,5:-1,3:-1,2:-2.
+escapement-book-55.png  Escapement 55 as dealt: hex, clocks 1-, scramble 1:+2,4:+3,2:+4,1:+1,6:+5,1:+1,6:+4,1:+1,2:+4,1:+1,0:+4,1:+1,2:+3,1:+1,6:+5,1:+1,6:+4,1:+1,6:-2,1:+1.
+escapement-book-56.png  Escapement 56 as dealt: hex, clocks 1-,2-, scramble 1:+1,6:+5,1:+5,4:-5,5:+4,4:-2,5:+2,0:-3,2:+1,1:+1,4:-3,2:+1,1:+1,5:+2,2:+1,1:+1,4:-2,2:+1,1:+1,3:+3,2:+1,1:+1,5:-4,2:+1,1:+1,4:+3.
+escapement-book-57.png  Escapement 57 as dealt: hex, clocks 1-,3-, scramble 3:+3,4:+5,3:+4,5:+2,6:-5,5:-5,1:+1,0:+5,3:+2,1:+3,5:+5,4:-3,3:+1,0:+4,3:+1,1:+1,2:+5,3:+1,1:+2,4:-2,3:+1,5:+2.
+escapement-book-58.png  Escapement 58 as dealt: hex, clocks 1-, scramble 1:+2,3:+2,0:-2,1:+4,3:-3,4:-5,5:-4,6:-4,1:+1,6:+4,1:+5,4:+5,3:+2,4:-3,5:-4,2:-4,1:+2,4:-5,5:+3.
+escapement-book-59.png  Escapement 59 as dealt: hex, clocks 1-,2-, scramble 2:+3,0:+3,2:+2,6:+5,3:-4,2:+2,4:+3,1:+1,5:+3,2:+1,1:+1,4:-2,2:+1,1:+1,5:-5,2:+1,1:+1,4:+4,2:+1,1:+1,5:+2,2:+1,1:+1,4:+5.
+escapement-book-60.png  Escapement 60 as dealt: hex, clocks 1-, scramble 1:+1,0:+5,1:+4,5:-4,4:+2,3:+2,2:-3,1:+1,2:+4,1:+5,5:+4,4:-4,5:+3,4:+3,6:+2,1:+4,5:+2,4:+4,3:-2,2:-5.
+escapement-book-61.png  Escapement 61 as dealt: hex, clocks 1+,2+, scramble 1:-1,0:-4,1:-1,3:+2,2:-1,1:-1,6:-3,2:-1,1:-1,3:+3,2:-1,1:-1,3:+5,2:-1,1:-1,0:-5,2:-1,1:-1,0:+5,2:-1,1:-1,6:+4,2:-1,1:-1,6:-2,2:-1,1:-1,2:-1,1:-1,2:-1,1:-1,0:-3.
+escapement-book-62.png  Escapement 62 as dealt: pent, clocks 0+,1-, scramble 0:-2,3:-2,4:+4,0:-3,3:-3,2:-2,4:-4,0:-1,3:-5,1:+1,0:-1,2:-5,1:+1,0:-1,2:+4,1:+1,0:-1,3:-5,1:+1,0:-1,4:+5,1:+1,0:-1,3:+5,1:+1,0:-1,4:+2,1:+1,0:-1,4:+2.
+escapement-book-63.png  Escapement 63 as dealt: hex, clocks 1-,2-, scramble 2:+4,4:-2,5:+5,4:+5,0:-2,2:+1,0:+5,2:+2,5:+4,1:+1,4:+5,2:+1,1:+1,5:+4,2:+1,1:+1,4:+4,2:+1,1:+1,5:-3,2:+1,1:+1,4:-3,2:+1,1:+1,5:+3.
+escapement-book-64.png  Escapement 64 as dealt: hex, clocks 1+,2-, scramble 1:-1,0:+3,1:-5,5:-4,4:-5,5:+3,4:-4,5:-3,2:+1,1:-1,4:+2,2:+1,1:-1,3:+4,2:+1,1:-1,5:-4,2:+1,1:-1,0:+3,2:+1,1:-1,5:-3,2:+1,1:-1,4:+3.
+escapement-book-65.png  Escapement 65 as dealt: hex, clocks 1-,2-, scramble 2:+2,4:-2,3:+4,2:+5,4:-2,5:-3,6:-3,5:+3,1:+1,6:+5,2:+1,1:+1,4:+4,2:+1,1:+1,5:-4,2:+1,1:+1,4:-3,2:+1,1:+1,5:-5,2:+1,1:+1,4:+3.
+escapement-book-66.png  Escapement 66 as dealt: hex, clocks 1+,2+, scramble 1:-2,4:+4,6:+2,1:-4,5:+3,4:-5,5:+4,4:+3,2:-1,1:-1,5:-2,2:-1,1:-1,4:+3,2:-1,1:-1,5:+5,2:-1,1:-1,4:-5,2:-1,1:-1,5:+3,2:-1,1:-1,4:+3.
+escapement-book-67.png  Escapement 67 as dealt: hex, clocks 1+, scramble 1:-1,0:-4,1:-1,2:+2,1:-1,6:-3,1:-2,2:+3,1:-1,2:+5,1:-1,0:-5,1:-1,0:+5,1:-1,6:+4,1:-1,6:-2,1:-3,0:-3.
+escapement-book-68.png  Escapement 68 as dealt: pent, clocks 0+, scramble 0:-5,4:-5,0:-5,3:-3,2:-4,3:-2,2:-3,1:+3,0:-4,2:+2,3:+3,2:-3,4:-2.
+escapement-book-69.png  Escapement 69 as dealt: hex, clocks 1+, scramble 1:-3,2:-2,1:-1,2:+4,1:-1,0:+3,1:-2,5:-5,6:-3,1:-1,2:-2,1:-3,4:-5,3:+2,2:+4,1:-4,5:+2,4:-4,3:-3,4:+5.
+escapement-book-70.png  Escapement 70 as dealt: pent, clocks 0+, scramble 0:-3,1:-5,0:-2,2:-3,4:+5,0:-2,3:-5,4:+5,0:-2,3:-4,1:-5,0:-1,4:-5,0:-2,3:-2,4:-4,0:-4,2:+2,3:-3,2:+2,3:-2.
+escapement-book-71.png  Escapement 71 as dealt: hex, clocks 1+, scramble 1:-2,0:-2,1:-2,0:+2,1:-4,3:+2,4:+2,5:-2,0:+3,1:-2,5:-3,2:+3,1:-1,6:-3,1:-2,2:-3,1:-1,0:+3,1:-3,4:+5,3:-5,4:+4.
+escapement-book-72.png  Escapement 72 as dealt: hex, clocks 1+, scramble 1:-2,4:-4,0:-4,1:-2,4:-3,2:+2,1:-2,5:-4,2:+2,1:-5,4:-2,5:-5,4:-5,3:-4,2:+3,1:-2,5:+4,0:-4,1:-2,5:+5,6:+2,1:-3,0:+4.
+escapement-book-73.png  Escapement 73 as dealt: pent, clocks 0+, scramble 0:-2,2:-3,1:+3,0:-1,4:+5,0:-1,4:+3,0:-1,4:+2,0:-1,1:-3,0:-3,1:-4,0:-1,1:+4,0:-1,4:-3,0:-1,4:+2,0:-1,1:-2,0:-3,3:+4,2:+3,1:-2,0:-1,1:-4.
+escapement-book-74.png  Escapement 74 as dealt: hex, clocks 1+, scramble 1:-1,2:-5,1:-3,4:+2,3:+3,0:+3,1:-4,3:-5,4:+2,5:+5,6:-3,1:-5,4:+5,5:-3,4:+2,3:+2,0:-3,1:-3,0:+3,1:-2,4:-2,6:-5.
+escapement-book-75.png  Escapement 75 as dealt: pent, clocks 0+, scramble 0:-4,3:+5,2:+4,3:-4,1:-2,0:-2,2:+3,1:+4,0:-1,1:-3,0:-3,2:+4,3:-5,4:+5,0:-1,1:-4,0:-5,3:-4,2:-5,3:-5,2:-3,1:-3,0:-3,3:+2,2:+5,1:-4.
+escapement-book-76.png  Escapement 76 as dealt: hex, clocks 1+, scramble 1:-2,5:+4,2:+2,1:-4,3:+4,4:-2,5:-3,6:+4,1:-5,3:+5,4:-5,5:-3,4:+2,6:+3,1:-4,3:+5,4:-5,3:+3,0:+3,1:-1,0:+4,1:-2,3:-5,2:-4,1:-1,6:-4.
+escapement-book-77.png  Escapement 77 as dealt: pent, clocks 0+, scramble 0:-4,2:-4,3:-3,2:+2,4:-3,0:-1,4:+2,0:-4,3:-4,2:-4,3:+2,4:+2,0:-3,2:+2,3:-4,1:+2,0:-1,4:-3,0:-4,2:-5,3:-5,2:+2,4:+3,0:-2,3:+5,1:-4,0:-2,2:-3,3:-5.
+escapement-book-78.png  Escapement 78 as dealt: hex, clocks 1+, scramble 1:-5,4:+3,5:-4,4:+2,3:+4,2:-5,1:-5,5:-2,4:-4,5:-4,4:+4,2:+5,1:-4,5:+3,4:+2,3:-5,0:-3,1:-2,3:-2,6:-5,1:-1,2:-2,1:-1,6:-4,1:-1,4:+5.
+escapement-book-79.png  Escapement 79 as dealt: hex, clocks 1-, scramble 1:+2,5:-2,0:-3,1:+1,0:-2,1:+1,6:+5,1:+1,0:-4,1:+3,6:+2,1:+1,0:+3,1:+2,4:+3,2:-3,1:+1,0:+4,1:+2,3:-5,2:+2,1:+1,0:+3,1:+2,3:+4,2:+3.
+escapement-book-80.png  Escapement 80 as dealt: hex, clocks 1-, scramble 1:+2,5:+3,0:-4,1:+5,4:+3,5:+3,4:+4,3:+2,0:-3,1:+1,6:+5,1:+4,4:+4,5:-3,4:+2,0:+3,1:+2,4:-3,0:+4,1:+5,3:-4,4:+2,3:-3,4:+3,5:+3.
+escapement-book-81.png  Escapement 81 as dealt: hex, clocks 1-, scramble 1:+2,4:+5,0:-3,1:+1,6:-4,1:+4,3:-4,4:+2,5:+5,2:+2,1:+1,6:+4,1:+3,4:-2,5:-4,6:-4,1:+2,3:+3,2:-3,1:+5,5:+3,4:+3,5:+2,4:-4,3:+3.
+escapement-book-82.png  Escapement 82 as dealt: hex, clocks 1-, scramble 1:+2,5:+3,6:-3,1:+2,5:+5,6:-5,1:+3,4:+4,5:-2,2:+5,1:+1,2:+3,1:+5,4:+4,3:+5,4:-2,5:-3,6:-5,1:+3,3:-5,4:+3,6:+4,1:+3,3:+4,4:-4,0:-5.
+escapement-book-83.png  Escapement 83 as dealt: hex, clocks 1-, scramble 1:+3,4:+5,5:+5,6:+2,1:+2,5:+4,6:-5,1:+2,3:-3,6:-3,1:+3,4:-4,3:-3,2:+2,1:+5,5:-4,4:-3,5:-2,4:-3,6:+5,1:+4,5:+5,4:+3,3:-4,0:+5.
+escapement-book-84.png  Escapement 84 as dealt: hex, clocks 1-, scramble 1:+3,5:-3,4:-4,0:+3,1:+2,5:+2,0:+5,1:+5,5:-2,4:+3,5:-3,4:-3,0:-5,1:+3,5:+3,4:+4,0:+3,1:+4,3:-3,4:-3,5:+5,0:-5,1:+3,5:-4,4:+4,6:+5.
+escapement-book-85.png  Escapement 85 as dealt: hex, clocks 1+, scramble 1:-2,4:-2,2:+5,1:-3,5:+4,4:+2,0:+2,1:-3,3:-5,4:-3,0:+3,1:-1,6:-2,1:-2,5:+4,6:-4,1:-1,0:+2,1:-1,2:-4,1:-2,6:-4,1:-1,2:-3,1:-2,6:-4.
+escapement-book-86.png  Escapement 86 as dealt: hex, clocks 1+, scramble 1:-1,0:+5,1:-2,3:+4,0:+3,1:-3,4:+2,5:-5,2:+3,1:-3,4:+5,5:+3,6:-2,1:-5,4:+3,5:+4,4:-3,3:-5,0:+4,1:-2,3:-5,2:-2,1:-3,3:+2,4:+5,3:+5.
+escapement-book-87.png  Escapement 87 as dealt: hex, clocks 1+, scramble 1:-2,5:-4,2:+4,1:-2,3:-5,6:+5,1:-3,5:+2,4:+2,2:-4,1:-2,5:+5,2:-5,1:-3,3:-2,4:-3,2:+4,1:-2,3:-2,6:-4,1:-5,4:+4,3:-3,4:+5,3:+5,4:+2.
+escapement-book-88.png  Escapement 88 as dealt: hex, clocks 1+, scramble 1:-2,3:-2,6:+3,1:-2,4:-4,2:-5,1:-4,5:-3,4:+3,3:-3,6:+2,1:-3,4:+4,3:-5,2:-3,1:-5,4:+2,3:+5,4:+3,5:+4,0:-5,1:-2,4:-5,6:+5,1:-1,3:+3.
+escapement-book-89.png  Escapement 89 as dealt: hex, clocks 1+, scramble 1:-5,4:+2,3:-3,4:-5,3:-2,0:-3,1:-3,4:+2,3:+2,6:+4,1:-3,4:+3,5:-4,6:+2,1:-5,4:+4,3:+4,4:-2,3:-5,0:+2,1:-1,6:+2,1:-3,3:-3,4:-5,2:+2.
+escapement-book-90.png  Escapement 90 as dealt: hex, clocks 1+, scramble 1:-3,4:-3,3:-2,2:+2,1:-2,5:+4,6:+3,1:-5,4:-5,3:+3,4:+5,3:-4,6:+4,1:-3,4:+5,3:+5,2:-3,1:-2,5:+3,6:-4,1:-3,4:-2,3:-3,0:-4,1:-1,4:-3.
+escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's fifteen chapter headings.
 escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
 escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
@@ -660,6 +720,9 @@ escapement-hubs-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 r
 escapement-hubs-16-wrong.png  Escapement 16 after 3:-2, 5:-2 and a wrong 6:-4: clock 1's last tick pushed, grey at 0 over its +1; clock 4 at 3; header 03.
 escapement-hubs-16-out.png  Escapement 16, the wrong 6:-4 then three waits: both hubs grey at 0, header 00, out of ticks.
 escapement-hubs-22-dealt.png  Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11.
+escapement-hubs-41-dealt.png  Escapement 41 as dealt: two cards on each hub, 11 and 07, as tall as a one-card hub's, header 18.
+escapement-hubs-41-mid.png  Escapement 41 after 5:+2, 4:-3 and 5:-3: hubs 08 and 04, header 12.
+escapement-hubs-90-mid.png  Escapement 90 after 4:+3, 0:+4, 3:+3, 4:+2 and 6:+4: its hub at 14, header 14.
 escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
 escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
 escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
@@ -726,6 +789,186 @@ escapement-plate-29-dealt.png  Escapement 29 as dealt on its own plate.
 escapement-plate-29-solved.png  Escapement 29 solved on its own plate, the solve's ink ring run out.
 escapement-plate-30-dealt.png  Escapement 30 as dealt on its own plate.
 escapement-plate-30-solved.png  Escapement 30 solved on its own plate, the solve's ink ring run out.
+escapement-plate-31-dealt.png  Escapement 31 as dealt on its own plate.
+escapement-plate-31-third.png  Escapement 31 on its own plate a third of the way into its line, after 1:-2,1:-5.
+escapement-plate-31-solved.png  Escapement 31 solved on its own plate, the solve's ink ring run out.
+escapement-plate-32-dealt.png  Escapement 32 as dealt on its own plate.
+escapement-plate-32-third.png  Escapement 32 on its own plate a third of the way into its line, after 3:5,4:-4,3:2.
+escapement-plate-32-solved.png  Escapement 32 solved on its own plate, the solve's ink ring run out.
+escapement-plate-33-dealt.png  Escapement 33 as dealt on its own plate.
+escapement-plate-33-third.png  Escapement 33 on its own plate a third of the way into its line, after 3:-4,2:-5,4:-2.
+escapement-plate-33-solved.png  Escapement 33 solved on its own plate, the solve's ink ring run out.
+escapement-plate-34-dealt.png  Escapement 34 as dealt on its own plate.
+escapement-plate-34-third.png  Escapement 34 on its own plate a third of the way into its line, after 3:-5,4:-2,3:-5.
+escapement-plate-34-solved.png  Escapement 34 solved on its own plate, the solve's ink ring run out.
+escapement-plate-35-dealt.png  Escapement 35 as dealt on its own plate.
+escapement-plate-35-third.png  Escapement 35 on its own plate a third of the way into its line, after 3:4,2:3,3:-3.
+escapement-plate-35-solved.png  Escapement 35 solved on its own plate, the solve's ink ring run out.
+escapement-plate-36-dealt.png  Escapement 36 as dealt on its own plate.
+escapement-plate-36-third.png  Escapement 36 on its own plate a third of the way into its line, after 3:-5,4:-3,3:-4.
+escapement-plate-36-solved.png  Escapement 36 solved on its own plate, the solve's ink ring run out.
+escapement-plate-37-dealt.png  Escapement 37 as dealt on its own plate.
+escapement-plate-37-third.png  Escapement 37 on its own plate a third of the way into its line, after 1:3,1:2,3:-2.
+escapement-plate-37-solved.png  Escapement 37 solved on its own plate, the solve's ink ring run out.
+escapement-plate-38-dealt.png  Escapement 38 as dealt on its own plate.
+escapement-plate-38-third.png  Escapement 38 on its own plate a third of the way into its line, after 5:5,2:-2,6:-5.
+escapement-plate-38-solved.png  Escapement 38 solved on its own plate, the solve's ink ring run out.
+escapement-plate-39-dealt.png  Escapement 39 as dealt on its own plate.
+escapement-plate-39-third.png  Escapement 39 on its own plate a third of the way into its line, after 5:5,4:2,5:-2.
+escapement-plate-39-solved.png  Escapement 39 solved on its own plate, the solve's ink ring run out.
+escapement-plate-40-dealt.png  Escapement 40 as dealt on its own plate.
+escapement-plate-40-third.png  Escapement 40 on its own plate a third of the way into its line, after 5:-3,0:-4,6:-3,5:-4.
+escapement-plate-40-solved.png  Escapement 40 solved on its own plate, the solve's ink ring run out.
+escapement-plate-41-dealt.png  Escapement 41 as dealt on its own plate.
+escapement-plate-41-third.png  Escapement 41 on its own plate a third of the way into its line, after 5:2,4:-3,5:-3,4:4.
+escapement-plate-41-solved.png  Escapement 41 solved on its own plate, the solve's ink ring run out.
+escapement-plate-42-dealt.png  Escapement 42 as dealt on its own plate.
+escapement-plate-42-third.png  Escapement 42 on its own plate a third of the way into its line, after 5:3,6:5,6:3,5:2.
+escapement-plate-42-solved.png  Escapement 42 solved on its own plate, the solve's ink ring run out.
+escapement-plate-43-dealt.png  Escapement 43 as dealt on its own plate.
+escapement-plate-43-third.png  Escapement 43 on its own plate a third of the way into its line, after 2:-5,4:-3,2:-4.
+escapement-plate-43-solved.png  Escapement 43 solved on its own plate, the solve's ink ring run out.
+escapement-plate-44-dealt.png  Escapement 44 as dealt on its own plate.
+escapement-plate-44-third.png  Escapement 44 on its own plate a third of the way into its line, after 5:-5,4:-5,6:2,6:-2.
+escapement-plate-44-solved.png  Escapement 44 solved on its own plate, the solve's ink ring run out.
+escapement-plate-45-dealt.png  Escapement 45 as dealt on its own plate.
+escapement-plate-45-third.png  Escapement 45 on its own plate a third of the way into its line, after 4:-5,5:-4,4:-5,6:4.
+escapement-plate-45-solved.png  Escapement 45 solved on its own plate, the solve's ink ring run out.
+escapement-plate-46-dealt.png  Escapement 46 as dealt on its own plate.
+escapement-plate-46-third.png  Escapement 46 on its own plate a third of the way into its line, after 0:1,2:2,3:3,4:-2.
+escapement-plate-46-solved.png  Escapement 46 solved on its own plate, the solve's ink ring run out.
+escapement-plate-47-dealt.png  Escapement 47 as dealt on its own plate.
+escapement-plate-47-third.png  Escapement 47 on its own plate a third of the way into its line, after 5:-2,0:-2,5:5,6:5.
+escapement-plate-47-solved.png  Escapement 47 solved on its own plate, the solve's ink ring run out.
+escapement-plate-48-dealt.png  Escapement 48 as dealt on its own plate.
+escapement-plate-48-third.png  Escapement 48 on its own plate a third of the way into its line, after 0:-3,5:2,4:-5,5:4.
+escapement-plate-48-solved.png  Escapement 48 solved on its own plate, the solve's ink ring run out.
+escapement-plate-49-dealt.png  Escapement 49 as dealt on its own plate.
+escapement-plate-49-third.png  Escapement 49 on its own plate a third of the way into its line, after 2:-4,2:-2,2:-4.
+escapement-plate-49-solved.png  Escapement 49 solved on its own plate, the solve's ink ring run out.
+escapement-plate-50-dealt.png  Escapement 50 as dealt on its own plate.
+escapement-plate-50-third.png  Escapement 50 on its own plate a third of the way into its line, after 0:2,6:-3,5:-3,6:-4.
+escapement-plate-50-solved.png  Escapement 50 solved on its own plate, the solve's ink ring run out.
+escapement-plate-51-dealt.png  Escapement 51 as dealt on its own plate.
+escapement-plate-51-third.png  Escapement 51 on its own plate a third of the way into its line, after 1:1,1:1,0:2,4:3.
+escapement-plate-51-solved.png  Escapement 51 solved on its own plate, the solve's ink ring run out.
+escapement-plate-52-dealt.png  Escapement 52 as dealt on its own plate.
+escapement-plate-52-third.png  Escapement 52 on its own plate a third of the way into its line, after 6:-2,6:2,0:-2,1:1.
+escapement-plate-52-solved.png  Escapement 52 solved on its own plate, the solve's ink ring run out.
+escapement-plate-53-dealt.png  Escapement 53 as dealt on its own plate.
+escapement-plate-53-third.png  Escapement 53 on its own plate a third of the way into its line, after 5:-4,0:-4,4:-4,5:3.
+escapement-plate-53-solved.png  Escapement 53 solved on its own plate, the solve's ink ring run out.
+escapement-plate-54-dealt.png  Escapement 54 as dealt on its own plate.
+escapement-plate-54-third.png  Escapement 54 on its own plate a third of the way into its line, after 2:2,4:3,2:-2,1:1.
+escapement-plate-54-solved.png  Escapement 54 solved on its own plate, the solve's ink ring run out.
+escapement-plate-55-dealt.png  Escapement 55 as dealt on its own plate.
+escapement-plate-55-third.png  Escapement 55 on its own plate a third of the way into its line, after 1:1,6:2,6:-4,6:-5.
+escapement-plate-55-solved.png  Escapement 55 solved on its own plate, the solve's ink ring run out.
+escapement-plate-56-dealt.png  Escapement 56 as dealt on its own plate.
+escapement-plate-56-third.png  Escapement 56 on its own plate a third of the way into its line, after 4:-3,5:4,3:-3,4:2.
+escapement-plate-56-solved.png  Escapement 56 solved on its own plate, the solve's ink ring run out.
+escapement-plate-57-dealt.png  Escapement 57 as dealt on its own plate.
+escapement-plate-57-third.png  Escapement 57 on its own plate a third of the way into its line, after 5:-2,4:2,2:-5,0:-4,4:3.
+escapement-plate-57-solved.png  Escapement 57 solved on its own plate, the solve's ink ring run out.
+escapement-plate-58-dealt.png  Escapement 58 as dealt on its own plate.
+escapement-plate-58-third.png  Escapement 58 on its own plate a third of the way into its line, after 5:-3,4:5,2:4,5:4,4:3.
+escapement-plate-58-solved.png  Escapement 58 solved on its own plate, the solve's ink ring run out.
+escapement-plate-59-dealt.png  Escapement 59 as dealt on its own plate.
+escapement-plate-59-third.png  Escapement 59 on its own plate a third of the way into its line, after 4:-5,5:-2,4:-4,5:5.
+escapement-plate-59-solved.png  Escapement 59 solved on its own plate, the solve's ink ring run out.
+escapement-plate-60-dealt.png  Escapement 60 as dealt on its own plate.
+escapement-plate-60-third.png  Escapement 60 on its own plate a third of the way into its line, after 2:5,3:2,4:-4,5:-2,6:-2.
+escapement-plate-60-solved.png  Escapement 60 solved on its own plate, the solve's ink ring run out.
+escapement-plate-61-dealt.png  Escapement 61 as dealt on its own plate.
+escapement-plate-61-third.png  Escapement 61 on its own plate a third of the way into its line, after 0:3,1:1,1:1,6:2.
+escapement-plate-61-solved.png  Escapement 61 solved on its own plate, the solve's ink ring run out.
+escapement-plate-62-dealt.png  Escapement 62 as dealt on its own plate.
+escapement-plate-62-third.png  Escapement 62 on its own plate a third of the way into its line, after 4:-2,4:-2,3:-5,4:-5,3:5.
+escapement-plate-62-solved.png  Escapement 62 solved on its own plate, the solve's ink ring run out.
+escapement-plate-63-dealt.png  Escapement 63 as dealt on its own plate.
+escapement-plate-63-third.png  Escapement 63 on its own plate a third of the way into its line, after 5:-3,4:3,5:3,4:-4.
+escapement-plate-63-solved.png  Escapement 63 solved on its own plate, the solve's ink ring run out.
+escapement-plate-64-dealt.png  Escapement 64 as dealt on its own plate.
+escapement-plate-64-third.png  Escapement 64 on its own plate a third of the way into its line, after 4:-3,5:3,0:-3,5:4.
+escapement-plate-64-solved.png  Escapement 64 solved on its own plate, the solve's ink ring run out.
+escapement-plate-65-dealt.png  Escapement 65 as dealt on its own plate.
+escapement-plate-65-third.png  Escapement 65 on its own plate a third of the way into its line, after 4:-3,5:5,4:3,5:4.
+escapement-plate-65-solved.png  Escapement 65 solved on its own plate, the solve's ink ring run out.
+escapement-plate-66-dealt.png  Escapement 66 as dealt on its own plate.
+escapement-plate-66-third.png  Escapement 66 on its own plate a third of the way into its line, after 4:-3,5:-3,4:5,5:-5.
+escapement-plate-66-solved.png  Escapement 66 solved on its own plate, the solve's ink ring run out.
+escapement-plate-67-dealt.png  Escapement 67 as dealt on its own plate.
+escapement-plate-67-third.png  Escapement 67 on its own plate a third of the way into its line, after 0:3,1:1,1:1,6:2,6:-4.
+escapement-plate-67-solved.png  Escapement 67 solved on its own plate, the solve's ink ring run out.
+escapement-plate-68-dealt.png  Escapement 68 as dealt on its own plate.
+escapement-plate-68-third.png  Escapement 68 on its own plate a third of the way into its line, after 4:2,2:3,3:-3,2:-2,1:-3.
+escapement-plate-68-solved.png  Escapement 68 solved on its own plate, the solve's ink ring run out.
+escapement-plate-69-dealt.png  Escapement 69 as dealt on its own plate.
+escapement-plate-69-third.png  Escapement 69 on its own plate a third of the way into its line, after 4:-5,3:3,4:4,5:-2,2:-4.
+escapement-plate-69-solved.png  Escapement 69 solved on its own plate, the solve's ink ring run out.
+escapement-plate-70-dealt.png  Escapement 70 as dealt on its own plate.
+escapement-plate-70-third.png  Escapement 70 on its own plate a third of the way into its line, after 3:2,2:-2,3:3,2:-2,4:4,3:2.
+escapement-plate-70-solved.png  Escapement 70 solved on its own plate, the solve's ink ring run out.
+escapement-plate-71-dealt.png  Escapement 71 as dealt on its own plate.
+escapement-plate-71-third.png  Escapement 71 on its own plate a third of the way into its line, after 4:-4,3:5,4:-5,0:-3,2:3,1:1.
+escapement-plate-71-solved.png  Escapement 71 solved on its own plate, the solve's ink ring run out.
+escapement-plate-72-dealt.png  Escapement 72 as dealt on its own plate.
+escapement-plate-72-third.png  Escapement 72 on its own plate a third of the way into its line, after 0:-4,1:1,1:1,6:-2,5:-5,0:4.
+escapement-plate-72-solved.png  Escapement 72 solved on its own plate, the solve's ink ring run out.
+escapement-plate-73-dealt.png  Escapement 73 as dealt on its own plate.
+escapement-plate-73-third.png  Escapement 73 on its own plate a third of the way into its line, after 1:4,1:2,2:-3,3:-4,1:2,4:-2.
+escapement-plate-73-solved.png  Escapement 73 solved on its own plate, the solve's ink ring run out.
+escapement-plate-74-dealt.png  Escapement 74 as dealt on its own plate.
+escapement-plate-74-third.png  Escapement 74 on its own plate a third of the way into its line, after 6:5,4:2,0:-3,1:1,1:1,0:3.
+escapement-plate-74-solved.png  Escapement 74 solved on its own plate, the solve's ink ring run out.
+escapement-plate-75-dealt.png  Escapement 75 as dealt on its own plate.
+escapement-plate-75-third.png  Escapement 75 on its own plate a third of the way into its line, after 1:4,2:-5,3:-2,1:3,2:3,3:5,2:5.
+escapement-plate-75-solved.png  Escapement 75 solved on its own plate, the solve's ink ring run out.
+escapement-plate-76-dealt.png  Escapement 76 as dealt on its own plate.
+escapement-plate-76-third.png  Escapement 76 on its own plate a third of the way into its line, after 6:4,2:4,3:5,0:-4,0:-3,3:-3,4:5.
+escapement-plate-76-solved.png  Escapement 76 solved on its own plate, the solve's ink ring run out.
+escapement-plate-77-dealt.png  Escapement 77 as dealt on its own plate.
+escapement-plate-77-third.png  Escapement 77 on its own plate a third of the way into its line, after 3:5,2:3,1:4,3:-5,4:-3,2:-2,3:5.
+escapement-plate-77-solved.png  Escapement 77 solved on its own plate, the solve's ink ring run out.
+escapement-plate-78-dealt.png  Escapement 78 as dealt on its own plate.
+escapement-plate-78-third.png  Escapement 78 on its own plate a third of the way into its line, after 4:-5,6:4,2:2,6:5,3:2,0:3,3:5.
+escapement-plate-78-solved.png  Escapement 78 solved on its own plate, the solve's ink ring run out.
+escapement-plate-79-dealt.png  Escapement 79 as dealt on its own plate.
+escapement-plate-79-third.png  Escapement 79 on its own plate a third of the way into its line, after 2:-3,3:-4,0:-3,2:-2,3:5,0:-4.
+escapement-plate-79-solved.png  Escapement 79 solved on its own plate, the solve's ink ring run out.
+escapement-plate-80-dealt.png  Escapement 80 as dealt on its own plate.
+escapement-plate-80-third.png  Escapement 80 on its own plate a third of the way into its line, after 5:-3,4:-3,3:3,4:-2,3:4,0:-4,4:3.
+escapement-plate-80-solved.png  Escapement 80 solved on its own plate, the solve's ink ring run out.
+escapement-plate-81-dealt.png  Escapement 81 as dealt on its own plate.
+escapement-plate-81-third.png  Escapement 81 on its own plate a third of the way into its line, after 3:-3,4:4,5:-2,4:-3,5:-3,2:3.
+escapement-plate-81-solved.png  Escapement 81 solved on its own plate, the solve's ink ring run out.
+escapement-plate-82-dealt.png  Escapement 82 as dealt on its own plate.
+escapement-plate-82-third.png  Escapement 82 on its own plate a third of the way into its line, after 0:5,4:4,3:-4,6:-4,4:-3,3:5,6:5.
+escapement-plate-82-solved.png  Escapement 82 solved on its own plate, the solve's ink ring run out.
+escapement-plate-83-dealt.png  Escapement 83 as dealt on its own plate.
+escapement-plate-83-third.png  Escapement 83 on its own plate a third of the way into its line, after 0:-5,3:4,4:-3,5:-5,6:-5,4:3,5:2.
+escapement-plate-83-solved.png  Escapement 83 solved on its own plate, the solve's ink ring run out.
+escapement-plate-84-dealt.png  Escapement 84 as dealt on its own plate.
+escapement-plate-84-third.png  Escapement 84 on its own plate a third of the way into its line, after 6:-5,4:-4,5:4,0:5,5:-5,4:3,3:3.
+escapement-plate-84-solved.png  Escapement 84 solved on its own plate, the solve's ink ring run out.
+escapement-plate-85-dealt.png  Escapement 85 as dealt on its own plate.
+escapement-plate-85-third.png  Escapement 85 on its own plate a third of the way into its line, after 6:4,1:1,2:3,6:4,1:1,2:4.
+escapement-plate-85-solved.png  Escapement 85 solved on its own plate, the solve's ink ring run out.
+escapement-plate-86-dealt.png  Escapement 86 as dealt on its own plate.
+escapement-plate-86-third.png  Escapement 86 on its own plate a third of the way into its line, after 3:-5,4:-5,3:-2,2:2,3:5,0:-4,3:5.
+escapement-plate-86-solved.png  Escapement 86 solved on its own plate, the solve's ink ring run out.
+escapement-plate-87-dealt.png  Escapement 87 as dealt on its own plate.
+escapement-plate-87-third.png  Escapement 87 on its own plate a third of the way into its line, after 4:-2,3:-5,4:-5,3:3,4:-4,6:4,3:2.
+escapement-plate-87-solved.png  Escapement 87 solved on its own plate, the solve's ink ring run out.
+escapement-plate-88-dealt.png  Escapement 88 as dealt on its own plate.
+escapement-plate-88-third.png  Escapement 88 on its own plate a third of the way into its line, after 3:-3,6:-5,4:5,0:5,5:-4,4:-3,3:-5.
+escapement-plate-88-solved.png  Escapement 88 solved on its own plate, the solve's ink ring run out.
+escapement-plate-89-dealt.png  Escapement 89 as dealt on its own plate.
+escapement-plate-89-third.png  Escapement 89 on its own plate a third of the way into its line, after 2:-2,4:5,3:3,6:-2,0:-2,3:5,4:2.
+escapement-plate-89-solved.png  Escapement 89 solved on its own plate, the solve's ink ring run out.
+escapement-plate-90-dealt.png  Escapement 90 as dealt on its own plate.
+escapement-plate-90-third.png  Escapement 90 on its own plate a third of the way into its line, after 4:3,0:4,3:3,4:2,6:4,5:-3,2:3.
+escapement-plate-90-solved.png  Escapement 90 solved on its own plate, the solve's ink ring run out.
 escapement-plate-alt-7-dealt.png  Escapement 7 as dealt on level 7's alternate plate, a pause mark on a dial without hands.
 escapement-plate-alt-7-solved.png  Escapement 7 solved on level 7's alternate plate.
 escapement-plate-alt-9-dealt.png  Escapement 9 as dealt on Hourglass's alternate plate, the glass ending inside the top and bottom rods.
@@ -764,6 +1007,66 @@ prism-specimen-27.png  Prism specimen 27 as dealt (docs/prism-design.md), on its
 prism-specimen-28.png  Prism specimen 28 as dealt (docs/prism-design.md), on its tray's plate.
 prism-specimen-29.png  Prism specimen 29 as dealt (docs/prism-design.md), on its tray's plate.
 prism-specimen-30.png  Prism specimen 30 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-31.png  Prism specimen 31 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-32.png  Prism specimen 32 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-33.png  Prism specimen 33 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-34.png  Prism specimen 34 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-35.png  Prism specimen 35 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-36.png  Prism specimen 36 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-37.png  Prism specimen 37 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-38.png  Prism specimen 38 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-39.png  Prism specimen 39 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-40.png  Prism specimen 40 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-41.png  Prism specimen 41 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-42.png  Prism specimen 42 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-43.png  Prism specimen 43 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-44.png  Prism specimen 44 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-45.png  Prism specimen 45 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-46.png  Prism specimen 46 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-47.png  Prism specimen 47 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-48.png  Prism specimen 48 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-49.png  Prism specimen 49 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-50.png  Prism specimen 50 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-51.png  Prism specimen 51 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-52.png  Prism specimen 52 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-53.png  Prism specimen 53 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-54.png  Prism specimen 54 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-55.png  Prism specimen 55 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-56.png  Prism specimen 56 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-57.png  Prism specimen 57 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-58.png  Prism specimen 58 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-59.png  Prism specimen 59 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-60.png  Prism specimen 60 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-61.png  Prism specimen 61 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-62.png  Prism specimen 62 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-63.png  Prism specimen 63 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-64.png  Prism specimen 64 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-65.png  Prism specimen 65 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-66.png  Prism specimen 66 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-67.png  Prism specimen 67 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-68.png  Prism specimen 68 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-69.png  Prism specimen 69 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-70.png  Prism specimen 70 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-71.png  Prism specimen 71 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-72.png  Prism specimen 72 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-73.png  Prism specimen 73 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-74.png  Prism specimen 74 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-75.png  Prism specimen 75 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-76.png  Prism specimen 76 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-77.png  Prism specimen 77 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-78.png  Prism specimen 78 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-79.png  Prism specimen 79 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-80.png  Prism specimen 80 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-81.png  Prism specimen 81 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-82.png  Prism specimen 82 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-83.png  Prism specimen 83 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-84.png  Prism specimen 84 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-85.png  Prism specimen 85 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-86.png  Prism specimen 86 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-87.png  Prism specimen 87 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-88.png  Prism specimen 88 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-89.png  Prism specimen 89 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-90.png  Prism specimen 90 as dealt (docs/prism-design.md), on its tray's plate.
 prism-bare-quad.png  Prism's fern under quad's knobs, unstirred: some line in every core.
 prism-bare-eye.png  Prism's fern under eye's knobs, unstirred: some line in every core.
 prism-bare-pent.png  Prism's fern under pent's knobs, unstirred: some line in every core.
@@ -780,6 +1083,16 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+prism-plate-leaves.png  Prism's leaves plate under pent's knobs, unstirred.
+prism-plate-moths.png  Prism's moths plate under pent's knobs, unstirred.
+prism-plate-reef.png  Prism's reef plate under pent's knobs, unstirred.
+prism-plate-diatoms.png  Prism's diatoms plate under pent's knobs, unstirred.
+prism-plate-fungi.png  Prism's fungi plate under pent's knobs, unstirred.
+prism-plate-feathers.png  Prism's feathers plate under pent's knobs, unstirred.
+prism-plate-starfish.png  Prism's starfish plate under pent's knobs, unstirred.
+prism-plate-beetles.png  Prism's beetles plate under pent's knobs, unstirred.
+prism-plate-seahorses.png  Prism's seahorses plate under pent's knobs, unstirred.
+prism-plate-octopus.png  Prism's octopus plate under pent's knobs, unstirred.
 prism-read-01-cyan-rest.png  Prism's read: Frond's cyan rod, its first move, held at 0 of +3.
 prism-read-01-cyan-short10.png  Prism's read: Frond's cyan rod, its first move, held at +2.0 of +3.
 prism-read-01-cyan-short5.png  Prism's read: Frond's cyan rod, its first move, held at +2.5 of +3.
@@ -816,6 +1129,8 @@ prism-read-15-magenta-short5.png  Prism's read: Sea nettle's magenta rod, stirre
 prism-read-15-magenta-on.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.0 of -5.
 prism-read-15-magenta-past5.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.5 of -5.
 prism-read-15-magenta-past10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
+prism-idea-white-mid.png  Rule idea: Spore with a white stir mid-stack (4:-2): a sheared white disc with no colour, the red and cyan over it.
+prism-idea-white-mid-before.png  Rule idea's control: Spore as dealt, the same stirs without the white one.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.

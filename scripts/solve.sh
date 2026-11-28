@@ -1,13 +1,13 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots, comma-separated]
-#        [masks=slot:channel pairs, each channel one of r g b c m y w] [decoys]
+#        [masks=slot:channel pairs, each channel one of r g b c m y w] [decoys] [untwisting]
 #        scripts/solve.sh escapement <layout> <scramble> <clocks, e.g. 1+,4-> [limit]
 #        scripts/solve.sh lab <layout> <scramble> [keys=1:0@3] [keel=n] [flip] [exhaustive] [limit=n]
 # Prints the optimum, the park rule's fewest and most moves over every way its ties go under each reading, the
 # no-lookahead player's count, the one-visit and last-ring rules' ties, whether the level needs a plan (every rule's
 # fewest misses the optimum), how many choice points have a decoy a lookahead of 3 or more moves refutes (`decoys`
-# lists each), and the optimal moves. Escapement's mode prints the prover's fewest moves with the clock ticking after
+# lists each), and the optimal moves; with `untwisting`, only the entries and what untwisting alone takes. Escapement's mode prints the prover's fewest moves with the clock ticking after
 # each, and a line. Lab mode proves a level under the fifth chapter's candidate rules (`LabRules`).
 set -euo pipefail
 cd "$(dirname "$0")/.."
