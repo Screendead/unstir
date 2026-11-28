@@ -137,6 +137,8 @@ final class Sound: @unchecked Sendable {
         case ratchet
         /// The nth heal since the level opened or was reset.
         case heal(Int)
+        /// The rings' swipe to a deeper ring, falling, and back to a shallower one, rising (Jack, 2026-11-28).
+        case deeper, shallower
     }
 
     /// The file an effect plays: the `n`th of a tap's or a tick's four, in turn, so quick ones don't ring alike.
@@ -152,6 +154,8 @@ final class Sound: @unchecked Sendable {
         case .undo: "undo"
         case .reset: "reset"
         case .tier: "switch"
+        case .deeper: "swipe-down"
+        case .shallower: "swipe-up"
         case .heal(let n): "heal-\(((n - 1) % 6 + 6) % 6 + 1)"
         }
     }

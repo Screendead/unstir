@@ -18,7 +18,7 @@ vars=()
 [[ -n "${UNSTIR_ANALYTICS:-}" ]] && vars+=("\"UNSTIR_ANALYTICS\": \"$UNSTIR_ANALYTICS\"")
 [[ -n "${UNSTIR_GPUBENCH:-}" ]] && vars+=("\"UNSTIR_GPUBENCH\": \"$UNSTIR_GPUBENCH\"")
 [[ -n "${UNSTIR_TAPS:-}" ]] && vars+=("\"UNSTIR_TAPS\": \"$UNSTIR_TAPS\"")
-for name in UNSTIR_MAP UNSTIR_MAPLOG UNSTIR_ORACLECASES UNSTIR_ORACLESIDE; do
+for name in UNSTIR_MAP UNSTIR_MAPLOG UNSTIR_ORACLECASES UNSTIR_ORACLESIDE UNSTIR_MENU UNSTIR_RINGSTOUR; do
   [[ -n "${!name:-}" ]] && vars+=("\"$name\": \"${!name}\"")
 done
 env=()

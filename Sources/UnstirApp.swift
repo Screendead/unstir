@@ -264,7 +264,8 @@ struct Harness {
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
         // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"].contains($0) }
+        // UNSTIR_MENU and UNSTIR_RINGSTOUR (`RingsFlag`) are too.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !(["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"] + RingsFlag.phone).contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
@@ -673,10 +674,14 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
     @Environment(\.requestReview) private var requestReview
     private let mute: Bool
+    /// The rings are the menu (`RingsFlag`), read once at launch.
+    private let rings: Bool
 
     init() {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
+        RingsFlag.read(env, harnessed: h.harnessed)
+        rings = RingsFlag.on
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
@@ -752,7 +757,18 @@ struct RootView: View {
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
                 // level, whose ground it leaves uncovered.
-                if level == nil || peeking || beside {
+                if rings, !wide, level == nil || peeking {
+                    // The list stays the menu beside play, until the rings have a layout for it.
+                    RingsMenu(start: level == nil ? harness?.menuTier ?? look : nil, focus: focus, settings: $settings, card: $card,
+                              clock: harness?.clock, day: harness?.day, placeholders: placeholders,
+                              cardScroll: harness?.cardScroll ?? false, arrived: arrived, revision: revision,
+                              endless: Self.save("endless", harnessed: harnessed, harnessSave)) {
+                        show($0)
+                    }
+                    .allowsHitTesting(level == nil)
+                    .accessibilityHidden(level != nil)
+                    .transition(level == nil ? dip : .identity)
+                } else if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
@@ -836,18 +852,19 @@ struct RootView: View {
         }
         .modifier(AgeChecked(menu: calm,
                              played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
-        // Game Center signs in only once the menu has settled, and holds its sheet while anything covers the menu.
+        // Game Center holds a sign-in sheet while anything covers the menu, until it has settled.
         .task(id: calm) {
             GameCenter.shared.calm = false
             guard calm, GameCenter.shared.plays, (try? await Task.sleep(for: GameCenter.settle)) != nil else { return }
             GameCenter.shared.calm = true
-            GameCenter.shared.signIn()
         }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier,
-        // a pack's with the pack's layer over it.
+        // a pack's with the pack's layer over it. Game Center signs in as the session's first level opens, so its
+        // welcome banner never slides over the menu (Jack, 2026-11-28).
         .onChange(of: level?.id, initial: true) {
             Sound.shared.bed(level?.bed ?? .menu)
             Sound.shared.layer(level?.layer)
+            if level != nil { GameCenter.shared.signIn() }
         }
         // Closed again mid-level, a card or the archive parked as the phone opened waits under the level, as on a phone,
         // if it opened that level. The slot goes with the menu beside play, so a later one waits for the level's own.

@@ -1359,10 +1359,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Achievement.shelf`). Only A Week of Tanks and Brim report a share on the way, and `due` sends only a rise past 0,
   so a hidden one never shows unearned. The build's `GAME_CENTER` (`Config/Unstir.xcconfig`, YES since the sign-in
   overlay test passed on the phone, 2026-11-18) sets Info.plist's `GameCenter`, read as `GameCenter.built`; off, no GameKit
-  call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once the menu has
-  been up with nothing over it for `settle` (`RootView.calm`, the age check's moment), holding a sign-in sheet GameKit
-  hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports as every
-  finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the swirl. It signs with Game Center's entitlement (`Config/*GameCenter.entitlements`,
+  call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once, as the session's
+  first level opens from either menu (`RootView`'s change of level), so Game Center's welcome banner never slides over
+  the menu (Jack, 2026-11-28); it holds a sign-in sheet GameKit hands over until the menu has been up with nothing over
+  it for `settle` (`RootView.calm`, the age check's moment), hides the access point, loads what Game Center has, and
+  reports as every finish's card shows (`Carded.shown`, never at the solve) and on the first turn of the tank or the
+  swirl. A report asked for before the sign-in lands sends nothing and needs no queue: the sign-in's own report reads
+  the stored state afresh and sends everything due. It signs with Game Center's entitlement (`Config/*GameCenter.entitlements`,
   picked with iCloud's and Declared Age Range's), and App Store Connect holds the 16 achievements, their images made by
   `scripts/achievement-art.sh`.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
@@ -1528,6 +1531,18 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over
   the menu opens centred on its row the same way (`PackCard.focus`), but a gate's card opens on buying
   (`arrived`), and `UNSTIR_CARDSCROLL` on the list: arrived first, then scrolled, then the row.
+- **RingsModel.swift, RingsArt.swift, RingsView.swift, RingsMenu.swift, RingsTour.swift** are the rings, the menu's
+  new look (Jack, 2026-11-27: "A, sun in the ring"), behind `UNSTIR_MENU=rings` until Jack signs them off; `MenuView`
+  stays the default, and stays the menu beside play on a wide window. `docs/rings.md` holds the design, the speed rule
+  as built, the flags and what is left. In short: `RingsModel` reads what the menu shows once on the main actor, by the
+  old menu's rules (the daily, and the archive's ring above the tiers and endless's below, by `MenuView.lead`; the
+  archive's lock by `Archive.open`; endless's new run armed by `ResetArm`; the covers by `PackDock.shown` and `Offer.shelf`, only packs that
+  ship, so never First Stir, and each cover's line by `Marks.line`, "new" first, as the dock's); `RingsArt` bakes every
+  picture off the main thread into a `CGImage`, kept by a key of what decides its pixels; `RingsView` is a `UIView`
+  of layers that hold those bitmaps and only move, scale and fade, with a hidden paging `UIScrollView` as the swipe,
+  no display link and nothing running at rest (the `rest` tour counts zero main-thread work); `RingsMenu` is its
+  SwiftUI host, laying the old menu's pack card, settings sheet and consent question over it. `RootView` builds it in
+  place of `MenuView` when `RingsFlag.on`.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
@@ -1686,7 +1701,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   as any other move does, after the out-of-ticks sound at the lift. One task that leaving
   the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
-  daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
+  daily, endless, the sandbox and the packs take plughole's). The menu's, under either menu, is the rings' produced
+  hybrid (Jack, 2026-11-28: round four's `hybridProduced` in `sound-src/synthwave-sketches.csd`, 16 bars at 100 bpm,
+  38.4 s), rendered by `scripts/sounds.sh menu` at the old menu bed's -29 LUFS with the rings' swipe pair
+  (`swipe-down`, `swipe-up`, `Effect.deeper` and `.shallower`; Csound 7 no longer reads `effects.csd`, so that mode
+  renders these alone over the set as it stands); and a new one crossfades in over the old at equal power
   across two decks. The next level of the same tier wants the same bed, which plays on untouched. A bed faded out runs
   on unheard for `Sound.hold` (15 s) before its deck stops, so back to the list and into another level within that
   takes it up where it had got to, not from its start (Jack, 2026-11-11). Only a bed a deck is playing, or the wanted

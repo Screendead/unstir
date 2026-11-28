@@ -186,7 +186,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Mac's output to BlackHole for the takes and back (needs Homebrew's `blackhole-2ch` and `switchaudio-osx`), into
   `<name>-sound.mp4`, at 48 kHz, two-pass loudnorm to -16 LUFS. It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
   it meets are in its header, with where they were read.
-- Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
+- Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` (`menu` renders only the
+  menu's bed and the rings' swipe, as Csound 7 no longer reads `effects.csd`) and prints each file's
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
   Every source is seeded, so a rerun renders the same samples, but the AAC encoder isn't byte-deterministic, so a
   rerun may rewrite a bed's .m4a with new bytes; restore those rather than commit them. `scripts/sounds.sh listen
