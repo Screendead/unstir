@@ -14,7 +14,7 @@ Store Connect and the hosted pages, never into a tracked file. The same goes for
 `{{DEVELOPER_NAME}}`.
 
 What it is true to: `master` on 2026-11-18, built for release with its tracked defaults (no analytics and iCloud sync
-off, Game Center on): four tiers of 27 levels, the daily with its frost days, endless, the daily archive and the
+off, Game Center on): four tiers of 30 levels (Jack, 2026-11-28), the daily with its frost days, endless, the daily archive and the
 supporter mark that any purchase opens, and the three packs as built, Lens's 25 panels, Escapement's 30 problems and
 Prism's 30 specimens, with Triptych I. First Stir is out of v1 and compiled out of Release. Built but off in v1, so left
 out of the copy: iCloud sync of bests (`ICLOUD = NO`); turning it on changes the description's last line and the
@@ -50,7 +50,7 @@ which the category already shows.
 
 | Option | Text | Chars |
 |---|---|---|
-| **A (Jack, ST3)** | A picture, stirred by rods under the glass. Turn them back in the right order and it snaps clean. 108 levels free, a new daily every day, three packs to add. | 157 |
+| **A (Jack, ST3)** | A picture, stirred by rods under the glass. Turn them back in the right order and it snaps clean. 120 levels free, a new daily every day, three packs to add. | 157 |
 | B, set aside for later | Every stir left a seam. The newest one runs unbroken. Turn the rods back in order and the picture comes clean. Four tiers and a daily, free. | 140 |
 
 A says what is free and that packs exist; B teaches the rule. Since this field changes without a review, B can follow
@@ -67,12 +67,12 @@ The rule is simple to say and slow to master: the last stir is on top. Where two
 
 Drag a knob to turn its rod. Let go where you started and nothing happens, so you can look before you commit. Every level has a par, the fewest moves that unstir it. Reset is free in every level. Undos come from a small bank that refills a little on each day you play.
 
-FOUR TIERS, 108 LEVELS, FREE
+FOUR TIERS, 120 LEVELS, FREE
 
-- Plughole: 27 levels on neon pictures, from one stir on three rods to deep tanks on seven. The first three replay the scramble so you can watch it happen.
-- Whirlpool: 27 deeper levels on live pictures that move as you play: glass, chainmail, coral, a web of neurons and marbled ink. More stirs, more of them hidden under louder ones.
-- Vortex: 27 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
-- Maelstrom: 27 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. The last free tier and the hardest: some levels need a plan, not just a good eye. Its pictures have a heartbeat.
+- Plughole: 30 levels on neon pictures, from one stir on three rods to deep tanks on seven. The first three replay the scramble so you can watch it happen.
+- Whirlpool: 30 deeper levels on live pictures that move as you play: glass, chainmail, coral, a web of neurons and marbled ink. More stirs, more of them hidden under louder ones.
+- Vortex: 30 levels with a swirl as wide as the glass, which stirs through every other rod. Its pictures are its own: isobars, a sky of orbiting planets, woven cords.
+- Maelstrom: 30 levels where knobs have seized. Turn the whole tank to bring the seams round to a knob that still works. The last free tier and the hardest: some levels need a plan, not just a good eye. Its pictures have a heartbeat.
 
 Each tier opens when every level of the one before it is solved.
 
