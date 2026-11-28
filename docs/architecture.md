@@ -109,8 +109,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   open Duo upright's 1471 px starts at 23 (Jack's call r16c-duoprior = B, round 16, which rescaled duocap2 = D's 17,
   scaled from the 31 measured before 2026-11-04); `Tank.maxStack` is the same at every size, so every level plays as on an iPhone, its stacks as deep, while the
   four-tap limit shrinks to 23 on the Duo upright, where every stack whose work is past 23 draws two taps (Jack's
-  call r16c-duoprior = B). On a phone every level is dealt within 40 (whirlpool 27, the deepest on a live picture, has 28
-  stirs on the glass's fill of 4, 32), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
+  call r16c-duoprior = B). On a phone every level is dealt within 40 (whirlpool 30, the deepest on a live picture, has 32
+  stirs on the glass's fill of 4, 36; whirlpool 27's 28 made 32 when the call was made), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
   wp27-table = B). The accepted risk: a deep stack on a live picture there may run up to 32% over the
   frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench
   (GPUBench.swift, `UNSTIR_GPUBENCH`, `scripts/gpu-bench.sh`) times a plain entry with four taps and with two at 1137,
@@ -515,16 +515,20 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   loses it unless the stored keys are remapped. Each table row's title and note is a `String(localized:)` keyed by the
   level's id (`level.L1.title`, `level.L1.note`), so an English edit keeps its translations; `Level.title`, `note` and
   `chapter` stay `String`, resolved once as the table is built, as the play screen, menu, shelf and card read them as
-  text. `Tier.name` is translated (Jack's call CAT2 = A); the raw value never shows once the menu's pass lands. Plughole has 27 levels, 1–18
-  hand-written and 19–27 dealt by the frozen generator and picked for a gentler curve (`scripts/plughole-levels.sh`),
-  all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
-  deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
-  then hex) on its own family, nine levels each: no two neighbours alike, V1–V3 one of each, isobars opening each
-  layout and taking the finale, the ephemeris only to 14 stirs (`testVortexTable`), no knob seized, so the tank never turns and par is the entry count, which the
-  solver's optimum matches and plain untwisting reaches (`testVortexParIsTheOptimum`, slow), and maelstrom 27 of its
+  text. `Tier.name` is translated (Jack's call CAT2 = A); the raw value never shows once the menu's pass lands. Every free chapter has 30 levels
+  (Jack's call "Thirty and ninety", 2026-11-28; 28 to 30 appended as each chapter's finales, so no id moved). Plughole's
+  1–18 are hand-written and 19–30 dealt by the frozen generator and picked for a gentler curve
+  (`scripts/plughole-levels.sh`, `pick.py`, which picks 19–27 again from the same pools), all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
+  deeper variants on live pictures that follow a table, its finales dealt on hex by the frozen generator
+  (`plughole-levels.sh search`) to 30, 31 and 32 stirs with fewer right moves a step than 27; vortex 30 provisional
+  swirl levels (quad, tri, eye, pent, then hex) on its own family, ten levels each (nine before the finales): no two
+  neighbours alike, V1–V3 one of each, isobars opening each layout and taking the finale, the ephemeris only to 14
+  stirs (`testVortexTable`), so of the finales 28 is the ephemeris's, short and dense with hidden stirs and swirls,
+  and 29 and 30 the deepest (`scripts/vortex-levels/pick.py`'s last slots); no knob seized, so the tank never turns and par is the entry count, which the
+  solver's optimum matches and plain untwisting reaches (`testVortexParIsTheOptimum`, slow), and maelstrom 30 of its
   own (quad, then pent, then hex) on the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
-  solver's optimum (`testMaelstromParIsTheOptimum`, slow). The levels that need a plan (M6, M11–M14 and most of hex
-  past M18) miss par by every rule of thumb however its ties go, and the rest are fair, the park rule reaching par
+  solver's optimum (`testMaelstromParIsTheOptimum`, slow). The levels that need a plan (M6, M11–M14, most of hex
+  past M18, and the finales M28–M30, which also leave more decoys on the optimal line than M27) miss par by every rule of thumb however its ties go, and the rest are fair, the park rule reaching par
   however its ties go; the test pins which is which. Jack dropped the promise that a sensible player always reaches par
   (2026-11-12): it is the last free tier. `scripts/maelstrom-levels.sh` measures the table and deals candidates. Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
@@ -1061,7 +1065,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   as the card needs, down to a hard floor of 30% of the size it was played at (`leastFinished`, about 100 pt across on
   the shortest phone), under which the glass would stop being a picture; a card that lacks room even there would run
   past the foot (`Finished.fits` false), which the tests fail. No card measured comes near it: on 2026-11-13 the
-  tallest, plughole 27 replayed at par with an undo against an older best (what clean takes, the best line, again and
+  tallest, plughole's last level (27 then; the candidates take the tier's last) replayed at par with an undo against an older best (what clean takes, the best line, again and
   up a notch), at xxxLarge took the SE's glass to 59% and the closed Duo's to 58%, every other screen less. `testEveryCardStandsWholeOnOneScreenOnEveryScreenAtEveryType` measures every
   candidate card on the SE, the narrowest, at the type cap, and holds the tallest to stand whole at its own height there
   and on each other screen the game runs on (a 6.1 inch, the Pro Max and the Duo closed, upright, beside the menu and
@@ -1499,7 +1503,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   row lies in its list, a mark in the outgoing list moves there, and the scroll view scrolls to it once it is laid out, so the jump
   happens under the stir's peak. Tapping the picked tier scrolls to its landing. A locked tier can be
   looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit once solved, and under the
-  ticks the levels without a best as runs (`Tier.short`: "short: 21–27"), each a button opening its first,
+  ticks the levels without a best as runs (`Tier.short`: "short: 21–30"), each a button opening its first,
   which is always open. A closed row
   still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
   locked tier "solve every plughole level to open"), which VoiceOver reads as its value. Once the player owns a pack (`Store.bought`) and until the settings' switch is off, the title carries the supporter mark (`SupporterMark`; Jack's call M6, round 14, the thank-you, as there is no tip jar): a hairline four-pointed glint after it in the tier's sweep, still, which VoiceOver reads as "Unstir, supporter", and the daily's share line puts the same glyph, ✦ (`Share.supporter`), after its name. The daily's title names its day in the locale's words ("Daily ·
