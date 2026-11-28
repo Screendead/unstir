@@ -194,14 +194,14 @@ as the old dock's do (`Marks.line`).
   its role at that setting (`RingsPlan.pt`: `UIFontMetrics` for title1, headline, footnote, subheadline, callout or
   caption1 from the mock's size), never smaller, and the middle's words are measured (`RingsPaint.measure`, line
   layout without drawing) and stacked centred on the sun, the count in its short form ("14/27 · 11 par"). At
-  accessibility3, the mock's, it matches `launch-ax.png` (`rings-ax3`). At accessibility5 (`rings-ax5`) it does not
-  fit: the level's name runs past the sun onto the beads and the horizon, the covers' labels run into the packs'
-  line, and the daily's second line touches the ring's top beads. How it should give way there (the ring and sun
-  drawn smaller, as the tank scales on the play screen; the packs' line dropped; the covers' news dropped) is Jack's
-  call.
+  accessibility3, the mock's, it matches `launch-ax.png` (`rings-ax3`). Past it the menu's text stops growing
+  (Jack, 2026-11-28: "Stop the menu's text growing past the third size"): `RingsPlan` takes accessibility4 and 5 as
+  accessibility3, so `rings-ax5` draws as `rings-ax3`. Drawn at their own sizes they did not fit (the level's name
+  ran past the sun, the covers' labels into the packs' line). An exception to "text never shrinks" for the rings
+  alone: the settings sheet, the cards over the menu and the play screen still follow the setting.
 
 ## Step two, what is left
 
-Fitting accessibility4 and 5 (above); the list beside play on a wide window, where `RootView` keeps `MenuView`; the level
+The list beside play on a wide window, where `RootView` keeps `MenuView`; the level
 growing out of its bead, which the mock's film shows and this step replaces with the root's fade; First Stir's cover,
 when it ships.

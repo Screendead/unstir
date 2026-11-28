@@ -45,7 +45,7 @@ rings-today.png  The archive's ring above plughole, Lens owned so it is open: a 
 rings-today-shut.png  The archive's ring with no pack owned: its sun down, what opens it.
 rings-endless.png  Endless's ring below maelstrom, a run saved on tank 6 at brim 3, best 9: a neon circle, continue and new run on its sun.
 rings-ax3.png  The rings at rest on whirlpool at accessibility3, the mock's accessibility size: the sun whole over a lower horizon, its words at the system's sizes and stacked, the daily's words flat under its star, a line under each cover.
-rings-ax5.png  The same at accessibility5, the largest: every word at the system's size, the level's name wrapped to the sun.
+rings-ax5.png  The same at accessibility5, the largest: drawn exactly as accessibility3, as the rings' text stops growing there.
 rings-ax3-bead.png  Accessibility3, bead 09 tapped: the word stays put, the picked level's best, number, name and tap again to play stacked under it.
 rings-ax3-shut.png  Accessibility3 on vortex, shut: its word and what opens it at the system's sizes.
 rings-ax3-endless.png  Accessibility3 on endless's ring, a run saved: continue and new run stacked under its count.

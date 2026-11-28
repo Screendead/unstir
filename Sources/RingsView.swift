@@ -22,7 +22,8 @@ final class RingsLayer: CALayer {
 /// Where everything stands on a screen, from its size, insets and type size alone. The mock is 440 by 956; a smaller
 /// screen draws the ring, the sun and the orbits in, and leaves every word and bead its size. Under accessibility type
 /// the mock's own layout for it holds (`launch-ax.png`): the ring a little higher, the sun whole over a lower horizon,
-/// the daily's words set flat under its star, and every word at the size the system gives its role, never smaller.
+/// the daily's words set flat under its star, and every word at the size the system gives its role, never smaller, up
+/// to accessibility3, past which it stops growing.
 struct RingsPlan: Equatable {
     /// A finger's travel from one ring to the next.
     static let pitch: CGFloat = 240
@@ -41,7 +42,8 @@ struct RingsPlan: Equatable {
         self.size = size
         self.top = top
         self.bottom = bottom
-        self.type = type
+        // The menu's text stops growing past accessibility3: the two largest sizes draw as it (Jack, 2026-11-28).
+        self.type = min(type, .accessibilityExtraLarge)
         large = type.isAccessibilityCategory
         let room = size.height - top - bottom
         k = min(1, size.width / 440, room / 860)

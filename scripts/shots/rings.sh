@@ -19,7 +19,7 @@ shot rings-endless "Endless's ring below maelstrom, a run saved on tank 6 at bri
   MENU=rings TIER=whirlpool BESTS=$ringsBests,endless:9 DAILIES=4 OWNED=lens MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3 RINGSPOSE=ring:5
 shot rings-ax3 "The rings at rest on whirlpool at accessibility3, the mock's accessibility size: the sun whole over a lower horizon, its words at the system's sizes and stacked, the daily's words flat under its star, a line under each cover." \
   MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility3
-shot rings-ax5 "The same at accessibility5, the largest: every word at the system's size, the level's name wrapped to the sun." \
+shot rings-ax5 "The same at accessibility5, the largest: drawn exactly as accessibility3, as the rings' text stops growing there." \
   MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility5
 shot rings-ax3-bead "Accessibility3, bead 09 tapped: the word stays put, the picked level's best, number, name and tap again to play stacked under it." \
   MENU=rings TIER=whirlpool BESTS=$ringsBests DAILIES=4 OWNED=lens TYPESIZE=accessibility3 RINGSPOSE=pick:9
