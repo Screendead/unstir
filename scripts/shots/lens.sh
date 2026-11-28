@@ -14,6 +14,11 @@ for clue in $(scripts/lens-art-sheet.py clues); do
   hold=5 shot "lens-${clue%%=*}-clue" "Lens ${clue%%=*}'s panel drawn clean, only its lenses magnified (${clue#*=}): what is seen through each." \
     PACK=lens LEVEL=${clue%%=*} OWNED=lens BESTS=lens:0 STACK=${clue#*=} CLEAN=1
 done
+# The levels that zoom out (from 62) drawn clean, each lens at what it nets as dealt: whether a zoom out reads as one.
+for net in $(scripts/lens-levels.py nets 62 75); do
+  hold=5 shot "lens-${net%%=*}-net" "Lens ${net%%=*}'s panel drawn clean, each lens at what it nets as dealt (${net#*=})." \
+    PACK=lens LEVEL=${net%%=*} OWNED=lens BESTS=lens:0 STACK=${net#*=} CLEAN=1
+done
 # Each level one move from solved: only the entry dealt first left on its panel, the last read a solve makes.
 for last in $(scripts/lens-art-sheet.py lasts); do
   hold=5 shot "lens-${last%%=*}-last" "Lens ${last%%=*} one move from solved: only ${last#*=} left on its panel." \
