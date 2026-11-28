@@ -1057,13 +1057,7 @@ struct LevelView: View {
             undoQueued = false
             if !game.finished { undo() }
         }
-        .onChange(of: game.wardRefusals) {
-            jammed = game.refusedKnob
-            jams += 1
-            Knock.thud.play()
-            Sound.shared.play(.seized)
-            say(game.wardSpoken(game.slot(of: game.refusedKnob)))
-        }
+        .onChange(of: game.wardRefusals) { wardRefused() }
         .onChange(of: game.refusals) {
             // A full stack refuses as a seized knob does, and says what frees it.
             jammed = game.refusedKnob
@@ -1165,9 +1159,11 @@ struct LevelView: View {
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
-            let pack = game.level.pack.map { p in
-                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "")"
-            } ?? ""
+            var pack = ""
+            if let p = game.level.pack {
+                let access: String = Store.shared.access(game.level).map { "\($0)" } ?? ""
+                pack = " \(p.rawValue) \(Store.shared.state(p)), \(access)"
+            }
             Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if knocks { Knock.warm() }
@@ -1429,6 +1425,15 @@ struct LevelView: View {
     /// The solved picture's veil under the card, light enough that an over-par solve still shows what it unstirred
     /// (Jack's call C11, round 13).
     nonisolated static func haze(over: Int) -> Double { min(0.05 * Double(over), 0.2) }
+
+    /// A locked ward refused a commit: it knocks as a seized knob does, and says what opens it.
+    private func wardRefused() {
+        jammed = game.refusedKnob
+        jams += 1
+        Knock.thud.play()
+        Sound.shared.play(.seized)
+        say(game.wardSpoken(game.slot(of: game.refusedKnob)))
+    }
 
     private func say(_ text: String) {
         notice = text
