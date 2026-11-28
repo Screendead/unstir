@@ -135,7 +135,8 @@ enum GPUBench {
                 }
             }
         }
-        let estuary = Level.whirlpool.last!
+        // Whirlpool 27, Estuary, whose frame the phone's recorded times measure, though 28 to 30 are deeper.
+        let estuary = Level.whirlpool[26]
         var estuaryFull = estuary.scramble
         while estuaryFull.count < Tank.maxStack { estuaryFull += estuary.scramble }
         estuaryFull = Array(estuaryFull.prefix(Tank.maxStack))

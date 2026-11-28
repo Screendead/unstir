@@ -5,7 +5,7 @@
 # a result card, then each other picture at its deepest level and, on maelstrom, each twin. The live background is held
 # 3 s in, so the probes compare; level 12 is marbling, so its probes are pinned to the glass.
 shot menu-whirlpool "Menu on whirlpool with every row unlocked." TIER=whirlpool UNLOCK=1
-for n in 01 09 14 19 23 27; do
+for n in 01 09 14 19 23 30; do
   shot "whirlpool$n" "Whirlpool level $n with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
 shot whirlpool-probe-short "Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal." \
@@ -32,11 +32,11 @@ shot whirlpool-count-hex-below "Whirlpool 25 (hex, marbling), finger down to the
   TIER=whirlpool LEVEL=25 LIVE=4:+2 TOUCH=0.2165,0.685 CLOCK=3
 shot whirlpool-result "Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par)." \
   TIER=whirlpool SCREEN=result LEVEL=5 CLOCK=3
-for level in 24:chainmail 16:coral 20:neurons 25:marbling; do
+for level in 28:chainmail 16:coral 20:neurons 29:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "whirlpool$n-$picture" "Whirlpool level $n ($picture) with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
-for level in 27:glass 22:chainmail 8:coral 18:neurons 24:marbling; do
+for level in 29:glass 28:chainmail 8:coral 18:neurons 30:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
 done

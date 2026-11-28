@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/duo-feel.sh [--sim udid] [drags] [budgets...]   Plays the deepest levels (whirlpool, maelstrom and
-# vortex 27, endless's tank 20), each as dealt and repeated to the full stack (Tank.maxStack, UNSTIR_DEEP), on the phone
+# vortex 30, endless's tank 20), each as dealt and repeated to the full stack (Tank.maxStack, UNSTIR_DEEP), on the phone
 # UNSTIR_DEVICE names with the build scripts/run-ios.sh Release installed (or on the simulator given: a dry run of the
 # plumbing), at each four-tap budget pinned (UNSTIR_TAPS=watch:n), a knob dragged 4 s at a time through the real
 # let-go `drags` times (UNSTIR_TAPDRAG, 2 unset), and prints each run's taps lines from the flight recorder. Budgets
@@ -29,9 +29,9 @@ budgets=("$@")
 limit=$(sed -nE 's/^ *static let maxStack = ([0-9]+)$/\1/p' Sources/Twist.swift)
 (( ${#budgets[@]} )) || budgets=(42 23)
 levels=(
-  'whirlpool 27|"UNSTIR_TIER":"whirlpool","UNSTIR_LEVEL":"27"'
-  'maelstrom 27|"UNSTIR_TIER":"maelstrom","UNSTIR_LEVEL":"27"'
-  'vortex 27|"UNSTIR_TIER":"vortex","UNSTIR_LEVEL":"27"'
+  'whirlpool 30|"UNSTIR_TIER":"whirlpool","UNSTIR_LEVEL":"30"'
+  'maelstrom 30|"UNSTIR_TIER":"maelstrom","UNSTIR_LEVEL":"30"'
+  'vortex 30|"UNSTIR_TIER":"vortex","UNSTIR_LEVEL":"30"'
   'endless tank 20|"UNSTIR_MODE":"endless","UNSTIR_RESUME":"","UNSTIR_RESUMETANK":"20"'
 )
 log=$(mktemp)

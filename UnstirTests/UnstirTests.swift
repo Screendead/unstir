@@ -650,7 +650,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(Offer.pointer(after: .free, shelf: Self.shelf, owned: Self.owning([.lens, .escapement, .prism])))
     }
 
-    /// "more puzzles in the packs ›" shows on maelstrom 27's card alone, once, opening the first pack on the shelf the
+    /// "more puzzles in the packs ›" shows on maelstrom's last card alone, once, opening the first pack on the shelf the
     /// player doesn't own; never where a completion already points to one, nor once every pack is owned.
     @MainActor func testTheLadderEndPointsToThePacksOnce() {
         let end = Level.maelstrom.last!
@@ -1486,9 +1486,10 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false])
         for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
-        XCTAssertEqual(Tier.plughole.solved { bests[$0] }, Array(repeating: true, count: 26) + [false])
+        let allButLast = Array(repeating: true, count: Level.plughole.count - 1) + [false]
+        XCTAssertEqual(Tier.plughole.solved { bests[$0] }, allButLast)
         bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
-        XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
+        XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, allButLast)
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false], "over par opens it")
         // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool solved opens
         // vortex and not maelstrom, and vortex solved opens maelstrom.
@@ -1728,12 +1729,12 @@ final class UnstirTests: XCTestCase {
     /// The gate lists what is unsolved as runs, each opening at a level the player can open; a best over par counts.
     func testTheGateListsTheUnsolvedLevelsAsRuns() {
         var bests: [String: Best] = [:]
-        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... 26])
+        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... Level.plughole.count - 1])
         for level in Level.plughole.prefix(20) { bests[level.id] = Best(over: 0, seconds: 30) }
         for id in ["L5", "L12", "L13"] { bests[id] = nil }
         bests["L7"] = Best(over: 2, seconds: 30)
         let runs = Tier.plughole.short { bests[$0] }
-        XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... 26])
+        XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... Level.plughole.count - 1])
         for run in runs { XCTAssert(run.lowerBound == 0 || bests[Level.plughole[run.lowerBound - 1].id] != nil) }
         for level in Level.plughole { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertEqual(Tier.plughole.short { bests[$0] }, [])
