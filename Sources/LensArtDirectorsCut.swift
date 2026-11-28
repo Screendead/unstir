@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let directorsCut: [Int: Halftone.Panel] = [76: rangefinder]
+    static let directorsCut: [Int: Halftone.Panel] = [76: rangefinder, 77: lensflare]
 
     /// Hex's rods, the hub first.
     fileprivate static let rods: [P] = [P(0, 0), P(0, -0.56), P(0.485, -0.28), P(0.485, 0.28), P(0, 0.56), P(-0.485, 0.28), P(-0.485, -0.28)]
@@ -182,5 +182,128 @@ extension LensArt {
             return cloth
         }
         return Halftone.Panel(name: "rangefinder", tones: tones, strokes: cut(s))
+    }
+}
+
+// MARK: - 77: Lens flare
+
+/// Level 77's name: a film's last shot of a beach at sunset, shot into the sun, and the flare it throws across the
+/// frame: the sun itself over the upper right core in a burst of spikes, a streak drawn level across the sky through
+/// it, a palm leaning in from the upper left and a striped umbrella on the sand, and the flare's ghosts strung on the
+/// line from the sun through the middle, each rimmed in split colour: a hexagon of the iris over the hub and a broad
+/// disc over the lower left, and a third over the lower right, where the sun's path glitters on the sea. Through them:
+/// a gull crossing the sun, a yacht on the horizon (hub), a surfer on the glitter (lower right) and a sandcastle with
+/// its flag (lower left).
+extension LensArt {
+    static let lensflare: Halftone.Panel = drawLensflare()
+
+    private static func drawLensflare() -> Halftone.Panel {
+        let sun: P = rods[2], ghosts: [P] = [rods[0], rods[3], rods[5]]
+        let horizon = -0.06, shore = 0.46
+        let chroma: [Tone] = [c(0.75), .zero, m(0.75), y(0.85), .zero]
+        let ports: [Port] = [
+            port(sun, y(0.9), [(14, m(0.5)), (40, y(0.95)), (52, m(0.5)), (100, y(0.95)), (118, m(0.5)), (190, y(0.95)), (200, m(0.5)), (262, y(0.95)), (290, m(0.5)), (360, y(0.95))]),
+            port(rods[3], m(0.55), [(30, chroma[0]), (70, chroma[1]), (130, chroma[2]), (150, chroma[3]), (220, chroma[1]), (280, chroma[0]), (310, chroma[2]), (360, chroma[3])]),
+            port(rods[5], y(0.65), [(50, chroma[3]), (80, chroma[2]), (170, chroma[1]), (200, chroma[0]), (260, chroma[3]), (300, chroma[1]), (360, chroma[2])]),
+        ]
+        // The iris's ghost over the hub: a hexagon of glass in its split rim.
+        let iris: [P] = closed((0..<6).map { polar(rods[0], 0.215, 60 * Double($0) + 12) })
+        let irisRim: Port = port(rods[0], .zero, [(40, chroma[0]), (75, chroma[1]), (120, chroma[2]), (160, chroma[3]), (230, chroma[4]), (250, chroma[0]), (300, chroma[2]), (360, chroma[3])], glass: 0)
+        let small: [(P, Double, Tone)] = [(P(0.25, -0.145), 0.055, y(0.5)), (P(-0.8, 0.46), 0.1, m(0.45)), (P(0.68, -0.39), 0.035, c(0.5))]
+        // The palm: its trunk leaning in, and its fronds from the crown.
+        let crown: P = P(-0.56, -0.5)
+        let trunk: [P] = curve(P(-1.0, 0.2), P(-0.66, -0.1), crown, 10)
+        let trunkShape: [P] = trunk.map { $0 + P(-0.03, 0) } + trunk.reversed().map { $0 + P(0.03, 0) }
+        let fronds: [[P]] = [-10.0, 30, 75, 150, 200, 250].map { (a: Double) -> [P] in
+            let tip: P = polar(crown, 0.36, a) + P(0, 0.08), n: P = polar(P(0, 0), 0.07, a + 90)
+            return curve(crown, polar(crown, 0.2, a) + n + P(0, -0.03), tip, 8) + curve(tip, polar(crown, 0.18, a) - n + P(0, 0.02), crown, 8)
+        }
+        let umbrella: P = P(0.2, 0.62)
+        let canopy: [[P]] = (0..<4).map { (k: Int) -> [P] in [umbrella] + arc(umbrella, 0.17, 180 + 45 * Double(k), 225 + 45 * Double(k), 6) }
+        let towel: [P] = [P(-0.36, 0.72), P(-0.12, 0.66), P(-0.08, 0.8), P(-0.32, 0.86)]
+        let clouds: [(P, P)] = [(P(-0.12, -0.66), P(0.26, 0.05)), (P(0.22, -0.78), P(0.2, 0.04)), (P(0.1, -0.5), P(0.18, 0.03))]
+        var fills: [Fill] = small.map { disc($0.0, $0.1, $0.2) } + fronds.map { fill($0, .zero) } + [fill(trunkShape, .zero)]
+        fills += canopy.enumerated().map { fill($0.element, $0.offset % 2 == 0 ? m(0.75) : y(0.9)) } + [fill(bar(umbrella, umbrella + P(0.03, 0.3), 0.025), .zero), fill(towel, c(0.75))]
+        fills += clouds.map { oval($0.0, $0.1.x, $0.1.y, m(0.75)) }
+
+        var s: [Halftone.Stroke] = []
+        // The horizon, the shore's foam, the glitter on the sun's path.
+        s.append(stroke(span(P(-1, horizon), P(1, horizon), 60), mid))
+        s.append(stroke((0...40).map { (i: Int) -> P in let x: Double = -1 + 0.05 * Double(i); return P(x, shore + 0.025 * sin(x * 9)) }, mid))
+        for k in 0..<12 {
+            let yy: Double = horizon + 0.03 + 0.04 * Double(k), w: Double = 0.03 + 0.006 * Double(k)
+            s.append(stroke([P(sun.x - w + 0.01 * Double(k % 3), yy), P(sun.x + w - 0.01 * Double(k % 2), yy)], hair))
+        }
+        // The palm's fronds and trunk, the umbrella and the towel.
+        for f in fronds { s.append(stroke(f, mid)) }
+        s.append(stroke(trunk.map { $0 + P(-0.03, 0) }, mid)); s.append(stroke(trunk.map { $0 + P(0.03, 0) }, mid))
+        for k in 1..<8 { let at: P = trunk[k]; s.append(stroke([at + P(-0.03, 0), at + P(0.03, -0.015)], hair)) }
+        s.append(stroke(arc(umbrella, 0.17, 180, 360, 24) + [umbrella + P(-0.17, 0)], mid))
+        for k in 1..<4 { s.append(stroke([umbrella, polar(umbrella, 0.17, 180 + 45 * Double(k))], hair)) }
+        s.append(stroke([umbrella, umbrella + P(0.03, 0.3)], mid))
+        s.append(stroke(closed(towel), mid))
+        // The streak drawn level through the sun, the clouds' edges, the small ghosts, gulls far off.
+        for e in [-0.012, 0.012] { s.append(stroke([P(-1, sun.y + e), P(1, sun.y + e * 0.4)], hair)) }
+        for (cc, r) in clouds { s.append(stroke(Array(ellipse(cc, r.x, r.y, 32)[16...32]), mid)) }
+        for (cc, r, _) in small { s.append(stroke(circle(cc, r, 24), mid)) }
+        for at in [P(-0.2, -0.36), P(-0.08, -0.4), P(0.62, -0.62)] { s.append(stroke([at + P(-0.03, 0.006), at + P(-0.012, -0.01), at, at + P(0.012, -0.01), at + P(0.03, 0.006)], hair)) }
+        s = clearOf(s, [sun] + ghosts, by: coreR + 0.004)
+        // The sun's spikes, the ghosts' rims.
+        for k in 0..<12 {
+            let a: Double = 30 * Double(k) + 7, l: Double = k % 2 == 0 ? 0.42 : 0.16
+            s += clearOf([stroke([polar(sun, coreR + 0.02, a), polar(sun, coreR + l, a)], k % 2 == 0 ? mid : hair)], ghosts + [P(0, -0.56)], by: coreR + 0.004)
+        }
+        for p in ports {
+            s.append(stroke(circle(p.centre, p.rim, 56), bold))
+            s.append(stroke(circle(p.centre, p.glass, 48), hair))
+        }
+        s.append(stroke(circle(rods[0], 0.258, 56), bold))
+        s.append(stroke(iris, mid))
+        // In the sun: a gull crossing it.
+        let gull: P = sun + P(0.02, 0.024)
+        s.append(stroke(circle(gull + P(0.012, 0.008), 0.042, 28), 0.0026))
+        s.append(stroke(curve(gull + P(-0.05, 0.004), gull + P(-0.03, -0.03), gull + P(0, 0.0), 8) + curve(gull + P(0, 0.0), gull + P(0.03, -0.03), gull + P(0.05, 0.004), 8).dropFirst(), 0.0036))
+        // In the iris: a yacht on the horizon.
+        let yacht: P = rods[0] + P(0.02, -0.024)
+        s += runs(span(yacht + P(-0.1, 0.03), yacht + P(0.1, 0.03), 30), 0.0022) { abs($0.x - yacht.x) > 0.045 }
+        s.append(stroke(closed([yacht + P(-0.045, 0.012), yacht + P(0.045, 0.012), yacht + P(0.032, 0.03), yacht + P(-0.032, 0.03)]), 0.0032))
+        s.append(stroke([yacht + P(0, 0.012), yacht + P(0, -0.07)], 0.0026))
+        s.append(stroke(closed([yacht + P(0.004, -0.064), yacht + P(0.04, 0.004), yacht + P(0.004, 0.004)]), 0.003))
+        s.append(stroke(closed([yacht + P(-0.004, -0.05), yacht + P(-0.004, 0.004), yacht + P(-0.034, 0.004)]), 0.003))
+        // On the glitter: a surfer on his board under a wave's curl.
+        let surf: P = rods[3] + P(-0.022, 0.024)
+        s.append(stroke(closed(ellipse(surf + P(0, 0.034), 0.05, 0.008, degrees: -8, 16)), 0.003))
+        s.append(stroke([surf + P(-0.016, 0.026), surf + P(-0.004, 0.0), surf + P(0.014, 0.026)], 0.003))
+        s.append(stroke([surf + P(-0.004, 0.0), surf + P(0.002, -0.03)], 0.0032))
+        s.append(stroke([surf + P(-0.03, -0.02), surf + P(0.0, -0.022), surf + P(0.03, -0.012)], 0.0028))
+        s.append(stroke(circle(surf + P(0.004, -0.042), 0.01, 10), 0.003))
+        s.append(stroke(curve(surf + P(0.08, 0.05), surf + P(0.1, -0.06), surf + P(0.04, -0.07), 10) + curve(surf + P(0.04, -0.07), surf + P(0.03, -0.05), surf + P(0.05, -0.045), 4), 0.0026))
+        // In the broad ghost: a sandcastle and its flag.
+        let castle: P = rods[5] + P(0.024, 0.02)
+        let wall: [P] = [P(-0.06, 0.04), P(-0.06, -0.01), P(-0.05, -0.01), P(-0.05, -0.02), P(-0.04, -0.02), P(-0.04, -0.01), P(-0.02, -0.01),
+                         P(-0.02, -0.04), P(-0.012, -0.04), P(-0.012, -0.05), P(-0.004, -0.05), P(-0.004, -0.04), P(0.004, -0.04), P(0.004, -0.05),
+                         P(0.012, -0.05), P(0.012, -0.04), P(0.02, -0.04), P(0.02, -0.01), P(0.04, -0.01), P(0.04, -0.02), P(0.05, -0.02),
+                         P(0.05, -0.01), P(0.06, -0.01), P(0.06, 0.04)]
+        s.append(stroke(wall.map { castle + $0 }, 0.0032))
+        s.append(stroke(arc(castle + P(0, 0.04), 0.014, 180, 360, 8), 0.0028))
+        s.append(stroke([castle + P(0, -0.05), castle + P(0, -0.09)], 0.0024))
+        s.append(stroke(closed([castle + P(0, -0.09), castle + P(0.03, -0.08), castle + P(0, -0.07)]), 0.0026))
+        s.append(stroke([castle + P(-0.09, 0.04), castle + P(0.09, 0.04)], 0.0024))
+
+        let shapes: [Fill] = fills, hub: P = rods[0]
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
+            for pt in ports { if let t = pt.tone(at: p) { return t } }
+            let dh = simd_distance(p, hub)
+            if dh < 0.258 { return inside(p, iris) ? c(0.5) : (irisRim.tone(at: p) ?? .zero) }
+            for f in shapes where f.holds(p) { return f.tone }
+            if p.y < horizon {
+                if abs(p.y - sun.y + 0.0) < 0.03 * (1 - abs(p.x - sun.x) * 0.6) { return c(0.65) }
+                return p.y < -0.62 ? m(0.65) : p.y < -0.4 ? m(0.4) : m(0.22)
+            }
+            let ys = shore + 0.025 * sin(p.x * 9)
+            if p.y < ys { return abs(p.x - sun.x) < 0.09 && Int(((p.y - horizon) / 0.04).rounded(.down)) % 2 == 0 ? y(0.85) : c(0.6) }
+            return y(0.45)
+        }
+        return Halftone.Panel(name: "lensflare", tones: tones, strokes: cut(s))
     }
 }
