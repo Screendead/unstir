@@ -127,6 +127,8 @@ final class RingsView: UIView, UIScrollViewDelegate {
     private(set) var at: Int
     /// The bead named in the middle, of the ring in front.
     private(set) var picked: Int?
+    /// The ring the swipe last committed to, so its sound plays once for each new ring, never on a scroll callback.
+    private var landing = 0
 
     private struct Seat {
         let piece: RingsPiece
@@ -406,6 +408,7 @@ final class RingsView: UIView, UIScrollViewDelegate {
         pager.contentOffset = CGPoint(x: 0, y: RingsPlan.pitch * place)
         pager.delegate = self
         at = min(max(Int(place.rounded()), 0), max(rings.count - 1, 0))
+        landing = at
         apply(place)
 
         let art = RingsArt.shared, pieces = Set(seats.map(\.piece)), have = art.have(pieces)
@@ -579,15 +582,39 @@ final class RingsView: UIView, UIScrollViewDelegate {
         unpick()
     }
 
+    /// The finger let go: the page the pager will settle on is known now, so its sound plays with the release.
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint,
+                                   targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        let target = Int((targetContentOffset.pointee.y / RingsPlan.pitch).rounded())
+        commit(to: min(max(target, 0), max(rings.count - 1, 0)))
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        landing = at
+    }
+
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        landing = at
         glided?()
     }
 
-    /// Brings ring `index` forward, as a swipe does.
-    func go(to index: Int, animated: Bool = true) {
+    /// Brings ring `index` forward, as a swipe does, with its sound unless `sounds` is false (a pose for a shot).
+    func go(to index: Int, animated: Bool = true, sounds: Bool = true) {
         guard rings.indices.contains(index) else { return }
         unpick()
+        if sounds { commit(to: index) } else { landing = index }
         pager.setContentOffset(CGPoint(x: 0, y: RingsPlan.pitch * CGFloat(index)), animated: animated)
+    }
+
+    /// A swipe settling on a new ring: a deeper one falls, a shallower one rises. Once a ring, preloaded with the other
+    /// effects, so a glide costs its frames nothing.
+    private func commit(to index: Int) {
+        guard index != landing else { return }
+        let effect: Sound.Effect = index > landing ? .deeper : .shallower
+        // Logged with sound off too, so a muted run can check the swipe's sound against the finger.
+        Log.write("rings \(landing)→\(index): \(effect)")
+        Sound.shared.play(effect)
+        landing = index
     }
 
     /// A pose's: the swipe stopped at a place between rings.

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/sounds.sh [listen <dir> | layers <dir>]   Renders the glass set from sound-src into Sounds/glass with
+# Usage: scripts/sounds.sh [menu | listen <dir> | layers <dir>]   Renders the glass set from sound-src into Sounds/glass with
 # Csound, then prints each file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam;
 # spectrograms go to build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun renders
 # the same samples; the AAC encoder isn't byte-deterministic, so a bed's .m4a may still come out with new bytes.
@@ -247,7 +247,12 @@ fi
 SRC=sound-src
 OUT=Sounds/glass
 B=build/sounds
-rm -rf "$B/raw" "$B/wav" "$B/spec" "$OUT"
+# menu: the menu's bed and the rings' swipe alone, from synthwave-sketches.csd, over the set as it stands, then the
+# table of every file. Csound 7 no longer reads effects.csd (`switch` is a keyword there), so only this part renders.
+ALL=1
+[ "${1:-}" = menu ] && ALL=0
+rm -rf "$B/raw" "$B/wav" "$B/spec"
+[ "$ALL" = 1 ] && rm -rf "$OUT"
 mkdir -p "$B/raw" "$B/wav" "$B/spec" "$OUT"
 swiftc -O scripts/sounds.swift -o "$B/tool"
 TOOL="$B/tool"
@@ -295,11 +300,24 @@ loop plughole 800 -28
 whirlpool whirlpool 850 -28
 vortex vortex 875 -28
 maelstrom maelstrom 900 -28
-menu menu 950 -29
+"
+# The menu's bed (Jack, 2026-11-28: "Hybrid, produced"), from sound-src/synthwave-sketches.csd as
+# scripts/synthwave-sketches.sh renders it for his ear: three periods of its 16 bars at 100 bpm, the second kept, so
+# its tails wrap, turned to start a quarter beat before its first downbeat, where nothing strikes. It sits at the old
+# menu bed's -29 LUFS. The rings' swipe (Jack, 2026-11-28: "Drum folded in"), falling going deeper and rising coming
+# back, from the same file with the sketch's 19 ms lead cut; stereo, so measured as it is, not as dual mono. The sketch
+# set a swipe's loudest 400 ms 5 LU over the bed's integrated loudness, so here -24, beside the tier switch's -25.
+MENU_BPM=100
+MENUN=1843200
+MENU_LEAD=7200
+SWIPES="
+swipe-down swipeWarmFoldDown -24
+swipe-up swipeWarmFoldUp -24
 "
 
 echo "rendering"
 pids=()
+if [ "$ALL" = 1 ]; then
 while read -r name bed seed target; do
     [ -z "$name" ] && continue
     (cd "$SRC" && csound --omacro:BED="$bed" --omacro:SEED="$seed" --omacro:OUT="$ROOT/$B/raw/$name.wav" \
@@ -312,12 +330,27 @@ while read -r name fx arg dur seed target trim; do
         --omacro:OUT="$ROOT/$B/raw/$name.wav" effects.csd >"$ROOT/$B/raw/$name.log" 2>&1) &
     pids+=($!)
 done <<<"$EFFECTS"
+fi
+synth() {  # sketch seconds out
+    (cd "$SRC" && csound --omacro:SKETCH="$1" --omacro:BPM=$MENU_BPM --omacro:DUR="$2" --omacro:OUT="$ROOT/$3" \
+        synthwave-sketches.csd >"$ROOT/$3.log" 2>&1)
+}
+synth hybridProduced "$(awk -v n=$MENUN 'BEGIN { print 3 * n / 48000 }')" "$B/raw/menu3.wav" &
+pids+=($!)
+while read -r name ins target; do
+    [ -z "$name" ] && continue
+    synth "$ins" 1.6 "$B/raw/$name.wav" &
+    pids+=($!)
+done <<<"$SWIPES"
 for pid in "${pids[@]}"; do wait "$pid"; done
+# Csound 6 ends a clean run with "0 errors in performance", Csound 7 with "end of Performance" alone.
 for log in "$B"/raw/*.log; do
-    grep -q "0 errors in performance" "$log" || { echo "csound failed: $log"; tail -20 "$log"; exit 1; }
+    grep -q "end of Performance" "$log" && ! grep -qE "[1-9][0-9]* errors in performance" "$log" ||
+        { echo "csound failed: $log"; tail -20 "$log"; exit 1; }
 done
 
 echo "levels"
+if [ "$ALL" = 1 ]; then
 while read -r name fx arg dur seed target trim; do
     [ -z "$name" ] && continue
     read -r m _ p < <(loud "$B/raw/$name.wav" 1)
@@ -351,6 +384,29 @@ while read -r name bed seed target; do
         echo "$name: ALAC"
     fi
 done <<<"$BEDS"
+fi
+ffmpeg -hide_banner -nostdin -v error -y -i "$B/raw/menu3.wav" \
+    -af "atrim=start_sample=$((MENUN - MENU_LEAD)):end_sample=$((2 * MENUN - MENU_LEAD)),asetpts=N/SR/TB" -c:a pcm_f32le \
+    "$B/raw/menu.wav"
+read -r _ i p < <(loud "$B/raw/menu.wav")
+"$TOOL" finish "$B/raw/menu.wav" "$B/wav/menu.wav" "$(gain "$i" -29 "$p")"
+for rate in 128000 160000 256000; do
+    for pad in $PADS; do
+        "$TOOL" wrap "$B/wav/menu.wav" "$B/wav/menu-wrapped.wav" "$pad"
+        afconvert -f m4af -d aac -b $rate -q 127 "$B/wav/menu-wrapped.wav" "$OUT/menu.m4a"
+        "$TOOL" gapless "$OUT/menu.m4a" "$pad" $MENUN
+        if "$TOOL" clean "$OUT/menu.m4a" $MENUN; then echo "menu: AAC at $rate b/s, pre-roll $pad"; break 2; fi
+        rm "$OUT/menu.m4a"
+    done
+done
+[ -f "$OUT/menu.m4a" ] || { echo "menu: no AAC loops cleanly"; exit 1; }
+while read -r name _ target; do
+    [ -z "$name" ] && continue
+    ffmpeg -hide_banner -nostdin -v error -y -i "$B/raw/$name.wav" -af "atrim=start_sample=912,asetpts=N/SR/TB" \
+        -c:a pcm_f32le "$B/raw/$name-cut.wav"
+    read -r m _ p < <(loud "$B/raw/$name-cut.wav")
+    "$TOOL" finish "$B/raw/$name-cut.wav" "$OUT/$name.caf" "$(gain "$m" "$target" "$p")" trim
+done <<<"$SWIPES"
 
 # Layers: each pack's kept layer (Jack's call SOUNDSK: Lens B, Escapement B, Prism A) from sound-src/sketches.csd, at
 # its 20 s sketch's gain (-30 LUFS integrated, under the ceiling, as listen sets it), so the app plays it as Jack heard
@@ -377,6 +433,7 @@ layer() {  # sketch seed out [macros...]
         >"$ROOT/$out.log" 2>&1)
     grep -q "0 errors in performance" "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
 }
+if [ "$ALL" = 1 ]; then
 echo "layers"
 pids=()
 while read -r pack sk seed shots; do
@@ -419,6 +476,7 @@ while read -r pack sk seed shots; do
         "$TOOL" finish "$L/$pack-$part.wav" "$OUT/layer-$pack-$part.caf" "$g" trim
     done
 done <<<"$LAYERS"
+fi
 
 echo
 printf "%-11s %6s %7s %7s %7s %7s %9s %9s %8s\n" file seconds "M" "I" "TP" "onset" "phone ΔM" "phone ΔI" bytes
@@ -448,12 +506,15 @@ row() {  # file, mono
         "$B/spec/${base%.*}.png"
 }
 while read -r name _; do [ -n "$name" ] && row "$OUT/$name.caf" 1; done <<<"$EFFECTS"
+while read -r name _; do [ -n "$name" ] && row "$OUT/$name.caf" 0; done <<<"$SWIPES"
 bed() { ls "$OUT/$1".m4a "$OUT/$1".caf 2>/dev/null; }
 while read -r name _; do [ -n "$name" ] && row "$(bed "$name")" 0; done <<<"$BEDS"
+row "$OUT/menu.m4a" 0
 for f in "$OUT"/layer-*.m4a "$OUT"/layer-*.caf; do row "$f" 0; done
 echo "total $total bytes"
 
 echo
+if [ "$ALL" = 1 ]; then
 echo "each bed's hum alone, at its level in the bed (I, and I through the phone model, against the whole bed's)"
 while read -r name _; do
     [ -z "$name" ] && continue
@@ -465,16 +526,23 @@ while read -r name _; do
         printf "%-10s hum %.1f against %.1f (%+.1f LU); through the phone model %.1f against %.1f (%+.1f LU), the hum losing %.1f LU\n",
             n, hi, bi, hi - bi, hpi, bpi, hpi - bpi, hi - hpi }'
 done <<<"$BEDS"
+fi
 
 echo
 echo "seams, as AVAudioFile decodes each bed (the decoded error is against the float source)"
+if [ "$ALL" = 1 ]; then
 while read -r name _; do
     [ -z "$name" ] && continue
     echo "$name:"
     "$TOOL" seam "$(bed "$name")" "$B/wav/$name.wav" | sed 's/^/  /'
 done <<<"$BEDS"
+fi
+echo "menu:"
+"$TOOL" seam "$OUT/menu.m4a" "$B/wav/menu.wav" | sed 's/^/  /'
+if [ "$ALL" = 1 ]; then
 while read -r pack _; do
     [ -z "$pack" ] && continue
     echo "layer-$pack:"
     "$TOOL" seam "$OUT/layer-$pack.m4a" "$B/wav/layer-$pack.wav" | sed 's/^/  /'
 done <<<"$LAYERS"
+fi

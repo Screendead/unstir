@@ -115,7 +115,7 @@ extension RingsView {
         for part in pose.split(separator: ",") {
             let words = part.split(separator: ":"), value = words.count > 1 ? Double(words[1]) ?? 0 : 0
             switch words.first {
-            case "ring": go(to: Int(value), animated: false)
+            case "ring": go(to: Int(value), animated: false, sounds: false)
             case "place": hold(place: CGFloat(value))
             case "pick": act(.bead(Int(value) - 1))
             default: break

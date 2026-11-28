@@ -1656,7 +1656,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   as any other move does, after the out-of-ticks sound at the lift. One task that leaving
   the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
-  daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
+  daily, endless, the sandbox and the packs take plughole's). The menu's, under either menu, is the rings' produced
+  hybrid (Jack, 2026-11-28: round four's `hybridProduced` in `sound-src/synthwave-sketches.csd`, 16 bars at 100 bpm,
+  38.4 s), rendered by `scripts/sounds.sh menu` at the old menu bed's -29 LUFS with the rings' swipe pair
+  (`swipe-down`, `swipe-up`, `Effect.deeper` and `.shallower`; Csound 7 no longer reads `effects.csd`, so that mode
+  renders these alone over the set as it stands); and a new one crossfades in over the old at equal power
   across two decks. The next level of the same tier wants the same bed, which plays on untouched. A bed faded out runs
   on unheard for `Sound.hold` (15 s) before its deck stops, so back to the list and into another level within that
   takes it up where it had got to, not from its start (Jack, 2026-11-11). Only a bed a deck is playing, or the wanted

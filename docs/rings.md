@@ -19,6 +19,13 @@ The mock-up is the source of truth for the look: `design/negative-space/world/ri
   Not solved: dark glass and a faint rim. The way on: larger, white-hot, its rim split into cyan and magenta.
 - **A swipe** up brings the next tier's ring forward and down the one before, by scale and fade alone: nothing
   rotates. The suns cross-fade, the stars shift a little, and the floor's lines run towards the viewer, two a ring.
+- **Sound.** The menu's bed is the produced hybrid (Jack, 2026-11-28: "Hybrid, produced"): round four's
+  `hybridProduced` from `sound-src/synthwave-sketches.csd`, E minor at 100 bpm, `menu.m4a` at -29 LUFS, as the old menu
+  plays it too. A swipe that commits to a new ring plays the warm pair with its drum folded in (Jack, 2026-11-28:
+  "Drum folded in"): falling (`swipe-down`) going deeper, rising (`swipe-up`) coming back, at -24 LUFS momentary,
+  beside the tier switch's -25. It sounds once a ring, as the finger lets go towards it
+  (`scrollViewWillEndDragging`'s target page) or a glide or VoiceOver's step starts (`go(to:)`), never on a scroll
+  callback, and a pose for a shot is silent. Both are ordinary effects, decoded with the rest at launch.
 - **Taps.** A tap on the middle, or on the bead it names, opens that level at once. A tap on any other bead names
   it in the middle, with its best and par and "tap again to play" (or what opens it, "solve 08 to open"), and a
   second tap, or one on the middle, plays it. A tap anywhere else lets it go. This is the mock's, and it is built so
