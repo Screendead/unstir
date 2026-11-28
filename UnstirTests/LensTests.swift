@@ -203,12 +203,12 @@ final class LensTests: XCTestCase {
         (.hex, [2, 3, 5, 6], "4:+1,0:-3,3:+1,4:-3,0:+5,1:-1,2:+1,0:-5,1:-1,0:-5,1:+5,0:-1,3:+1,0:-1,2:+2,0:+5,1:+5,6:+2,1:-1,0:-1,4:+4,0:+5,1:-2,0:+2,4:-4,3:+1,0:-1,5:+1,0:-5,1:+5,0:-1,1:-5,6:+1,1:-4,0:-3,5:+2"),
         (.hex, [1, 2, 3, 5], "6:+1,0:-1,4:-2,3:-2,0:-4,2:-1,0:-4,4:+4,0:-5,4:-5,0:-3,1:-1,0:+5,4:+3,0:-4,4:-1,0:-1,6:-4,0:-1,6:-2,0:+1,6:-1,0:+2,5:-2,4:-5,5:-1,6:-5,0:+1,3:-1,0:+5,2:-2,0:+4,6:+4,1:-2"),
         (.hex, [1, 2, 3, 4, 6], "5:-2,4:+2,0:+1,3:-2,0:+1,4:-3,0:+4,1:+1,0:+1,6:+2,0:+3,5:+3,0:+1,5:-4,4:-1,0:+2,1:-2,0:+4,2:-2,0:-2,1:-2,0:-5,5:-4,6:-1,0:-3,6:-2,5:+5,0:-5,2:+3,0:-1,2:-3,0:-3,3:-1,0:-2,3:+2"),
-        (.hex, [0, 1, 3, 6], "6:+1,5:-1,4:+2,5:-1,4:-3,5:+5,4:+1,5:-1,0:+1,2:-1,1:+1,2:+3,1:+1,2:+3,3:+1,4:+4,3:+1,2:-5,0:+2,5:+5,6:+1,5:-1,4:+1,5:+2,6:+1,5:-5,4:-1,5:-2,4:-5,5:-1,4:+5,5:-3"),
+        (.hex, [0, 1, 3, 6], "5:+1,6:+3,5:-2,4:+1,5:+5,4:+5,5:-1,0:-3,5:-5,6:-2,5:-1,6:+2,5:+5,0:+2,4:+2,5:+1,0:-1,2:-1,3:-2,4:-4,5:+1,4:+4,3:+3,2:+4,1:+2,2:-1,1:-3,2:-5,1:-2,2:+5,3:+1,4:+5"),
         (.hex, [2, 3, 4, 5, 6], "4:-3,0:-4,1:+3,2:+2,0:-3,5:+3,0:+5,4:+2,0:+1,6:-3,1:+3,6:+2,0:+4,1:-3,2:+1,0:+4,6:+2,1:-2,2:-2,1:-1,0:-2,3:+1,0:-2,1:-1,0:+3,3:-2,0:-4,4:-2,0:-2,3:+2,0:-5,5:-2,0:-3,5:+2"),
-        (.hex, [0, 2, 4, 5], "5:+2,6:+3,1:-1,0:+1,1:-2,6:-1,1:+1,6:+5,1:-2,6:+1,1:+1,6:-2,0:+1,3:-5,4:+1,3:-3,4:+1,3:+1,2:+1,1:+3,6:+5,5:+1,6:+1,1:+1,6:+1,1:-4,2:+2,1:-3,0:+1,6:+4,1:-2"),
+        (.hex, [0, 2, 4, 5], "4:-2,3:+2,4:+1,3:+5,2:-2,1:+4,6:+1,5:+2,6:-2,1:-2,2:+1,1:-4,6:+1,5:-3,6:-5,1:-2,6:-4,1:+1,6:-5,5:+2,6:-2,0:+2,1:+3,2:+2,1:+1,0:-3,3:+1,0:-2,3:-3,4:+2,3:-2"),
         (.hex, [0, 1, 4, 5], "3:+5,0:+1,3:+2,0:+2,3:+4,2:+4,1:+1,2:-3,3:-3,2:+1,3:-3,2:-4,3:-3,2:-1,3:+2,4:+1,3:+4,2:+1,3:-1,4:+1,3:-4,2:-4,3:-2,4:+1,3:-1,2:+1,1:+1,6:+2,5:+1,6:+3,5:+1,6:+3"),
         (.hex, [1, 2, 3, 4, 5], "3:-3,0:-2,2:-2,0:-1,3:+2,0:-4,2:+1,0:+1,2:-2,0:+1,4:+1,0:-4,1:-2,0:-1,6:+1,1:+3,6:-5,0:-2,5:+2,0:+1,6:-1,1:-3,0:-5,5:-3,6:-3,5:-2,0:-5,6:-4,0:-1,3:+2,0:-1,4:-2,0:-5,4:+2"),
-        (.hex, [0, 1, 2, 5], "6:-2,0:+1,6:+4,5:+1,4:+1,3:-4,4:+4,3:+1,2:+2,3:+1,4:+3,3:-3,4:+1,3:-1,4:-1,3:-1,4:-4,5:+1,6:+3,5:+1,4:+2,3:+3,2:+1,3:+4,4:-1,3:-3,0:+1,6:-3,1:+1,6:+1,1:+1"),
+        (.hex, [0, 1, 2, 5], "2:+3,3:+4,2:-2,3:-1,4:+1,3:+5,2:-2,3:+3,4:+2,3:-1,0:-2,4:+1,3:+4,4:-1,5:-1,6:+3,5:-2,6:-2,0:+1,6:-4,0:+2,3:-4,4:+5,5:+2,6:-2,1:-2,6:+1,1:+3,6:+3,1:+1,6:-1"),
         (.hex, [0, 3, 5, 6], "2:+1,3:+1,4:-2,5:+2,4:-5,0:+1,1:+4,2:+3,1:-5,2:-4,1:+2,2:+1,1:+1,2:+2,3:+2,4:-5,5:+1,4:-1,0:+1,1:-2,2:+3,1:-2,2:+1,1:+1,2:+5,0:+1,2:-1,1:-3,6:+2,1:-3,6:+1,1:+1"),
         (.hex, [1, 2, 3, 5, 6], "2:-3,0:-1,4:-1,5:+2,0:-4,2:+1,0:-5,2:+3,0:-1,3:-3,0:-1,4:+5,3:+1,0:-3,1:-2,0:-1,4:+1,3:+3,4:-5,5:-3,0:-1,6:-3,0:-1,4:-4,5:-2,0:-4,6:+2,0:+2,5:+2,0:+1,1:+3,0:-5,6:+2,0:-1,1:+2"),
         (.hex, [1, 2, 4, 5, 6], "1:+3,0:+5,4:+2,0:+4,5:-2,0:-1,4:-3,0:+3,4:-2,3:-1,0:+2,1:-2,0:+4,5:+3,0:+4,2:-1,3:-1,0:+1,6:+2,0:+4,5:+2,0:-1,6:-1,0:-1,6:+2,0:+4,3:+1,2:+3,0:+3,1:+2,0:+2,6:-1,0:-1,3:-1,2:+1,0:-2"),
@@ -222,12 +222,13 @@ final class LensTests: XCTestCase {
     /// zoom out (Jack's call, 2026-11-28: each entry 1 to 3 steps either way, each lens's running sum from the bottom
     /// within ±3 and never 0), each lens in reach of a twist; par is the depth, and untwisting reaches it on a real game (levels 26 on with the proof, `testLensParIsTheOptimum`).
     @MainActor func testLensLevels() {
-        XCTAssertEqual(Level.lens.count, 75)
+        XCTAssertEqual(Level.lens.count, 90)
         XCTAssertEqual(Level.lens.count, Pack.lens.planned)
-        XCTAssertEqual(Level.lens.map(\.id), (1...75).map { "lens-\($0)" })
+        XCTAssertEqual(Level.lens.map(\.id), (1...90).map { "lens-\($0)" })
         XCTAssertEqual(Level.lensChapters, ["Close-up", "Cut-in", "Double-take", "Big Picture", "Wide shot", "Long take",
-                                            "Jump cut", "Freeze frame", "Split screen", "Slow motion", "Dolly zoom", "Final cut"])
-        XCTAssertEqual(Level.lens.compactMap(\.chapter), [6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 8].enumerated().flatMap { c, n in
+                                            "Jump cut", "Freeze frame", "Split screen", "Slow motion", "Dolly zoom", "Final cut",
+                                            "Director's cut", "Fade out"])
+        XCTAssertEqual(Level.lens.compactMap(\.chapter), [6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 8, 7, 8].enumerated().flatMap { c, n in
             Array(repeating: Level.lensChapters[c], count: n)
         })
         for (level, (layout, lenses, scramble)) in zip(Level.lens, Self.table) {
@@ -356,15 +357,15 @@ final class LensTests: XCTestCase {
         }
     }
 
-    /// A Lens level draws the panel of its number, all 75 drawn, and anything else on the halftone the test panel. A
+    /// A Lens level draws the panel of its number, all 90 drawn, and anything else on the halftone the test panel. A
     /// panel's name keys its bake in Caches, so no two share one.
     func testEachLensLevelDrawsItsOwnPanel() {
-        XCTAssertEqual(Level.lens.map(\.panel), Array(1...75))
+        XCTAssertEqual(Level.lens.map(\.panel), Array(1...90))
         XCTAssertTrue((Tier.allCases.flatMap(\.levels) + Level.prism + Level.escapement).allSatisfy { $0.panel == 0 })
         XCTAssertEqual(Halftone.panel(0).name, "test")
         XCTAssertEqual(Halftone.panel(1).name, "keyhole")
-        XCTAssertEqual(LensArt.levels.keys.sorted(), Array(1...75))
-        XCTAssertEqual(Halftone.panel(76).name, "test")
+        XCTAssertEqual(LensArt.levels.keys.sorted(), Array(1...90))
+        XCTAssertEqual(Halftone.panel(91).name, "test")
         XCTAssertEqual(Set(Halftone.panels.map(\.name)).count, Halftone.panels.count)
         XCTAssertTrue(Halftone.panels.allSatisfy { !$0.name.contains("-") }, "a bake's file name is cut at its hyphens")
     }

@@ -247,7 +247,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   MB) draws through the chain past a size; it is unset.
   A Lens level's map holds its lenses' flow, and is asked for as any level's is, from `least` entries (Jack's call,
   2026-11-13, the map's memory for the frame's saving: "32mb out of 6gb seems like a reasonable trade-off for 10-20%
-  savings and thus better battery life"): Lens 22 to 75 as dealt (10 to 36 entries), and the 21 before them, dealt
+  savings and thus better battery life"): Lens 22 to 90 as dealt (10 to 36 entries), and the 21 before them, dealt
   1 to 9, only once a player has stirred to 10. Lens 51's, six lenses at 35 entries, is 45.6 MB at 2274 px in the
   simulator (2026-11-27). `UNSTIR_MAPLENS=0`, a probe, draws Lens through its
   chain as before (`StirMap.lensMaps`), for holding the two against each other on a phone. Its glass draws through `unstirLensMapped` once the detail is in, which reads the map
@@ -910,7 +910,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   fail offline, as the runner's test session served the products under a simulated `.loadProducts` error) at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
   has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
-  `Level.lens` holds the pack's 75 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
+  `Level.lens` holds the pack's 90 levels (75 until Jack's 2026-11-28 call that every paid pack holds 90), table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
   netting at most +3 and reached by a twist, no entry merging as it is dealt, and par the depth (`testLensLevels`, which
   pins the table), the solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md
@@ -922,7 +922,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   one or two entries netting +3 so some still zoom by two or three steps. From 62, the last two chapters, lens entries
   zoom out as well as in (Jack's call, 2026-11-28): each ±1 to ±3, each lens's running sum from the bottom within ±3
   and never 0, so a lens's zoom no longer tells its entries; 62 deals only zoom-outs, to teach them, and lifting the
-  three-entry cap raises lens entries to over two fifths of the depth. `scripts/lens-levels/plan.tsv` is the plan
+  three-entry cap raises lens entries to over two fifths of the depth. Levels 76 to 90 deal the same way in two more
+  chapters, Director's cut (76 to 82) and Fade out (83 to 90), each on its own panel (`LensArtDirectorsCut.swift`,
+  `LensArtDirectorsCutEnd.swift`, `LensArtFadeOut.swift` and `LensArtFadeOutEnd.swift`, two files a chapter as four
+  hands drew them). `scripts/lens-levels/plan.tsv` is the plan
   and `picked.tsv` the deals `lens-levels.py pick` proved against it. A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
   colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
   ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate

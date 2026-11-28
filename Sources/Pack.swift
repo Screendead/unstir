@@ -89,7 +89,7 @@ enum Pack: String, CaseIterable, Sendable {
     var planned: Int {
         switch self {
         case .firstStir: 25
-        case .lens: 75
+        case .lens: 90
         case .escapement: 90
         case .prism: 90
         }
@@ -149,9 +149,9 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    /// Each Lens level's layout, lens slots, deal and title, in order, in four typed lists, so each type-checks quickly.
+    /// Each Lens level's layout, lens slots, deal and title, in order, in five typed lists, so each type-checks quickly.
     private static let lensRows: [(Layout, [Int], String, String)] =
-        lensRowsFirst + lensRowsCloser + lensRowsDeeper + lensRowsDeepest
+        lensRowsFirst + lensRowsCloser + lensRowsDeeper + lensRowsDeepest + lensRowsLast
 
     private static let lensRowsFirst: [(Layout, [Int], String, String)] = [
         (.tri, [0], "0:+2",
@@ -352,13 +352,13 @@ extension Level {
         (.hex, [1, 2, 3, 4, 6], "5:-2,4:+2,0:+1,3:-2,0:+1,4:-3,0:+4,1:+1,0:+1,6:+2,0:+3,5:+3,0:+1,5:-4,4:-1,0:+2,1:-2,0:+4,2:-2,0:-2,1:-2,0:-5,5:-4,6:-1,0:-3,6:-2,5:+5,0:-5,2:+3,0:-1,2:-3,0:-3,3:-1,0:-2,3:+2",
          String(localized: "level.lens-63.title", defaultValue: "Stereoscope",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.hex, [0, 1, 3, 6], "6:+1,5:-1,4:+2,5:-1,4:-3,5:+5,4:+1,5:-1,0:+1,2:-1,1:+1,2:+3,1:+1,2:+3,3:+1,4:+4,3:+1,2:-5,0:+2,5:+5,6:+1,5:-1,4:+1,5:+2,6:+1,5:-5,4:-1,5:-2,4:-5,5:-1,4:+5,5:-3",
+        (.hex, [0, 1, 3, 6], "5:+1,6:+3,5:-2,4:+1,5:+5,4:+5,5:-1,0:-3,5:-5,6:-2,5:-1,6:+2,5:+5,0:+2,4:+2,5:+1,0:-1,2:-1,3:-2,4:-4,5:+1,4:+4,3:+3,2:+4,1:+2,2:-1,1:-3,2:-5,1:-2,2:+5,3:+1,4:+5",
          String(localized: "level.lens-64.title", defaultValue: "Ophthalmoscope",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.hex, [2, 3, 4, 5, 6], "4:-3,0:-4,1:+3,2:+2,0:-3,5:+3,0:+5,4:+2,0:+1,6:-3,1:+3,6:+2,0:+4,1:-3,2:+1,0:+4,6:+2,1:-2,2:-2,1:-1,0:-2,3:+1,0:-2,1:-1,0:+3,3:-2,0:-4,4:-2,0:-2,3:+2,0:-5,5:-2,0:-3,5:+2",
          String(localized: "level.lens-65.title", defaultValue: "Sextant",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.hex, [0, 2, 4, 5], "5:+2,6:+3,1:-1,0:+1,1:-2,6:-1,1:+1,6:+5,1:-2,6:+1,1:+1,6:-2,0:+1,3:-5,4:+1,3:-3,4:+1,3:+1,2:+1,1:+3,6:+5,5:+1,6:+1,1:+1,6:+1,1:-4,2:+2,1:-3,0:+1,6:+4,1:-2",
+        (.hex, [0, 2, 4, 5], "4:-2,3:+2,4:+1,3:+5,2:-2,1:+4,6:+1,5:+2,6:-2,1:-2,2:+1,1:-4,6:+1,5:-3,6:-5,1:-2,6:-4,1:+1,6:-5,5:+2,6:-2,0:+2,1:+3,2:+2,1:+1,0:-3,3:+1,0:-2,3:-3,4:+2,3:-2",
          String(localized: "level.lens-66.title", defaultValue: "Theodolite",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.hex, [0, 1, 4, 5], "3:+5,0:+1,3:+2,0:+2,3:+4,2:+4,1:+1,2:-3,3:-3,2:+1,3:-3,2:-4,3:-3,2:-1,3:+2,4:+1,3:+4,2:+1,3:-1,4:+1,3:-4,2:-4,3:-2,4:+1,3:-1,2:+1,1:+1,6:+2,5:+1,6:+3,5:+1,6:+3",
@@ -367,7 +367,7 @@ extension Level {
         (.hex, [1, 2, 3, 4, 5], "3:-3,0:-2,2:-2,0:-1,3:+2,0:-4,2:+1,0:+1,2:-2,0:+1,4:+1,0:-4,1:-2,0:-1,6:+1,1:+3,6:-5,0:-2,5:+2,0:+1,6:-1,1:-3,0:-5,5:-3,6:-3,5:-2,0:-5,6:-4,0:-1,3:+2,0:-1,4:-2,0:-5,4:+2",
          String(localized: "level.lens-68.title", defaultValue: "Lighthouse",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.hex, [0, 1, 2, 5], "6:-2,0:+1,6:+4,5:+1,4:+1,3:-4,4:+4,3:+1,2:+2,3:+1,4:+3,3:-3,4:+1,3:-1,4:-1,3:-1,4:-4,5:+1,6:+3,5:+1,4:+2,3:+3,2:+1,3:+4,4:-1,3:-3,0:+1,6:-3,1:+1,6:+1,1:+1",
+        (.hex, [0, 1, 2, 5], "2:+3,3:+4,2:-2,3:-1,4:+1,3:+5,2:-2,3:+3,4:+2,3:-1,0:-2,4:+1,3:+4,4:-1,5:-1,6:+3,5:-2,6:-2,0:+1,6:-4,0:+2,3:-4,4:+5,5:+2,6:-2,1:-2,6:+1,1:+3,6:+3,1:+1,6:-1",
          String(localized: "level.lens-69.title", defaultValue: "Eclipse glasses",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.hex, [0, 3, 5, 6], "2:+1,3:+1,4:-2,5:+2,4:-5,0:+1,1:+4,2:+3,1:-5,2:-4,1:+2,2:+1,1:+1,2:+2,3:+2,4:-5,5:+1,4:-1,0:+1,1:-2,2:+3,1:-2,2:+1,1:+1,2:+5,0:+1,2:-1,1:-3,6:+2,1:-3,6:+1,1:+1",
@@ -390,7 +390,7 @@ extension Level {
                 comment: "Lens level title, a lens or a way of seeing")),
     ]
 
-    /// Lens's 75 panels, each on its own halftone panel (`panel`, `LensArt.levels`). A rod is a lens or a twist for the
+    /// Lens's 90 panels, each on its own halftone panel (`panel`, `LensArt.levels`). A rod is a lens or a twist for the
     /// whole level; every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3, until the last two
     /// chapters, from 62, whose entries zoom out as well (Jack's call, 2026-11-28), each lens's running sum within ±3
     /// and never 0. No entry merges as it is dealt, and par is the depth (`testLensLevels`), the solver's optimum (`testLensParIsTheOptimum`).
@@ -416,8 +416,9 @@ extension Level {
     var plate: Int { pack == .escapement ? Int(label) ?? 0 : panel }
 
     /// How many levels each of Lens's chapters holds: the first 25's six, six, six and seven (Jack's call N1b, round
-    /// 13), then six each and eight to end the pack, the shape again with the remainder in the last.
-    static let lensChapterSizes = [6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 8]
+    /// 13), then six each to 67 and eight in Final cut; the pack's last fifteen (Jack, 2026-11-28: every paid pack 90)
+    /// in two more, seven and eight, the sizes the chapters already have.
+    static let lensChapterSizes = [6, 6, 6, 7, 6, 6, 6, 6, 6, 6, 6, 8, 7, 8]
 
     /// Lens's chapters, each a film-making word.
     static let lensChapters = [
@@ -444,7 +445,11 @@ extension Level {
         String(localized: "chapter.lens.11", defaultValue: "Dolly zoom",
                comment: "Lens chapter, a film-making word: panels 62 to 67"),
         String(localized: "chapter.lens.12", defaultValue: "Final cut",
-               comment: "Lens chapter, a film-making word: the last eight panels"),
+               comment: "Lens chapter, a film-making word: panels 68 to 75"),
+        String(localized: "chapter.lens.13", defaultValue: "Director's cut",
+               comment: "Lens chapter, a film-making word: panels 76 to 82, after Final cut as a film's longer release follows it"),
+        String(localized: "chapter.lens.14", defaultValue: "Fade out",
+               comment: "Lens chapter, a film-making word: the last eight panels, the pack's end"),
     ]
 
     /// The problem book (docs/escapement-problems.md, scripts/escapement/problems.tsv) in its order: fifteen chapters
