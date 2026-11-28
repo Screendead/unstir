@@ -17,6 +17,7 @@ enum Picture: String, CaseIterable {
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
     case fern, seeds, medusae, radiolaria, nautilus
+    case leaves, moths, reef, diatoms, fungi, feathers, starfish, beetles, seahorses, octopus
     /// Escapement's engine-turned plate, ink on paper, baked.
     case engineTurned
 
@@ -24,7 +25,8 @@ enum Picture: String, CaseIterable {
         switch self {
         case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
              .marblingTwin, .isobars, .ephemeris, .cords: true
-        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: false
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
+             .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: false
         }
     }
 
@@ -40,7 +42,8 @@ enum Picture: String, CaseIterable {
         case .neurons: .neuronsTwin
         case .marbling: .marblingTwin
         case .grid, .sunset, .city, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin, .isobars,
-             .ephemeris, .cords, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: self
+             .ephemeris, .cords, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
+             .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: self
         }
     }
 
@@ -58,7 +61,8 @@ enum Picture: String, CaseIterable {
         case .ephemeris: 30
         case .glass, .marbling, .isobars, .cords: 10
         // Baked, so nothing uses it.
-        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: 10
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
+             .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: 10
         }
     }
 
@@ -74,7 +78,8 @@ enum Picture: String, CaseIterable {
     /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
     var fillEntries: Int {
         switch self {
-        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: 0
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
+             .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: 0
         case .marbling: 3
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
@@ -105,7 +110,8 @@ enum Picture: String, CaseIterable {
         case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
         case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
         case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
-        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: nil
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus,
+             .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus, .engineTurned: nil
         // A sibling is never a twin.
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: nil
         }
@@ -356,7 +362,7 @@ enum Picture: String, CaseIterable {
                 city(g, lit: true)
             }
 
-        case .fern, .seeds, .medusae, .radiolaria, .nautilus:
+        case .fern, .seeds, .medusae, .radiolaria, .nautilus, .leaves, .moths, .reef, .diatoms, .fungi, .feathers, .starfish, .beetles, .seahorses, .octopus:
             // White only, so every channel samples the same lines and an aligned one stays white.
             var strokes: [Double: Path] = [:]
             for line in Engraving.lines(plate!) {
@@ -404,6 +410,16 @@ extension Picture {
         case .medusae: LocalizedStringResource("picture.medusae", defaultValue: "medusae", comment: "A picture's name on the sandbox's control")
         case .radiolaria: LocalizedStringResource("picture.radiolaria", defaultValue: "radiolaria", comment: "A picture's name on the sandbox's control")
         case .nautilus: LocalizedStringResource("picture.nautilus", defaultValue: "nautilus", comment: "A picture's name on the sandbox's control")
+        case .leaves: LocalizedStringResource("picture.leaves", defaultValue: "leaves", comment: "A picture's name on the sandbox's control")
+        case .moths: LocalizedStringResource("picture.moths", defaultValue: "moths", comment: "A picture's name on the sandbox's control")
+        case .reef: LocalizedStringResource("picture.reef", defaultValue: "reef", comment: "A picture's name on the sandbox's control")
+        case .diatoms: LocalizedStringResource("picture.diatoms", defaultValue: "diatoms", comment: "A picture's name on the sandbox's control")
+        case .fungi: LocalizedStringResource("picture.fungi", defaultValue: "fungi", comment: "A picture's name on the sandbox's control")
+        case .feathers: LocalizedStringResource("picture.feathers", defaultValue: "feathers", comment: "A picture's name on the sandbox's control")
+        case .starfish: LocalizedStringResource("picture.starfish", defaultValue: "starfish", comment: "A picture's name on the sandbox's control")
+        case .beetles: LocalizedStringResource("picture.beetles", defaultValue: "beetles", comment: "A picture's name on the sandbox's control")
+        case .seahorses: LocalizedStringResource("picture.seahorses", defaultValue: "seahorses", comment: "A picture's name on the sandbox's control")
+        case .octopus: LocalizedStringResource("picture.octopus", defaultValue: "octopus", comment: "A picture's name on the sandbox's control")
         case .engineTurned: LocalizedStringResource("picture.engineTurned", defaultValue: "engineTurned", comment: "A picture's name on the sandbox's control")
         }
     }

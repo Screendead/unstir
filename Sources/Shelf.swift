@@ -121,11 +121,11 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): String(localized: "\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
                                        comment: "What First Stir holds. Its levels counted")
-        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
+        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in twelve issues",
                                   comment: "What Lens holds. Its levels counted")
-        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
+        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in fifteen chapters",
                                         comment: "What Escapement holds. Its levels counted")
-        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in five trays",
+        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in fifteen trays",
                                    comment: "What Prism holds. Its levels counted")
         case .complete: String(localized: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels",
                                comment: "What the bundle holds. Its packs, then their levels")
@@ -365,8 +365,9 @@ struct PackTank: View {
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
                 if k == level.clocks.first?.rod {
                     ClockHint(radius: min(rods[k].z * r, r - 4)).position(at(k))
-                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core), plate: LevelView.ratchetReach * r, pawl: 0,
-                                lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true)
+                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core, cards: level.hubCards), plate: LevelView.ratchetReach(cards: level.hubCards) * r,
+                                pawl: 0, lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true,
+                                digits: level.hubCards)
                         .position(at(k))
                 } else {
                     RodView(angle: angle(k), size: core, seized: level.kind(of: k) != .working, grabbed: false,

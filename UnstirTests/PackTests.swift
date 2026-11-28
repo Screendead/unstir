@@ -632,7 +632,7 @@ final class PackTests: XCTestCase {
             XCTAssertFalse(Offer.complete.holds.contains(pack.name), pack.name)
             XCTAssertFalse(Clip.complete.reels.contains { $0.level.pack == pack }, pack.name)
         }
-        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 85 levels")
+        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 255 levels")
         XCTAssertEqual(Offer.shelf(release: true, ready: { Pack.bundled.contains($0) }).last, .complete)
         XCTAssertEqual(Offer.complete.name, Offer.bundleName)
     }
@@ -660,16 +660,16 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "true"])
         XCTAssertNil(PackCard.taste([], best: best))
         XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: best),
-                       "You've played the free three. 22 more in Lens.")
+                       "You've played the free three. 72 more in Lens.")
         XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels, state: .pending, best: { _ in
-            Best(over: 0, seconds: 60) }), "You've played the free three. 27 more in Escapement.")
+            Best(over: 0, seconds: 60) }), "You've played the free three. 87 more in Escapement.")
         XCTAssertNil(PackCard.arrival(.complete, [], state: .unowned, best: best))
         // Only while it is true: before every free level has a best, that they are free (Jack's call C1A = B, round
         // 16); nothing to an owner or a refunded one, whose revocation line says it.
         XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }),
-                       "The first three are free. 22 more in Lens.")
+                       "The first three are free. 72 more in Lens.")
         XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { $0 == levels[2].id ? Best(over: 0, seconds: 60) : nil }),
-                       "The first three are free. 22 more in Lens.")
+                       "The first three are free. 72 more in Lens.")
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: { _ in nil }))
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: best))
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .owned, best: best))
@@ -741,12 +741,12 @@ final class PackTests: XCTestCase {
                 .filter { $0.key != "unlock" })
         }
         // An earlier build's harness launch may have left them on this simulator.
-        for key in ["best.escapement-31", "started.escapement-31"] { UserDefaults.standard.removeObject(forKey: key) }
+        for key in ["best.escapement-91", "started.escapement-91"] { UserDefaults.standard.removeObject(forKey: key) }
         let before = stored()
-        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "31"])
+        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "91"])
         let store = Store()
         store.pretend(try XCTUnwrap(h.purchases))
-        XCTAssertEqual(h.level.id, "escapement-31")
+        XCTAssertEqual(h.level.id, "escapement-91")
         XCTAssertEqual(h.level.pack, .escapement)
         XCTAssertEqual(store.access(h.level), .owned)
         XCTAssertEqual(store.state(.escapement), .owned)
@@ -756,8 +756,8 @@ final class PackTests: XCTestCase {
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
         XCTAssertEqual(stored(), before)
-        XCTAssertNil(Best.load("escapement-31"))
-        XCTAssertFalse(Best.started("escapement-31"))
+        XCTAssertNil(Best.load("escapement-91"))
+        XCTAssertFalse(Best.started("escapement-91"))
         XCTAssertEqual(Store().access(h.level), .needsCard)
         XCTAssertEqual(Store().access(Harness(["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "3"]).level), .taste)
         Best.unlocked = false

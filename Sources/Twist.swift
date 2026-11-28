@@ -280,9 +280,11 @@ enum Layout: String, CaseIterable {
         func map(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
             word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
         }
+        // Looked up by index: hashing the set for every entry at every sample was most of a deep Lens proof's time.
+        let lens = rods.indices.map { lenses.contains($0) }
         func lensMap(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
             word.reduce(p) { q, t in
-                lenses.contains(t.rod) ? Tank.lens(q, rod: rods[t.rod], steps: Double(t.steps))
+                lens[t.rod] ? Tank.lens(q, rod: rods[t.rod], steps: Double(t.steps))
                     : Tank.twist(q, rod: rods[t.rod], angle: Double(t.steps) * Tank.step)
             }
         }

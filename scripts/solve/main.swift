@@ -8,7 +8,8 @@ let all = CommandLine.arguments.dropFirst().map { $0 }
 let lensArg = all.dropFirst(2).first { $0.hasPrefix("lenses=") }
 let maskArg = all.dropFirst(2).first { $0.hasPrefix("masks=") }
 let decoysArg = all.dropFirst(2).contains("decoys")
-let args = all.filter { $0 != lensArg && $0 != maskArg && $0 != "decoys" }
+let quickArg = all.dropFirst(2).contains("untwisting")
+let args = all.filter { $0 != lensArg && $0 != maskArg && $0 != "decoys" && $0 != "untwisting" }
 guard (2...3).contains(args.count), let layout = Layout(rawValue: args[0]) else {
     let layouts = (Layout.allCases + Layout.swirls).map(\.rawValue).joined(separator: "|")
     print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4] [lenses=0,2] [masks=0:r,1:c] [decoys]")
@@ -35,6 +36,13 @@ if let swirl = layout.swirl, seized.contains(swirl) {
 }
 let stack = [Twist].parse(args[1], in: layout, lenses: lenses, masks: masks)
 let solver = Solver(layout, lenses: lenses, masks: masks)
+// `untwisting` prints only the entries and what untwisting alone takes, which costs a fraction of the optimum's search
+// and rules out a deal whose untwists join.
+if quickArg {
+    print("entries \(stack.count)")
+    print("untwisting \(solver.untwistingPlay(stack, seized: seized).map { String($0.count) } ?? "none")")
+    exit(0)
+}
 let readings: [(String, Solver.Parking)] = [
     ("fewest seized knobs over unfinished rings", .fewest),
     ("every seized knob over a finished ring or no preference", .all),

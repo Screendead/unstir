@@ -52,6 +52,13 @@ enum GPUBench {
         var radius, px, scale, t: Float
     }
 
+    /// Lens's deepest level, the most lenses breaking a tie.
+    static var deepestLens: Level {
+        Level.lens.max { (a: Level, b: Level) -> Bool in
+            a.scramble.count != b.scramble.count ? a.scramble.count < b.scramble.count : a.lenses.count < b.lenses.count
+        }!
+    }
+
     /// `glass` is the play screen's glass on this display, in pixels, at which Lens's panels bake.
     @MainActor static func run(glass: Int) async {
         @MainActor func say(_ line: String) {
@@ -88,8 +95,10 @@ enum GPUBench {
             }
             textures[key] = t
         }
-        // Lens's first level and its deepest, the only one with four lenses, each on its own panel.
-        let lensLevels = [Level.lens[0], Level.lens[24]]
+        // Lens's first level, 25 (the first chapters' deepest, four lenses) and the pack's deepest with the most lenses,
+        // each on its own panel: a lens's inset runs the chain, so its pixels pay for every entry.
+        let lensLevels = [Level.lens[0], Level.lens[24],
+                          deepestLens]
         var panels: [Int: MTLTexture] = [:], atlases: [Int: MTLTexture] = [:], tables: [Int: [Float]] = [:]
         func texture(_ pixels: [UInt8], _ width: Int, _ height: Int) -> MTLTexture? {
             let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: width, height: height, mipmapped: false)
@@ -309,8 +318,8 @@ enum GPUBench {
         let picked = [ranked.first!.level, Level.lens[0], ranked.last!.level]
         for level in picked.reduce(into: [Level]()) { if !$0.contains($1) { $0.append($1) } } {
             let rank = ranked.firstIndex { $0.level == level }! + 1
-            say(String(format: "GPUBENCH lens %@ %@ baked cold at %d px: %.0f ms wall clock, %@ build; %d of 25 cheapest at %d px",
-                       level.label, level.title, glass, await bake(level, glass), build, rank, quick))
+            say(String(format: "GPUBENCH lens %@ %@ baked cold at %d px: %.0f ms wall clock, %@ build; %d of %d cheapest at %d px",
+                       level.label, level.title, glass, await bake(level, glass), build, rank, ranked.count, quick))
         }
         for level in lensLevels {
             let panel = Halftone.panel(level.panel), rods = level.lenses.sorted().map { level.layout.rods[$0] }
@@ -322,7 +331,7 @@ enum GPUBench {
             say(String(format: "GPUBENCH lens %@ %@ detail baked at %d px, every open: %.0f ms wall clock, %@ build; %d x %d atlas, %d bytes",
                        level.label, level.title, glass, took, build, detail.width, detail.height, detail.pixels.count))
         }
-        say("GPUBENCH lens cache: a panel at \(glass) px takes \(4 * glass * glass) bytes, all 25 \(25 * 4 * glass * glass / 1_000_000) MB; thermal \(heat())")
+        say("GPUBENCH lens cache: a panel at \(glass) px takes \(4 * glass * glass) bytes, all \(Level.lens.count) \(Level.lens.count * 4 * glass * glass / 1_000_000) MB; thermal \(heat())")
     }
 }
 

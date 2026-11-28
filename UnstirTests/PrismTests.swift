@@ -488,11 +488,73 @@ final class PrismTests: XCTestCase {
         (.eye, [0: .white, 1: .red, 2: .magenta, 3: .blue], "0:-3,2:-2,3:-3,1:-5,2:+4,1:+5,2:-2,1:-2"),
         (.pent, [0: .cyan, 1: .magenta, 2: .blue, 3: .yellow, 4: .white], "4:-4,3:+5,0:-3,2:+2,1:+4,2:-3,1:+3,0:-4"),
         (.pent, [0: .yellow, 1: .magenta, 2: .red, 3: .white, 4: .green], "3:-3,2:+2,1:-2,2:-2,0:+3,4:+2,1:+2,0:-2"),
+        (.quad, [0: .magenta, 1: .white, 2: .green, 3: .magenta], "1:-4,2:+4,0:-5,3:-5,0:-3,3:-4,0:+2,3:-2"),
+        (.pent, [0: .yellow, 1: .yellow, 2: .yellow, 3: .blue, 4: .white], "4:+4,1:+3,2:+4,3:+2,0:-5,1:-2,0:+5,1:-5,2:-2"),
+        (.pent, [0: .white, 1: .green, 2: .magenta, 3: .magenta, 4: .magenta], "0:-5,1:+5,3:-4,2:+2,4:+4,3:-2,2:+2,3:-2,4:-3"),
+        (.pent, [0: .yellow, 1: .blue, 2: .blue, 3: .blue, 4: .white], "4:+2,0:-5,3:+3,2:+5,1:-5,3:+2,2:+4,1:+4,2:+4,3:-3"),
+        (.hex, [0: .magenta, 1: .green, 2: .green, 3: .magenta, 4: .white, 5: .magenta, 6: .magenta], "4:-3,6:+2,1:-5,2:+3,0:-4,5:-3,6:+3,0:+4,1:-5,3:-5"),
+        (.hex, [0: .blue, 1: .blue, 2: .blue, 3: .blue, 4: .blue, 5: .yellow, 6: .white], "6:+4,3:+2,2:+2,5:-3,0:-3,1:+2,4:-5,0:+3,3:-2,0:+4,4:-3"),
+        (.pent, [0: .white, 1: .red, 2: .green, 3: .blue, 4: .blue], "0:+5,4:+5,3:+2,1:+3,4:+4,3:+4,4:-4,3:+3,2:+5"),
+        (.hex, [0: .magenta, 1: .white, 2: .magenta, 3: .magenta, 4: .green, 5: .magenta, 6: .magenta], "1:+3,4:+5,6:+3,0:-5,5:-4,6:-4,2:+2,5:+5,3:-4,6:-3"),
+        (.hex, [0: .white, 1: .red, 2: .red, 3: .red, 4: .cyan, 5: .cyan, 6: .red], "0:-4,1:-3,3:+4,6:-2,5:-4,4:-5,1:-2,2:+4,5:-5,1:-3"),
+        (.pent, [0: .cyan, 1: .yellow, 2: .white, 3: .magenta, 4: .magenta], "2:+2,1:-3,4:+5,3:+2,4:-3,0:+2,4:+4,3:-5,0:+4,1:+3,0:+2"),
+        (.hex, [0: .blue, 1: .green, 2: .green, 3: .green, 4: .white, 5: .blue, 6: .red], "4:-5,3:-4,6:+4,2:-2,0:-3,3:+5,1:-2,5:+5,2:+2,3:+2,1:+4"),
+        (.hex, [0: .cyan, 1: .red, 2: .white, 3: .cyan, 4: .red, 5: .cyan, 6: .cyan], "2:-2,5:-2,1:+2,6:+2,0:+3,3:-3,4:+2,5:+3,0:-4,5:+2,0:+3,3:-4"),
+        (.pent, [0: .white, 1: .red, 2: .cyan, 3: .cyan, 4: .cyan], "0:+2,1:-2,3:-3,4:+4,2:+2,3:+2,4:+4,2:-4,3:-3,2:+2"),
+        (.pent, [0: .yellow, 1: .white, 2: .blue, 3: .blue, 4: .blue], "1:-4,0:+2,4:-3,2:-4,3:-5,4:-2,3:+3,2:-4,3:+5,4:-3,2:+3"),
+        (.hex, [0: .magenta, 1: .green, 2: .green, 3: .white, 4: .magenta, 5: .magenta, 6: .green], "3:+5,2:-3,5:-4,4:+4,1:+5,2:+3,0:+2,6:+5,4:+3,1:-2,0:-5"),
+        (.hex, [0: .blue, 1: .yellow, 2: .yellow, 3: .yellow, 4: .blue, 5: .white, 6: .yellow], "5:+2,1:+5,0:-5,6:-4,1:-4,6:-4,1:-4,6:-2,2:-2,3:+4,4:-3,0:-4"),
+        (.hex, [0: .green, 1: .white, 2: .green, 3: .green, 4: .green, 5: .green, 6: .magenta], "1:+4,0:-4,2:-3,4:+2,5:+2,6:+5,4:+4,5:+5,0:+4,3:-4,5:-4,2:+2"),
+        (.hex, [0: .red, 1: .red, 2: .red, 3: .cyan, 4: .red, 5: .red, 6: .white], "6:-2,2:-5,5:+5,4:+5,5:+3,4:+5,0:-2,3:-4,1:-2,2:+2,5:+5,4:+3"),
+        (.pent, [0: .magenta, 1: .yellow, 2: .cyan, 3: .white, 4: .yellow], "3:-2,1:+3,0:+4,1:-2,4:-5,0:+5,4:+4,0:+5,1:-4,2:-3,4:-2"),
+        (.pent, [0: .green, 1: .cyan, 2: .red, 3: .white, 4: .yellow], "3:+3,1:-5,0:+5,4:-2,1:+2,0:+2,2:+5,1:+3,4:+3,0:+3,4:-5"),
+        (.pent, [0: .yellow, 1: .green, 2: .magenta, 3: .red, 4: .white], "4:-2,2:-4,0:-5,3:-2,1:-5,2:-3,0:-4,1:+4,0:+5,3:-2,1:+5,2:-4"),
+        (.pent, [0: .magenta, 1: .white, 2: .yellow, 3: .cyan, 4: .magenta], "1:+2,4:-2,3:+4,2:+4,4:+4,0:+4,4:+5,0:-2,3:+4,2:+5,3:+5,2:-2"),
+        (.pent, [0: .yellow, 1: .yellow, 2: .cyan, 3: .magenta, 4: .white], "4:-5,1:+2,3:-2,0:-4,2:-3,1:-5,3:-3,2:-2,0:-2,1:+3,2:-4,3:+2"),
+        (.hex, [0: .magenta, 1: .magenta, 2: .magenta, 3: .yellow, 4: .cyan, 5: .white, 6: .magenta], "5:-4,0:+5,4:-3,3:+4,4:+2,0:-4,2:+4,1:+3,3:-4,2:+2,1:+5,6:+3,4:-3"),
+        (.hex, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .cyan, 5: .cyan, 6: .cyan], "0:+4,1:+2,4:+2,3:+2,6:-4,2:-2,4:+4,3:-5,4:+5,3:-4,5:+3,6:-5"),
+        (.hex, [0: .blue, 1: .yellow, 2: .yellow, 3: .yellow, 4: .blue, 5: .white, 6: .blue], "5:-2,2:-5,0:-3,3:+2,4:-3,1:-5,6:+2,2:-3,1:+3,0:+2,2:+2,4:-4"),
+        (.hex, [0: .blue, 1: .yellow, 2: .white, 3: .blue, 4: .yellow, 5: .blue, 6: .yellow], "2:+3,3:+2,5:+5,4:-3,0:-4,1:-5,5:+3,0:+3,5:-5,6:+2,1:+5,3:+5,0:+2"),
+        (.hex, [0: .red, 1: .red, 2: .cyan, 3: .cyan, 4: .red, 5: .white, 6: .red], "5:+2,0:-4,3:+2,2:-2,1:+3,6:+5,1:-4,3:+3,6:-4,2:-3,0:+3,1:+5,4:-5"),
+        (.hex, [0: .green, 1: .green, 2: .green, 3: .green, 4: .magenta, 5: .magenta, 6: .white], "6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,1:-3,4:-2,5:-4,4:+3,5:+3,0:+4"),
+        (.hex, [0: .cyan, 1: .red, 2: .cyan, 3: .cyan, 4: .white, 5: .cyan, 6: .red], "4:-5,5:+4,1:+2,0:-3,2:-5,3:-2,5:+2,2:+2,0:+5,5:-5,2:-3,0:+5,6:+4"),
+        (.pent, [0: .magenta, 1: .magenta, 2: .green, 3: .green, 4: .white], "4:+2,1:-4,0:+3,3:+5,2:+4,1:+4,0:+2,1:-5,0:+4,3:-5,2:-2,3:+4,2:+5"),
+        (.hex, [0: .cyan, 1: .cyan, 2: .cyan, 3: .red, 4: .red, 5: .white, 6: .red], "5:-3,4:+4,3:+4,4:+3,3:-2,0:+2,1:+3,0:-4,1:+3,2:-4,1:-3,2:+5,6:+2"),
+        (.hex, [0: .blue, 1: .yellow, 2: .yellow, 3: .yellow, 4: .yellow, 5: .white, 6: .blue], "5:+4,4:+5,0:+4,6:-2,1:-4,0:-2,2:-3,1:-2,3:-3,6:-5,0:+5,6:+4,4:+3,2:-4"),
+        (.hex, [0: .white, 1: .green, 2: .green, 3: .magenta, 4: .green, 5: .green, 6: .green], "0:+2,3:-4,6:+4,1:-2,2:+4,6:+3,4:+4,5:+3,1:+3,4:+3,2:-5,5:+5,4:+2"),
+        (.hex, [0: .blue, 1: .blue, 2: .green, 3: .green, 4: .white, 5: .red, 6: .blue], "4:+3,1:-4,3:+2,0:-2,1:+2,6:-2,1:-5,5:-3,2:+5,6:+5,0:-2,3:-2,6:+4,0:-5"),
+        (.hex, [0: .magenta, 1: .white, 2: .green, 3: .green, 4: .green, 5: .green, 6: .magenta], "1:+2,0:+3,2:-3,3:+4,6:+2,0:+5,6:+4,0:-3,4:+4,2:-3,3:-4,2:+5,3:+4,5:-2"),
+        (.hex, [0: .magenta, 1: .magenta, 2: .green, 3: .white, 4: .green, 5: .green, 6: .green], "3:+3,6:-2,5:-5,2:+4,0:+3,6:+5,5:-2,4:-3,6:+5,5:+2,4:+4,1:+2,0:-4"),
+        (.pent, [0: .blue, 1: .yellow, 2: .yellow, 3: .white, 4: .blue], "3:-3,1:+3,4:-2,0:-3,2:+2,4:-2,0:-5,1:-3,2:-5,4:-3,0:-3,1:-5,2:-5"),
+        (.hex, [0: .cyan, 1: .red, 2: .white, 3: .red, 4: .red, 5: .cyan, 6: .cyan], "2:-2,3:-2,5:-5,0:+5,6:+3,4:+5,1:-4,5:-3,0:-4,6:+4,5:+2,3:-3,4:-3,0:+3"),
+        (.hex, [0: .white, 1: .yellow, 2: .yellow, 3: .yellow, 4: .blue, 5: .blue, 6: .blue], "0:-3,1:+3,4:+4,5:+5,2:-2,4:-5,1:-4,5:-4,2:+2,1:-2,2:-2,4:+3,6:-5,3:-2"),
+        (.hex, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .red, 5: .red, 6: .red], "0:+2,2:-2,1:+5,4:+3,5:+3,2:-2,6:+5,5:-2,6:+3,1:-3,4:-3,5:-4,4:-3,2:+4,3:-4"),
+        (.hex, [0: .green, 1: .magenta, 2: .green, 3: .magenta, 4: .magenta, 5: .white, 6: .green], "5:+2,1:-2,2:+3,3:-3,0:-5,6:+4,2:-2,4:-4,0:+3,2:-4,3:+2,4:-5,6:+2,0:-2,3:-4"),
+        (.pent, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .cyan], "0:+2,1:+4,3:-5,2:+4,4:-4,3:-3,4:-4,1:-3,3:+3,2:+5,4:-5,1:+3,2:+3"),
+        (.hex, [0: .red, 1: .cyan, 2: .red, 3: .white, 4: .red, 5: .cyan, 6: .cyan], "3:-5,5:-4,6:-3,5:-2,0:-3,2:-2,0:+2,4:+2,2:+3,6:-5,0:-3,5:+5,1:-5,2:+2"),
+        (.hex, [0: .blue, 1: .yellow, 2: .yellow, 3: .blue, 4: .yellow, 5: .yellow, 6: .white], "6:-3,2:+5,3:-2,1:+4,0:+2,5:+2,4:-4,3:+4,5:+5,4:-4,5:-5,2:-4,0:+5,1:+3,4:+3"),
+        (.hex, [0: .magenta, 1: .white, 2: .green, 3: .green, 4: .magenta, 5: .green, 6: .magenta], "1:+5,0:-2,5:+4,6:+5,4:+3,0:-5,2:-2,6:-4,4:+2,0:-5,4:-4,6:+3,3:+2,2:+5,3:+2"),
+        (.hex, [0: .cyan, 1: .cyan, 2: .cyan, 3: .red, 4: .red, 5: .red, 6: .white], "6:+5,3:-5,0:-3,4:+3,3:-4,4:-2,3:-2,4:+4,5:-3,2:-2,0:+4,2:-4,0:+2,2:-2,1:+2"),
+        (.hex, [0: .blue, 1: .yellow, 2: .white, 3: .yellow, 4: .blue, 5: .yellow, 6: .yellow], "2:+2,4:-3,5:-5,3:+5,0:+5,6:+2,5:-3,6:+3,1:+3,4:-5,6:+3,5:-2,1:-2,0:+4,4:+2,0:-3"),
+        (.hex, [0: .white, 1: .green, 2: .green, 3: .magenta, 4: .green, 5: .magenta, 6: .magenta], "0:-4,5:+5,3:-5,2:-2,6:+5,4:+3,1:+3,2:+5,1:+2,5:-4,2:-3,1:+5,6:+2,5:+3"),
+        (.hex, [0: .red, 1: .red, 2: .red, 3: .white, 4: .red, 5: .cyan, 6: .cyan], "3:-4,2:-3,0:+2,2:-4,0:-3,6:+3,2:-4,0:+2,4:+2,1:+4,5:-2,6:+2,5:-5,6:+4,5:-3"),
+        (.hex, [0: .red, 1: .cyan, 2: .red, 3: .cyan, 4: .cyan, 5: .white, 6: .cyan], "5:+2,0:-5,4:+5,3:-5,4:-4,3:-4,4:-4,3:+3,2:-2,6:-2,1:+4,6:-2,0:+3,2:-4,1:-3"),
+        (.hex, [0: .white, 1: .green, 2: .green, 3: .magenta, 4: .green, 5: .green, 6: .green], "0:+2,3:-4,6:+4,1:-2,2:+4,6:+3,4:+4,5:+3,1:+3,4:+3,2:-5,5:+5,4:+2,5:+5,1:+4,6:+4"),
+        (.hex, [0: .red, 1: .red, 2: .red, 3: .cyan, 4: .red, 5: .red, 6: .white], "6:-2,2:-5,5:+5,4:+5,5:+3,4:+5,0:-2,3:-4,1:-2,2:+2,5:+5,4:+3,1:+4,2:-5,0:+4,1:-4"),
+        (.hex, [0: .blue, 1: .blue, 2: .blue, 3: .blue, 4: .blue, 5: .yellow, 6: .white], "6:+4,3:+2,2:+2,5:-3,0:-3,1:+2,4:-5,0:+3,3:-2,0:+4,4:-3,2:+5,1:+5,3:+2,2:-4,1:-4"),
+        (.hex, [0: .red, 1: .cyan, 2: .red, 3: .cyan, 4: .cyan, 5: .cyan, 6: .white], "6:-5,4:+3,5:-4,2:-5,0:+3,1:+4,2:-4,4:+3,3:+5,0:+3,4:+5,5:+2,2:-4,3:+3,0:-4"),
+        (.hex, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .red, 5: .red, 6: .red], "0:+2,2:-2,1:+5,4:+3,5:+3,2:-2,6:+5,5:-2,6:+3,1:-3,4:-3,5:-4,4:-3,2:+4,3:-4,1:+2"),
+        (.hex, [0: .green, 1: .green, 2: .green, 3: .green, 4: .magenta, 5: .magenta, 6: .white], "6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,1:-3,4:-2,5:-4,4:+3,5:+3,0:+4,1:-2,4:-5,2:-3"),
+        (.hex, [0: .white, 1: .yellow, 2: .yellow, 3: .yellow, 4: .blue, 5: .blue, 6: .blue], "0:-3,1:+3,4:+4,5:+5,2:-2,4:-5,1:-4,5:-4,2:+2,1:-2,2:-2,4:+3,6:-5,3:-2,5:-3,6:-5"),
+        (.hex, [0: .red, 1: .red, 2: .cyan, 3: .cyan, 4: .red, 5: .white, 6: .red], "5:+2,0:-4,3:+2,2:-2,1:+3,6:+5,1:-4,3:+3,6:-4,2:-3,0:+3,1:+5,4:-5,3:+3,0:-2,2:-4"),
+        (.hex, [0: .green, 1: .white, 2: .green, 3: .green, 4: .green, 5: .green, 6: .magenta], "1:+4,0:-4,2:-3,4:+2,5:+2,6:+5,4:+4,5:+5,0:+4,3:-4,5:-4,2:+2,3:+2,4:-3,3:+5,2:-2"),
     ]
 
-    /// Prism's five trays, `docs/prism-design.md`: every rod dealt, over one white rod that holds only the bottom entry.
-    /// Nothing merges as it is dealt, no stack is deeper than 8 (Jack's call PK1: deeper reads too busy), par is the
-    /// depth, untwisting reaches it, and every stack keeps four taps under the per-channel shader's assumed cost.
+    /// Prism's fifteen trays, `docs/prism-design.md`: every rod dealt, over one white rod that holds only the bottom
+    /// entry. Nothing merges as it is dealt, the first five trays are at most 8 deep (Jack's call PK1: deeper reads too
+    /// busy) and the ten the treble added (Jack, 2026-11-27) at most 16, no rod holds more than three stirs (past that
+    /// its moves read only as a sum, so they are guesses), par is the depth, untwisting reaches it, and every stack keeps
+    /// four taps under the per-channel shader's assumed cost.
     @MainActor func testPrismLevels() {
         XCTAssertEqual(Level.prism.count, Self.table.count)
         XCTAssertEqual(Level.prism.map(\.id), (1...Self.table.count).map { "prism-\($0)" })
@@ -501,7 +563,9 @@ final class PrismTests: XCTestCase {
             let tray = (Int(level.label)! - 1) / 6
             XCTAssertEqual(level.picture, Level.prismPlates[tray], level.id)
             XCTAssertEqual(level.chapter, Level.prismTrays[tray], level.id)
-            XCTAssertLessThanOrEqual(level.scramble.count, 8, "\(level.id) is deeper than Prism's cap")
+            XCTAssertLessThanOrEqual(level.scramble.count, tray < 5 ? 8 : 16, "\(level.id) is deeper than Prism's cap")
+            XCTAssertLessThanOrEqual(Dictionary(grouping: level.scramble, by: \.rod).values.map(\.count).max() ?? 0, 3,
+                                     "\(level.id): a rod stirred more than three times")
             XCTAssertEqual(level.motion, .none)
             XCTAssertEqual(level.layout, layout, level.id)
             XCTAssertEqual(level.masks, masks, level.id)
@@ -527,11 +591,23 @@ final class PrismTests: XCTestCase {
         XCTAssertTrue(Offer.shelf(release: true).contains(.pack(.prism)), "Prism ships in v1 (PK1)")
     }
 
-    /// Every specimen's par, its depth, is the solver's optimum: no detour beats untwisting. Slow, as Lens's is.
+    /// Every specimen's par, its depth, is the solver's optimum: no detour beats untwisting. Slow, as Lens's is: the first
+    /// five trays about 4 minutes.
     func testPrismParIsTheOptimum() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
                           "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
-        for level in Level.prism {
+        for level in Level.prism.prefix(30) {
+            XCTAssertEqual(Solver(level.layout, masks: level.masks).optimum(level.scramble), level.par, level.id)
+        }
+    }
+
+    /// The same for the ten trays the treble added, depth 8 to 16. Far slower than the first five's: their proofs take
+    /// 35 minutes on a loaded Mac with `-O` (`scripts/prism-levels.sh table`, which proves them as this does, is the one
+    /// to run), many times that unoptimised here.
+    func testPrismTrebleParIsTheOptimum() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
+                          "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
+        for level in Level.prism.dropFirst(30) {
             XCTAssertEqual(Solver(level.layout, masks: level.masks).optimum(level.scramble), level.par, level.id)
         }
     }

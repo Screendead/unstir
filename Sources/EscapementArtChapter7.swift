@@ -1,0 +1,714 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
+import Foundation
+import simd
+
+/// Chapter 7, Chronograph: problems 37 to 42's plates, drawn with `Kit`.
+extension EscapementArt {
+    /// A ring from radius `r0` to `r1` about `c`, as one outline.
+    private static func annulus(_ c: P, _ r0: Double, _ r1: Double, from a: Double = 0, to b: Double = 2 * .pi) -> [P] {
+        let outer = arc(c, r1, from: a, to: b), inner = arc(c, r0, from: b, to: a)
+        return outer + inner + [outer[0]]
+    }
+
+    /// An outline symmetric about its axis, from the upper half's profile (along, across), laid from `c` toward `a`.
+    private static func profile(_ half: [(Double, Double)], at c: P, toward a: Double) -> [P] {
+        let upper = half.map { P($0.0, $0.1) }
+        let ring = upper + upper.reversed().map { P($0.x, -$0.y) } + [upper[0]]
+        return turned(ring, by: a).map { $0 + c }
+    }
+
+    /// Any outline in local coordinates, turned to `a` and moved to `c`.
+    private static func placed(_ points: [(Double, Double)], at c: P, turn a: Double = 0, scale k: Double = 1) -> [P] {
+        turned(points.map { P($0.0 * k, $0.1 * k) }, by: a).map { $0 + c }
+    }
+
+    /// Problem 37, Second hand, pent, clocks 0+,2+: a long counterpoised seconds hand, its needle at nine seconds and
+    /// its lollipop tail across the middle, over a bone railway-track ring with twelve bold five-second wedges, in a
+    /// heavy bezel; the lollipop's disc in the second ink. The middle is clear of every pent hub, and the hand lies
+    /// between them.
+    static func plate37() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, a = -0.2 * .pi
+        let track = (inner: 0.66, outer: 0.925)
+        let needle = profile([(-0.26, 0.021), (-0.05, 0.028), (0.09, 0.035), (0.5, 0.021), (0.8, 0.009), (0.9, 0)],
+                             at: o, toward: a)
+        let pop = polar(o, 0.33, a + .pi)
+
+        Kit.ground(&plate, angle: 0.35, around: [arc(o, track.outer), arc(o, track.inner)])
+        // The bezel, heavy, with its coin edge.
+        Kit.mass(&plate, annulus(o, track.outer, 1.06))
+        for k in 0..<120 {
+            let t = Double(k) * .pi / 60
+            plate.line([polar(o, 0.985, t), polar(o, 1.06, t)], medium, .bone)
+        }
+        plate.line(arc(o, 0.955), fine, .bone)
+        // The railway track: two rails and a tie a second.
+        Kit.mass(&plate, annulus(o, track.inner - 0.035, track.inner))
+        plate.line(arc(o, 0.84), heavy)
+        plate.line(arc(o, 0.89), heavy)
+        for k in 0..<60 {
+            let t = Double(k) * .pi / 30
+            plate.line([polar(o, 0.84, t), polar(o, 0.89, t)], k % 5 == 0 ? heavy : medium)
+        }
+        // The five-second wedges, the minute's doubled.
+        for k in 0..<12 {
+            let t = Kit.clock(Double(k)), w = k == 0 ? 0.075 : 0.05
+            let wedge = [polar(o, 0.915, t - w / 0.915), polar(o, 0.915, t + w / 0.915), polar(o, 0.69, t),
+                         polar(o, 0.915, t - w / 0.915)]
+            Kit.mass(&plate, wedge)
+            plate.line([polar(o, 0.88, t), polar(o, 0.76, t)], fine, .bone)
+        }
+        // Where the needle has swept from, dotted along the rails.
+        plate.lines(dashed(arc(o, 0.78, from: a - 0.55, to: a - 0.08), on: 0.012, off: 0.018), medium)
+        plate.line(Kit.barb(polar(o, 0.78, a - 0.06), toward: a + .pi / 2, size: 0.04), medium)
+
+        // The hand, cut clear of the ground by a bone halo, then solid.
+        plate.line(needle, 0.024, .bone)
+        plate.line(arc(pop, 0.085), 0.024, .bone)
+        Kit.mass(&plate, needle)
+        plate.line([polar(o, 0.1, a), polar(o, 0.66, a)], fine, .bone)
+        plate.line([polar(o, 0.1, a + .pi), polar(o, 0.24, a + .pi)], fine, .bone)
+        Kit.mass(&plate, arc(pop, 0.082))
+        plate.fill(arc(pop, 0.058), .second)
+        plate.line(arc(pop, 0.058), fine, .bone)
+        plate.line(arc(pop, 0.038), fine)
+        // The arbor: a domed cap and its pin.
+        Kit.mass(&plate, arc(o, 0.07))
+        plate.line(arc(o, 0.05), medium, .bone)
+        plate.fill(arc(o, 0.022))
+        plate.line(arc(o, 0.022), medium)
+
+        callout(&plate, "A", from: pop + P(-0.04, 0.035), to: P(-0.6, 0.12))
+        callout(&plate, "B", from: polar(o, 0.865, Kit.clock(6.6)), to: polar(o, 0.6, Kit.clock(6)))
+        callout(&plate, "C", from: polar(o, 0.74, Kit.clock(3)), to: P(0.42, 0.12))
+        callout(&plate, "D", from: polar(o, 0.8, a), to: P(0.24, -0.38))
+        return plate
+    }
+
+    /// Problem 38, Pushpiece, hex, clocks 1+,3+: a chronograph's case band, a heavy ring, on its bracelet, its knurled
+    /// crown at three and two pushpieces in the lanes either side, a fingertip in solid ink pressing the upper one home;
+    /// the pressed pushpiece's cap in the second ink. Crown, pushpieces and finger keep clear of every hex hub.
+    static func plate38() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, push = plate38Push, band = plate38Band
+        Kit.ground(&plate, angle: 0.6, around: [arc(o, band.outer), plate38Strap(-1), plate38Strap(1)])
+        plate38Bracelet(&plate)
+        plate38Pushpieces(&plate)
+        plate38Case(&plate)
+        plate38Finger(&plate)
+
+        callout(&plate, "A", from: P(0.72, 0.1), to: P(0.86, 0.26))
+        callout(&plate, "B", from: polar(o, 0.66, -push + 0.04), to: P(0.82, -0.36))
+        callout(&plate, "C", from: polar(o, 0.8, push + 0.05), to: P(0.66, 0.66))
+        callout(&plate, "D", from: polar(o, 0.5, .pi + 0.08), to: P(-0.78, 0.02))
+        return plate
+    }
+    private static let plate38Band: (inner: Double, outer: Double) = (inner: 0.41, outer: 0.55)
+    private static let plate38Push: Double = 55.0 * .pi / 180
+    private static let plate38StrapHalf: Double = 0.18
+    private static func plate38Strap(_ s: Double) -> [P] {
+        let strapHalf = plate38StrapHalf
+        let a0: Double = asin(strapHalf / 1.06)
+        let rim: [P] = arc(Kit.origin, 1.06, from: s * (.pi / 2) - a0, to: s * (.pi / 2) + a0)
+        return [P(s * strapHalf, s * 0.42)] + (s > 0 ? rim : rim) + [P(-s * strapHalf, s * 0.42), P(s * strapHalf, s * 0.42)]
+    }
+    private static func plate38Bracelet(_ plate: inout Plate) {
+        let strapHalf = plate38StrapHalf
+        // The bracelet: solid outer links and cut centre links, row by row out to the rim.
+        for s in [-1.0, 1.0] {
+            plate.fill(plate38Strap(s))
+            for y0 in stride(from: 0.555, to: 1.06, by: 0.105) {
+                let y1: Double = y0 + 0.07
+                for x in [-strapHalf, 0.085] {
+                    Kit.mass(&plate, box(P(x, s * y0), P(x + 0.095, s * y1)))
+                }
+                Kit.cut(&plate, box(P(-0.06, s * (y0 + 0.004)), P(0.06, s * (y1 - 0.004))), edge: heavy)
+                plate.line([P(-0.035, s * (y0 + 0.025)), P(0.035, s * (y0 + 0.025))], medium)
+            }
+        }
+    }
+    private static func plate38Pushpieces(_ plate: inout Plate) {
+        let o = Kit.origin, band = plate38Band, push = plate38Push
+        // The pushpieces: a stem, a tube and a cap, the upper pressed home.
+        for (k, s) in [-1.0, 1.0].enumerated() {
+            let t: Double = s * push, pressed: Bool = k == 0, at: Double = pressed ? -0.045 : 0.0
+            Kit.mass(&plate, Kit.band(polar(o, band.outer - 0.02, t), polar(o, 0.65 + at, t), 0.06))
+            Kit.mass(&plate, Kit.band(polar(o, 0.62 + at, t), polar(o, 0.77 + at, t), 0.13))
+            for d in [-0.035, 0.035] {
+                let side: P = polar(o, d, t + .pi / 2) - o
+                plate.line([polar(o, 0.645 + at, t) + side, polar(o, 0.745 + at, t) + side], 0.012, .bone)
+            }
+            let cap: [P] = profile([(0, 0.08), (0.04, 0.08), (0.065, 0.055), (0.072, 0)], at: polar(o, 0.77 + at, t), toward: t)
+            if pressed {
+                plate.fill(cap, .second)
+                plate.line(cap, medium)
+            } else {
+                Kit.mass(&plate, cap)
+            }
+        }
+        // The crown at three: its stem, a knurled body and a bone face.
+        Kit.mass(&plate, Kit.band(P(band.outer - 0.02, 0), P(0.62, 0), 0.06))
+        let crown: [P] = profile([(0, 0.11), (0.15, 0.11), (0.17, 0.095), (0.175, 0)], at: P(0.6, 0), toward: 0)
+        Kit.mass(&plate, crown)
+        for y in stride(from: -0.075, through: 0.076, by: 0.03) {
+            plate.line([P(0.615, y), P(0.755, y)], 0.011, .bone)
+        }
+        plate.line([P(0.773, -0.08), P(0.773, 0.08)], medium, .bone)
+    }
+    private static func plate38Case(_ plate: inout Plate) {
+        let o = Kit.origin, band = plate38Band
+        // The case band, heavy, its bevel and bezel in bone.
+        Kit.mass(&plate, annulus(o, band.inner, band.outer))
+        plate.line(arc(o, band.outer - 0.035), medium, .bone)
+        plate.line(arc(o, band.inner + 0.03), 0.014, .bone)
+        for k in 0..<60 {
+            let t: Double = Double(k) * .pi / 30 + 0.04
+            plate.line([polar(o, band.outer - 0.05, t), polar(o, band.outer, t)], 0.018, .bone)
+        }
+        // The dial: bold batons, the hands and the chronograph's needle at its start.
+        plate.fill(arc(o, band.inner))
+        plate.line(arc(o, band.inner - 0.02), medium)
+        for k in 0..<12 {
+            let t: Double = Kit.clock(Double(k))
+            Kit.mass(&plate, Kit.band(polar(o, 0.26, t), polar(o, 0.36, t), k % 3 == 0 ? 0.05 : 0.032))
+        }
+        Kit.mass(&plate, Kit.hand(o, toward: Kit.clock(10.2), length: 0.24, width: 0.05, tail: 0.05))
+        Kit.mass(&plate, Kit.hand(o, toward: Kit.clock(2.0), length: 0.34, width: 0.04, tail: 0.06))
+        plate.line([polar(o, 0.1, Kit.clock(6)), polar(o, 0.37, Kit.clock(0))], medium)
+    }
+    private static func plate38Finger(_ plate: inout Plate) {
+        let o = Kit.origin, push = plate38Push
+        // The fingertip, pressing in from the rim along the lane: solid ink, its nail and creases in bone.
+        let f: Double = -push, tip: P = polar(o, 0.79, -push)
+        let round: [(Double, Double)] = arc(P(0.12, 0), 0.12, from: .pi / 2, to: 1.5 * .pi).map { (p: P) -> (Double, Double) in (p.x, p.y) }
+        let finger: [P] = placed(round + [(0.75, -0.14), (0.75, 0.14), (0.12, 0.12)], at: tip, turn: f)
+        plate.line(finger, 0.024, .bone)
+        Kit.mass(&plate, finger)
+        let nail: [(Double, Double)] = ellipse(P(0.17, -0.07), 0.12, 0.038).map { (p: P) -> (Double, Double) in (p.x, p.y) }
+        plate.line(placed(nail, at: tip, turn: f), heavy, .bone)
+        let knuckle: [(Double, Double)] = arc(P(0.29, -0.07), 0.04, from: 0.6 * .pi, to: 1.4 * .pi).map { (p: P) -> (Double, Double) in (p.x, p.y) }
+        plate.line(placed(knuckle, at: tip, turn: f), medium, .bone)
+        for x in [0.44, 0.48] {
+            let crease: [(Double, Double)] = curve(P(x, 0.14), P(x - 0.025, 0.1), P(x, 0.06), 6).map { (p: P) -> (Double, Double) in (p.x, p.y) }
+            plate.line(placed(crease, at: tip, turn: f), medium, .bone)
+        }
+    }
+
+    /// A limb or a stroke of a silhouette: a solid strip through the joints, rounded at each, cut from what lies
+    /// under it by a bone halo `halo` wide.
+    private static func limb(_ plate: inout Plate, _ joints: [P], _ width: Double, halo: Double = 0.022) {
+        if halo > 0 {
+            plate.line(joints, width + halo, .bone)
+            for j in joints { plate.fill(arc(j, (width + halo) / 2)) }
+        }
+        plate.fill(Kit.ribbon(joints, width), .black)
+        for j in joints { plate.fill(arc(j, width / 2), .black) }
+    }
+
+    /// A tapered strip through the joints, `widths` wide at each, as one outline.
+    private static func taper(_ joints: [P], _ widths: [Double]) -> [P] {
+        var left: [P] = [], right: [P] = []
+        for i in joints.indices {
+            let d = joints[min(i + 1, joints.count - 1)] - joints[max(i - 1, 0)]
+            let n = simd_normalize(P(-d.y, d.x)) * (widths[i] / 2)
+            left.append(joints[i] + n)
+            right.append(joints[i] - n)
+        }
+        return left + right.reversed() + [left[0]]
+    }
+
+    /// A limb of a silhouette: a tapered solid strip, rounded at each joint, cut from what lies under it by a bone halo.
+    private static func limb(_ plate: inout Plate, _ joints: [P], _ widths: [Double], halo: Double = 0.024) {
+        let strip = taper(joints, widths)
+        plate.line(strip, halo, .bone)
+        for (j, w) in zip(joints, widths) { plate.fill(arc(j, w / 2 + halo / 2)) }
+        plate.fill(strip, .black)
+        for (j, w) in zip(joints, widths) { plate.fill(arc(j, w / 2), .black) }
+    }
+
+    /// Problem 39, Lap time, hex, clocks 1+,2+: a running track's bend in perspective, its lanes curving across the glass
+    /// in alternate ink and bone with their numbers, a stand along the far side, the finish line chequered across
+    /// them, and a runner in silhouette dipping through the line along the lane at three, clear of every hub, the
+    /// broken tape falling from his chest; the tape in the second ink.
+    static func plate39() -> Plate {
+        var plate = Plate()
+        let d = plate39D, edges = plate39Edges
+        Kit.ground(&plate, angle: 0, around: [])
+        plate39Stand(&plate)
+        plate39Lanes(&plate)
+        plate39Starts(&plate)
+        plate39Finish(&plate)
+        plate39Runner(&plate)
+        plate39Tape(&plate)
+
+        callout(&plate, "A", from: plate39Cross(d, edges[7] + 0.05), to: P(0.06, 0.74))
+        callout(&plate, "B", from: P(-0.45, -0.5), to: P(-0.27, -0.76))
+        callout(&plate, "C", from: P(0.66, -0.09), to: P(0.86, -0.2))
+        return plate
+    }
+    private static let plate39C: P = P(0.27, -1.75)
+    private static let plate39Stretch: Double = 1.35
+    private static let plate39Edges: [Double] = [-0.12, -0.02, 0.09, 0.21, 0.34, 0.48, 0.63, 0.79, 0.96, 1.14].map { (e: Double) -> Double in e - plate39C.y }
+    private static let plate39D: P = simd_normalize(P(0.28, 0.4) - plate39C)
+    private static func plate39Edge(_ rho: Double) -> [P] {
+        stride(from: -1.1, through: 1.1, by: 0.02).map { (x: Double) -> P in
+            let u: Double = (x - plate39C.x) / (plate39Stretch * rho)
+            return P(x, plate39C.y + rho * (1 - u * u).squareRoot())
+        }
+    }
+    private static func plate39Height(_ rho: Double, at x: Double) -> Double {
+        let u: Double = (x - plate39C.x) / (plate39Stretch * rho)
+        return plate39C.y + rho * (1 - u * u).squareRoot()
+    }
+    // Where a ray from the bend's middle toward `d` crosses the edge `rho`.
+    private static func plate39Cross(_ d: P, _ rho: Double) -> P {
+        let sx: Double = d.x / plate39Stretch
+        return plate39C + d * (rho / (sx * sx + d.y * d.y).squareRoot())
+    }
+    private static func plate39Stand(_ plate: inout Plate) {
+        let edges = plate39Edges
+        // The stand along the far side: its roof in ink, the crowd's heads under it.
+        let far: [P] = plate39Edge(edges[0])
+        let roof: [P] = far.map { (p: P) -> P in P(p.x, p.y - 0.135 - 0.045 * max(0, -p.x)) }
+        let lip: [P] = far.map { (p: P) -> P in P(p.x, p.y - 0.012) }
+        Kit.mass(&plate, lip + roof.reversed() + [P(far[0].x, far[0].y - 0.012)])
+        plate.line(far.map { (p: P) -> P in P(p.x, p.y - 0.1 - 0.033 * max(0, -p.x)) }, 0.02, .bone)
+        for (k, p) in far.enumerated() where k % 2 == 0 {
+            plate.fill(arc(P(p.x, p.y - 0.05 - 0.02 * max(0, -p.x) - (k % 4 == 0 ? 0.012 : 0)), 0.017))
+        }
+        for (k, p) in roof.enumerated() where k % 4 == 0 {
+            plate.line([p + P(0, 0.04), P(p.x, far[k].y - 0.015)], 0.036, .bone)
+        }
+        for (k, p) in roof.enumerated() where k % 10 == 5 {
+            plate.line([p, p + P(0, -0.08)], medium)
+            plate.fill([p + P(0, -0.08), p + P(0.05, -0.065), p + P(0, -0.05), p + P(0, -0.08)], .black)
+        }
+    }
+    private static func plate39Lanes(_ plate: inout Plate) {
+        let edges = plate39Edges
+        // The lanes, ink and bone in turn, a bone stripe down each inked one, and their numbers at nine.
+        let lanes: Int = edges.count - 1
+        for k in 0..<lanes {
+            let inner: [P] = plate39Edge(edges[k]), outer: [P] = plate39Edge(edges[k + 1])
+            let ink: Ink = k % 2 == 0 ? .black : .bone
+            plate.fill(inner + outer.reversed() + [inner[0]], ink)
+            if k % 2 == 0 { plate.line(plate39Edge((edges[k] + edges[k + 1]) / 2), 0.038 + 0.011 * Double(k), .bone) }
+            let x = -0.74, y0: Double = plate39Height(edges[k], at: x), y1: Double = plate39Height(edges[k + 1], at: x)
+            guard simd_length(P(x, (y0 + y1) / 2)) < 0.9 else { continue }
+            let h: Double = 0.45 * (y1 - y0)
+            plate.fill(box(P(x - 0.6 * h, (y0 + y1) / 2 - 0.65 * h), P(x + 0.6 * h, (y0 + y1) / 2 + 0.65 * h)), ink)
+            let numeral: [[P]] = Kit.numeral(roman(lanes - k), at: P(x, (y0 + y1) / 2), height: h, squeeze: 1.1)
+            plate.lines(numeral, max(medium, 0.14 * h), k % 2 == 0 ? .bone : .black)
+        }
+    }
+    private static func plate39Starts(_ plate: inout Plate) {
+        let edges = plate39Edges, c = plate39C
+        let lanes: Int = edges.count - 1
+        // Two staggers of start marks, each lane's further round the bend than the next lane in.
+        for x0 in [-0.66, -0.2, 0.95] {
+            for k in 0..<lanes {
+                let x: Double = x0 - 0.075 * Double(k)
+                let y: Double = (plate39Height(edges[k], at: x) + plate39Height(edges[k + 1], at: x)) / 2
+                let ray: P = P(x, y) - c, a: P = plate39Cross(ray, edges[k]), b: P = plate39Cross(ray, edges[k + 1])
+                let w: Double = 0.016 * simd_length(a - c)
+                let n: P = P(-ray.y, ray.x) / simd_length(ray) * w
+                plate.fill([a - n, b - n, b + n, a + n, a - n], k % 2 == 0 ? .bone : .black)
+            }
+        }
+        for rho in edges { plate.line(plate39Edge(rho), heavy) }
+    }
+    private static func plate39Finish(_ plate: inout Plate) {
+        let edges = plate39Edges, c = plate39C, d = plate39D
+        let lanes: Int = edges.count - 1
+        let across: P = P(-d.y, d.x)
+        // The finish line, chequered across the lanes.
+        for k in 0..<lanes {
+            for half in 0..<2 {
+                let r0: Double = edges[k] + Double(half) * (edges[k + 1] - edges[k]) / 2, r1: Double = r0 + (edges[k + 1] - edges[k]) / 2
+                let a: P = plate39Cross(d, r0), b: P = plate39Cross(d, r1)
+                let wa: Double = 0.02 * simd_length(a - c), wb: Double = 0.02 * simd_length(b - c)
+                for side in 0..<2 {
+                    let s0: Double = Double(side) - 1, s1: Double = Double(side)
+                    let square: [P] = [a + across * (s0 * wa), b + across * (s0 * wb), b + across * (s1 * wb), a + across * (s1 * wa)]
+                    plate.fill(square + [square[0]], (k * 2 + half + side) % 2 == 0 ? .bone : .black)
+                }
+            }
+        }
+    }
+    private static func plate39Runner(_ plate: inout Plate) {
+        // The runner, dipping at the line along the lane at three, arms flung back: solid ink, each part cut clear by a
+        // bone halo.
+        limb(&plate, [P(0.41, -0.05), P(0.565, -0.115), P(0.7, -0.21), P(0.745, -0.25)], [0.05, 0.042, 0.034, 0.03])
+        limb(&plate, [P(0.69, -0.06), P(0.815, 0.09), P(0.915, 0.22), P(0.94, 0.185)], [0.1, 0.064, 0.04, 0.03])
+        let torso: [P] = [P(0.3, -0.045), P(0.42, -0.085), P(0.55, -0.095), P(0.66, -0.11), P(0.72, -0.07), P(0.7, 0.0),
+                          P(0.6, 0.02), P(0.5, 0.05), P(0.39, 0.085), P(0.31, 0.065), P(0.29, 0.01), P(0.3, -0.045)]
+        plate.line(torso, 0.024, .bone)
+        Kit.mass(&plate, torso)
+        let head = P(0.232, 0.005)
+        plate.fill(arc(head, 0.071))
+        Kit.mass(&plate, arc(head, 0.058))
+        plate.fill(arc(P(0.252, -0.015), 0.034), .black)
+        plate.line(arc(head, 0.04, from: 3.3, to: 4.5), medium, .bone)
+        limb(&plate, [P(0.66, -0.03), P(0.643, 0.16), P(0.685, 0.37), P(0.632, 0.405)], [0.1, 0.062, 0.04, 0.03])
+        limb(&plate, [P(0.37, 0.02), P(0.5, 0.095), P(0.61, 0.07), P(0.645, 0.045)], [0.054, 0.044, 0.034, 0.03])
+        // His singlet's hem, the number on his bib, the spikes under his shoes.
+        plate.line([P(0.62, 0.03), P(0.655, -0.11)], 0.016, .bone)
+        let bib: [P] = [P(0.4, -0.04), P(0.52, -0.06), P(0.525, 0.0), P(0.41, 0.025), P(0.4, -0.04)]
+        Kit.cut(&plate, bib, edge: fine)
+        plate.lines(Kit.numeral("VII", at: P(0.462, -0.018), height: 0.04, turn: -0.17, squeeze: 0.9), medium)
+        plate.line([P(0.65, 0.425), P(0.64, 0.44)], medium)
+        plate.line([P(0.955, 0.17), P(0.97, 0.16)], medium)
+    }
+    private static func plate39Tape(_ plate: inout Plate) {
+        // The tape, broken on his chest, its ends falling away either side of him along the line.
+        let upper: [P] = (0...14).map { (k: Int) -> P in
+            let t: Double = Double(k) / 14
+            return P(0.3 - 0.02 * t + 0.014 * sin(t * 3 * .pi), 0.025 - 0.32 * t)
+        }
+        let lower: [P] = (0...14).map { (k: Int) -> P in
+            let t: Double = Double(k) / 14
+            return P(0.31 - 0.025 * t + 0.014 * sin(t * 3 * .pi + 1), 0.075 + 0.3 * t)
+        }
+        for tail in [upper, lower] {
+            let ribbon: [P] = Kit.ribbon(tail, 0.03)
+            plate.line(ribbon, 0.022, .bone)
+            plate.fill(ribbon, .second)
+            plate.line(ribbon, fine)
+        }
+    }
+
+    /// Problem 40, Split second, hex, clocks 1+,3+: a rattrapante's two seconds hands split from one arbor, the split
+    /// hand stopped at five seconds in bone and the chronograph hand running on at fifteen in ink, each down a lane
+    /// between the hubs, over a bold chapter ring, and below them the isolator's column wheel through a window cut in
+    /// the dial; the stopped hand's tip in the second ink.
+    static func plate40() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, stopped = Kit.clock(1), running = Kit.clock(3)
+        let chapter = (inner: 0.79, outer: 0.95), window = P(0, 0.56), opening = 0.41
+
+        Kit.ground(&plate, angle: -0.4, around: [arc(window, opening)])
+        // The chapter ring: ink, a bone tick a second and a bone baton every five.
+        Kit.mass(&plate, annulus(o, chapter.inner, chapter.outer))
+        for k in 0..<60 {
+            let t = Double(k) * .pi / 30
+            if k % 5 == 0 {
+                plate.fill(Kit.band(polar(o, chapter.inner + 0.02, t), polar(o, chapter.outer - 0.015, t), k % 15 == 0 ? 0.05 : 0.034))
+            } else {
+                plate.line([polar(o, chapter.outer - 0.06, t), polar(o, chapter.outer - 0.015, t)], 0.012, .bone)
+            }
+        }
+        plate.line(arc(o, chapter.outer + 0.025), heavy)
+        plate.line(arc(o, chapter.inner - 0.025), medium)
+
+        // The sector ring between the arbor and the hubs: ink, a bone bar every five seconds.
+        Kit.mass(&plate, annulus(o, 0.27, 0.35))
+        for k in 0..<12 {
+            let t = Kit.clock(Double(k))
+            plate.line([polar(o, 0.285, t), polar(o, 0.335, t)], 0.026, .bone)
+        }
+        plate.line(arc(o, 0.375), heavy)
+
+        // The window and the column wheel in it: seven columns standing off its ratchet.
+        plate.fill(arc(window, opening))
+        plate.lines(hatch([arc(window, opening), arc(window, 0.36)], angle: 1.1, gap: 0.03), fine)
+        let ratchet = (0..<21).flatMap { k -> [P] in
+            let t = Double(k) * 2 * .pi / 21 + 0.1
+            return [polar(window, 0.305, t), polar(window, 0.355, t + 0.2), polar(window, 0.305, t + 2 * .pi / 21)]
+        }
+        Kit.mass(&plate, ratchet + [ratchet[0]])
+        plate.fill(arc(window, 0.29))
+        plate.lines(hatch([arc(window, 0.29)], angle: -0.5, gap: 0.03), fine)
+        plate.line(arc(window, 0.29), medium)
+        for k in 0..<7 {
+            let t = Double(k) * 2 * .pi / 7 + 0.25, w = 0.16
+            let column = arc(window, 0.27, from: t - w, to: t + w) + arc(window, 0.2, from: t + w * 1.25, to: t - w * 1.25)
+            Kit.mass(&plate, column + [column[0]])
+            plate.line(arc(window, 0.255, from: t - w * 0.7, to: t + w * 0.7), fine, .bone)
+        }
+        plate.line(arc(window, opening), 0.03)
+        plate.line(arc(window, opening - 0.03), fine)
+
+        // How far the chronograph hand has run since the split.
+        for (r, on) in [(0.7, 0.03), (0.62, 0.02)] {
+            plate.lines(dashed(arc(o, r, from: stopped + 0.12, to: running - 0.1), on: on, off: 0.018), medium)
+        }
+        plate.line(Kit.barb(polar(o, 0.7, running - 0.08), toward: running + .pi / 2 - 0.08, size: 0.045), medium)
+
+        // The split hand: bone, edged in ink, its tip in the second ink.
+        let split = profile([(-0.2, 0.026), (0.0, 0.04), (0.12, 0.046), (0.62, 0.028), (0.88, 0.0)], at: o, toward: stopped)
+        plate.line(split, 0.026, .bone)
+        plate.fill(split)
+        plate.line(split, heavy)
+        plate.line([polar(o, 0.2, stopped), polar(o, 0.6, stopped)], medium)
+        let tip = profile([(0.7, 0.019), (0.88, 0.0)], at: o, toward: stopped)
+        plate.fill(tip, .second)
+        plate.line(tip, medium)
+        // The chronograph hand: solid ink, running on, a counterweight behind the arbor.
+        let hand = profile([(-0.24, 0.034), (-0.12, 0.028), (0.0, 0.044), (0.12, 0.05), (0.66, 0.026), (0.9, 0.0)],
+                           at: o, toward: running)
+        plate.line(hand, 0.026, .bone)
+        Kit.mass(&plate, hand)
+        plate.line([polar(o, 0.22, running), polar(o, 0.68, running)], fine, .bone)
+        Kit.mass(&plate, arc(o, 0.075))
+        plate.line(arc(o, 0.05), medium, .bone)
+
+        callout(&plate, "A", from: polar(o, 0.8, stopped), to: polar(o, 0.87, Kit.clock(0.45)))
+        callout(&plate, "B", from: polar(o, 0.82, running), to: polar(o, 0.87, Kit.clock(3.6)))
+        callout(&plate, "C", from: window + polar(o, 0.24, 3.3) - o, to: polar(o, 0.76, Kit.clock(7)))
+        callout(&plate, "D", from: polar(o, 0.82, Kit.clock(9.3)), to: P(-0.64, 0))
+        return plate
+    }
+
+    /// Problem 41, Flyback, hex, clocks 1+,2+: the heart cam of a chronograph's reset, a big solid heart upright on
+    /// the arbor, struck flat on its flank by the hammer driven in along the lane at three
+    /// on its spring, with the strokes of the blow and the heart's snap, over the chronograph wheel; the hammer's face in
+    /// the second ink. Heart and hammer keep inside the hubs' clear ring and lanes.
+    static func plate41() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin, point = Kit.clock(6)
+        // The heart, upright, its arbor at its middle, inside the ring hubs' reach.
+        let heart = (0...240).map { i -> P in
+            let t = 2 * .pi * Double(i) / 240, k = 0.0222
+            let x = 16 * pow(sin(t), 3), y = 13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t) + 1.5
+            return turned([P(x * k, -y * k)], by: point - .pi / 2)[0]
+        }
+        let face = heart.filter { abs($0.y) < 0.012 && $0.x > 0 }.map(\.x).max() ?? 0.3
+        let wheel = gear(o, 0.835, teeth: 60, phase: 0.02)
+
+        Kit.ground(&plate, angle: 0.9, around: [wheel])
+        // The chronograph wheel: rim and spokes in ink, its windows ruled.
+        Kit.mass(&plate, wheel)
+        plate.line(arc(o, 0.775), 0.012, .bone)
+        let holes = windows(o, hub: 0.15, rim: 0.745, spokes: 5, width: 0.03, phase: Kit.clock(0.4))
+        for hole in holes {
+            plate.fill(hole)
+            plate.lines(hatch([hole], angle: 0.9, gap: Kit.groundGap), Kit.groundWidth)
+            plate.line(hole, medium)
+        }
+        for k in 0..<5 {
+            let t = Kit.clock(0.4) + 0.3 + 2 * .pi * Double(k) / 5
+            plate.line([polar(o, 0.38, t), polar(o, 0.73, t)], 0.012, .bone)
+        }
+
+        // The heart: solid, a bone line round its edge, its face cut in bone.
+        plate.line(heart, 0.03, .bone)
+        Kit.mass(&plate, heart)
+        plate.line(heart.map { $0 * 0.87 }, 0.014, .bone)
+        plate.lines(hatch([heart.map { $0 * 0.82 }], angle: 0.5, gap: 0.04), 0.022, .bone)
+        plate.line(arc(o, 0.1), 0.016, .bone)
+        // Its snap back to the notch, in bone across its face.
+        for r in [0.2, 0.245] {
+            let from = point + 0.5, to = point + 2.0
+            plate.line(arc(o, r, from: from, to: to), 0.016, .bone)
+            plate.fill(Kit.barb(polar(o, r, to), toward: to + .pi / 2, size: 0.04), .bone)
+        }
+
+        // The hammer: face, head and arm along the lane, on its pivot near the rim, its spring under it.
+        let pivot = P(0.82, 0)
+        Kit.mass(&plate, Kit.ribbon(curve(P(0.94, 0.17), P(0.82, 0.1), P(0.6, 0.065), 16), 0.03))
+        let arm = Kit.band(P(0.42, 0), pivot, 0.07)
+        plate.line(arm, 0.024, .bone)
+        Kit.mass(&plate, arm)
+        Kit.mass(&plate, arc(pivot, 0.07))
+        plate.fill(arc(pivot, 0.04))
+        plate.line(arc(pivot, 0.04), medium)
+        plate.line([pivot + P(-0.03, 0.02), pivot + P(0.03, -0.02)], medium)
+        let head = box(P(face + 0.025, -0.08), P(face + 0.14, 0.08))
+        plate.line(head, 0.024, .bone)
+        Kit.mass(&plate, head)
+        plate.lines(hatch([box(P(face + 0.05, -0.06), P(face + 0.115, 0.06))], angle: 0.8, gap: 0.022), medium, .bone)
+        let strike = box(P(face, -0.08), P(face + 0.025, 0.08))
+        plate.fill(strike, .second)
+        plate.line(strike, medium)
+        // The blow: strokes off the face, and the hammer's rush.
+        for d in [-1.0, 1.0] {
+            plate.line([P(face - 0.01, d * 0.1), P(face - 0.05, d * 0.15)], heavy)
+            plate.line([P(face + 0.02, d * 0.105), P(face + 0.01, d * 0.16)], medium)
+            for (k, y) in [0.05, 0.075].enumerated() {
+                plate.line([P(face + 0.17 + 0.04 * Double(k), d * y), P(0.7, d * y)], medium)
+            }
+        }
+
+        callout(&plate, "A", from: polar(o, 0.31, Kit.clock(9)), to: polar(o, 0.7, Kit.clock(9)))
+        callout(&plate, "B", from: P(face + 0.012, -0.06), to: polar(o, 0.72, Kit.clock(1)))
+        callout(&plate, "C", from: pivot + P(0.03, 0.05), to: polar(o, 0.92, Kit.clock(3.7)))
+        callout(&plate, "D", from: polar(o, 0.78, Kit.clock(6.3)), to: polar(o, 0.72, Kit.clock(7)))
+        return plate
+    }
+
+    /// Problem 42, Tachymeter, hex, clocks 1+,3+: a steam locomotive at speed in bold silhouette, running left, its
+    /// smoke streaming back in billows and speed lines under it, beneath the arc of a tachymeter bezel graduated from
+    /// a hundred and fifty to five hundred, read in Roman, past every hub; the headlamp's glass in the second ink.
+    static func plate42() -> Plate {
+        var plate = Plate()
+        let o = Kit.origin
+        Kit.ground(&plate, angle: 0.62, around: [])
+        plate42Bezel(&plate)
+
+        // The engine and all that goes with it, drawn on its own and set down a little right of and above the middle.
+        var engine = Plate()
+        plate42Smoke(&engine)
+        plate42Silhouette(&engine)
+        plate42Fittings(&engine)
+        plate42Air(&engine)
+        plate42Running(&engine)
+        plate42Lamp(&engine)
+
+        let shift = P(0.09, -0.02)
+        plate.marks += engine.marks.map { Mark(points: $0.points.map { $0 + shift }, width: $0.width, ink: $0.ink) }
+
+        callout(&plate, "A", from: polar(o, 0.89, plate42At(250)), to: polar(o, 0.68, Kit.clock(1)))
+        callout(&plate, "B", from: P(-0.73, -0.19), to: P(-0.9, 0.1))
+        callout(&plate, "C", from: plate42Billows[2].0 + P(0.04, -0.1), to: polar(o, 0.66, Kit.clock(10.6)))
+        callout(&plate, "D", from: plate42Drivers[0] + P(0.04, 0.05), to: P(-0.3, 0.72))
+        return plate
+    }
+    // The bezel's scale: a speed v reads at 3600 / v seconds; a hundred and fifty to five hundred, centred over twelve.
+    private static let plate42Span: (lo: Double, hi: Double) = (lo: 3600.0 / 500, hi: 3600.0 / 150)
+    private static func plate42At(_ v: Double) -> Double { Kit.clock((3600 / v - (plate42Span.lo + plate42Span.hi) / 2) / 5) }
+    private static let plate42Billows: [(P, Double)] = [(P(-0.53, -0.36), 0.055), (P(-0.43, -0.42), 0.07), (P(-0.3, -0.45), 0.08),
+                                                         (P(-0.14, -0.46), 0.088), (P(0.03, -0.47), 0.092), (P(0.2, -0.46), 0.095),
+                                                         (P(0.37, -0.45), 0.092), (P(0.52, -0.4), 0.085), (P(0.64, -0.33), 0.075),
+                                                         (P(0.74, -0.27), 0.062)]
+    private static let plate42Drivers: [P] = [-0.27, 0.03, 0.33].map { (x: Double) -> P in P(x, 0.33) }
+    private static let plate42Cylinder: [P] = box(P(-0.6, 0.17), P(-0.4, 0.31))
+    private static let plate42Pilot: [P] = [P(-0.72, 0.2), P(-0.9, 0.44), P(-0.62, 0.44), P(-0.62, 0.2), P(-0.72, 0.2)]
+    private static func plate42Bezel(_ plate: inout Plate) {
+        let o = Kit.origin
+        let bezel: (inner: Double, outer: Double) = (inner: 0.81, outer: 0.97)
+        let ends: (Double, Double) = (plate42At(500) - 0.05, plate42At(150) + 0.05)
+        // The bezel arc in ink, graduated and numbered in bone.
+        Kit.mass(&plate, annulus(o, bezel.inner, bezel.outer, from: min(ends.0, ends.1), to: max(ends.0, ends.1)))
+        let slow: [Double] = Array(stride(from: 150.0, through: 200, by: 5)) + Array(stride(from: 210.0, through: 300, by: 10))
+        let speeds: [Double] = slow + Array(stride(from: 325.0, through: 500, by: 25))
+        for v in speeds {
+            let major: Bool = [150.0, 200, 250, 300, 400, 500].contains(v), mid: Bool = v.truncatingRemainder(dividingBy: 50) == 0
+            let from: Double = major ? 0.88 : mid ? 0.91 : 0.935
+            plate.line([polar(o, from, plate42At(v)), polar(o, bezel.outer - 0.01, plate42At(v))], major ? 0.02 : 0.011, .bone)
+        }
+        let labels: [(Double, String)] = [(150.0, "CL"), (200, "CC"), (250, "CCL"), (300, "CCC"), (400, "CD"), (500, "D")]
+        for (v, n) in labels {
+            let a: Double = plate42At(v)
+            plate.lines(Kit.numeral(n, at: polar(o, 0.845, a), height: 0.05, turn: a + .pi / 2, squeeze: 0.8), 0.011, .bone)
+        }
+        plate.line(arc(o, bezel.outer + 0.02), heavy)
+    }
+    private static func plate42Smoke(_ engine: inout Plate) {
+        // The smoke, billowing back from the chimney, bone cut from the ground with an ink edge and curls.
+        for (k, b) in plate42Billows.enumerated() {
+            engine.fill(arc(b.0, b.1))
+            engine.line(arc(b.0, b.1, from: 2.2, to: 2 * .pi + 1.2), k % 2 == 0 ? 0.02 : heavy)
+            engine.line(arc(b.0 + P(0.01, 0.01), b.1 * 0.55, from: 3.4, to: 5.6), medium)
+        }
+        // Speed lines streaming back above and under the engine.
+        let streaks: [(Double, Double, Double)] = [(-0.24, 0.42, 0.98), (-0.3, -0.1, 0.38), (0.56, 0.3, 0.95), (0.62, -0.95, -0.55),
+                                                   (0.62, -0.2, 0.2), (0.68, 0.0, 0.7), (0.74, -0.45, 0.05)]
+        for (y, x0, x1) in streaks {
+            engine.line([P(x0, y), P(x1, y)], 0.022)
+        }
+        // The rail and its sleepers.
+        engine.line([P(-1.06, 0.475), P(1.06, 0.475)], 0.022)
+        for x in stride(from: -1.0, through: 1.0, by: 0.09) {
+            engine.fill(box(P(x, 0.49), P(x + 0.035, 0.51)), .black)
+        }
+    }
+    private static func plate42Silhouette(_ engine: inout Plate) {
+        // The engine in silhouette: tender, cab, boiler, smokebox, chimney and domes, cut clear by a bone halo.
+        let tender: [P] = box(P(0.69, -0.2), P(1.06, 0.38))
+        let cab: [P] = [P(0.36, 0.17), P(0.36, -0.33), P(0.33, -0.36), P(0.71, -0.36), P(0.68, -0.33), P(0.68, 0.17), P(0.36, 0.17)]
+        let boiler: [P] = box(P(-0.62, -0.13), P(0.38, 0.15))
+        let smokebox: [P] = [P(-0.6, -0.15), P(-0.72, -0.15), P(-0.76, -0.1), P(-0.76, 0.12), P(-0.72, 0.16), P(-0.6, 0.16),
+                             P(-0.6, -0.15)]
+        let chimney: [P] = [P(-0.6, -0.13), P(-0.59, -0.28), P(-0.61, -0.31), P(-0.48, -0.31), P(-0.5, -0.28), P(-0.49, -0.13),
+                            P(-0.6, -0.13)]
+        let dome: [P] = arc(P(-0.15, -0.13), 0.075, from: .pi, to: 2 * .pi) + [P(-0.15, -0.13)]
+        let sand: [P] = arc(P(0.13, -0.13), 0.06, from: .pi, to: 2 * .pi) + [P(0.13, -0.13)]
+        let body: [[P]] = [tender, cab, boiler, smokebox, chimney, dome, sand]
+        for part in body { engine.line(part, 0.03, .bone) }
+        for part in body { engine.fill(part, .black) }
+        engine.fill(box(P(-0.78, 0.17), P(-0.72, 0.26)), .black)
+    }
+    private static func plate42Fittings(_ engine: inout Plate) {
+        let cylinder = plate42Cylinder, pilot = plate42Pilot
+        // Boiler bands, the running board, the cab's window, the tender's coal, the pilot's bars, the smokebox door.
+        for x in stride(from: -0.5, through: 0.3, by: 0.115) { engine.line([P(x, -0.12), P(x, 0.16)], 0.016, .bone) }
+        engine.line([P(-0.6, -0.1), P(0.36, -0.1)], 0.01, .bone)
+        engine.line([P(-0.58, -0.035), P(0.34, -0.035)], 0.014, .bone)
+        for x in stride(from: -0.55, through: 0.3, by: 0.115) { engine.fill(arc(P(x, -0.035), 0.014), .bone) }
+        engine.line([P(-0.6, 0.115), P(0.36, 0.115)], 0.02, .bone)
+        engine.line([P(0.36, -0.33), P(0.68, -0.33)], 0.012, .bone)
+        engine.line([P(0.4, -0.08), P(0.4, 0.15)], 0.012, .bone)
+        engine.line([P(0.64, -0.08), P(0.64, 0.15)], 0.012, .bone)
+        for y in stride(from: 0.0, through: 0.3, by: 0.075) { engine.line([P(0.72, y), P(1.06, y)], 0.014, .bone) }
+        engine.line(cylinder, 0.03, .bone)
+        Kit.cut(&engine, cylinder, edge: heavy)
+        for x in [-0.6, -0.43] { engine.fill(box(P(x, 0.17), P(x + 0.03, 0.31)), .black) }
+        engine.lines(hatch([box(P(-0.57, 0.17), P(-0.43, 0.31))], angle: 0, gap: 0.035), medium)
+        engine.line([P(-0.62, -0.075), P(0.36, -0.075)], 0.036, .bone)
+        engine.line([P(-0.6, 0.07), P(0.36, 0.07)], 0.026, .bone)
+        engine.line([P(-0.755, 0.04), P(-0.62, 0.04)], 0.02, .bone)
+        engine.line([P(-0.755, 0.1), P(-0.62, 0.1)], 0.02, .bone)
+        engine.line([P(-0.705, -0.12), P(-0.705, 0.15)], 0.012, .bone)
+        engine.line([P(-0.735, -0.08), P(-0.735, 0.12)], 0.012, .bone)
+        for y in [-0.26, -0.2] { engine.line([P(-0.597, y), P(-0.493, y)], 0.014, .bone) }
+        engine.line([P(-0.575, -0.16), P(-0.57, -0.27)], 0.01, .bone)
+        engine.line(arc(P(-0.15, -0.13), 0.045, from: 3.5, to: 4.6), 0.012, .bone)
+        engine.line(arc(P(0.13, -0.13), 0.035, from: 3.5, to: 4.6), 0.012, .bone)
+        for y in stride(from: -0.1, through: 0.14, by: 0.06) { engine.fill(arc(P(-0.665, y), 0.012), .bone) }
+        engine.line([P(-0.72, 0.165), P(0.68, 0.165)], 0.014, .bone)
+        Kit.cut(&engine, box(P(0.42, -0.28), P(0.62, -0.12)), edge: medium)
+        engine.line([P(0.52, -0.28), P(0.52, -0.12)], heavy)
+        engine.line([P(0.72, -0.1), P(1.06, -0.1)], 0.014, .bone)
+        engine.line(pilot, 0.03, .bone)
+        Kit.cut(&engine, pilot, edge: heavy)
+        for k in 0..<6 { engine.line([P(-0.705 + 0.016 * Double(k), 0.22), P(-0.85 + 0.042 * Double(k), 0.43)], 0.014) }
+        engine.line([P(-0.745, -0.08), P(-0.745, 0.1)], 0.012, .bone)
+    }
+    private static func plate42Air(_ engine: inout Plate) {
+        // The rush of air through the engine, thinning toward its front.
+        for (k, y) in stride(from: -0.31, through: 0.16, by: 0.042).enumerated() {
+            let start: Double = k % 2 == 0 ? -0.62 + 0.3 * rnd(42, k) : 0.05 + 0.22 * rnd(42, k)
+            engine.line([P(start, y), P(1.06, y)], 0.016, .bone)
+        }
+    }
+    private static func plate42Wheel(_ engine: inout Plate, _ c: P, _ r: Double, spokes: Int) {
+        engine.fill(arc(c, r + 0.015))
+        Kit.mass(&engine, annulus(c, r - (r > 0.1 ? 0.021 : 0.013), r))
+        for k in 0..<spokes {
+            let t: Double = 2 * .pi * Double(k) / Double(spokes)
+            engine.line([polar(c, 0.02, t), polar(c, r - 0.02, t)], r > 0.1 ? 0.012 : 0.009)
+        }
+        Kit.mass(&engine, arc(c, r > 0.1 ? 0.026 : 0.015))
+        engine.fill(arc(c, 0.008))
+    }
+    private static func plate42Running(_ engine: inout Plate) {
+        let drivers = plate42Drivers
+        // The wheels: the bogie's, three drivers with their counterweights, the tender's, and the rods between.
+        for x in [-0.66, -0.5] { plate42Wheel(&engine, P(x, 0.39), 0.075, spokes: 6) }
+        for x in [0.8, 0.98] { plate42Wheel(&engine, P(x, 0.39), 0.075, spokes: 6) }
+        for d in drivers {
+            plate42Wheel(&engine, d, 0.135, spokes: 12)
+            let weight: [P] = arc(d, 0.1, from: -2.0, to: -1.1) + arc(d, 0.06, from: -1.1, to: -2.0)
+            Kit.mass(&engine, weight + [weight[0]])
+        }
+        let pins: [P] = drivers.map { (d: P) -> P in d + P(-0.06, 0.04) }
+        engine.line([pins[0], pins[2]], 0.032, .bone)
+        Kit.mass(&engine, Kit.band(pins[0], pins[2], 0.026))
+        Kit.mass(&engine, Kit.band(P(-0.45, 0.24), pins[1], 0.028))
+        for pin in pins { engine.fill(arc(pin, 0.016)) }
+    }
+    private static func plate42Lamp(_ engine: inout Plate) {
+        // The headlamp on the smokebox, its glass forward, its beam on the ground ahead.
+        let lamp: [P] = box(P(-0.8, -0.24), P(-0.7, -0.14))
+        engine.line(lamp, 0.024, .bone)
+        Kit.mass(&engine, lamp)
+        engine.fill([P(-0.79, -0.24), P(-0.75, -0.28), P(-0.71, -0.24), P(-0.79, -0.24)], .black)
+        let glass: [P] = arc(P(-0.8, -0.19), 0.034)
+        engine.fill(glass, .second)
+        engine.line(glass, medium)
+        for a in [-0.16, 0.0, 0.16] {
+            engine.line([polar(P(-0.8, -0.19), 0.06, .pi + a), polar(P(-0.8, -0.19), 0.2, .pi + a * 1.3)], heavy)
+        }
+    }
+}
