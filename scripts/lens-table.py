@@ -6,7 +6,8 @@ core. Rows are the table's lines whose first cell is a number, read as # | issue
 Each scramble is parsed as Array.commit would parse it once rods have kinds (a turn merges into its rod's newest entry
 when everything above commutes, and pops at 0), commutation decided by overlap alone. Per row it prints the depth,
 the lens entries, how many entries come off at the start, and every rule broken: a dealt lens entry outside +1 to +3,
-a lens rod netting past +3 or out of every twist rod's reach, an entry the parse merges, or a twist dealt over a lens that drags its rim less than
+a lens rod netting past +3 or out of every twist rod's reach (from row OUT on, Lens's last two chapters zoom out as
+well: an entry outside ±1 to ±3, a lens whose running sum from the bottom passes ±3 or comes to 0), an entry the parse merges, or a twist dealt over a lens that drags its rim less than
 --pitches dot pitches (0.03 tank units) at the rim's deepest point inside the twist's disc.
 With --solve it also runs scripts/solve.sh on each row and breaks a row whose optimum is not its depth, as par is the
 depth only where untwisting is the optimum.
@@ -18,6 +19,8 @@ import re
 import sys
 
 PLATEAU, PITCH, STEP = 0.6, 0.03, math.pi / 6
+# The first of Lens's levels whose lens entries may zoom out (Jack's call, 2026-11-28: the last chapters zoom both ways).
+OUT = 62
 
 
 def ring(n, r, radius, a0=-90):
@@ -60,7 +63,7 @@ def rim_drag(rods, lens, twist, steps):
     return best
 
 
-def check(layout, lenses, scramble, pitches):
+def check(layout, lenses, scramble, pitches, out=False):
     rods = LAYOUTS[layout]
     deal = [(int(r), int(s)) for r, s in (e.split(":") for e in scramble.split(","))]
     problems, stack = [], []
@@ -68,8 +71,8 @@ def check(layout, lenses, scramble, pitches):
         if not 0 <= rod < len(rods):
             problems.append(f"no rod {rod}")
             return [], problems
-        if rod in lenses and not 1 <= steps <= 3:
-            problems.append(f"lens {rod}:{steps:+d} is not +1 to +3")
+        if rod in lenses and not (1 <= abs(steps) <= 3 if out else 1 <= steps <= 3):
+            problems.append(f"lens {rod}:{steps:+d} is not {'±1' if out else '+1'} to +3")
         newest = max((i for i, e in enumerate(stack) if e[0] == rod), default=None)
         if newest is not None and all(not interacts(rods, lenses, rod, e[0]) for e in stack[newest + 1:]):
             problems.append(f"{rod}:{steps:+d} merges into {rod}:{stack[newest][1]:+d}")
@@ -84,6 +87,10 @@ def check(layout, lenses, scramble, pitches):
         net = sum(s for r, s in stack if r == rod)
         if net > 3:
             problems.append(f"lens {rod} nets {net:+d}")
+        if out:
+            running = [sum(s for r, s in stack[:i + 1] if r == rod) for i, (r, _) in enumerate(stack) if r == rod]
+            if any(not 0 < abs(t) <= 3 for t in running):
+                problems.append(f"lens {rod} runs {','.join(f'{t:+d}' for t in running)}: past ±3 or at 0")
         if not any(t not in lenses and interacts(rods, lenses, rod, t) for t in range(len(rods))):
             problems.append(f"no twist rod reaches lens {rod}")
     for i, (lens, _) in enumerate(stack):
@@ -117,7 +124,7 @@ def main():
         rows += 1
         n, layout = int(cells[0]), cells[2]
         lenses = {int(x) for x in re.findall(r"\d+", cells[3])}
-        stack, problems = check(layout, lenses, cells[4], pitches)
+        stack, problems = check(layout, lenses, cells[4], pitches, n >= OUT)
         rods = LAYOUTS[layout]
         free = sum(all(not interacts(rods, lenses, e[0], f[0]) for f in stack[i + 1:]) for i, e in enumerate(stack))
         lens_entries = sum(r in lenses for r, _ in stack)
