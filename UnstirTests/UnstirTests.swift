@@ -2265,18 +2265,19 @@ final class UnstirTests: XCTestCase {
     /// optimum is `SolverTests`' to check.
     func testMaelstromTable() {
         let levels = Level.maelstrom
-        XCTAssertEqual(levels.count, 27)
         XCTAssertEqual(levels.map(\.layout), Array(repeating: .quad, count: 6) + Array(repeating: .pent, count: 8)
-                       + Array(repeating: .hex, count: 13))
+                       + Array(repeating: .hex, count: 16))
         let pictures: [Picture] = [.coral, .neurons, .coral, .chainmail, .coral, .glass, .chainmail, .neurons,
                                    .marbling, .glass, .chainmail, .glass, .marbling, .glass, .chainmail, .neurons,
                                    .marbling, .neurons, .chainmail, .glass, .marbling, .chainmail, .glass, .marbling,
-                                   .chainmail, .glass, .marbling]
+                                   .chainmail, .glass, .marbling, .chainmail, .glass, .marbling]
         XCTAssertEqual(levels.map(\.picture), pictures.map(\.twin))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [3, 4, 5, 5, 6, 11, 8, 8, 10, 9, 12, 14, 16, 18, 9, 11, 10, 12, 16, 17, 17, 18, 22, 23, 24, 25, 26])
+                       [3, 4, 5, 5, 6, 11, 8, 8, 10, 9, 12, 14, 16, 18, 9, 11, 10, 12, 16, 17, 17, 18, 22, 23, 24, 25, 26,
+                        27, 28, 32])
         XCTAssertEqual(levels.map(\.par),
-                       [4, 5, 6, 6, 8, 15, 11, 10, 12, 12, 16, 18, 21, 23, 11, 13, 13, 15, 19, 20, 21, 22, 25, 26, 27, 28, 29])
+                       [4, 5, 6, 6, 8, 15, 11, 10, 12, 12, 16, 18, 21, 23, 11, 13, 13, 15, 19, 20, 21, 22, 25, 26, 27, 28, 29,
+                        32, 33, 36])
         for level in levels {
             XCTAssertTrue((1...2).contains(level.seized.count), level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }

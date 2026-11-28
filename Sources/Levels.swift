@@ -524,7 +524,9 @@ struct Level: Hashable, Sendable {
 
     /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum (UnstirTests). From M6
     /// on, the last of each layout's teaching, several levels need a plan: every rule of thumb misses par however its ties
-    /// go (Jack, 2026-11-12). Each shows the twin of the picture its row names.
+    /// go (Jack, 2026-11-12). Each shows the twin of the picture its row names. The finales, 28 to 30, each need a plan
+    /// and leave more decoys on the way than 27: seeds 2698 and 1171 of the hex 27-28 neighbours and two-apart bands
+    /// and 983 of the 31-32 neighbours band (`scripts/maelstrom-levels.sh search`).
     static let maelstrom: [Level] = ([
         (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral,
          String(localized: "level.M1.title", defaultValue: "Swell",
@@ -618,6 +620,15 @@ struct Level: Hashable, Sendable {
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
         (.hex, "1:+4,6:-3,1:+4,2:+4,0:+7,3:+8,1:+4,0:-6,1:-7,6:+8,0:-4,2:-7,3:+8,0:-5,4:+6,5:-8,6:-3,0:-5,5:-7,6:-3,0:-5,2:-7,0:+8,6:+3,0:+4,6:+6", [2,3], 29, .marbling,
          String(localized: "level.M27.title", defaultValue: "Abyss",
+                           comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
+        (.hex, "2:+2,1:+5,6:-2,0:+3,5:-6,4:+8,5:-6,0:-2,6:+5,0:-2,5:+5,2:-3,6:-6,1:-7,2:+8,3:+8,0:+5,5:+6,4:-8,0:-2,2:-4,3:-5,1:-2,4:+7,3:-4,0:+5,6:-2", [5,6], 32, .chainmail,
+         String(localized: "level.M28.title", defaultValue: "Hadal zone",
+                           comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
+        (.hex, "5:+4,6:+7,1:-8,2:+2,0:-2,3:-3,6:+3,0:-5,4:+6,3:-6,4:+6,5:+8,3:-3,1:+4,2:+6,1:+7,0:-5,6:-2,0:-2,1:-3,5:-4,4:-6,6:+2,1:-5,2:+6,0:+8,5:-3,6:-4", [1,5], 33, .glass,
+         String(localized: "level.M29.title", defaultValue: "Black smoker",
+                           comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
+        (.hex, "5:-2,4:-2,3:-5,0:-8,5:+6,1:-4,0:-7,4:+8,3:+5,2:-6,3:-7,5:+3,4:+8,0:+5,5:-2,6:-4,5:-7,4:+8,6:-4,2:-3,3:+4,5:-6,0:-7,1:-2,0:-2,3:+4,0:-7,3:+8,0:-4,2:+5,0:-8,4:+6", [2,3], 36, .marbling,
+         String(localized: "level.M30.title", defaultValue: "Challenger Deep",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
     ] as [(Layout, String, Set<Int>, Int, Picture, String, String)]).enumerated().map { i, l in
         Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
