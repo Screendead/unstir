@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let directorsCut: [Int: Halftone.Panel] = [76: rangefinder, 77: lensflare, 78: slideviewer]
+    static let directorsCut: [Int: Halftone.Panel] = [76: rangefinder, 77: lensflare, 78: slideviewer, 79: photobooth]
 
     /// Hex's rods, the hub first.
     fileprivate static let rods: [P] = [P(0, 0), P(0, -0.56), P(0.485, -0.28), P(0.485, 0.28), P(0, 0.56), P(-0.485, 0.28), P(-0.485, -0.28)]
@@ -435,5 +435,114 @@ extension LensArt {
             return c(0.45)
         }
         return Halftone.Panel(name: "slideviewer", tones: tones, strokes: cut(s))
+    }
+}
+
+// MARK: - 79: Photo booth
+
+/// Level 79's name: the front of a photo booth at a fair, its lit sign across the top, the coin plate and the slot the
+/// prints drop from in the middle, the curtain drawn below with two pairs of feet under it, and a sample strip of four
+/// pictures pinned up either side, a picture of each over the four corner cores. In the pictures, four poses of the
+/// sitters: a grin under big glasses (upper left), a wink and a tongue out (upper right), a shout of surprise (lower
+/// right) and a kiss (lower left).
+extension LensArt {
+    static let photobooth: Halftone.Panel = drawPhotobooth()
+
+    private static func drawPhotobooth() -> Halftone.Panel {
+        let shots: [P] = [rods[6], rods[5], rods[2], rods[3]]
+        let wall = c(0.5), cardTone = y(0.2), board = m(0.75)
+        let photoTones: [Tone] = [y(0.6), c(0.75), m(0.55), y(0.6)]
+        let edges: [[(Double, Tone)]] = [
+            [(35, cardTone), (55, .zero), (140, cardTone), (165, m(0.7)), (250, cardTone), (275, .zero), (360, cardTone)],
+            [(80, cardTone), (100, m(0.7)), (190, cardTone), (215, .zero), (310, cardTone), (330, .zero), (360, cardTone)],
+            [(20, .zero), (110, cardTone), (130, .zero), (220, cardTone), (240, m(0.7)), (360, cardTone)],
+            [(60, cardTone), (85, .zero), (170, cardTone), (195, .zero), (290, cardTone), (310, m(0.7)), (360, cardTone)],
+        ]
+        let mounts: [Port] = (0..<4).map { (k: Int) -> Port in port(shots[k], photoTones[k], edges[k], glass: 0) }
+        let pictures: [Rounded] = shots.map { Rounded($0, P(0.19, 0.2), round: 0.03) }
+        let spare: [Rounded] = [P(-0.485, 0.84), P(0.485, 0.84)].map { Rounded($0, P(0.19, 0.2), round: 0.03) }
+        let strips: [[P]] = [rect(-0.72, -0.54, -0.25, 1), rect(0.25, -0.54, 0.72, 1)]
+        let sign: [P] = rect(-0.62, -0.9, 0.62, -0.58)
+        let plate: [P] = rect(-0.2, -0.22, 0.02, -0.04), slot: [P] = rect(0.04, 0.0, 0.2, 0.06), burst: P = P(0.12, -0.36)
+        let folds: [Double] = [-0.22, -0.15, -0.11, -0.02, 0.03, 0.12, 0.16, 0.22]
+        let feet: [P] = [P(-0.14, 0.86), P(-0.06, 0.87), P(0.07, 0.85), P(0.15, 0.86)]
+        let fills: [Fill] = feet.map { oval($0, 0.035, 0.022, .zero) }
+            + [disc(burst, 0.1, y(0.9)), fill(plate, y(0.75)), fill(slot, .zero), fill(sign, board)]
+        let cards: [Fill] = strips.map { fill($0, cardTone) }
+
+        var s: [Halftone.Stroke] = []
+        // The sign and its bulbs, its letters.
+        s.append(stroke(closed(sign), bold))
+        for k in 0..<13 { let x: Double = -0.6 + 0.1 * Double(k); for yy in [-0.88, -0.6] { s.append(stroke(circle(P(x, yy), 0.012, 8), hair)) } }
+        let letters: [[P]] = [
+            [P(-0.42, -0.66), P(-0.42, -0.82), P(-0.36, -0.82), P(-0.34, -0.78), P(-0.36, -0.74), P(-0.42, -0.74)],
+            [P(-0.28, -0.66), P(-0.28, -0.82)], [P(-0.2, -0.66), P(-0.2, -0.82)], [P(-0.28, -0.74), P(-0.2, -0.74)],
+            [P(-0.12, -0.82), P(-0.04, -0.82), P(-0.04, -0.66), P(-0.12, -0.66), P(-0.12, -0.82)],
+            [P(0.02, -0.82), P(0.12, -0.82)], [P(0.07, -0.82), P(0.07, -0.66)],
+            [P(0.18, -0.82), P(0.26, -0.82), P(0.26, -0.66), P(0.18, -0.66), P(0.18, -0.82)],
+            [P(0.4, -0.82), P(0.32, -0.82), P(0.32, -0.74), P(0.4, -0.74), P(0.4, -0.66), P(0.32, -0.66)],
+        ]
+        for l in letters { s.append(stroke(l, bold)) }
+        // The coin plate, its slot and price, the slot the prints drop from, the burst over it.
+        s.append(stroke(closed(plate), mid))
+        s.append(stroke(closed(rect(-0.12, -0.18, -0.1, -0.1)), mid))
+        for yy in [-0.08, -0.06] { s.append(stroke([P(-0.18, yy), P(-0.02, yy)], hair)) }
+        s.append(stroke(closed(slot), mid))
+        s.append(stroke([P(0.12, -0.06), P(0.12, -0.02)], mid)); s.append(stroke([P(0.1, -0.04), P(0.12, -0.02), P(0.14, -0.04)], mid))
+        s.append(stroke(star(burst, 0.13, points: 10, inner: 0.75), mid))
+        s.append(stroke([burst + P(0.012, 0.04), burst + P(0.012, -0.04), burst + P(-0.03, 0.014), burst + P(0.03, 0.014)], mid))
+        // The curtain's folds and hem, the feet under it.
+        s.append(stroke([P(-0.26, 0.12), P(0.26, 0.12)], bold))
+        for (k, x) in folds.enumerated() where k > 0 { s.append(stroke(curve(P(x, 0.14), P(x + 0.01, 0.46), P(x - 0.005, 0.78), 12), k == folds.count - 1 ? mid : hair)) }
+        s.append(stroke((0...16).map { (i: Int) -> P in let x: Double = -0.22 + 0.44 * Double(i) / 16; return P(x, 0.78 + (i % 2 == 0 ? 0 : 0.012)) }, mid))
+        for f in feet { s.append(stroke(ellipse(f, 0.035, 0.022, 16), mid)) }
+        // The strips' edges and their other pictures.
+        for st in strips { s.append(stroke([st[0], st[3]], mid)); s.append(stroke([st[1], st[2]], mid)) }
+        for r in spare { s.append(stroke(r.outline, mid)) }
+        s = clearOf(s, shots, by: coreR + 0.004)
+        for m0 in mounts { s.append(stroke(circle(m0.centre, m0.rim, 56), bold)) }
+        for r in pictures { s.append(stroke(r.outline, mid)) }
+        // A grin under big glasses.
+        let grin: P = shots[0] + P(0.022, 0.024)
+        s.append(stroke(circle(grin, 0.05, 28), 0.0034))
+        for e in [-1.0, 1.0] { s.append(stroke(circle(grin + P(0.02 * e, -0.012), 0.015, 12), 0.003)) }
+        s.append(stroke([grin + P(-0.005, -0.012), grin + P(0.005, -0.012)], 0.0026))
+        s.append(stroke(arc(grin + P(0, 0.008), 0.026, 20, 160, 10), 0.0032))
+        // A wink and a tongue out.
+        let wink: P = shots[2] + P(-0.022, 0.024)
+        s.append(stroke(circle(wink, 0.05, 28), 0.0034))
+        s.append(stroke(circle(wink + P(-0.018, -0.014), 0.006, 8), 0.003))
+        s.append(stroke(arc(wink + P(0.018, -0.008), 0.01, 200, 340, 6), 0.003))
+        s.append(stroke([wink + P(-0.022, 0.016), wink + P(0.022, 0.016)], 0.003))
+        s.append(stroke(arc(wink + P(0.004, 0.016), 0.012, 0, 180, 8), 0.003))
+        // A shout of surprise, hands up.
+        let shout: P = shots[3] + P(-0.022, -0.02)
+        s.append(stroke(circle(shout, 0.05, 28), 0.0034))
+        for e in [-1.0, 1.0] { s.append(stroke(circle(shout + P(0.018 * e, -0.014), 0.007, 8), 0.003)) }
+        s.append(stroke(closed(ellipse(shout + P(0, 0.022), 0.01, 0.015, 12)), 0.003))
+        for e in [-1.0, 1.0] { s.append(stroke([shout + P(0.05 * e, 0.01), shout + P(0.07 * e, -0.04), shout + P(0.066 * e, -0.06)], 0.003)) }
+        // A kiss: two faces in profile, a heart over them.
+        let kiss: P = shots[1] + P(0.024, 0.024)
+        let face: [P] = arc(P(0, 0), 0.04, 90, 270, 14) + [P(0.02, -0.032), P(0.026, -0.016), P(0.036, -0.004), P(0.026, 0.002), P(0.032, 0.01),
+                                                           P(0.025, 0.016), P(0.028, 0.026), P(0.0, 0.04)]
+        for e in [-1.0, 1.0] { s.append(stroke(face.map { kiss + P(0.037 * e, 0.0) + P(-e * $0.x, $0.y) }, 0.0032)) }
+        s.append(stroke([kiss + P(0, -0.05), kiss + P(-0.012, -0.062)] + arc(kiss + P(-0.007, -0.066), 0.007, 150, 330, 6) + arc(kiss + P(0.007, -0.066), 0.007, 210, 390, 6) + [kiss + P(0.012, -0.062), kiss + P(0, -0.05)], 0.0026))
+
+        let shapes: [Fill] = fills, inner: [Rounded] = pictures, others: [Rounded] = spare
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
+            for (k, m0) in mounts.enumerated() where simd_distance(p, m0.centre) < m0.rim {
+                return inner[k].holds(p) ? m0.tone : (m0.tone(at: p) ?? cardTone)
+            }
+            for f in shapes where f.holds(p) { return f.tone }
+            for (k, r) in others.enumerated() where r.holds(p) { return photoTones[k + 1] }
+            if p.y > 0.14, p.y < 0.78, abs(p.x) < 0.22 {
+                var k = 0
+                for f in folds where p.x > f { k += 1 }
+                return k % 2 == 0 ? m(0.45) : m(0.75)
+            }
+            for f in cards where f.holds(p) { return f.tone }
+            return wall
+        }
+        return Halftone.Panel(name: "photobooth", tones: tones, strokes: cut(s))
     }
 }
