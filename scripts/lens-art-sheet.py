@@ -103,6 +103,10 @@ LEVELS = {
     73: ("radiotelescope", "Radio telescope", "hex", "1,3,4,5,6", "1:+2,3:+2,4:+2,5:+2,6:+2"),
     74: ("spacetelescope", "Space telescope", "hex", "0,1,2,4", "0:+2,1:+2,2:+2,4:+2"),
     75: ("mindseye", "Mind's eye", "hex", "1,2,3,4,6", "1:+2,2:+2,3:+2,4:+2,6:+2"),
+    83: ("trainwindow", "Train window", "hex", "1,2,4,6", "1:+2,2:+2,4:+2,6:+2"),
+    84: ("windscreen", "Windscreen", "hex", "0,1,4,6", "0:+2,1:+2,4:+2,6:+2"),
+    85: ("fireflyjar", "Firefly jar", "hex", "1,2,3,4,5", "1:+2,2:+2,3:+2,4:+2,5:+2"),
+    86: ("readingstone", "Reading stone", "hex", "0,2,4,6", "0:+2,2:+2,4:+2,6:+2"),
 }
 RODS = {
     "tri": [(0, -0.42, 0.58), (0.3637, 0.21, 0.58), (-0.3637, 0.21, 0.58)],
