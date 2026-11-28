@@ -337,6 +337,10 @@ film editors-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FING
 film editors-vortex-02 24 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=0.2 MOVES=3:+8,4:+7,0:-4
 film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=0.2 \
   MOVES=-1:+1,2:+8,3:-7,0:+4
+# Maelstrom 30, the free game's last level, solved at par by a drawn fingertip: its 36 moves, five of them the tank's,
+# as scripts/solve.sh prints its optimal line.
+film maelstrom-30-solve 110 "fps=1,scale=150:-1,tile=11x10:padding=4" TIER=maelstrom LEVEL=30 SWIRLED=1 TANKTURNED=1 OPEN=1 \
+  FINGER=1 REST=0.2 MOVES=4:-6,0:+8,-1:+3,5:-5,0:+4,6:-8,0:+7,6:-4,0:+2,4:+2,0:+7,6:-4,5:+3,-1:+3,5:+6,4:-8,6:+4,5:+7,6:+4,5:+2,0:-5,4:-8,5:-3,-1:+3,6:+7,5:+6,6:-5,1:-8,0:+7,4:+4,-1:-2,6:-6,0:+8,4:+5,5:+2,6:+2
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
 if wants editors-lens-03; then

@@ -150,7 +150,31 @@ maelstrom27-glass.png  Maelstrom level 27 (glass twin) with its full scramble.
 maelstrom22-chainmail.png  Maelstrom level 22 (chainmail twin) with its full scramble.
 maelstrom8-coral.png  Maelstrom level 8 (coral twin) with its full scramble.
 maelstrom18-neurons.png  Maelstrom level 18 (neurons twin) with its full scramble.
-maelstrom24-marbling.png  Maelstrom level 24 (marbling twin) with its full scramble.
+maelstrom30-marbling.png  Maelstrom level 30 (marbling twin) with its full scramble.
+finale-plughole28.png  The plughole chapter's level 28, one of its three finales, as dealt.
+finale-plughole28-solved.png  The plughole chapter's level 28 solved at par: its card over the clean picture.
+finale-plughole29.png  The plughole chapter's level 29, one of its three finales, as dealt.
+finale-plughole29-solved.png  The plughole chapter's level 29 solved at par: its card over the clean picture.
+finale-plughole30.png  The plughole chapter's level 30, one of its three finales, as dealt.
+finale-plughole30-solved.png  The plughole chapter's level 30 solved at par: its card over the clean picture.
+finale-whirlpool28.png  The whirlpool chapter's level 28, one of its three finales, as dealt.
+finale-whirlpool28-solved.png  The whirlpool chapter's level 28 solved at par: its card over the clean picture.
+finale-whirlpool29.png  The whirlpool chapter's level 29, one of its three finales, as dealt.
+finale-whirlpool29-solved.png  The whirlpool chapter's level 29 solved at par: its card over the clean picture.
+finale-whirlpool30.png  The whirlpool chapter's level 30, one of its three finales, as dealt.
+finale-whirlpool30-solved.png  The whirlpool chapter's level 30 solved at par: its card over the clean picture.
+finale-vortex28.png  The vortex chapter's level 28, one of its three finales, as dealt.
+finale-vortex28-solved.png  The vortex chapter's level 28 solved at par: its card over the clean picture.
+finale-vortex29.png  The vortex chapter's level 29, one of its three finales, as dealt.
+finale-vortex29-solved.png  The vortex chapter's level 29 solved at par: its card over the clean picture.
+finale-vortex30.png  The vortex chapter's level 30, one of its three finales, as dealt.
+finale-vortex30-solved.png  The vortex chapter's level 30 solved at par: its card over the clean picture.
+finale-maelstrom28.png  The maelstrom chapter's level 28, one of its three finales, as dealt.
+finale-maelstrom28-solved.png  The maelstrom chapter's level 28 solved at par: its card over the clean picture.
+finale-maelstrom29.png  The maelstrom chapter's level 29, one of its three finales, as dealt.
+finale-maelstrom29-solved.png  The maelstrom chapter's level 29 solved at par: its card over the clean picture.
+finale-maelstrom30.png  The maelstrom chapter's level 30, one of its three finales, as dealt.
+finale-maelstrom30-solved.png  The maelstrom chapter's level 30 solved at par: its card over the clean picture.
 seized-m01-home.png  Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home.
 seized-m01-turned.png  Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2.
 seized-m09-home.png  Maelstrom 09 (pentagon, marbling twin) with knobs 0 and 4 seized, tank at home.
