@@ -2,7 +2,7 @@
 # Game Center's achievement images: one tank each for scripts/achievement-art.sh to crop. The pack achievements take
 # their offers' promoted-purchase images (promo-*), so only the tiers', the dailies', endless's and the rim's are here.
 shot ach-first-drop "Achievement First Drop: plughole 01 as dealt." LEVEL=1 CLOCK=3
-shot ach-down-the-plughole "Achievement Down the Plughole: plughole 30, the tier's last, as dealt." LEVEL=30 CLOCK=3
+shot ach-down-the-plughole "Achievement Down the Plughole: plughole 27, as dealt, as the image App Store Connect holds shows it." LEVEL=27 CLOCK=3
 hold=8 shot ach-into-the-vortex "Achievement Into the Vortex: vortex 14 (Monsoon) with its full scramble." TIER=vortex LEVEL=14 CLOCK=3 SWIRLED=1
 hold=8 shot ach-the-maelstrom "Achievement The Maelstrom: maelstrom 23 (Fathom) with its full scramble." TIER=maelstrom LEVEL=23 CLOCK=3
 shot ach-unstirred "Achievement Unstirred: plughole 13 solved, the solve wave at radius 0.8." LEVEL=13 WAVE=0.8
