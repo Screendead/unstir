@@ -7,7 +7,7 @@ import simd
 
 extension LensArt {
     /// This chapter's drawn panels by their level's number.
-    static let directorsCut: [Int: Halftone.Panel] = [76: rangefinder, 77: lensflare]
+    static let directorsCut: [Int: Halftone.Panel] = [76: rangefinder, 77: lensflare, 78: slideviewer]
 
     /// Hex's rods, the hub first.
     fileprivate static let rods: [P] = [P(0, 0), P(0, -0.56), P(0.485, -0.28), P(0.485, 0.28), P(0, 0.56), P(-0.485, 0.28), P(-0.485, -0.28)]
@@ -66,6 +66,32 @@ extension LensArt {
 
     fileprivate static func port(_ centre: P, _ tone: Tone, _ frame: [(Double, Tone)], glass: Double = 0.2, rim: Double = 0.258) -> Port {
         Port(centre: centre, glass: glass, rim: rim, tone: tone, ends: frame.map { $0.0 }, bands: frame.map { $0.1 })
+    }
+
+    /// A rectangle about `centre` with its corners rounded to `round`, turned `degrees`, tested without a polygon.
+    fileprivate struct Rounded: Sendable {
+        var centre: P
+        var half: P
+        var round: Double
+        var turn: P
+
+        init(_ centre: P, _ half: P, round: Double, degrees: Double = 0) {
+            self.centre = centre
+            self.half = half
+            self.round = round
+            turn = P(cos(degrees * .pi / 180), sin(degrees * .pi / 180))
+        }
+
+        func holds(_ p: P) -> Bool {
+            let d = p - centre, q = simd_abs(P(d.x * turn.x + d.y * turn.y, -d.x * turn.y + d.y * turn.x)) - half + P(round, round)
+            return simd_length(simd_max(q, P(0, 0))) + min(max(q.x, q.y), 0) < round
+        }
+
+        var outline: [P] {
+            let corners: [(P, Double)] = [(P(1, 1), 0), (P(-1, 1), 90), (P(-1, -1), 180), (P(1, -1), 270)]
+            let local: [P] = corners.flatMap { (s: P, a: Double) -> [P] in arc(s * (half - P(round, round)), round, a, a + 90, 6) }
+            return closed(local.map { centre + P($0.x * turn.x - $0.y * turn.y, $0.x * turn.y + $0.y * turn.x) })
+        }
     }
 }
 
@@ -305,5 +331,109 @@ extension LensArt {
             return y(0.45)
         }
         return Halftone.Panel(name: "lensflare", tones: tones, strokes: cut(s))
+    }
+}
+
+// MARK: - 78: Slide viewer
+
+/// Level 78's name: a picture reel for a stereo slide viewer, its card disc filling the glass with its ring of film
+/// slides in their mounts, five showing over the ring's lenses and the sixth gone into the red viewer that grips the
+/// reel at the lower left, its advance lever down its side. On the reel's label in the middle a printed title and
+/// picture, off the centre hole. In the slides: a big wheel at a fair (top), a rocket climbing (upper right), a castle
+/// on its hill (lower right), a cactus in the desert (bottom) and a long-necked dinosaur (upper left).
+extension LensArt {
+    static let slideviewer: Halftone.Panel = drawSlideviewer()
+
+    private static func drawSlideviewer() -> Halftone.Panel {
+        let slides: [P] = [rods[1], rods[2], rods[3], rods[4], rods[6]]
+        let card = y(0.35), reelR = 0.9
+        let glassTones: [Tone] = [c(0.6), y(0.75), m(0.55), c(0.55), y(0.7)]
+        let frames: [[(Double, Tone)]] = [
+            [(40, .zero), (80, m(0.7)), (150, .zero), (200, c(0.8)), (300, .zero), (330, m(0.7)), (360, .zero)],
+            [(20, c(0.8)), (90, .zero), (120, m(0.7)), (210, .zero), (250, c(0.8)), (360, .zero)],
+            [(60, .zero), (100, y(0.85)), (180, .zero), (230, c(0.8)), (320, .zero), (360, y(0.85))],
+            [(30, m(0.7)), (110, .zero), (140, y(0.85)), (250, .zero), (290, m(0.7)), (360, .zero)],
+            [(70, .zero), (120, c(0.8)), (190, .zero), (220, m(0.7)), (300, .zero), (360, c(0.8))],
+        ]
+        let mounts: [Port] = (0..<5).map { (k: Int) -> Port in port(slides[k], glassTones[k], frames[k], glass: 0) }
+        // Each slide's window, its long side across the reel's radius.
+        let windows: [Rounded] = slides.map { (c0: P) -> Rounded in Rounded(c0, P(0.19, 0.14), round: 0.05, degrees: heading(c0, P(0, 0)) + 90) }
+        let body = Rounded(P(-0.66, 0.5), P(0.44, 0.3), round: 0.16, degrees: -30)
+        let viewer: [P] = body.outline
+        let eyes: [P] = [P(-0.78, 0.43), P(-0.5, 0.59)]
+        let lever: [P] = bar(P(-0.3, 0.68), P(-0.16, 0.92), 0.07)
+        let label: Double = 0.22, picture: [P] = rect(0.02, -0.17, 0.16, -0.07)
+        let fills: [Fill] = eyes.map { disc($0, 0.05, c(0.35)) } + eyes.map { disc($0, 0.09, .zero) } + [fill(lever, m(0.55)), disc(P(0, 0), 0.03, .zero), fill(picture, m(0.65)), fill(closed(sector(P(0, 0), 0.045, label, 120, 240)), c(0.55)),
+                             fill(rect(0.02, 0.06, 0.17, 0.13), y(0.8)), disc(P(0, 0), label, .zero)]
+
+        var s: [Halftone.Stroke] = []
+        // The reel: its rim, the label's ring, the centre hole and its notch, the title's lines and the picture.
+        s.append(stroke(circle(P(0, 0), reelR, 120), bold))
+        s.append(stroke(circle(P(0, 0), reelR - 0.04, 120), hair))
+        s.append(stroke(circle(P(0, 0), label, 48), mid))
+        s.append(stroke(circle(P(0, 0), 0.03, 12), mid))
+        s.append(stroke(closed(picture), mid))
+        s.append(stroke([P(0.04, -0.08), P(0.08, -0.14), P(0.11, -0.1), P(0.13, -0.12), P(0.15, -0.08)], hair))
+        s.append(stroke(closed(rect(0.02, 0.06, 0.17, 0.13)), mid))
+        s.append(stroke(closed(sector(P(0, 0), 0.045, label, 120, 240)), mid))
+        for (x0, x1, yy) in [(-0.12, -0.02, -0.17), (-0.06, 0.0, -0.11), (0.04, 0.15, 0.17), (-0.16, -0.08, 0.0)] { s.append(stroke([P(x0, yy), P(x1, yy)], mid)) }
+        // The numbers' ticks round the rim, between the slides.
+        for k in 0..<6 { let a: Double = 60 * Double(k) - 60; s.append(stroke([polar(P(0, 0), reelR - 0.12, a), polar(P(0, 0), reelR - 0.06, a)], mid)) }
+        // The viewer: its body, the lit panel, the lever, the reel's slot.
+        s.append(stroke(closed(viewer), bold))
+        for e in eyes { s.append(stroke(circle(e, 0.09, 24), mid)); s.append(stroke(circle(e, 0.05, 20), hair)); s.append(stroke(arc(e, 0.035, 200, 260, 6), hair)) }
+        s.append(stroke(curve(eyes[0] + P(0.06, -0.06), (eyes[0] + eyes[1]) / 2 + P(0.02, -0.08), eyes[1] + P(0.02, -0.09), 8), hair))
+        s.append(stroke(closed(lever), mid))
+        s.append(stroke(Array(Rounded(P(-0.66, 0.5), P(0.38, 0.24), round: 0.12, degrees: -30).outline.prefix(12)), hair))
+        s = clearOf(s, slides, by: coreR + 0.004)
+        for m0 in mounts { s.append(stroke(circle(m0.centre, m0.rim, 56), bold)) }
+        for w in windows { s.append(stroke(w.outline, mid)) }
+        // The big wheel.
+        let wheel: P = slides[0] + P(0.022, 0.02)
+        s.append(stroke(circle(wheel, 0.048, 28), 0.0034))
+        for k in 0..<6 { s.append(stroke([wheel, polar(wheel, 0.048, 30 * Double(k) * 2)], 0.002)) }
+        for k in 0..<8 { s.append(stroke(circle(polar(wheel, 0.048, 45 * Double(k)), 0.007, 6), 0.0024)) }
+        s.append(stroke([wheel + P(-0.034, 0.07), wheel, wheel + P(0.034, 0.07)], 0.003))
+        // The rocket.
+        let rocket: P = slides[1] + P(0.02, 0.026)
+        s.append(stroke(closed([rocket + P(0, -0.07), rocket + P(0.016, -0.04), rocket + P(0.016, 0.03), rocket + P(-0.016, 0.03), rocket + P(-0.016, -0.04)]), 0.0034))
+        for e in [-1.0, 1.0] { s.append(stroke([rocket + P(0.016 * e, 0.004), rocket + P(0.034 * e, 0.036), rocket + P(0.016 * e, 0.03)], 0.003)) }
+        s.append(stroke(circle(rocket + P(0, -0.024), 0.008, 8), 0.0026))
+        s.append(stroke([rocket + P(-0.01, 0.036), rocket + P(-0.004, 0.06), rocket + P(0, 0.044), rocket + P(0.005, 0.066), rocket + P(0.01, 0.036)], 0.0026))
+        // The castle on its hill.
+        let castle: P = slides[2] + P(-0.022, 0.024)
+        let walls: [P] = [P(-0.05, 0.03), P(-0.05, -0.03), P(-0.036, -0.03), P(-0.036, -0.016), P(0.036, -0.016), P(0.036, -0.03), P(0.05, -0.03), P(0.05, 0.03)]
+        s.append(stroke(walls.map { castle + $0 }, 0.0032))
+        s.append(stroke(closed([castle + P(-0.012, -0.016), castle + P(-0.012, -0.05), castle + P(0.012, -0.05), castle + P(0.012, -0.016)]), 0.003))
+        s.append(stroke([castle + P(-0.016, -0.05), castle + P(0, -0.074), castle + P(0.016, -0.05)], 0.003))
+        s.append(stroke(arc(castle + P(0, 0.03), 0.012, 180, 360, 8), 0.0026))
+        s.append(stroke(curve(castle + P(-0.09, 0.06), castle + P(0, 0.0), castle + P(0.09, 0.06), 12), 0.0026))
+        // The cactus in the desert, the sun over it.
+        let cactus: P = slides[3] + P(0.022, -0.022)
+        s.append(stroke([cactus + P(-0.01, 0.05), cactus + P(-0.01, -0.05)] + arc(cactus + P(0, -0.05), 0.01, 180, 360, 6) + [cactus + P(0.01, 0.05)], 0.0034))
+        s.append(stroke([cactus + P(-0.01, 0.0), cactus + P(-0.034, 0.0), cactus + P(-0.034, -0.03)], 0.003))
+        s.append(stroke([cactus + P(0.01, 0.014), cactus + P(0.032, 0.014), cactus + P(0.032, -0.016)], 0.003))
+        s.append(stroke([cactus + P(-0.09, 0.05), cactus + P(0.09, 0.05)], 0.0024))
+        s.append(stroke(circle(cactus + P(0.06, -0.05), 0.014, 10), 0.0026))
+        // The dinosaur.
+        let dino: P = slides[4] + P(0.024, 0.022)
+        s.append(stroke(closed(ellipse(dino + P(0.0, 0.01), 0.036, 0.02, 20)), 0.0034))
+        s.append(stroke(curve(dino + P(0.03, 0.0), dino + P(0.05, -0.02), dino + P(0.05, -0.06), 8), 0.003))
+        s.append(stroke(circle(dino + P(0.056, -0.064), 0.008, 8), 0.003))
+        s.append(stroke(curve(dino + P(-0.034, 0.012), dino + P(-0.06, 0.03), dino + P(-0.08, 0.016), 8), 0.003))
+        for x in [-0.022, -0.008, 0.012, 0.024] { s.append(stroke([dino + P(x, 0.026), dino + P(x, 0.05)], 0.003)) }
+
+        let shapes: [Fill] = fills, cut0: [Rounded] = windows
+        let tones: @Sendable (P) -> Tone = { (p: P) -> Tone in
+            for (k, m0) in mounts.enumerated() where simd_distance(p, m0.centre) < m0.rim {
+                return cut0[k].holds(p) ? m0.tone : (m0.tone(at: p) ?? card)
+            }
+            for f in shapes where f.holds(p) { return f.tone }
+            if body.holds(p) { return m(0.75) }
+            let r = simd_length(p)
+            if r < reelR { return r > reelR - 0.12 ? .zero : card }
+            return c(0.45)
+        }
+        return Halftone.Panel(name: "slideviewer", tones: tones, strokes: cut(s))
     }
 }
