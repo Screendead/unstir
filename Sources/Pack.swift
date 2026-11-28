@@ -825,7 +825,8 @@ extension Level {
     }
 
     /// Prism's 90 specimens, `docs/prism-design.md`'s table: fifteen trays of six, each on its own plate. One white rod
-    /// holds only the bottom entry, so no channel is ever clean alone; no entry merges as it is dealt; the first five
+    /// holds the bottom entry, so no channel is ever clean alone, and in six specimens of trays 13 to 15 a second
+    /// stir buried mid-stack (Jack, 2026-11-28), and nothing else; no entry merges as it is dealt; the first five
     /// trays' stacks are at most 8 deep, as deeper ones read too busy (Jack's call PK1), and the ten the treble added
     /// (Jack, 2026-11-27) climb to 16, no rod stirred more than three times; par is the depth (`testPrismLevels`), the
     /// solver's optimum (`testPrismParIsTheOptimum`). `scripts/prism-levels.sh table` measures them.
@@ -1068,17 +1069,17 @@ extension Level {
         (.hex, "0:b,1:y,2:y,3:b,4:y,5:y,6:w", "6:-3,2:+5,3:-2,1:+4,0:+2,5:+2,4:-4,3:+4,5:+5,4:-4,5:-5,2:-4,0:+5,1:+3,4:+3",
          String(localized: "level.prism-75.title", defaultValue: "Weevil",
                 comment: "Prism level title, the plate's specimen")),
-        (.hex, "0:m,1:w,2:g,3:g,4:m,5:g,6:m", "1:+5,0:-2,5:+4,6:+5,4:+3,0:-5,2:-2,6:-4,4:+2,0:-5,4:-4,6:+3,3:+2,2:+5,3:+2",
+        (.hex, "0:m,1:w,2:g,3:g,4:m,5:g,6:m", "1:+5,0:-2,5:+4,6:+5,4:+3,0:-5,2:-2,6:-4,4:+2,0:-5,1:+3,6:+3,3:+2,2:+5,3:+2",
          String(localized: "level.prism-76.title", defaultValue: "Ladybird",
                 comment: "Prism level title, the plate's specimen")),
-        (.hex, "0:c,1:c,2:c,3:r,4:r,5:r,6:w", "6:+5,3:-5,0:-3,4:+3,3:-4,4:-2,3:-2,4:+4,5:-3,2:-2,0:+4,2:-4,0:+2,2:-2,1:+2",
+        (.hex, "0:c,1:c,2:c,3:r,4:r,5:r,6:w", "6:+5,3:-5,0:-3,4:+3,3:-4,4:-2,3:-2,4:+4,5:-3,6:+3,0:+4,2:-4,0:+2,2:-2,1:+2",
          String(localized: "level.prism-77.title", defaultValue: "Longhorn",
                 comment: "Prism level title, the plate's specimen")),
         (.hex, "0:b,1:y,2:w,3:y,4:b,5:y,6:y", "2:+2,4:-3,5:-5,3:+5,0:+5,6:+2,5:-3,6:+3,1:+3,4:-5,6:+3,5:-2,1:-2,0:+4,4:+2,0:-3",
          String(localized: "level.prism-78.title", defaultValue: "Jewel beetle",
                 comment: "Prism level title, the plate's specimen")),
         // Interference, on the seahorses.
-        (.hex, "0:w,1:g,2:g,3:m,4:g,5:m,6:m", "0:-4,5:+5,3:-5,2:-2,6:+5,4:+3,1:+3,2:+5,1:+2,5:-4,2:-3,1:+5,6:+2,5:+3",
+        (.hex, "0:w,1:g,2:g,3:m,4:g,5:m,6:m", "0:-4,5:+5,3:-5,2:-2,6:+5,4:+3,0:-3,1:+3,2:+5,1:+2,5:-4,2:-3,1:+5,6:+2,5:+3",
          String(localized: "level.prism-79.title", defaultValue: "Seahorse",
                 comment: "Prism level title, the plate's specimen")),
         (.hex, "0:r,1:r,2:r,3:w,4:r,5:c,6:c", "3:-4,2:-3,0:+2,2:-4,0:-3,6:+3,2:-4,0:+2,4:+2,1:+4,5:-2,6:+2,5:-5,6:+4,5:-3",
@@ -1087,7 +1088,7 @@ extension Level {
         (.hex, "0:r,1:c,2:r,3:c,4:c,5:w,6:c", "5:+2,0:-5,4:+5,3:-5,4:-4,3:-4,4:-4,3:+3,2:-2,6:-2,1:+4,6:-2,0:+3,2:-4,1:-3",
          String(localized: "level.prism-81.title", defaultValue: "Pipefish",
                 comment: "Prism level title, the plate's specimen")),
-        (.hex, "0:w,1:g,2:g,3:m,4:g,5:g,6:g", "0:+2,3:-4,6:+4,1:-2,2:+4,6:+3,4:+4,5:+3,1:+3,4:+3,2:-5,5:+5,4:+2,5:+5,1:+4,6:+4",
+        (.hex, "0:w,1:g,2:g,3:m,4:g,5:g,6:g", "0:+2,3:-4,6:+4,1:-2,2:+4,0:+4,4:+4,5:+3,1:+3,4:+3,2:-5,5:+5,4:+2,5:+5,1:+4,6:+4",
          String(localized: "level.prism-82.title", defaultValue: "Kelp",
                 comment: "Prism level title, the plate's specimen")),
         (.hex, "0:r,1:r,2:r,3:c,4:r,5:r,6:w", "6:-2,2:-5,5:+5,4:+5,5:+3,4:+5,0:-2,3:-4,1:-2,2:+2,5:+5,4:+3,1:+4,2:-5,0:+4,1:-4",
@@ -1103,10 +1104,10 @@ extension Level {
         (.hex, "0:w,1:r,2:r,3:c,4:r,5:r,6:r", "0:+2,2:-2,1:+5,4:+3,5:+3,2:-2,6:+5,5:-2,6:+3,1:-3,4:-3,5:-4,4:-3,2:+4,3:-4,1:+2",
          String(localized: "level.prism-86.title", defaultValue: "Argonaut",
                 comment: "Prism level title, the plate's specimen")),
-        (.hex, "0:g,1:g,2:g,3:g,4:m,5:m,6:w", "6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,1:-3,4:-2,5:-4,4:+3,5:+3,0:+4,1:-2,4:-5,2:-3",
+        (.hex, "0:g,1:g,2:g,3:g,4:m,5:m,6:w", "6:+5,3:+5,5:+2,2:-3,3:-4,0:-4,3:-2,1:-3,6:+4,5:-4,4:+3,5:+3,0:+4,1:-2,4:-5,2:-3",
          String(localized: "level.prism-87.title", defaultValue: "Squid",
                 comment: "Prism level title, the plate's specimen")),
-        (.hex, "0:w,1:y,2:y,3:y,4:b,5:b,6:b", "0:-3,1:+3,4:+4,5:+5,2:-2,4:-5,1:-4,5:-4,2:+2,1:-2,2:-2,4:+3,6:-5,3:-2,5:-3,6:-5",
+        (.hex, "0:w,1:y,2:y,3:y,4:b,5:b,6:b", "0:-3,1:+3,4:+4,5:+5,2:-2,4:-5,1:-4,5:-4,2:+2,1:-2,2:-2,0:-4,6:-5,3:-2,5:-3,6:-5",
          String(localized: "level.prism-88.title", defaultValue: "Cuttlefish",
                 comment: "Prism level title, the plate's specimen")),
         (.hex, "0:r,1:r,2:c,3:c,4:r,5:w,6:r", "5:+2,0:-4,3:+2,2:-2,1:+3,6:+5,1:-4,3:+3,6:-4,2:-3,0:+3,1:+5,4:-5,3:+3,0:-2,2:-4",
@@ -1119,7 +1120,7 @@ extension Level {
         let (layout, mask, scramble, title): (Layout, String, String, String) = row
         let masks = Channels.masks(mask)!, tray = i / 6
         return Level(id: Pack.prism.id(i + 1), pack: .prism, label: String(format: "%02d", i + 1), title: title,
-                     note: i % 6 == 0 ? prismNotes[tray] : "", picture: prismPlates[tray], layout: layout,
+                     note: i % 6 == 0 ? prismNotes[tray] : i == 75 ? prismBuriedNote : "", picture: prismPlates[tray], layout: layout,
                      scramble: .parse(scramble, in: layout, masks: masks), chapter: prismTrays[tray], masks: masks)
     }
 
@@ -1178,6 +1179,10 @@ extension Level {
         String(localized: "rule.prism.15", defaultValue: "Where every colour agrees, the line is white.",
                comment: "Prism's fifteenth tray's rule, under the tank"),
     ]
+
+    /// Specimen 76's note, the first whose white rod holds a second stir, buried mid-stack (Jack, 2026-11-28).
+    static let prismBuriedNote = String(localized: "rule.prism.buried", defaultValue: "White blocks every colour stirred over it.",
+                                        comment: "Prism's note on the first specimen with a white stir buried mid-stack, under the tank")
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.

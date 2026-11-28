@@ -1131,6 +1131,17 @@ prism-read-15-magenta-past5.png  Prism's read: Sea nettle's magenta rod, stirred
 prism-read-15-magenta-past10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
 prism-idea-white-mid.png  Rule idea: Spore with a white stir mid-stack (4:-2): a sheared white disc with no colour, the red and cyan over it.
 prism-idea-white-mid-before.png  Rule idea's control: Spore as dealt, the same stirs without the white one.
+prism-buried-76-third.png  Prism specimen 76 a third of the way into its untwist (3:-2,2:-5,3:-2,6:-3,1:-3).
+prism-buried-76-white.png  Prism specimen 76 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-77-third.png  Prism specimen 77 a third of the way into its untwist (1:-2,2:+2,0:-2,2:+4,0:-4).
+prism-buried-79-third.png  Prism specimen 79 a third of the way into its untwist (5:-3,6:-2,1:-5,2:+3,5:+4).
+prism-buried-79-white.png  Prism specimen 79 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-82-third.png  Prism specimen 82 a third of the way into its untwist (6:-4,1:-4,5:-5,4:-2,5:-5).
+prism-buried-82-white.png  Prism specimen 82 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-87-third.png  Prism specimen 87 a third of the way into its untwist (2:+3,4:+5,1:+2,0:-4,5:-3).
+prism-buried-87-white.png  Prism specimen 87 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-88-third.png  Prism specimen 88 a third of the way into its untwist (6:+5,5:+3,3:+2,6:+5,0:+4).
+prism-buried-88-white.png  Prism specimen 88 with every entry over its buried white stir lifted: the white seam on top.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
