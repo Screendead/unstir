@@ -10,8 +10,8 @@ right order. The tank only shows where the picture ended up, not the order the s
   <img src="docs/images/whirlpool24-chainmail.webp" width="200" alt="Whirlpool 24, live chainmail">
 </p>
 
-27 levels in plughole, then whirlpool (deeper scrambles on live, moving pictures) and maelstrom, a daily tank,
-endless, and a sandbox. SwiftUI and Metal, iOS 17, Swift 6, portrait only.
+Five free tiers of 30 levels: plughole, whirlpool (deeper scrambles on live, moving pictures), vortex, maelstrom and
+charybdis, then a daily tank, endless, and a sandbox. SwiftUI and Metal, iOS 17, Swift 6, portrait only.
 
 ## Building
 
