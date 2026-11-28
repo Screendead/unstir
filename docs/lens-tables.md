@@ -11,7 +11,8 @@ Jack's call LENSART = B, 2026-11-10) in place of section 1's story.
 Both tables follow `docs/lens-design.md` section 2's rules and teaching curve: four issues of six and a splash page,
 the free taste (1 to 3) on tri as `master` has it, depth climbing from 1 to 12. A positive step magnifies and is a
 drag up, as on `master` and in the draft, so the draft's strings keep their sign: a dealt lens is undone dragging down.
-Each dealt lens entry is +1 to +3 (x2, x4, x8 at the centre), and each lens rod nets at most +3. Every twist dealt
+Each dealt lens entry is +1 to +3 (x2, x4, x8 at the centre), and each lens rod nets at most +3, until 62, from
+where lens entries zoom out as well (below). Every twist dealt
 over a lens drags its rim at least 4 dot pitches: any step on tri and hex, 2 or more of a small twist over a big lens
 on eye, 3 or more on quad. No entry merges as it is dealt, so the depth is the string's length.
 
@@ -21,7 +22,7 @@ optimum, row by row; `testLensLevels` pins the table on its own branch and repla
 
 "Free" is how many entries can come off at the start.
 
-## Levels 26 to 75
+## Levels 26 to 90
 
 Jack, 2026-11-27: at least treble the pack, ramping a little faster to a much higher top, harder to crack without
 changing what the pack is. Rows 26 to 75 go on table A below; the first 25 stay as they were. The rules are table A's,
@@ -56,6 +57,26 @@ Lens share is lens entries over depth; buried, lens entries dealt under a twist 
 stacked, lenses holding two or more entries, so the zoom shows their sum; faint twists, twists of one step, the least
 a turn shows; lens steps of 2 or 3, the lens entries a player undoes by counting the zoom rather than one step down;
 right moves, the whole entries at each step of the untwist on average, one being a forced read among every rod.
+
+## Zooming out, from 62
+
+Jack, 2026-11-28 ("Lens zooms both ways"): the last chapters deal lens entries that zoom out (-1 to -3) as well as in,
+each lens netting within ±3. Until then three entries a lens was the cap, since every entry zoomed in and a lens nets
+at most +3, so deep levels dealt most lens entries at +1 and the count read thinned out. From 62 each lens entry is ±1
+to ±3, and every running sum of a lens's entries from the bottom stays within ±3 and is never 0: no state the untwist
+passes through shows a lens past x8 or x1/8, or plain. A lens's zoom no longer tells its entries: x2 may be +3 under
+-2, undone one entry at a time, in order. `scripts/lens-table.py` holds rows from 62 (its `OUT`) to these rules and
+the rows before to the old ones, and `testLensLevels` does the same.
+
+62, the first of Dolly zoom, deals only zoom-outs, every lens at x1/8, the last entry dealt a lens of two steps, so
+the first move is a whole rim zoomed out, undone by dragging up. From 63 the lenses mix signs, some lens on every level
+holding both, and with the cap lifted lens entries rise back to over two fifths of the depth, a little under on the
+levels whose hub is a lens, whose proofs run longest. Levels 76 to 90 (Jack, 2026-11-28: every paid pack holds 90)
+deal the same way in two more chapters, Director's cut and Fade out, each on its own panel; on 81 and 90 only the hub
+twists, and on 86 and 89 the three twists never reach each other, so a chained deal puts a lens entry between every
+two twists and those two sit at 29 deep.
+
+CHAPTER_TABLE
 
 ## Table A: lenses on every rod size (`lens-levels-all`)
 
@@ -140,7 +161,7 @@ tri and eye's big rods (0.58), and eye's small rods and every hex rod (0.44); no
 | 67 | Dolly zoom | hex | 0, 1, 4, 5 | `3:+4,0:-1,2:+3,1:-2,2:+4,1:+1,2:-3,0:-2,6:+5,0:+1,3:-1,2:-3,3:-2,4:-2,3:+1,4:+1,3:+4,2:+1,3:+3,4:-2,3:-5,2:-1,3:-2,2:+5,3:+3,2:+2,1:+3,6:+2,5:-3,6:-3,5:+2,6:+3` | 32 | 1 |  | 32 |
 | 68 | Final cut | hex | 1, 2, 3, 4, 5 | `3:-3,0:-2,2:-2,0:-1,3:+2,0:-4,2:+1,0:+1,2:-2,0:+1,4:+1,0:-4,1:-2,0:-1,6:+1,1:+3,6:-5,0:-2,5:+2,0:+1,6:-1,1:-3,0:-5,5:-3,6:-3,5:-2,0:-5,6:-4,0:-1,3:+2,0:-1,4:-2,0:-5,4:+2` | 34 | 1 |  | 34 |
 | 69 | Final cut | hex | 0, 1, 2, 5 | `2:+3,3:+4,2:-2,3:-1,4:+1,3:+5,2:-2,3:+3,4:+2,3:-1,0:-2,4:+1,3:+4,4:-1,5:-1,6:+3,5:-2,6:-2,0:+1,6:-4,0:+2,3:-4,4:+5,5:+2,6:-2,1:-2,6:+1,1:+3,6:+3,1:+1,6:-1` | 31 | 1 |  | 31 |
-| 70 | Final cut | hex | 0, 3, 5, 6 | `2:+1,3:+1,4:-2,5:+2,4:-5,0:+1,1:+4,2:+3,1:-5,2:-4,1:+2,2:+1,1:+1,2:+2,3:+2,4:-5,5:+1,4:-1,0:+1,1:-2,2:+3,1:-2,2:+1,1:+1,2:+5,0:+1,2:-1,1:-3,6:+2,1:-3,6:+1,1:+1` | 32 | 1 |  | 32 |
+| 70 | Final cut | hex | 0, 3, 5, 6 | `5:+1,4:+4,3:-1,2:-3,0:-3,2:+1,3:-2,2:-4,3:+1,4:-4,5:+1,4:+5,0:+2,1:+3,2:-1,1:-1,6:+2,1:-4,2:-1,1:+1,2:+5,1:+1,2:+5,1:+5,6:-3,1:-1,6:-1,1:+4,0:+2,1:+4,2:+1,1:-1` | 32 | 1 |  | 32 |
 | 71 | Final cut | hex | 1, 2, 3, 5, 6 | `2:-3,0:-1,4:-1,5:+2,0:-4,2:+1,0:-5,2:+3,0:-1,3:-3,0:-1,4:+5,3:+1,0:-3,1:-2,0:-1,4:+1,3:+3,4:-5,5:-3,0:-1,6:-3,0:-1,4:-4,5:-2,0:-4,6:+2,0:+2,5:+2,0:+1,1:+3,0:-5,6:+2,0:-1,1:+2` | 35 | 1 |  | 35 |
 | 72 | Final cut | hex | 1, 2, 4, 5, 6 | `1:+3,0:+5,4:+2,0:+4,5:-2,0:-1,4:-3,0:+3,4:-2,3:-1,0:+2,1:-2,0:+4,5:+3,0:+4,2:-1,3:-1,0:+1,6:+2,0:+4,5:+2,0:-1,6:-1,0:-1,6:+2,0:+4,3:+1,2:+3,0:+3,1:+2,0:+2,6:-1,0:-1,3:-1,2:+1,0:-2` | 36 | 1 |  | 36 |
 | 73 | Final cut | hex | 1, 3, 4, 5, 6 | `5:+3,0:+1,5:-2,0:-2,2:+3,1:-1,2:-1,0:-4,5:-3,0:-2,3:-2,2:-4,3:+3,2:-5,1:-1,2:+1,1:+3,0:-2,4:+1,0:-2,3:+1,2:-5,0:+3,6:-1,0:+3,6:+3,0:+2,4:-2,0:-1,6:-3,0:+5,2:-1,0:-2,4:+2,0:-1,6:-1` | 36 | 1 |  | 36 |
