@@ -178,8 +178,9 @@ struct Level: Hashable, Sendable {
     }
 
     /// Dealt by the frozen generator as layout-depth-inversions #seed: pent-5-0 #1,
-    /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, picked by
-    /// scripts/plughole-levels/pick.py so each layout's curve rises.
+    /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, and the
+    /// finales hex-10-2 #26, hex-10-3 #33, hex-11-3 #178, picked by scripts/plughole-levels/pick.py so each layout's curve
+    /// rises.
     static let plughole: [Level] = ([
         (.tri, "0:+4",
          String(localized: "level.L1.title", defaultValue: "Drop",
@@ -292,10 +293,20 @@ struct Level: Hashable, Sendable {
         (.hex, "2:+2,3:-5,1:+3,0:+6,3:+7,1:-3,4:-7,2:-5,5:+3",
          String(localized: "level.L27.title", defaultValue: "Drain",
                            comment: "Plughole level title, a word for draining water"), ""),
+        (.hex, "5:+3,4:+4,0:-2,4:+4,6:+3,2:-4,3:+7,1:-4,0:-3,6:-6",
+         String(localized: "level.L28.title", defaultValue: "Glug",
+                           comment: "Plughole level title, a word for draining water"), ""),
+        (.hex, "6:+3,1:-2,2:+3,0:+5,3:+7,4:+6,2:-4,6:-4,5:-7,0:-7",
+         String(localized: "level.L29.title", defaultValue: "Sluice",
+                           comment: "Plughole level title, a word for draining water"), ""),
+        (.hex, "4:-2,3:+3,0:+6,1:-7,0:+5,4:-4,1:+4,5:+6,6:+2,4:-2,1:-4",
+         String(localized: "level.L30.title", defaultValue: "Sinkhole",
+                           comment: "Plughole level title, a word for draining water"), ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The city only where par is 4 or less: deeper, it goes murky.
         Level(id: Tier.plughole.prefix + "\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
-              picture: [5: .sunset, 11: .sunset, 15: .sunset, 6: .city, 10: .city, 14: .city, 16: .city][i + 1] ?? .grid,
+              picture: ([5: .sunset, 11: .sunset, 15: .sunset, 6: .city, 10: .city, 14: .city, 16: .city]
+                        as [Int: Picture])[i + 1] ?? .grid,
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 

@@ -1444,7 +1444,7 @@ final class UnstirTests: XCTestCase {
     }
 
     func testLevelsNeverMerge() {
-        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 5, 6, 6, 7, 6, 7, 8, 9, 9]
+        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 5, 6, 6, 7, 6, 7, 8, 9, 9, 10, 10, 11]
         XCTAssertEqual(Level.plughole.map(\.scramble.count), par)
         XCTAssertEqual(Level.plughole.filter(\.replay).count, 3)
     }
@@ -1452,7 +1452,7 @@ final class UnstirTests: XCTestCase {
     /// Against the design table's inversion column.
     func testInversions() {
         XCTAssertEqual(Level.plughole.map { $0.layout.inversions($0.scramble) },
-                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2])
+                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3])
     }
 
     /// Twice the par of each plughole level as first written (19 to 27 have since eased), strictly more inversions than
