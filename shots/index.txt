@@ -2,9 +2,9 @@ menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fr
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level solved: its level 01 playable, vortex still locked.
-menu-vortex-locked.png  Menu looking at vortex, 20 of whirlpool's 27 solved (05, 12 and 18 over par): ticks 01 to 20 lit, and under them short: 21–27, opening 21, the first not played.
+menu-vortex-locked.png  Menu looking at vortex, 20 of whirlpool's 30 solved (05, 12 and 18 over par): ticks 01 to 20 lit, and under them short: 21–30, opening 21, the first not played.
 menu-vortex-open.png  Menu on vortex, opened by every whirlpool level solved: its level 01 playable, maelstrom still locked.
-menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: two of vortex's 27 ticks lit.
+menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: two of vortex's 30 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
@@ -25,7 +25,7 @@ archive-day.png  The daily from five days ago, opened from the archive: its own 
 menu-tried.png  Plughole 01 to 13 solved and 14 tried: three hollow marks on 14's row.
 menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
 menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
-menu-list-end.png  A cold launch with plughole 01 to 26 solved: the list centred on 27, its last, and under it the sandbox's row under anything goes (Debug; Release has neither).
+menu-list-end.png  A cold launch with plughole 01 to 29 solved: the list centred on 30, its last, and under it the sandbox's row under anything goes (Debug; Release has neither).
 menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
 menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
 back-swipe.png  Plughole 05 held 40% into an edge swipe back: the level sliding right over the menu, centred on 05, 01 to 04 solved.
@@ -33,8 +33,8 @@ menu-back-swiped.png  Back from plughole 12 by the edge swipe: the list centred 
 menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
 menu-mid-switch-scrolled.png  The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin.
 menu-switch-landing.png  Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir.
-menu-switch-locked.png  Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 20 of whirlpool's 27 solved: vortex is locked, so the list landed on its header, over the gate and its short list.
-menu-back-up.png  Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole.
+menu-switch-locked.png  Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 20 of whirlpool's 30 solved: vortex is locked, so the list landed on its header, over the gate and its short list.
+menu-back-up.png  Up a notch from plughole 30 into whirlpool 01, then back: the menu on whirlpool, not plughole.
 card-back-solved.png  Back from Lens 02's result card after a solve, Lens's card up (UNSTIR_CARD): the card centred on 03, the row next › opens.
 rings-launch.png  The rings at rest on whirlpool, 14 of 27 solved (05, 09 and 12 over par), Lens owned: the sun in the ring with the tier, its count and level 15 dark on it, the daily's star over the ring four days running, three covers under it.
 rings-locked.png  The rings on vortex, shut: its sun down, a dusk disc rimmed in the tier's blue, with what opens it; every bead dark.
@@ -78,7 +78,7 @@ level18.png  Level 18 with its full scramble and its note.
 level19.png  Level 19 with its full scramble and its note.
 level22.png  Level 22 with its full scramble and its note.
 level23.png  Level 23 with its full scramble and its note.
-level27.png  Level 27 with its full scramble and its note.
+level30.png  Level 30 with its full scramble and its note.
 level05.png  Level 05 with its full scramble and its note.
 level11.png  Level 11 with its full scramble and its note.
 level15.png  Level 15 with its full scramble and its note.
@@ -115,14 +115,14 @@ result-clean.png  Level 06 (city) result card after a harness solve with nothing
 result-replay.png  Level 06 (city) replayed at par with nothing wasted, started before (UNSTIR_TRIED) so no first try, no best saved yet: three marks and clean, as a level earns clean on any try.
 result-undone.png  Level 06 (city) solved at par with a stir undone on the way: two marks, at par, again beside next.
 result-again-best.png  Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next.
-result-fullest.png  Plughole 27 replayed at par with a stir undone against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows.
+result-fullest.png  Plughole 30 replayed at par with a stir undone against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows.
 result-pack-complete.png  Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's).
-result-every-tier.png  Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
-result-ladder-end.png  Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
-tier-up.png  Vortex 27 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing.
+result-every-tier.png  Maelstrom 30 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
+result-ladder-end.png  Maelstrom 30 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
+tier-up.png  Vortex 30 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing.
 tier-up-locked.png  The same with maelstrom still closed, no other vortex level solved (as levels open in order, plain play never reaches this): as bright, with a lock, saying how many vortex levels are unsolved; it opens the menu on maelstrom's gate.
 tier-up-midway.png  Plughole 05 solved at par, the last plughole level without a best: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
-tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, vortex 01 to 24 solved (04, 11 and 22 over par): 24 ticks lit, short: 25–27.
+tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, vortex 01 to 24 solved (04, 11 and 22 over par): 24 ticks lit, short: 25–30.
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and share, sharing the card's width, and next daily in 7 h under them (UNSTIR_NOW=17:00).
 daily-clean.png  Today's daily solved at par on its first try with nothing wasted: three marks, clean, share and next daily in 7 h.
 daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): no best line, again, share and next daily in 7 h.
@@ -142,7 +142,7 @@ whirlpool09.png  Whirlpool level 09 with its full scramble.
 whirlpool14.png  Whirlpool level 14 with its full scramble.
 whirlpool19.png  Whirlpool level 19 with its full scramble.
 whirlpool23.png  Whirlpool level 23 with its full scramble.
-whirlpool27.png  Whirlpool level 27 with its full scramble.
+whirlpool30.png  Whirlpool level 30 with its full scramble.
 whirlpool-probe-short.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal.
 whirlpool-probe-heal.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals.
 whirlpool-probe-over.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal.
@@ -156,15 +156,39 @@ whirlpool-grab-overlap-marbling.png  Whirlpool 25 (hex, marbling), a finger just
 whirlpool-count-marbling.png  Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four dashes, +4 off the finger.
 whirlpool-count-hex-below.png  Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above.
 whirlpool-result.png  Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
-whirlpool24-chainmail.png  Whirlpool level 24 (chainmail) with its full scramble.
+whirlpool28-chainmail.png  Whirlpool level 28 (chainmail) with its full scramble.
 whirlpool16-coral.png  Whirlpool level 16 (coral) with its full scramble.
 whirlpool20-neurons.png  Whirlpool level 20 (neurons) with its full scramble.
-whirlpool25-marbling.png  Whirlpool level 25 (marbling) with its full scramble.
-maelstrom27-glass.png  Maelstrom level 27 (glass twin) with its full scramble.
-maelstrom22-chainmail.png  Maelstrom level 22 (chainmail twin) with its full scramble.
+whirlpool29-marbling.png  Whirlpool level 29 (marbling) with its full scramble.
+maelstrom29-glass.png  Maelstrom level 29 (glass twin) with its full scramble.
+maelstrom28-chainmail.png  Maelstrom level 28 (chainmail twin) with its full scramble.
 maelstrom8-coral.png  Maelstrom level 8 (coral twin) with its full scramble.
 maelstrom18-neurons.png  Maelstrom level 18 (neurons twin) with its full scramble.
-maelstrom24-marbling.png  Maelstrom level 24 (marbling twin) with its full scramble.
+maelstrom30-marbling.png  Maelstrom level 30 (marbling twin) with its full scramble.
+finale-plughole28.png  The plughole chapter's level 28, one of its three finales, as dealt.
+finale-plughole28-solved.png  The plughole chapter's level 28 solved at par: its card over the clean picture.
+finale-plughole29.png  The plughole chapter's level 29, one of its three finales, as dealt.
+finale-plughole29-solved.png  The plughole chapter's level 29 solved at par: its card over the clean picture.
+finale-plughole30.png  The plughole chapter's level 30, one of its three finales, as dealt.
+finale-plughole30-solved.png  The plughole chapter's level 30 solved at par: its card over the clean picture.
+finale-whirlpool28.png  The whirlpool chapter's level 28, one of its three finales, as dealt.
+finale-whirlpool28-solved.png  The whirlpool chapter's level 28 solved at par: its card over the clean picture.
+finale-whirlpool29.png  The whirlpool chapter's level 29, one of its three finales, as dealt.
+finale-whirlpool29-solved.png  The whirlpool chapter's level 29 solved at par: its card over the clean picture.
+finale-whirlpool30.png  The whirlpool chapter's level 30, one of its three finales, as dealt.
+finale-whirlpool30-solved.png  The whirlpool chapter's level 30 solved at par: its card over the clean picture.
+finale-vortex28.png  The vortex chapter's level 28, one of its three finales, as dealt.
+finale-vortex28-solved.png  The vortex chapter's level 28 solved at par: its card over the clean picture.
+finale-vortex29.png  The vortex chapter's level 29, one of its three finales, as dealt.
+finale-vortex29-solved.png  The vortex chapter's level 29 solved at par: its card over the clean picture.
+finale-vortex30.png  The vortex chapter's level 30, one of its three finales, as dealt.
+finale-vortex30-solved.png  The vortex chapter's level 30 solved at par: its card over the clean picture.
+finale-maelstrom28.png  The maelstrom chapter's level 28, one of its three finales, as dealt.
+finale-maelstrom28-solved.png  The maelstrom chapter's level 28 solved at par: its card over the clean picture.
+finale-maelstrom29.png  The maelstrom chapter's level 29, one of its three finales, as dealt.
+finale-maelstrom29-solved.png  The maelstrom chapter's level 29 solved at par: its card over the clean picture.
+finale-maelstrom30.png  The maelstrom chapter's level 30, one of its three finales, as dealt.
+finale-maelstrom30-solved.png  The maelstrom chapter's level 30 solved at par: its card over the clean picture.
 seized-m01-home.png  Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home.
 seized-m01-turned.png  Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2.
 seized-m09-home.png  Maelstrom 09 (pentagon, marbling twin) with knobs 0 and 4 seized, tank at home.
@@ -215,25 +239,28 @@ vortex24.png  Vortex level 24 with its full scramble, the swirl never stirred: t
 vortex25.png  Vortex level 25 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
 vortex26.png  Vortex level 26 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
 vortex27.png  Vortex level 27 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex28.png  Vortex level 28 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex29.png  Vortex level 29 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex30.png  Vortex level 30 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
 vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson.
 vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one inside the glass at the bottom.
 vortex21-both.png  Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass.
 vortex-result.png  Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue.
 vortex-plughole-01.png  Vortex level 01 with its full scramble on plughole's grid, the swirl never stirred.
 vortex-plughole-14.png  Vortex level 14 with its full scramble on plughole's grid, the swirl never stirred.
-vortex-plughole-27.png  Vortex level 27 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-plughole-30.png  Vortex level 30 with its full scramble on plughole's grid, the swirl never stirred.
 vortex-family-isobars-clean.png  Vortex's isobars, clean: the sandbox's square with a swirl, nothing stirred.
 vortex-family-ephemeris-clean.png  Vortex's ephemeris, clean: the sandbox's square with a swirl, nothing stirred.
 vortex-family-cords-clean.png  Vortex's cords, clean: the sandbox's square with a swirl, nothing stirred.
 vortex-family-isobars-01.png  Vortex level 01 with its full scramble on its own isobars, its lesson learnt.
 vortex-family-isobars-14.png  Vortex level 14 with its full scramble on its own isobars, its lesson learnt.
-vortex-family-isobars-27.png  Vortex level 27 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-isobars-30.png  Vortex level 30 with its full scramble on its own isobars, its lesson learnt.
 vortex-family-ephemeris-02.png  Vortex level 02 with its full scramble on its own ephemeris, its lesson learnt.
 vortex-family-ephemeris-13.png  Vortex level 13 with its full scramble on its own ephemeris, its lesson learnt.
 vortex-family-ephemeris-22.png  Vortex level 22 with its full scramble on its own ephemeris, its lesson learnt.
 vortex-family-cords-03.png  Vortex level 03 with its full scramble on its own cords, its lesson learnt.
 vortex-family-cords-16.png  Vortex level 16 with its full scramble on its own cords, its lesson learnt.
-vortex-family-cords-26.png  Vortex level 26 with its full scramble on its own cords, its lesson learnt.
+vortex-family-cords-29.png  Vortex level 29 with its full scramble on its own cords, its lesson learnt.
 rim-swirl.png  Rim: vortex 01, the swirl alone, its lesson learnt.
 rim-swirl-lesson.png  Rim: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
 rim-swirl-held.png  Rim: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
@@ -1145,6 +1172,17 @@ prism-read-15-magenta-past5.png  Prism's read: Sea nettle's magenta rod, stirred
 prism-read-15-magenta-past10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
 prism-idea-white-mid.png  Rule idea: Spore with a white stir mid-stack (4:-2): a sheared white disc with no colour, the red and cyan over it.
 prism-idea-white-mid-before.png  Rule idea's control: Spore as dealt, the same stirs without the white one.
+prism-buried-76-third.png  Prism specimen 76 a third of the way into its untwist (3:-2,2:-5,3:-2,6:-3,1:-3).
+prism-buried-76-white.png  Prism specimen 76 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-77-third.png  Prism specimen 77 a third of the way into its untwist (1:-2,2:+2,0:-2,2:+4,0:-4).
+prism-buried-79-third.png  Prism specimen 79 a third of the way into its untwist (5:-3,6:-2,1:-5,2:+3,5:+4).
+prism-buried-79-white.png  Prism specimen 79 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-82-third.png  Prism specimen 82 a third of the way into its untwist (6:-4,1:-4,5:-5,4:-2,5:-5).
+prism-buried-82-white.png  Prism specimen 82 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-87-third.png  Prism specimen 87 a third of the way into its untwist (2:+3,4:+5,1:+2,0:-4,5:-3).
+prism-buried-87-white.png  Prism specimen 87 with every entry over its buried white stir lifted: the white seam on top.
+prism-buried-88-third.png  Prism specimen 88 a third of the way into its untwist (6:+5,5:+3,3:+2,6:+5,0:+4).
+prism-buried-88-white.png  Prism specimen 88 with every entry over its buried white stir lifted: the white seam on top.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
@@ -1161,7 +1199,7 @@ store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 st
 store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
 duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
-duo-open-fullest.png  Duo open: plughole 27's fullest card (at par with an undo on a replay, what clean takes, new best, again, up a notch) whole over the menu in the trailing half.
+duo-open-fullest.png  Duo open: plughole 30's fullest card (at par with an undo on a replay, what clean takes, new best, again, up a notch) whole over the menu in the trailing half.
 duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note.
 duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them.
 duo-open-endless.png  Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it.
@@ -1175,7 +1213,7 @@ duo-folded-book.png  Duo half open like a book: the split clear of the fold's ba
 duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
 duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.
 duo-tabletop-daily-result.png  Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold.
-duo-tabletop-fullest.png  Duo tabletop: plughole 27 replayed at par with a stir undone against a best of +6, the fullest card a level shows (what clean takes, new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold.
+duo-tabletop-fullest.png  Duo tabletop: plughole 30 replayed at par with a stir undone against a best of +6, the fullest card a level shows (what clean takes, new best, again, up a notch): the caption risen so the card ends above unstirred., clear of the fold.
 duo-tabletop-pack-complete.png  Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold.
 duo-tabletop-escapement.png  Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half.
 duo-tabletop-prism.png  Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half.
@@ -1186,7 +1224,7 @@ duo-tabletop-lesson-count.png  Duo tabletop: whirlpool 25 with knobs 2 and 5 sei
 duo-tabletop-lens-long.png  Duo tabletop: Lens 01's top lens held turned nine steps up (UNSTIR_LIVE, a held turn, not a drag), past the pane's top: the lens stops at +7, the last step its track shows inside the pane (d3-lenscap = B), its count and dashes clear of the fold.
 duo-phone-lens-long.png  A phone, for comparison: the same held turn of nine steps up in the column, which caps nothing, so the lens zooms all nine.
 duo-tabletop-ending.png  Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half.
-duo-tabletop-ladder-end-ax5.png  Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold.
+duo-tabletop-ladder-end-ax5.png  Duo tabletop at the largest accessibility text size: maelstrom 30 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold.
 duo-open-menu.png  Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens.
 duo-open-card.png  Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning; its way out reads ✕ close, as the menu is in sight (d4-menuback = B).
 duo-open-card-gate.png  Duo open: Lens 04 opened past the taste, its card beside the list, scrolled to buying under you've played the free three.
@@ -1213,8 +1251,8 @@ duo-beside-card.png  Duo open: plughole 11 beside the menu, Lens's card opened f
 duo-beside-gate.png  Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over 03's result card in the trailing half on buying, its way out ✕ close (s5b-back = B), Lens 03 still in the tank.
 duo-beside-archive.png  Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned.
 duo-beside-live-solve.png  Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card over the menu.
-duo-beside-ax3.png  Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size.
-duo-beside-ax5.png  Duo open at the largest accessibility size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size.
+duo-beside-ax3.png  Duo open at accessibility3: plughole 30's fullest card over the menu at that size, the chrome round the tank fixed in size.
+duo-beside-ax5.png  Duo open at the largest accessibility size: maelstrom 30 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size.
 duo-beside-pack-complete.png  Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu.
 duo-beside-lost.png  Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass.
 duo-beside-pointer.png  Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest and no settings line under it: the gear is beside the menu's title.
@@ -1251,10 +1289,10 @@ type-menu-ax3.png  The same at accessibility3: each row's result under its title
 type-level-xxxl.png  Level 01 at xxxLarge type: the header, title, note and controls grown, the tank still the screen's width.
 type-level-ax5.png  Level 01 at accessibility5: the play screen capped at xxxLarge, the same frame as type-level-xxxl.
 type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size.
-type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge, replayed at par with a stir undone: the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
+type-result-fullest-xxxl.png  Plughole 30's fullest card at xxxLarge, replayed at par with a stir undone: the new best's line, again, and up a notch, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
 type-result-clean-xxxl.png  Level 06's clean result card at xxxLarge.
 type-result-par-xxxl.png  Level 06 solved at par on a replay with a stir undone, at xxxLarge.
-type-tier-up-xxxl.png  Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM.
+type-tier-up-xxxl.png  Vortex 30's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM.
 type-daily-result-xxxl.png  Today's daily's result card at xxxLarge, two over par: again, share and next daily in 7 h.
 type-menu-marks-xxxl.png  Plughole 01 to 07 solved and 08 tried at xxxLarge: each row's marks at its right.
 type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
@@ -1270,7 +1308,7 @@ marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay with a stir undone: two discs filled over at par.
 ach-first-drop.png  Achievement First Drop: plughole 01 as dealt.
-ach-down-the-plughole.png  Achievement Down the Plughole: plughole 27, the tier's last, as dealt.
+ach-down-the-plughole.png  Achievement Down the Plughole: plughole 27, as dealt, as the image App Store Connect holds shows it.
 ach-into-the-vortex.png  Achievement Into the Vortex: vortex 14 (Monsoon) with its full scramble.
 ach-the-maelstrom.png  Achievement The Maelstrom: maelstrom 23 (Fathom) with its full scramble.
 ach-unstirred.png  Achievement Unstirred: plughole 13 solved, the solve wave at radius 0.8.

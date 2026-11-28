@@ -1,11 +1,11 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Vortex: the swirl, its lessons and pictures, the rim and the breath. Sourced in order by scripts/shots.sh.
-# Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its 27 levels are provisional. The
+# Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its 30 levels are provisional. The
 # rim shows how to stir with the swirl until the player has once (UNSTIR_SWIRLED=1 is a player who has); with seized
 # knobs too, both lessons show. The swirl-* shots are of the picture, so they read as a player who has. UNSTIR_CLOCK
 # holds the swirl's breath still, so no shot catches it mid-slosh unless UNSTIR_BREATH asks.
 shot menu-vortex "Menu on vortex with every row unlocked." TIER=vortex UNLOCK=1
-for n in $(seq -w 1 27); do
+for n in $(seq -w 1 30); do
   shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom." TIER=vortex LEVEL=$n CLOCK=3
 done
 shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
@@ -15,7 +15,7 @@ shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used
 shot vortex-result "Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue." \
   TIER=vortex SCREEN=result LEVEL=5 CLOCK=3
 # Vortex on plughole's grid (UNSTIR_PICTURE) instead of its own family, the option for its pictures set aside.
-for n in 01 14 27; do
+for n in 01 14 30; do
   shot "vortex-plughole-$n" "Vortex level $n with its full scramble on plughole's grid, the swirl never stirred." \
     TIER=vortex LEVEL=$n CLOCK=3 PICTURE=grid
 done
@@ -25,7 +25,7 @@ for p in isobars ephemeris cords; do
   shot "vortex-family-$p-clean" "Vortex's $p, clean: the sandbox's square with a swirl, nothing stirred." \
     MODE=sandbox LAYOUT=quadSwirl STACK= PICTURE=$p CLOCK=3 SWIRLED=1
 done
-for pn in isobars:01 isobars:14 isobars:27 ephemeris:02 ephemeris:13 ephemeris:22 cords:03 cords:16 cords:26; do
+for pn in isobars:01 isobars:14 isobars:30 ephemeris:02 ephemeris:13 ephemeris:22 cords:03 cords:16 cords:29; do
   p=${pn%:*} n=${pn#*:}
   shot "vortex-family-$p-$n" "Vortex level $n with its full scramble on its own $p, its lesson learnt." TIER=vortex LEVEL=$n \
     CLOCK=3 SWIRLED=1

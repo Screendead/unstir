@@ -13,7 +13,8 @@ final class PackTests: XCTestCase {
         for tier in Tier.allCases {
             let prefix = try XCTUnwrap(prefixes[tier.rawValue], "\(tier.rawValue) has no pinned prefix")
             XCTAssertEqual(tier.prefix, prefix)
-            XCTAssertEqual(tier.levels.map(\.id), (1...27).map { "\(prefix)\($0)" })
+            // The 30 a chapter ships with stay; later ones append (`testLevelIdsMatchTheirTier`).
+            XCTAssertEqual(tier.levels.prefix(30).map(\.id), (1...30).map { "\(prefix)\($0)" })
         }
         XCTAssertTrue(Set(["plughole", "whirlpool", "maelstrom"]).isSubset(of: Tier.allCases.map(\.rawValue)))
         XCTAssertEqual(Level.daily(DateComponents(calendar: Calendar(identifier: .gregorian), year: 2026, month: 10,

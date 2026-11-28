@@ -31,7 +31,7 @@ shot grab-grid "Level 12 (square), a finger just down deep in rod 0, not yet mov
 shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not." \
   LEVEL=12 TOUCH=0.5,-0.03
 # Each layout at its chapter's first and last level, the first two without a replay, then every level with a sunset or city.
-for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
+for n in 01 04 07 08 09 13 14 18 19 22 23 30 05 11 15 06 10 16; do
   shot "level$n" "Level $n with its full scramble and its note." LEVEL=$n
 done
 # Mid-solve, where an inversion is on top: the top rod should not read from the still.
@@ -70,7 +70,7 @@ shot reset-armed "Level 12 with two moves played, reset tapped once: it reads re
 shot level-resumed "Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening." \
   LEVEL=12 UNDOS=9 RESUME=2:+5,0:+2,u,1:+3
 shot menu-endless-continue "The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best." \
-  BESTS=plughole:$par27,endless:9 MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3
+  BESTS=plughole:$par30,endless:9 MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
 full=$(for i in $(seq 0 $((limit - 1))); do printf '%d:+1,' $((i % 2)); done)
@@ -94,22 +94,22 @@ shot result-undone "Level 06 (city) solved at par with a stir undone on the way:
   SCREEN=undone LEVEL=6
 shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006
-shot result-fullest "Plughole 27 replayed at par with a stir undone against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows." \
-  SCREEN=undone LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+shot result-fullest "Plughole 30 replayed at par with a stir undone against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch to WHIRLPOOL, the fullest card a tier level shows." \
+  SCREEN=undone LEVEL=30 BESTS=plughole:000000000000000000000000000006 CLOCK=0
 shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
-shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
-  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
-shot result-ladder-end "Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
-  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0
-shot tier-up "Vortex 27 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
-  SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
+shot result-every-tier "Maelstrom 30 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=maelstrom LEVEL=30 OWNED=first-stir BESTS=plughole:$par30,whirlpool:$par30,vortex:$par30,maelstrom:${par30:1}- CLOCK=0
+shot result-ladder-end "Maelstrom 30 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=maelstrom LEVEL=30 OWNED=first-stir CLOCK=0
+shot tier-up "Vortex 30 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
+  SCREEN=clean TIER=vortex LEVEL=30 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed, no other vortex level solved (as levels open in order, plain play never reaches this): as bright, with a lock, saying how many vortex levels are unsolved; it opens the menu on maelstrom's gate." \
-  SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
+  SCREEN=clean TIER=vortex LEVEL=30 CLOCK=0
 shot tier-up-midway "Plughole 05 solved at par, the last plughole level without a best: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last." \
-  SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000 CLOCK=0
-shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, vortex 01 to 24 solved (04, 11 and 22 over par): 24 ticks lit, short: 25–27." \
-  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200---
+  SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000000 CLOCK=0
+shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, vortex 01 to 24 solved (04, 11 and 22 over par): 24 ticks lit, short: 25–30." \
+  TIER=maelstrom BESTS=plughole:$par30,whirlpool:$par30,vortex:000100000010000000000200------
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and share, sharing the card's width, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
   SCREEN=result MODE=daily NOW=17:00
 shot daily-clean "Today's daily solved at par on its first try with nothing wasted: three marks, clean, share and next daily in 7 h." \

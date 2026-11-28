@@ -650,7 +650,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(Offer.pointer(after: .free, shelf: Self.shelf, owned: Self.owning([.lens, .escapement, .prism])))
     }
 
-    /// "more puzzles in the packs ›" shows on maelstrom 27's card alone, once, opening the first pack on the shelf the
+    /// "more puzzles in the packs ›" shows on maelstrom's last card alone, once, opening the first pack on the shelf the
     /// player doesn't own; never where a completion already points to one, nor once every pack is owned.
     @MainActor func testTheLadderEndPointsToThePacksOnce() {
         let end = Level.maelstrom.last!
@@ -1444,7 +1444,7 @@ final class UnstirTests: XCTestCase {
     }
 
     func testLevelsNeverMerge() {
-        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 5, 6, 6, 7, 6, 7, 8, 9, 9]
+        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 5, 6, 6, 7, 6, 7, 8, 9, 9, 10, 10, 11]
         XCTAssertEqual(Level.plughole.map(\.scramble.count), par)
         XCTAssertEqual(Level.plughole.filter(\.replay).count, 3)
     }
@@ -1452,18 +1452,21 @@ final class UnstirTests: XCTestCase {
     /// Against the design table's inversion column.
     func testInversions() {
         XCTAssertEqual(Level.plughole.map { $0.layout.inversions($0.scramble) },
-                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2])
+                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3])
     }
 
-    /// Twice the par of each plughole level as first written (19 to 27 have since eased), strictly more inversions than
-    /// the same-numbered level (against the whirlpool design table), and room to stir on top.
+    /// Twice the par of each plughole level as first written (19 to 27 have since eased; the finales, 28 to 30, go past
+    /// it), strictly more inversions than the same-numbered level (against the whirlpool design table), and room to stir
+    /// on top.
     func testWhirlpool() {
         let whirlpool = Level.whirlpool
         XCTAssertEqual(whirlpool.map(\.layout), Level.plughole.map(\.layout))
         XCTAssertEqual(whirlpool.map(\.scramble.count),
-                       [2, 2, 4, 4, 6, 6, 8, 6, 4, 8, 10, 12, 14, 8, 10, 6, 14, 16, 12, 14, 16, 18, 14, 16, 20, 24, 28])
+                       [2, 2, 4, 4, 6, 6, 8, 6, 4, 8, 10, 12, 14, 8, 10, 6, 14, 16, 12, 14, 16, 18, 14, 16, 20, 24, 28,
+                        30, 31, 32])
         let inversions = whirlpool.map { $0.layout.inversions($0.scramble) }
-        XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12])
+        XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12, 13, 14,
+                                    15])
         for (n, level) in zip(inversions, Level.plughole) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
         XCTAssertFalse(whirlpool.contains(where: \.replay))
         XCTAssertGreaterThanOrEqual(Tank.maxStack - whirlpool.map(\.scramble.count).max()!, 8)
@@ -1483,9 +1486,10 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false])
         for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
-        XCTAssertEqual(Tier.plughole.solved { bests[$0] }, Array(repeating: true, count: 26) + [false])
+        let allButLast = Array(repeating: true, count: Level.plughole.count - 1) + [false]
+        XCTAssertEqual(Tier.plughole.solved { bests[$0] }, allButLast)
         bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
-        XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
+        XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, allButLast)
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false], "over par opens it")
         // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool solved opens
         // vortex and not maelstrom, and vortex solved opens maelstrom.
@@ -1725,12 +1729,12 @@ final class UnstirTests: XCTestCase {
     /// The gate lists what is unsolved as runs, each opening at a level the player can open; a best over par counts.
     func testTheGateListsTheUnsolvedLevelsAsRuns() {
         var bests: [String: Best] = [:]
-        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... 26])
+        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... Level.plughole.count - 1])
         for level in Level.plughole.prefix(20) { bests[level.id] = Best(over: 0, seconds: 30) }
         for id in ["L5", "L12", "L13"] { bests[id] = nil }
         bests["L7"] = Best(over: 2, seconds: 30)
         let runs = Tier.plughole.short { bests[$0] }
-        XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... 26])
+        XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... Level.plughole.count - 1])
         for run in runs { XCTAssert(run.lowerBound == 0 || bests[Level.plughole[run.lowerBound - 1].id] != nil) }
         for level in Level.plughole { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertEqual(Tier.plughole.short { bests[$0] }, [])
@@ -2223,24 +2227,24 @@ final class UnstirTests: XCTestCase {
 
     /// Against vortex's provisional table: quad, tri, eye, pent, then hex, each with its swirl; the swirl in every
     /// scramble, hidden stirs and swirls climbing within each layout, no knob seized, par the entry count; its own
-    /// family, nine levels each, no two neighbours alike, the first three one of each, the ephemeris only to 14 stirs,
+    /// family, ten levels each, no two neighbours alike, the first three one of each, the ephemeris only to 14 stirs,
     /// and each tank four taps as dealt. That par is the optimum is `SolverTests`' to check.
     func testVortexTable() {
         let levels = Level.vortex
-        XCTAssertEqual(levels.count, 27)
         XCTAssertEqual(levels.map(\.layout), Array(repeating: .quadSwirl, count: 6) + Array(repeating: .triSwirl, count: 3)
                        + Array(repeating: .eyeSwirl, count: 4) + Array(repeating: .pentSwirl, count: 7)
-                       + Array(repeating: .hexSwirl, count: 7))
+                       + Array(repeating: .hexSwirl, count: 10))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [2, 3, 4, 5, 6, 8, 5, 6, 8, 7, 8, 10, 12, 8, 10, 12, 13, 14, 16, 18, 12, 14, 16, 18, 20, 22, 24])
+                       [2, 3, 4, 5, 6, 8, 5, 6, 8, 7, 8, 10, 12, 8, 10, 12, 13, 14, 16, 18, 12, 14, 16, 18, 20, 22, 24,
+                        14, 26, 28])
         XCTAssertEqual(levels.map { $0.layout.inversions($0.scramble) },
-                       [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8])
+                       [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8, 6, 9, 10])
         XCTAssertEqual(levels.map { level in level.scramble.filter { $0.rod == level.layout.swirl }.count },
-                       [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6])
-        let table: [(Picture, [Int])] = [(.isobars, [1, 7, 10, 14, 19, 21, 23, 25, 27]),
-                                         (.ephemeris, [2, 4, 6, 8, 11, 13, 15, 17, 22]),
-                                         (.cords, [3, 5, 9, 12, 16, 18, 20, 24, 26])]
-        var want = [Picture?](repeating: nil, count: 27)
+                       [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6, 5, 6, 7])
+        let table: [(Picture, [Int])] = [(.isobars, [1, 7, 10, 14, 19, 21, 23, 25, 27, 30]),
+                                         (.ephemeris, [2, 4, 6, 8, 11, 13, 15, 17, 22, 28]),
+                                         (.cords, [3, 5, 9, 12, 16, 18, 20, 24, 26, 29])]
+        var want = [Picture?](repeating: nil, count: levels.count)
         for (picture, numbers) in table { for n in numbers { want[n - 1] = picture } }
         XCTAssertEqual(levels.map(\.picture), want)
         XCTAssertEqual(Set(levels.prefix(3).map(\.picture)).count, 3)
@@ -2262,18 +2266,19 @@ final class UnstirTests: XCTestCase {
     /// optimum is `SolverTests`' to check.
     func testMaelstromTable() {
         let levels = Level.maelstrom
-        XCTAssertEqual(levels.count, 27)
         XCTAssertEqual(levels.map(\.layout), Array(repeating: .quad, count: 6) + Array(repeating: .pent, count: 8)
-                       + Array(repeating: .hex, count: 13))
+                       + Array(repeating: .hex, count: 16))
         let pictures: [Picture] = [.coral, .neurons, .coral, .chainmail, .coral, .glass, .chainmail, .neurons,
                                    .marbling, .glass, .chainmail, .glass, .marbling, .glass, .chainmail, .neurons,
                                    .marbling, .neurons, .chainmail, .glass, .marbling, .chainmail, .glass, .marbling,
-                                   .chainmail, .glass, .marbling]
+                                   .chainmail, .glass, .marbling, .chainmail, .glass, .marbling]
         XCTAssertEqual(levels.map(\.picture), pictures.map(\.twin))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [3, 4, 5, 5, 6, 11, 8, 8, 10, 9, 12, 14, 16, 18, 9, 11, 10, 12, 16, 17, 17, 18, 22, 23, 24, 25, 26])
+                       [3, 4, 5, 5, 6, 11, 8, 8, 10, 9, 12, 14, 16, 18, 9, 11, 10, 12, 16, 17, 17, 18, 22, 23, 24, 25, 26,
+                        27, 28, 32])
         XCTAssertEqual(levels.map(\.par),
-                       [4, 5, 6, 6, 8, 15, 11, 10, 12, 12, 16, 18, 21, 23, 11, 13, 13, 15, 19, 20, 21, 22, 25, 26, 27, 28, 29])
+                       [4, 5, 6, 6, 8, 15, 11, 10, 12, 12, 16, 18, 21, 23, 11, 13, 13, 15, 19, 20, 21, 22, 25, 26, 27, 28, 29,
+                        32, 33, 36])
         for level in levels {
             XCTAssertTrue((1...2).contains(level.seized.count), level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }

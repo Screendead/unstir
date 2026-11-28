@@ -227,7 +227,32 @@ case "search" where args.count == 6:
         if r.fair { print(r.line) }
         fflush(stdout)
     }
+case "bury" where args.count == 4 || args.count == 5:
+    // bury <layout> <masks> <scramble> [counts, e.g. 4,-4]: the deal with a second stir on its white rod buried mid-stack (Jack's call,
+    // 2026-11-28), added at each place and count, or put in place of a coloured stir whose rod has others; each with
+    // the place it sits at ahead of the measures. The solver is left to `check`. Every count but the white's own
+    // ghost shares measures alike, so one count is enough to place it.
+    guard let layout = Layout(rawValue: args[1]), let masks = Channels.masks(args[2]) else { exit(2) }
+    let dealt = [Twist].parse(args[3], in: layout, masks: masks)
+    let white = dealt[0].rod
+    print((["how", "at"] + header).joined(separator: "\t"))
+    for at in 2..<dealt.count - 1 {
+        for steps in args.count == 5 ? args[4].split(separator: ",").compactMap({ Int($0) }) : [-5, -4, -3, -2, 2, 3, 4, 5] {
+            let t = Twist(rod: white, steps: steps)
+            var tries = [("add", Array(dealt[..<at]) + [t] + dealt[at...])]
+            if dealt.filter({ $0.rod == dealt[at].rod }).count > 1 {
+                tries.append(("for \(dealt[at].rod):\(signed(dealt[at].steps))", Array(dealt[..<at]) + [t] + dealt[(at + 1)...]))
+            }
+            for (how, stack) in tries {
+                guard [Twist].parse(string(stack), in: layout, masks: masks) == stack,
+                      stack.reduce(3, { $0 + Int((masks[$1.rod] ?? .white).rawValue).nonzeroBitCount }) <= 30 else { continue }
+                let r = row("-", layout, masks, stack, optimum: false)
+                if r.fair { print("\(how)\t\(at)\t\(r.line)") }
+                fflush(stdout)
+            }
+        }
+    }
 default:
-    print("usage: table < rows | check <layout> <masks> <scramble> | search <layout> <depth> <palette> <from> <to>")
+    print("usage: table < rows | check <layout> <masks> <scramble> | search <layout> <depth> <palette> <from> <to> | bury <layout> <masks> <scramble> [counts]")
     exit(2)
 }

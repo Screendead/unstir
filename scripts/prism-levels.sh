@@ -7,6 +7,9 @@
 # read white, blocked knobs, right moves per step, forced steps, shader cost, ghost and triple shares, scramble. `search`
 # deals seeded scrambles over one white bottom rod, every other rod a mask from the palette's letters (or the masks
 # given, slot:letter pairs), and keeps those whose optimum is their depth. See scripts/prism-levels/main.swift.
+#        scripts/prism-levels.sh bury <layout> <masks> <scramble> [counts]
+# `bury` measures the deal with a second stir on its white rod buried at each place (added, or in place of a coloured
+# stir whose rod has others), each count given (every one by default), without the solver; `check` proves a pick.
 #        scripts/prism-levels.sh read                               how each move of every specimen's untwist reads
 # `read` prints a line per move: the rod, its mask, the turn that lifts its newest stir, how many entries the rod holds
 # and their sum, and over the rod's core the share where the mask's channels lie together (whole), the share the right

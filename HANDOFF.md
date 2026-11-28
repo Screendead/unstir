@@ -60,8 +60,19 @@ session on `packs/treble`; its draft PR is the claim.
   and go on a new tier after maelstrom. Its mechanic (Debug prototypes, filmed), name (a stored raw value and prefix)
   and length go to Jack as one pitch before its levels are built. It must not give away a paid pack's mechanic or touch
   the frozen generator.
+- **Prism's buried white stir** (Jack's call, 2026-11-28): built on `packs/prism-white`, off `packs/treble`.
+  Specimens 76, 77, 79, 82, 87 and 88 give the white rod a second stir mid-stack, each proven at par and as hard or
+  harder on every measure; 76 carries the note "White blocks every colour stirred over it." (`docs/prism-design.md`,
+  "A buried white stir").
 - Measured 2026-11-27: today's pars run Lens 1 to 12, Escapement 2 to 9, Prism 3 to 8, maelstrom up to 26. At par the
   solvers deal Prism depth 11 on hex and Escapement 12 with two clocks.
+
+### Open work (2026-11-28): every free chapter 30
+
+Jack's call "Thirty and ninety", on `levels/thirty`: plughole, whirlpool, vortex and maelstrom gain 28–30 as finales,
+dealt by each tier's own tool (maelstrom's each need a plan); what assumed 27 now derives from the level count or says
+30 (gates, the ladder's end, the curtain call, shots, store copy: 120 levels free). Charybdis and Lens's 90 are other
+owners'. Not yet seen: how the finales play on the phone.
 
 ### Open work (2026-11-23)
 

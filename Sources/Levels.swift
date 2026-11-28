@@ -178,8 +178,9 @@ struct Level: Hashable, Sendable {
     }
 
     /// Dealt by the frozen generator as layout-depth-inversions #seed: pent-5-0 #1,
-    /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, picked by
-    /// scripts/plughole-levels/pick.py so each layout's curve rises.
+    /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, and the
+    /// finales hex-10-2 #26, hex-10-3 #33, hex-11-3 #178, picked by scripts/plughole-levels/pick.py so each layout's curve
+    /// rises.
     static let plughole: [Level] = ([
         (.tri, "0:+4",
          String(localized: "level.L1.title", defaultValue: "Drop",
@@ -292,15 +293,26 @@ struct Level: Hashable, Sendable {
         (.hex, "2:+2,3:-5,1:+3,0:+6,3:+7,1:-3,4:-7,2:-5,5:+3",
          String(localized: "level.L27.title", defaultValue: "Drain",
                            comment: "Plughole level title, a word for draining water"), ""),
+        (.hex, "5:+3,4:+4,0:-2,4:+4,6:+3,2:-4,3:+7,1:-4,0:-3,6:-6",
+         String(localized: "level.L28.title", defaultValue: "Glug",
+                           comment: "Plughole level title, a word for draining water"), ""),
+        (.hex, "6:+3,1:-2,2:+3,0:+5,3:+7,4:+6,2:-4,6:-4,5:-7,0:-7",
+         String(localized: "level.L29.title", defaultValue: "Sluice",
+                           comment: "Plughole level title, a word for draining water"), ""),
+        (.hex, "4:-2,3:+3,0:+6,1:-7,0:+5,4:-4,1:+4,5:+6,6:+2,4:-2,1:-4",
+         String(localized: "level.L30.title", defaultValue: "Sinkhole",
+                           comment: "Plughole level title, a word for draining water"), ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The city only where par is 4 or less: deeper, it goes murky.
         Level(id: Tier.plughole.prefix + "\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
-              picture: [5: .sunset, 11: .sunset, 15: .sunset, 6: .city, 10: .city, 14: .city, 16: .city][i + 1] ?? .grid,
+              picture: ([5: .sunset, 11: .sunset, 15: .sunset, 6: .city, 10: .city, 14: .city, 16: .city]
+                        as [Int: Picture])[i + 1] ?? .grid,
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 
     /// Twice the stirs of the same-numbered plughole level, more of them hidden under louder ones, live pictures,
-    /// nothing replayed.
+    /// nothing replayed. The finales go past twice: dealt by the frozen generator as hex-depth-hidden #seed, hex-30-13
+    /// #218, hex-31-14 #42, hex-32-15 #299 (`scripts/plughole-levels.sh search`), each with fewer right moves a step.
     static let whirlpool: [Level] = ([
         (.tri, "0:-5,1:+3",
          String(localized: "level.N1.title", defaultValue: "Spring",
@@ -389,20 +401,32 @@ struct Level: Hashable, Sendable {
         (.hex, "3:+3,4:-2,5:-2,6:-2,2:-2,4:-2,1:-4,3:+4,6:-4,1:-5,0:-7,2:+3,5:-4,1:+3,0:+5,1:+6,6:-3,5:+4,0:-6,6:+5,0:+4,2:-6,3:+7,1:+4,4:-4,2:+6,3:-5,2:+2",
          String(localized: "level.N27.title", defaultValue: "Estuary",
                            comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
+        (.hex, "6:+2,2:+4,0:-5,6:-7,4:-4,5:+2,3:-3,0:-6,6:-3,0:+3,4:+2,3:-2,2:-2,0:+2,5:-3,3:+3,4:+5,5:+6,4:+6,5:+5,4:+3,5:+6,6:+7,1:+4,6:-5,1:+5,5:+2,3:+3,2:-3,1:+5",
+         String(localized: "level.N28.title", defaultValue: "Mudflats",
+                           comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
+        (.hex, "3:-2,2:+2,0:+5,2:+3,1:+5,3:-3,2:+3,3:+6,2:+4,0:-4,6:-2,0:-3,4:+5,6:+2,1:-2,5:-2,0:+4,4:+5,6:-4,2:+2,5:-6,4:+4,3:-5,0:+4,1:-7,6:+6,5:+3,4:-2,5:+3,4:-2,0:-4",
+         String(localized: "level.N29.title", defaultValue: "Delta",
+                           comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
+        (.hex, "0:+4,1:-5,6:-4,5:+4,0:+6,4:-7,5:-4,0:+3,2:+5,6:-2,1:-4,0:+7,2:-3,4:+3,5:-3,4:+4,5:-4,3:+2,4:+5,6:-4,0:-6,5:-2,0:-3,3:+4,4:+3,3:+4,4:+3,5:+5,0:+5,3:-7,2:+4,3:+4",
+         String(localized: "level.N30.title", defaultValue: "River mouth",
+                           comment: "Whirlpool level title, a word for a river from its source to the sea"), ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
-        // The glass opens each layout and takes the deepest levels. Coral reads only to 6 stirs, and neurons, the dearest
-        // to draw, to 14.
+        // The glass opens each layout and takes the deepest levels, chainmail and marbling the finales before the last.
+        // Coral reads only to 6 stirs, and neurons, the dearest to draw, to 14.
         Level(id: Tier.whirlpool.prefix + "\(i + 1)", tier: .whirlpool, label: String(format: "%02d", i + 1),
               title: l.2, note: l.3,
-              picture: [3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
+              picture: ([3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
                         2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
-                        20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
+                        20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling,
+                        28: .chainmail, 29: .marbling] as [Int: Picture])[i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
     /// The swirl: a rod the size of the tank, held from the rim. Quad teaches it, then tri, eye, pent and hex, each
     /// opening easier than the last one's showpiece. No knob seizes, so
-    /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py.
+    /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py; the finales,
+    /// 28 to 30, never leave more than two rods free to come off at once and hide three to five swirls under louder
+    /// stirs, the ephemeris's short as it reads only to 14.
     static let vortex: [Level] = ([
         (.quadSwirl, "0:+3,4:+4", Picture.isobars,
          String(localized: "level.V1.title", defaultValue: "Calm",
@@ -493,6 +517,15 @@ struct Level: Hashable, Sendable {
         (.hexSwirl, "4:+3,1:-2,7:-6,1:-3,7:-2,0:-4,2:+6,1:+4,6:+5,1:+7,0:-8,6:+4,7:-3,0:+6,5:-7,3:+3,7:-8,0:+6,1:+3,7:-4,1:-7,3:-3,7:+8,5:-8", .isobars,
          String(localized: "level.V27.title", defaultValue: "Tornado",
                            comment: "Vortex level title, a word for wind, gentle to wild"), ""),
+        (.hexSwirl, "4:-2,5:-3,7:-4,2:+6,7:-5,1:+7,7:-5,5:-5,7:-4,1:+6,6:+7,2:-4,7:+6,1:+3", .ephemeris,
+         String(localized: "level.V28.title", defaultValue: "Downburst",
+                           comment: "Vortex level title, a word for wind, gentle to wild"), ""),
+        (.hexSwirl, "3:-3,4:-4,5:-6,6:+7,0:-8,4:+4,7:-5,0:-6,5:+7,7:+8,4:+2,5:+4,3:+3,7:+2,6:+4,7:+2,2:-5,0:-4,2:+7,3:+7,2:+8,7:-3,2:-3,3:-5,2:-5,7:-6", .cords,
+         String(localized: "level.V29.title", defaultValue: "Supercell",
+                           comment: "Vortex level title, a word for wind, gentle to wild"), ""),
+        (.hexSwirl, "1:+4,7:+2,4:-4,7:+3,0:-2,1:-5,6:+8,7:-3,2:+6,1:+8,4:-3,7:-3,6:-2,7:-3,0:-6,2:-8,3:+5,6:+2,2:+6,5:-5,7:-7,3:+8,6:+2,1:-4,7:+6,1:-8,0:-8,3:+4", .isobars,
+         String(localized: "level.V30.title", defaultValue: "Polar vortex",
+                           comment: "Vortex level title, a word for wind, gentle to wild"), ""),
     ] as [(Layout, String, Picture, String, String)]).enumerated().map { i, l in
         // Vortex's own family. Isobars open each layout and take the deepest; the ephemeris dims with depth, so it
         // reads only to 14 stirs.
@@ -502,7 +535,9 @@ struct Level: Hashable, Sendable {
 
     /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum (UnstirTests). From M6
     /// on, the last of each layout's teaching, several levels need a plan: every rule of thumb misses par however its ties
-    /// go (Jack, 2026-11-12). Each shows the twin of the picture its row names.
+    /// go (Jack, 2026-11-12). Each shows the twin of the picture its row names. The finales, 28 to 30, each need a plan
+    /// and leave more decoys on the way than 27: seeds 2698 and 1171 of the hex 27-28 neighbours and two-apart bands
+    /// and 983 of the 31-32 neighbours band (`scripts/maelstrom-levels.sh search`).
     static let maelstrom: [Level] = ([
         (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral,
          String(localized: "level.M1.title", defaultValue: "Swell",
@@ -596,6 +631,15 @@ struct Level: Hashable, Sendable {
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
         (.hex, "1:+4,6:-3,1:+4,2:+4,0:+7,3:+8,1:+4,0:-6,1:-7,6:+8,0:-4,2:-7,3:+8,0:-5,4:+6,5:-8,6:-3,0:-5,5:-7,6:-3,0:-5,2:-7,0:+8,6:+3,0:+4,6:+6", [2,3], 29, .marbling,
          String(localized: "level.M27.title", defaultValue: "Abyss",
+                           comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
+        (.hex, "2:+2,1:+5,6:-2,0:+3,5:-6,4:+8,5:-6,0:-2,6:+5,0:-2,5:+5,2:-3,6:-6,1:-7,2:+8,3:+8,0:+5,5:+6,4:-8,0:-2,2:-4,3:-5,1:-2,4:+7,3:-4,0:+5,6:-2", [5,6], 32, .chainmail,
+         String(localized: "level.M28.title", defaultValue: "Hadal zone",
+                           comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
+        (.hex, "5:+4,6:+7,1:-8,2:+2,0:-2,3:-3,6:+3,0:-5,4:+6,3:-6,4:+6,5:+8,3:-3,1:+4,2:+6,1:+7,0:-5,6:-2,0:-2,1:-3,5:-4,4:-6,6:+2,1:-5,2:+6,0:+8,5:-3,6:-4", [1,5], 33, .glass,
+         String(localized: "level.M29.title", defaultValue: "Black smoker",
+                           comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
+        (.hex, "5:-2,4:-2,3:-5,0:-8,5:+6,1:-4,0:-7,4:+8,3:+5,2:-6,3:-7,5:+3,4:+8,0:+5,5:-2,6:-4,5:-7,4:+8,6:-4,2:-3,3:+4,5:-6,0:-7,1:-2,0:-2,3:+4,0:-7,3:+8,0:-4,2:+5,0:-8,4:+6", [2,3], 36, .marbling,
+         String(localized: "level.M30.title", defaultValue: "Challenger Deep",
                            comment: "Maelstrom level title, a word for the sea, rising to its depths"), ""),
     ] as [(Layout, String, Set<Int>, Int, Picture, String, String)]).enumerated().map { i, l in
         Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
